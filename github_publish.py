@@ -2,12 +2,15 @@
 GitHub publish service — commits an HTML file to the repo's published/ folder.
 Vercel auto-redeploys on each new commit.
 """
+from dotenv import load_dotenv
 import base64
 import logging
 import os
 import httpx
 
 log = logging.getLogger("quotation.github")
+
+load_dotenv()
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
 GITHUB_REPO  = os.getenv("GITHUB_REPO", "")   # e.g. "vungocnamhust/quotation-landingpage-template"
@@ -24,8 +27,8 @@ async def publish_to_github(quotation_id: str, html_content: str, version: int) 
     if not GITHUB_TOKEN or not GITHUB_REPO:
         raise ValueError("GITHUB_TOKEN and GITHUB_REPO must be set in environment.")
 
-    filename = f"{quotation_id}_v{version}.html"
-    file_path = f"published/{filename}"
+    filename = f"v{version}.html"
+    file_path = f"published/{quotation_id}/{filename}"
     api_url   = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{file_path}"
     headers   = {
         "Authorization": f"token {GITHUB_TOKEN}",
@@ -56,6 +59,6 @@ async def publish_to_github(quotation_id: str, html_content: str, version: int) 
         log.error("[github] Commit failed %s: %s", resp.status_code, resp.text[:400])
         raise RuntimeError(f"GitHub API error {resp.status_code}: {resp.text[:200]}")
 
-    public_url = f"{PUBLIC_BASE_URL}/published/{filename}"
+    public_url = f"{PUBLIC_BASE_URL}/published/{quotation_id}/{filename}"
     log.info("[github] ✓ Committed %s → %s", file_path, public_url)
     return public_url

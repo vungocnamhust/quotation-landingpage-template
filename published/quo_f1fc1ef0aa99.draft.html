@@ -4,17 +4,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{{ tour_title }} - Luxury Quotation</title>
+  <title>B2B NET rates are quoted per person, based on 2 pax sharing, private services, and standard season. Final
+    prices depend on group size, travel dates, hotel and cruise category, and selected upgrades. Single supplement and
+    peak season surcharges may apply. Prices are indicative and subject to reconfirmation at time of booking.
+    Inclusions: private airport transfers, private A/C transportation, accommodation with breakfast, meals as mentioned,
+    sightseeing entrance fees, Hanoi cultural discovery and Train Street, Ninh Binh, Sapa, Fansipan cable car, Ha Long
+    Bay overnight cruise, Ba Na Hills, Marble Mountains, Coconut Forest, Hoi An, Ho Chi Minh City highlights, Mekong
+    Delta, English-speaking guide, halal-friendly meal arrangements. Exclusions: international flights, Vietnam visa,
+    travel insurance, personal expenses, optional activities, domestic flights Hanoi–Da Nang and Da Nang–Ho Chi Minh
+    City. - Luxury Quotation</title>
   <style>
     :root {
-      --hero-img: url('{{ img_0 }}');
-      --img-1: url('{{ img_1 }}');
-      --img-2: url('{{ img_2 }}');
-      --img-3: url('{{ img_3 }}');
-      --img-4: url('{{ img_4 }}');
-    }
-
-    :root {
+      --hero-img: url('/assets/vietnam-safar-logo.png');
       --ivory: #f8f3e9;
       --ivory-2: #efe4d1;
       --ink: #11130f;
@@ -304,54 +305,6 @@
       margin: 0
     }
 
-    .gallery {
-      display: grid;
-      grid-template-columns: 1.2fr .8fr .8fr;
-      grid-auto-rows: 310px;
-      gap: 16px
-    }
-
-    .image-tile {
-      position: relative;
-      border-radius: 34px;
-      overflow: hidden;
-      box-shadow: var(--shadow);
-      background: center/cover no-repeat
-    }
-
-    .image-tile.large {
-      grid-row: span 2
-    }
-
-    .image-tile:before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(180deg, transparent 34%, rgba(17, 19, 15, .72))
-    }
-
-    .image-caption {
-      position: absolute;
-      left: 24px;
-      right: 24px;
-      bottom: 22px;
-      color: white
-    }
-
-    .image-caption small {
-      display: block;
-      color: var(--gold-2);
-      text-transform: uppercase;
-      letter-spacing: .18em;
-      font-weight: 700
-    }
-
-    .image-caption strong {
-      font-family: var(--serif);
-      font-size: 27px;
-      font-weight: 500
-    }
-
     .experience-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -406,8 +359,7 @@
       border-radius: 30px;
       padding: 24px;
       align-items: start;
-      box-shadow: 0 18px 45px rgba(17, 19, 15, .05);
-      break-inside: avoid
+      box-shadow: 0 18px 45px rgba(17, 19, 15, .05)
     }
 
     .day-label {
@@ -437,8 +389,7 @@
       color: white;
       border-radius: 42px;
       padding: 46px;
-      box-shadow: var(--shadow);
-      break-inside: avoid
+      box-shadow: var(--shadow)
     }
 
     .pricing h2 {
@@ -503,8 +454,7 @@
       border: 1px solid var(--line);
       border-radius: 32px;
       padding: 30px;
-      box-shadow: 0 18px 45px rgba(17, 19, 15, .05);
-      break-inside: avoid
+      box-shadow: 0 18px 45px rgba(17, 19, 15, .05)
     }
 
     .panel ul {
@@ -523,8 +473,7 @@
       grid-template-columns: 1.1fr .9fr;
       gap: 44px;
       align-items: center;
-      box-shadow: var(--shadow);
-      break-inside: avoid
+      box-shadow: var(--shadow)
     }
 
     .cta h2 {
@@ -580,8 +529,111 @@
       font-size: 13px
     }
 
-    .no-screen {
-      display: none
+    /* ── Inline editing styles ────────────────── */
+    [data-editable] {
+      outline: none;
+      border-radius: 4px;
+      transition: background .15s
+    }
+
+    [data-editable]:hover {
+      background: rgba(183, 137, 75, .08);
+      cursor: text
+    }
+
+    [data-editable]:focus {
+      background: rgba(183, 137, 75, .13);
+      box-shadow: 0 0 0 2px rgba(183, 137, 75, .4)
+    }
+
+    /* ── Publish Bar ─────────────────────────── */
+    #publish-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 9999;
+      background: rgba(23, 65, 46, .96);
+      backdrop-filter: blur(18px);
+      border-top: 1px solid rgba(183, 137, 75, .35);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 32px;
+      gap: 16px;
+    }
+
+    #publish-bar .pb-left {
+      display: flex;
+      align-items: center;
+      gap: 14px
+    }
+
+    #publish-bar .pb-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #f59e0b;
+      animation: pulse 2s infinite
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .4
+      }
+    }
+
+    #publish-bar .pb-label {
+      color: rgba(255, 255, 255, .8);
+      font-size: 13px;
+      letter-spacing: .04em
+    }
+
+    #publish-bar .pb-label strong {
+      color: #d8bd85
+    }
+
+    #publish-status {
+      font-size: 13px;
+      color: rgba(255, 255, 255, .6)
+    }
+
+    #btn-publish {
+      background: linear-gradient(135deg, #b7894b, #d8bd85);
+      color: #1c160d;
+      border: none;
+      border-radius: 999px;
+      padding: 11px 28px;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: .2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    #btn-publish:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(183, 137, 75, .4)
+    }
+
+    #btn-publish:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+      transform: none
+    }
+
+    body {
+      padding-bottom: 80px
     }
 
     @media(max-width:980px) {
@@ -602,15 +654,6 @@
         grid-template-columns: 1fr 1fr
       }
 
-      .gallery {
-        grid-template-columns: 1fr;
-        grid-auto-rows: 280px
-      }
-
-      .image-tile.large {
-        grid-row: auto
-      }
-
       .day {
         grid-template-columns: 1fr
       }
@@ -618,14 +661,6 @@
       .day-meta {
         text-align: left;
         padding-top: 0
-      }
-
-      .hero {
-        min-height: auto
-      }
-
-      .hero-content {
-        padding: 86px 0 130px
       }
     }
 
@@ -639,195 +674,18 @@
       .price-grid {
         grid-template-columns: 1fr
       }
-
-      .hero h1 {
-        font-size: 52px
-      }
-
-      .pricing,
-      .cta {
-        padding: 28px;
-        border-radius: 30px
-      }
-    }
-
-    @media print {
-      .no-print {
-        display: none !important
-      }
-
-      .no-screen {
-        display: block
-      }
-
-      html,
-      body {
-        background: var(--ivory) !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact
-      }
-
-      .nav {
-        position: relative
-      }
-
-      .hero {
-        min-height: 720px
-      }
-
-      .hero-content {
-        padding: 72px 0 100px
-      }
-
-      section {
-        padding: 44px 0
-      }
-
-      .container {
-        width: 92%
-      }
-
-      .day,
-      .panel,
-      .pricing,
-      .cta,
-      .strip-card,
-      .experience,
-      .image-tile {
-        break-inside: avoid
-      }
-
-      .gallery {
-        grid-auto-rows: 260px
-      }
-
-      .footer {
-        page-break-after: auto
-      }
-
-      @page {
-        size: A4;
-        margin: 0
-      }
-    }
-
-    /* ── Inline editing ─────────────────────────────────────────── */
-    [data-editable] {
-      outline: none;
-      border-radius: 4px;
-      transition: background .15s, box-shadow .15s
-    }
-
-    [data-editable]:hover {
-      background: rgba(183, 137, 75, .09);
-      cursor: text
-    }
-
-    [data-editable]:focus {
-      background: rgba(183, 137, 75, .14);
-      box-shadow: 0 0 0 2px rgba(183, 137, 75, .45)
-    }
-
-    /* ── Publish Bar ────────────────────────────────────────────── */
-    #publish-bar {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      z-index: 9999;
-      background: rgba(23, 65, 46, .96);
-      backdrop-filter: blur(18px);
-      border-top: 1px solid rgba(183, 137, 75, .35);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 32px;
-      gap: 16px
-    }
-
-    #publish-bar .pb-left {
-      display: flex;
-      align-items: center;
-      gap: 12px
-    }
-
-    #publish-bar .pb-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #f59e0b;
-      animation: pulse 2s infinite;
-      flex-shrink: 0
-    }
-
-    @keyframes pulse {
-
-      0%,
-      100% {
-        opacity: 1
-      }
-
-      50% {
-        opacity: .4
-      }
-    }
-
-    #publish-bar .pb-label {
-      color: rgba(255, 255, 255, .8);
-      font-size: 13px
-    }
-
-    #publish-bar .pb-label strong {
-      color: #d8bd85
-    }
-
-    #publish-status {
-      font-size: 13px;
-      color: rgba(255, 255, 255, .6);
-      flex: 1;
-      text-align: center
-    }
-
-    #btn-publish {
-      background: linear-gradient(135deg, #b7894b, #d8bd85);
-      color: #1c160d;
-      border: none;
-      border-radius: 999px;
-      padding: 11px 28px;
-      font-weight: 700;
-      font-size: 12px;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: .2s ease;
-      white-space: nowrap
-    }
-
-    #btn-publish:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 8px 24px rgba(183, 137, 75, .4)
-    }
-
-    #btn-publish:disabled {
-      opacity: .5;
-      cursor: not-allowed;
-      transform: none
-    }
-
-    body {
-      padding-bottom: 72px
     }
   </style>
 </head>
 
 <body>
-  <nav class="nav no-print">
+  <nav class="nav">
     <div class="container nav-inner">
-      <a class="brand" href="#top"><img src="/assets/vietnam-safar-logo.png" alt="Vietnam Safar logo" /> Vietnam
+      <a class="brand" href="#top"><img src="../assets/vietnam-safar-logo.png" alt="Vietnam Safar logo" /> Vietnam
         Safar</a>
       <div class="nav-links">
-        <a href="#overview">Overview</a><a href="#journey">Journey</a><a href="#itinerary">Itinerary</a><a
-          href="#quotation">Quotation</a><a href="#terms">Terms</a>
+        <a href="#overview">Overview</a><a href="#itinerary">Itinerary</a><a href="#quotation">Quotation</a><a
+          href="#terms">Terms</a>
       </div>
       <div class="nav-actions">
         <button class="btn dark" onclick="window.print()">Print / Save PDF</button>
@@ -839,28 +697,43 @@
     <header class="hero">
       <div class="container hero-content">
         <div>
-          <div class="kicker" data-editable="kicker">{{ kicker }}</div>
-          <h1 data-editable="tour_title">{{ tour_title }}</h1>
-          <p class="hero-lede" data-editable="lede">{{ lede }}</p>
-          <div class="hero-actions no-print">
-            <a class="btn gold" href="#quotation">View Luxury Rates</a>
-            <a class="btn outline" href="#itinerary">Explore the Journey</a>
+          <div class="kicker" data-editable="kicker">Private Quotation • 2026-05-14</div>
+          <h1 data-editable="title">B2B NET rates are quoted per person, based on 2 pax sharing, private services, and
+            standard season. Final prices depend on group size, travel dates, hotel and cruise category, and selected
+            upgrades. Single supplement and peak season surcharges may apply. Prices are indicative and subject to
+            reconfirmation at time of booking. Inclusions: private airport transfers, private A/C transportation,
+            accommodation with breakfast, meals as mentioned, sightseeing entrance fees, Hanoi cultural discovery and
+            Train Street, Ninh Binh, Sapa, Fansipan cable car, Ha Long Bay overnight cruise, Ba Na Hills, Marble
+            Mountains, Coconut Forest, Hoi An, Ho Chi Minh City highlights, Mekong Delta, English-speaking guide,
+            halal-friendly meal arrangements. Exclusions: international flights, Vietnam visa, travel insurance,
+            personal expenses, optional activities, domestic flights Hanoi–Da Nang and Da Nang–Ho Chi Minh City.</h1>
+          <p class="hero-lede" data-editable="lede">B2B NET rates are quoted per person, based on 2 pax sharing, private
+            services, and standard season. Final prices depend on group size, travel dates, hotel and cruise category,
+            and selected upgrades. Single supplement and peak season surcharges may apply. Prices are indicative and
+            subject to reconfirmation at time of booking. Inclusions: private airport transfers, private A/C
+            transportation, accommodation with breakfast, meals as mentioned, sightseeing entrance fees, Hanoi cultural
+            discovery and Train Street, Ninh Binh, Sapa, Fansipan cable car, Ha Long Bay overnight cruise, Ba Na Hills,
+            Marble Mountains, Coconut Forest, Hoi An, Ho Chi Minh City highlights, Mekong Delta, English-speaking guide,
+            halal-friendly meal arrangements. Exclusions: international flights, Vietnam visa, travel insurance,
+            personal expenses, optional activities, domestic flights Hanoi–Da Nang and Da Nang–Ho Chi Minh City.</p>
+          <div class="hero-actions">
+            <a class="btn gold" href="#quotation">View Rates</a>
+            <a class="btn outline" href="#itinerary">Explore Journey</a>
           </div>
         </div>
         <aside class="quote-card">
           <h2>Quotation Snapshot</h2>
           <div class="quote-list">
-            <div class="quote-row"><span>Prepared for</span><strong data-editable="customer_name">{{ customer_name
-                }}</strong></div>
-            <div class="quote-row"><span>Prepared by</span><strong data-editable="seller_name">{{ seller_name
-                }}</strong></div>
-            <div class="quote-row"><span>Tour code</span><strong data-editable="quotation_number">{{ quotation_number
-                }}</strong></div>
-            <div class="quote-row"><span>Date</span><strong data-editable="quotation_date">{{ quotation_date }}</strong>
+            <div class="quote-row"><span>Prepared for</span><strong data-editable="customer_name">Saudi B2B
+                Partners</strong></div>
+            <div class="quote-row"><span>Prepared by</span><strong data-editable="seller_name">Vietnam Safar – Discovery
+                Asia Travel Group</strong></div>
+            <div class="quote-row"><span>Quotation #</span><strong
+                data-editable="quotation_number">VS-KSA-13D-HNNBI-SAP-HL-DADHA-SGNMKD-2026</strong></div>
+            <div class="quote-row"><span>Date</span><strong data-editable="quotation_date">2026-05-14</strong></div>
+            <div class="quote-row"><span>Valid until</span><strong data-editable="valid_until">2026-06-13</strong></div>
+            <div class="quote-row"><span>Contact</span><strong data-editable="contact">safa@vietnamsafar.vn</strong>
             </div>
-            <div class="quote-row"><span>Valid until</span><strong data-editable="valid_until">{{ valid_until
-                }}</strong></div>
-            <div class="quote-row"><span>Contact</span><strong data-editable="contact">{{ contact }}</strong></div>
           </div>
         </aside>
       </div>
@@ -868,93 +741,78 @@
 
     <section class="luxury-strip">
       <div class="container strip-grid">
-        <div class="strip-card"><span>Duration</span><strong data-editable="strip_duration">{{ strip_duration
-            }}</strong></div>
-        <div class="strip-card"><span>Best for</span><strong data-editable="strip_best_for">{{ strip_best_for
-            }}</strong></div>
-        <div class="strip-card"><span>Travel pace</span><strong data-editable="strip_pace">{{ strip_pace }}</strong>
-        </div>
-        <div class="strip-card"><span>Service</span><strong data-editable="strip_service">{{ strip_service }}</strong>
-        </div>
+        <div class="strip-card"><span>Total</span><strong data-editable="grand_total">12430.0 SAR</strong></div>
+        <div class="strip-card"><span>Items</span><strong data-editable="item_count">3</strong></div>
+        <div class="strip-card"><span>Payment</span><strong data-editable="payment_terms">To be confirmed at time of
+            booking. Deposit and balance payment schedule subject to supplier confirmation.</strong></div>
+        <div class="strip-card"><span>Delivery</span><strong data-editable="delivery_terms">Private ground services in
+            Vietnam as per itinerary. Domestic flights are excluded and quoted separately based on
+            availability.</strong></div>
       </div>
     </section>
 
     <section id="overview">
       <div class="container">
         <div class="section-head">
-          <h2 data-editable="overview_h2">{{ overview_h2 }}</h2>
-          <p data-editable="overview_p">{{ overview_p }}</p>
+          <h2 data-editable="overview_heading">Saudi B2B Partners, a premium proposal crafted with care.</h2>
+          <p data-editable="overview_desc">This quotation covers 3 item(s) totalling 12,430.00 SAR.</p>
         </div>
-        <div class="experience-grid">
-          {% for exp in experiences %}
-          <article class="experience">
-            <span class="num" data-editable="exp_num_{{ loop.index }}">{{ exp.num }}</span>
-            <h3 data-editable="exp_title_{{ loop.index }}">{{ exp.title }}</h3>
-            <p data-editable="exp_desc_{{ loop.index }}">{{ exp.desc }}</p>
-          </article>
-          {% endfor %}
-        </div>
-      </div>
-    </section>
+        <div class="itinerary" id="items-list">
 
-    <section id="journey">
-      <div class="container">
-        <div class="section-head">
-          <h2 data-editable="journey_h2">{{ journey_h2 }}</h2>
-          <p data-editable="journey_p">{{ journey_p }}</p>
-        </div>
-        <div class="gallery">
-          <div class="image-tile large" style="background-image: var(--img-1)">
-            <div class="image-caption">
-              <small data-editable="gal1_label">{{ gal1_label }}</small>
-              <strong data-editable="gal1_title">{{ gal1_title }}</strong>
-            </div>
-          </div>
-          <div class="image-tile" style="background-image: var(--img-2)">
-            <div class="image-caption">
-              <small data-editable="gal2_label">{{ gal2_label }}</small>
-              <strong data-editable="gal2_title">{{ gal2_title }}</strong>
-            </div>
-          </div>
-          <div class="image-tile" style="background-image: var(--img-3)">
-            <div class="image-caption">
-              <small data-editable="gal3_label">{{ gal3_label }}</small>
-              <strong data-editable="gal3_title">{{ gal3_title }}</strong>
-            </div>
-          </div>
-          <div class="image-tile" style="background-image: var(--img-4)">
-            <div class="image-caption">
-              <small data-editable="gal4_label">{{ gal4_label }}</small>
-              <strong data-editable="gal4_title">{{ gal4_title }}</strong>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="itinerary">
-      <div class="container">
-        <div class="section-head">
-          <h2 data-editable="itinerary_h2">{{ itinerary_h2 }}</h2>
-          <p data-editable="itinerary_p">{{ itinerary_p }}</p>
-        </div>
-        <div class="itinerary">
-          {% for item in items %}
           <article class="day">
-            <div class="day-label">{{ loop.index }}</div>
+            <div class="day-label">1</div>
             <div>
-              <span class="num" data-editable="item_num_{{ loop.index }}">ITEM {{ loop.index }}</span>
-              <h3 data-editable="item_name_{{ loop.index }}">{{ item.name }}</h3>
-              <p data-editable="item_desc_{{ loop.index }}">{{ item.description or '' }}</p>
+              <span class="num">ITEM 1</span>
+              <h3 data-editable="item_name_1">Grand Journey Through the Best of Vietnam – North to South – 13D12N | 3★
+                Comfort</h3>
+              <p data-editable="item_desc_1">Private halal-friendly Vietnam tour: Hanoi, Ninh Binh, Sapa, Ha Long Bay,
+                Da Nang, Hoi An, Ho Chi Minh City and Mekong Delta. Indicative B2B NET rate from uploaded tour
+                quotation, based on 2 pax sharing, private services and standard season.</p>
             </div>
-            <div class="day-meta">
-              Qty: {{ item.quantity }} {{ item.unit or '' }}<br><br>
-              <span style="font-size:18px;font-family:Georgia,serif">{{ '{:,.0f}'.format(item.unitPrice) }} {{ currency
-                }}</span><br>
-              <span style="font-size:11px">per unit</span>
+            <div class="day-meta"
+              style="background-image:url('/assets/vietnam-safar-logo.png');background-size:cover;background-position:center;border-radius:12px;min-height:80px;display:flex;flex-direction:column;justify-content:flex-end;padding:12px;color:white;text-shadow:0 1px 4px rgba(0,0,0,.6)">
+              Qty: 1.0 pax<br><br>
+              <span style="font-size:18px;font-family:Georgia">3655 SAR</span><br>
+              <span style="color:rgba(255,255,255,.8);font-size:11px">per unit</span>
             </div>
           </article>
-          {% endfor %}
+
+          <article class="day">
+            <div class="day-label">2</div>
+            <div>
+              <span class="num">ITEM 2</span>
+              <h3 data-editable="item_name_2">Grand Journey Through the Best of Vietnam – North to South – 13D12N | 4★
+                Premium</h3>
+              <p data-editable="item_desc_2">Private halal-friendly Vietnam tour: Hanoi, Ninh Binh, Sapa, Ha Long Bay,
+                Da Nang, Hoi An, Ho Chi Minh City and Mekong Delta. Indicative B2B NET rate from uploaded tour
+                quotation, based on 2 pax sharing, private services and standard season.</p>
+            </div>
+            <div class="day-meta"
+              style="background-image:url('/assets/vietnam-safar-logo.png');background-size:cover;background-position:center;border-radius:12px;min-height:80px;display:flex;flex-direction:column;justify-content:flex-end;padding:12px;color:white;text-shadow:0 1px 4px rgba(0,0,0,.6)">
+              Qty: 1.0 pax<br><br>
+              <span style="font-size:18px;font-family:Georgia">4145 SAR</span><br>
+              <span style="color:rgba(255,255,255,.8);font-size:11px">per unit</span>
+            </div>
+          </article>
+
+          <article class="day">
+            <div class="day-label">3</div>
+            <div>
+              <span class="num">ITEM 3</span>
+              <h3 data-editable="item_name_3">Grand Journey Through the Best of Vietnam – North to South – 13D12N | 5★
+                Luxury</h3>
+              <p data-editable="item_desc_3">Private halal-friendly Vietnam tour: Hanoi, Ninh Binh, Sapa, Ha Long Bay,
+                Da Nang, Hoi An, Ho Chi Minh City and Mekong Delta. Indicative B2B NET rate from uploaded tour
+                quotation, based on 2 pax sharing, private services and standard season.</p>
+            </div>
+            <div class="day-meta"
+              style="background-image:url('/assets/vietnam-safar-logo.png');background-size:cover;background-position:center;border-radius:12px;min-height:80px;display:flex;flex-direction:column;justify-content:flex-end;padding:12px;color:white;text-shadow:0 1px 4px rgba(0,0,0,.6)">
+              Qty: 1.0 pax<br><br>
+              <span style="font-size:18px;font-family:Georgia">4630 SAR</span><br>
+              <span style="color:rgba(255,255,255,.8);font-size:11px">per unit</span>
+            </div>
+          </article>
+
         </div>
       </div>
     </section>
@@ -962,78 +820,59 @@
     <section id="quotation">
       <div class="container">
         <div class="pricing">
-          <h2 data-editable="pricing_h2">{{ pricing_h2 }}</h2>
-          <p data-editable="pricing_p">{{ pricing_p }}</p>
+          <h2 data-editable="pricing_heading">Total: 12,430.00 SAR</h2>
+          <p data-editable="pricing_desc">Grand total for all items. Currency: SAR.</p>
           <div class="price-grid">
-            {% if subtotal %}
+
             <div class="price-card">
               <span>Subtotal</span>
-              <strong data-editable="price_subtotal">{{ '{:,.0f}'.format(subtotal) }} {{ currency }}</strong>
-              <small>before tax &amp; discount</small>
+              <strong data-editable="subtotal">12430 SAR</strong>
+              <small>before tax & discount</small>
             </div>
-            {% endif %}
-            {% if tax_total %}
-            <div class="price-card">
-              <span>Tax</span>
-              <strong data-editable="price_tax">{{ '{:,.0f}'.format(tax_total) }} {{ currency }}</strong>
-              <small>total tax</small>
-            </div>
-            {% endif %}
+
+
             <div class="price-card featured">
               <span>Grand Total</span>
-              <strong data-editable="price_grand">{{ '{:,.0f}'.format(grand_total) }} {{ currency }}</strong>
+              <strong data-editable="grand_total_price">12430 SAR</strong>
               <small>final amount</small>
             </div>
           </div>
-          {% if payment_terms %}
-          <p class="subtle" style="margin-top:20px" data-editable="payment_terms">{{ payment_terms }}</p>
-          {% endif %}
-        </div>
-      </div>
-    </section>
 
-    <section>
-      <div class="container two-col">
-        <article class="panel">
-          <h3>Inclusions</h3>
-          <ul id="inclusions-list">
-            {% for line in inclusions %}
-            <li data-editable="inc_{{ loop.index }}">{{ line }}</li>
-            {% endfor %}
-          </ul>
-        </article>
-        <article class="panel">
-          <h3>Exclusions</h3>
-          <ul id="exclusions-list">
-            {% for line in exclusions %}
-            <li data-editable="exc_{{ loop.index }}">{{ line }}</li>
-            {% endfor %}
-          </ul>
-        </article>
+          <p class="subtle" style="margin-top:20px" data-editable="notes">B2B NET rates are quoted per person, based on
+            2 pax sharing, private services, and standard season. Final prices depend on group size, travel dates, hotel
+            and cruise category, and selected upgrades. Single supplement and peak season surcharges may apply. Prices
+            are indicative and subject to reconfirmation at time of booking. Inclusions: private airport transfers,
+            private A/C transportation, accommodation with breakfast, meals as mentioned, sightseeing entrance fees,
+            Hanoi cultural discovery and Train Street, Ninh Binh, Sapa, Fansipan cable car, Ha Long Bay overnight
+            cruise, Ba Na Hills, Marble Mountains, Coconut Forest, Hoi An, Ho Chi Minh City highlights, Mekong Delta,
+            English-speaking guide, halal-friendly meal arrangements. Exclusions: international flights, Vietnam visa,
+            travel insurance, personal expenses, optional activities, domestic flights Hanoi–Da Nang and Da Nang–Ho Chi
+            Minh City.</p>
+
+        </div>
       </div>
     </section>
 
     <section id="terms">
       <div class="container">
         <div class="section-head">
-          <h2>Commercial notes</h2>
-          <p data-editable="terms_p">{{ terms_p }}</p>
+          <h2>Commercial Notes</h2>
+          <p>Terms and conditions applicable to this quotation.</p>
         </div>
         <div class="experience-grid">
           <article class="experience"><span class="num">VALIDITY</span>
-            <h3>Subject to reconfirmation</h3>
-            <p data-editable="terms_validity">Rates are indicative B2B rates and should be reconfirmed at booking stage
-              based on hotel, cruise, guide and transfer availability.</p>
+            <h3 data-editable="valid_until_note">Valid until 2026-06-13</h3>
+            <p>This quotation is valid until the date above. Prices may change after this date.</p>
           </article>
-          <article class="experience"><span class="num">SEASONALITY</span>
-            <h3>Peak dates may vary</h3>
-            <p data-editable="terms_season">Selected upgrades, high season travel and holiday periods may affect the
-              final quotation.</p>
+          <article class="experience"><span class="num">PAYMENT</span>
+            <h3 data-editable="payment_note">To be confirmed at time of booking. Deposit and balance payment schedule
+              subject to supplier confirmation.</h3>
+            <p>Payment terms as specified. Please confirm availability before final booking.</p>
           </article>
-          <article class="experience"><span class="num">UPGRADES</span>
-            <h3>Luxury customization</h3>
-            <p data-editable="terms_upgrades">Suggested upgrades may include 5-star hotels, premium cruise cabins,
-              private dining, wellness add-ons or airport fast-track services.</p>
+          <article class="experience"><span class="num">DELIVERY</span>
+            <h3 data-editable="delivery_note">Private ground services in Vietnam as per itinerary. Domestic flights are
+              excluded and quoted separately based on availability.</h3>
+            <p>Delivery terms as agreed. Final schedule subject to confirmation.</p>
           </article>
         </div>
       </div>
@@ -1044,21 +883,22 @@
         <div class="cta">
           <div>
             <div class="kicker">Next step</div>
-            <h2 data-editable="cta_h2">{{ cta_h2 }}</h2>
-            <p data-editable="cta_p">{{ cta_p }}</p>
+            <h2 data-editable="cta_heading">Ready to confirm?</h2>
+            <p data-editable="cta_desc">Contact us to confirm this quotation, adjust quantities, or request additional
+              services.</p>
           </div>
           <div class="contact">
-            <label>Website</label>
-            <div data-editable="contact_web">{{ contact_web }}</div>
-            <label>WhatsApp</label>
-            <div data-editable="contact_phone">{{ contact_phone }}</div>
-            <label>Prepared by</label>
-            <div data-editable="seller_name2">{{ seller_name }}</div>
-            {% if seller_email %}
-            <div style="margin-top:24px" class="no-print">
-              <a class="btn gold" href="mailto:{{ seller_email }}">Request final confirmation</a>
+            <label>Email</label>
+            <div data-editable="seller_email">safa@vietnamsafar.vn</div>
+            <label>Phone</label>
+            <div data-editable="seller_phone">+84 911 538 738</div>
+            <label>Address</label>
+            <div data-editable="seller_address">Vietnam</div>
+            <div style="margin-top:24px">
+
+              <a class="btn gold" href="mailto:safa@vietnamsafar.vn">Send confirmation</a>
+
             </div>
-            {% endif %}
           </div>
         </div>
       </div>
@@ -1066,22 +906,33 @@
   </main>
 
   <footer class="footer">
-    <div class="container" data-editable="footer_text">{{ footer_text }}</div>
+    <div class="container" data-editable="footer_text">
+      B2B NET rates are quoted per person, based on 2 pax sharing, private services, and standard season. Final prices
+      depend on group size, travel dates, hotel and cruise category, and selected upgrades. Single supplement and peak
+      season surcharges may apply. Prices are indicative and subject to reconfirmation at time of booking. Inclusions:
+      private airport transfers, private A/C transportation, accommodation with breakfast, meals as mentioned,
+      sightseeing entrance fees, Hanoi cultural discovery and Train Street, Ninh Binh, Sapa, Fansipan cable car, Ha Long
+      Bay overnight cruise, Ba Na Hills, Marble Mountains, Coconut Forest, Hoi An, Ho Chi Minh City highlights, Mekong
+      Delta, English-speaking guide, halal-friendly meal arrangements. Exclusions: international flights, Vietnam visa,
+      travel insurance, personal expenses, optional activities, domestic flights Hanoi–Da Nang and Da Nang–Ho Chi Minh
+      City. — Quotation #VS-KSA-13D-HNNBI-SAP-HL-DADHA-SGNMKD-2026 — Vietnam Safar – Discovery Asia Travel Group
+    </div>
   </footer>
 
   <!-- ── Publish Bar ─────────────────────────────────────────── -->
-  <div id="publish-bar" class="no-print">
+  <div id="publish-bar">
     <div class="pb-left">
       <div class="pb-dot"></div>
-      <div class="pb-label">✏️ Editing <strong>{{ quotation_id }}</strong></div>
+      <div class="pb-label">✏️ Editing <strong>quo_f1fc1ef0aa99</strong> — Click any text to edit</div>
     </div>
     <span id="publish-status"></span>
     <button id="btn-publish" onclick="publishPage()">🚀 Publish to Web</button>
   </div>
 
   <script>
-    const QUOTATION_ID = "{{ quotation_id }}";
+    const QUOTATION_ID = "quo_f1fc1ef0aa99";
 
+    // Enable contenteditable on all data-editable elements
     document.querySelectorAll('[data-editable]').forEach(el => {
       el.contentEditable = 'true';
       el.spellcheck = false;
@@ -1090,15 +941,23 @@
     async function publishPage() {
       const btn = document.getElementById('btn-publish');
       const status = document.getElementById('publish-status');
-      const bar = document.getElementById('publish-bar');
 
+      // Temporarily remove publish bar from HTML before capturing
+      const bar = document.getElementById('publish-bar');
       bar.style.display = 'none';
-      document.querySelectorAll('[data-editable]').forEach(el => el.removeAttribute('contenteditable'));
+
+      // Remove contenteditable attributes so published page is static
+      document.querySelectorAll('[data-editable]').forEach(el => {
+        el.removeAttribute('contenteditable');
+      });
 
       const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
 
+      // Restore bar and contenteditable
       bar.style.display = '';
-      document.querySelectorAll('[data-editable]').forEach(el => { el.contentEditable = 'true'; });
+      document.querySelectorAll('[data-editable]').forEach(el => {
+        el.contentEditable = 'true';
+      });
 
       btn.disabled = true;
       btn.textContent = '⏳ Publishing...';
@@ -1111,18 +970,21 @@
           body: JSON.stringify({ html })
         });
         const data = await res.json();
+
         if (data.published_url) {
           status.innerHTML = `✅ <a href="${data.published_url}" target="_blank" style="color:#d8bd85">${data.published_url}</a>`;
           btn.textContent = '🔁 Re-publish';
+          btn.disabled = false;
         } else {
           status.textContent = '❌ ' + (data.detail || 'Publish failed');
           btn.textContent = '🚀 Publish to Web';
+          btn.disabled = false;
         }
       } catch (e) {
-        status.textContent = '❌ ' + e.message;
+        status.textContent = '❌ Network error: ' + e.message;
         btn.textContent = '🚀 Publish to Web';
+        btn.disabled = false;
       }
-      btn.disabled = false;
     }
   </script>
 </body>

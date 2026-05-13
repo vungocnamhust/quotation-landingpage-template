@@ -229,17 +229,8 @@ async def create_quotation(request: Request):
     quotation_id = f"quo_{uuid.uuid4().hex[:12]}"
 
     # ── Extract locations from payload → select images concurrently ─────────────
-    # Locations are derived from item names + notes + delivery terms.
-    # select_landing_image is already async (calls OpenAI), so we gather all at once.
-    location_sources: list[str] = []
-
-    # Hero image: use notes/page title as the primary location hint
-    hero_location = payload.notes or payload.deliveryTerms or payload.customer.name
-    location_sources.append(hero_location)
-
     # Per-item images: use each item's name as location hint
-    for item in payload.items:
-        location_sources.append(item.name)
+    location_sources = [item.name for item in payload.items]
 
     log.debug("[/quotations] Selecting images for %d locations: %s", len(location_sources), location_sources)
 
@@ -249,50 +240,146 @@ async def create_quotation(request: Request):
         return_exceptions=False,
     )
 
-    hero_image_url   = image_urls[0]                        # First = hero
-    item_image_urls  = image_urls[1:]                       # Rest = per-item
+    default_img = "/assets/vietnam-safar-logo.png"
+    
+    # Hero image: Pick a random image from the resolved item images, or default
+    valid_images = [url for url in image_urls if url != default_img]
+    if valid_images:
+        import random
+        hero_image_url = random.choice(valid_images)
+    else:
+        hero_image_url = default_img
 
+    item_image_urls = image_urls
     log.debug("[/quotations] Images resolved: hero=%s  items=%s", hero_image_url, item_image_urls)
 
     # ── Build template context ────────────────────────────────────────────────
     seller = payload.seller
+    seller_name  = seller.companyName if seller else "Vietnam Safar – Discovery Asia Travel Group"
+    seller_email = (seller.email if seller else None) or "sales@vietnamsafar.vn"
+    seller_phone = (seller.phone if seller else None) or "+84 911 538 738"
 
-    # Attach resolved image URL to each item dict
-    items_with_images = []
-    for i, item in enumerate(payload.items):
-        item_dict = item.model_dump()
-        item_dict["image_url"] = item_image_urls[i] if i < len(item_image_urls) else hero_image_url
-        items_with_images.append(item_dict)
+    # Tour title: quotationNumber or short customer description — never raw notes
+    tour_title = (
+        payload.quotationNumber
+        or f"{payload.customer.name} – {payload.currency} {payload.grandTotal:,.0f}"
+    )
+
+    # Gallery: hero = img_0, gallery tiles = img_1..4 (cycle if fewer items)
+    default_img = "/assets/vietnam-safar-logo.png"
+    img_0 = hero_image_url
+    img_1 = image_urls[0] if len(image_urls) > 0 else img_0
+    img_2 = image_urls[1] if len(image_urls) > 1 else img_0
+    img_3 = image_urls[2] if len(image_urls) > 2 else img_1
+    img_4 = image_urls[3] if len(image_urls) > 3 else img_2
+
+    # Gallery captions: use item names as destination labels
+    items_list = payload.items
+    def _item_name(idx: int) -> str:
+        return items_list[idx].name if idx < len(items_list) else ""
+
+    # Parse inclusions / exclusions from notes (lines starting with + / -)
+    # Fallback to generic list if not structured
+    raw_notes = payload.notes or ""
+    inc_lines, exc_lines = [], []
+    for line in raw_notes.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("+"):
+            inc_lines.append(stripped[1:].strip())
+        elif stripped.startswith("-"):
+            exc_lines.append(stripped[1:].strip())
+    # Generic fallbacks
+    if not inc_lines:
+        inc_lines = [
+            "Private airport pick-up and drop-off",
+            "Private air-conditioned transportation throughout",
+            "Accommodation with daily breakfast",
+            "Meals as mentioned in the program",
+            "All sightseeing entrance fees as mentioned",
+            "English-speaking local guide",
+        ]
+    if not exc_lines:
+        exc_lines = [
+            "International flights",
+            "Vietnam visa and visa processing fees",
+            "Travel insurance",
+            "Personal expenses, laundry, beverages and tips",
+            "Optional activities not mentioned in the program",
+        ]
+
+    # Overview experience cards — derive from first 3 items
+    experiences = []
+    for i, item in enumerate(items_list[:3]):
+        experiences.append({
+            "num": f"{i+1:02d}",
+            "title": item.name,
+            "desc":  item.description or f"Premium service: {item.name}.",
+        })
+    while len(experiences) < 3:
+        experiences.append({"num": f"{len(experiences)+1:02d}", "title": "Premium Service", "desc": "Carefully curated service included in this quotation."})
 
     ctx = {
-        "quotation_id":     quotation_id,
-        "page_title":       payload.notes or f"{payload.customer.name} – Quotation",
-        "kicker":           f"Private Quotation • {payload.quotationDate}",
-        "lede":             payload.notes or "A curated quotation prepared exclusively for you.",
-        "hero_image_url":   hero_image_url,
-        "customer_name":    payload.customer.name,
-        "seller_name":      seller.companyName if seller else "Vietnam Safar – Discovery Asia Travel Group",
-        "seller_email":     (seller.email if seller else None) or "sales@vietnamsafar.vn",
-        "seller_phone":     (seller.phone if seller else None) or "+84 911 538 738",
-        "seller_address":   (seller.address if seller else None) or "",
+        "quotation_id":    quotation_id,
+        # Images
+        "img_0":  img_0, "img_1": img_1, "img_2": img_2, "img_3": img_3, "img_4": img_4,
+        # Hero
+        "tour_title":      tour_title,
+        "kicker":          f"Private Luxury Quotation • {payload.quotationDate}",
+        "lede":            payload.deliveryTerms or "A polished, privately guided journey — crafted for discerning travellers who value comfort, cultural depth and seamless pacing.",
+        # Quote card
+        "customer_name":   payload.customer.name,
+        "seller_name":     seller_name,
         "quotation_number": payload.quotationNumber or quotation_id,
-        "quotation_date":   str(payload.quotationDate),
-        "valid_until":      str(payload.validUntil) if payload.validUntil else "On request",
-        "contact":          (seller.email if seller else None) or "www.vietnamsafar.vn",
-        "currency":         payload.currency,
-        "grand_total":      payload.grandTotal,
-        "subtotal":         payload.subtotal,
-        "tax_total":        payload.taxTotal,
-        "item_count":       len(payload.items),
-        "payment_terms":    payload.paymentTerms or "On confirmation",
-        "delivery_terms":   payload.deliveryTerms or "As agreed",
-        "notes":            payload.notes or "",
-        "items":            items_with_images,
-        "overview_heading": f"{payload.customer.name}, a premium proposal crafted with care.",
-        "overview_desc":    f"This quotation covers {len(payload.items)} item(s) totalling {payload.grandTotal:,.2f} {payload.currency}.",
-        "pricing_heading":  f"Total: {payload.grandTotal:,.2f} {payload.currency}",
-        "pricing_desc":     f"Grand total for all items. Currency: {payload.currency}.",
+        "quotation_date":  str(payload.quotationDate),
+        "valid_until":     str(payload.validUntil) if payload.validUntil else "On request",
+        "contact":         f"{seller_phone}",
+        # Strip stats
+        "strip_duration":  f"{len(items_list)}D Tour",
+        "strip_best_for":  "B2B Partners",
+        "strip_pace":      "Relaxed",
+        "strip_service":   "Private",
+        # Overview section
+        "overview_h2":     f"{payload.customer.name}, curated with elegance and ease.",
+        "overview_p":      f"This quotation covers {len(items_list)} service(s) totalling {payload.grandTotal:,.2f} {payload.currency}. Crafted for discerning travellers who expect seamless logistics and private service.",
+        "experiences":     experiences,
+        # Gallery section
+        "journey_h2":      "Destination imagery woven into the quotation.",
+        "journey_p":       "Large cinematic destination panels help the quotation feel like a premium travel proposal.",
+        "gal1_label":      items_list[0].name[:24] if len(items_list) > 0 else "Highlight",
+        "gal1_title":      _item_name(0),
+        "gal2_label":      "Destination",
+        "gal2_title":      _item_name(1),
+        "gal3_label":      "Experience",
+        "gal3_title":      _item_name(2),
+        "gal4_label":      "Journey",
+        "gal4_title":      _item_name(3),
+        # Itinerary
+        "itinerary_h2":    "Detailed service program",
+        "itinerary_p":     f"Your personalised quotation — {len(items_list)} items, {payload.grandTotal:,.2f} {payload.currency} total.",
+        "items":           [i.model_dump() for i in payload.items],
+        "currency":        payload.currency,
+        # Pricing
+        "pricing_h2":      f"B2B net price: {payload.grandTotal:,.2f} {payload.currency}",
+        "pricing_p":       f"Grand total for all services. Currency: {payload.currency}. Final rates subject to reconfirmation.",
+        "grand_total":     payload.grandTotal,
+        "subtotal":        payload.subtotal,
+        "tax_total":       payload.taxTotal,
+        "payment_terms":   payload.paymentTerms or "",
+        # Inclusions / Exclusions
+        "inclusions":      inc_lines,
+        "exclusions":      exc_lines,
+        # Terms
+        "terms_p":         "These notes keep the proposal professional and protect the B2B quotation before services are reconfirmed.",
+        # CTA
+        "cta_h2":          "Confirm dates, then refine the luxury layer.",
+        "cta_p":           "Share travel dates, preferred hotel tier, rooming list and any dietary or mobility requirements. We will reconfirm availability and return a finalized quotation.",
+        "contact_web":     "www.vietnamsafar.vn",
+        "contact_phone":   seller_phone,
+        "seller_email":    seller_email,
+        # Footer
+        "footer_text":     f"{tour_title} — Luxury quotation prepared for {payload.customer.name}.",
     }
+
 
     # ── Register slot in store immediately (status=pending) ─────────────────
     # This lets GET /quotations/{id} respond with a loading page while
@@ -318,10 +405,12 @@ async def create_quotation(request: Request):
 
     # ── Persist draft to filesystem ───────────────────────────────────────────
     # Vercel serverless instances don't share memory between requests.
-    # Writing to published/{id}.draft.html ensures GET /quotations/{id} can
+    # Writing to published/{id}/draft.html ensures GET /quotations/{id} can
     # serve the page even if called from a different serverless instance.
-    draft_path = os.path.join("published", f"{quotation_id}.draft.html")
-    os.makedirs("published", exist_ok=True)
+    quo_dir = os.path.join("published", quotation_id)
+    os.makedirs(quo_dir, exist_ok=True)
+    draft_path = os.path.join(quo_dir, "draft.html")
+    
     loop2 = asyncio.get_event_loop()
     await loop2.run_in_executor(
         None,
@@ -375,7 +464,7 @@ async def get_quotation(quotation_id: str):
         return HTMLResponse(content=entry["html"])
 
     # 2. Fallback: read draft file from filesystem (cross-instance resilience)
-    draft_path = os.path.join("published", f"{quotation_id}.draft.html")
+    draft_path = os.path.join("published", quotation_id, "draft.html")
     if os.path.isfile(draft_path):
         with open(draft_path, "r", encoding="utf-8") as f:
             return HTMLResponse(content=f.read())
@@ -396,9 +485,10 @@ async def publish_quotation(quotation_id: str, body: PublishRequest):
     Does NOT require the in-memory store — quotation_id + html come from the request.
     This makes the endpoint resilient across Vercel serverless instances.
     """
-    # Derive version by counting existing published files for this quotation
+    # Derive version by counting existing published files in the quotation's folder
     import glob
-    existing = glob.glob(os.path.join("published", f"{quotation_id}_v*.html"))
+    quo_dir = os.path.join("published", quotation_id)
+    existing = glob.glob(os.path.join(quo_dir, "v*.html"))
     version  = len(existing) + 1
 
     try:

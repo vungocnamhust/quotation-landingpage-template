@@ -17,7 +17,7 @@ venv/
 .DS_Store
 
 # Draft landing pages (auto-generated, not committed)
-published/*.draft.html
+published/*/draft.html
 
 # IDE
 .idea/

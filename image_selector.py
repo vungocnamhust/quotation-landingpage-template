@@ -42,7 +42,7 @@ Hãy trả về CHỈ ĐÚNG 1 SLUG từ danh sách trên mà không kèm bất 
     
     try:
         response = await client.chat.completions.create(
-            model="gpt-5-nano", # Dùng model nhỏ để tốc độ phản hồi nhanh và rẻ
+            model="gpt-4o-mini", # Dùng model nhỏ để tốc độ phản hồi nhanh và rẻ
             messages=[{"role": "user", "content": prompt}],
             temperature=0,
             max_tokens=10,
