@@ -440,8 +440,8 @@ async def get_quotation_pdf(quotation_id: str):
         return RedirectResponse(url=entry["pdf_url"], status_code=302)
 
     # 2. Production: static pdf.html is on Vercel CDN — redirect there
-    GITHUB_TOKEN_VAL = os.getenv("GITHUB_TOKEN", "")
-    if GITHUB_TOKEN_VAL:
+    ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
+    if ENVIRONMENT == "production":
         static_pdf_url = f"{PUBLIC_BASE_URL}/published/{quotation_id}/pdf.html"
         return RedirectResponse(url=static_pdf_url, status_code=302)
 
