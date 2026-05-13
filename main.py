@@ -366,8 +366,9 @@ async def create_quotation(request: Request):
     # We commit both files now so they are statically served by Vercel CDN.
     published_url: str | None = None
     pdf_static_url: str | None = None
-    GITHUB_TOKEN_VAL = os.getenv("GITHUB_TOKEN", "")
-    if GITHUB_TOKEN_VAL:
+    ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
+    
+    if ENVIRONMENT == "production":
         try:
             # Publish landing page and PDF in parallel
             published_url, pdf_static_url = await asyncio.gather(
@@ -392,8 +393,8 @@ async def create_quotation(request: Request):
             published_url = None
             pdf_static_url = None
 
-    # ── Localhost fallback: persist to disk when no GitHub token ────────────
-    if not published_url:
+    # ── Localhost fallback: persist to disk ────────────
+    if ENVIRONMENT != "production" or not published_url:
         quo_dir = os.path.join("published", quotation_id)
         os.makedirs(quo_dir, exist_ok=True)
         open(os.path.join(quo_dir, "v1.html"),   "w", encoding="utf-8").write(rendered_html)
@@ -409,8 +410,8 @@ async def create_quotation(request: Request):
              quotation_id, payload.customer.name, len(payload.items),
              payload.grandTotal, payload.currency)
 
-    # quotationUrl points directly to the editable static page
-    quotation_url = published_url or f"{PUBLIC_BASE_URL}/published/{quotation_id}/v1.html"
+    # quotationUrl should be the stable permalink API endpoint
+    quotation_url = f"{PUBLIC_BASE_URL}/quotations/{quotation_id}"
     return {
         "quotationId":  quotation_id,
         "status":       "published",

@@ -19,6 +19,47 @@ PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "").rstrip("/")
 GITHUB_API = "https://api.github.com"
 
 
+async def get_next_version(quotation_id: str) -> int:
+    """
+    Fetch the contents of the published/{quotation_id} directory from GitHub API
+    and return the next version number. This ensures cross-instance accuracy on Vercel.
+    """
+    if not GITHUB_TOKEN or not GITHUB_REPO:
+        # Fallback for local dev without tokens
+        import glob
+        existing = glob.glob(os.path.join("published", quotation_id, "v*.html"))
+        return len(existing) + 1
+
+    api_url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/published/{quotation_id}"
+    headers = {
+        "Authorization": f"token {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json",
+        "User-Agent": "quotation-landingpage/1.0",
+    }
+
+    async with httpx.AsyncClient(timeout=10) as client:
+        resp = await client.get(api_url, headers=headers)
+        
+        if resp.status_code == 200:
+            files = resp.json()
+            if isinstance(files, list):
+                versions = [1]
+                for f in files:
+                    name = f.get("name", "")
+                    if name.startswith("v") and name.endswith(".html"):
+                        try:
+                            v_num = int(name[1:-5])
+                            versions.append(v_num + 1)
+                        except ValueError:
+                            pass
+                return max(versions)
+                
+    # If folder doesn't exist or error, start at v1 (or fallback to local disk)
+    import glob
+    existing = glob.glob(os.path.join("published", quotation_id, "v*.html"))
+    return len(existing) + 1
+
+
 async def publish_to_github(quotation_id: str, html_content: str, version: int) -> str:
     """
     Commit published/{quotation_id}_v{version}.html to the GitHub repo.
@@ -60,5 +101,49 @@ async def publish_to_github(quotation_id: str, html_content: str, version: int) 
         raise RuntimeError(f"GitHub API error {resp.status_code}: {resp.text[:200]}")
 
     public_url = f"{PUBLIC_BASE_URL}/published/{quotation_id}/{filename}"
+    log.info("[github] ✓ Committed %s → %s", file_path, public_url)
+    return public_url
+
+
+async def publish_file_to_github(
+    file_path: str,
+    html_content: str,
+    commit_message: str,
+) -> str:
+    """
+    Generic helper: commit any file to GitHub at the given file_path.
+    Returns its public Vercel CDN URL.
+    Used for publishing pdf.html alongside v{n}.html.
+    """
+    if not GITHUB_TOKEN or not GITHUB_REPO:
+        raise ValueError("GITHUB_TOKEN and GITHUB_REPO must be set in environment.")
+
+    api_url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{file_path}"
+    headers = {
+        "Authorization": f"token {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json",
+        "User-Agent": "quotation-landingpage/1.0",
+    }
+
+    encoded = base64.b64encode(html_content.encode("utf-8")).decode("ascii")
+
+    existing_sha: str | None = None
+    async with httpx.AsyncClient(timeout=20) as client:
+        check = await client.get(api_url, headers=headers)
+        if check.status_code == 200:
+            existing_sha = check.json().get("sha")
+            log.info("[github] File exists (sha=%s), will update: %s", existing_sha, file_path)
+
+        body: dict = {"message": commit_message, "content": encoded}
+        if existing_sha:
+            body["sha"] = existing_sha
+
+        resp = await client.put(api_url, headers=headers, json=body)
+
+    if resp.status_code not in (200, 201):
+        log.error("[github] Commit failed %s: %s", resp.status_code, resp.text[:400])
+        raise RuntimeError(f"GitHub API error {resp.status_code}: {resp.text[:200]}")
+
+    public_url = f"{PUBLIC_BASE_URL}/{file_path}"
     log.info("[github] ✓ Committed %s → %s", file_path, public_url)
     return public_url

@@ -4,14 +4,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{{ tour_title }} - Luxury Quotation</title>
+  <title>VNS-VERIFY-PDF - Luxury Quotation</title>
   <style>
     :root {
-      --hero-img: url('{{ img_0 }}');
-      --img-1: url('{{ img_1 }}');
-      --img-2: url('{{ img_2 }}');
-      --img-3: url('{{ img_3 }}');
-      --img-4: url('{{ img_4 }}');
+      --hero-img: url('/assets/mekong/traodoihanghoa.jpg');
+      --img-1: url('/assets/mekong/traodoihanghoa.jpg');
+      --img-2: url('/assets/mekong/traodoihanghoa.jpg');
+      --img-3: url('/assets/mekong/traodoihanghoa.jpg');
+      --img-4: url('/assets/mekong/traodoihanghoa.jpg');
     }
 
     :root {
@@ -830,7 +830,7 @@
           href="#quotation">Quotation</a><a href="#terms">Terms</a>
       </div>
       <div class="nav-actions">
-        <a class="btn dark" href="/quotations/{{ quotation_id }}/pdf" target="_blank" id="btn-pdf-view">📄 PDF Preview</a>
+        <a class="btn dark" href="/quotations/quo_6888020e1500/pdf" target="_blank" id="btn-pdf-view">📄 PDF Preview</a>
         <button class="btn dark" onclick="window.print()" style="background:rgba(23,65,46,.6)">🖨️ Print</button>
       </div>
     </div>
@@ -840,9 +840,9 @@
     <header class="hero">
       <div class="container hero-content">
         <div>
-          <div class="kicker" data-editable="kicker">{{ kicker }}</div>
-          <h1 data-editable="tour_title">{{ tour_title }}</h1>
-          <p class="hero-lede" data-editable="lede">{{ lede }}</p>
+          <div class="kicker" data-editable="kicker">Private Luxury Quotation • 2026-05-14</div>
+          <h1 data-editable="tour_title">VNS-VERIFY-PDF</h1>
+          <p class="hero-lede" data-editable="lede">A polished, privately guided journey — crafted for discerning travellers who value comfort, cultural depth and seamless pacing.</p>
           <div class="hero-actions no-print">
             <a class="btn gold" href="#quotation">View Luxury Rates</a>
             <a class="btn outline" href="#itinerary">Explore the Journey</a>
@@ -851,17 +851,13 @@
         <aside class="quote-card">
           <h2>Quotation Snapshot</h2>
           <div class="quote-list">
-            <div class="quote-row"><span>Prepared for</span><strong data-editable="customer_name">{{ customer_name
-                }}</strong></div>
-            <div class="quote-row"><span>Prepared by</span><strong data-editable="seller_name">{{ seller_name
-                }}</strong></div>
-            <div class="quote-row"><span>Tour code</span><strong data-editable="quotation_number">{{ quotation_number
-                }}</strong></div>
-            <div class="quote-row"><span>Date</span><strong data-editable="quotation_date">{{ quotation_date }}</strong>
+            <div class="quote-row"><span>Prepared for</span><strong data-editable="customer_name">Final Verify</strong></div>
+            <div class="quote-row"><span>Prepared by</span><strong data-editable="seller_name">Vietnam Safar – Discovery Asia Travel Group</strong></div>
+            <div class="quote-row"><span>Tour code</span><strong data-editable="quotation_number">VNS-VERIFY-PDF</strong></div>
+            <div class="quote-row"><span>Date</span><strong data-editable="quotation_date">2026-05-14</strong>
             </div>
-            <div class="quote-row"><span>Valid until</span><strong data-editable="valid_until">{{ valid_until
-                }}</strong></div>
-            <div class="quote-row"><span>Contact</span><strong data-editable="contact">{{ contact }}</strong></div>
+            <div class="quote-row"><span>Valid until</span><strong data-editable="valid_until">On request</strong></div>
+            <div class="quote-row"><span>Contact</span><strong data-editable="contact">+84 911 538 738</strong></div>
           </div>
         </aside>
       </div>
@@ -869,13 +865,11 @@
 
     <section class="luxury-strip">
       <div class="container strip-grid">
-        <div class="strip-card"><span>Duration</span><strong data-editable="strip_duration">{{ strip_duration
-            }}</strong></div>
-        <div class="strip-card"><span>Best for</span><strong data-editable="strip_best_for">{{ strip_best_for
-            }}</strong></div>
-        <div class="strip-card"><span>Travel pace</span><strong data-editable="strip_pace">{{ strip_pace }}</strong>
+        <div class="strip-card"><span>Duration</span><strong data-editable="strip_duration">1D Tour</strong></div>
+        <div class="strip-card"><span>Best for</span><strong data-editable="strip_best_for">B2B Partners</strong></div>
+        <div class="strip-card"><span>Travel pace</span><strong data-editable="strip_pace">Relaxed</strong>
         </div>
-        <div class="strip-card"><span>Service</span><strong data-editable="strip_service">{{ strip_service }}</strong>
+        <div class="strip-card"><span>Service</span><strong data-editable="strip_service">Private</strong>
         </div>
       </div>
     </section>
@@ -883,17 +877,29 @@
     <section id="overview">
       <div class="container">
         <div class="section-head">
-          <h2 data-editable="overview_h2">{{ overview_h2 }}</h2>
-          <p data-editable="overview_p">{{ overview_p }}</p>
+          <h2 data-editable="overview_h2">Final Verify, curated with elegance and ease.</h2>
+          <p data-editable="overview_p">This quotation covers 1 service(s) totalling 650.00 USD. Crafted for discerning travellers who expect seamless logistics and private service.</p>
         </div>
         <div class="experience-grid">
-          {% for exp in experiences %}
+          
           <article class="experience">
-            <span class="num" data-editable="exp_num_{{ loop.index }}">{{ exp.num }}</span>
-            <h3 data-editable="exp_title_{{ loop.index }}">{{ exp.title }}</h3>
-            <p data-editable="exp_desc_{{ loop.index }}">{{ exp.desc }}</p>
+            <span class="num" data-editable="exp_num_1">01</span>
+            <h3 data-editable="exp_title_1">Mekong Delta</h3>
+            <p data-editable="exp_desc_1">Premium service: Mekong Delta.</p>
           </article>
-          {% endfor %}
+          
+          <article class="experience">
+            <span class="num" data-editable="exp_num_2">02</span>
+            <h3 data-editable="exp_title_2">Premium Service</h3>
+            <p data-editable="exp_desc_2">Carefully curated service included in this quotation.</p>
+          </article>
+          
+          <article class="experience">
+            <span class="num" data-editable="exp_num_3">03</span>
+            <h3 data-editable="exp_title_3">Premium Service</h3>
+            <p data-editable="exp_desc_3">Carefully curated service included in this quotation.</p>
+          </article>
+          
         </div>
       </div>
     </section>
@@ -901,32 +907,32 @@
     <section id="journey">
       <div class="container">
         <div class="section-head">
-          <h2 data-editable="journey_h2">{{ journey_h2 }}</h2>
-          <p data-editable="journey_p">{{ journey_p }}</p>
+          <h2 data-editable="journey_h2">Destination imagery woven into the quotation.</h2>
+          <p data-editable="journey_p">Large cinematic destination panels help the quotation feel like a premium travel proposal.</p>
         </div>
         <div class="gallery">
           <div class="image-tile large" style="background-image: var(--img-1)">
             <div class="image-caption">
-              <small data-editable="gal1_label">{{ gal1_label }}</small>
-              <strong data-editable="gal1_title">{{ gal1_title }}</strong>
+              <small data-editable="gal1_label">Mekong Delta</small>
+              <strong data-editable="gal1_title">Mekong Delta</strong>
             </div>
           </div>
           <div class="image-tile" style="background-image: var(--img-2)">
             <div class="image-caption">
-              <small data-editable="gal2_label">{{ gal2_label }}</small>
-              <strong data-editable="gal2_title">{{ gal2_title }}</strong>
+              <small data-editable="gal2_label">Destination</small>
+              <strong data-editable="gal2_title"></strong>
             </div>
           </div>
           <div class="image-tile" style="background-image: var(--img-3)">
             <div class="image-caption">
-              <small data-editable="gal3_label">{{ gal3_label }}</small>
-              <strong data-editable="gal3_title">{{ gal3_title }}</strong>
+              <small data-editable="gal3_label">Experience</small>
+              <strong data-editable="gal3_title"></strong>
             </div>
           </div>
           <div class="image-tile" style="background-image: var(--img-4)">
             <div class="image-caption">
-              <small data-editable="gal4_label">{{ gal4_label }}</small>
-              <strong data-editable="gal4_title">{{ gal4_title }}</strong>
+              <small data-editable="gal4_label">Journey</small>
+              <strong data-editable="gal4_title"></strong>
             </div>
           </div>
         </div>
@@ -936,26 +942,25 @@
     <section id="itinerary">
       <div class="container">
         <div class="section-head">
-          <h2 data-editable="itinerary_h2">{{ itinerary_h2 }}</h2>
-          <p data-editable="itinerary_p">{{ itinerary_p }}</p>
+          <h2 data-editable="itinerary_h2">Detailed service program</h2>
+          <p data-editable="itinerary_p">Your personalised quotation — 1 items, 650.00 USD total.</p>
         </div>
         <div class="itinerary">
-          {% for item in items %}
+          
           <article class="day">
-            <div class="day-label">{{ loop.index }}</div>
+            <div class="day-label">1</div>
             <div>
-              <span class="num" data-editable="item_num_{{ loop.index }}">ITEM {{ loop.index }}</span>
-              <h3 data-editable="item_name_{{ loop.index }}">{{ item.name }}</h3>
-              <p data-editable="item_desc_{{ loop.index }}">{{ item.description or '' }}</p>
+              <span class="num" data-editable="item_num_1">ITEM 1</span>
+              <h3 data-editable="item_name_1">Mekong Delta</h3>
+              <p data-editable="item_desc_1"></p>
             </div>
             <div class="day-meta">
-              Qty: {{ item.quantity }} {{ item.unit or '' }}<br><br>
-              <span style="font-size:18px;font-family:Georgia,serif">{{ '{:,.0f}'.format(item.unitPrice) }} {{ currency
-                }}</span><br>
+              Qty: 1.0 <br><br>
+              <span style="font-size:18px;font-family:Georgia,serif">650 USD</span><br>
               <span style="font-size:11px">per unit</span>
             </div>
           </article>
-          {% endfor %}
+          
         </div>
       </div>
     </section>
@@ -963,32 +968,18 @@
     <section id="quotation">
       <div class="container">
         <div class="pricing">
-          <h2 data-editable="pricing_h2">{{ pricing_h2 }}</h2>
-          <p data-editable="pricing_p">{{ pricing_p }}</p>
+          <h2 data-editable="pricing_h2">B2B net price: 650.00 USD</h2>
+          <p data-editable="pricing_p">Grand total for all services. Currency: USD. Final rates subject to reconfirmation.</p>
           <div class="price-grid">
-            {% if subtotal %}
-            <div class="price-card">
-              <span>Subtotal</span>
-              <strong data-editable="price_subtotal">{{ '{:,.0f}'.format(subtotal) }} {{ currency }}</strong>
-              <small>before tax &amp; discount</small>
-            </div>
-            {% endif %}
-            {% if tax_total %}
-            <div class="price-card">
-              <span>Tax</span>
-              <strong data-editable="price_tax">{{ '{:,.0f}'.format(tax_total) }} {{ currency }}</strong>
-              <small>total tax</small>
-            </div>
-            {% endif %}
+            
+            
             <div class="price-card featured">
               <span>Grand Total</span>
-              <strong data-editable="price_grand">{{ '{:,.0f}'.format(grand_total) }} {{ currency }}</strong>
+              <strong data-editable="price_grand">650 USD</strong>
               <small>final amount</small>
             </div>
           </div>
-          {% if payment_terms %}
-          <p class="subtle" style="margin-top:20px" data-editable="payment_terms">{{ payment_terms }}</p>
-          {% endif %}
+          
         </div>
       </div>
     </section>
@@ -998,17 +989,35 @@
         <article class="panel">
           <h3>Inclusions</h3>
           <ul id="inclusions-list">
-            {% for line in inclusions %}
-            <li data-editable="inc_{{ loop.index }}">{{ line }}</li>
-            {% endfor %}
+            
+            <li data-editable="inc_1">Private airport pick-up and drop-off</li>
+            
+            <li data-editable="inc_2">Private air-conditioned transportation throughout</li>
+            
+            <li data-editable="inc_3">Accommodation with daily breakfast</li>
+            
+            <li data-editable="inc_4">Meals as mentioned in the program</li>
+            
+            <li data-editable="inc_5">All sightseeing entrance fees as mentioned</li>
+            
+            <li data-editable="inc_6">English-speaking local guide</li>
+            
           </ul>
         </article>
         <article class="panel">
           <h3>Exclusions</h3>
           <ul id="exclusions-list">
-            {% for line in exclusions %}
-            <li data-editable="exc_{{ loop.index }}">{{ line }}</li>
-            {% endfor %}
+            
+            <li data-editable="exc_1">International flights</li>
+            
+            <li data-editable="exc_2">Vietnam visa and visa processing fees</li>
+            
+            <li data-editable="exc_3">Travel insurance</li>
+            
+            <li data-editable="exc_4">Personal expenses, laundry, beverages and tips</li>
+            
+            <li data-editable="exc_5">Optional activities not mentioned in the program</li>
+            
           </ul>
         </article>
       </div>
@@ -1018,7 +1027,7 @@
       <div class="container">
         <div class="section-head">
           <h2>Commercial notes</h2>
-          <p data-editable="terms_p">{{ terms_p }}</p>
+          <p data-editable="terms_p">These notes keep the proposal professional and protect the B2B quotation before services are reconfirmed.</p>
         </div>
         <div class="experience-grid">
           <article class="experience"><span class="num">VALIDITY</span>
@@ -1045,21 +1054,21 @@
         <div class="cta">
           <div>
             <div class="kicker">Next step</div>
-            <h2 data-editable="cta_h2">{{ cta_h2 }}</h2>
-            <p data-editable="cta_p">{{ cta_p }}</p>
+            <h2 data-editable="cta_h2">Confirm dates, then refine the luxury layer.</h2>
+            <p data-editable="cta_p">Share travel dates, preferred hotel tier, rooming list and any dietary or mobility requirements. We will reconfirm availability and return a finalized quotation.</p>
           </div>
           <div class="contact">
             <label>Website</label>
-            <div data-editable="contact_web">{{ contact_web }}</div>
+            <div data-editable="contact_web">www.vietnamsafar.vn</div>
             <label>WhatsApp</label>
-            <div data-editable="contact_phone">{{ contact_phone }}</div>
+            <div data-editable="contact_phone">+84 911 538 738</div>
             <label>Prepared by</label>
-            <div data-editable="seller_name2">{{ seller_name }}</div>
-            {% if seller_email %}
+            <div data-editable="seller_name2">Vietnam Safar – Discovery Asia Travel Group</div>
+            
             <div style="margin-top:24px" class="no-print">
-              <a class="btn gold" href="mailto:{{ seller_email }}">Request final confirmation</a>
+              <a class="btn gold" href="mailto:sales@vietnamsafar.vn">Request final confirmation</a>
             </div>
-            {% endif %}
+            
           </div>
         </div>
       </div>
@@ -1067,17 +1076,17 @@
   </main>
 
   <footer class="footer">
-    <div class="container" data-editable="footer_text">{{ footer_text }}</div>
+    <div class="container" data-editable="footer_text">VNS-VERIFY-PDF — Luxury quotation prepared for Final Verify.</div>
   </footer>
 
   <!-- ── Publish Bar ─────────────────────────────────────────── -->
   <div id="publish-bar" class="no-print">
     <div class="pb-left">
       <div class="pb-dot"></div>
-      <div class="pb-label">✏️ Editing <strong>{{ quotation_id }}</strong></div>
+      <div class="pb-label">✏️ Editing <strong>quo_6888020e1500</strong></div>
     </div>
     <span id="publish-status"></span>
-    <a id="btn-pdf" href="/quotations/{{ quotation_id }}/pdf" target="_blank"
+    <a id="btn-pdf" href="/quotations/quo_6888020e1500/pdf" target="_blank"
        style="background:rgba(183,137,75,.18);border:1px solid rgba(183,137,75,.5);color:#d8bd85;
               border-radius:999px;padding:11px 22px;font-weight:700;font-size:12px;
               letter-spacing:.08em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
@@ -1090,7 +1099,7 @@
   </div>
 
   <script>
-    const QUOTATION_ID = "{{ quotation_id }}";
+    const QUOTATION_ID = "quo_6888020e1500";
 
     document.querySelectorAll('[data-editable]').forEach(el => {
       el.contentEditable = 'true';
