@@ -204,7 +204,7 @@ class QuotationPayload(BaseModel):
 
 # ── Context builder (pure fn — no I/O) ───────────────────────────────────────
 
-def _build_ctx(quotation_id, payload, hero_image_url, image_urls):
+def _build_ctx(quotation_id, payload, hero_image_url, destinations: list[dict]):
     """Build template context. Shared by /quotations (landingpage) and /quotations/{id}/pdf."""
     default_img = "/assets/vietnam-safar-logo.png"
     seller = payload.seller
@@ -212,11 +212,17 @@ def _build_ctx(quotation_id, payload, hero_image_url, image_urls):
     seller_email = (seller.email if seller else None) or "sales@vietnamsafar.vn"
     seller_phone = (seller.phone if seller else None) or "+84 911 538 738"
     tour_title = payload.quotationNumber or f"{payload.customer.name} \u2013 {payload.currency} {payload.grandTotal:,.0f}"
+    
+    # destinations list contains dicts with "name", "slug", "image_url"
+    def _d_img(i): return destinations[i].get("image_url", default_img) if i < len(destinations) else default_img
+    def _d_name(i): return destinations[i].get("name", "") if i < len(destinations) else ""
+    
     img_0 = hero_image_url
-    img_1 = image_urls[0] if len(image_urls) > 0 else img_0
-    img_2 = image_urls[1] if len(image_urls) > 1 else img_0
-    img_3 = image_urls[2] if len(image_urls) > 2 else img_1
-    img_4 = image_urls[3] if len(image_urls) > 3 else img_2
+    img_1 = _d_img(0)
+    img_2 = _d_img(1)
+    img_3 = _d_img(2)
+    img_4 = _d_img(3)
+    
     items_list = payload.items
     def _n(i): return items_list[i].name if i < len(items_list) else ""
     raw_notes = payload.notes or ""
@@ -256,9 +262,9 @@ def _build_ctx(quotation_id, payload, hero_image_url, image_urls):
         "experiences": experiences,
         "journey_h2": "Destination imagery woven into the quotation.",
         "journey_p": "Large cinematic destination panels help the quotation feel like a premium travel proposal.",
-        "gal1_label": items_list[0].name[:24] if items_list else "Highlight",
-        "gal1_title": _n(0), "gal2_label": "Destination", "gal2_title": _n(1),
-        "gal3_label": "Experience", "gal3_title": _n(2), "gal4_label": "Journey", "gal4_title": _n(3),
+        "gal1_label": "Highlight" if len(destinations) > 0 else "Destination",
+        "gal1_title": _d_name(0), "gal2_label": "Destination", "gal2_title": _d_name(1),
+        "gal3_label": "Experience", "gal3_title": _d_name(2), "gal4_label": "Journey", "gal4_title": _d_name(3),
         "itinerary_h2": "Detailed service program",
         "itinerary_p": f"Your personalised quotation \u2014 {len(items_list)} items, {payload.grandTotal:,.2f} {payload.currency} total.",
         "items": [i.model_dump() for i in payload.items], "currency": payload.currency,
@@ -313,31 +319,34 @@ async def create_quotation(request: Request):
 
     quotation_id = f"quo_{uuid.uuid4().hex[:12]}"
 
-    # ── Extract locations from payload → select images concurrently ─────────────
-    # Per-item images: use each item's name as location hint
-    location_sources = [item.name for item in payload.items]
+    # ── Extract exact destinations from payload text for the gallery ─────────────
+    # Combine item names, descriptions, and notes for context
+    text_context = " ".join([f"{i.name} {i.description or ''}" for i in payload.items])
+    if payload.notes:
+        text_context += " " + payload.notes
 
-    log.debug("[/quotations] Selecting images for %d locations: %s", len(location_sources), location_sources)
+    from image_selector import extract_and_map_destinations, get_random_image_for_province
+    destinations = await extract_and_map_destinations(text_context, max_items=4)
+    
+    # Resolve image urls for each destination
+    for d in destinations:
+        d["image_url"] = get_random_image_for_province(d.get("slug"))
 
-    # Run all LLM image lookups in parallel — no blocking
-    image_urls: list[str] = await asyncio.gather(
-        *[select_landing_image(loc) for loc in location_sources],
-        return_exceptions=False,
-    )
+    log.debug("[/quotations] Extracted destinations: %s", destinations)
 
     default_img = "/assets/vietnam-safar-logo.png"
     
-    # Hero image: Pick a random image from the resolved item images, or default
-    valid_images = [url for url in image_urls if url != default_img]
+    # Hero image: Pick a random image from the resolved destinations, or default
+    valid_images = [d["image_url"] for d in destinations if d.get("image_url") != default_img]
     if valid_images:
         import random
         hero_image_url = random.choice(valid_images)
     else:
         hero_image_url = default_img
 
-    log.debug("[/quotations] Images resolved: hero=%s  items=%s", hero_image_url, image_urls)
+    log.debug("[/quotations] Hero image resolved: %s", hero_image_url)
 
-    ctx = _build_ctx(quotation_id, payload, hero_image_url, image_urls)
+    ctx = _build_ctx(quotation_id, payload, hero_image_url, destinations)
 
     # ── Render landing page HTML ───────────────────────────────────────────────
     loop = asyncio.get_event_loop()
@@ -498,15 +507,28 @@ async def publish_quotation(quotation_id: str, body: PublishRequest):
     from github_publish import get_next_version, publish_to_github
     version = await get_next_version(quotation_id)
 
-    try:
-        published_url = await publish_to_github(
-            quotation_id=quotation_id,
-            html_content=body.html,
-            version=version,
-        )
-    except Exception as exc:
-        log.exception("[publish] Failed for %s", quotation_id)
-        raise HTTPException(status_code=502, detail=str(exc))
+    ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
+    
+    if ENVIRONMENT == "production":
+        try:
+            published_url = await publish_to_github(
+                quotation_id=quotation_id,
+                html_content=body.html,
+                version=version,
+            )
+        except Exception as exc:
+            log.exception("[publish] Failed for %s", quotation_id)
+            raise HTTPException(status_code=502, detail=str(exc))
+    else:
+        # Localhost: write to disk
+        quo_dir = os.path.join("published", quotation_id)
+        os.makedirs(quo_dir, exist_ok=True)
+        filename = f"v{version}.html"
+        file_path = os.path.join(quo_dir, filename)
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(body.html)
+        published_url = f"{PUBLIC_BASE_URL}/published/{quotation_id}/{filename}"
+        log.info("[publish] Localhost: wrote to disk %s", file_path)
 
     # Update in-memory store if entry exists (same instance flow)
     entry = quotations.get(quotation_id)

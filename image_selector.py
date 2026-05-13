@@ -28,16 +28,17 @@ async def get_province_slug_for_location(location: str) -> str | None:
         return None
 
     prompt = f"""
-Bạn là một chuyên gia về địa lý du lịch Việt Nam. Nhiệm vụ của bạn là ánh xạ một địa danh, địa điểm hoặc điểm du lịch được cung cấp sang tên của một trong 63 tỉnh/thành phố của Việt Nam tương ứng với địa điểm đó.
+Bạn là một chuyên gia về địa lý du lịch Việt Nam. Nhiệm vụ của bạn là đọc đoạn văn bản cung cấp và tìm ra địa danh du lịch nổi bật nhất được nhắc đến. Sau đó, ánh xạ địa danh đó sang TÊN SLUG của 1 trong 63 tỉnh/thành phố của Việt Nam.
 
-Đặc biệt nếu là miền tây thì hãy trả về mekong
+Đặc biệt nếu nhắc đến các tỉnh miền Tây (Mekong Delta), hãy ưu tiên trả về "mekong".
+Nếu đoạn văn chứa nhiều địa điểm (ví dụ: Hà Nội, Sapa, Đà Nẵng), hãy TỰ ĐỘNG CHỌN NGẪU NHIÊN 1 địa điểm trong số đó để ánh xạ sang slug.
 
-Danh sách các tỉnh/thành (dạng slug):
+Danh sách các slug hợp lệ:
 {', '.join(PROVINCES)}
 
-Địa điểm đầu vào: "{location}"
+Đoạn văn bản đầu vào: "{location}"
 
-Hãy trả về CHỈ ĐÚNG 1 SLUG từ danh sách trên mà không kèm bất kỳ lời giải thích, dấu câu hay nội dung nào khác. Nếu không thể xác định, hãy trả về chữ "unknown".
+Hãy trả về CHỈ ĐÚNG 1 SLUG từ danh sách trên mà không kèm bất kỳ lời giải thích, dấu câu hay nội dung nào khác. Nếu hoàn toàn không có địa danh nào, hãy trả về "unknown".
     """
     
     try:
@@ -56,6 +57,43 @@ Hãy trả về CHỈ ĐÚNG 1 SLUG từ danh sách trên mà không kèm bất 
     except Exception as e:
         print(f"[Error] Mapping location failed: {e}")
         return None
+
+async def extract_and_map_destinations(text: str, max_items: int = 4) -> list[dict[str, str]]:
+    """
+    Đọc toàn bộ văn bản (tour info), trích xuất ra danh sách các điểm đến cụ thể
+    và ánh xạ chính xác mỗi điểm đến với slug của tỉnh tương ứng.
+    Trả về list: [{"name": "Hà Nội", "slug": "ha-noi"}, ...]
+    """
+    prompt = f"""
+Bạn là chuyên gia du lịch Việt Nam. Hãy đọc đoạn văn bản sau và trích xuất ra {max_items} địa điểm/tỉnh thành NỔI BẬT NHẤT xuất hiện trong văn bản.
+Với mỗi địa điểm, hãy cung cấp tên hiển thị (name) và mã slug tương ứng thuộc danh sách 63 tỉnh/thành.
+
+Danh sách slug hợp lệ:
+{', '.join(PROVINCES)}
+
+Lưu ý:
+- Tên hiển thị (name) nên ngắn gọn, ví dụ "Hà Nội", "Vịnh Hạ Long", "Sapa", "Hội An".
+- Slug (slug) PHẢI nằm trong danh sách slug trên. (Ví dụ Sapa -> lao-cai, Hạ Long -> quang-ninh).
+
+Văn bản:
+"{text}"
+
+Hãy trả về ĐÚNG MỘT object JSON có chứa 1 key là "destinations". Key này trỏ tới một array, mỗi element là một object có 2 key "name" và "slug".
+"""
+    try:
+        response = await client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0,
+            response_format={"type": "json_object"}
+        )
+        import json
+        content = response.choices[0].message.content
+        data = json.loads(content)
+        return data.get("destinations", [])
+    except Exception as e:
+        print(f"[Error] Extract destinations failed: {e}")
+        return []
 
 def get_random_image_for_province(province_slug: str | None, assets_dir: str = "assets") -> str:
     """

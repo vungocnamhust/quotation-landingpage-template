@@ -24,8 +24,9 @@ async def get_next_version(quotation_id: str) -> int:
     Fetch the contents of the published/{quotation_id} directory from GitHub API
     and return the next version number. This ensures cross-instance accuracy on Vercel.
     """
-    if not GITHUB_TOKEN or not GITHUB_REPO:
-        # Fallback for local dev without tokens
+    ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
+    if ENVIRONMENT != "production" or not GITHUB_TOKEN or not GITHUB_REPO:
+        # Fallback for local dev
         import glob
         existing = glob.glob(os.path.join("published", quotation_id, "v*.html"))
         return len(existing) + 1
