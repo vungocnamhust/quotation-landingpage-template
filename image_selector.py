@@ -1,8 +1,10 @@
+from dotenv import load_dotenv
 import os
 import random
 from openai import AsyncOpenAI
 
 # Initialize OpenAI client (make sure OPENAI_API_KEY is set in your environment variables)
+load_dotenv()
 client = AsyncOpenAI()
 
 PROVINCES = [
@@ -11,7 +13,7 @@ PROVINCES = [
     "da-nang", "dak-lak", "dak-nong", "dien-bien", "dong-nai", "dong-thap", "gia-lai", 
     "ha-giang", "ha-nam", "ha-noi", "ha-tinh", "hai-duong", "hai-phong", "hau-giang", 
     "hoa-binh", "hung-yen", "khanh-hoa", "kien-giang", "kon-tum", "lai-chau", "lang-son", 
-    "lao-cai", "lam-dong", "long-an", "nam-dinh", "nghe-an", "ninh-binh", "ninh-thuan", 
+    "lao-cai", "lam-dong", "long-an", "mekong", "nam-dinh", "nghe-an", "ninh-binh", "ninh-thuan", 
     "phu-tho", "phu-yen", "quang-binh", "quang-nam", "quang-ngai", "quang-ninh", "quang-tri", 
     "soc-trang", "son-la", "tay-ninh", "thai-binh", "thai-nguyen", "thanh-hoa", "thua-thien-hue", 
     "tien-giang", "ho-chi-minh", "tra-vinh", "tuyen-quang", "vinh-long", "vinh-phuc", "yen-bai"
@@ -26,7 +28,9 @@ async def get_province_slug_for_location(location: str) -> str | None:
         return None
 
     prompt = f"""
-Bạn là một chuyên gia về địa lý du lịch Việt Nam. Nhiệm vụ của bạn là ánh xạ một địa danh, địa điểm hoặc điểm du lịch được cung cấp sang tên của một trong 63 tỉnh/thành phố trực thuộc trung ương của Việt Nam tương ứng với địa điểm đó.
+Bạn là một chuyên gia về địa lý du lịch Việt Nam. Nhiệm vụ của bạn là ánh xạ một địa danh, địa điểm hoặc điểm du lịch được cung cấp sang tên của một trong 63 tỉnh/thành phố của Việt Nam tương ứng với địa điểm đó.
+
+Đặc biệt nếu là miền tây thì hãy trả về mekong
 
 Danh sách các tỉnh/thành (dạng slug):
 {', '.join(PROVINCES)}
@@ -38,7 +42,7 @@ Hãy trả về CHỈ ĐÚNG 1 SLUG từ danh sách trên mà không kèm bất 
     
     try:
         response = await client.chat.completions.create(
-            model="gpt-4o-mini", # Dùng model nhỏ để tốc độ phản hồi nhanh và rẻ
+            model="gpt-5-nano", # Dùng model nhỏ để tốc độ phản hồi nhanh và rẻ
             messages=[{"role": "user", "content": prompt}],
             temperature=0,
             max_tokens=10,

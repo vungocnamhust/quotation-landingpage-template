@@ -25,3 +25,4 @@ published/*.draft.html
 
 # Logs
 *.log
+.env
