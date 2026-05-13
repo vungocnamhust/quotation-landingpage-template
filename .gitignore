@@ -1,0 +1,27 @@
+# Environment — never commit real secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# macOS
+.DS_Store
+
+# Draft landing pages (auto-generated, not committed)
+published/*.draft.html
+
+# IDE
+.idea/
+.vscode/
+
+# Logs
+*.log
