@@ -14,7 +14,7 @@ from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel, ValidationError
 from typing import List, Optional
 from datetime import date
-from github_publish import publish_to_github
+from github_publish import publish_to_github, publish_file_to_github
 from image_selector import select_landing_image
 
 load_dotenv()
@@ -202,7 +202,92 @@ class QuotationPayload(BaseModel):
     source:          Optional[str]   = None
 
 
-# ── Endpoint ─────────────────────────────────────────────────────────────────
+# ── Context builder (pure fn — no I/O) ───────────────────────────────────────
+
+def _build_ctx(quotation_id, payload, hero_image_url, image_urls):
+    """Build template context. Shared by /quotations (landingpage) and /quotations/{id}/pdf."""
+    default_img = "/assets/vietnam-safar-logo.png"
+    seller = payload.seller
+    seller_name  = seller.companyName if seller else "Vietnam Safar \u2013 Discovery Asia Travel Group"
+    seller_email = (seller.email if seller else None) or "sales@vietnamsafar.vn"
+    seller_phone = (seller.phone if seller else None) or "+84 911 538 738"
+    tour_title = payload.quotationNumber or f"{payload.customer.name} \u2013 {payload.currency} {payload.grandTotal:,.0f}"
+    img_0 = hero_image_url
+    img_1 = image_urls[0] if len(image_urls) > 0 else img_0
+    img_2 = image_urls[1] if len(image_urls) > 1 else img_0
+    img_3 = image_urls[2] if len(image_urls) > 2 else img_1
+    img_4 = image_urls[3] if len(image_urls) > 3 else img_2
+    items_list = payload.items
+    def _n(i): return items_list[i].name if i < len(items_list) else ""
+    raw_notes = payload.notes or ""
+    inc_lines, exc_lines = [], []
+    for line in raw_notes.splitlines():
+        s = line.strip()
+        if s.startswith("+"): inc_lines.append(s[1:].strip())
+        elif s.startswith("-"): exc_lines.append(s[1:].strip())
+    if not inc_lines:
+        inc_lines = ["Private airport pick-up and drop-off","Private air-conditioned transportation throughout",
+                     "Accommodation with daily breakfast","Meals as mentioned in the program",
+                     "All sightseeing entrance fees as mentioned","English-speaking local guide"]
+    if not exc_lines:
+        exc_lines = ["International flights","Vietnam visa and visa processing fees",
+                     "Travel insurance","Personal expenses, laundry, beverages and tips",
+                     "Optional activities not mentioned in the program"]
+    experiences = [{"num": f"{i+1:02d}", "title": it.name, "desc": it.description or f"Premium service: {it.name}."}
+                   for i, it in enumerate(items_list[:3])]
+    while len(experiences) < 3:
+        experiences.append({"num": f"{len(experiences)+1:02d}", "title": "Premium Service",
+                            "desc": "Carefully curated service included in this quotation."})
+    return {
+        "quotation_id": quotation_id,
+        "img_0": img_0, "img_1": img_1, "img_2": img_2, "img_3": img_3, "img_4": img_4,
+        "tour_title": tour_title,
+        "kicker": f"Private Luxury Quotation \u2022 {payload.quotationDate}",
+        "lede": payload.deliveryTerms or "A polished, privately guided journey \u2014 crafted for discerning travellers who value comfort, cultural depth and seamless pacing.",
+        "customer_name": payload.customer.name, "seller_name": seller_name,
+        "quotation_number": payload.quotationNumber or quotation_id,
+        "quotation_date": str(payload.quotationDate),
+        "valid_until": str(payload.validUntil) if payload.validUntil else "On request",
+        "contact": seller_phone,
+        "strip_duration": f"{len(items_list)}D Tour", "strip_best_for": "B2B Partners",
+        "strip_pace": "Relaxed", "strip_service": "Private",
+        "overview_h2": f"{payload.customer.name}, curated with elegance and ease.",
+        "overview_p": f"This quotation covers {len(items_list)} service(s) totalling {payload.grandTotal:,.2f} {payload.currency}. Crafted for discerning travellers who expect seamless logistics and private service.",
+        "experiences": experiences,
+        "journey_h2": "Destination imagery woven into the quotation.",
+        "journey_p": "Large cinematic destination panels help the quotation feel like a premium travel proposal.",
+        "gal1_label": items_list[0].name[:24] if items_list else "Highlight",
+        "gal1_title": _n(0), "gal2_label": "Destination", "gal2_title": _n(1),
+        "gal3_label": "Experience", "gal3_title": _n(2), "gal4_label": "Journey", "gal4_title": _n(3),
+        "itinerary_h2": "Detailed service program",
+        "itinerary_p": f"Your personalised quotation \u2014 {len(items_list)} items, {payload.grandTotal:,.2f} {payload.currency} total.",
+        "items": [i.model_dump() for i in payload.items], "currency": payload.currency,
+        "pricing_h2": f"B2B net price: {payload.grandTotal:,.2f} {payload.currency}",
+        "pricing_p": f"Grand total for all services. Currency: {payload.currency}. Final rates subject to reconfirmation.",
+        "grand_total": payload.grandTotal, "subtotal": payload.subtotal,
+        "tax_total": payload.taxTotal, "payment_terms": payload.paymentTerms or "",
+        "inclusions": inc_lines, "exclusions": exc_lines,
+        "terms_p": "These notes keep the proposal professional and protect the B2B quotation before services are reconfirmed.",
+        "cta_h2": "Confirm dates, then refine the luxury layer.",
+        "cta_p": "Share travel dates, preferred hotel tier, rooming list and any dietary or mobility requirements. We will reconfirm availability and return a finalized quotation.",
+        "contact_web": "www.vietnamsafar.vn", "contact_phone": seller_phone, "seller_email": seller_email,
+        "footer_text": f"{tour_title} \u2014 Luxury quotation prepared for {payload.customer.name}.",
+    }
+
+
+def _load_ctx(quotation_id: str) -> dict | None:
+    """Load ctx from memory store or persisted ctx.json (cross-instance resilience)."""
+    entry = quotations.get(quotation_id)
+    if entry and entry.get("ctx"):
+        return entry["ctx"]
+    ctx_path = os.path.join("published", quotation_id, "ctx.json")
+    if os.path.isfile(ctx_path):
+        with open(ctx_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return None
+
+
+# ── Endpoints ─────────────────────────────────────────────────────────────────
 
 @app.post("/quotations")
 async def create_quotation(request: Request):
@@ -250,224 +335,147 @@ async def create_quotation(request: Request):
     else:
         hero_image_url = default_img
 
-    item_image_urls = image_urls
-    log.debug("[/quotations] Images resolved: hero=%s  items=%s", hero_image_url, item_image_urls)
+    log.debug("[/quotations] Images resolved: hero=%s  items=%s", hero_image_url, image_urls)
 
-    # ── Build template context ────────────────────────────────────────────────
-    seller = payload.seller
-    seller_name  = seller.companyName if seller else "Vietnam Safar – Discovery Asia Travel Group"
-    seller_email = (seller.email if seller else None) or "sales@vietnamsafar.vn"
-    seller_phone = (seller.phone if seller else None) or "+84 911 538 738"
+    ctx = _build_ctx(quotation_id, payload, hero_image_url, image_urls)
 
-    # Tour title: quotationNumber or short customer description — never raw notes
-    tour_title = (
-        payload.quotationNumber
-        or f"{payload.customer.name} – {payload.currency} {payload.grandTotal:,.0f}"
+    # ── Render landing page HTML ───────────────────────────────────────────────
+    loop = asyncio.get_event_loop()
+    tmpl_lp  = templates.get_template("vietnam_heritage_luxury.html")
+    tmpl_pdf = templates.get_template("vietnam_heritage_luxury_pdf.html")
+
+    rendered_html, rendered_pdf = await asyncio.gather(
+        loop.run_in_executor(None, partial(tmpl_lp.render,  **ctx)),
+        loop.run_in_executor(None, partial(tmpl_pdf.render, **ctx)),
     )
 
-    # Gallery: hero = img_0, gallery tiles = img_1..4 (cycle if fewer items)
-    default_img = "/assets/vietnam-safar-logo.png"
-    img_0 = hero_image_url
-    img_1 = image_urls[0] if len(image_urls) > 0 else img_0
-    img_2 = image_urls[1] if len(image_urls) > 1 else img_0
-    img_3 = image_urls[2] if len(image_urls) > 2 else img_1
-    img_4 = image_urls[3] if len(image_urls) > 3 else img_2
-
-    # Gallery captions: use item names as destination labels
-    items_list = payload.items
-    def _item_name(idx: int) -> str:
-        return items_list[idx].name if idx < len(items_list) else ""
-
-    # Parse inclusions / exclusions from notes (lines starting with + / -)
-    # Fallback to generic list if not structured
-    raw_notes = payload.notes or ""
-    inc_lines, exc_lines = [], []
-    for line in raw_notes.splitlines():
-        stripped = line.strip()
-        if stripped.startswith("+"):
-            inc_lines.append(stripped[1:].strip())
-        elif stripped.startswith("-"):
-            exc_lines.append(stripped[1:].strip())
-    # Generic fallbacks
-    if not inc_lines:
-        inc_lines = [
-            "Private airport pick-up and drop-off",
-            "Private air-conditioned transportation throughout",
-            "Accommodation with daily breakfast",
-            "Meals as mentioned in the program",
-            "All sightseeing entrance fees as mentioned",
-            "English-speaking local guide",
-        ]
-    if not exc_lines:
-        exc_lines = [
-            "International flights",
-            "Vietnam visa and visa processing fees",
-            "Travel insurance",
-            "Personal expenses, laundry, beverages and tips",
-            "Optional activities not mentioned in the program",
-        ]
-
-    # Overview experience cards — derive from first 3 items
-    experiences = []
-    for i, item in enumerate(items_list[:3]):
-        experiences.append({
-            "num": f"{i+1:02d}",
-            "title": item.name,
-            "desc":  item.description or f"Premium service: {item.name}.",
-        })
-    while len(experiences) < 3:
-        experiences.append({"num": f"{len(experiences)+1:02d}", "title": "Premium Service", "desc": "Carefully curated service included in this quotation."})
-
-    ctx = {
-        "quotation_id":    quotation_id,
-        # Images
-        "img_0":  img_0, "img_1": img_1, "img_2": img_2, "img_3": img_3, "img_4": img_4,
-        # Hero
-        "tour_title":      tour_title,
-        "kicker":          f"Private Luxury Quotation • {payload.quotationDate}",
-        "lede":            payload.deliveryTerms or "A polished, privately guided journey — crafted for discerning travellers who value comfort, cultural depth and seamless pacing.",
-        # Quote card
-        "customer_name":   payload.customer.name,
-        "seller_name":     seller_name,
-        "quotation_number": payload.quotationNumber or quotation_id,
-        "quotation_date":  str(payload.quotationDate),
-        "valid_until":     str(payload.validUntil) if payload.validUntil else "On request",
-        "contact":         f"{seller_phone}",
-        # Strip stats
-        "strip_duration":  f"{len(items_list)}D Tour",
-        "strip_best_for":  "B2B Partners",
-        "strip_pace":      "Relaxed",
-        "strip_service":   "Private",
-        # Overview section
-        "overview_h2":     f"{payload.customer.name}, curated with elegance and ease.",
-        "overview_p":      f"This quotation covers {len(items_list)} service(s) totalling {payload.grandTotal:,.2f} {payload.currency}. Crafted for discerning travellers who expect seamless logistics and private service.",
-        "experiences":     experiences,
-        # Gallery section
-        "journey_h2":      "Destination imagery woven into the quotation.",
-        "journey_p":       "Large cinematic destination panels help the quotation feel like a premium travel proposal.",
-        "gal1_label":      items_list[0].name[:24] if len(items_list) > 0 else "Highlight",
-        "gal1_title":      _item_name(0),
-        "gal2_label":      "Destination",
-        "gal2_title":      _item_name(1),
-        "gal3_label":      "Experience",
-        "gal3_title":      _item_name(2),
-        "gal4_label":      "Journey",
-        "gal4_title":      _item_name(3),
-        # Itinerary
-        "itinerary_h2":    "Detailed service program",
-        "itinerary_p":     f"Your personalised quotation — {len(items_list)} items, {payload.grandTotal:,.2f} {payload.currency} total.",
-        "items":           [i.model_dump() for i in payload.items],
-        "currency":        payload.currency,
-        # Pricing
-        "pricing_h2":      f"B2B net price: {payload.grandTotal:,.2f} {payload.currency}",
-        "pricing_p":       f"Grand total for all services. Currency: {payload.currency}. Final rates subject to reconfirmation.",
-        "grand_total":     payload.grandTotal,
-        "subtotal":        payload.subtotal,
-        "tax_total":       payload.taxTotal,
-        "payment_terms":   payload.paymentTerms or "",
-        # Inclusions / Exclusions
-        "inclusions":      inc_lines,
-        "exclusions":      exc_lines,
-        # Terms
-        "terms_p":         "These notes keep the proposal professional and protect the B2B quotation before services are reconfirmed.",
-        # CTA
-        "cta_h2":          "Confirm dates, then refine the luxury layer.",
-        "cta_p":           "Share travel dates, preferred hotel tier, rooming list and any dietary or mobility requirements. We will reconfirm availability and return a finalized quotation.",
-        "contact_web":     "www.vietnamsafar.vn",
-        "contact_phone":   seller_phone,
-        "seller_email":    seller_email,
-        # Footer
-        "footer_text":     f"{tour_title} — Luxury quotation prepared for {payload.customer.name}.",
-    }
-
-
-    # ── Register slot in store immediately (status=pending) ─────────────────
-    # This lets GET /quotations/{id} respond with a loading page while
-    # rendering runs in the thread pool — keeps the event loop unblocked.
+    # ── Update in-memory store ────────────────────────────────────────────
     quotations[quotation_id] = {
         "payload":       payload.model_dump(mode="json"),
-        "html":          None,
+        "ctx":           ctx,
+        "html":          rendered_html,
+        "pdf_html":      rendered_pdf,
         "status":        "pending",
         "published_url": None,
+        "pdf_url":       None,
         "version":       0,
     }
 
-    # ── Offload sync Jinja2 render to thread pool (non-blocking) ─────────────
-    # tmpl.render() is CPU-bound/sync — running it directly in an async handler
-    # would block the event loop and delay responses to ALL concurrent requests.
-    loop = asyncio.get_event_loop()
-    tmpl = templates.get_template("vietnam_heritage_luxury.html")
-    rendered_html = await loop.run_in_executor(None, partial(tmpl.render, **ctx))
+    # ── Publish v1.html + pdf.html to GitHub (production flow) ──────────────
+    # On Vercel, filesystem is ephemeral — all state must live in GitHub.
+    # We commit both files now so they are statically served by Vercel CDN.
+    published_url: str | None = None
+    pdf_static_url: str | None = None
+    GITHUB_TOKEN_VAL = os.getenv("GITHUB_TOKEN", "")
+    if GITHUB_TOKEN_VAL:
+        try:
+            # Publish landing page and PDF in parallel
+            published_url, pdf_static_url = await asyncio.gather(
+                publish_to_github(
+                    quotation_id=quotation_id,
+                    html_content=rendered_html,
+                    version=1,
+                ),
+                publish_file_to_github(
+                    file_path=f"published/{quotation_id}/pdf.html",
+                    html_content=rendered_pdf,
+                    commit_message=f"Publish PDF view for quotation {quotation_id}",
+                ),
+            )
+            quotations[quotation_id]["status"]        = "published"
+            quotations[quotation_id]["published_url"] = published_url
+            quotations[quotation_id]["pdf_url"]       = pdf_static_url
+            quotations[quotation_id]["version"]       = 1
+            log.info("[/quotations] ✓ v1 + pdf.html committed to GitHub")
+        except Exception as exc:
+            log.error("[/quotations] GitHub publish failed (non-fatal): %s", exc)
+            published_url = None
+            pdf_static_url = None
 
-    # Update store with rendered HTML
-    quotations[quotation_id]["html"]   = rendered_html
-    quotations[quotation_id]["status"] = "draft"
-
-    # ── Persist draft to filesystem ───────────────────────────────────────────
-    # Vercel serverless instances don't share memory between requests.
-    # Writing to published/{id}/draft.html ensures GET /quotations/{id} can
-    # serve the page even if called from a different serverless instance.
-    quo_dir = os.path.join("published", quotation_id)
-    os.makedirs(quo_dir, exist_ok=True)
-    draft_path = os.path.join(quo_dir, "draft.html")
-    
-    loop2 = asyncio.get_event_loop()
-    await loop2.run_in_executor(
-        None,
-        lambda: open(draft_path, "w", encoding="utf-8").write(rendered_html)
-    )
-    log.info("[/quotations] Draft written → %s", draft_path)
+    # ── Localhost fallback: persist to disk when no GitHub token ────────────
+    if not published_url:
+        quo_dir = os.path.join("published", quotation_id)
+        os.makedirs(quo_dir, exist_ok=True)
+        open(os.path.join(quo_dir, "v1.html"),   "w", encoding="utf-8").write(rendered_html)
+        open(os.path.join(quo_dir, "pdf.html"),  "w", encoding="utf-8").write(rendered_pdf)
+        open(os.path.join(quo_dir, "ctx.json"),  "w", encoding="utf-8").write(
+            json.dumps(ctx, ensure_ascii=False, default=str)
+        )
+        quotations[quotation_id]["status"]  = "published"
+        quotations[quotation_id]["version"] = 1
+        log.info("[/quotations] Localhost: v1.html + pdf.html + ctx.json written to disk.")
 
     log.info("[/quotations] ✓ id=%s  customer=%s  items=%d  total=%s %s",
              quotation_id, payload.customer.name, len(payload.items),
              payload.grandTotal, payload.currency)
 
-    quotation_url = f"{PUBLIC_BASE_URL}/quotations/{quotation_id}"
+    # quotationUrl points directly to the editable static page
+    quotation_url = published_url or f"{PUBLIC_BASE_URL}/published/{quotation_id}/v1.html"
     return {
         "quotationId":  quotation_id,
-        "status":       "draft",
-        "message":      "Landing page created. Open quotationUrl to preview and edit.",
+        "status":       "published",
+        "version":      1,
+        "message":      "Landing page published. Open quotationUrl to preview and edit inline.",
         "quotationUrl": quotation_url,
+        "pdfUrl":       f"{PUBLIC_BASE_URL}/quotations/{quotation_id}/pdf",
     }
 
 
-# ── GET /quotations/{id} — serve editable preview ────────────────────────────
+# ── GET /quotations/{id}/pdf — A4-optimised PDF view ─────────────────────
+# IMPORTANT: must be registered BEFORE the {quotation_id} catch-all route.
+
+@app.get("/quotations/{quotation_id}/pdf", response_class=HTMLResponse)
+async def get_quotation_pdf(quotation_id: str):
+    """
+    On production (GitHub token set): redirect to the static pdf.html committed to GitHub/Vercel CDN.
+    On localhost (no token): dynamically render from ctx.json on disk.
+    Auto-triggers the browser print dialog so the user just hits Cmd+P → Save as PDF.
+    """
+    from fastapi.responses import RedirectResponse
+
+    # 1. In-memory store: check if we already have a static pdf URL (same instance)
+    entry = quotations.get(quotation_id)
+    if entry and entry.get("pdf_url"):
+        return RedirectResponse(url=entry["pdf_url"], status_code=302)
+
+    # 2. Production: static pdf.html is on Vercel CDN — redirect there
+    GITHUB_TOKEN_VAL = os.getenv("GITHUB_TOKEN", "")
+    if GITHUB_TOKEN_VAL:
+        static_pdf_url = f"{PUBLIC_BASE_URL}/published/{quotation_id}/pdf.html"
+        return RedirectResponse(url=static_pdf_url, status_code=302)
+
+    # 3. Localhost fallback: dynamic render from disk ctx.json
+    ctx = _load_ctx(quotation_id)
+    if not ctx:
+        raise HTTPException(status_code=404, detail=f"Quotation '{quotation_id}' not found.")
+    loop = asyncio.get_event_loop()
+    tmpl = templates.get_template("vietnam_heritage_luxury_pdf.html")
+    rendered = await loop.run_in_executor(None, partial(tmpl.render, **ctx))
+    log.info("[/pdf] Served dynamic PDF view for %s", quotation_id)
+    return HTMLResponse(content=rendered)
+
+
+# ── GET /quotations/{id} — redirect to latest static published version ────────
+# On Vercel: the HTML is a static file served by Vercel CDN.
+# This endpoint acts as a stable permalink that redirects to the latest version.
 
 @app.get("/quotations/{quotation_id}", response_class=HTMLResponse)
 async def get_quotation(quotation_id: str):
-    # 1. Try in-memory store first (same instance, fastest)
+    from fastapi.responses import RedirectResponse
+
+    # 1. Check in-memory store for the published URL (same-instance fast path)
     entry = quotations.get(quotation_id)
-
-    if entry and entry["status"] == "pending":
-        # Render still in progress — serve auto-refresh loading page
-        loading_html = f"""<!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/>
-<meta http-equiv="refresh" content="1;url=/quotations/{quotation_id}"/>
-<title>Preparing your quotation…</title>
-<style>
-  body{{margin:0;background:#f8f3e9;display:grid;place-items:center;min-height:100vh;font-family:Arial,sans-serif}}
-  .card{{background:#fffaf1;border:1px solid rgba(183,137,75,.28);border-radius:28px;padding:48px 56px;text-align:center;box-shadow:0 24px 60px rgba(17,19,15,.1)}}
-  h1{{font-family:Georgia,serif;color:#17412e;font-size:32px;margin:0 0 12px}}
-  p{{color:#706a5d;font-size:15px;margin:0 0 24px}}
-  .spinner{{width:40px;height:40px;border:3px solid rgba(183,137,75,.2);border-top-color:#b7894b;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto}}
-  @keyframes spin{{to{{transform:rotate(360deg)}}}}
-</style></head>
-<body><div class="card">
-  <div class="spinner"></div>
-  <h1 style="margin-top:24px">Preparing your quotation…</h1>
-  <p>Your landing page is being rendered. This page will refresh automatically.</p>
-  <code style="color:#b7894b;font-size:13px">{quotation_id}</code>
-</div></body></html>"""
-        return HTMLResponse(content=loading_html, status_code=202)
-
-    if entry and entry["html"]:
+    if entry and entry.get("published_url"):
+        return RedirectResponse(url=entry["published_url"], status_code=302)
+    if entry and entry.get("html"):
         return HTMLResponse(content=entry["html"])
 
-    # 2. Fallback: read draft file from filesystem (cross-instance resilience)
-    draft_path = os.path.join("published", quotation_id, "draft.html")
-    if os.path.isfile(draft_path):
-        with open(draft_path, "r", encoding="utf-8") as f:
-            return HTMLResponse(content=f.read())
+    # 2. Localhost fallback: serve from disk
+    for version in range(10, 0, -1):   # check v10 down to v1
+        path = os.path.join("published", quotation_id, f"v{version}.html")
+        if os.path.isfile(path):
+            with open(path, "r", encoding="utf-8") as f:
+                return HTMLResponse(content=f.read())
 
     raise HTTPException(status_code=404, detail=f"Quotation '{quotation_id}' not found.")
 
@@ -485,11 +493,9 @@ async def publish_quotation(quotation_id: str, body: PublishRequest):
     Does NOT require the in-memory store — quotation_id + html come from the request.
     This makes the endpoint resilient across Vercel serverless instances.
     """
-    # Derive version by counting existing published files in the quotation's folder
-    import glob
-    quo_dir = os.path.join("published", quotation_id)
-    existing = glob.glob(os.path.join(quo_dir, "v*.html"))
-    version  = len(existing) + 1
+    # Fetch the next version from GitHub directly to ensure it works across serverless instances
+    from github_publish import get_next_version, publish_to_github
+    version = await get_next_version(quotation_id)
 
     try:
         published_url = await publish_to_github(
