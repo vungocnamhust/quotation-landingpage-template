@@ -247,6 +247,7 @@ def _build_ctx(quotation_id, payload, hero_image_url, destinations: list[dict]):
     return {
         "quotation_id": quotation_id,
         "img_0": img_0, "img_1": img_1, "img_2": img_2, "img_3": img_3, "img_4": img_4,
+        "destinations": destinations,
         "tour_title": tour_title,
         "kicker": f"Private Luxury Quotation \u2022 {payload.quotationDate}",
         "lede": payload.deliveryTerms or "A polished, privately guided journey \u2014 crafted for discerning travellers who value comfort, cultural depth and seamless pacing.",
@@ -326,7 +327,7 @@ async def create_quotation(request: Request):
         text_context += " " + payload.notes
 
     from image_selector import extract_and_map_destinations, get_random_image_for_province
-    destinations = await extract_and_map_destinations(text_context, max_items=4)
+    destinations = await extract_and_map_destinations(text_context, max_items=None)
     
     # Resolve image urls for each destination
     for d in destinations:

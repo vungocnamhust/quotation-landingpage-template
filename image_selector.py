@@ -58,14 +58,15 @@ Hãy trả về CHỈ ĐÚNG 1 SLUG từ danh sách trên mà không kèm bất 
         print(f"[Error] Mapping location failed: {e}")
         return None
 
-async def extract_and_map_destinations(text: str, max_items: int = 4) -> list[dict[str, str]]:
+async def extract_and_map_destinations(text: str, max_items: int | None = None) -> list[dict[str, str]]:
     """
     Đọc toàn bộ văn bản (tour info), trích xuất ra danh sách các điểm đến cụ thể
     và ánh xạ chính xác mỗi điểm đến với slug của tỉnh tương ứng.
     Trả về list: [{"name": "Hà Nội", "slug": "ha-noi"}, ...]
     """
+    limit_text = f"trích xuất ra {max_items} địa điểm/tỉnh thành" if max_items else "trích xuất ra TẤT CẢ địa điểm/tỉnh thành"
     prompt = f"""
-Bạn là chuyên gia du lịch Việt Nam. Hãy đọc đoạn văn bản sau và trích xuất ra {max_items} địa điểm/tỉnh thành NỔI BẬT NHẤT xuất hiện trong văn bản.
+Bạn là chuyên gia du lịch Việt Nam. Hãy đọc đoạn văn bản sau và {limit_text} NỔI BẬT NHẤT xuất hiện trong văn bản.
 Với mỗi địa điểm, hãy cung cấp tên hiển thị (name) và mã slug tương ứng thuộc danh sách 63 tỉnh/thành.
 
 Danh sách slug hợp lệ:
