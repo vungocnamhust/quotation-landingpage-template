@@ -371,13 +371,20 @@ async def create_quotation(request: Request):
     }
 
     # ── Publish v1.html + pdf.html to GitHub (production flow) ──────────────
-    # On Vercel, filesystem is ephemeral — all state must live in GitHub.
-    # We commit both files now so they are statically served by Vercel CDN.
+    # On Vercel, filesystem is READ-ONLY — all persistence must go through GitHub.
+    # NEVER fall back to disk writes on production; raise 502 if GitHub fails.
     published_url: str | None = None
     pdf_static_url: str | None = None
     ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
-    
+
     if ENVIRONMENT == "production":
+        # Hard requirement: GITHUB_TOKEN and GITHUB_REPO must be configured.
+        if not os.getenv("GITHUB_TOKEN") or not os.getenv("GITHUB_REPO"):
+            log.error("[/quotations] GITHUB_TOKEN or GITHUB_REPO not set — cannot persist on Vercel.")
+            raise HTTPException(
+                status_code=500,
+                detail="Server misconfiguration: GITHUB_TOKEN / GITHUB_REPO env vars are missing.",
+            )
         try:
             # Publish landing page and PDF in parallel
             published_url, pdf_static_url = await asyncio.gather(
@@ -396,21 +403,25 @@ async def create_quotation(request: Request):
             quotations[quotation_id]["published_url"] = published_url
             quotations[quotation_id]["pdf_url"]       = pdf_static_url
             quotations[quotation_id]["version"]       = 1
-            log.info("[/quotations] ✓ v1 + pdf.html committed to GitHub")
+            log.info("[/quotations] ✓ v1 + pdf.html committed to GitHub → %s", published_url)
         except Exception as exc:
-            log.error("[/quotations] GitHub publish failed (non-fatal): %s", exc)
-            published_url = None
-            pdf_static_url = None
+            log.exception("[/quotations] GitHub publish FAILED for %s: %s", quotation_id, exc)
+            # On Vercel, disk is read-only — we MUST NOT attempt a filesystem fallback.
+            raise HTTPException(
+                status_code=502,
+                detail=f"GitHub publish failed: {exc}. Check GITHUB_TOKEN permissions and GITHUB_REPO value.",
+            )
 
-    # ── Localhost fallback: persist to disk ────────────
-    if ENVIRONMENT != "production" or not published_url:
+    else:
+        # ── Localhost only: persist to disk ────────────────────────────────────
         quo_dir = os.path.join("published", quotation_id)
         os.makedirs(quo_dir, exist_ok=True)
-        open(os.path.join(quo_dir, "v1.html"),   "w", encoding="utf-8").write(rendered_html)
-        open(os.path.join(quo_dir, "pdf.html"),  "w", encoding="utf-8").write(rendered_pdf)
-        open(os.path.join(quo_dir, "ctx.json"),  "w", encoding="utf-8").write(
-            json.dumps(ctx, ensure_ascii=False, default=str)
-        )
+        with open(os.path.join(quo_dir, "v1.html"),  "w", encoding="utf-8") as _f:
+            _f.write(rendered_html)
+        with open(os.path.join(quo_dir, "pdf.html"), "w", encoding="utf-8") as _f:
+            _f.write(rendered_pdf)
+        with open(os.path.join(quo_dir, "ctx.json"), "w", encoding="utf-8") as _f:
+            json.dump(ctx, _f, ensure_ascii=False, default=str)
         quotations[quotation_id]["status"]  = "published"
         quotations[quotation_id]["version"] = 1
         log.info("[/quotations] Localhost: v1.html + pdf.html + ctx.json written to disk.")
