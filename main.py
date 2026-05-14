@@ -476,29 +476,42 @@ async def get_quotation_pdf(quotation_id: str):
     return HTMLResponse(content=rendered)
 
 
-# ── GET /quotations/{id} — redirect to latest static published version ────────
-# On Vercel: the HTML is a static file served by Vercel CDN.
-# This endpoint acts as a stable permalink that redirects to the latest version.
-
 @app.get("/quotations/{quotation_id}", response_class=HTMLResponse)
 async def get_quotation(quotation_id: str):
-    from fastapi.responses import RedirectResponse
-
-    # 1. Check in-memory store for the published URL (same-instance fast path)
+    """
+    Stable permalink for a quotation.
+    Serves from memory (instant), then disk (deployed), then GitHub (if Vercel is still building).
+    """
+    # 1. In-memory fast path (same serverless instance)
     entry = quotations.get(quotation_id)
-    if entry and entry.get("published_url"):
-        return RedirectResponse(url=entry["published_url"], status_code=302)
     if entry and entry.get("html"):
         return HTMLResponse(content=entry["html"])
 
-    # 2. Localhost fallback: serve from disk
-    for version in range(10, 0, -1):   # check v10 down to v1
+    # 2. Local disk fallback (if Vercel has finished building this commit)
+    for version in range(10, 0, -1):
         path = os.path.join("published", quotation_id, f"v{version}.html")
         if os.path.isfile(path):
             with open(path, "r", encoding="utf-8") as f:
                 return HTMLResponse(content=f.read())
 
-    raise HTTPException(status_code=404, detail=f"Quotation '{quotation_id}' not found.")
+    # 3. GitHub fallback (if Vercel is STILL building and memory was wiped via cold start)
+    ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
+    if ENVIRONMENT == "production":
+        import httpx
+        repo = os.getenv("GITHUB_REPO")
+        token = os.getenv("GITHUB_TOKEN")
+        if repo and token:
+            # Check v10 down to v1
+            async with httpx.AsyncClient(timeout=10) as client:
+                headers = {"Authorization": f"token {token}", "Accept": "application/vnd.github.v3.raw"}
+                for version in range(10, 0, -1):
+                    gh_url = f"https://api.github.com/repos/{repo}/contents/published/{quotation_id}/v{version}.html"
+                    resp = await client.get(gh_url, headers=headers)
+                    if resp.status_code == 200:
+                        log.info("[/quotations] Fetched %s directly from GitHub API.", quotation_id)
+                        return HTMLResponse(content=resp.text)
+
+    raise HTTPException(status_code=404, detail=f"Quotation '{quotation_id}' not found. It may still be deploying, please refresh in 30 seconds.")
 
 
 
