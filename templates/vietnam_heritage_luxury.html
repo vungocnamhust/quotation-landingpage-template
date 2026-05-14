@@ -1,18 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="--hero-img: url('{{ img_0 }}'); {% for dest in destinations %} --img-{{ loop.index }}: url('{{ dest.image_url or '/assets/vietnam-safar-logo.png' }}'); {% endfor %}">
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{{ tour_title }} - Luxury Quotation</title>
   <style>
-    :root {
-      --hero-img: url('{{ img_0 }}');
-      {% for dest in destinations %}
-      --img-{{ loop.index }}: url('{{ dest.image_url or '/assets/vietnam-safar-logo.png' }}');
-      {% endfor %}
-    }
-
     :root {
       --ivory: #f8f3e9;
       --ivory-2: #efe4d1;
@@ -829,7 +822,8 @@
           href="#quotation">Quotation</a><a href="#terms">Terms</a>
       </div>
       <div class="nav-actions">
-        <a class="btn dark" href="/quotations/{{ quotation_id }}/pdf" target="_blank" id="btn-pdf-view">📄 PDF Preview</a>
+        <a class="btn dark" href="/quotations/{{ quotation_id }}/pdf" target="_blank" id="btn-pdf-view">📄 PDF
+          Preview</a>
         <button class="btn dark" onclick="window.print()" style="background:rgba(23,65,46,.6)">🖨️ Print</button>
       </div>
     </div>
@@ -905,9 +899,11 @@
         </div>
         <div class="gallery">
           {% for dest in destinations %}
-          <div class="image-tile {% if loop.index == 1 %}large{% endif %}" style="background-image: var(--img-{{ loop.index }})">
+          <div class="image-tile {% if loop.index == 1 %}large{% endif %}"
+            style="background-image: var(--img-{{ loop.index }})">
             <div class="image-caption">
-              <small data-editable="gal{{ loop.index }}_label">{% if loop.index == 1 %}Highlight{% else %}Destination{% endif %}</small>
+              <small data-editable="gal{{ loop.index }}_label">{% if loop.index == 1 %}Highlight{% else %}Destination{%
+                endif %}</small>
               <strong data-editable="gal{{ loop.index }}_title">{{ dest.name }}</strong>
             </div>
           </div>
@@ -1060,13 +1056,12 @@
       <div class="pb-label">✏️ Editing <strong>{{ quotation_id }}</strong></div>
     </div>
     <span id="publish-status"></span>
-    <a id="btn-pdf" href="/quotations/{{ quotation_id }}/pdf" target="_blank"
-       style="background:rgba(183,137,75,.18);border:1px solid rgba(183,137,75,.5);color:#d8bd85;
+    <a id="btn-pdf" href="/quotations/{{ quotation_id }}/pdf" target="_blank" style="background:rgba(183,137,75,.18);border:1px solid rgba(183,137,75,.5);color:#d8bd85;
               border-radius:999px;padding:11px 22px;font-weight:700;font-size:12px;
               letter-spacing:.08em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
               transition:.2s ease;display:inline-flex;align-items:center;gap:6px;"
-       onmouseover="this.style.background='rgba(183,137,75,.28)'" 
-       onmouseout="this.style.background='rgba(183,137,75,.18)'">
+      onmouseover="this.style.background='rgba(183,137,75,.28)'"
+      onmouseout="this.style.background='rgba(183,137,75,.18)'">
       📄 Export PDF
     </a>
     <button id="btn-publish" onclick="publishPage()">🚀 Publish to Web</button>
@@ -1087,13 +1082,13 @@
     fileInput.style.display = 'none';
     document.body.appendChild(fileInput);
 
-    fileInput.addEventListener('change', function(e) {
+    fileInput.addEventListener('change', function (e) {
       const file = e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = function(evt) {
+      reader.onload = function (evt) {
         const img = new Image();
-        img.onload = function() {
+        img.onload = function () {
           const canvas = document.createElement('canvas');
           const MAX_WIDTH = 1920;
           const MAX_HEIGHT = 1080;
@@ -1131,7 +1126,7 @@
         currentCssVar = cssVar;
         fileInput.click();
       };
-      if(getComputedStyle(el).position === 'static') el.style.position = 'relative';
+      if (getComputedStyle(el).position === 'static') el.style.position = 'relative';
       el.appendChild(btn);
     }
 
@@ -1142,7 +1137,7 @@
         addImageChanger(`.gallery .image-tile:nth-child(${index + 1})`, `--img-${index + 1}`);
       });
     }
-    
+
     // Init on load
     initImageChangers();
 

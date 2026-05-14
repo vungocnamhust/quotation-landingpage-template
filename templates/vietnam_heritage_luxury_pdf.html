@@ -44,7 +44,22 @@
     }
 
     @media print {
-      body { background: transparent; padding: 0; display: block; }
+      body { 
+        background-color: var(--ivory) !important; 
+        padding: 0; 
+        display: block; 
+      }
+      .pdf-page {
+        width: auto !important;
+        min-height: auto !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+      }
+      .cover {
+        height: 100vh !important;
+      }
     }
 
     /* ── Page wrapper ── */
@@ -53,9 +68,7 @@
       min-height: 1123px;
       background: var(--ivory);
       page-break-after: always;
-      page-break-inside: avoid;
       position: relative;
-      overflow: hidden;
     }
     .pdf-page:last-of-type { page-break-after: auto; }
 
@@ -227,6 +240,8 @@
       border: 1px solid var(--line);
       border-radius: 18px;
       padding: 18px;
+      break-inside: avoid;
+      page-break-inside: avoid;
     }
 
     .exp-num {
@@ -260,6 +275,8 @@
       overflow: hidden;
       background: center/cover no-repeat;
       position: relative;
+      break-inside: avoid;
+      page-break-inside: avoid;
     }
     .img-tile.large { grid-row: span 2; }
 
