@@ -264,8 +264,8 @@ class TourQuotationPayload(BaseModel):
     programOverview: TextSection
     itinerary:       List[ItineraryDay]
     pricing:         TourPricing
-    rawQuotation:    str
     # optional fields
+    rawQuotation:              Optional[str]        = None
     quotationNumber:           Optional[str]        = None
     status:                    Optional[str]        = None
     publishStatus:             Optional[str]        = None
