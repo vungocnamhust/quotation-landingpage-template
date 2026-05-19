@@ -600,9 +600,16 @@
         <h2>Quotation Snapshot</h2>
         <div class="qrow"><span>Prepared for</span><strong>{{ customer_name }}</strong></div>
         <div class="qrow"><span>Prepared by</span><strong>{{ seller_name }}</strong></div>
-        <div class="qrow"><span>Tour code</span><strong>{{ quotation_number }}</strong></div>
-        <div class="qrow"><span>Date</span><strong>{{ quotation_date }}</strong></div>
-        <div class="qrow"><span>Valid until</span><strong>{{ valid_until }}</strong></div>
+        {% if guests_txt %}
+        <div class="qrow"><span>Guests</span><strong>{{ guests_txt }}</strong></div>
+        {% endif %}
+        {% if travel_dates %}
+        <div class="qrow"><span>Travel dates</span><strong>{{ travel_dates }}</strong></div>
+        {% endif %}
+        {% if route_txt %}
+        <div class="qrow"><span>Route</span><strong>{{ route_txt }}</strong></div>
+        {% endif %}
+        <div class="qrow"><span>Ref.</span><strong>{{ quotation_number }}</strong></div>
         <div class="qrow"><span>Contact</span><strong>{{ contact }}</strong></div>
       </div>
     </div>
@@ -662,18 +669,30 @@
     <p class="section-p">{{ itinerary_p }}</p>
 
     <div class="itinerary">
-      {% for item in items %}
+      {% for day in itinerary %}
       <div class="day-card">
-        <div class="day-num">{{ loop.index }}</div>
+        <div class="day-num">{{ day.dayNumber }}</div>
         <div>
-          <div class="day-badge">Item {{ loop.index }}</div>
-          <h3>{{ item.name }}</h3>
-          <p>{{ item.description or '' }}</p>
+          <div class="day-badge">DAY {{ day.dayNumber }}{% if day.date %} · {{ day.date }}{% endif %}</div>
+          <h3>{{ day.title }}</h3>
+          {% for para in day.description %}
+          <p>{{ para }}</p>
+          {% endfor %}
+          {% if day.activities %}
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>Highlights:</strong> {{ day.activities | join(' · ') }}
+          </p>
+          {% endif %}
         </div>
         <div class="day-meta">
-          <div class="qty">Qty: {{ item.quantity }} {{ item.unit or '' }}</div>
-          <div class="price">{{ '{:,.0f}'.format(item.unitPrice) }} {{ currency }}</div>
-          <div class="price-sub">per unit</div>
+          {% if day.overnight %}
+          <div class="price-sub" style="margin-bottom:2px">OVERNIGHT</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">{{ day.overnight }}</div>
+          {% endif %}
+          {% if day.meals %}
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">MEALS</div>
+          <div style="font-size:11px">{{ day.meals | join(' · ') }}</div>
+          {% endif %}
         </div>
       </div>
       {% endfor %}
@@ -694,25 +713,22 @@
       <h2>{{ pricing_h2 }}</h2>
       <p class="sub">{{ pricing_p }}</p>
       <div class="price-cards">
-        {% if subtotal %}
-        <div class="price-card">
-          <span>Subtotal</span>
-          <strong>{{ '{:,.0f}'.format(subtotal) }} {{ currency }}</strong>
-          <small>before tax &amp; discount</small>
+        {% for opt in price_options %}
+        <div class="price-card {% if opt.isConfirmedMainOption %}featured{% endif %}">
+          <span>{{ opt.hotelCategory }}</span>
+          {% if opt.optionName %}
+          <small style="display:block;margin-top:3px;font-size:9px;opacity:.7">{{ opt.optionName }}</small>
+          {% endif %}
+          <strong>{{ opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~ opt.pricePerPerson.currency) }}</strong>
+          <small>per person</small><br>
+          <small>Total: {{ opt.totalPrice.displayText or ('{:,.0f}'.format(opt.totalPrice.amount) ~ ' ' ~ opt.totalPrice.currency) }}</small>
+          {% if opt.isConfirmedMainOption %}
+          <div style="margin-top:8px;font-size:8px;letter-spacing:.14em;color:#d8bd85;font-weight:800">✓ CONFIRMED</div>
+          {% elif opt.isAlternativeOption %}
+          <div style="margin-top:8px;font-size:8px;letter-spacing:.14em;color:rgba(216,189,133,.6);font-weight:700">ALTERNATIVE</div>
+          {% endif %}
         </div>
-        {% endif %}
-        {% if tax_total %}
-        <div class="price-card">
-          <span>Tax</span>
-          <strong>{{ '{:,.0f}'.format(tax_total) }} {{ currency }}</strong>
-          <small>total tax</small>
-        </div>
-        {% endif %}
-        <div class="price-card featured">
-          <span>Grand Total</span>
-          <strong>{{ '{:,.0f}'.format(grand_total) }} {{ currency }}</strong>
-          <small>final amount</small>
-        </div>
+        {% endfor %}
       </div>
       {% if payment_terms %}
       <p class="price-note">{{ payment_terms }}</p>
@@ -747,21 +763,12 @@
     <p class="section-p" style="margin-bottom:16px;">{{ terms_p }}</p>
 
     <div class="terms-grid">
+      {% for para in price_cond_paras %}
       <div class="term-card">
-        <div class="label">Validity</div>
-        <h3>Subject to reconfirmation</h3>
-        <p>Rates are indicative B2B rates and should be reconfirmed at booking stage based on hotel, cruise, guide and transfer availability.</p>
+        <div class="label">Note {{ loop.index }}</div>
+        <p>{{ para }}</p>
       </div>
-      <div class="term-card">
-        <div class="label">Seasonality</div>
-        <h3>Peak dates may vary</h3>
-        <p>Selected upgrades, high season travel and holiday periods may affect the final quotation.</p>
-      </div>
-      <div class="term-card">
-        <div class="label">Upgrades</div>
-        <h3>Luxury customization</h3>
-        <p>Suggested upgrades may include 5-star hotels, premium cruise cabins, private dining, wellness add-ons or airport fast-track services.</p>
-      </div>
+      {% endfor %}
     </div>
 
     <div class="cta-block">

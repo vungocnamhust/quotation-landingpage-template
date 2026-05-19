@@ -844,16 +844,21 @@
         <aside class="quote-card">
           <h2>Quotation Snapshot</h2>
           <div class="quote-list">
-            <div class="quote-row"><span>Prepared for</span><strong data-editable="customer_name">{{ customer_name
-                }}</strong></div>
-            <div class="quote-row"><span>Prepared by</span><strong data-editable="seller_name">{{ seller_name
-                }}</strong></div>
-            <div class="quote-row"><span>Tour code</span><strong data-editable="quotation_number">{{ quotation_number
-                }}</strong></div>
-            <div class="quote-row"><span>Date</span><strong data-editable="quotation_date">{{ quotation_date }}</strong>
-            </div>
-            <div class="quote-row"><span>Valid until</span><strong data-editable="valid_until">{{ valid_until
-                }}</strong></div>
+            <div class="quote-row"><span>Prepared for</span><strong data-editable="customer_name">{{ customer_name }}</strong></div>
+            <div class="quote-row"><span>Prepared by</span><strong data-editable="seller_name">{{ seller_name }}</strong></div>
+            {% if guests_txt %}
+            <div class="quote-row"><span>Guests</span><strong>{{ guests_txt }}</strong></div>
+            {% endif %}
+            {% if travel_dates %}
+            <div class="quote-row"><span>Travel dates</span><strong>{{ travel_dates }}</strong></div>
+            {% endif %}
+            {% if route_txt %}
+            <div class="quote-row"><span>Route</span><strong>{{ route_txt }}</strong></div>
+            {% endif %}
+            {% if travel_style %}
+            <div class="quote-row"><span>Style</span><strong>{{ travel_style }}</strong></div>
+            {% endif %}
+            <div class="quote-row"><span>Ref.</span><strong data-editable="quotation_number">{{ quotation_number }}</strong></div>
             <div class="quote-row"><span>Contact</span><strong data-editable="contact">{{ contact }}</strong></div>
           </div>
         </aside>
@@ -919,19 +924,31 @@
           <p data-editable="itinerary_p">{{ itinerary_p }}</p>
         </div>
         <div class="itinerary">
-          {% for item in items %}
+          {% for day in itinerary %}
           <article class="day">
-            <div class="day-label">{{ loop.index }}</div>
+            <div class="day-label">{{ day.dayNumber }}</div>
             <div>
-              <span class="num" data-editable="item_num_{{ loop.index }}">ITEM {{ loop.index }}</span>
-              <h3 data-editable="item_name_{{ loop.index }}">{{ item.name }}</h3>
-              <p data-editable="item_desc_{{ loop.index }}">{{ item.description or '' }}</p>
+              <span class="num" data-editable="day_num_{{ loop.index }}">DAY {{ day.dayNumber }}{% if day.date %} &nbsp;&middot;&nbsp; {{ day.date }}{% endif %}</span>
+              <h3 data-editable="day_title_{{ loop.index }}">{{ day.title }}</h3>
+              {% for para in day.description %}
+              <p data-editable="day_desc_{{ loop.index }}_{{ loop.index0 }}">{{ para }}</p>
+              {% endfor %}
+              {% if day.activities %}
+              <p style="font-size:13px;color:#706a5d;margin-top:8px">
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                {{ day.activities | join(' &nbsp;·&nbsp; ') }}
+              </p>
+              {% endif %}
             </div>
             <div class="day-meta">
-              Qty: {{ item.quantity }} {{ item.unit or '' }}<br><br>
-              <span style="font-size:18px;font-family:Georgia,serif">{{ '{:,.0f}'.format(item.unitPrice) }} {{ currency
-                }}</span><br>
-              <span style="font-size:11px">per unit</span>
+              {% if day.overnight %}
+              <span style="font-size:11px;letter-spacing:.12em">OVERNIGHT</span><br>
+              <span style="font-size:15px;font-family:Georgia,serif">{{ day.overnight }}</span><br><br>
+              {% endif %}
+              {% if day.meals %}
+              <span style="font-size:11px;letter-spacing:.12em">MEALS</span><br>
+              <span style="font-size:13px">{{ day.meals | join(' · ') }}</span>
+              {% endif %}
             </div>
           </article>
           {% endfor %}
@@ -945,25 +962,22 @@
           <h2 data-editable="pricing_h2">{{ pricing_h2 }}</h2>
           <p data-editable="pricing_p">{{ pricing_p }}</p>
           <div class="price-grid">
-            {% if subtotal %}
-            <div class="price-card">
-              <span>Subtotal</span>
-              <strong data-editable="price_subtotal">{{ '{:,.0f}'.format(subtotal) }} {{ currency }}</strong>
-              <small>before tax &amp; discount</small>
+            {% for opt in price_options %}
+            <div class="price-card {% if opt.isConfirmedMainOption %}featured{% endif %}">
+              <span>{{ opt.hotelCategory }}</span>
+              {% if opt.optionName %}
+              <small style="color:rgba(255,255,255,.55);font-size:11px;display:block;margin-top:4px">{{ opt.optionName }}</small>
+              {% endif %}
+              <strong data-editable="price_pax_{{ loop.index }}" style="font-size:28px">{{ opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~ opt.pricePerPerson.currency) }}</strong>
+              <small>per person</small><br>
+              <span style="font-size:13px;opacity:.8">Total: {{ opt.totalPrice.displayText or ('{:,.0f}'.format(opt.totalPrice.amount) ~ ' ' ~ opt.totalPrice.currency) }}</span>
+              {% if opt.isConfirmedMainOption %}
+              <div style="margin-top:12px;font-size:10px;letter-spacing:.14em;color:#d8bd85;font-weight:800">✓ CONFIRMED MAIN OPTION</div>
+              {% elif opt.isAlternativeOption %}
+              <div style="margin-top:12px;font-size:10px;letter-spacing:.14em;color:rgba(216,189,133,.6);font-weight:700">ALTERNATIVE OPTION</div>
+              {% endif %}
             </div>
-            {% endif %}
-            {% if tax_total %}
-            <div class="price-card">
-              <span>Tax</span>
-              <strong data-editable="price_tax">{{ '{:,.0f}'.format(tax_total) }} {{ currency }}</strong>
-              <small>total tax</small>
-            </div>
-            {% endif %}
-            <div class="price-card featured">
-              <span>Grand Total</span>
-              <strong data-editable="price_grand">{{ '{:,.0f}'.format(grand_total) }} {{ currency }}</strong>
-              <small>final amount</small>
-            </div>
+            {% endfor %}
           </div>
           {% if payment_terms %}
           <p class="subtle" style="margin-top:20px" data-editable="payment_terms">{{ payment_terms }}</p>
@@ -996,25 +1010,16 @@
     <section id="terms">
       <div class="container">
         <div class="section-head">
-          <h2>Commercial notes</h2>
-          <p data-editable="terms_p">{{ terms_p }}</p>
+          <h2>Price Conditions &amp; Notes</h2>
+          <p>The following conditions apply to this B2B quotation.</p>
         </div>
         <div class="experience-grid">
-          <article class="experience"><span class="num">VALIDITY</span>
-            <h3>Subject to reconfirmation</h3>
-            <p data-editable="terms_validity">Rates are indicative B2B rates and should be reconfirmed at booking stage
-              based on hotel, cruise, guide and transfer availability.</p>
+          {% for para in price_cond_paras %}
+          <article class="experience">
+            <span class="num">NOTE {{ loop.index }}</span>
+            <p data-editable="price_cond_{{ loop.index }}">{{ para }}</p>
           </article>
-          <article class="experience"><span class="num">SEASONALITY</span>
-            <h3>Peak dates may vary</h3>
-            <p data-editable="terms_season">Selected upgrades, high season travel and holiday periods may affect the
-              final quotation.</p>
-          </article>
-          <article class="experience"><span class="num">UPGRADES</span>
-            <h3>Luxury customization</h3>
-            <p data-editable="terms_upgrades">Suggested upgrades may include 5-star hotels, premium cruise cabins,
-              private dining, wellness add-ons or airport fast-track services.</p>
-          </article>
+          {% endfor %}
         </div>
       </div>
     </section>

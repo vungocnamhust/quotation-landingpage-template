@@ -143,17 +143,42 @@ async def generic_exception_handler(request: Request, exc: Exception):
     return JSONResponse(status_code=500, content={"detail": str(exc)})
 
 
-# ── Pydantic models — mapped 1:1 from the OpenAPI spec ──────────────────────
+# ── Pydantic models — mapped 1:1 from the OpenAPI schema (v2.1.0) ───────────
 # Only fields listed under `required:` in the spec are non-Optional here.
+
+class Duration(BaseModel):
+    # required: [days, nights]
+    days:   int
+    nights: int
+    label:  Optional[str] = None
+
+
+class TravelDates(BaseModel):
+    # required: [startDate, endDate]
+    startDate:   date
+    endDate:     date
+    displayText: Optional[str] = None
+
+
+class GuestComposition(BaseModel):
+    # required: [totalGuests]
+    totalGuests:  int
+    adults:       Optional[int]       = None
+    children:     Optional[int]       = None
+    infants:      Optional[int]       = None
+    childrenAges: Optional[List[int]] = None
+    displayText:  Optional[str]       = None
+
 
 class Customer(BaseModel):
     # required: [name]
-    name: str
+    name:        str
     contactName: Optional[str] = None
     email:       Optional[str] = None
     phone:       Optional[str] = None
     address:     Optional[str] = None
-    taxCode:     Optional[str] = None
+    nationality: Optional[str] = None
+    market:      Optional[str] = None
 
 
 class Seller(BaseModel):
@@ -164,121 +189,263 @@ class Seller(BaseModel):
     phone:       Optional[str] = None
     address:     Optional[str] = None
     taxCode:     Optional[str] = None
+    website:     Optional[str] = None
 
 
-class Item(BaseModel):
-    # required: [name, quantity, unitPrice]
-    name:           str
-    quantity:       float               # number in spec (allows decimals)
-    unitPrice:      float
-    sku:            Optional[str]   = None
-    description:    Optional[str]   = None
-    unit:           Optional[str]   = None
-    discountAmount: Optional[float] = None
-    taxRate:        Optional[float] = None
-    lineSubtotal:   Optional[float] = None
-    lineTax:        Optional[float] = None
-    lineTotal:      Optional[float] = None
+class TextSection(BaseModel):
+    # required: [paragraphs]
+    paragraphs: List[str]
+    heading:    Optional[str] = None
 
 
-class QuotationPayload(BaseModel):
-    # required: [quotationDate, currency, customer, items, grandTotal]
-    quotationDate:  date
-    currency:       str
-    customer:       Customer
-    items:          List[Item]
-    grandTotal:     float
-    # all other top-level fields are optional
-    quotationNumber: Optional[str]   = None
-    validUntil:      Optional[date]  = None
-    seller:          Optional[Seller] = None
-    subtotal:        Optional[float] = None
-    discountTotal:   Optional[float] = None
-    taxTotal:        Optional[float] = None
-    paymentTerms:    Optional[str]   = None
-    deliveryTerms:   Optional[str]   = None
-    notes:           Optional[str]   = None
-    internalNotes:   Optional[str]   = None
-    source:          Optional[str]   = None
+class ItineraryDay(BaseModel):
+    # required: [dayNumber, title, description]
+    dayNumber:          int
+    title:              str
+    description:        List[str]
+    date:               Optional[str]        = None  # kept as str to avoid Pydantic v2 field-name shadowing
+    overnight:          Optional[str]        = None
+    meals:              Optional[List[str]]  = None
+    destinations:       Optional[List[str]]  = None
+    activities:         Optional[List[str]]  = None
+    optionalActivities: Optional[List[str]]  = None
+    notes:              Optional[List[str]]  = None
+
+
+class MoneyAmount(BaseModel):
+    # required: [amount, currency]
+    amount:      float
+    currency:    str
+    displayText: Optional[str]  = None
+    isFromPrice: Optional[bool] = None
+
+
+class PriceOption(BaseModel):
+    # required: [hotelCategory, pricePerPerson, totalPrice]
+    hotelCategory:        str
+    pricePerPerson:       MoneyAmount
+    totalPrice:           MoneyAmount
+    optionName:           Optional[str]       = None
+    isConfirmedMainOption: Optional[bool]     = None
+    isAlternativeOption:  Optional[bool]      = None
+    notes:                Optional[List[str]] = None
+
+
+class TourPricing(BaseModel):
+    # required: [currency, priceOptions]
+    currency:     str
+    priceOptions: List[PriceOption]
+    pricingTitle: Optional[str]   = None
+    basis:        Optional[str]   = None
+    totalGuests:  Optional[int]   = None
+    subtotal:     Optional[float] = None
+    discountTotal: Optional[float] = None
+    taxTotal:     Optional[float] = None
+    grandTotal:   Optional[float] = None
+
+
+class QuotationOutput(BaseModel):
+    quotationUrl: Optional[str] = None
+    pdfUrl:       Optional[str] = None
+
+
+class TourQuotationPayload(BaseModel):
+    # required: [quotationType, quotationTitle, tourTitle, duration,
+    #            preparedFor, travelDates, guests, route, programOverview,
+    #            itinerary, pricing, rawQuotation]
+    quotationType:   str
+    quotationTitle:  str
+    tourTitle:       str
+    duration:        Duration
+    preparedFor:     str
+    travelDates:     TravelDates
+    guests:          GuestComposition
+    route:           List[str]
+    programOverview: TextSection
+    itinerary:       List[ItineraryDay]
+    pricing:         TourPricing
+    rawQuotation:    str
+    # optional fields
+    quotationNumber:           Optional[str]        = None
+    status:                    Optional[str]        = None
+    publishStatus:             Optional[str]        = None
+    source:                    Optional[str]        = None
+    language:                  Optional[str]        = None
+    nationality:               Optional[str]        = None
+    travelStyle:               Optional[List[str]]  = None
+    hotelOptions:              Optional[List[str]]  = None
+    confirmedMainOption:       Optional[str]        = None
+    alternativeOptionRetained: Optional[str]        = None
+    customer:                  Optional[Customer]   = None
+    seller:                    Optional[Seller]     = None
+    inclusions:                Optional[List[str]]  = None
+    exclusions:                Optional[List[str]]  = None
+    priceConditions:           Optional[TextSection] = None
+    termsAndConditions:        Optional[TextSection] = None
+    cancellationPolicy:        Optional[TextSection] = None
+    paymentTerms:              Optional[str]        = None
+    notes:                     Optional[List[str]]  = None
+    internalNotes:             Optional[List[str]]  = None
+    output:                    Optional[QuotationOutput] = None
 
 
 # ── Context builder (pure fn — no I/O) ───────────────────────────────────────
 
-def _build_ctx(quotation_id, payload, hero_image_url, destinations: list[dict]):
+def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, destinations: list[dict]):
     """Build template context. Shared by /quotations (landingpage) and /quotations/{id}/pdf."""
     default_img = "/assets/vietnam-safar-logo.png"
     seller = payload.seller
-    seller_name  = seller.companyName if seller else "Vietnam Safar \u2013 Discovery Asia Travel Group"
+    seller_name  = (seller.companyName if seller else None) or "Vietnam Safar \u2013 Discovery Asia Travel Group"
     seller_email = (seller.email if seller else None) or "sales@vietnamsafar.vn"
     seller_phone = (seller.phone if seller else None) or "+84 911 538 738"
-    tour_title = payload.quotationNumber or f"{payload.customer.name} \u2013 {payload.currency} {payload.grandTotal:,.0f}"
-    
-    # destinations list contains dicts with "name", "slug", "image_url"
+
+    # Resolve key display strings from new schema
+    tour_title    = payload.tourTitle
+    prepared_for  = payload.preparedFor
+    duration_lbl  = payload.duration.label or f"{payload.duration.days}D{payload.duration.nights}N"
+    travel_dates  = payload.travelDates.displayText or f"{payload.travelDates.startDate} \u2013 {payload.travelDates.endDate}"
+    guests_txt    = payload.guests.displayText or f"{payload.guests.totalGuests} guests"
+    route_txt     = " \u2013 ".join(payload.route)
+    nationality   = payload.nationality or (payload.customer.nationality if payload.customer else "")
+    travel_style  = " | ".join(payload.travelStyle) if payload.travelStyle else "Private"
+
+    # Confirmed main pricing option
+    main_option   = next((o for o in payload.pricing.priceOptions if o.isConfirmedMainOption), None)
+    currency      = payload.pricing.currency
+    if main_option:
+        price_per_pax = main_option.pricePerPerson.displayText or f"{currency} {main_option.pricePerPerson.amount:,.0f} / person"
+        total_price   = main_option.totalPrice.displayText or f"{currency} {main_option.totalPrice.amount:,.0f}"
+        grand_total_num = main_option.totalPrice.amount
+    else:
+        price_per_pax = ""
+        total_price   = ""
+        grand_total_num = 0.0
+
+    # Inclusions / exclusions — use payload fields or defaults
+    inc_lines = payload.inclusions or [
+        "Private airport pick-up and drop-off",
+        "Private air-conditioned transportation throughout",
+        "Accommodation with daily breakfast",
+        "Meals as mentioned in the program",
+        "All sightseeing entrance fees as mentioned",
+        "English-speaking local guide",
+    ]
+    exc_lines = payload.exclusions or [
+        "International flights",
+        "Vietnam visa and visa processing fees",
+        "Travel insurance",
+        "Personal expenses, laundry, beverages and tips",
+        "Optional activities not mentioned in the program",
+    ]
+
+    # Overview paragraphs
+    overview_paras = payload.programOverview.paragraphs
+    overview_heading = payload.programOverview.heading or "PROGRAM OVERVIEW"
+    lede = overview_paras[0] if overview_paras else "A privately guided journey crafted for discerning travellers."
+
+    # Gallery helpers
     def _d_img(i): return destinations[i].get("image_url", default_img) if i < len(destinations) else default_img
     def _d_name(i): return destinations[i].get("name", "") if i < len(destinations) else ""
-    
+
     img_0 = hero_image_url
     img_1 = _d_img(0)
     img_2 = _d_img(1)
     img_3 = _d_img(2)
     img_4 = _d_img(3)
-    
-    items_list = payload.items
-    def _n(i): return items_list[i].name if i < len(items_list) else ""
-    raw_notes = payload.notes or ""
-    inc_lines, exc_lines = [], []
-    for line in raw_notes.splitlines():
-        s = line.strip()
-        if s.startswith("+"): inc_lines.append(s[1:].strip())
-        elif s.startswith("-"): exc_lines.append(s[1:].strip())
-    if not inc_lines:
-        inc_lines = ["Private airport pick-up and drop-off","Private air-conditioned transportation throughout",
-                     "Accommodation with daily breakfast","Meals as mentioned in the program",
-                     "All sightseeing entrance fees as mentioned","English-speaking local guide"]
-    if not exc_lines:
-        exc_lines = ["International flights","Vietnam visa and visa processing fees",
-                     "Travel insurance","Personal expenses, laundry, beverages and tips",
-                     "Optional activities not mentioned in the program"]
-    experiences = [{"num": f"{i+1:02d}", "title": it.name, "desc": it.description or f"Premium service: {it.name}."}
-                   for i, it in enumerate(items_list[:3])]
+
+    # Highlight experiences — first 3 itinerary days
+    experiences = [
+        {"num": f"{i+1:02d}", "title": day.title,
+         "desc": day.description[0] if day.description else f"Day {day.dayNumber} of the journey."}
+        for i, day in enumerate(payload.itinerary[:3])
+    ]
     while len(experiences) < 3:
-        experiences.append({"num": f"{len(experiences)+1:02d}", "title": "Premium Service",
-                            "desc": "Carefully curated service included in this quotation."})
+        experiences.append({"num": f"{len(experiences)+1:02d}", "title": "Premium Experience",
+                            "desc": "A carefully curated moment in this journey."})
+
+    # Price conditions note
+    price_cond_paras = payload.priceConditions.paragraphs if payload.priceConditions else [
+        "Rates are B2B net indicative and subject to reconfirmation at the time of booking."
+    ]
+
     return {
-        "quotation_id": quotation_id,
+        # IDs & images
+        "quotation_id":   quotation_id,
         "img_0": img_0, "img_1": img_1, "img_2": img_2, "img_3": img_3, "img_4": img_4,
-        "destinations": destinations,
-        "tour_title": tour_title,
-        "kicker": f"Private Luxury Quotation \u2022 {payload.quotationDate}",
-        "lede": payload.deliveryTerms or "A polished, privately guided journey \u2014 crafted for discerning travellers who value comfort, cultural depth and seamless pacing.",
-        "customer_name": payload.customer.name, "seller_name": seller_name,
+        "destinations":   destinations,
+        # Hero / header
+        "quotation_title": payload.quotationTitle,
+        "tour_title":      tour_title,
+        "kicker":          f"Private Luxury Quotation \u2022 {duration_lbl} \u2022 {travel_dates}",
+        "lede":            lede,
+        # Guest & trip meta
+        "customer_name":   prepared_for,
+        "nationality":     nationality,
+        "travel_style":    travel_style,
+        "guests_txt":      guests_txt,
+        "route_txt":       route_txt,
+        "duration_label":  duration_lbl,
+        "travel_dates":    travel_dates,
+        "hotel_options":   payload.hotelOptions or [],
+        "confirmed_option": payload.confirmedMainOption or "",
+        # Seller / contact
+        "seller_name":    seller_name,
+        "seller_email":   seller_email,
+        "contact":        seller_phone,
+        "contact_web":    "www.vietnamsafar.vn",
+        "contact_phone":  seller_phone,
+        # Quotation ref
         "quotation_number": payload.quotationNumber or quotation_id,
-        "quotation_date": str(payload.quotationDate),
-        "valid_until": str(payload.validUntil) if payload.validUntil else "On request",
-        "contact": seller_phone,
-        "strip_duration": f"{len(items_list)}D Tour", "strip_best_for": "B2B Partners",
-        "strip_pace": "Relaxed", "strip_service": "Private",
-        "overview_h2": f"{payload.customer.name}, curated with elegance and ease.",
-        "overview_p": f"This quotation covers {len(items_list)} service(s) totalling {payload.grandTotal:,.2f} {payload.currency}. Crafted for discerning travellers who expect seamless logistics and private service.",
-        "experiences": experiences,
-        "journey_h2": "Destination imagery woven into the quotation.",
-        "journey_p": "Large cinematic destination panels help the quotation feel like a premium travel proposal.",
-        "gal1_label": "Highlight" if len(destinations) > 0 else "Destination",
-        "gal1_title": _d_name(0), "gal2_label": "Destination", "gal2_title": _d_name(1),
-        "gal3_label": "Experience", "gal3_title": _d_name(2), "gal4_label": "Journey", "gal4_title": _d_name(3),
-        "itinerary_h2": "Detailed service program",
-        "itinerary_p": f"Your personalised quotation \u2014 {len(items_list)} items, {payload.grandTotal:,.2f} {payload.currency} total.",
-        "items": [i.model_dump() for i in payload.items], "currency": payload.currency,
-        "pricing_h2": f"B2B net price: {payload.grandTotal:,.2f} {payload.currency}",
-        "pricing_p": f"Grand total for all services. Currency: {payload.currency}. Final rates subject to reconfirmation.",
-        "grand_total": payload.grandTotal, "subtotal": payload.subtotal,
-        "tax_total": payload.taxTotal, "payment_terms": payload.paymentTerms or "",
-        "inclusions": inc_lines, "exclusions": exc_lines,
-        "terms_p": "These notes keep the proposal professional and protect the B2B quotation before services are reconfirmed.",
+        "quotation_date":   str(payload.travelDates.startDate),
+        "valid_until":      "On request",
+        # Strip badges
+        "strip_duration":  duration_lbl,
+        "strip_best_for":  nationality or "B2B Partners",
+        "strip_pace":      "Relaxed",
+        "strip_service":   "Private",
+        # Overview section
+        "overview_heading": overview_heading,
+        "overview_h2":      f"{prepared_for} \u2014 {tour_title}",
+        "overview_p":       " ".join(overview_paras),
+        "overview_paras":   overview_paras,
+        # Experiences (first 3 days)
+        "experiences":      experiences,
+        # Gallery section
+        "journey_h2":   "Destination imagery woven into the quotation.",
+        "journey_p":    "Cinematic destination panels crafted for a premium travel proposal.",
+        "gal1_label":   "Highlight" if len(destinations) > 0 else "Destination",
+        "gal1_title":   _d_name(0), "gal2_label": "Destination", "gal2_title": _d_name(1),
+        "gal3_label":   "Experience", "gal3_title": _d_name(2), "gal4_label": "Journey", "gal4_title": _d_name(3),
+        # Itinerary section
+        "itinerary_h2": "Day-by-Day Journey Program",
+        "itinerary_p":  f"Your private {duration_lbl} journey \u2014 {len(payload.itinerary)} days, carefully crafted.",
+        "itinerary":    [d.model_dump(mode="json") for d in payload.itinerary],
+        # Pricing section
+        "currency":       currency,
+        "pricing_title":  payload.pricing.pricingTitle or "PRICE QUOTATION \u2013 B2B NET INDICATIVE",
+        "pricing_basis":  payload.pricing.basis or "B2B net indicative",
+        "price_options":  [o.model_dump(mode="json") for o in payload.pricing.priceOptions],
+        "price_per_pax":  price_per_pax,
+        "total_price":    total_price,
+        "grand_total":    grand_total_num,
+        "subtotal":       payload.pricing.subtotal,
+        "tax_total":      payload.pricing.taxTotal,
+        "pricing_h2":     f"B2B Net Price: {total_price}",
+        "pricing_p":      f"Grand total for {guests_txt}. Currency: {currency}. Final rates subject to reconfirmation.",
+        # Inclusions / exclusions
+        "inclusions":     inc_lines,
+        "exclusions":     exc_lines,
+        # Price conditions
+        "price_cond_paras": price_cond_paras,
+        "payment_terms":    payload.paymentTerms or "",
+        "terms_p":          price_cond_paras[0] if price_cond_paras else "",
+        # CTA
         "cta_h2": "Confirm dates, then refine the luxury layer.",
-        "cta_p": "Share travel dates, preferred hotel tier, rooming list and any dietary or mobility requirements. We will reconfirm availability and return a finalized quotation.",
-        "contact_web": "www.vietnamsafar.vn", "contact_phone": seller_phone, "seller_email": seller_email,
-        "footer_text": f"{tour_title} \u2014 Luxury quotation prepared for {payload.customer.name}.",
+        "cta_p":  "Share travel dates, preferred hotel tier, rooming list and any dietary or mobility requirements. We will reconfirm availability and return a finalized quotation.",
+        # Footer
+        "footer_text": f"{tour_title} \u2014 Luxury quotation prepared for {prepared_for}.",
+        # Raw quotation (for reference / debugging)
+        "raw_quotation":  payload.rawQuotation,
     }
 
 
@@ -310,7 +477,7 @@ async def create_quotation(request: Request):
     log.debug("[/quotations] Data keys after unwrap: %s", list(data.keys()))
 
     try:
-        payload = QuotationPayload.model_validate(data)
+        payload = TourQuotationPayload.model_validate(data)
     except ValidationError as exc:
         errors = exc.errors()
         log.error("[/quotations] Pydantic validation failed — %d error(s):\n%s",
@@ -320,11 +487,15 @@ async def create_quotation(request: Request):
 
     quotation_id = f"quo_{uuid.uuid4().hex[:12]}"
 
-    # ── Extract exact destinations from payload text for the gallery ─────────────
-    # Combine item names, descriptions, and notes for context
-    text_context = " ".join([f"{i.name} {i.description or ''}" for i in payload.items])
+    # ── Extract destinations from route + itinerary for the gallery ──────────
+    route_text = " ".join(payload.route)
+    itinerary_text = " ".join(
+        " ".join(day.destinations or []) + " " + day.title
+        for day in payload.itinerary
+    )
+    text_context = route_text + " " + itinerary_text
     if payload.notes:
-        text_context += " " + payload.notes
+        text_context += " " + " ".join(payload.notes)
 
     from image_selector import extract_and_map_destinations, get_random_image_for_province
     destinations = await extract_and_map_destinations(text_context, max_items=None)
@@ -427,9 +598,9 @@ async def create_quotation(request: Request):
         quotations[quotation_id]["version"] = 1
         log.info("[/quotations] Localhost: v1.html + pdf.html + ctx.json written to disk.")
 
-    log.info("[/quotations] ✓ id=%s  customer=%s  items=%d  total=%s %s",
-             quotation_id, payload.customer.name, len(payload.items),
-             payload.grandTotal, payload.currency)
+    log.info("[/quotations] ✓ id=%s  preparedFor=%s  days=%d  route=%s",
+             quotation_id, payload.preparedFor,
+             payload.duration.days, " > ".join(payload.route))
 
     # quotationUrl should be the stable permalink API endpoint
     quotation_url = f"{PUBLIC_BASE_URL}/quotations/{quotation_id}"
