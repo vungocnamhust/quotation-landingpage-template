@@ -39,7 +39,8 @@ app.add_middleware(
 
 # Mount static directories
 app.mount("/assets", StaticFiles(directory="assets"), name="assets")
-# Removed app.mount("/published"...) to use dynamic fallback route instead
+# Removed: app.mount("/published", StaticFiles(directory="published"), name="published")
+# We now use a dynamic route below to handle /published to allow GitHub API fallback on Vercel
 
 # Jinja2 templates
 templates = Jinja2Templates(directory="templates")
@@ -614,6 +615,46 @@ async def create_quotation(request: Request):
     }
 
 
+# ── GET /published/{file_path:path} — Dynamic static files ────────────────────
+
+@app.get("/published/{file_path:path}")
+async def get_published_file(file_path: str):
+    """
+    Serve files from the local 'published' directory if they exist.
+    On Vercel (where no rebuild happens and local file might be missing),
+    fetch the file directly from GitHub API and serve it.
+    """
+    import mimetypes
+    from fastapi.responses import Response, FileResponse
+
+    local_path = os.path.join("published", file_path)
+    if os.path.isfile(local_path):
+        return FileResponse(local_path)
+        
+    # File not found locally - if we are on Vercel, try fetching from GitHub
+    ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
+    if ENVIRONMENT == "production":
+        import httpx
+        repo = os.getenv("GITHUB_REPO")
+        token = os.getenv("GITHUB_TOKEN")
+        if repo and token:
+            async with httpx.AsyncClient(timeout=10) as client:
+                headers = {
+                    "Authorization": f"token {token}", 
+                    "Accept": "application/vnd.github.v3.raw"
+                }
+                gh_url = f"https://api.github.com/repos/{repo}/contents/published/{file_path}"
+                resp = await client.get(gh_url, headers=headers)
+                if resp.status_code == 200:
+                    log.info("[/published] Fetched %s from GitHub API", file_path)
+                    mt, _ = mimetypes.guess_type(file_path)
+                    if not mt:
+                        mt = "application/octet-stream"
+                    return Response(content=resp.content, media_type=mt)
+                    
+    raise HTTPException(status_code=404, detail=f"File {file_path} not found.")
+
+
 # ── GET /quotations/{id}/pdf — A4-optimised PDF view ─────────────────────
 # IMPORTANT: must be registered BEFORE the {quotation_id} catch-all route.
 
@@ -685,44 +726,6 @@ async def get_quotation(quotation_id: str):
 
     raise HTTPException(status_code=404, detail=f"Quotation '{quotation_id}' not found. It may still be deploying, please refresh in 30 seconds.")
 
-
-@app.get("/published/{quotation_id}/{filename}", response_class=HTMLResponse)
-async def serve_published_file(quotation_id: str, filename: str):
-    """
-    Dynamic handler for /published/{quotation_id}/{filename}.
-    Replaces StaticFiles to handle Vercel deployment delay by falling back to GitHub API.
-    """
-    import base64
-    local_path = os.path.join("published", quotation_id, filename)
-    if os.path.exists(local_path):
-        return FileResponse(local_path)
-    
-    # Fallback to GitHub API (Vercel race condition handling)
-    import httpx
-    repo = os.getenv("GITHUB_REPO")
-    token = os.getenv("GITHUB_TOKEN")
-    
-    if not repo or not token:
-        raise HTTPException(status_code=404, detail="Not Found locally, and GitHub API not configured.")
-        
-    api_url = f"https://api.github.com/repos/{repo}/contents/published/{quotation_id}/{filename}"
-    headers = {
-        "Authorization": f"token {token}",
-        "Accept": "application/vnd.github.v3+json",
-        "User-Agent": "quotation-landingpage/1.0",
-    }
-    
-    async with httpx.AsyncClient(timeout=10) as client:
-        resp = await client.get(api_url, headers=headers)
-        if resp.status_code == 200:
-            data = resp.json()
-            content = base64.b64decode(data["content"]).decode("utf-8")
-            media_type = "text/html" if filename.endswith(".html") else "text/plain"
-            return HTMLResponse(content=content, media_type=media_type)
-        elif resp.status_code == 404:
-            raise HTTPException(status_code=404, detail=f"File {filename} not found on GitHub. It may not exist.")
-        else:
-            raise HTTPException(status_code=502, detail=f"GitHub API Error: {resp.status_code}")
 
 
 # ── POST /quotations/{id}/publish — commit to GitHub → Vercel ─────────────────
