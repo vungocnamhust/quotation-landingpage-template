@@ -39,7 +39,7 @@ app.add_middleware(
 
 # Mount static directories
 app.mount("/assets", StaticFiles(directory="assets"), name="assets")
-app.mount("/published", StaticFiles(directory="published"), name="published")
+# Removed app.mount("/published"...) to use dynamic fallback route instead
 
 # Jinja2 templates
 templates = Jinja2Templates(directory="templates")
@@ -685,6 +685,44 @@ async def get_quotation(quotation_id: str):
 
     raise HTTPException(status_code=404, detail=f"Quotation '{quotation_id}' not found. It may still be deploying, please refresh in 30 seconds.")
 
+
+@app.get("/published/{quotation_id}/{filename}", response_class=HTMLResponse)
+async def serve_published_file(quotation_id: str, filename: str):
+    """
+    Dynamic handler for /published/{quotation_id}/{filename}.
+    Replaces StaticFiles to handle Vercel deployment delay by falling back to GitHub API.
+    """
+    import base64
+    local_path = os.path.join("published", quotation_id, filename)
+    if os.path.exists(local_path):
+        return FileResponse(local_path)
+    
+    # Fallback to GitHub API (Vercel race condition handling)
+    import httpx
+    repo = os.getenv("GITHUB_REPO")
+    token = os.getenv("GITHUB_TOKEN")
+    
+    if not repo or not token:
+        raise HTTPException(status_code=404, detail="Not Found locally, and GitHub API not configured.")
+        
+    api_url = f"https://api.github.com/repos/{repo}/contents/published/{quotation_id}/{filename}"
+    headers = {
+        "Authorization": f"token {token}",
+        "Accept": "application/vnd.github.v3+json",
+        "User-Agent": "quotation-landingpage/1.0",
+    }
+    
+    async with httpx.AsyncClient(timeout=10) as client:
+        resp = await client.get(api_url, headers=headers)
+        if resp.status_code == 200:
+            data = resp.json()
+            content = base64.b64decode(data["content"]).decode("utf-8")
+            media_type = "text/html" if filename.endswith(".html") else "text/plain"
+            return HTMLResponse(content=content, media_type=media_type)
+        elif resp.status_code == 404:
+            raise HTTPException(status_code=404, detail=f"File {filename} not found on GitHub. It may not exist.")
+        else:
+            raise HTTPException(status_code=502, detail=f"GitHub API Error: {resp.status_code}")
 
 
 # ── POST /quotations/{id}/publish — commit to GitHub → Vercel ─────────────────
