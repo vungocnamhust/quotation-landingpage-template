@@ -49,6 +49,7 @@ templates = Jinja2Templates(directory="templates")
 # { quotation_id: { "payload": dict, "html": str, "status": str,
 #                   "published_url": str|None, "version": int } }
 quotations: dict[str, dict] = {}
+itineraries: dict[str, dict] = {}
 
 PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "http://localhost:8001")
 
@@ -346,6 +347,102 @@ class TourQuotationPayload(BaseModel):
     finalization:              Optional[FinalizationSteps] = None
 
 
+# ── Detailed Itinerary Booking Models ───────────────────────────────────────
+
+class BookedHotel(BaseModel):
+    name: str
+    star: Optional[int] = None
+    addressArea: Optional[str] = None
+    roomType: Optional[str] = None
+    checkInDate: str
+    checkOutDate: str
+    nights: int
+    destination: str
+    status: Optional[str] = "Confirmed"
+    notes: Optional[str] = None
+    imageUrl: Optional[str] = None
+    pricePerNightUsd: Optional[float] = None
+    pricePerNightVnd: Optional[float] = None
+
+
+class BookedActivity(BaseModel):
+    activityName: str
+    operator: Optional[str] = None
+    date: str
+    area: str
+    durationHours: Optional[float] = None
+    privateGroup: Optional[bool] = True
+    status: Optional[str] = "Confirmed"
+    notes: Optional[str] = None
+    imageUrl: Optional[str] = None
+    pricePerAdultUsd: Optional[float] = None
+    pricePerChildUsd: Optional[float] = None
+    totalEstimateUsd: Optional[float] = None
+
+
+class BookedTransfer(BaseModel):
+    transferType: str  # airport_pickup, airport_dropoff, intercity, day_trip_return
+    fromLocation: str
+    toLocation: str
+    date: str
+    vehicleRequirement: str  # e.g., 7-seat, 16-seat
+    seats: Optional[int] = None
+    status: Optional[str] = "Confirmed"
+    notes: Optional[str] = None
+    priceUsd: Optional[float] = None
+    priceVnd: Optional[float] = None
+
+
+class BookedGuide(BaseModel):
+    guideName: Optional[str] = None
+    language: str
+    destination: str
+    dates: List[str]
+    days: int
+    status: Optional[str] = "Confirmed"
+    notes: Optional[str] = None
+    pricePerDayUsd: Optional[float] = None
+    totalEstimateUsd: Optional[float] = None
+
+
+class BookedFlight(BaseModel):
+    flightNumber: str
+    airline: str
+    date: str
+    fromCity: str
+    toCity: str
+    departureTime: Optional[str] = None
+    arrivalTime: Optional[str] = None
+    status: Optional[str] = "Confirmed"
+    notes: Optional[str] = None
+    priceUsd: Optional[float] = None
+
+
+class DetailItineraryPayload(BaseModel):
+    quotationNumber: str
+    quotationTitle: str
+    tourTitle: str
+    duration: Duration
+    preparedFor: str
+    nationality: Optional[str] = None
+    travelDates: TravelDates
+    guests: GuestComposition
+    route: List[str]
+    travelStyle: Optional[List[str]] = None
+    programOverview: TextSection
+    hotels: List[BookedHotel] = []
+    activities: List[BookedActivity] = []
+    transfers: List[BookedTransfer] = []
+    guides: List[BookedGuide] = []
+    flights: List[BookedFlight] = []
+    itinerary: List[ItineraryDay]
+    inclusions: Optional[List[str]] = None
+    exclusions: Optional[List[str]] = None
+    notes: Optional[List[str]] = None
+    seller: Optional[Seller] = None
+    pricing: Optional[TourPricing] = None
+
+
 # ── Context builder (pure fn — no I/O) ───────────────────────────────────────
 
 def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, destinations: list[dict]):
@@ -635,6 +732,214 @@ def _load_ctx(quotation_id: str) -> dict | None:
         with open(ctx_path, "r", encoding="utf-8") as f:
             return json.load(f)
     return None
+
+
+def _load_itinerary_ctx(itinerary_id: str) -> dict | None:
+    """Load itinerary ctx from memory store or persisted ctx.json (cross-instance resilience)."""
+    entry = itineraries.get(itinerary_id)
+    if entry and entry.get("ctx"):
+        return entry["ctx"]
+    ctx_path = os.path.join("published", itinerary_id, "ctx.json")
+    if os.path.isfile(ctx_path):
+        with open(ctx_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return None
+
+
+def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, hero_image_url: str, destinations: list[dict]):
+    """Build rendering context for the detailed itinerary landing page."""
+    default_img = "/assets/vietnam-safar-logo.png"
+    seller = payload.seller
+    seller_name  = (seller.companyName if seller else None) or "Vietnam Safar – Discovery Asia Travel Group"
+    seller_email = (seller.email if seller else None) or "sales@vietnamsafar.vn"
+    seller_phone = (seller.phone if seller else None) or "+84 911 538 738"
+
+    tour_title    = payload.tourTitle
+    prepared_for  = payload.preparedFor
+    duration_lbl  = payload.duration.label or f"{payload.duration.days}D{payload.duration.nights}"
+    travel_dates  = payload.travelDates.displayText or f"{payload.travelDates.startDate} – {payload.travelDates.endDate}"
+    guests_txt    = payload.guests.displayText or f"{payload.guests.totalGuests} guests"
+    route_txt     = " – ".join(payload.route)
+    nationality   = payload.nationality or ""
+    travel_style  = " | ".join(payload.travelStyle) if payload.travelStyle else "Private"
+
+    # Narrative overview
+    overview_paras = payload.programOverview.paragraphs
+    overview_heading = payload.programOverview.heading or "PROGRAM OVERVIEW"
+    lede = overview_paras[0] if overview_paras else "A detailed booking itinerary crafted for your journey."
+
+    # Gallery helpers
+    def _d_img(i): return destinations[i].get("image_url", default_img) if i < len(destinations) else default_img
+    def _d_name(i): return destinations[i].get("name", "") if i < len(destinations) else ""
+
+    img_0 = hero_image_url
+    img_1 = _d_img(0)
+    img_2 = _d_img(1)
+    img_3 = _d_img(2)
+    img_4 = _d_img(3)
+
+    # Highlight experiences — first 3 itinerary days
+    experiences = [
+        {"num": f"{i+1:02d}", "title": day.title,
+         "desc": day.description[0] if day.description else f"Day {day.dayNumber} of the journey."}
+        for i, day in enumerate(payload.itinerary[:3])
+    ]
+    while len(experiences) < 3:
+        experiences.append({"num": f"{len(experiences)+1:02d}", "title": "Premium Experience",
+                            "desc": "A carefully curated moment in this journey."})
+
+    inc_lines = payload.inclusions or [
+        "Private airport pick-up and drop-off",
+        "Private air-conditioned transportation throughout",
+        "Accommodation with daily breakfast",
+        "Meals as mentioned in the program",
+        "All sightseeing entrance fees as mentioned",
+        "English-speaking local guide",
+    ]
+    exc_lines = payload.exclusions or [
+        "International flights",
+        "Vietnam visa and visa processing fees",
+        "Travel insurance",
+        "Personal expenses, laundry, beverages and tips",
+        "Optional activities not mentioned in the program",
+    ]
+
+    # Pricing fields from payload
+    main_option   = next((o for o in payload.pricing.priceOptions if o.isConfirmedMainOption), None) if payload.pricing else None
+    currency      = payload.pricing.currency if payload.pricing else "USD"
+    if main_option:
+        price_per_pax = main_option.pricePerPerson.displayText or f"{currency} {main_option.pricePerPerson.amount:,.0f} / person"
+        total_price   = main_option.totalPrice.displayText or f"{currency} {main_option.totalPrice.amount:,.0f}"
+        grand_total_num = main_option.totalPrice.amount
+    else:
+        price_per_pax = ""
+        total_price   = ""
+        grand_total_num = 0.0
+
+    # Map daily services
+    days_list = []
+    for day in payload.itinerary:
+        day_date = day.date
+        
+        # Match hotels: check-in date <= day_date < check-out date
+        day_hotels = []
+        for idx, h in enumerate(payload.hotels):
+            if h.checkInDate and h.checkOutDate and h.checkInDate <= day_date < h.checkOutDate:
+                h_dict = h.model_dump(mode="json")
+                h_dict["_index"] = idx
+                day_hotels.append(h_dict)
+        
+        # Match activities
+        day_activities = []
+        for idx, act in enumerate(payload.activities):
+            if act.date == day_date:
+                act_dict = act.model_dump(mode="json")
+                act_dict["_index"] = idx
+                day_activities.append(act_dict)
+
+        # Match transfers
+        day_transfers = []
+        for idx, tx in enumerate(payload.transfers):
+            if tx.date == day_date:
+                tx_dict = tx.model_dump(mode="json")
+                tx_dict["_index"] = idx
+                day_transfers.append(tx_dict)
+
+        # Match flights
+        day_flights = []
+        for idx, fl in enumerate(payload.flights):
+            if fl.date == day_date:
+                fl_dict = fl.model_dump(mode="json")
+                fl_dict["_index"] = idx
+                day_flights.append(fl_dict)
+
+        # Match guides
+        day_guides = []
+        for idx, gd in enumerate(payload.guides):
+            if gd.dates and day_date in gd.dates:
+                gd_dict = gd.model_dump(mode="json")
+                gd_dict["_index"] = idx
+                day_guides.append(gd_dict)
+
+        days_list.append({
+            "dayNumber": day.dayNumber,
+            "date": day_date,
+            "title": day.title,
+            "description": day.description,
+            "overnight": day.overnight,
+            "meals": day.meals or [],
+            "destinations": day.destinations or [],
+            "activities": day.activities or [],
+            "optionalActivities": day.optionalActivities or [],
+            "notes": day.notes or [],
+            "booked_hotels": day_hotels,
+            "booked_activities": day_activities,
+            "booked_transfers": day_transfers,
+            "booked_flights": day_flights,
+            "booked_guides": day_guides,
+        })
+
+    return {
+        "itinerary_id":     itinerary_id,
+        "img_0": img_0, "img_1": img_1, "img_2": img_2, "img_3": img_3, "img_4": img_4,
+        "destinations":     destinations,
+        # Hero / header
+        "quotation_title":  payload.quotationTitle,
+        "tour_title":       tour_title,
+        "kicker":           f"Confirmed Booking Itinerary • {duration_lbl} • {travel_dates}",
+        "lede":             lede,
+        # Guest & trip meta
+        "customer_name":    prepared_for,
+        "nationality":      nationality,
+        "travel_style":     travel_style,
+        "guests_txt":       guests_txt,
+        "guests_adults":    payload.guests.adults,
+        "guests_children":   payload.guests.children,
+        "route_txt":        route_txt,
+        "duration_label":   duration_lbl,
+        "travel_dates":     travel_dates,
+        # Seller / contact
+        "seller_name":      seller_name,
+        "seller_email":     seller_email,
+        "contact":          seller_phone,
+        "contact_web":      "www.vietnamsafar.vn",
+        "contact_phone":    seller_phone,
+        "quotation_number": payload.quotationNumber or itinerary_id,
+        "valid_until":      "N/A",
+        # Overview
+        "overview_heading": overview_heading,
+        "overview_h2":      f"{prepared_for} — {tour_title}",
+        "overview_p":       " ".join(overview_paras),
+        "overview_paras":   overview_paras,
+        # Experiences
+        "experiences":      experiences,
+        # Daily Itinerary with matched services
+        "itinerary":        days_list,
+        # Consolidated list of booked services (useful for summary tabs/cards!)
+        "hotels":           [h.model_dump(mode="json") for h in payload.hotels],
+        "activities":       [act.model_dump(mode="json") for act in payload.activities],
+        "transfers":        [tx.model_dump(mode="json") for tx in payload.transfers],
+        "flights":          [fl.model_dump(mode="json") for fl in payload.flights],
+        "guides":           [gd.model_dump(mode="json") for gd in payload.guides],
+        # Inclusions / exclusions
+        "inclusions":       inc_lines,
+        "exclusions":       exc_lines,
+        "notes":            payload.notes or [],
+        # Pricing section
+        "currency":       currency,
+        "pricing_title":  payload.pricing.pricingTitle or "PRICE QUOTATION – B2B NET INDICATIVE" if payload.pricing else "",
+        "pricing_basis":  payload.pricing.basis or "B2B net indicative" if payload.pricing else "",
+        "price_options":  [o.model_dump(mode="json") for o in payload.pricing.priceOptions] if payload.pricing else [],
+        "price_per_pax":  price_per_pax,
+        "total_price":    total_price,
+        "grand_total":    grand_total_num,
+        "subtotal":       payload.pricing.subtotal if payload.pricing else 0.0,
+        "tax_total":      payload.pricing.taxTotal if payload.pricing else 0.0,
+        "pricing_h2":     f"B2B Net Price: {total_price}" if total_price else "",
+        "pricing_p":      f"Grand total for {guests_txt}. Currency: {currency}." if total_price else "",
+        # Footer
+        "footer_text":      f"{tour_title} — Detailed booking itinerary prepared for {prepared_for}.",
+    }
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
@@ -951,6 +1256,393 @@ async def publish_quotation(quotation_id: str, body: PublishRequest):
         entry["version"]       = version
 
     log.info("[publish] ✓ %s v%d → %s", quotation_id, version, published_url)
+    return {"published_url": published_url, "version": version, "status": "published"}
+
+
+
+# ── Detailed Itinerary Endpoints ─────────────────────────────────────────────
+
+@app.post("/itineraries")
+async def create_itinerary(request: Request):
+    """
+    Receives structured itinerary data, renders a Jinja2 template with booked services,
+    stores it locally or on GitHub, and returns the preview/PDF URLs.
+    """
+    body = await request.json()
+    log.debug("[/itineraries] Incoming keys: %s", list(body.keys()))
+
+    # Unwrap ChatGPT Action wrapper if present
+    data = body.get("params", body)
+    log.debug("[/itineraries] Data keys after unwrap: %s", list(data.keys()))
+
+    try:
+        payload = DetailItineraryPayload.model_validate(data)
+    except ValidationError as exc:
+        errors = exc.errors()
+        log.error("[/itineraries] Pydantic validation failed — %d error(s):\n%s",
+                  len(errors), json.dumps(errors, indent=2, default=str))
+        return JSONResponse(status_code=422, content={"detail": errors,
+            "hint": "Field path is in 'loc'. Check which required field is missing."})
+
+    itinerary_id = f"iti_{uuid.uuid4().hex[:12]}"
+
+    # Extract destinations from route + itinerary for the gallery
+    route_text = " ".join(payload.route)
+    itinerary_text = " ".join(
+        " ".join(day.destinations or []) + " " + day.title
+        for day in payload.itinerary
+    )
+    text_context = route_text + " " + itinerary_text
+    if payload.notes:
+        text_context += " " + " ".join(payload.notes)
+
+    from image_selector import extract_and_map_destinations, get_random_image_for_province
+    destinations = await extract_and_map_destinations(text_context, max_items=None)
+    
+    # Resolve image urls for each destination
+    for d in destinations:
+        d["image_url"] = get_random_image_for_province(d.get("slug"))
+
+    log.debug("[/itineraries] Extracted destinations: %s", destinations)
+
+    default_img = "/assets/vietnam-safar-logo.png"
+    
+    # Hero image: Pick a random image from the resolved destinations, or default
+    valid_images = [d["image_url"] for d in destinations if d.get("image_url") != default_img]
+    if valid_images:
+        import random
+        hero_image_url = random.choice(valid_images)
+    else:
+        hero_image_url = default_img
+
+    log.debug("[/itineraries] Hero image resolved: %s", hero_image_url)
+
+    # Let's check hotels and activities image URLs. If they don't have them, we can try resolving one!
+    for h in payload.hotels:
+        if not h.imageUrl:
+            from image_selector import get_province_slug_for_location
+            slug = await get_province_slug_for_location(h.destination or h.addressArea)
+            h.imageUrl = get_random_image_for_province(slug)
+
+    for act in payload.activities:
+        if not act.imageUrl:
+            from image_selector import get_province_slug_for_location
+            slug = await get_province_slug_for_location(act.area or act.activityName)
+            act.imageUrl = get_random_image_for_province(slug)
+
+    ctx = _build_itinerary_ctx(itinerary_id, payload, hero_image_url, destinations)
+
+    # Render landing page HTML and PDF
+    loop = asyncio.get_event_loop()
+    tmpl_lp  = templates.get_template("detail_itinerary_landingpage_template.html")
+    tmpl_pdf = templates.get_template("detail_itinerary_landingpage_template_pdf.html")
+
+    rendered_html, rendered_pdf = await asyncio.gather(
+        loop.run_in_executor(None, partial(tmpl_lp.render,  **ctx)),
+        loop.run_in_executor(None, partial(tmpl_pdf.render, **ctx)),
+    )
+
+    # Update in-memory store
+    itineraries[itinerary_id] = {
+        "payload":       payload.model_dump(mode="json"),
+        "ctx":           ctx,
+        "html":          rendered_html,
+        "pdf_html":      rendered_pdf,
+        "status":        "pending",
+        "published_url": None,
+        "pdf_url":       None,
+        "version":       0,
+    }
+
+    published_url: str | None = None
+    pdf_static_url: str | None = None
+    ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
+
+    if ENVIRONMENT == "production":
+        if not os.getenv("GITHUB_TOKEN") or not os.getenv("GITHUB_REPO"):
+            log.error("[/itineraries] GITHUB_TOKEN or GITHUB_REPO not set — cannot persist on Vercel.")
+            raise HTTPException(
+                status_code=500,
+                detail="Server misconfiguration: GITHUB_TOKEN / GITHUB_REPO env vars are missing.",
+            )
+        try:
+            # Commit to GitHub
+            published_url, pdf_static_url = await asyncio.gather(
+                publish_to_github(
+                    quotation_id=itinerary_id,  # will publish to published/{itinerary_id}
+                    html_content=rendered_html,
+                    version=1,
+                ),
+                publish_file_to_github(
+                    file_path=f"published/{itinerary_id}/pdf.html",
+                    html_content=rendered_pdf,
+                    commit_message=f"Publish PDF view for itinerary {itinerary_id}",
+                ),
+            )
+            itineraries[itinerary_id]["status"]        = "published"
+            itineraries[itinerary_id]["published_url"] = published_url
+            itineraries[itinerary_id]["pdf_url"]       = pdf_static_url
+            itineraries[itinerary_id]["version"]       = 1
+            log.info("[/itineraries] ✓ v1 + pdf.html committed to GitHub → %s", published_url)
+        except Exception as exc:
+            log.exception("[/itineraries] GitHub publish FAILED for %s: %s", itinerary_id, exc)
+            raise HTTPException(
+                status_code=502,
+                detail=f"GitHub publish failed: {exc}.",
+            )
+    else:
+        # Localhost: write to disk
+        iti_dir = os.path.join("published", itinerary_id)
+        os.makedirs(iti_dir, exist_ok=True)
+        with open(os.path.join(iti_dir, "v1.html"),  "w", encoding="utf-8") as _f:
+            _f.write(rendered_html)
+        with open(os.path.join(iti_dir, "pdf.html"), "w", encoding="utf-8") as _f:
+            _f.write(rendered_pdf)
+        with open(os.path.join(iti_dir, "ctx.json"), "w", encoding="utf-8") as _f:
+            json.dump(ctx, _f, ensure_ascii=False, default=str)
+        itineraries[itinerary_id]["status"]  = "published"
+        itineraries[itinerary_id]["version"] = 1
+        log.info("[/itineraries] Localhost: v1.html + pdf.html + ctx.json written to disk.")
+
+    log.info("[/itineraries] ✓ id=%s  preparedFor=%s  days=%d",
+             itinerary_id, payload.preparedFor, payload.duration.days)
+
+    itinerary_url = f"{PUBLIC_BASE_URL}/itineraries/{itinerary_id}"
+    return {
+        "itineraryId":  itinerary_id,
+        "status":       "published",
+        "version":      1,
+        "message":      "Itinerary page published. Open itineraryUrl to preview and edit inline.",
+        "itineraryUrl": itinerary_url,
+        "pdfUrl":       f"{PUBLIC_BASE_URL}/itineraries/{itinerary_id}/pdf",
+    }
+
+
+@app.get("/itineraries/{itinerary_id}", response_class=HTMLResponse)
+async def get_itinerary(itinerary_id: str):
+    """
+    Stable permalink for an itinerary. Serves from memory, disk, then GitHub.
+    """
+    # 1. In-memory fast path
+    entry = itineraries.get(itinerary_id)
+    if entry and entry.get("html"):
+        return HTMLResponse(content=entry["html"])
+
+    # 2. Local disk fallback
+    for version in range(10, 0, -1):
+        path = os.path.join("published", itinerary_id, f"v{version}.html")
+        if os.path.isfile(path):
+            with open(path, "r", encoding="utf-8") as f:
+                return HTMLResponse(content=f.read())
+
+    # 3. GitHub fallback
+    ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
+    if ENVIRONMENT == "production":
+        import httpx
+        repo = os.getenv("GITHUB_REPO")
+        token = os.getenv("GITHUB_TOKEN")
+        if repo and token:
+            async with httpx.AsyncClient(timeout=10) as client:
+                headers = {"Authorization": f"token {token}", "Accept": "application/vnd.github.v3.raw"}
+                for version in range(10, 0, -1):
+                    gh_url = f"https://api.github.com/repos/{repo}/contents/published/{itinerary_id}/v{version}.html"
+                    resp = await client.get(gh_url, headers=headers)
+                    if resp.status_code == 200:
+                        log.info("[/itineraries] Fetched %s directly from GitHub API.", itinerary_id)
+                        return HTMLResponse(content=resp.text)
+
+    raise HTTPException(status_code=404, detail=f"Itinerary '{itinerary_id}' not found. It may still be deploying.")
+
+
+@app.get("/itineraries/{itinerary_id}/pdf", response_class=HTMLResponse)
+async def get_itinerary_pdf(itinerary_id: str):
+    """ Serves A4 PDF view for itinerary. """
+    from fastapi.responses import RedirectResponse
+
+    entry = itineraries.get(itinerary_id)
+    if entry and entry.get("pdf_url"):
+        return RedirectResponse(url=entry["pdf_url"], status_code=302)
+
+    ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
+    if ENVIRONMENT == "production":
+        static_pdf_url = f"{PUBLIC_BASE_URL}/published/{itinerary_id}/pdf.html"
+        return RedirectResponse(url=static_pdf_url, status_code=302)
+
+    ctx = _load_itinerary_ctx(itinerary_id)
+    if not ctx:
+        raise HTTPException(status_code=404, detail=f"Itinerary '{itinerary_id}' not found.")
+    loop = asyncio.get_event_loop()
+    tmpl = templates.get_template("detail_itinerary_landingpage_template_pdf.html")
+    rendered = await loop.run_in_executor(None, partial(tmpl.render, **ctx))
+    log.info("[/itineraries/pdf] Served dynamic PDF view for %s", itinerary_id)
+    return HTMLResponse(content=rendered)
+
+
+@app.post("/itineraries/{itinerary_id}/publish")
+async def publish_itinerary(itinerary_id: str, body: PublishRequest):
+    """ Saves inline edits back to the system. """
+    from github_publish import get_next_version, publish_to_github
+    version = await get_next_version(itinerary_id)
+
+    # Update ctx.json and pdf.html using values from the edited HTML
+    from html.parser import HTMLParser
+    
+    class ServiceCardParser(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.cards = []
+            
+        def handle_starttag(self, tag, attrs):
+            attrs_dict = dict(attrs)
+            if 'class' in attrs_dict and 'service-card' in attrs_dict['class']:
+                self.cards.append(attrs_dict)
+
+    parser = ServiceCardParser()
+    parser.feed(body.html)
+    
+    ctx = _load_itinerary_ctx(itinerary_id)
+    rendered_pdf = None
+    if ctx:
+        for card in parser.cards:
+            card_type = card.get("data-type")
+            idx_str = card.get("data-index")
+            if idx_str is None:
+                continue
+            idx = int(idx_str)
+            
+            if card_type == "hotel":
+                if idx < len(ctx.get("hotels", [])):
+                    h = ctx["hotels"][idx]
+                    h["pricePerNightUsd"] = float(card.get("data-price-per-night", 0))
+                    h["nights"] = int(card.get("data-nights", 0))
+                    h["rooms"] = int(card.get("data-rooms", 1))
+            elif card_type == "activity":
+                if idx < len(ctx.get("activities", [])):
+                    act = ctx["activities"][idx]
+                    act["pricePerAdultUsd"] = float(card.get("data-price-adult", 0))
+                    act["pricePerChildUsd"] = float(card.get("data-price-child", 0))
+                    adults = int(card.get("data-adults", ctx.get("guests_adults") or 0))
+                    children = int(card.get("data-children", ctx.get("guests_children") or 0))
+                    act["totalEstimateUsd"] = (act["pricePerAdultUsd"] * adults) + (act["pricePerChildUsd"] * children)
+            elif card_type == "transfer":
+                if idx < len(ctx.get("transfers", [])):
+                    tx = ctx["transfers"][idx]
+                    base = float(card.get("data-base-cost", 0))
+                    tolls = float(card.get("data-tolls", 0))
+                    overnight = float(card.get("data-overnight", 0))
+                    surcharges = float(card.get("data-surcharges", 0))
+                    vat = float(card.get("data-vat", 0))
+                    tx["priceUsd"] = base + tolls + overnight + surcharges + vat
+            elif card_type == "flight":
+                if idx < len(ctx.get("flights", [])):
+                    fl = ctx["flights"][idx]
+                    fl["priceUsd"] = float(card.get("data-price-ticket", 0))
+            elif card_type == "guide":
+                if idx < len(ctx.get("guides", [])):
+                    gd = ctx["guides"][idx]
+                    gd["pricePerDayUsd"] = float(card.get("data-price-day", 0))
+                    gd["days"] = int(card.get("data-days", 0))
+                    gd["totalEstimateUsd"] = gd["pricePerDayUsd"] * gd["days"]
+
+        # Recalculate Grand Total in ctx
+        grand_total = 0.0
+        for h in ctx.get("hotels", []):
+            grand_total += (h.get("pricePerNightUsd") or 0.0) * (h.get("nights") or 0) * (h.get("rooms") or 1)
+        for act in ctx.get("activities", []):
+            adults = ctx.get("guests_adults") or 0
+            children = ctx.get("guests_children") or 0
+            grand_total += (act.get("pricePerAdultUsd") or 0.0) * adults + (act.get("pricePerChildUsd") or 0.0) * children
+        for tx in ctx.get("transfers", []):
+            grand_total += tx.get("priceUsd") or 0.0
+        for fl in ctx.get("flights", []):
+            adults = ctx.get("guests_adults") or 0
+            children = ctx.get("guests_children") or 0
+            grand_total += (fl.get("priceUsd") or 0.0) * (adults + children)
+        for gd in ctx.get("guides", []):
+            grand_total += (gd.get("pricePerDayUsd") or 0.0) * (gd.get("days") or 0)
+
+        ctx["grand_total"] = grand_total
+        
+        if ctx.get("price_options"):
+            for opt in ctx["price_options"]:
+                if opt.get("isConfirmedMainOption"):
+                    opt["totalPrice"]["amount"] = grand_total
+                    opt["totalPrice"]["displayText"] = f"${grand_total:,.0f} total"
+                    guests_adults = ctx.get("guests_adults") or 1
+                    per_person = grand_total / guests_adults
+                    opt["pricePerPerson"]["amount"] = per_person
+                    opt["pricePerPerson"]["displayText"] = f"${per_person:,.0f} per adult"
+            
+            main_option = next((o for o in ctx["price_options"] if o.get("isConfirmedMainOption")), None)
+            if main_option:
+                ctx["total_price"] = main_option["totalPrice"]["displayText"]
+                ctx["price_per_pax"] = main_option["pricePerPerson"]["displayText"]
+                ctx["pricing_h2"] = f"B2B Net Price: {ctx['total_price']}"
+                ctx["pricing_p"] = f"Grand total for {ctx['guests_txt']}. Currency: {ctx['currency']}."
+
+        loop = asyncio.get_event_loop()
+        tmpl_pdf = templates.get_template("detail_itinerary_landingpage_template_pdf.html")
+        rendered_pdf = await loop.run_in_executor(None, partial(tmpl_pdf.render, **ctx))
+        
+        ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
+        if ENVIRONMENT == "production":
+            from github_publish import publish_file_to_github
+            try:
+                await asyncio.gather(
+                    publish_file_to_github(
+                        file_path=f"published/{itinerary_id}/pdf.html",
+                        html_content=rendered_pdf,
+                        commit_message=f"Update PDF view for itinerary {itinerary_id} (version {version})",
+                    ),
+                    publish_file_to_github(
+                        file_path=f"published/{itinerary_id}/ctx.json",
+                        html_content=json.dumps(ctx, ensure_ascii=False, default=str),
+                        commit_message=f"Update context for itinerary {itinerary_id} (version {version})",
+                    )
+                )
+            except Exception as e:
+                log.warning("Failed to publish updated PDF/ctx to GitHub: %s", e)
+        else:
+            iti_dir = os.path.join("published", itinerary_id)
+            os.makedirs(iti_dir, exist_ok=True)
+            with open(os.path.join(iti_dir, "ctx.json"), "w", encoding="utf-8") as _f:
+                json.dump(ctx, _f, ensure_ascii=False, default=str)
+            with open(os.path.join(iti_dir, "pdf.html"), "w", encoding="utf-8") as _f:
+                _f.write(rendered_pdf)
+
+    ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
+    if ENVIRONMENT == "production":
+        try:
+            published_url = await publish_to_github(
+                quotation_id=itinerary_id,
+                html_content=body.html,
+                version=version,
+            )
+        except Exception as exc:
+            log.exception("[publish_itinerary] Failed for %s", itinerary_id)
+            raise HTTPException(status_code=502, detail=str(exc))
+    else:
+        # Localhost: write to disk
+        iti_dir = os.path.join("published", itinerary_id)
+        os.makedirs(iti_dir, exist_ok=True)
+        filename = f"v{version}.html"
+        file_path = os.path.join(iti_dir, filename)
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(body.html)
+        published_url = f"{PUBLIC_BASE_URL}/published/{itinerary_id}/{filename}"
+        log.info("[publish_itinerary] Localhost: wrote to disk %s", file_path)
+
+    entry = itineraries.get(itinerary_id)
+    if entry:
+        entry["status"]        = "published"
+        entry["published_url"] = published_url
+        entry["html"]          = body.html
+        if ctx:
+            entry["ctx"]       = ctx
+            entry["pdf_html"]  = rendered_pdf
+        entry["version"]       = version
+
+    log.info("[publish_itinerary] ✓ %s v%d → %s", itinerary_id, version, published_url)
     return {"published_url": published_url, "version": version, "status": "published"}
 
 

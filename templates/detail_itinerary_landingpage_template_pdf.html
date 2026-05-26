@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{ tour_title }} — Booking Itinerary</title>
+  <style>
+    :root {
+      --ivory: #f8f3e9;
+      --ink: #11130f;
+      --muted: #706a5d;
+      --emerald: #17412e;
+      --emerald-2: #0e2f22;
+      --gold: #b7894b;
+      --gold-2: #d8bd85;
+      --line: rgba(183,137,75,.28);
+      --card: #fffaf1;
+      --charcoal: #171915;
+      --serif: Georgia, 'Times New Roman', serif;
+      --sans: Arial, Helvetica, sans-serif;
+    }
+
+    @page { size: A4 portrait; margin: 0; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.6;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* Screen-only viewer styles */
+    @media screen {
+      body {
+        background: #525659; /* PDF viewer gray */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 40px 0;
+        gap: 20px;
+      }
+    }
+
+    @media print {
+      body { 
+        background-color: var(--ivory) !important; 
+        padding: 0; 
+        display: block; 
+      }
+      .pdf-page {
+        width: auto !important;
+        min-height: auto !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+      }
+      .cover {
+        height: 100vh !important;
+      }
+    }
+
+    /* ── Page wrapper ── */
+    .pdf-page {
+      width: 794px;
+      min-height: 1123px;
+      background: var(--ivory);
+      page-break-after: always;
+      position: relative;
+    }
+    .pdf-page:last-of-type { page-break-after: auto; }
+
+    @media screen {
+      .pdf-page {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+      }
+    }
+
+    /* ── Page watermark (fixed = repeats on every print page) ── */
+    .watermark {
+      position: fixed;
+      bottom: 10px;
+      right: 20px;
+      font-size: 9px;
+      color: rgba(0,0,0,.22);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      font-family: var(--sans);
+    }
+
+    /* ═══════════════════════════════════════════
+       PAGE 1 — Cover
+    ═══════════════════════════════════════════ */
+    .cover {
+      width: 794px;
+      height: 1123px;
+      background: linear-gradient(160deg, rgba(17,19,15,.88) 0%, rgba(17,19,15,.55) 55%, rgba(17,19,15,.18) 100%),
+                  center/cover no-repeat;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 0;
+    }
+
+    .cover-body {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 24px;
+      align-items: end;
+      padding: 48px 48px 54px;
+    }
+
+    .cover-kicker {
+      color: var(--gold-2);
+      font-size: 10px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .cover h1 {
+      font-family: var(--serif);
+      font-size: 58px;
+      line-height: .93;
+      font-weight: 500;
+      letter-spacing: -.05em;
+      margin-bottom: 16px;
+      max-width: 420px;
+    }
+
+    .cover-lede {
+      font-size: 14px;
+      color: rgba(255,255,255,.76);
+      max-width: 380px;
+      line-height: 1.6;
+    }
+
+    /* Snapshot card on cover */
+    .quote-card {
+      background: rgba(255,250,241,.93);
+      color: var(--ink);
+      border-radius: 24px;
+      padding: 22px 24px;
+      border: 1px solid rgba(255,255,255,.6);
+    }
+
+    .quote-card h2 {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 14px;
+      color: var(--emerald);
+    }
+
+    .qrow {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(17,19,15,.1);
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .qrow:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .qrow strong { color: var(--ink); text-align: right; font-size: 11px; }
+
+    /* Strip bar at bottom of cover */
+    .cover-strip {
+      background: rgba(23,65,46,.92);
+      display: grid;
+      grid-template-columns: repeat(4,1fr);
+      padding: 16px 48px;
+    }
+
+    .strip-item { text-align: center; }
+    .strip-item span {
+      display: block;
+      color: var(--gold-2);
+      font-size: 8px;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .strip-item strong {
+      font-family: var(--serif);
+      font-size: 20px;
+      font-weight: 500;
+      color: white;
+      display: block;
+      margin-top: 3px;
+    }
+
+    /* ── Shared page header ── */
+    .page-header {
+      background: var(--emerald);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 48px;
+    }
+
+    .page-header .brand {
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .page-header .ref {
+      color: var(--gold-2);
+      font-size: 9px;
+      letter-spacing: .1em;
+    }
+
+    .page-inner { padding: 44px 48px; }
+
+    .section-label {
+      color: var(--gold);
+      font-size: 9px;
+      letter-spacing: .24em;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .section-h2 {
+      font-family: var(--serif);
+      font-size: 36px;
+      line-height: .98;
+      letter-spacing: -.04em;
+      font-weight: 500;
+      color: var(--emerald);
+      margin-bottom: 8px;
+    }
+
+    .section-p {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 24px;
+    }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 20px;
+      break-inside: avoid;
+    }
+
+    .panel h3 {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--emerald);
+      margin-bottom: 10px;
+    }
+
+    .panel p { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+
+    .panel ul {
+      padding-left: 18px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .panel ul li { font-size: 12px; color: var(--muted); }
+
+    /* ── Bookings summary styles ── */
+    .overview-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .overview-panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(17, 19, 15, .03);
+    }
+
+    .panel-title {
+      font-family: var(--serif);
+      font-size: 18px;
+      color: var(--emerald);
+      margin-bottom: 14px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .panel-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .panel-item {
+      padding-bottom: 10px;
+      border-bottom: 1px dashed rgba(183, 137, 75, .2);
+    }
+
+    .panel-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .panel-item-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--gold);
+      font-weight: 700;
+      margin-bottom: 2px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .panel-item h4 {
+      font-size: 13px;
+      font-weight: 700;
+      margin: 0;
+      color: var(--ink);
+    }
+
+    .panel-item-sub {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    /* ── Daily Schedule cards ── */
+    .itinerary { display: grid; gap: 10px; }
+
+    .day-card {
+      display: grid;
+      grid-template-columns: 56px 1fr 130px;
+      gap: 16px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      align-items: start;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .day-num {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--emerald);
+      color: white;
+      display: grid;
+      place-items: center;
+      font-family: var(--serif);
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .day-card h3 {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--emerald);
+      margin: 2px 0 5px;
+      line-height: 1.1;
+    }
+
+    .day-badge {
+      font-size: 8px;
+      color: var(--gold);
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .day-card p { font-size: 11px; color: var(--muted); }
+
+    .day-meta {
+      text-align: right;
+      padding-top: 6px;
+      font-size: 11px;
+    }
+
+    .day-meta .overnight-label {
+      font-size: 8px;
+      color: var(--gold);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 2px;
+    }
+
+    .day-meta .overnight-val {
+      font-family: var(--serif);
+      font-size: 13px;
+      color: var(--emerald);
+    }
+
+    /* ── Booked Services Cards on Day Cards ── */
+    .booked-services-group {
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--line);
+    }
+
+    .service-group-title {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      font-weight: 700;
+      color: var(--gold);
+      margin-bottom: 8px;
+    }
+
+    .service-card {
+      display: flex;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.5);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px;
+      margin-bottom: 8px;
+      box-shadow: 0 2px 8px rgba(17, 19, 15, 0.01);
+    }
+
+    .service-card:last-child {
+      margin-bottom: 0;
+    }
+
+    .service-img {
+      width: 80px;
+      height: 60px;
+      border-radius: 8px;
+      background-position: center;
+      background-size: cover;
+      background-repeat: no-repeat;
+      flex-shrink: 0;
+    }
+
+    .service-details {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .service-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .service-header h4 {
+      font-family: var(--serif);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--emerald);
+    }
+
+    .service-status {
+      font-size: 7px;
+      text-transform: uppercase;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(23, 65, 46, 0.2);
+      background: rgba(23, 65, 46, 0.05);
+      color: var(--emerald);
+    }
+
+    .service-meta {
+      display: flex;
+      gap: 10px;
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .service-dates {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .service-notes {
+      font-size: 10px;
+      font-style: italic;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .cta-block {
+      background: linear-gradient(135deg, var(--emerald-2), #11130f 64%, #332711);
+      color: white;
+      border-radius: 24px;
+      padding: 32px;
+      display: grid;
+      grid-template-columns: 1fr 220px;
+      gap: 28px;
+      align-items: center;
+      break-inside: avoid;
+      margin-bottom: 20px;
+    }
+
+    .cta-block h2 {
+      font-family: var(--serif);
+      font-size: 32px;
+      font-weight: 500;
+      letter-spacing: -.04em;
+      line-height: .96;
+      margin-bottom: 10px;
+    }
+
+    .cta-block p { color: rgba(255,255,255,.72); font-size: 13px; }
+
+    .contact-box {
+      background: rgba(255,255,255,.09);
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .contact-box .clabel {
+      display: block;
+      color: var(--gold-2);
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: .16em;
+      font-weight: 800;
+      margin-top: 12px;
+    }
+
+    .contact-box .clabel:first-child { margin-top: 0; }
+    .contact-box .cval { font-weight: 700; font-size: 13px; margin-top: 2px; }
+
+    .pdf-footer {
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+      padding: 16px 0 20px;
+      border-top: 1px solid var(--line);
+      margin-top: 8px;
+    }
+
+    .no-print { display: none !important; }
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,400;0,600;0,800;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --serif: 'Playfair Display', Georgia, serif;
+      --sans: 'Outfit', Arial, sans-serif;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="watermark">Vietnam Safar · {{ quotation_number }} · Booking Itinerary</div>
+
+  <!-- ═══════════════════ PAGE 1 — Cover ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="cover" style="background-image: linear-gradient(160deg,rgba(17,19,15,.88),rgba(17,19,15,.55) 55%,rgba(17,19,15,.18)), url('{{ img_0 }}');">
+      <div class="cover-body">
+        <div>
+          <div style="font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-2);margin-bottom:10px;font-weight:700;">Confidential Booking Document</div>
+          <div class="cover-kicker">{{ kicker }}</div>
+          <h1>{{ tour_title }}</h1>
+          <p class="cover-lede">{{ lede }}</p>
+        </div>
+        <div class="quote-card">
+          <h2>Booking Snapshot</h2>
+          <div class="qrow"><span>Prepared for</span><strong>{{ customer_name }}</strong></div>
+          <div class="qrow"><span>Travel dates</span><strong>{{ travel_dates }}</strong></div>
+          <div class="qrow"><span>Guests</span><strong>{{ guests_txt }}</strong></div>
+          <div class="qrow"><span>Travel style</span><strong>{{ travel_style }}</strong></div>
+          <div class="qrow"><span>Route</span><strong>{{ route_txt }}</strong></div>
+          <div class="qrow"><span>Booking Ref</span><strong>{{ quotation_number }}</strong></div>
+        </div>
+      </div>
+      <div class="cover-strip">
+        <div class="strip-item"><span>Duration</span><strong>{{ duration_label }}</strong></div>
+        <div class="strip-item"><span>Best for</span><strong>{{ nationality or 'B2B Partner' }}</strong></div>
+        <div class="strip-item"><span>Travel pace</span><strong>Relaxed</strong></div>
+        <div class="strip-item"><span>Service</span><strong>Private</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ PAGE 2 — Overview & Bookings Summary ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="page-header">
+      <span class="brand">Vietnam Safar — Booking Itinerary</span>
+      <span class="ref">{{ quotation_number }}</span>
+    </div>
+    <div class="page-inner">
+      <div class="section-label">Section 1 — Overview</div>
+      <h2 class="section-h2">{{ overview_heading }}</h2>
+      <p class="section-p">{{ prepared_for }} — {{ tour_title }}</p>
+      
+      <div style="font-size:12px; color:var(--muted); margin-bottom: 24px; line-height: 1.7;">
+        {% for para in overview_paras %}
+        <p style="margin-bottom: 10px;">{{ para }}</p>
+        {% endfor %}
+      </div>
+
+      {% if hotels or flights %}
+      <div class="section-label">Section 2 — Confirmed Bookings</div>
+      <div class="overview-grid">
+        {% if hotels %}
+        <div class="overview-panel">
+          <h3 class="panel-title">🏨 Accommodations</h3>
+          <div class="panel-list">
+            {% for hotel in hotels %}
+            <div class="panel-item">
+              <div class="panel-item-meta">
+                <span>{{ hotel.destination }}</span>
+                <strong>{{ hotel.nights }} Nights</strong>
+              </div>
+              <h4>{{ hotel.name }}</h4>
+              <p class="panel-item-sub">{{ hotel.roomType }} ({{ hotel.checkInDate }} to {{ hotel.checkOutDate }})</p>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        {% if flights %}
+        <div class="overview-panel">
+          <h3 class="panel-title">✈️ Flights</h3>
+          <div class="panel-list">
+            {% for fl in flights %}
+            <div class="panel-item">
+              <div class="panel-item-meta">
+                <span>{{ fl.flightNumber }}</span>
+                <strong>{{ fl.date }}</strong>
+              </div>
+              <h4>{{ fl.airline }}</h4>
+              <p class="panel-item-sub">{{ fl.fromCity }} ➔ {{ fl.toCity }}</p>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ═══════════════════ PAGES 3+ — Daily Itinerary timeline ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="page-header">
+      <span class="brand">Vietnam Safar — Booking Itinerary</span>
+      <span class="ref">{{ quotation_number }}</span>
+    </div>
+    <div class="page-inner">
+      <div class="section-label">Section 3 — Daily Schedule & Services</div>
+      <h2 class="section-h2">Day-by-Day Program</h2>
+      <p class="section-p">Detailed program listing confirmed daily tours and transfers.</p>
+
+      <div class="itinerary">
+        {% for day in itinerary %}
+        <div class="day-card">
+          <div class="day-num">{{ day.dayNumber }}</div>
+          <div>
+            <div class="day-badge">DAY {{ day.dayNumber }}{% if day.date %} · {{ day.date }}{% endif %}</div>
+            <h3>{{ day.title }}</h3>
+            {% for para in day.description %}
+            <p style="margin-bottom: 6px;">{{ para }}</p>
+            {% endfor %}
+
+            <!-- Hotels -->
+            {% if day.booked_hotels %}
+              <div class="booked-services-group">
+                <div class="service-group-title">🏨 Accommodation</div>
+                {% for hotel in day.booked_hotels %}
+                  <div class="service-card">
+                    <div class="service-details">
+                      <div class="service-header">
+                        <h4>{{ hotel.name }}</h4>
+                        <span class="service-status">{{ hotel.status }}</span>
+                      </div>
+                      <div class="service-meta">
+                        <span>⭐ {{ hotel.star }}★ Resort</span>
+                        <span>📍 {{ hotel.destination }}</span>
+                        {% if hotel.pricePerNightUsd %}
+                          <span style="color:var(--emerald);font-weight:600;">💵 1 Rm × {{ hotel.nights or 0 }} Nts × ${{ '{:,.0f}'.format(hotel.pricePerNightUsd) }} = ${{ '{:,.0f}'.format(hotel.pricePerNightUsd * hotel.nights) }}</span>
+                        {% elif hotel.pricePerNightVnd %}
+                          <span style="color:var(--emerald);font-weight:600;">💵 1 Rm × {{ hotel.nights or 0 }} Nts × {{ '{:,.0f}'.format(hotel.pricePerNightVnd) }} VND = {{ '{:,.0f}'.format(hotel.pricePerNightVnd * hotel.nights) }} VND</span>
+                        {% endif %}
+                      </div>
+                      <div class="service-dates">
+                        Check-in: <strong>{{ hotel.checkInDate }}</strong> · Check-out: <strong>{{ hotel.checkOutDate }}</strong> ({{ hotel.nights }} Nights)
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            <!-- Activities -->
+            {% if day.booked_activities %}
+              <div class="booked-services-group">
+                <div class="service-group-title">🛶 Excursions & Activities</div>
+                {% for act in day.booked_activities %}
+                  <div class="service-card">
+                    <div class="service-details">
+                      <div class="service-header">
+                        <h4>{{ act.activityName }}</h4>
+                        <span class="service-status">{{ act.status }}</span>
+                      </div>
+                      <div class="service-meta">
+                        <span>📍 {{ act.area }}</span>
+                        {% if act.durationHours %}<span>⏱️ {{ act.durationHours }} Hours</span>{% endif %}
+                        <span style="color:var(--emerald);font-weight:600;">💵 ({{ guests_adults or 0 }} Ad × ${{ '{:,.0f}'.format(act.pricePerAdultUsd or 0) }}) + ({{ guests_children or 0 }} Ch × ${{ '{:,.0f}'.format(act.pricePerChildUsd or 0) }}) = ${{ '{:,.0f}'.format((act.pricePerAdultUsd or 0) * (guests_adults or 0) + (act.pricePerChildUsd or 0) * (guests_children or 0)) }}</span>
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            <!-- Transfers -->
+            {% if day.booked_transfers %}
+              <div class="booked-services-group">
+                <div class="service-group-title">🚗 Transfers & Transport</div>
+                {% for tx in day.booked_transfers %}
+                  <div class="service-card">
+                    <div class="service-details">
+                      <div class="service-header">
+                        <h4>{{ tx.transferType | replace("_", " ") | title }}</h4>
+                        <span class="service-status">{{ tx.status }}</span>
+                      </div>
+                      <div class="service-meta">
+                        <span>Route: <strong>{{ tx.fromLocation }}</strong> ➔ <strong>{{ tx.toLocation }}</strong></span>
+                        <span>Vehicle: <strong>{{ tx.vehicleRequirement }}</strong></span>
+                        {% if tx.priceUsd %}
+                          <span style="color:var(--emerald);font-weight:600;">💵 Base: ${{ '{:,.0f}'.format(tx.priceUsd) }} + Fees: $0 = ${{ '{:,.0f}'.format(tx.priceUsd) }}</span>
+                        {% elif tx.priceVnd %}
+                          <span style="color:var(--emerald);font-weight:600;">💵 Base: {{ '{:,.0f}'.format(tx.priceVnd) }} VND + Fees: 0 = {{ '{:,.0f}'.format(tx.priceVnd) }} VND</span>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            <!-- Flights -->
+            {% if day.booked_flights %}
+              <div class="booked-services-group">
+                <div class="service-group-title">✈️ Flights</div>
+                {% for fl in day.booked_flights %}
+                  <div class="service-card">
+                    <div class="service-details">
+                      <div class="service-header">
+                        <h4>{{ fl.airline }} - {{ fl.flightNumber }}</h4>
+                        <span class="service-status">{{ fl.status }}</span>
+                      </div>
+                      <div class="service-meta">
+                        <span>Route: <strong>{{ fl.fromCity }}</strong> ➔ <strong>{{ fl.toCity }}</strong></span>
+                        <span>Time: <strong>{{ fl.departureTime or 'TBD' }} - {{ fl.arrivalTime or 'TBD' }}</strong></span>
+                        {% if fl.priceUsd %}
+                          <span style="color:var(--emerald);font-weight:600;">💵 {{ (guests_adults or 0) + (guests_children or 0) }} Pax × ${{ '{:,.0f}'.format(fl.priceUsd) }} = ${{ '{:,.0f}'.format(fl.priceUsd * ((guests_adults or 0) + (guests_children or 0))) }}</span>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            <!-- Guides -->
+            {% if day.booked_guides %}
+              <div class="booked-services-group">
+                <div class="service-group-title">🗣️ Local Guides</div>
+                {% for gd in day.booked_guides %}
+                  <div class="service-card">
+                    <div class="service-details">
+                      <div class="service-header">
+                        <h4>Local Guide ({{ gd.language }})</h4>
+                        <span class="service-status">{{ gd.status }}</span>
+                      </div>
+                      <div class="service-meta">
+                        <span>Active in: <strong>{{ gd.destination }}</strong></span>
+                        <span>Duration: <strong>{{ gd.days }} Days</strong></span>
+                        {% if gd.pricePerDayUsd %}
+                          <span style="color:var(--emerald);font-weight:600;">💵 {{ gd.days or 0 }} Days × ${{ '{:,.0f}'.format(gd.pricePerDayUsd) }} = ${{ '{:,.0f}'.format(gd.pricePerDayUsd * gd.days) }}</span>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+          <div class="day-meta">
+            <div class="overnight-label">OVERNIGHT</div>
+            <div class="overnight-val">{{ day.overnight or 'Leisure' }}</div>
+            {% if day.meals %}
+            <div style="margin-top:6px; font-size:10px; opacity:0.7">☕ {{ day.meals | join(" | ") }}</div>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Pricing Section ── -->
+  {% if price_options %}
+  <div class="pdf-page">
+    <div class="page-header">
+      <span class="brand">Vietnam Safar — Booking Itinerary</span>
+      <span class="ref">{{ quotation_number }}</span>
+    </div>
+    <div class="page-inner">
+      <div class="section-label">Section 4 — Pricing Snapshot</div>
+      <h2 class="section-h2">{{ pricing_title or 'Booking Pricing' }}</h2>
+      <p class="section-p">Confirmed package prices and selections.</p>
+
+      <div class="pricing-block">
+        <h2>{{ pricing_h2 }}</h2>
+        <p class="sub">{{ pricing_p }}</p>
+        <div class="price-cards">
+          {% for opt in price_options %}
+          <div class="price-card {% if opt.isConfirmedMainOption %}featured{% endif %}">
+            <span>{{ opt.hotelCategory }}</span>
+            {% if opt.optionName %}
+            <small style="color:rgba(255,255,255,.55);font-size:9px;display:block;margin-top:4px">{{ opt.optionName }}</small>
+            {% endif %}
+            <strong>{{ opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~ opt.pricePerPerson.currency) }}</strong>
+            <small>per person</small><br>
+            <span style="font-size:11px;opacity:.8">Total: {{ opt.totalPrice.displayText or ('{:,.0f}'.format(opt.totalPrice.amount) ~ ' ' ~ opt.totalPrice.currency) }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ═══════════════════ LAST PAGE — Inclusions/Exclusions & Concierge ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="page-header">
+      <span class="brand">Vietnam Safar — Booking Itinerary</span>
+      <span class="ref">{{ quotation_number }}</span>
+    </div>
+    <div class="page-inner">
+      <div class="section-label">Section 4 — Terms & Contacts</div>
+      <h2 class="section-h2">Inclusions & Policies</h2>
+      <p class="section-p">Detailed details of inclusions, exclusions, and contact support.</p>
+
+      <div class="two-col" style="margin-bottom: 24px;">
+        <div class="panel">
+          <h3>Inclusions</h3>
+          <ul>
+            {% for inc in inclusions %}
+            <li>{{ inc }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+        <div class="panel">
+          <h3>Exclusions</h3>
+          <ul>
+            {% for exc in exclusions %}
+            <li>{{ exc }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+
+      {% if notes %}
+      <div class="panel" style="margin-bottom: 24px;">
+        <h3>Notes & Special Requests</h3>
+        <ul>
+          {% for note in notes %}
+          <li>{{ note }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      <div class="cta-block">
+        <div>
+          <h2>Secured Booking</h2>
+          <p>This itinerary reflects confirmed bookings. If any local timing needs adjusting, please let your travel coordinator know prior to departure.</p>
+        </div>
+        <div class="contact-box">
+          <span class="clabel">Vietnam Hotline 24/7</span>
+          <span class="cval">{{ contact }}</span>
+
+          <span class="clabel">Email Support</span>
+          <span class="cval">{{ seller_email }}</span>
+
+          <span class="clabel">Website</span>
+          <span class="cval">{{ contact_web }}</span>
+        </div>
+      </div>
+
+      <div class="pdf-footer">
+        {{ footer_text }}
+      </div>
+    </div>
+  </div>
+
+  <script class="no-print">
+    window.onload = function() {
+      window.print();
+    }
+  </script>
+</body>
+</html>
