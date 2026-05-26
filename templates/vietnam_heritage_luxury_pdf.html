@@ -592,6 +592,7 @@
   <div class="cover" style="background-image: linear-gradient(160deg,rgba(17,19,15,.88),rgba(17,19,15,.55) 55%,rgba(17,19,15,.18)), url('{{ img_0 }}');">
     <div class="cover-body">
       <div>
+        <div style="font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-2);margin-bottom:10px;font-weight:700;">Confidential B2B Proposal</div>
         <div class="cover-kicker">{{ kicker }}</div>
         <h1>{{ tour_title }}</h1>
         <p class="cover-lede">{{ lede }}</p>
@@ -622,25 +623,82 @@
   </div>
 </div>
 
-<!-- ═══════════════════ PAGE 2 — Overview + Gallery ═══════════════════ -->
+<!-- ═══════════════════ PAGE 2 — Glance & Overview ═══════════════════ -->
 <div class="pdf-page">
   <div class="page-header">
-    <span class="brand">Vietnam Safar — Luxury Quotation</span>
+    <span class="brand">Vietnam Safar — B2B Travel Proposal</span>
     <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
   </div>
   <div class="page-inner">
-    <div class="section-label">Overview</div>
-    <h2 class="section-h2">{{ overview_h2 }}</h2>
-    <p class="section-p">{{ overview_p }}</p>
-
-    <div class="experience-grid">
-      {% for exp in experiences %}
-      <div class="exp-card">
-        <div class="exp-num">{{ exp.num }}</div>
-        <h3>{{ exp.title }}</h3>
-        <p>{{ exp.desc }}</p>
+    <div class="section-label">Section 1 — Journey at a Glance</div>
+    <h2 class="section-h2">Journey Specifications</h2>
+    <p class="section-p">Core parameters of this B2B travel proposal.</p>
+    
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 28px;">
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
+        <span style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Duration</span>
+        <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">{{ duration_label }}</strong>
       </div>
-      {% endfor %}
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
+        <span style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Market &amp; Nationality</span>
+        <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">{{ glance_market }}</strong>
+      </div>
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
+        <span style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Guest Profile</span>
+        <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">{{ glance_profile }}</strong>
+      </div>
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
+        <span style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Hotel Standard</span>
+        <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">{{ glance_standard }}</strong>
+      </div>
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
+        <span style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Meal Preference</span>
+        <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">{{ glance_meals }}</strong>
+      </div>
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
+        <span style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Tour Type</span>
+        <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">Private Services</strong>
+      </div>
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; grid-column: span 3;">
+        <span style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Route Sequence</span>
+        <strong style="display:block; font-size:13px; color:var(--emerald); margin-top:3px; font-family:var(--serif); font-weight:500;">{{ route_txt }}</strong>
+      </div>
+    </div>
+
+    <div class="section-label" style="margin-top:20px;">Section 2 — Journey Overview</div>
+    <h2 class="section-h2">{{ overview_h2 }}</h2>
+    <p style="font-size:13px; color:var(--muted); line-height:1.7;">{{ overview_p }}</p>
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE 3 — Why Works & Gallery ═══════════════════ -->
+<div class="pdf-page">
+  <div class="page-header">
+    <span class="brand">Vietnam Safar — B2B Travel Proposal</span>
+    <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
+  </div>
+  <div class="page-inner">
+    <div class="section-label">Section 3 — Why This Journey Works Well</div>
+    <h2 class="section-h2">Value Propositions</h2>
+    <p class="section-p">Core features ensuring comfort and alignment with the guests' expectations.</p>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px;">
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
+        <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">Private &amp; Flexible</strong>
+        <p style="font-size:11px; color:var(--muted); line-height:1.4;">{{ why_private }}</p>
+      </div>
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
+        <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">Comfort &amp; Pacing</strong>
+        <p style="font-size:11px; color:var(--muted); line-height:1.4;">{{ why_comfort }}</p>
+      </div>
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
+        <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">Muslim-Friendly Care</strong>
+        <p style="font-size:11px; color:var(--muted); line-height:1.4;">{{ why_muslim }}</p>
+      </div>
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
+        <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">Balanced Highlights</strong>
+        <p style="font-size:11px; color:var(--muted); line-height:1.4;">{{ why_balanced }}</p>
+      </div>
     </div>
 
     <div class="section-label">Destination Gallery</div>
@@ -657,7 +715,7 @@
   </div>
 </div>
 
-<!-- ═══════════════════ PAGE 3 — Itinerary ═══════════════════ -->
+<!-- ═══════════════════ PAGE 4 — Itinerary ═══════════════════ -->
 <div class="pdf-page">
   <div class="page-header">
     <span class="brand">Vietnam Safar — Luxury Quotation</span>
@@ -683,6 +741,14 @@
             <strong>Highlights:</strong> {{ day.activities | join(' · ') }}
           </p>
           {% endif %}
+          {% if day.notes %}
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>Notes:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              {% for note in day.notes %}<li>{{ note }}</li>{% endfor %}
+            </ul>
+          </div>
+          {% endif %}
         </div>
         <div class="day-meta">
           {% if day.overnight %}
@@ -700,16 +766,51 @@
   </div>
 </div>
 
-<!-- ═══════════════════ PAGE 4 — Pricing + Inc/Exc ═══════════════════ -->
+<!-- ═══════════════════ PAGE 5 — Hotel Plan & Pricing ═══════════════════ -->
 <div class="pdf-page">
   <div class="page-header">
-    <span class="brand">Vietnam Safar — Luxury Quotation</span>
+    <span class="brand">Vietnam Safar — B2B Travel Proposal</span>
     <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
   </div>
   <div class="page-inner">
-    <div class="section-label">Financial Summary</div>
+    <div class="section-label">Section 5 — Selected Hotel Plan</div>
+    <h2 class="section-h2">Hotel Arrangement</h2>
+    <p class="section-p">Proposed accommodation plan. Similar options can be requested.</p>
 
-    <div class="pricing-block">
+    {% if hotels %}
+    <div style="border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 16px;">
+      <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11px;">
+        <thead>
+          <tr style="background: var(--emerald); color: white;">
+            <th style="padding: 10px 14px; width: 120px;">Destination</th>
+            <th style="padding: 10px 14px; width: 80px;">Check-In</th>
+            <th style="padding: 10px 14px; width: 80px;">Check-Out</th>
+            <th style="padding: 10px 14px;">Hotel Arrangement</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in hotels %}
+          <tr style="border-bottom: 1px solid var(--line); background: {% if loop.index % 2 == 0 %}rgba(183, 137, 75, 0.03){% else %}white{% endif %};">
+            <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">{{ item.destination }}</td>
+            <td style="padding: 10px 14px;">{{ item.checkInDate or 'TBA' }}</td>
+            <td style="padding: 10px 14px;">{{ item.checkOutDate or 'TBA' }}</td>
+            <td style="padding: 10px 14px; font-family: var(--serif); color: var(--ink);">{{ item.hotelArrangement }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if room_notes %}
+    <div style="margin-top: 10px; padding: 10px 14px; background: rgba(183, 137, 75, 0.05); border-radius: 8px; border: 1px dashed var(--gold); font-size: 10px; color: var(--muted); margin-bottom: 24px;">
+      <strong>Room Notes &amp; Requests:</strong> {{ room_notes }}
+    </div>
+    {% endif %}
+    {% else %}
+    <p style="font-size:11px; color:var(--muted); font-style:italic; margin-bottom:24px;">Hotel arrangements will be tailored and detailed here for your specific travel dates.</p>
+    {% endif %}
+
+    <div class="section-label">Section 6 — B2B Package Pricing</div>
+    <div class="pricing-block" style="margin-bottom: 0;">
       <h2>{{ pricing_h2 }}</h2>
       <p class="sub">{{ pricing_p }}</p>
       <div class="price-cards">
@@ -730,12 +831,40 @@
         </div>
         {% endfor %}
       </div>
-      {% if payment_terms %}
-      <p class="price-note">{{ payment_terms }}</p>
-      {% endif %}
+      <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.1); display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; font-size: 10px; color: rgba(255,255,255,0.7);">
+        <div>
+          <strong style="color: var(--gold-2); display: block; margin-bottom: 2px;">Price Basis</strong>
+          <span>{{ glance_basis }}</span>
+        </div>
+        <div>
+          <strong style="color: var(--gold-2); display: block; margin-bottom: 2px;">Domestic Flights</strong>
+          <span>{{ glance_flights }}</span>
+        </div>
+        <div>
+          <strong style="color: var(--gold-2); display: block; margin-bottom: 2px;">Validity</strong>
+          <span>{{ glance_validity }}</span>
+        </div>
+        <div>
+          <strong style="color: var(--gold-2); display: block; margin-bottom: 2px;">Rate Classification</strong>
+          <span>{{ glance_partner_note }}</span>
+        </div>
+      </div>
     </div>
+  </div>
+</div>
 
-    <div class="two-col">
+<!-- ═══════════════════ PAGE 6 — Inc/Exc & Muslim Care ═══════════════════ -->
+<div class="pdf-page">
+  <div class="page-header">
+    <span class="brand">Vietnam Safar — B2B Travel Proposal</span>
+    <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
+  </div>
+  <div class="page-inner">
+    <div class="section-label">Section 7 — Package Inclusions &amp; Exclusions</div>
+    <h2 class="section-h2">What is Included</h2>
+    <p class="section-p">Detailed list of inclusions and exclusions for this proposal.</p>
+
+    <div class="two-col" style="margin-bottom: 24px;">
       <div class="panel">
         <h3>Inclusions</h3>
         <ul>
@@ -749,18 +878,40 @@
         </ul>
       </div>
     </div>
+
+    {% if show_muslim_care %}
+    <div class="section-label">Section 8 — Muslim-Friendly Travel Care</div>
+    <h2 class="section-h2">Halal &amp; Prayer Coordination</h2>
+    <div style="margin-top: 10px; padding: 16px; background: rgba(23, 65, 46, 0.03); border-left: 3px solid var(--emerald); border-radius: 8px; font-size: 11px; color: var(--muted); line-height: 1.6;">
+      Vietnam Safar can assist with halal-friendly meal planning where available, no-pork meal notes, seafood or vegetarian alternatives where halal-certified restaurants are limited, and flexible prayer stops during touring days where practical. Halal-certified restaurants are more available in major cities such as Hanoi, Da Nang and Ho Chi Minh City. In mountain, cruise or countryside destinations, suitable seafood, vegetarian or no-pork meals may be recommended.
+    </div>
+    {% endif %}
   </div>
 </div>
 
-<!-- ═══════════════════ PAGE 5 — Terms + CTA ═══════════════════ -->
+<!-- ═══════════════════ PAGE 7 — Enhancements & Notes ═══════════════════ -->
 <div class="pdf-page">
   <div class="page-header">
-    <span class="brand">Vietnam Safar — Luxury Quotation</span>
+    <span class="brand">Vietnam Safar — B2B Travel Proposal</span>
     <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
   </div>
   <div class="page-inner">
-    <div class="section-label">Commercial Notes</div>
-    <p class="section-p" style="margin-bottom:16px;">{{ terms_p }}</p>
+    <div class="section-label">Section 9 — Optional Enhancements</div>
+    <h2 class="section-h2">Personalize Your Proposal</h2>
+    <p class="section-p">Select optional upgrades to enhance the guests' experience.</p>
+
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 28px;">
+      {% for item in optional_enhancements %}
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
+        <strong style="display:block; font-family:var(--serif); font-size:13px; color:var(--emerald); margin-bottom:4px;">{{ item.title }}</strong>
+        <span style="font-size:9px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--gold);">{{ item.status }}</span>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="section-label">Section 10 — Price Conditions &amp; Notes</div>
+    <h2 class="section-h2">Price Conditions</h2>
+    <p class="section-p" style="margin-bottom:12px;">{{ terms_p }}</p>
 
     <div class="terms-grid">
       {% for para in price_cond_paras %}
@@ -771,27 +922,80 @@
       {% endfor %}
     </div>
 
-    <div class="cta-block">
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE 8 — Booking Terms & Finalization ═══════════════════ -->
+<div class="pdf-page">
+  <div class="page-header">
+    <span class="brand">Vietnam Safar — B2B Travel Proposal</span>
+    <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
+  </div>
+  <div class="page-inner">
+    <div class="section-label">Section 11 — Booking &amp; Payment Terms</div>
+    <h2 class="section-h2">Booking Terms</h2>
+    <p class="section-p">Commercial conditions and cancellation policies.</p>
+
+    <div style="border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 24px;">
+      <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11px;">
+        <thead>
+          <tr style="background: var(--emerald); color: white;">
+            <th style="padding: 10px 14px; width: 180px;">Term</th>
+            <th style="padding: 10px 14px;">Condition</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom: 1px solid var(--line); background: white;">
+            <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Deposit</td>
+            <td style="padding: 10px 14px;">{{ term_deposit }}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--line); background: rgba(183, 137, 75, 0.03);">
+            <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Balance</td>
+            <td style="padding: 10px 14px;">{{ term_balance }}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--line); background: white;">
+            <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Cancellation</td>
+            <td style="padding: 10px 14px;">{{ term_cancellation }}</td>
+          </tr>
+          <tr style="background: rgba(183, 137, 75, 0.03);">
+            <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Confirmation</td>
+            <td style="padding: 10px 14px;">{{ term_confirmation }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-label">Section 12 — Finalization Checklist</div>
+    
+    <div class="cta-block" style="margin-bottom: 10px; padding: 24px; grid-template-columns: 1fr 180px; gap: 14px;">
       <div>
-        <div class="cover-kicker">Next step</div>
         <h2>{{ cta_h2 }}</h2>
-        <p>{{ cta_p }}</p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; font-size: 10px; margin-top: 14px; text-align: left;">
+          <div>
+            <strong style="color: var(--gold-2); display:block; margin-bottom:4px; text-transform:uppercase;">Details Required</strong>
+            <ul style="padding-left:12px; display:grid; gap:3px; color:rgba(255,255,255,0.85);">
+              {% for item in final_req %}<li>{{ item }}</li>{% endfor %}
+            </ul>
+          </div>
+          <div>
+            <strong style="color: var(--gold-2); display:block; margin-bottom:4px; text-transform:uppercase;">Next Steps</strong>
+            <ul style="padding-left:12px; display:grid; gap:3px; color:rgba(255,255,255,0.85);">
+              {% for item in final_after %}<li>{{ item }}</li>{% endfor %}
+            </ul>
+          </div>
+        </div>
       </div>
-      <div class="contact-box">
-        <span class="clabel">Website</span>
-        <div class="cval">{{ contact_web }}</div>
+      <div class="contact-box" style="padding: 12px;">
+        <span class="clabel" style="margin-top:0;">Prepared by</span>
+        <div class="cval" style="font-size:11px;">{{ seller_name }}</div>
         <span class="clabel">WhatsApp</span>
-        <div class="cval">{{ contact_phone }}</div>
-        <span class="clabel">Prepared by</span>
-        <div class="cval">{{ seller_name }}</div>
-        {% if seller_email %}
-        <span class="clabel">Email</span>
-        <div class="cval">{{ seller_email }}</div>
-        {% endif %}
+        <div class="cval" style="font-size:11px;">{{ contact_phone }}</div>
+        <span class="clabel">Website</span>
+        <div class="cval" style="font-size:11px;">{{ contact_web }}</div>
       </div>
     </div>
 
-    <div class="pdf-footer">
+    <div class="pdf-footer" style="padding: 10px 0; font-size: 10px;">
       {{ footer_text }}<br>
       <span style="color:var(--gold);font-weight:700;">vietnamsafar.vn</span> &nbsp;·&nbsp;
       This document is a confidential B2B quotation prepared exclusively for {{ customer_name }}.

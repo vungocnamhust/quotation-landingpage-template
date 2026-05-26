@@ -250,6 +250,55 @@ class QuotationOutput(BaseModel):
     pdfUrl:       Optional[str] = None
 
 
+class JourneyAtAGlance(BaseModel):
+    market: Optional[str] = None
+    guestProfile: Optional[str] = None
+    hotelStandard: Optional[str] = None
+    mealPreference: Optional[str] = None
+    priceType: Optional[str] = None
+    tourCode: Optional[str] = None
+    domesticFlights: Optional[str] = None
+    priceBasis: Optional[str] = None
+    partnerNote: Optional[str] = None
+    validity: Optional[str] = None
+
+
+class WhyThisJourneyWorks(BaseModel):
+    privateFlexible: Optional[str] = None
+    comfort: Optional[str] = None
+    muslimFriendly: Optional[str] = None
+    balancedHighlights: Optional[str] = None
+
+
+class HotelPlanItem(BaseModel):
+    destination: str
+    checkInDate: Optional[str] = None
+    checkOutDate: Optional[str] = None
+    hotelArrangement: str
+
+
+class SelectedHotelPlan(BaseModel):
+    hotels: List[HotelPlanItem]
+    roomNotes: Optional[str] = None
+
+
+class OptionalEnhancementItem(BaseModel):
+    title: str
+    status: str
+
+
+class BookingPaymentTerms(BaseModel):
+    deposit: Optional[str] = None
+    balance: Optional[str] = None
+    cancellation: Optional[str] = None
+    confirmation: Optional[str] = None
+
+
+class FinalizationSteps(BaseModel):
+    finalDetailsRequired: Optional[List[str]] = None
+    afterConfirmation: Optional[List[str]] = None
+
+
 class TourQuotationPayload(BaseModel):
     # required: [quotationType, quotationTitle, tourTitle, duration,
     #            preparedFor, travelDates, guests, route, programOverview,
@@ -288,6 +337,13 @@ class TourQuotationPayload(BaseModel):
     notes:                     Optional[List[str]]  = None
     internalNotes:             Optional[List[str]]  = None
     output:                    Optional[QuotationOutput] = None
+    # new gap-alignment fields
+    journeyGlance:             Optional[JourneyAtAGlance] = None
+    whyWorks:                  Optional[WhyThisJourneyWorks] = None
+    hotelPlan:                 Optional[SelectedHotelPlan] = None
+    optionalEnhancements:      Optional[List[OptionalEnhancementItem]] = None
+    bookingTerms:              Optional[BookingPaymentTerms] = None
+    finalization:              Optional[FinalizationSteps] = None
 
 
 # ── Context builder (pure fn — no I/O) ───────────────────────────────────────
@@ -369,6 +425,100 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         "Rates are B2B net indicative and subject to reconfirmation at the time of booking."
     ]
 
+    # --- GAP ALIGNMENT LOGIC ---
+    
+    # 1. Muslim-Friendly conditional check
+    show_muslim_care = False
+    
+    # Check travel style
+    if payload.travelStyle:
+        for style in payload.travelStyle:
+            if "halal" in style.lower() or "muslim" in style.lower():
+                show_muslim_care = True
+                
+    # Check meal preference in journeyGlance
+    if payload.journeyGlance and payload.journeyGlance.mealPreference:
+        if "halal" in payload.journeyGlance.mealPreference.lower() or "no pork" in payload.journeyGlance.mealPreference.lower():
+            show_muslim_care = True
+            
+    # Check nationality / market (case-insensitive substring checks)
+    muslim_keywords = ["saudi", "arabia", "uae", "emirates", "qatar", "kuwait", "oman", "bahrain", "gcc", "middle east", "malaysia", "indonesia", "egypt", "jordan", "turkey", "halal", "muslim"]
+    
+    nat_str = (payload.nationality or "").lower()
+    if payload.customer and payload.customer.nationality:
+        nat_str += " " + payload.customer.nationality.lower()
+    if payload.customer and payload.customer.market:
+        nat_str += " " + payload.customer.market.lower()
+    if payload.journeyGlance and payload.journeyGlance.market:
+        nat_str += " " + payload.journeyGlance.market.lower()
+        
+    if any(k in nat_str for k in muslim_keywords):
+        show_muslim_care = True
+
+    # 2. Journey at a Glance defaults/fallbacks
+    glance = payload.journeyGlance
+    glance_market = (glance.market if glance else None) or payload.nationality or (payload.customer.market if payload.customer else None) or "GCC"
+    glance_profile = (glance.guestProfile if glance else None) or (payload.guests.displayText if payload.guests else None) or f"{payload.guests.totalGuests} guests"
+    glance_standard = (glance.hotelStandard if glance else None) or (" / ".join(payload.hotelOptions) if payload.hotelOptions else "5★ Luxury")
+    glance_meals = (glance.mealPreference if glance else None) or ("Halal-friendly meals" if show_muslim_care else "Breakfast included")
+    glance_price_type = (glance.priceType if glance else None) or "B2B Net Rate"
+    glance_tour_code = (glance.tourCode if glance else None) or payload.quotationNumber or "VS-2026-TBD"
+    glance_flights = (glance.domesticFlights if glance else None) or "Excluded (Quoted separately)"
+    glance_basis = (glance.priceBasis if glance else None) or "Twin/double sharing basis"
+    glance_partner_note = (glance.partnerNote if glance else None) or "Indicative rates only"
+    glance_validity = (glance.validity if glance else None) or "On request"
+
+    # 3. Why works defaults/fallbacks
+    why = payload.whyWorks
+    why_private = (why.privateFlexible if why else None) or "Private vehicle and guide allow the guests to travel at a comfortable pace, adjusting the timing day by day."
+    why_comfort = (why.comfort if why else None) or "Family-friendly spacing, selected comfort stops, and premium vehicle throughout."
+    why_muslim = (why.muslimFriendly if why else None) or "Halal-friendly meals where available, no-pork notes, and prayer-conscious timing where practical."
+    why_balanced = (why.balancedHighlights if why else None) or "A balanced mix of natural scenery, cultural highlights, city discovery, and leisure time."
+
+    # 4. Selected Hotel Plan defaults/fallbacks
+    hotel_plan_items = []
+    hotel_room_notes = ""
+    if payload.hotelPlan:
+        hotel_plan_items = [item.model_dump(mode="json") for item in payload.hotelPlan.hotels]
+        hotel_room_notes = payload.hotelPlan.roomNotes or ""
+
+    # 5. Optional Enhancements defaults/fallbacks
+    opt_enhancements = []
+    if payload.optionalEnhancements:
+        opt_enhancements = [item.model_dump(mode="json") for item in payload.optionalEnhancements]
+    else:
+        opt_enhancements = [
+            {"title": "Airport Fast Track", "status": "Recommended / On request"},
+            {"title": "Arabic-Speaking Guide", "status": "Subject to availability / supplement"},
+            {"title": "Larger Private Vehicle", "status": "Recommended if family has large luggage"},
+            {"title": "Connecting Rooms", "status": "Requested / Subject to availability"},
+            {"title": "Shopping Time", "status": "Included / City-specific"},
+            {"title": "Private Dinner / VIP Setup", "status": "On request / celebration setup"}
+        ]
+
+    # 6. Booking Terms defaults/fallbacks
+    b_terms = payload.bookingTerms
+    term_deposit = (b_terms.deposit if b_terms else None) or "30% deposit upon written confirmation"
+    term_balance = (b_terms.balance if b_terms else None) or "70% balance due 30 days before arrival"
+    term_cancellation = (b_terms.cancellation if b_terms else None) or "Subject to hotel & cruise policies; details provided at booking"
+    term_confirmation = (b_terms.confirmation if b_terms else None) or "Services are secured only after deposit and final confirmation"
+
+    # 7. Finalization defaults/fallbacks
+    final = payload.finalization
+    final_req = (final.finalDetailsRequired if final else None) or [
+        "Guest full names & rooming list",
+        "Passport copies (needed for flights/cruise registration)",
+        "International flight details for arrival/departure transfers",
+        "Special dietary requirements (e.g. halal, vegetarian, allergies)",
+        "Preferred bedding arrangement (double/twin/connecting rooms)"
+    ]
+    final_after = (final.afterConfirmation if final else None) or [
+        "Vietnam Safar secures all rooms, guides, and internal transport",
+        "Halal meal guidelines are sent to all restaurants in advance where relevant",
+        "Final service vouchers and travel documents are shared before arrival",
+        "24/7 local hotline support is activated for the guests during touring"
+    ]
+
     return {
         # IDs & images
         "quotation_id":   quotation_id,
@@ -398,7 +548,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         # Quotation ref
         "quotation_number": payload.quotationNumber or quotation_id,
         "quotation_date":   str(payload.travelDates.startDate),
-        "valid_until":      "On request",
+        "valid_until":      glance_validity,
         # Strip badges
         "strip_duration":  duration_lbl,
         "strip_best_for":  nationality or "B2B Partners",
@@ -447,6 +597,31 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         "footer_text": f"{tour_title} \u2014 Luxury quotation prepared for {prepared_for}.",
         # Raw quotation (for reference / debugging)
         "raw_quotation":  payload.rawQuotation,
+        # GAP ALIGNMENT context
+        "show_muslim_care": show_muslim_care,
+        "glance_market": glance_market,
+        "glance_profile": glance_profile,
+        "glance_standard": glance_standard,
+        "glance_meals": glance_meals,
+        "glance_price_type": glance_price_type,
+        "glance_tour_code": glance_tour_code,
+        "glance_flights": glance_flights,
+        "glance_basis": glance_basis,
+        "glance_partner_note": glance_partner_note,
+        "glance_validity": glance_validity,
+        "why_private": why_private,
+        "why_comfort": why_comfort,
+        "why_muslim": why_muslim,
+        "why_balanced": why_balanced,
+        "hotels": hotel_plan_items,
+        "room_notes": hotel_room_notes,
+        "optional_enhancements": opt_enhancements,
+        "term_deposit": term_deposit,
+        "term_balance": term_balance,
+        "term_cancellation": term_cancellation,
+        "term_confirmation": term_confirmation,
+        "final_req": final_req,
+        "final_after": final_after,
     }
 
 

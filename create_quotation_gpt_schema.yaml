@@ -411,6 +411,27 @@ components:
 
             Full confirmed quotation content continues here.
 
+        journeyGlance:
+          $ref: "#/components/schemas/JourneyAtAGlance"
+
+        whyWorks:
+          $ref: "#/components/schemas/WhyThisJourneyWorks"
+
+        hotelPlan:
+          $ref: "#/components/schemas/SelectedHotelPlan"
+
+        optionalEnhancements:
+          type: array
+          description: List of optional enhancements/upsells.
+          items:
+            $ref: "#/components/schemas/OptionalEnhancementItem"
+
+        bookingTerms:
+          $ref: "#/components/schemas/BookingPaymentTerms"
+
+        finalization:
+          $ref: "#/components/schemas/FinalizationSteps"
+
         output:
           $ref: "#/components/schemas/QuotationOutput"
 
@@ -802,3 +823,141 @@ components:
       required:
         - error
         - message
+
+    JourneyAtAGlance:
+      type: object
+      additionalProperties: false
+      properties:
+        market:
+          type: string
+          example: GCC
+        guestProfile:
+          type: string
+          example: Family
+        hotelStandard:
+          type: string
+          example: 5★ Luxury
+        mealPreference:
+          type: string
+          example: Halal-friendly
+        priceType:
+          type: string
+          example: B2B Net Rate
+        tourCode:
+          type: string
+          example: VS-2026-01
+        domesticFlights:
+          type: string
+          example: Included
+        priceBasis:
+          type: string
+          example: Twin/double sharing
+        partnerNote:
+          type: string
+          example: B2B Net Rate
+        validity:
+          type: string
+          example: 2026-12-31
+
+    WhyThisJourneyWorks:
+      type: object
+      additionalProperties: false
+      properties:
+        privateFlexible:
+          type: string
+          example: Private vehicle and guide allow comfortable pacing.
+        comfort:
+          type: string
+          example: Slow family pacing.
+        muslimFriendly:
+          type: string
+          example: Halal meals and prayer timing.
+        balancedHighlights:
+          type: string
+          example: Balanced culture, nature, and shopping.
+
+    SelectedHotelPlan:
+      type: object
+      additionalProperties: false
+      properties:
+        hotels:
+          type: array
+          items:
+            $ref: "#/components/schemas/HotelPlanItem"
+        roomNotes:
+          type: string
+          example: Connecting rooms requested.
+      required:
+        - hotels
+
+    HotelPlanItem:
+      type: object
+      additionalProperties: false
+      properties:
+        destination:
+          type: string
+          example: Hanoi
+        checkInDate:
+          type: string
+          format: date
+          example: 2026-09-26
+        checkOutDate:
+          type: string
+          format: date
+          example: 2026-09-28
+        hotelArrangement:
+          type: string
+          example: Sofitel Legend Metropole - 2 Nights - Luxury Room
+      required:
+        - destination
+        - hotelArrangement
+
+    OptionalEnhancementItem:
+      type: object
+      additionalProperties: false
+      properties:
+        title:
+          type: string
+          example: Arabic-Speaking Guide
+        status:
+          type: string
+          example: On request
+      required:
+        - title
+        - status
+
+    BookingPaymentTerms:
+      type: object
+      additionalProperties: false
+      properties:
+        deposit:
+          type: string
+          example: 30% upon confirmation
+        balance:
+          type: string
+          example: 70% due 30 days before arrival
+        cancellation:
+          type: string
+          example: Policy according to supplier conditions
+        confirmation:
+          type: string
+          example: Services are secured after deposit
+
+    FinalizationSteps:
+      type: object
+      additionalProperties: false
+      properties:
+        finalDetailsRequired:
+          type: array
+          items:
+            type: string
+          example:
+            - Guest full names
+            - Passport details
+        afterConfirmation:
+          type: array
+          items:
+            type: string
+          example:
+            - Vietnam Safar secures all hotels and services
+            - Final travel documents shared before arrival
