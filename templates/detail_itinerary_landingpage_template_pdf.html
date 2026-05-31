@@ -1,3 +1,4 @@
+{% set symbol = currency ~ ' ' if currency not in ['USD', 'VND'] else ('đ' if currency == 'VND' else '$') %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -693,7 +694,7 @@
                         <span>⭐ {{ hotel.star }}★ Resort</span>
                         <span>📍 {{ hotel.destination }}</span>
                         {% if hotel.pricePerNightUsd %}
-                          <span style="color:var(--emerald);font-weight:600;">💵 1 Rm × {{ hotel.nights or 0 }} Nts × ${{ '{:,.0f}'.format(hotel.pricePerNightUsd) }} = ${{ '{:,.0f}'.format(hotel.pricePerNightUsd * hotel.nights) }}</span>
+                          <span style="color:var(--emerald);font-weight:600;">💵 1 Rm × {{ hotel.nights or 0 }} Nts × {{ symbol }}{{ '{:,.0f}'.format(hotel.pricePerNightUsd) }} = {{ symbol }}{{ '{:,.0f}'.format(hotel.pricePerNightUsd * hotel.nights) }}</span>
                         {% elif hotel.pricePerNightVnd %}
                           <span style="color:var(--emerald);font-weight:600;">💵 1 Rm × {{ hotel.nights or 0 }} Nts × {{ '{:,.0f}'.format(hotel.pricePerNightVnd) }} VND = {{ '{:,.0f}'.format(hotel.pricePerNightVnd * hotel.nights) }} VND</span>
                         {% endif %}
@@ -721,7 +722,7 @@
                       <div class="service-meta">
                         <span>📍 {{ act.area }}</span>
                         {% if act.durationHours %}<span>⏱️ {{ act.durationHours }} Hours</span>{% endif %}
-                        <span style="color:var(--emerald);font-weight:600;">💵 ({{ guests_adults or 0 }} Ad × ${{ '{:,.0f}'.format(act.pricePerAdultUsd or 0) }}) + ({{ guests_children or 0 }} Ch × ${{ '{:,.0f}'.format(act.pricePerChildUsd or 0) }}) = ${{ '{:,.0f}'.format((act.pricePerAdultUsd or 0) * (guests_adults or 0) + (act.pricePerChildUsd or 0) * (guests_children or 0)) }}</span>
+                        <span style="color:var(--emerald);font-weight:600;">💵 ({{ guests_adults or 0 }} Ad × {{ symbol }}{{ '{:,.0f}'.format(act.pricePerAdultUsd or 0) }}) + ({{ guests_children or 0 }} Ch × {{ symbol }}{{ '{:,.0f}'.format(act.pricePerChildUsd or 0) }}) = {{ symbol }}{{ '{:,.0f}'.format((act.pricePerAdultUsd or 0) * (guests_adults or 0) + (act.pricePerChildUsd or 0) * (guests_children or 0)) }}</span>
                       </div>
                     </div>
                   </div>
@@ -744,7 +745,7 @@
                         <span>Route: <strong>{{ tx.fromLocation }}</strong> ➔ <strong>{{ tx.toLocation }}</strong></span>
                         <span>Vehicle: <strong>{{ tx.vehicleRequirement }}</strong></span>
                         {% if tx.priceUsd %}
-                          <span style="color:var(--emerald);font-weight:600;">💵 Base: ${{ '{:,.0f}'.format(tx.priceUsd) }} + Fees: $0 = ${{ '{:,.0f}'.format(tx.priceUsd) }}</span>
+                          <span style="color:var(--emerald);font-weight:600;">💵 Base: {{ symbol }}{{ '{:,.0f}'.format(tx.priceUsd) }} + Fees: {{ symbol }}0 = {{ symbol }}{{ '{:,.0f}'.format(tx.priceUsd) }}</span>
                         {% elif tx.priceVnd %}
                           <span style="color:var(--emerald);font-weight:600;">💵 Base: {{ '{:,.0f}'.format(tx.priceVnd) }} VND + Fees: 0 = {{ '{:,.0f}'.format(tx.priceVnd) }} VND</span>
                         {% endif %}
@@ -770,7 +771,7 @@
                         <span>Route: <strong>{{ fl.fromCity }}</strong> ➔ <strong>{{ fl.toCity }}</strong></span>
                         <span>Time: <strong>{{ fl.departureTime or 'TBD' }} - {{ fl.arrivalTime or 'TBD' }}</strong></span>
                         {% if fl.priceUsd %}
-                          <span style="color:var(--emerald);font-weight:600;">💵 {{ (guests_adults or 0) + (guests_children or 0) }} Pax × ${{ '{:,.0f}'.format(fl.priceUsd) }} = ${{ '{:,.0f}'.format(fl.priceUsd * ((guests_adults or 0) + (guests_children or 0))) }}</span>
+                          <span style="color:var(--emerald);font-weight:600;">💵 {{ (guests_adults or 0) + (guests_children or 0) }} Pax × {{ symbol }}{{ '{:,.0f}'.format(fl.priceUsd) }} = {{ symbol }}{{ '{:,.0f}'.format(fl.priceUsd * ((guests_adults or 0) + (guests_children or 0))) }}</span>
                         {% endif %}
                       </div>
                     </div>
@@ -794,7 +795,7 @@
                         <span>Active in: <strong>{{ gd.destination }}</strong></span>
                         <span>Duration: <strong>{{ gd.days }} Days</strong></span>
                         {% if gd.pricePerDayUsd %}
-                          <span style="color:var(--emerald);font-weight:600;">💵 {{ gd.days or 0 }} Days × ${{ '{:,.0f}'.format(gd.pricePerDayUsd) }} = ${{ '{:,.0f}'.format(gd.pricePerDayUsd * gd.days) }}</span>
+                          <span style="color:var(--emerald);font-weight:600;">💵 {{ gd.days or 0 }} Days × {{ symbol }}{{ '{:,.0f}'.format(gd.pricePerDayUsd) }} = {{ symbol }}{{ '{:,.0f}'.format(gd.pricePerDayUsd * gd.days) }}</span>
                         {% endif %}
                       </div>
                     </div>

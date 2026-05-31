@@ -1,3 +1,4 @@
+{% set symbol = currency ~ ' ' if currency not in ['USD', 'VND'] else ('đ' if currency == 'VND' else '$') %}
 <!DOCTYPE html>
 <html lang="en" style="--hero-img: url('{{ img_0 }}'); {% for dest in destinations %} --img-{{ loop.index }}: url('{{ dest.image_url or '/assets/vietnam-safar-logo.png' }}'); {% endfor %}">
 
@@ -943,6 +944,32 @@
       cursor: not-allowed
     }
 
+    #btn-approve {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #ffffff;
+      border: none;
+      border-radius: 999px;
+      padding: 11px 28px;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: .2s ease;
+      white-space: nowrap;
+      margin-left: 8px;
+    }
+
+    #btn-approve:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(16, 185, 129, .4)
+    }
+
+    #btn-approve:disabled {
+      opacity: .6;
+      cursor: not-allowed
+    }
+
     /* ── Image Selector Button ── */
     .img-change-btn {
       position: absolute;
@@ -1245,7 +1272,7 @@
                         <span>⭐ {{ hotel.star }}★ Resort</span>
                         <span>📍 {{ hotel.destination }}</span>
                         <span class="price-formula" style="color:var(--emerald);font-weight:600;cursor:pointer;border-bottom:1px dashed var(--emerald)">
-                          💵 <span class="rooms-val">1</span> Rm × <span class="nights-val">{{ hotel.nights or 0 }}</span> Nts × $<span class="price-val">{{ '{:,.0f}'.format(hotel.pricePerNightUsd or 0) }}</span> = $<span class="total-val">{{ '{:,.0f}'.format((hotel.pricePerNightUsd or 0) * (hotel.nights or 0)) }}</span>
+                          💵 <span class="rooms-val">1</span> Rm × <span class="nights-val">{{ hotel.nights or 0 }}</span> Nts × {{ symbol }}<span class="price-val">{{ '{:,.0f}'.format(hotel.pricePerNightUsd or 0) }}</span> = {{ symbol }}<span class="total-val">{{ '{:,.0f}'.format((hotel.pricePerNightUsd or 0) * (hotel.nights or 0)) }}</span>
                         </span>
                       </div>
                       <div class="service-dates">
@@ -1293,7 +1320,7 @@
                           <span class="badge-private">👥 Private Group</span>
                         {% endif %}
                         <span class="price-formula" style="color:var(--emerald);font-weight:600;cursor:pointer;border-bottom:1px dashed var(--emerald)">
-                          💵 (<span class="adults-val">{{ guests_adults or 0 }}</span> Ad × $<span class="price-adult-val">{{ '{:,.0f}'.format(act.pricePerAdultUsd or 0) }}</span>) + (<span class="children-val">{{ guests_children or 0 }}</span> Ch × $<span class="price-child-val">{{ '{:,.0f}'.format(act.pricePerChildUsd or 0) }}</span>) = $<span class="total-val">{{ '{:,.0f}'.format((act.pricePerAdultUsd or 0) * (guests_adults or 0) + (act.pricePerChildUsd or 0) * (guests_children or 0)) }}</span>
+                          💵 (<span class="adults-val">{{ guests_adults or 0 }}</span> Ad × {{ symbol }}<span class="price-adult-val">{{ '{:,.0f}'.format(act.pricePerAdultUsd or 0) }}</span>) + (<span class="children-val">{{ guests_children or 0 }}</span> Ch × {{ symbol }}<span class="price-child-val">{{ '{:,.0f}'.format(act.pricePerChildUsd or 0) }}</span>) = {{ symbol }}<span class="total-val">{{ '{:,.0f}'.format((act.pricePerAdultUsd or 0) * (guests_adults or 0) + (act.pricePerChildUsd or 0) * (guests_children or 0)) }}</span>
                         </span>
                       </div>
                       {% if act.operator %}
@@ -1333,7 +1360,7 @@
                           <span>({{ tx.seats }} Seats)</span>
                         {% endif %}
                         <span class="price-formula" style="color:var(--emerald);font-weight:600;cursor:pointer;border-bottom:1px dashed var(--emerald)">
-                          💵 Base: $<span class="base-val">{{ '{:,.0f}'.format(tx.priceUsd or 0) }}</span> + Fees: $<span class="fees-val">0</span> = $<span class="total-val">{{ '{:,.0f}'.format(tx.priceUsd or 0) }}</span>
+                          💵 Base: {{ symbol }}<span class="base-val">{{ '{:,.0f}'.format(tx.priceUsd or 0) }}</span> + Fees: {{ symbol }}<span class="fees-val">0</span> = {{ symbol }}<span class="total-val">{{ '{:,.0f}'.format(tx.priceUsd or 0) }}</span>
                         </span>
                       </div>
                       {% if tx.notes %}
@@ -1364,7 +1391,7 @@
                         <span>From: <strong data-editable="true">{{ fl.fromCity }}</strong> ({{ fl.departureTime or 'TBD' }})</span>
                         <span>To: <strong data-editable="true">{{ fl.toCity }}</strong> ({{ fl.arrivalTime or 'TBD' }})</span>
                         <span class="price-formula" style="color:var(--emerald);font-weight:600;cursor:pointer;border-bottom:1px dashed var(--emerald)">
-                          💵 <span class="passengers-val">{{ (guests_adults or 0) + (guests_children or 0) }}</span> Pax × $<span class="price-ticket-val">{{ '{:,.0f}'.format(fl.priceUsd or 0) }}</span> = $<span class="total-val">{{ '{:,.0f}'.format((fl.priceUsd or 0) * ((guests_adults or 0) + (guests_children or 0))) }}</span>
+                          💵 <span class="passengers-val">{{ (guests_adults or 0) + (guests_children or 0) }}</span> Pax × {{ symbol }}<span class="price-ticket-val">{{ '{:,.0f}'.format(fl.priceUsd or 0) }}</span> = {{ symbol }}<span class="total-val">{{ '{:,.0f}'.format((fl.priceUsd or 0) * ((guests_adults or 0) + (guests_children or 0))) }}</span>
                         </span>
                       </div>
                       {% if fl.notes %}
@@ -1396,7 +1423,7 @@
                         <span>Destination: <strong>{{ gd.destination }}</strong></span>
                         <span>Active duration: <strong>{{ gd.days }} Days</strong></span>
                         <span class="price-formula" style="color:var(--emerald);font-weight:600;cursor:pointer;border-bottom:1px dashed var(--emerald)">
-                          💵 <span class="days-val">{{ gd.days or 0 }}</span> Days × $<span class="price-day-val">{{ '{:,.0f}'.format(gd.pricePerDayUsd or 0) }}</span> = $<span class="total-val">{{ '{:,.0f}'.format((gd.pricePerDayUsd or 0) * (gd.days or 0)) }}</span>
+                          💵 <span class="days-val">{{ gd.days or 0 }}</span> Days × {{ symbol }}<span class="price-day-val">{{ '{:,.0f}'.format(gd.pricePerDayUsd or 0) }}</span> = {{ symbol }}<span class="total-val">{{ '{:,.0f}'.format((gd.pricePerDayUsd or 0) * (gd.days or 0)) }}</span>
                         </span>
                       </div>
                       {% if gd.notes %}
@@ -1529,6 +1556,7 @@
     </div>
     <span id="publish-status"></span>
     <button id="btn-publish" onclick="publishPage()">🚀 Publish to Web</button>
+    <button id="btn-approve" onclick="approvePage()">✅ Save & Approve</button>
   </div>
 
   <!-- ── Image Uploader (Hidden) ── -->
@@ -1648,7 +1676,7 @@
             <input type="number" id="inp-hotel-nights" min="1" step="1">
           </div>
           <div class="pricing-form-group">
-            <label for="inp-hotel-price">Price per Night (USD)</label>
+            <label for="inp-hotel-price">Price per Night ({{ currency }})</label>
             <input type="number" id="inp-hotel-price" min="0" step="1">
           </div>
         </div>
@@ -1660,7 +1688,7 @@
             <input type="number" id="inp-act-adults" min="0" step="1">
           </div>
           <div class="pricing-form-group">
-            <label for="inp-act-price-adult">Price per Adult (USD)</label>
+            <label for="inp-act-price-adult">Price per Adult ({{ currency }})</label>
             <input type="number" id="inp-act-price-adult" min="0" step="1">
           </div>
           <div class="pricing-form-group">
@@ -1668,7 +1696,7 @@
             <input type="number" id="inp-act-children" min="0" step="1">
           </div>
           <div class="pricing-form-group">
-            <label for="inp-act-price-child">Price per Child (USD)</label>
+            <label for="inp-act-price-child">Price per Child ({{ currency }})</label>
             <input type="number" id="inp-act-price-child" min="0" step="1">
           </div>
         </div>
@@ -1676,23 +1704,23 @@
         <!-- Transfer Fields -->
         <div id="fields-transfer" class="fields-group" style="display:none">
           <div class="pricing-form-group">
-            <label for="inp-tx-base">Base Cost (USD)</label>
+            <label for="inp-tx-base">Base Cost ({{ currency }})</label>
             <input type="number" id="inp-tx-base" min="0" step="1">
           </div>
           <div class="pricing-form-group">
-            <label for="inp-tx-tolls">Tolls / Route Fees (USD)</label>
+            <label for="inp-tx-tolls">Tolls / Route Fees ({{ currency }})</label>
             <input type="number" id="inp-tx-tolls" min="0" step="1">
           </div>
           <div class="pricing-form-group">
-            <label for="inp-tx-overnight">Driver Overnight (USD)</label>
+            <label for="inp-tx-overnight">Driver Overnight ({{ currency }})</label>
             <input type="number" id="inp-tx-overnight" min="0" step="1">
           </div>
           <div class="pricing-form-group">
-            <label for="inp-tx-surcharges">Surcharges (USD)</label>
+            <label for="inp-tx-surcharges">Surcharges ({{ currency }})</label>
             <input type="number" id="inp-tx-surcharges" min="0" step="1">
           </div>
           <div class="pricing-form-group">
-            <label for="inp-tx-vat">VAT / Taxes (USD)</label>
+            <label for="inp-tx-vat">VAT / Taxes ({{ currency }})</label>
             <input type="number" id="inp-tx-vat" min="0" step="1">
           </div>
         </div>
@@ -1704,7 +1732,7 @@
             <input type="number" id="inp-flight-passengers" min="1" step="1">
           </div>
           <div class="pricing-form-group">
-            <label for="inp-flight-price">Price per Ticket (USD)</label>
+            <label for="inp-flight-price">Price per Ticket ({{ currency }})</label>
             <input type="number" id="inp-flight-price" min="0" step="1">
           </div>
         </div>
@@ -1716,7 +1744,7 @@
             <input type="number" id="inp-guide-days" min="1" step="1">
           </div>
           <div class="pricing-form-group">
-            <label for="inp-guide-rate">Price per Day (USD)</label>
+            <label for="inp-guide-rate">Price per Day ({{ currency }})</label>
             <input type="number" id="inp-guide-rate" min="0" step="1">
           </div>
         </div>
@@ -1732,6 +1760,8 @@
   <!-- ── Scripts ── -->
   <script class="no-print">
     const ITINERARY_ID = "{{ itinerary_id }}";
+    const CURRENCY_SYMBOL = "{{ 'đ' if currency == 'VND' else ('$' if currency == 'USD' else currency ~ ' ') }}";
+
 
     // Setup editable attributes
     document.querySelectorAll('[data-editable]').forEach(el => {
@@ -2023,16 +2053,16 @@
         const perPersonAmount = grandTotal / divisor;
         
         if (perPersonVal) {
-          perPersonVal.textContent = `$${formatNumber(perPersonAmount)} per adult`;
+          perPersonVal.textContent = `${CURRENCY_SYMBOL}${formatNumber(perPersonAmount)} per adult`;
         }
         if (totalVal) {
-          totalVal.textContent = `$${formatNumber(grandTotal)} total`;
+          totalVal.textContent = `${CURRENCY_SYMBOL}${formatNumber(grandTotal)} total`;
         }
       }
 
       const pricingHeading = document.querySelector('#quotation h2');
       if (pricingHeading) {
-        pricingHeading.textContent = `B2B Net Price: $${formatNumber(grandTotal)} total`;
+        pricingHeading.textContent = `B2B Net Price: ${CURRENCY_SYMBOL}${formatNumber(grandTotal)} total`;
       }
     }
 
@@ -2078,6 +2108,57 @@
         btn.textContent = '🚀 Publish to Web';
       }
       btn.disabled = false;
+    }
+
+    async function approvePage() {
+      const btn = document.getElementById('btn-approve');
+      const publishBtn = document.getElementById('btn-publish');
+      const status = document.getElementById('publish-status');
+      const bar = document.getElementById('publish-bar');
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token') || '';
+      if (!token) {
+        alert('Missing authentication token in URL query parameter. Cannot approve.');
+        return;
+      }
+
+      bar.style.display = 'none';
+      document.querySelectorAll('[data-editable]').forEach(el => el.removeAttribute('contenteditable'));
+      document.querySelectorAll('.img-change-btn').forEach(el => el.remove());
+
+      const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+
+      bar.style.display = '';
+      document.querySelectorAll('[data-editable]').forEach(el => { el.contentEditable = 'true'; });
+      initImageChangers();
+
+      btn.disabled = true;
+      publishBtn.disabled = true;
+      btn.textContent = '⏳ Approving...';
+      status.textContent = 'Submitting approval...';
+
+      try {
+        const res = await fetch(`/itineraries/${ITINERARY_ID}/approve`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ html, token })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          status.innerHTML = `✅ Approved successfully!`;
+          btn.textContent = 'Approved';
+          alert('Itinerary approved successfully!');
+        } else {
+          status.textContent = '❌ ' + (data.detail || 'Approval failed');
+          btn.textContent = '✅ Save & Approve';
+        }
+      } catch (e) {
+        status.textContent = '❌ ' + e.message;
+        btn.textContent = '✅ Save & Approve';
+      }
+      btn.disabled = false;
+      publishBtn.disabled = false;
     }
   </script>
 </body>

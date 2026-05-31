@@ -11,7 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.templating import Jinja2Templates
 from fastapi.exceptions import RequestValidationError
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ValidationError, Field
 from typing import List, Optional
 from datetime import date
 from github_publish import publish_to_github, publish_file_to_github
@@ -246,105 +246,7 @@ class TourPricing(BaseModel):
     grandTotal:   Optional[float] = None
 
 
-class QuotationOutput(BaseModel):
-    quotationUrl: Optional[str] = None
-    pdfUrl:       Optional[str] = None
-
-
-class JourneyAtAGlance(BaseModel):
-    market: Optional[str] = None
-    guestProfile: Optional[str] = None
-    hotelStandard: Optional[str] = None
-    mealPreference: Optional[str] = None
-    priceType: Optional[str] = None
-    tourCode: Optional[str] = None
-    domesticFlights: Optional[str] = None
-    priceBasis: Optional[str] = None
-    partnerNote: Optional[str] = None
-    validity: Optional[str] = None
-
-
-class WhyThisJourneyWorks(BaseModel):
-    privateFlexible: Optional[str] = None
-    comfort: Optional[str] = None
-    muslimFriendly: Optional[str] = None
-    balancedHighlights: Optional[str] = None
-
-
-class HotelPlanItem(BaseModel):
-    destination: str
-    checkInDate: Optional[str] = None
-    checkOutDate: Optional[str] = None
-    hotelArrangement: str
-
-
-class SelectedHotelPlan(BaseModel):
-    hotels: List[HotelPlanItem]
-    roomNotes: Optional[str] = None
-
-
-class OptionalEnhancementItem(BaseModel):
-    title: str
-    status: str
-
-
-class BookingPaymentTerms(BaseModel):
-    deposit: Optional[str] = None
-    balance: Optional[str] = None
-    cancellation: Optional[str] = None
-    confirmation: Optional[str] = None
-
-
-class FinalizationSteps(BaseModel):
-    finalDetailsRequired: Optional[List[str]] = None
-    afterConfirmation: Optional[List[str]] = None
-
-
-class TourQuotationPayload(BaseModel):
-    # required: [quotationType, quotationTitle, tourTitle, duration,
-    #            preparedFor, travelDates, guests, route, programOverview,
-    #            itinerary, pricing, rawQuotation]
-    quotationType:   str
-    quotationTitle:  str
-    tourTitle:       str
-    duration:        Duration
-    preparedFor:     str
-    travelDates:     TravelDates
-    guests:          GuestComposition
-    route:           List[str]
-    programOverview: TextSection
-    itinerary:       List[ItineraryDay]
-    pricing:         TourPricing
-    # optional fields
-    rawQuotation:              Optional[str]        = None
-    quotationNumber:           Optional[str]        = None
-    status:                    Optional[str]        = None
-    publishStatus:             Optional[str]        = None
-    source:                    Optional[str]        = None
-    language:                  Optional[str]        = None
-    nationality:               Optional[str]        = None
-    travelStyle:               Optional[List[str]]  = None
-    hotelOptions:              Optional[List[str]]  = None
-    confirmedMainOption:       Optional[str]        = None
-    alternativeOptionRetained: Optional[str]        = None
-    customer:                  Optional[Customer]   = None
-    seller:                    Optional[Seller]     = None
-    inclusions:                Optional[List[str]]  = None
-    exclusions:                Optional[List[str]]  = None
-    priceConditions:           Optional[TextSection] = None
-    termsAndConditions:        Optional[TextSection] = None
-    cancellationPolicy:        Optional[TextSection] = None
-    paymentTerms:              Optional[str]        = None
-    notes:                     Optional[List[str]]  = None
-    internalNotes:             Optional[List[str]]  = None
-    output:                    Optional[QuotationOutput] = None
-    # new gap-alignment fields
-    journeyGlance:             Optional[JourneyAtAGlance] = None
-    whyWorks:                  Optional[WhyThisJourneyWorks] = None
-    hotelPlan:                 Optional[SelectedHotelPlan] = None
-    optionalEnhancements:      Optional[List[OptionalEnhancementItem]] = None
-    bookingTerms:              Optional[BookingPaymentTerms] = None
-    finalization:              Optional[FinalizationSteps] = None
+from quotation_schemas import TourQuotationPayload
 
 
 # ── Detailed Itinerary Booking Models ───────────────────────────────────────
@@ -429,62 +331,152 @@ class DetailItineraryPayload(BaseModel):
     guests: GuestComposition
     route: List[str]
     travelStyle: Optional[List[str]] = None
-    programOverview: TextSection
-    hotels: List[BookedHotel] = []
-    activities: List[BookedActivity] = []
-    transfers: List[BookedTransfer] = []
-    guides: List[BookedGuide] = []
-    flights: List[BookedFlight] = []
-    itinerary: List[ItineraryDay]
-    inclusions: Optional[List[str]] = None
-    exclusions: Optional[List[str]] = None
+    
+    # Service and itinerary lists
     notes: Optional[List[str]] = None
     seller: Optional[Seller] = None
+    programOverview: Optional[TextSection] = None
+    hotels: List[BookedHotel] = Field(default_factory=list)
+    activities: List[BookedActivity] = Field(default_factory=list)
+    transfers: List[BookedTransfer] = Field(default_factory=list)
+    flights: List[BookedFlight] = Field(default_factory=list)
+    guides: List[BookedGuide] = Field(default_factory=list)
+    itinerary: List[ItineraryDay] = Field(default_factory=list)
+    inclusions: Optional[List[str]] = None
+    exclusions: Optional[List[str]] = None
+    priceConditions: Optional[TextSection] = None
     pricing: Optional[TourPricing] = None
-
-
 # ── Context builder (pure fn — no I/O) ───────────────────────────────────────
 
 def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, destinations: list[dict]):
     """Build template context. Shared by /quotations (landingpage) and /quotations/{id}/pdf."""
     default_img = "/assets/vietnam-safar-logo.png"
-    seller = payload.seller
-    seller_name  = (seller.companyName if seller else None) or "Vietnam Safar \u2013 Discovery Asia Travel Group"
-    seller_email = (seller.email if seller else None) or "sales@vietnamsafar.vn"
-    seller_phone = (seller.phone if seller else None) or "+84 911 538 738"
+    
+    # Defaults for seller/contact
+    seller_name  = "Vietnam Safar \u2013 Discovery Asia Travel Group"
+    seller_email = "sales@vietnamsafar.vn"
+    seller_phone = "+84 911 538 738"
 
-    # Resolve key display strings from new schema
-    tour_title    = payload.tourTitle
-    prepared_for  = payload.preparedFor
-    duration_lbl  = payload.duration.label or f"{payload.duration.days}D{payload.duration.nights}N"
-    travel_dates  = payload.travelDates.displayText or f"{payload.travelDates.startDate} \u2013 {payload.travelDates.endDate}"
-    guests_txt    = payload.guests.displayText or f"{payload.guests.totalGuests} guests"
-    route_txt     = " \u2013 ".join(payload.route)
-    nationality   = payload.nationality or (payload.customer.nationality if payload.customer else "")
-    travel_style  = " | ".join(payload.travelStyle) if payload.travelStyle else "Private"
+    # Resolve key display strings from new Spec 36 schema
+    tour_title    = payload.landingpageContent.heroSection.subtitle
+    prepared_for  = payload.journeyGlance.guestProfile
+    
+    # Calculate duration
+    days_count = len(payload.itinerary)
+    nights_count = max(0, days_count - 1)
+    duration_lbl  = f"{days_count}D{nights_count}N"
+    
+    # Travel dates - fallback to hotel plan if checkInDate is available, otherwise placeholder
+    travel_dates = "Flexible Dates"
+    if payload.hotelPlan.hotels:
+        start_date = payload.hotelPlan.hotels[0].checkInDate
+        end_date = payload.hotelPlan.hotels[-1].checkOutDate
+        if start_date and end_date:
+            travel_dates = f"{start_date} \u2013 {end_date}"
+            
+    guests_txt    = payload.journeyGlance.guestProfile
+    
+    # Extract route from itinerary destinations in sequence
+    route_list = []
+    for d in payload.itinerary:
+        if d.destination and d.destination not in route_list:
+            route_list.append(d.destination)
+    route_txt = " \u2013 ".join(route_list)
+    
+    nationality   = payload.journeyGlance.market
+    travel_style  = payload.journeyGlance.partnerNote
 
-    # Confirmed main pricing option
-    main_option   = next((o for o in payload.pricing.priceOptions if o.isConfirmedMainOption), None)
-    currency      = payload.pricing.currency
-    if main_option:
-        price_per_pax = main_option.pricePerPerson.displayText or f"{currency} {main_option.pricePerPerson.amount:,.0f} / person"
-        total_price   = main_option.totalPrice.displayText or f"{currency} {main_option.totalPrice.amount:,.0f}"
-        grand_total_num = main_option.totalPrice.amount
+    # Construct pricing context from agent custom pricing dict or default
+    price_options = []
+    total_price = ""
+    price_per_pax = ""
+    grand_total_num = 0.0
+    currency = "USD"
+
+    # Check if pricing is custom pricing context dict (from pricing engine)
+    if isinstance(payload.pricing, dict) or hasattr(payload.pricing, "totalPriceUsd"):
+        p_dict = payload.pricing if isinstance(payload.pricing, dict) else payload.pricing.model_dump()
+        currency = p_dict.get("currency", "USD")
+        grand_total_num = p_dict.get("totalPriceUsd", 0.0)
+        
+        # Estimate per-person
+        guests_count = 1
+        import re
+        m = re.search(r'(\d+)\s+adult', guests_txt, re.IGNORECASE)
+        if m:
+            guests_count = int(m.group(1))
+        price_per_person = grand_total_num / max(1, guests_count)
+        
+        price_per_pax = f"{currency} {price_per_person:,.0f} / person"
+        total_price = f"{currency} {grand_total_num:,.0f}"
+        
+        price_options = [{
+            "hotelCategory": payload.journeyGlance.hotelStandard,
+            "optionName": "Main confirmed option",
+            "pricePerPerson": {
+                "amount": price_per_person,
+                "currency": currency,
+                "displayText": price_per_pax,
+                "isFromPrice": False
+            },
+            "totalPrice": {
+                "amount": grand_total_num,
+                "currency": currency,
+                "displayText": total_price,
+                "isFromPrice": False
+            },
+            "isConfirmedMainOption": True,
+            "isAlternativeOption": False,
+            "notes": ["Calculated based on actual supplier costs"]
+        }]
     else:
-        price_per_pax = ""
-        total_price   = ""
-        grand_total_num = 0.0
+        # Standard Pricing model
+        currency = payload.pricing.currency
+        for opt in payload.pricing.priceOptions:
+            price_per_person_amt = opt.amount or 0.0
+            total_price_amt = price_per_person_amt * 2  # default placeholder
+            
+            p_pax_txt = f"{currency} {price_per_person_amt:,.0f} / person"
+            tot_txt = f"{currency} {total_price_amt:,.0f}"
+            
+            price_options.append({
+                "hotelCategory": opt.label,
+                "optionName": opt.notes,
+                "pricePerPerson": {
+                    "amount": price_per_person_amt,
+                    "currency": currency,
+                    "displayText": p_pax_txt,
+                    "isFromPrice": False
+                },
+                "totalPrice": {
+                    "amount": total_price_amt,
+                    "currency": currency,
+                    "displayText": tot_txt,
+                    "isFromPrice": False
+                },
+                "isConfirmedMainOption": True,
+                "isAlternativeOption": False,
+                "notes": [opt.notes] if opt.notes else []
+            })
+        grand_total_num = payload.pricing.grandTotal or 0.0
+        total_price = f"{currency} {grand_total_num:,.0f}"
 
-    # Inclusions / exclusions — use payload fields or defaults
-    inc_lines = payload.inclusions or [
-        "Private airport pick-up and drop-off",
-        "Private air-conditioned transportation throughout",
-        "Accommodation with daily breakfast",
-        "Meals as mentioned in the program",
-        "All sightseeing entrance fees as mentioned",
-        "English-speaking local guide",
-    ]
-    exc_lines = payload.exclusions or [
+    # Extract inclusions from itinerary day mainInclusions dynamically
+    inc_lines = []
+    for d in payload.itinerary:
+        if d.mainInclusions and d.mainInclusions not in inc_lines:
+            inc_lines.append(d.mainInclusions)
+    if not inc_lines:
+        inc_lines = [
+            "Private airport pick-up and drop-off",
+            "Private air-conditioned transportation throughout",
+            "Accommodation with daily breakfast",
+            "Meals as mentioned in the program",
+            "All sightseeing entrance fees as mentioned",
+            "English-speaking local guide",
+        ]
+        
+    exc_lines = [
         "International flights",
         "Vietnam visa and visa processing fees",
         "Travel insurance",
@@ -493,9 +485,9 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
     ]
 
     # Overview paragraphs
-    overview_paras = payload.programOverview.paragraphs
-    overview_heading = payload.programOverview.heading or "PROGRAM OVERVIEW"
-    lede = overview_paras[0] if overview_paras else "A privately guided journey crafted for discerning travellers."
+    overview_paras = [payload.quotationNarrative]
+    overview_heading = "PROGRAM OVERVIEW"
+    lede = payload.quotationNarrative
 
     # Gallery helpers
     def _d_img(i): return destinations[i].get("image_url", default_img) if i < len(destinations) else default_img
@@ -509,8 +501,8 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
 
     # Highlight experiences — first 3 itinerary days
     experiences = [
-        {"num": f"{i+1:02d}", "title": day.title,
-         "desc": day.description[0] if day.description else f"Day {day.dayNumber} of the journey."}
+        {"num": f"{i+1:02d}", "title": f"Day {day.dayNumber}: {day.destination}",
+         "desc": day.summary}
         for i, day in enumerate(payload.itinerary[:3])
     ]
     while len(experiences) < 3:
@@ -518,21 +510,14 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
                             "desc": "A carefully curated moment in this journey."})
 
     # Price conditions note
-    price_cond_paras = payload.priceConditions.paragraphs if payload.priceConditions else [
-        "Rates are B2B net indicative and subject to reconfirmation at the time of booking."
+    price_cond_paras = [
+        "Rates are B2B net indicative and subject to reconfirmation at the time of booking.",
+        "Final price may vary depending on hotel availability, resort category, cruise selection, domestic flight fare, rooming arrangement, child policy, and final travel services confirmed."
     ]
 
     # --- GAP ALIGNMENT LOGIC ---
-    
-    # 1. Muslim-Friendly conditional check
     show_muslim_care = False
     
-    # Check travel style
-    if payload.travelStyle:
-        for style in payload.travelStyle:
-            if "halal" in style.lower() or "muslim" in style.lower():
-                show_muslim_care = True
-                
     # Check meal preference in journeyGlance
     if payload.journeyGlance and payload.journeyGlance.mealPreference:
         if "halal" in payload.journeyGlance.mealPreference.lower() or "no pork" in payload.journeyGlance.mealPreference.lower():
@@ -541,80 +526,68 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
     # Check nationality / market (case-insensitive substring checks)
     muslim_keywords = ["saudi", "arabia", "uae", "emirates", "qatar", "kuwait", "oman", "bahrain", "gcc", "middle east", "malaysia", "indonesia", "egypt", "jordan", "turkey", "halal", "muslim"]
     
-    nat_str = (payload.nationality or "").lower()
-    if payload.customer and payload.customer.nationality:
-        nat_str += " " + payload.customer.nationality.lower()
-    if payload.customer and payload.customer.market:
-        nat_str += " " + payload.customer.market.lower()
-    if payload.journeyGlance and payload.journeyGlance.market:
-        nat_str += " " + payload.journeyGlance.market.lower()
-        
+    nat_str = (nationality or "").lower()
     if any(k in nat_str for k in muslim_keywords):
         show_muslim_care = True
 
-    # 2. Journey at a Glance defaults/fallbacks
+    # Journey at a Glance defaults/fallbacks
     glance = payload.journeyGlance
-    glance_market = (glance.market if glance else None) or payload.nationality or (payload.customer.market if payload.customer else None) or "GCC"
-    glance_profile = (glance.guestProfile if glance else None) or (payload.guests.displayText if payload.guests else None) or f"{payload.guests.totalGuests} guests"
-    glance_standard = (glance.hotelStandard if glance else None) or (" / ".join(payload.hotelOptions) if payload.hotelOptions else "5★ Luxury")
-    glance_meals = (glance.mealPreference if glance else None) or ("Halal-friendly meals" if show_muslim_care else "Breakfast included")
-    glance_price_type = (glance.priceType if glance else None) or "B2B Net Rate"
-    glance_tour_code = (glance.tourCode if glance else None) or payload.quotationNumber or "VS-2026-TBD"
-    glance_flights = (glance.domesticFlights if glance else None) or "Excluded (Quoted separately)"
-    glance_basis = (glance.priceBasis if glance else None) or "Twin/double sharing basis"
-    glance_partner_note = (glance.partnerNote if glance else None) or "Indicative rates only"
-    glance_validity = (glance.validity if glance else None) or "On request"
+    glance_market = glance.market
+    glance_profile = glance.guestProfile
+    glance_standard = glance.hotelStandard
+    glance_meals = glance.mealPreference
+    glance_price_type = glance.priceType
+    glance_tour_code = glance.tourCode
+    glance_flights = glance.domesticFlights
+    glance_basis = glance.priceBasis
+    glance_partner_note = glance.partnerNote
+    glance_validity = glance.validity
 
-    # 3. Why works defaults/fallbacks
+    # Why works defaults/fallbacks
     why = payload.whyWorks
-    why_private = (why.privateFlexible if why else None) or "Private vehicle and guide allow the guests to travel at a comfortable pace, adjusting the timing day by day."
-    why_comfort = (why.comfort if why else None) or "Family-friendly spacing, selected comfort stops, and premium vehicle throughout."
-    why_muslim = (why.muslimFriendly if why else None) or "Halal-friendly meals where available, no-pork notes, and prayer-conscious timing where practical."
-    why_balanced = (why.balancedHighlights if why else None) or "A balanced mix of natural scenery, cultural highlights, city discovery, and leisure time."
+    why_private = why.privateFlexible
+    why_comfort = why.comfort
+    why_muslim = why.muslimFriendly
+    why_balanced = why.balancedHighlights
 
-    # 4. Selected Hotel Plan defaults/fallbacks
+    # Selected Hotel Plan defaults/fallbacks
     hotel_plan_items = []
     hotel_room_notes = ""
     if payload.hotelPlan:
         hotel_plan_items = [item.model_dump(mode="json") for item in payload.hotelPlan.hotels]
         hotel_room_notes = payload.hotelPlan.roomNotes or ""
 
-    # 5. Optional Enhancements defaults/fallbacks
+    # Optional Enhancements defaults/fallbacks
     opt_enhancements = []
     if payload.optionalEnhancements:
         opt_enhancements = [item.model_dump(mode="json") for item in payload.optionalEnhancements]
-    else:
-        opt_enhancements = [
-            {"title": "Airport Fast Track", "status": "Recommended / On request"},
-            {"title": "Arabic-Speaking Guide", "status": "Subject to availability / supplement"},
-            {"title": "Larger Private Vehicle", "status": "Recommended if family has large luggage"},
-            {"title": "Connecting Rooms", "status": "Requested / Subject to availability"},
-            {"title": "Shopping Time", "status": "Included / City-specific"},
-            {"title": "Private Dinner / VIP Setup", "status": "On request / celebration setup"}
-        ]
 
-    # 6. Booking Terms defaults/fallbacks
+    # Booking Terms defaults/fallbacks
     b_terms = payload.bookingTerms
-    term_deposit = (b_terms.deposit if b_terms else None) or "30% deposit upon written confirmation"
-    term_balance = (b_terms.balance if b_terms else None) or "70% balance due 30 days before arrival"
-    term_cancellation = (b_terms.cancellation if b_terms else None) or "Subject to hotel & cruise policies; details provided at booking"
-    term_confirmation = (b_terms.confirmation if b_terms else None) or "Services are secured only after deposit and final confirmation"
+    term_deposit = b_terms.deposit
+    term_balance = b_terms.balance
+    term_cancellation = b_terms.cancellation
+    term_confirmation = b_terms.confirmation
 
-    # 7. Finalization defaults/fallbacks
+    # Finalization defaults/fallbacks
     final = payload.finalization
-    final_req = (final.finalDetailsRequired if final else None) or [
-        "Guest full names & rooming list",
-        "Passport copies (needed for flights/cruise registration)",
-        "International flight details for arrival/departure transfers",
-        "Special dietary requirements (e.g. halal, vegetarian, allergies)",
-        "Preferred bedding arrangement (double/twin/connecting rooms)"
-    ]
-    final_after = (final.afterConfirmation if final else None) or [
-        "Vietnam Safar secures all rooms, guides, and internal transport",
-        "Halal meal guidelines are sent to all restaurants in advance where relevant",
-        "Final service vouchers and travel documents are shared before arrival",
-        "24/7 local hotline support is activated for the guests during touring"
-    ]
+    final_req = [final.finalDetailsRequired]
+    final_after = [final.afterConfirmation]
+
+    # Build itinerary days matching template expectations
+    mapped_itinerary = []
+    for d in payload.itinerary:
+        mapped_itinerary.append({
+            "dayNumber": d.dayNumber,
+            "date": "",  # date is not explicitly in itinerary day in the new schema, but can be empty
+            "title": f"Explore {d.destination}",
+            "description": [d.summary],
+            "overnight": d.destination,
+            "meals": [d.dining] if d.dining else [],
+            "activities": [d.mainInclusions] if d.mainInclusions else [],
+            "notes": [f"Sense of Pace: {d.senseOfPace}"] if d.senseOfPace else [],
+            "destinations": [d.destination]
+        })
 
     return {
         # IDs & images
@@ -622,9 +595,9 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         "img_0": img_0, "img_1": img_1, "img_2": img_2, "img_3": img_3, "img_4": img_4,
         "destinations":   destinations,
         # Hero / header
-        "quotation_title": payload.quotationTitle,
+        "quotation_title": payload.landingpageContent.heroSection.headline,
         "tour_title":      tour_title,
-        "kicker":          f"Private Luxury Quotation \u2022 {duration_lbl} \u2022 {travel_dates}",
+        "kicker":          f"Private Luxury Quotation \u2012 {duration_lbl} \u2012 {travel_dates}",
         "lede":            lede,
         # Guest & trip meta
         "customer_name":   prepared_for,
@@ -634,8 +607,8 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         "route_txt":       route_txt,
         "duration_label":  duration_lbl,
         "travel_dates":    travel_dates,
-        "hotel_options":   payload.hotelOptions or [],
-        "confirmed_option": payload.confirmedMainOption or "",
+        "hotel_options":   [],
+        "confirmed_option": "",
         # Seller / contact
         "seller_name":    seller_name,
         "seller_email":   seller_email,
@@ -644,7 +617,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         "contact_phone":  seller_phone,
         # Quotation ref
         "quotation_number": payload.quotationNumber or quotation_id,
-        "quotation_date":   str(payload.travelDates.startDate),
+        "quotation_date":   travel_dates.split(" \u2013 ")[0] if "\u2013" in travel_dates else travel_dates,
         "valid_until":      glance_validity,
         # Strip badges
         "strip_duration":  duration_lbl,
@@ -653,8 +626,8 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         "strip_service":   "Private",
         # Overview section
         "overview_heading": overview_heading,
-        "overview_h2":      f"{prepared_for} \u2014 {tour_title}",
-        "overview_p":       " ".join(overview_paras),
+        "overview_h2":      f"Prepared for: {prepared_for} \u2014 {tour_title}",
+        "overview_p":       payload.quotationNarrative,
         "overview_paras":   overview_paras,
         # Experiences (first 3 days)
         "experiences":      experiences,
@@ -667,17 +640,17 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         # Itinerary section
         "itinerary_h2": "Day-by-Day Journey Program",
         "itinerary_p":  f"Your private {duration_lbl} journey \u2014 {len(payload.itinerary)} days, carefully crafted.",
-        "itinerary":    [d.model_dump(mode="json") for d in payload.itinerary],
+        "itinerary":    mapped_itinerary,
         # Pricing section
         "currency":       currency,
-        "pricing_title":  payload.pricing.pricingTitle or "PRICE QUOTATION \u2013 B2B NET INDICATIVE",
-        "pricing_basis":  payload.pricing.basis or "B2B net indicative",
-        "price_options":  [o.model_dump(mode="json") for o in payload.pricing.priceOptions],
+        "pricing_title":  "PRICE QUOTATION \u2013 B2B NET INDICATIVE",
+        "pricing_basis":  glance_basis,
+        "price_options":  price_options,
         "price_per_pax":  price_per_pax,
         "total_price":    total_price,
         "grand_total":    grand_total_num,
-        "subtotal":       payload.pricing.subtotal,
-        "tax_total":      payload.pricing.taxTotal,
+        "subtotal":       grand_total_num,
+        "tax_total":      0.0,
         "pricing_h2":     f"B2B Net Price: {total_price}",
         "pricing_p":      f"Grand total for {guests_txt}. Currency: {currency}. Final rates subject to reconfirmation.",
         # Inclusions / exclusions
@@ -685,15 +658,15 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         "exclusions":     exc_lines,
         # Price conditions
         "price_cond_paras": price_cond_paras,
-        "payment_terms":    payload.paymentTerms or "",
-        "terms_p":          price_cond_paras[0] if price_cond_paras else "",
+        "payment_terms":    "Refer to Booking & Payment terms below.",
+        "terms_p":          price_cond_paras[0],
         # CTA
         "cta_h2": "Confirm dates, then refine the luxury layer.",
         "cta_p":  "Share travel dates, preferred hotel tier, rooming list and any dietary or mobility requirements. We will reconfirm availability and return a finalized quotation.",
         # Footer
         "footer_text": f"{tour_title} \u2014 Luxury quotation prepared for {prepared_for}.",
         # Raw quotation (for reference / debugging)
-        "raw_quotation":  payload.rawQuotation,
+        "raw_quotation":  "",
         # GAP ALIGNMENT context
         "show_muslim_care": show_muslim_care,
         "glance_market": glance_market,
@@ -969,14 +942,16 @@ async def create_quotation(request: Request):
     quotation_id = f"quo_{uuid.uuid4().hex[:12]}"
 
     # ── Extract destinations from route + itinerary for the gallery ──────────
-    route_text = " ".join(payload.route)
+    route_list = []
+    for d in payload.itinerary:
+        if d.destination and d.destination not in route_list:
+            route_list.append(d.destination)
+    route_text = " ".join(route_list)
     itinerary_text = " ".join(
-        " ".join(day.destinations or []) + " " + day.title
+        (day.destination or "") + " " + (day.summary or "")
         for day in payload.itinerary
     )
     text_context = route_text + " " + itinerary_text
-    if payload.notes:
-        text_context += " " + " ".join(payload.notes)
 
     from image_selector import extract_and_map_destinations, get_random_image_for_province
     destinations = await extract_and_map_destinations(text_context, max_items=None)
@@ -1080,8 +1055,8 @@ async def create_quotation(request: Request):
         log.info("[/quotations] Localhost: v1.html + pdf.html + ctx.json written to disk.")
 
     log.info("[/quotations] ✓ id=%s  preparedFor=%s  days=%d  route=%s",
-             quotation_id, payload.preparedFor,
-             payload.duration.days, " > ".join(payload.route))
+             quotation_id, payload.journeyGlance.guestProfile,
+             len(payload.itinerary), " > ".join(route_list))
 
     # quotationUrl should be the stable permalink API endpoint
     quotation_url = f"{PUBLIC_BASE_URL}/quotations/{quotation_id}"
@@ -1212,6 +1187,10 @@ async def get_quotation(quotation_id: str):
 
 class PublishRequest(BaseModel):
     html: str
+
+class ApproveRequest(BaseModel):
+    html: str
+    token: str
 
 @app.post("/quotations/{quotation_id}/publish")
 async def publish_quotation(quotation_id: str, body: PublishRequest):
@@ -1644,6 +1623,204 @@ async def publish_itinerary(itinerary_id: str, body: PublishRequest):
 
     log.info("[publish_itinerary] ✓ %s v%d → %s", itinerary_id, version, published_url)
     return {"published_url": published_url, "version": version, "status": "published"}
+
+
+@app.post("/itineraries/{itinerary_id}/approve")
+async def approve_itinerary(itinerary_id: str, body: ApproveRequest):
+    """
+    Saves inline edits back to the system, recalculates ctx/PDF,
+    and calls the DMC Core webhook with the JWT token.
+    """
+    from github_publish import get_next_version, publish_to_github
+    version = await get_next_version(itinerary_id)
+
+    # 1. Update ctx.json and pdf.html using values from the edited HTML
+    from html.parser import HTMLParser
+    
+    class ServiceCardParser(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.cards = []
+            
+        def handle_starttag(self, tag, attrs):
+            attrs_dict = dict(attrs)
+            if 'class' in attrs_dict and 'service-card' in attrs_dict['class']:
+                self.cards.append(attrs_dict)
+
+    parser = ServiceCardParser()
+    parser.feed(body.html)
+    
+    ctx = _load_itinerary_ctx(itinerary_id)
+    rendered_pdf = None
+    if ctx:
+        for card in parser.cards:
+            card_type = card.get("data-type")
+            idx_str = card.get("data-index")
+            if idx_str is None:
+                continue
+            idx = int(idx_str)
+            
+            if card_type == "hotel":
+                if idx < len(ctx.get("hotels", [])):
+                    h = ctx["hotels"][idx]
+                    h["pricePerNightUsd"] = float(card.get("data-price-per-night", 0))
+                    h["nights"] = int(card.get("data-nights", 0))
+                    h["rooms"] = int(card.get("data-rooms", 1))
+            elif card_type == "activity":
+                if idx < len(ctx.get("activities", [])):
+                    act = ctx["activities"][idx]
+                    act["pricePerAdultUsd"] = float(card.get("data-price-adult", 0))
+                    act["pricePerChildUsd"] = float(card.get("data-price-child", 0))
+                    adults = int(card.get("data-adults", ctx.get("guests_adults") or 0))
+                    children = int(card.get("data-children", ctx.get("guests_children") or 0))
+                    act["totalEstimateUsd"] = (act["pricePerAdultUsd"] * adults) + (act["pricePerChildUsd"] * children)
+            elif card_type == "transfer":
+                if idx < len(ctx.get("transfers", [])):
+                    tx = ctx["transfers"][idx]
+                    base = float(card.get("data-base-cost", 0))
+                    tolls = float(card.get("data-tolls", 0))
+                    overnight = float(card.get("data-overnight", 0))
+                    surcharges = float(card.get("data-surcharges", 0))
+                    vat = float(card.get("data-vat", 0))
+                    tx["priceUsd"] = base + tolls + overnight + surcharges + vat
+            elif card_type == "flight":
+                if idx < len(ctx.get("flights", [])):
+                    fl = ctx["flights"][idx]
+                    fl["priceUsd"] = float(card.get("data-price-ticket", 0))
+            elif card_type == "guide":
+                if idx < len(ctx.get("guides", [])):
+                    gd = ctx["guides"][idx]
+                    gd["pricePerDayUsd"] = float(card.get("data-price-day", 0))
+                    gd["days"] = int(card.get("data-days", 0))
+                    gd["totalEstimateUsd"] = gd["pricePerDayUsd"] * gd["days"]
+
+        # Recalculate Grand Total in ctx
+        grand_total = 0.0
+        for h in ctx.get("hotels", []):
+            grand_total += (h.get("pricePerNightUsd") or 0.0) * (h.get("nights") or 0) * (h.get("rooms") or 1)
+        for act in ctx.get("activities", []):
+            adults = ctx.get("guests_adults") or 0
+            children = ctx.get("guests_children") or 0
+            grand_total += (act.get("pricePerAdultUsd") or 0.0) * adults + (act.get("pricePerChildUsd") or 0.0) * children
+        for tx in ctx.get("transfers", []):
+            grand_total += tx.get("priceUsd") or 0.0
+        for fl in ctx.get("flights", []):
+            adults = ctx.get("guests_adults") or 0
+            children = ctx.get("guests_children") or 0
+            grand_total += (fl.get("priceUsd") or 0.0) * (adults + children)
+        for gd in ctx.get("guides", []):
+            grand_total += (gd.get("pricePerDayUsd") or 0.0) * (gd.get("days") or 0)
+
+        ctx["grand_total"] = grand_total
+        
+        if ctx.get("price_options"):
+            for opt in ctx["price_options"]:
+                if opt.get("isConfirmedMainOption"):
+                    opt["totalPrice"]["amount"] = grand_total
+                    opt["totalPrice"]["displayText"] = f"${grand_total:,.0f} total"
+                    guests_adults = ctx.get("guests_adults") or 1
+                    per_person = grand_total / guests_adults
+                    opt["pricePerPerson"]["amount"] = per_person
+                    opt["pricePerPerson"]["displayText"] = f"${per_person:,.0f} per adult"
+            
+            main_option = next((o for o in ctx["price_options"] if o.get("isConfirmedMainOption")), None)
+            if main_option:
+                ctx["total_price"] = main_option["totalPrice"]["displayText"]
+                ctx["price_per_pax"] = main_option["pricePerPerson"]["displayText"]
+                ctx["pricing_h2"] = f"B2B Net Price: {ctx['total_price']}"
+                ctx["pricing_p"] = f"Grand total for {ctx['guests_txt']}. Currency: {ctx['currency']}."
+
+        loop = asyncio.get_event_loop()
+        tmpl_pdf = templates.get_template("detail_itinerary_landingpage_template_pdf.html")
+        rendered_pdf = await loop.run_in_executor(None, partial(tmpl_pdf.render, **ctx))
+        
+        ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
+        if ENVIRONMENT == "production":
+            from github_publish import publish_file_to_github
+            try:
+                await asyncio.gather(
+                    publish_file_to_github(
+                        file_path=f"published/{itinerary_id}/pdf.html",
+                        html_content=rendered_pdf,
+                        commit_message=f"Update PDF view for approved itinerary {itinerary_id} (version {version})",
+                    ),
+                    publish_file_to_github(
+                        file_path=f"published/{itinerary_id}/ctx.json",
+                        html_content=json.dumps(ctx, ensure_ascii=False, default=str),
+                        commit_message=f"Update context for approved itinerary {itinerary_id} (version {version})",
+                    )
+                )
+            except Exception as e:
+                log.warning("Failed to publish approved PDF/ctx to GitHub: %s", e)
+        else:
+            iti_dir = os.path.join("published", itinerary_id)
+            os.makedirs(iti_dir, exist_ok=True)
+            with open(os.path.join(iti_dir, "ctx.json"), "w", encoding="utf-8") as _f:
+                json.dump(ctx, _f, ensure_ascii=False, default=str)
+            with open(os.path.join(iti_dir, "pdf.html"), "w", encoding="utf-8") as _f:
+                _f.write(rendered_pdf)
+
+    # 2. Save the edited HTML
+    ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
+    if ENVIRONMENT == "production":
+        try:
+            published_url = await publish_to_github(
+                quotation_id=itinerary_id,
+                html_content=body.html,
+                version=version,
+            )
+        except Exception as exc:
+            log.exception("[approve_itinerary] Failed to publish HTML for %s", itinerary_id)
+            raise HTTPException(status_code=502, detail=str(exc))
+    else:
+        # Localhost: write to disk
+        iti_dir = os.path.join("published", itinerary_id)
+        os.makedirs(iti_dir, exist_ok=True)
+        filename = f"v{version}.html"
+        file_path = os.path.join(iti_dir, filename)
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(body.html)
+        published_url = f"{PUBLIC_BASE_URL}/published/{itinerary_id}/{filename}"
+        log.info("[approve_itinerary] Localhost: wrote to disk %s", file_path)
+
+    # Update in-memory
+    entry = itineraries.get(itinerary_id)
+    if entry:
+        entry["status"]        = "approved"
+        entry["published_url"] = published_url
+        entry["html"]          = body.html
+        if ctx:
+            entry["ctx"]       = ctx
+            entry["pdf_html"]  = rendered_pdf
+        entry["version"]       = version
+
+    # 3. Webhook callback to DMC Core
+    dmc_core_url = (os.environ.get("DMC_CORE_URL") or "http://localhost:8000").rstrip("/")
+    webhook_url = f"{dmc_core_url}/webhooks/landing-page/approve"
+    log.info("[approve_itinerary] Triggering callback to DMC Core: %s", webhook_url)
+    
+    import httpx
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            headers = {"Authorization": f"Bearer {body.token}"}
+            payload = {
+                "itinerary_id": itinerary_id,
+                "status": "approved",
+                "grand_total": grand_total if ctx else 0.0
+            }
+            resp = await client.post(webhook_url, json=payload, headers=headers)
+            log.info("[approve_itinerary] DMC Core response status: %d, body: %s", resp.status_code, resp.text)
+            if resp.status_code not in (200, 201):
+                log.error("[approve_itinerary] DMC Core webhook returned error status %d", resp.status_code)
+                raise HTTPException(status_code=502, detail=f"DMC Core webhook callback failed: status {resp.status_code}")
+    except Exception as exc:
+        log.exception("[approve_itinerary] DMC Core callback failed: %s", exc)
+        if isinstance(exc, HTTPException):
+            raise exc
+        raise HTTPException(status_code=502, detail=f"DMC Core callback failed: {exc}")
+
+    log.info("[approve_itinerary] ✓ %s approved v%d → %s", itinerary_id, version, published_url)
+    return {"published_url": published_url, "version": version, "status": "approved"}
 
 
 # ── Landing page (static demo) ───────────────────────────────────────────────
