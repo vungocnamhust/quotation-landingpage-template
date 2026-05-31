@@ -1,11 +1,11 @@
-{% set symbol = currency ~ ' ' if currency not in ['USD', 'VND'] else ('đ' if currency == 'VND' else '$') %}
+
 <!DOCTYPE html>
-<html lang="en" style="--hero-img: url('{{ img_0 }}'); {% for dest in destinations %} --img-{{ loop.index }}: url('{{ dest.image_url or '/assets/vietnam-safar-logo.png' }}'); {% endfor %}">
+<html lang="en" style="--hero-img: url('/assets/ninh-binh/tamcoc.jpg');  --img-1: url('/assets/ha-noi/duongtau.jpg');  --img-2: url('/assets/quang-ninh/halong.jpg');  --img-3: url('/assets/ninh-binh/tamcoc.jpg'); ">
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{{ tour_title }} - Booking Itinerary</title>
+  <title>A refined private journey through Hanoi, Ninh Binh, and Ha Long Bay, designed for halal-friendly comfort, smooth pacing, and memorable family travel. - Booking Itinerary</title>
   <style>
     :root {
       --ivory: #f8f3e9;
@@ -1032,9 +1032,9 @@
     <div class="container">
       <div class="hero-content">
         <div>
-          <div class="kicker" data-editable="true">{{ kicker }}</div>
-          <h1 data-editable="true">{{ tour_title }}</h1>
-          <p class="hero-lede" data-editable="true">{{ lede }}</p>
+          <div class="kicker" data-editable="true">Confirmed Booking Itinerary • 4D3N • 2026-09-02 to 2026-09-05</div>
+          <h1 data-editable="true">A refined private journey through Hanoi, Ninh Binh, and Ha Long Bay, designed for halal-friendly comfort, smooth pacing, and memorable family travel.</h1>
+          <p class="hero-lede" data-editable="true">Information mapping: the input is a premium GCC/Saudi, halal-friendly family request for Northern Vietnam, 4 days, for 2 adults and 1 child aged 6, starting 2026-09-02, with an indicative budget of 24,000,000 VND. The draft is therefore structured as a private, comfort-led Northern Vietnam program centered on Hanoi, Ninh Binh, and Ha Long Bay, which aligns with the proven halal-friendly private product style already used for Saudi/GCC partners, including private transport, 4-star positioning, and halal-conscious meal planning   . Assumptions used: no specific hotel or cruise supplier has been named, so accommodation remains generic and subject to final reconfirmation; domestic flights are not required for this 4-day Northern Vietnam routing; the 24,000,000 VND is treated as an indicative total package budget rather than a final contracted price.</p>
           <div class="hero-actions no-print">
             <a class="btn gold" href="#itinerary">Explore Timeline</a>
             <a class="btn outline" href="#services-overview">Booked Services</a>
@@ -1046,33 +1046,33 @@
           <div class="quote-list">
             <div class="quote-row">
               <span>Prepared for:</span>
-              <strong data-editable="true">{{ customer_name }}</strong>
+              <strong data-editable="true">Private family travel for 2 adults and 1 child (age 6), premium comfort focus</strong>
             </div>
-            {% if nationality %}
+            
             <div class="quote-row">
               <span>Nationality:</span>
-              <strong data-editable="true">{{ nationality }}</strong>
+              <strong data-editable="true">GCC / Saudi / Halal-friendly</strong>
             </div>
-            {% endif %}
+            
             <div class="quote-row">
               <span>Dates:</span>
-              <strong data-editable="true">{{ travel_dates }}</strong>
+              <strong data-editable="true">2026-09-02 to 2026-09-05</strong>
             </div>
             <div class="quote-row">
               <span>Duration:</span>
-              <strong data-editable="true">{{ duration_label }}</strong>
+              <strong data-editable="true">4D3N</strong>
             </div>
             <div class="quote-row">
               <span>Guests:</span>
-              <strong data-editable="true">{{ guests_txt }}</strong>
+              <strong data-editable="true">Private family travel for 2 adults and 1 child (age 6), premium comfort focus</strong>
             </div>
             <div class="quote-row">
               <span>Travel Style:</span>
-              <strong data-editable="true">{{ travel_style }}</strong>
+              <strong data-editable="true">4-star or similar premium standard, subject to final confirmation</strong>
             </div>
             <div class="quote-row" style="border-bottom:none">
               <span>Route:</span>
-              <strong data-editable="true">{{ route_txt }}</strong>
+              <strong data-editable="true">Ha Long Bay – Hanoi</strong>
             </div>
           </div>
         </div>
@@ -1108,7 +1108,7 @@
   <section id="overview">
     <div class="container">
       <div class="section-head">
-        <h2 data-editable="true">{{ overview_heading }}</h2>
+        <h2 data-editable="true">TRIP CONFIRMATION</h2>
         <p data-editable="true">A refined booking itinerary mapping confirmed reservations and daily schedule detail.</p>
       </div>
 
@@ -1116,9 +1116,9 @@
         <div class="panel">
           <h3 data-editable="true">Welcome to Vietnam</h3>
           <div class="overview-body">
-            {% for para in overview_paras %}
-            <p data-editable="true">{{ para }}</p>
-            {% endfor %}
+            
+            <p data-editable="true">Information mapping: the input is a premium GCC/Saudi, halal-friendly family request for Northern Vietnam, 4 days, for 2 adults and 1 child aged 6, starting 2026-09-02, with an indicative budget of 24,000,000 VND. The draft is therefore structured as a private, comfort-led Northern Vietnam program centered on Hanoi, Ninh Binh, and Ha Long Bay, which aligns with the proven halal-friendly private product style already used for Saudi/GCC partners, including private transport, 4-star positioning, and halal-conscious meal planning   . Assumptions used: no specific hotel or cruise supplier has been named, so accommodation remains generic and subject to final reconfirmation; domestic flights are not required for this 4-day Northern Vietnam routing; the 24,000,000 VND is treated as an indicative total package budget rather than a final contracted price.</p>
+            
           </div>
         </div>
 
@@ -1126,13 +1126,25 @@
           <h3 data-editable="true">Key Program Elements</h3>
           <p data-editable="true">Every service on this program has been checked and verified for premium quality and comfort.</p>
           <ul style="list-style-type: none; padding-left: 0;">
-            {% for exp in experiences %}
+            
             <li style="margin-bottom: 14px;">
-              <span class="num">{{ exp.num }}</span>
-              <strong style="display:block; font-size:16px; margin: 4px 0 2px;" data-editable="true">{{ exp.title }}</strong>
-              <span data-editable="true">{{ exp.desc }}</span>
+              <span class="num">01</span>
+              <strong style="display:block; font-size:16px; margin: 4px 0 2px;" data-editable="true">Explore Hanoi</strong>
+              <span data-editable="true">Arrival in the capital sets a graceful tone: private welcome, smooth transfer, and an easy first evening that allows the family to settle in without pressure.</span>
             </li>
-            {% endfor %}
+            
+            <li style="margin-bottom: 14px;">
+              <span class="num">02</span>
+              <strong style="display:block; font-size:16px; margin: 4px 0 2px;" data-editable="true">Explore Hanoi / Ninh Binh</strong>
+              <span data-editable="true">A full, elegant day of Northern Vietnam discovery, combining Hanoi’s cultural texture with Ninh Binh’s limestone scenery, in line with the proven Hanoi–Ninh Binh day structure used in the source programs  .</span>
+            </li>
+            
+            <li style="margin-bottom: 14px;">
+              <span class="num">03</span>
+              <strong style="display:block; font-size:16px; margin: 4px 0 2px;" data-editable="true">Explore Ha Long Bay</strong>
+              <span data-editable="true">The journey becomes cinematic as the family transfers to Ha Long Bay and boards an overnight cruise, bringing the iconic limestone seascape into focus with calm, polished elegance.</span>
+            </li>
+            
           </ul>
         </div>
       </div>
@@ -1140,7 +1152,7 @@
   </section>
 
   <!-- ── Booked Services Overview ── -->
-  {% if hotels or flights or guides or activities %}
+  
   <section id="services-overview">
     <div class="container">
       <div class="section-head">
@@ -1149,45 +1161,38 @@
       </div>
 
       <div class="overview-grid">
-        {% if hotels %}
+        
         <div class="overview-panel">
           <h3 class="panel-title">🏨 Confirmed Stays</h3>
           <div class="panel-list">
-            {% for hotel in hotels %}
+            
             <div class="panel-item">
               <div class="panel-item-meta">
-                <span class="star-rating">{% for i in range(hotel.star or 5) %}★{% endfor %}</span>
-                <strong>{{ hotel.nights }} Nights</strong>
+                <span class="star-rating">★★★★</span>
+                <strong>3 Nights</strong>
               </div>
-              <h4 data-editable="true">{{ hotel.name }}</h4>
-              <p class="panel-item-sub">{{ hotel.roomType }} ({{ hotel.checkInDate }} to {{ hotel.checkOutDate }})</p>
+              <h4 data-editable="true">Premium 4-star city hotel or similar, selected for comfort, cleanliness, family convenience, and easy access to Northern Vietnam sightseeing.</h4>
+              <p class="panel-item-sub">Premium Room (2026-09-02 to 2026-09-04)</p>
             </div>
-            {% endfor %}
+            
+            <div class="panel-item">
+              <div class="panel-item-meta">
+                <span class="star-rating">★★★★</span>
+                <strong>3 Nights</strong>
+              </div>
+              <h4 data-editable="true">Premium overnight cruise cabin or similar, subject to final availability and family rooming requirements.</h4>
+              <p class="panel-item-sub">Premium Room (2026-09-04 to 2026-09-05)</p>
+            </div>
+            
           </div>
         </div>
-        {% endif %}
+        
 
-        {% if flights %}
-        <div class="overview-panel">
-          <h3 class="panel-title">✈️ Flight Details</h3>
-          <div class="panel-list">
-            {% for fl in flights %}
-            <div class="panel-item">
-              <div class="panel-item-meta">
-                <span>{{ fl.flightNumber }}</span>
-                <strong>{{ fl.date }}</strong>
-              </div>
-              <h4 data-editable="true">{{ fl.airline }}</h4>
-              <p class="panel-item-sub">{{ fl.fromCity }} ➔ {{ fl.toCity }} ({{ fl.departureTime or 'TBD' }} - {{ fl.arrivalTime or 'TBD' }})</p>
-            </div>
-            {% endfor %}
-          </div>
-        </div>
-        {% endif %}
+        
       </div>
     </div>
   </section>
-  {% endif %}
+  
 
   <!-- ── Destinations Gallery ── -->
   <section id="gallery">
@@ -1195,26 +1200,26 @@
       <div class="gallery">
         <div class="image-tile large" style="background-image: var(--img-1)">
           <div class="image-caption">
-            <small>{{ (destinations[0].slug | default("Highlight") | replace("-", " ") | title) if destinations and destinations|length > 0 else "Highlight" }}</small>
-            <strong>{{ (destinations[0].name | default("Vietnam Highlight")) if destinations and destinations|length > 0 else "Vietnam Highlight" }}</strong>
+            <small>Ha Noi</small>
+            <strong>Hà Nội</strong>
           </div>
         </div>
         <div class="image-tile" style="background-image: var(--img-2)">
           <div class="image-caption">
-            <small>{{ (destinations[1].slug | default("Destination") | replace("-", " ") | title) if destinations and destinations|length > 1 else "Destination" }}</small>
-            <strong>{{ (destinations[1].name | default("Beautiful Stop")) if destinations and destinations|length > 1 else "Beautiful Stop" }}</strong>
+            <small>Quang Ninh</small>
+            <strong>Vịnh Hạ Long</strong>
           </div>
         </div>
         <div class="image-tile" style="background-image: var(--img-3)">
           <div class="image-caption">
-            <small>{{ (destinations[2].slug | default("Experience") | replace("-", " ") | title) if destinations and destinations|length > 2 else "Experience" }}</small>
-            <strong>{{ (destinations[2].name | default("Local Culture")) if destinations and destinations|length > 2 else "Local Culture" }}</strong>
+            <small>Ninh Binh</small>
+            <strong>Ninh Bình</strong>
           </div>
         </div>
         <div class="image-tile" style="background-image: var(--img-4)">
           <div class="image-caption">
-            <small>{{ (destinations[3].slug | default("Journey") | replace("-", " ") | title) if destinations and destinations|length > 3 else "Journey" }}</small>
-            <strong>{{ (destinations[3].name | default("Scenic Route")) if destinations and destinations|length > 3 else "Scenic Route" }}</strong>
+            <small>Journey</small>
+            <strong>Scenic Route</strong>
           </div>
         </div>
       </div>
@@ -1230,252 +1235,366 @@
       </div>
 
       <div class="itinerary">
-        {% for day in itinerary %}
+        
         <div class="day">
           <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
-            <div class="day-label">Day {{ day.dayNumber }}</div>
-            <div style="font-size:12px; font-weight:700; color:var(--muted)">{{ day.date }}</div>
+            <div class="day-label">Day 1</div>
+            <div style="font-size:12px; font-weight:700; color:var(--muted)">2026-09-02</div>
           </div>
 
           <div style="width: 100%;">
             <span class="num">
-              {% if day.meals %} Meals: {{ day.meals | join(", ") }} {% else %} Overnight: {{ day.overnight or "TBD" }} {% endif %}
+               Meals: Dinner at leisure; halal-friendly restaurant recommendations available. 
             </span>
-            <h3 data-editable="true">{{ day.title }}</h3>
+            <h3 data-editable="true">Explore Hanoi</h3>
             
             <div class="day-description-box">
-              {% for desc in day.description %}
-              <p data-editable="true">{{ desc }}</p>
-              {% endfor %}
+              
+              <p data-editable="true">Arrival in the capital sets a graceful tone: private welcome, smooth transfer, and an easy first evening that allows the family to settle in without pressure.</p>
+              
             </div>
 
             <!-- Match Booked Hotels staying tonight -->
-            {% if day.booked_hotels %}
+            
               <div class="booked-services-group">
                 <div class="service-group-title">🏨 Accommodation Stay</div>
-                {% for hotel in day.booked_hotels %}
+                
                   <div class="service-card hotel-card"
                        data-type="hotel"
-                       data-index="{{ hotel._index }}"
-                       data-price-per-night="{{ hotel.pricePerNightUsd or 0 }}"
-                       data-nights="{{ hotel.nights or 0 }}"
+                       data-index="0"
+                       data-price-per-night="150.0"
+                       data-nights="3"
                        data-rooms="1">
-                    {% if hotel.imageUrl %}
-                      <div class="service-img" style="background-image: url('{{ hotel.imageUrl }}')"></div>
-                    {% endif %}
+                    
+                      <div class="service-img" style="background-image: url('/assets/ha-noi/duongtau.jpg')"></div>
+                    
                     <div class="service-details">
                       <div class="service-header">
-                        <h4 data-editable="true">{{ hotel.name }}</h4>
-                        <span class="service-status {{ hotel.status.lower() }}">{{ hotel.status }}</span>
+                        <h4 data-editable="true">Premium 4-star city hotel or similar, selected for comfort, cleanliness, family convenience, and easy access to Northern Vietnam sightseeing.</h4>
+                        <span class="service-status confirmed">Confirmed</span>
                       </div>
                       <div class="service-meta">
-                        <span>⭐ {{ hotel.star }}★ Resort</span>
-                        <span>📍 {{ hotel.destination }}</span>
+                        <span>⭐ 4★ Resort</span>
+                        <span>📍 Hanoi</span>
                         <span class="price-formula" style="color:var(--emerald);font-weight:600;cursor:pointer;border-bottom:1px dashed var(--emerald)">
-                          💵 <span class="rooms-val">1</span> Rm × <span class="nights-val">{{ hotel.nights or 0 }}</span> Nts × {{ symbol }}<span class="price-val">{{ '{:,.0f}'.format(hotel.pricePerNightUsd or 0) }}</span> = {{ symbol }}<span class="total-val">{{ '{:,.0f}'.format((hotel.pricePerNightUsd or 0) * (hotel.nights or 0)) }}</span>
+                          💵 <span class="rooms-val">1</span> Rm × <span class="nights-val">3</span> Nts × đ<span class="price-val">150</span> = đ<span class="total-val">450</span>
                         </span>
                       </div>
                       <div class="service-dates">
-                        <span>Check-in: <strong>{{ hotel.checkInDate }}</strong></span>
-                        <span>Check-out: <strong>{{ hotel.checkOutDate }}</strong> ({{ hotel.nights }} Nights)</span>
+                        <span>Check-in: <strong>2026-09-02</strong></span>
+                        <span>Check-out: <strong>2026-09-04</strong> (3 Nights)</span>
                       </div>
-                      {% if hotel.roomType %}
-                        <div class="service-subtext">Room: <strong data-editable="true">{{ hotel.roomType }}</strong></div>
-                      {% endif %}
-                      {% if hotel.notes %}
-                        <p class="service-notes" data-editable="true">{{ hotel.notes }}</p>
-                      {% endif %}
+                      
+                        <div class="service-subtext">Room: <strong data-editable="true">Premium Room</strong></div>
+                      
+                      
+                        <p class="service-notes" data-editable="true">Assumed rooming: 1 double/twin room with 1 extra bed or family-style arrangement for the child, subject to hotel and cruise configuration. Final bedding, adjoining rooms, and child policy to be reconfirmed.</p>
+                      
                     </div>
                   </div>
-                {% endfor %}
+                
               </div>
-            {% endif %}
+            
 
             <!-- Match Booked Activities on this day -->
-            {% if day.booked_activities %}
-              <div class="booked-services-group">
-                <div class="service-group-title">🛶 Excursions & Activities</div>
-                {% for act in day.booked_activities %}
-                  <div class="service-card activity-card"
-                       data-type="activity"
-                       data-index="{{ act._index }}"
-                       data-price-adult="{{ act.pricePerAdultUsd or 0 }}"
-                       data-price-child="{{ act.pricePerChildUsd or 0 }}"
-                       data-adults="{{ guests_adults or 0 }}"
-                       data-children="{{ guests_children or 0 }}">
-                    {% if act.imageUrl %}
-                      <div class="service-img" style="background-image: url('{{ act.imageUrl }}')"></div>
-                    {% endif %}
-                    <div class="service-details">
-                      <div class="service-header">
-                        <h4 data-editable="true">{{ act.activityName }}</h4>
-                        <span class="service-status {{ act.status.lower() }}">{{ act.status }}</span>
-                      </div>
-                      <div class="service-meta">
-                        <span>📍 {{ act.area }}</span>
-                        {% if act.durationHours %}
-                          <span>⏱️ {{ act.durationHours }} Hours</span>
-                        {% endif %}
-                        {% if act.privateGroup %}
-                          <span class="badge-private">👥 Private Group</span>
-                        {% endif %}
-                        <span class="price-formula" style="color:var(--emerald);font-weight:600;cursor:pointer;border-bottom:1px dashed var(--emerald)">
-                          💵 (<span class="adults-val">{{ guests_adults or 0 }}</span> Ad × {{ symbol }}<span class="price-adult-val">{{ '{:,.0f}'.format(act.pricePerAdultUsd or 0) }}</span>) + (<span class="children-val">{{ guests_children or 0 }}</span> Ch × {{ symbol }}<span class="price-child-val">{{ '{:,.0f}'.format(act.pricePerChildUsd or 0) }}</span>) = {{ symbol }}<span class="total-val">{{ '{:,.0f}'.format((act.pricePerAdultUsd or 0) * (guests_adults or 0) + (act.pricePerChildUsd or 0) * (guests_children or 0)) }}</span>
-                        </span>
-                      </div>
-                      {% if act.operator %}
-                        <div class="service-subtext">Operator: <strong data-editable="true">{{ act.operator }}</strong></div>
-                      {% endif %}
-                      {% if act.notes %}
-                        <p class="service-notes" data-editable="true">{{ act.notes }}</p>
-                      {% endif %}
-                    </div>
-                  </div>
-                {% endfor %}
-              </div>
-            {% endif %}
+            
 
             <!-- Match Booked Transfers on this day -->
-            {% if day.booked_transfers %}
-              <div class="booked-services-group">
-                <div class="service-group-title">🚗 Transfers & Transportation</div>
-                {% for tx in day.booked_transfers %}
-                  <div class="service-card transfer-card"
-                       data-type="transfer"
-                       data-index="{{ tx._index }}"
-                       data-base-cost="{{ tx.priceUsd or 0 }}"
-                       data-tolls="0"
-                       data-overnight="0"
-                       data-surcharges="0"
-                       data-vat="0">
-                    <div class="service-details">
-                      <div class="service-header">
-                        <h4 data-editable="true">{{ tx.transferType | replace("_", " ") | title }}</h4>
-                        <span class="service-status {{ tx.status.lower() }}">{{ tx.status }}</span>
-                      </div>
-                      <div class="service-meta">
-                        <span>Route: <strong>{{ tx.fromLocation }}</strong> ➔ <strong>{{ tx.toLocation }}</strong></span>
-                        <span>Vehicle: <strong data-editable="true">{{ tx.vehicleRequirement }}</strong></span>
-                        {% if tx.seats %}
-                          <span>({{ tx.seats }} Seats)</span>
-                        {% endif %}
-                        <span class="price-formula" style="color:var(--emerald);font-weight:600;cursor:pointer;border-bottom:1px dashed var(--emerald)">
-                          💵 Base: {{ symbol }}<span class="base-val">{{ '{:,.0f}'.format(tx.priceUsd or 0) }}</span> + Fees: {{ symbol }}<span class="fees-val">0</span> = {{ symbol }}<span class="total-val">{{ '{:,.0f}'.format(tx.priceUsd or 0) }}</span>
-                        </span>
-                      </div>
-                      {% if tx.notes %}
-                        <p class="service-notes" data-editable="true">{{ tx.notes }}</p>
-                      {% endif %}
-                    </div>
-                  </div>
-                {% endfor %}
-              </div>
-            {% endif %}
+            
 
             <!-- Match Booked Flights on this day -->
-            {% if day.booked_flights %}
-              <div class="booked-services-group">
-                <div class="service-group-title">✈️ Flights</div>
-                {% for fl in day.booked_flights %}
-                  <div class="service-card flight-card"
-                       data-type="flight"
-                       data-index="{{ fl._index }}"
-                       data-price-ticket="{{ fl.priceUsd or 0 }}"
-                       data-passengers="{{ (guests_adults or 0) + (guests_children or 0) }}">
-                    <div class="service-details">
-                      <div class="service-header">
-                        <h4 data-editable="true">{{ fl.airline }} - {{ fl.flightNumber }}</h4>
-                        <span class="service-status {{ fl.status.lower() }}">{{ fl.status }}</span>
-                      </div>
-                      <div class="service-meta">
-                        <span>From: <strong data-editable="true">{{ fl.fromCity }}</strong> ({{ fl.departureTime or 'TBD' }})</span>
-                        <span>To: <strong data-editable="true">{{ fl.toCity }}</strong> ({{ fl.arrivalTime or 'TBD' }})</span>
-                        <span class="price-formula" style="color:var(--emerald);font-weight:600;cursor:pointer;border-bottom:1px dashed var(--emerald)">
-                          💵 <span class="passengers-val">{{ (guests_adults or 0) + (guests_children or 0) }}</span> Pax × {{ symbol }}<span class="price-ticket-val">{{ '{:,.0f}'.format(fl.priceUsd or 0) }}</span> = {{ symbol }}<span class="total-val">{{ '{:,.0f}'.format((fl.priceUsd or 0) * ((guests_adults or 0) + (guests_children or 0))) }}</span>
-                        </span>
-                      </div>
-                      {% if fl.notes %}
-                        <p class="service-notes" data-editable="true">{{ fl.notes }}</p>
-                      {% endif %}
-                    </div>
-                  </div>
-                {% endfor %}
-              </div>
-            {% endif %}
+            
 
             <!-- Match Booked Guides on this day -->
-            {% if day.booked_guides %}
-              <div class="booked-services-group">
-                <div class="service-group-title">🗣️ Local Guide Services</div>
-                {% for gd in day.booked_guides %}
-                  <div class="service-card guide-card"
-                       data-type="guide"
-                       data-index="{{ gd._index }}"
-                       data-price-day="{{ gd.pricePerDayUsd or 0 }}"
-                       data-days="{{ gd.days or 0 }}">
-                    <div class="service-details">
-                      <div class="service-header">
-                        <h4 data-editable="true">Guide: {{ gd.guideName or gd.language ~ ' Speaking Guide' }}</h4>
-                        <span class="service-status {{ gd.status.lower() }}">{{ gd.status }}</span>
-                      </div>
-                      <div class="service-meta">
-                        <span>Language: <strong>{{ gd.language }}</strong></span>
-                        <span>Destination: <strong>{{ gd.destination }}</strong></span>
-                        <span>Active duration: <strong>{{ gd.days }} Days</strong></span>
-                        <span class="price-formula" style="color:var(--emerald);font-weight:600;cursor:pointer;border-bottom:1px dashed var(--emerald)">
-                          💵 <span class="days-val">{{ gd.days or 0 }}</span> Days × {{ symbol }}<span class="price-day-val">{{ '{:,.0f}'.format(gd.pricePerDayUsd or 0) }}</span> = {{ symbol }}<span class="total-val">{{ '{:,.0f}'.format((gd.pricePerDayUsd or 0) * (gd.days or 0)) }}</span>
-                        </span>
-                      </div>
-                      {% if gd.notes %}
-                        <p class="service-notes" data-editable="true">{{ gd.notes }}</p>
-                      {% endif %}
-                    </div>
-                  </div>
-                {% endfor %}
-              </div>
-            {% endif %}
+            
 
           </div>
 
           <div class="day-meta">
-            <div>{{ day.overnight or "Leisure Day" }}</div>
-            {% if day.meals %}
-            <div class="subtle" style="margin-top: 6px;">☕ {{ day.meals | join(" | ") }}</div>
-            {% endif %}
+            <div>Hanoi</div>
+            
+            <div class="subtle" style="margin-top: 6px;">☕ Dinner at leisure; halal-friendly restaurant recommendations available.</div>
+            
           </div>
         </div>
-        {% endfor %}
+        
+        <div class="day">
+          <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+            <div class="day-label">Day 2</div>
+            <div style="font-size:12px; font-weight:700; color:var(--muted)">2026-09-02</div>
+          </div>
+
+          <div style="width: 100%;">
+            <span class="num">
+               Meals: Breakfast at hotel, lunch en route or locally arranged; dinner at leisure in Hanoi. 
+            </span>
+            <h3 data-editable="true">Explore Hanoi / Ninh Binh</h3>
+            
+            <div class="day-description-box">
+              
+              <p data-editable="true">A full, elegant day of Northern Vietnam discovery, combining Hanoi’s cultural texture with Ninh Binh’s limestone scenery, in line with the proven Hanoi–Ninh Binh day structure used in the source programs  .</p>
+              
+            </div>
+
+            <!-- Match Booked Hotels staying tonight -->
+            
+              <div class="booked-services-group">
+                <div class="service-group-title">🏨 Accommodation Stay</div>
+                
+                  <div class="service-card hotel-card"
+                       data-type="hotel"
+                       data-index="0"
+                       data-price-per-night="150.0"
+                       data-nights="3"
+                       data-rooms="1">
+                    
+                      <div class="service-img" style="background-image: url('/assets/ha-noi/duongtau.jpg')"></div>
+                    
+                    <div class="service-details">
+                      <div class="service-header">
+                        <h4 data-editable="true">Premium 4-star city hotel or similar, selected for comfort, cleanliness, family convenience, and easy access to Northern Vietnam sightseeing.</h4>
+                        <span class="service-status confirmed">Confirmed</span>
+                      </div>
+                      <div class="service-meta">
+                        <span>⭐ 4★ Resort</span>
+                        <span>📍 Hanoi</span>
+                        <span class="price-formula" style="color:var(--emerald);font-weight:600;cursor:pointer;border-bottom:1px dashed var(--emerald)">
+                          💵 <span class="rooms-val">1</span> Rm × <span class="nights-val">3</span> Nts × đ<span class="price-val">150</span> = đ<span class="total-val">450</span>
+                        </span>
+                      </div>
+                      <div class="service-dates">
+                        <span>Check-in: <strong>2026-09-02</strong></span>
+                        <span>Check-out: <strong>2026-09-04</strong> (3 Nights)</span>
+                      </div>
+                      
+                        <div class="service-subtext">Room: <strong data-editable="true">Premium Room</strong></div>
+                      
+                      
+                        <p class="service-notes" data-editable="true">Assumed rooming: 1 double/twin room with 1 extra bed or family-style arrangement for the child, subject to hotel and cruise configuration. Final bedding, adjoining rooms, and child policy to be reconfirmed.</p>
+                      
+                    </div>
+                  </div>
+                
+              </div>
+            
+
+            <!-- Match Booked Activities on this day -->
+            
+
+            <!-- Match Booked Transfers on this day -->
+            
+
+            <!-- Match Booked Flights on this day -->
+            
+
+            <!-- Match Booked Guides on this day -->
+            
+
+          </div>
+
+          <div class="day-meta">
+            <div>Hanoi / Ninh Binh</div>
+            
+            <div class="subtle" style="margin-top: 6px;">☕ Breakfast at hotel, lunch en route or locally arranged; dinner at leisure in Hanoi.</div>
+            
+          </div>
+        </div>
+        
+        <div class="day">
+          <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+            <div class="day-label">Day 3</div>
+            <div style="font-size:12px; font-weight:700; color:var(--muted)">2026-09-02</div>
+          </div>
+
+          <div style="width: 100%;">
+            <span class="num">
+               Meals: Breakfast, lunch, and dinner on the cruise; halal-friendly/seafood/vegetarian request to be advised in advance. 
+            </span>
+            <h3 data-editable="true">Explore Ha Long Bay</h3>
+            
+            <div class="day-description-box">
+              
+              <p data-editable="true">The journey becomes cinematic as the family transfers to Ha Long Bay and boards an overnight cruise, bringing the iconic limestone seascape into focus with calm, polished elegance.</p>
+              
+            </div>
+
+            <!-- Match Booked Hotels staying tonight -->
+            
+              <div class="booked-services-group">
+                <div class="service-group-title">🏨 Accommodation Stay</div>
+                
+                  <div class="service-card hotel-card"
+                       data-type="hotel"
+                       data-index="0"
+                       data-price-per-night="150.0"
+                       data-nights="3"
+                       data-rooms="1">
+                    
+                      <div class="service-img" style="background-image: url('/assets/ha-noi/duongtau.jpg')"></div>
+                    
+                    <div class="service-details">
+                      <div class="service-header">
+                        <h4 data-editable="true">Premium 4-star city hotel or similar, selected for comfort, cleanliness, family convenience, and easy access to Northern Vietnam sightseeing.</h4>
+                        <span class="service-status confirmed">Confirmed</span>
+                      </div>
+                      <div class="service-meta">
+                        <span>⭐ 4★ Resort</span>
+                        <span>📍 Hanoi</span>
+                        <span class="price-formula" style="color:var(--emerald);font-weight:600;cursor:pointer;border-bottom:1px dashed var(--emerald)">
+                          💵 <span class="rooms-val">1</span> Rm × <span class="nights-val">3</span> Nts × đ<span class="price-val">150</span> = đ<span class="total-val">450</span>
+                        </span>
+                      </div>
+                      <div class="service-dates">
+                        <span>Check-in: <strong>2026-09-02</strong></span>
+                        <span>Check-out: <strong>2026-09-04</strong> (3 Nights)</span>
+                      </div>
+                      
+                        <div class="service-subtext">Room: <strong data-editable="true">Premium Room</strong></div>
+                      
+                      
+                        <p class="service-notes" data-editable="true">Assumed rooming: 1 double/twin room with 1 extra bed or family-style arrangement for the child, subject to hotel and cruise configuration. Final bedding, adjoining rooms, and child policy to be reconfirmed.</p>
+                      
+                    </div>
+                  </div>
+                
+              </div>
+            
+
+            <!-- Match Booked Activities on this day -->
+            
+
+            <!-- Match Booked Transfers on this day -->
+            
+
+            <!-- Match Booked Flights on this day -->
+            
+
+            <!-- Match Booked Guides on this day -->
+            
+
+          </div>
+
+          <div class="day-meta">
+            <div>Ha Long Bay</div>
+            
+            <div class="subtle" style="margin-top: 6px;">☕ Breakfast, lunch, and dinner on the cruise; halal-friendly/seafood/vegetarian request to be advised in advance.</div>
+            
+          </div>
+        </div>
+        
+        <div class="day">
+          <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+            <div class="day-label">Day 4</div>
+            <div style="font-size:12px; font-weight:700; color:var(--muted)">2026-09-02</div>
+          </div>
+
+          <div style="width: 100%;">
+            <span class="num">
+               Meals: Brunch on cruise; additional meals depend on flight timing. 
+            </span>
+            <h3 data-editable="true">Explore Ha Long Bay / Hanoi</h3>
+            
+            <div class="day-description-box">
+              
+              <p data-editable="true">The final day unfolds gently with a tranquil morning on the bay, a leisurely brunch, and a smooth transfer back toward Hanoi for departure arrangements.</p>
+              
+            </div>
+
+            <!-- Match Booked Hotels staying tonight -->
+            
+              <div class="booked-services-group">
+                <div class="service-group-title">🏨 Accommodation Stay</div>
+                
+                  <div class="service-card hotel-card"
+                       data-type="hotel"
+                       data-index="0"
+                       data-price-per-night="150.0"
+                       data-nights="3"
+                       data-rooms="1">
+                    
+                      <div class="service-img" style="background-image: url('/assets/ha-noi/duongtau.jpg')"></div>
+                    
+                    <div class="service-details">
+                      <div class="service-header">
+                        <h4 data-editable="true">Premium 4-star city hotel or similar, selected for comfort, cleanliness, family convenience, and easy access to Northern Vietnam sightseeing.</h4>
+                        <span class="service-status confirmed">Confirmed</span>
+                      </div>
+                      <div class="service-meta">
+                        <span>⭐ 4★ Resort</span>
+                        <span>📍 Hanoi</span>
+                        <span class="price-formula" style="color:var(--emerald);font-weight:600;cursor:pointer;border-bottom:1px dashed var(--emerald)">
+                          💵 <span class="rooms-val">1</span> Rm × <span class="nights-val">3</span> Nts × đ<span class="price-val">150</span> = đ<span class="total-val">450</span>
+                        </span>
+                      </div>
+                      <div class="service-dates">
+                        <span>Check-in: <strong>2026-09-02</strong></span>
+                        <span>Check-out: <strong>2026-09-04</strong> (3 Nights)</span>
+                      </div>
+                      
+                        <div class="service-subtext">Room: <strong data-editable="true">Premium Room</strong></div>
+                      
+                      
+                        <p class="service-notes" data-editable="true">Assumed rooming: 1 double/twin room with 1 extra bed or family-style arrangement for the child, subject to hotel and cruise configuration. Final bedding, adjoining rooms, and child policy to be reconfirmed.</p>
+                      
+                    </div>
+                  </div>
+                
+              </div>
+            
+
+            <!-- Match Booked Activities on this day -->
+            
+
+            <!-- Match Booked Transfers on this day -->
+            
+
+            <!-- Match Booked Flights on this day -->
+            
+
+            <!-- Match Booked Guides on this day -->
+            
+
+          </div>
+
+          <div class="day-meta">
+            <div>Ha Long Bay / Hanoi</div>
+            
+            <div class="subtle" style="margin-top: 6px;">☕ Brunch on cruise; additional meals depend on flight timing.</div>
+            
+          </div>
+        </div>
+        
       </div>
     </div>
   </section>
 
   <!-- ── Pricing Section ── -->
-  {% if price_options %}
+  
   <section id="quotation" style="padding-top:0">
     <div class="container">
       <div class="pricing">
-        <h2 data-editable="true">{{ pricing_h2 }}</h2>
-        <p data-editable="true">{{ pricing_p }}</p>
+        <h2 data-editable="true">B2B Net Price: VND 24,000,000</h2>
+        <p data-editable="true">Grand total for Private family travel for 2 adults and 1 child (age 6), premium comfort focus. Currency: VND.</p>
         <div class="price-grid">
-          {% for opt in price_options %}
-          <div class="price-card {% if opt.isConfirmedMainOption %}featured{% endif %}">
-            <span>{{ opt.hotelCategory }}</span>
-            {% if opt.optionName %}
-            <small style="color:rgba(255,255,255,.55);font-size:11px;display:block;margin-top:4px">{{ opt.optionName }}</small>
-            {% endif %}
-            <strong data-editable="true" style="font-size:28px" class="price-per-person-display">{{ opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~ opt.pricePerPerson.currency) }}</strong>
+          
+          <div class="price-card featured">
+            <span>4-star or similar premium standard, subject to final confirmation</span>
+            
+            <small style="color:rgba(255,255,255,.55);font-size:11px;display:block;margin-top:4px">Private family package for 2 adults + 1 child (age 6)</small>
+            
+            <strong data-editable="true" style="font-size:28px" class="price-per-person-display">VND 8,000,000 / person</strong>
             <small>per person</small><br>
-            <span style="font-size:13px;opacity:.8">Total: <span class="total-price-display">{{ opt.totalPrice.displayText or ('{:,.0f}'.format(opt.totalPrice.amount) ~ ' ' ~ opt.totalPrice.currency) }}</span></span>
-            {% if opt.isConfirmedMainOption %}
+            <span style="font-size:13px;opacity:.8">Total: <span class="total-price-display">VND 24,000,000</span></span>
+            
             <div style="margin-top:12px;font-size:10px;letter-spacing:.14em;color:#d8bd85;font-weight:800">✓ CONFIRMED MAIN OPTION</div>
-            {% endif %}
+            
           </div>
-          {% endfor %}
+          
         </div>
       </div>
     </div>
   </section>
-  {% endif %}
+  
 
   <!-- ── Inclusions & Exclusions ── -->
   <section id="inclusions" style="padding-top:0">
@@ -1484,17 +1603,35 @@
         <div class="panel">
           <h3 data-editable="true">What is Included</h3>
           <ul>
-            {% for inc in inclusions %}
-            <li data-editable="true">{{ inc }}</li>
-            {% endfor %}
+            
+            <li data-editable="true">Private airport pick-up and drop-off</li>
+            
+            <li data-editable="true">Private air-conditioned transportation throughout</li>
+            
+            <li data-editable="true">Accommodation with daily breakfast</li>
+            
+            <li data-editable="true">Meals as mentioned in the program</li>
+            
+            <li data-editable="true">All sightseeing entrance fees as mentioned</li>
+            
+            <li data-editable="true">English-speaking local guide</li>
+            
           </ul>
         </div>
         <div class="panel">
           <h3 data-editable="true">What is Excluded</h3>
           <ul>
-            {% for exc in exclusions %}
-            <li data-editable="true">{{ exc }}</li>
-            {% endfor %}
+            
+            <li data-editable="true">International flights</li>
+            
+            <li data-editable="true">Vietnam visa and visa processing fees</li>
+            
+            <li data-editable="true">Travel insurance</li>
+            
+            <li data-editable="true">Personal expenses, laundry, beverages and tips</li>
+            
+            <li data-editable="true">Optional activities not mentioned in the program</li>
+            
           </ul>
         </div>
       </div>
@@ -1502,20 +1639,7 @@
   </section>
 
   <!-- ── Notes & Final Conditions ── -->
-  {% if notes %}
-  <section id="notes" style="padding-top:0">
-    <div class="container">
-      <div class="panel">
-        <h3 data-editable="true">Important Notes & Arrangements</h3>
-        <ul>
-          {% for note in notes %}
-          <li data-editable="true">{{ note }}</li>
-          {% endfor %}
-        </ul>
-      </div>
-    </div>
-  </section>
-  {% endif %}
+  
 
   <!-- ── CTA / Confirm ── -->
   <section class="no-print">
@@ -1528,13 +1652,13 @@
 
         <div class="contact">
           <label>Vietnam Concierge 24/7</label>
-          <div data-editable="true">{{ contact }}</div>
+          <div data-editable="true">+84 911 538 738</div>
 
           <label>Email Support</label>
-          <div data-editable="true"><a href="mailto:{{ seller_email }}">{{ seller_email }}</a></div>
+          <div data-editable="true"><a href="mailto:sales@vietnamsafar.vn">sales@vietnamsafar.vn</a></div>
 
           <label>Website</label>
-          <div data-editable="true"><a href="https://{{ contact_web }}" target="_blank">{{ contact_web }}</a></div>
+          <div data-editable="true"><a href="https://www.vietnamsafar.vn" target="_blank">www.vietnamsafar.vn</a></div>
         </div>
       </div>
     </div>
@@ -1543,7 +1667,7 @@
   <!-- ── Footer ── -->
   <footer class="footer">
     <div class="container">
-      <div class="subtle" data-editable="true">{{ footer_text }}</div>
+      <div class="subtle" data-editable="true">A refined private journey through Hanoi, Ninh Binh, and Ha Long Bay, designed for halal-friendly comfort, smooth pacing, and memorable family travel. — Detailed booking itinerary prepared for Private family travel for 2 adults and 1 child (age 6), premium comfort focus.</div>
       <p style="margin-top: 14px; font-size: 11px; opacity: 0.6;">© 2026 Vietnam Safar - Discovery Asia Travel Group. All rights reserved.</p>
     </div>
   </footer>
@@ -1676,7 +1800,7 @@
             <input type="number" id="inp-hotel-nights" min="1" step="1">
           </div>
           <div class="pricing-form-group">
-            <label for="inp-hotel-price">Price per Night ({{ currency }})</label>
+            <label for="inp-hotel-price">Price per Night (VND)</label>
             <input type="number" id="inp-hotel-price" min="0" step="1">
           </div>
         </div>
@@ -1688,7 +1812,7 @@
             <input type="number" id="inp-act-adults" min="0" step="1">
           </div>
           <div class="pricing-form-group">
-            <label for="inp-act-price-adult">Price per Adult ({{ currency }})</label>
+            <label for="inp-act-price-adult">Price per Adult (VND)</label>
             <input type="number" id="inp-act-price-adult" min="0" step="1">
           </div>
           <div class="pricing-form-group">
@@ -1696,7 +1820,7 @@
             <input type="number" id="inp-act-children" min="0" step="1">
           </div>
           <div class="pricing-form-group">
-            <label for="inp-act-price-child">Price per Child ({{ currency }})</label>
+            <label for="inp-act-price-child">Price per Child (VND)</label>
             <input type="number" id="inp-act-price-child" min="0" step="1">
           </div>
         </div>
@@ -1704,23 +1828,23 @@
         <!-- Transfer Fields -->
         <div id="fields-transfer" class="fields-group" style="display:none">
           <div class="pricing-form-group">
-            <label for="inp-tx-base">Base Cost ({{ currency }})</label>
+            <label for="inp-tx-base">Base Cost (VND)</label>
             <input type="number" id="inp-tx-base" min="0" step="1">
           </div>
           <div class="pricing-form-group">
-            <label for="inp-tx-tolls">Tolls / Route Fees ({{ currency }})</label>
+            <label for="inp-tx-tolls">Tolls / Route Fees (VND)</label>
             <input type="number" id="inp-tx-tolls" min="0" step="1">
           </div>
           <div class="pricing-form-group">
-            <label for="inp-tx-overnight">Driver Overnight ({{ currency }})</label>
+            <label for="inp-tx-overnight">Driver Overnight (VND)</label>
             <input type="number" id="inp-tx-overnight" min="0" step="1">
           </div>
           <div class="pricing-form-group">
-            <label for="inp-tx-surcharges">Surcharges ({{ currency }})</label>
+            <label for="inp-tx-surcharges">Surcharges (VND)</label>
             <input type="number" id="inp-tx-surcharges" min="0" step="1">
           </div>
           <div class="pricing-form-group">
-            <label for="inp-tx-vat">VAT / Taxes ({{ currency }})</label>
+            <label for="inp-tx-vat">VAT / Taxes (VND)</label>
             <input type="number" id="inp-tx-vat" min="0" step="1">
           </div>
         </div>
@@ -1732,7 +1856,7 @@
             <input type="number" id="inp-flight-passengers" min="1" step="1">
           </div>
           <div class="pricing-form-group">
-            <label for="inp-flight-price">Price per Ticket ({{ currency }})</label>
+            <label for="inp-flight-price">Price per Ticket (VND)</label>
             <input type="number" id="inp-flight-price" min="0" step="1">
           </div>
         </div>
@@ -1744,7 +1868,7 @@
             <input type="number" id="inp-guide-days" min="1" step="1">
           </div>
           <div class="pricing-form-group">
-            <label for="inp-guide-rate">Price per Day ({{ currency }})</label>
+            <label for="inp-guide-rate">Price per Day (VND)</label>
             <input type="number" id="inp-guide-rate" min="0" step="1">
           </div>
         </div>
@@ -1759,8 +1883,8 @@
 
   <!-- ── Scripts ── -->
   <script class="no-print">
-    const ITINERARY_ID = "{{ itinerary_id }}";
-    const CURRENCY_SYMBOL = "{{ 'đ' if currency == 'VND' else ('$' if currency == 'USD' else currency ~ ' ') }}";
+    const ITINERARY_ID = "iti_e9bec742b7b6";
+    const CURRENCY_SYMBOL = "đ";
 
 
     // Setup editable attributes
@@ -1810,8 +1934,8 @@
     // JS for pricing modal and formula editor
     let activeCard = null;
 
-    const GUESTS_ADULTS = parseInt("{{ guests_adults or 0 }}") || 0;
-    const GUESTS_CHILDREN = parseInt("{{ guests_children or 0 }}") || 0;
+    const GUESTS_ADULTS = parseInt("2") || 0;
+    const GUESTS_CHILDREN = parseInt("1") || 0;
     const TOTAL_GUESTS = GUESTS_ADULTS + GUESTS_CHILDREN || 1;
 
     function formatNumber(num) {
