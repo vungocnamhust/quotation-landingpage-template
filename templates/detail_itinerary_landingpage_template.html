@@ -1195,26 +1195,26 @@
       <div class="gallery">
         <div class="image-tile large" style="background-image: var(--img-1)">
           <div class="image-caption">
-            <small>{{ destinations[0].slug | default("Highlight") | replace("-", " ") | title }}</small>
-            <strong>{{ destinations[0].name | default("Vietnam Highlight") }}</strong>
+            <small>{{ (destinations[0].slug | default("Highlight") | replace("-", " ") | title) if destinations and destinations|length > 0 else "Highlight" }}</small>
+            <strong>{{ (destinations[0].name | default("Vietnam Highlight")) if destinations and destinations|length > 0 else "Vietnam Highlight" }}</strong>
           </div>
         </div>
         <div class="image-tile" style="background-image: var(--img-2)">
           <div class="image-caption">
-            <small>{{ destinations[1].slug | default("Destination") | replace("-", " ") | title }}</small>
-            <strong>{{ destinations[1].name | default("Beautiful Stop") }}</strong>
+            <small>{{ (destinations[1].slug | default("Destination") | replace("-", " ") | title) if destinations and destinations|length > 1 else "Destination" }}</small>
+            <strong>{{ (destinations[1].name | default("Beautiful Stop")) if destinations and destinations|length > 1 else "Beautiful Stop" }}</strong>
           </div>
         </div>
         <div class="image-tile" style="background-image: var(--img-3)">
           <div class="image-caption">
-            <small>{{ destinations[2].slug | default("Experience") | replace("-", " ") | title }}</small>
-            <strong>{{ destinations[2].name | default("Local Culture") }}</strong>
+            <small>{{ (destinations[2].slug | default("Experience") | replace("-", " ") | title) if destinations and destinations|length > 2 else "Experience" }}</small>
+            <strong>{{ (destinations[2].name | default("Local Culture")) if destinations and destinations|length > 2 else "Local Culture" }}</strong>
           </div>
         </div>
         <div class="image-tile" style="background-image: var(--img-4)">
           <div class="image-caption">
-            <small>{{ destinations[3].slug | default("Journey") | replace("-", " ") | title }}</small>
-            <strong>{{ destinations[3].name | default("Scenic Route") }}</strong>
+            <small>{{ (destinations[3].slug | default("Journey") | replace("-", " ") | title) if destinations and destinations|length > 3 else "Journey" }}</small>
+            <strong>{{ (destinations[3].name | default("Scenic Route")) if destinations and destinations|length > 3 else "Scenic Route" }}</strong>
           </div>
         </div>
       </div>
