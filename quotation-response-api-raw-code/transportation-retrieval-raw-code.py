@@ -65,7 +65,7 @@ response = client.responses.create(
                 "Ninh Binh Ha Long Bay transfer policy 7 chỗ",
                 "Ninh Bình Hạ Long HN 2 ngày 630 730 one-way transfer",
             ],
-            "results": null,
+            "results": null,  # type: ignore
         },
         {
             "type": "reasoning",

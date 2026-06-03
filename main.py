@@ -737,8 +737,8 @@ def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, her
     travel_style  = " | ".join(payload.travelStyle) if payload.travelStyle else "Private"
 
     # Narrative overview
-    overview_paras = payload.programOverview.paragraphs
-    overview_heading = payload.programOverview.heading or "PROGRAM OVERVIEW"
+    overview_paras = payload.programOverview.paragraphs  # type: ignore
+    overview_heading = payload.programOverview.heading or "PROGRAM OVERVIEW"  # type: ignore
     lede = overview_paras[0] if overview_paras else "A detailed booking itinerary crafted for your journey."
 
     # Gallery helpers
@@ -797,7 +797,7 @@ def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, her
         # Match hotels: check-in date <= day_date < check-out date
         day_hotels = []
         for idx, h in enumerate(payload.hotels):
-            if h.checkInDate and h.checkOutDate and h.checkInDate <= day_date < h.checkOutDate:
+            if h.checkInDate and h.checkOutDate and h.checkInDate <= day_date < h.checkOutDate:  # type: ignore
                 h_dict = h.model_dump(mode="json")
                 h_dict["_index"] = idx
                 day_hotels.append(h_dict)
@@ -1300,7 +1300,7 @@ async def create_itinerary(request: Request):
     for h in payload.hotels:
         if not h.imageUrl:
             from image_selector import get_province_slug_for_location
-            slug = await get_province_slug_for_location(h.destination or h.addressArea)
+            slug = await get_province_slug_for_location(h.destination or h.addressArea)  # type: ignore
             h.imageUrl = get_random_image_for_province(slug)
 
     for act in payload.activities:
@@ -1473,7 +1473,7 @@ async def publish_itinerary(itinerary_id: str, body: PublishRequest):
             
         def handle_starttag(self, tag, attrs):
             attrs_dict = dict(attrs)
-            if 'class' in attrs_dict and 'service-card' in attrs_dict['class']:
+            if 'class' in attrs_dict and 'service-card' in attrs_dict['class']:  # type: ignore
                 self.cards.append(attrs_dict)
 
     parser = ServiceCardParser()
@@ -1644,7 +1644,7 @@ async def approve_itinerary(itinerary_id: str, body: ApproveRequest):
             
         def handle_starttag(self, tag, attrs):
             attrs_dict = dict(attrs)
-            if 'class' in attrs_dict and 'service-card' in attrs_dict['class']:
+            if 'class' in attrs_dict and 'service-card' in attrs_dict['class']:  # type: ignore
                 self.cards.append(attrs_dict)
 
     parser = ServiceCardParser()

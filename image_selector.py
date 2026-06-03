@@ -48,7 +48,7 @@ Hãy trả về CHỈ ĐÚNG 1 SLUG từ danh sách trên mà không kèm bất 
             temperature=0,
             max_tokens=10,
         )
-        slug = response.choices[0].message.content.strip().lower()
+        slug = response.choices[0].message.content.strip().lower()  # type: ignore
         
         if slug in PROVINCES:
             return slug
@@ -90,7 +90,7 @@ Hãy trả về ĐÚNG MỘT object JSON có chứa 1 key là "destinations". Ke
         )
         import json
         content = response.choices[0].message.content
-        data = json.loads(content)
+        data = json.loads(content)  # type: ignore
         return data.get("destinations", [])
     except Exception as e:
         print(f"[Error] Extract destinations failed: {e}")
