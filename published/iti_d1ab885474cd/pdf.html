@@ -1,0 +1,928 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>A refined Northern Vietnam journey blending Hanoi’s timeless charm with the serene beauty of Ninh Binh, curated for private comfort and culturally mindful travel. — Booking Itinerary</title>
+  <style>
+    :root {
+      --ivory: #f8f3e9;
+      --ink: #11130f;
+      --muted: #706a5d;
+      --emerald: #17412e;
+      --emerald-2: #0e2f22;
+      --gold: #b7894b;
+      --gold-2: #d8bd85;
+      --line: rgba(183,137,75,.28);
+      --card: #fffaf1;
+      --charcoal: #171915;
+      --serif: Georgia, 'Times New Roman', serif;
+      --sans: Arial, Helvetica, sans-serif;
+    }
+
+    @page { size: A4 portrait; margin: 0; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.6;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* Screen-only viewer styles */
+    @media screen {
+      body {
+        background: #525659; /* PDF viewer gray */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 40px 0;
+        gap: 20px;
+      }
+    }
+
+    @media print {
+      body { 
+        background-color: var(--ivory) !important; 
+        padding: 0; 
+        display: block; 
+      }
+      .pdf-page {
+        width: auto !important;
+        min-height: auto !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+      }
+      .cover {
+        height: 100vh !important;
+      }
+    }
+
+    /* ── Page wrapper ── */
+    .pdf-page {
+      width: 794px;
+      min-height: 1123px;
+      background: var(--ivory);
+      page-break-after: always;
+      position: relative;
+    }
+    .pdf-page:last-of-type { page-break-after: auto; }
+
+    @media screen {
+      .pdf-page {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+      }
+    }
+
+    /* ── Page watermark (fixed = repeats on every print page) ── */
+    .watermark {
+      position: fixed;
+      bottom: 10px;
+      right: 20px;
+      font-size: 9px;
+      color: rgba(0,0,0,.22);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      font-family: var(--sans);
+    }
+
+    /* ═══════════════════════════════════════════
+       PAGE 1 — Cover
+    ═══════════════════════════════════════════ */
+    .cover {
+      width: 794px;
+      height: 1123px;
+      background: linear-gradient(160deg, rgba(17,19,15,.88) 0%, rgba(17,19,15,.55) 55%, rgba(17,19,15,.18) 100%),
+                  center/cover no-repeat;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 0;
+    }
+
+    .cover-body {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 24px;
+      align-items: end;
+      padding: 48px 48px 54px;
+    }
+
+    .cover-kicker {
+      color: var(--gold-2);
+      font-size: 10px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .cover h1 {
+      font-family: var(--serif);
+      font-size: 58px;
+      line-height: .93;
+      font-weight: 500;
+      letter-spacing: -.05em;
+      margin-bottom: 16px;
+      max-width: 420px;
+    }
+
+    .cover-lede {
+      font-size: 14px;
+      color: rgba(255,255,255,.76);
+      max-width: 380px;
+      line-height: 1.6;
+    }
+
+    /* Snapshot card on cover */
+    .quote-card {
+      background: rgba(255,250,241,.93);
+      color: var(--ink);
+      border-radius: 24px;
+      padding: 22px 24px;
+      border: 1px solid rgba(255,255,255,.6);
+    }
+
+    .quote-card h2 {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 14px;
+      color: var(--emerald);
+    }
+
+    .qrow {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(17,19,15,.1);
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .qrow:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .qrow strong { color: var(--ink); text-align: right; font-size: 11px; }
+
+    /* Strip bar at bottom of cover */
+    .cover-strip {
+      background: rgba(23,65,46,.92);
+      display: grid;
+      grid-template-columns: repeat(4,1fr);
+      padding: 16px 48px;
+    }
+
+    .strip-item { text-align: center; }
+    .strip-item span {
+      display: block;
+      color: var(--gold-2);
+      font-size: 8px;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .strip-item strong {
+      font-family: var(--serif);
+      font-size: 20px;
+      font-weight: 500;
+      color: white;
+      display: block;
+      margin-top: 3px;
+    }
+
+    /* ── Shared page header ── */
+    .page-header {
+      background: var(--emerald);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 48px;
+    }
+
+    .page-header .brand {
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .page-header .ref {
+      color: var(--gold-2);
+      font-size: 9px;
+      letter-spacing: .1em;
+    }
+
+    .page-inner { padding: 44px 48px; }
+
+    .section-label {
+      color: var(--gold);
+      font-size: 9px;
+      letter-spacing: .24em;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .section-h2 {
+      font-family: var(--serif);
+      font-size: 36px;
+      line-height: .98;
+      letter-spacing: -.04em;
+      font-weight: 500;
+      color: var(--emerald);
+      margin-bottom: 8px;
+    }
+
+    .section-p {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 24px;
+    }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 20px;
+      break-inside: avoid;
+    }
+
+    .panel h3 {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--emerald);
+      margin-bottom: 10px;
+    }
+
+    .panel p { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+
+    .panel ul {
+      padding-left: 18px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .panel ul li { font-size: 12px; color: var(--muted); }
+
+    /* ── Bookings summary styles ── */
+    .overview-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .overview-panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(17, 19, 15, .03);
+    }
+
+    .panel-title {
+      font-family: var(--serif);
+      font-size: 18px;
+      color: var(--emerald);
+      margin-bottom: 14px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .panel-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .panel-item {
+      padding-bottom: 10px;
+      border-bottom: 1px dashed rgba(183, 137, 75, .2);
+    }
+
+    .panel-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .panel-item-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--gold);
+      font-weight: 700;
+      margin-bottom: 2px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .panel-item h4 {
+      font-size: 13px;
+      font-weight: 700;
+      margin: 0;
+      color: var(--ink);
+    }
+
+    .panel-item-sub {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    /* ── Daily Schedule cards ── */
+    .itinerary { display: grid; gap: 10px; }
+
+    .day-card {
+      display: grid;
+      grid-template-columns: 56px 1fr 130px;
+      gap: 16px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      align-items: start;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .day-num {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--emerald);
+      color: white;
+      display: grid;
+      place-items: center;
+      font-family: var(--serif);
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .day-card h3 {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--emerald);
+      margin: 2px 0 5px;
+      line-height: 1.1;
+    }
+
+    .day-badge {
+      font-size: 8px;
+      color: var(--gold);
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .day-card p { font-size: 11px; color: var(--muted); }
+
+    .day-meta {
+      text-align: right;
+      padding-top: 6px;
+      font-size: 11px;
+    }
+
+    .day-meta .overnight-label {
+      font-size: 8px;
+      color: var(--gold);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 2px;
+    }
+
+    .day-meta .overnight-val {
+      font-family: var(--serif);
+      font-size: 13px;
+      color: var(--emerald);
+    }
+
+    /* ── Booked Services Cards on Day Cards ── */
+    .booked-services-group {
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--line);
+    }
+
+    .service-group-title {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      font-weight: 700;
+      color: var(--gold);
+      margin-bottom: 8px;
+    }
+
+    .service-card {
+      display: flex;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.5);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px;
+      margin-bottom: 8px;
+      box-shadow: 0 2px 8px rgba(17, 19, 15, 0.01);
+    }
+
+    .service-card:last-child {
+      margin-bottom: 0;
+    }
+
+    .service-img {
+      width: 80px;
+      height: 60px;
+      border-radius: 8px;
+      background-position: center;
+      background-size: cover;
+      background-repeat: no-repeat;
+      flex-shrink: 0;
+    }
+
+    .service-details {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .service-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .service-header h4 {
+      font-family: var(--serif);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--emerald);
+    }
+
+    .service-status {
+      font-size: 7px;
+      text-transform: uppercase;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(23, 65, 46, 0.2);
+      background: rgba(23, 65, 46, 0.05);
+      color: var(--emerald);
+    }
+
+    .service-meta {
+      display: flex;
+      gap: 10px;
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .service-dates {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .service-notes {
+      font-size: 10px;
+      font-style: italic;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .cta-block {
+      background: linear-gradient(135deg, var(--emerald-2), #11130f 64%, #332711);
+      color: white;
+      border-radius: 24px;
+      padding: 32px;
+      display: grid;
+      grid-template-columns: 1fr 220px;
+      gap: 28px;
+      align-items: center;
+      break-inside: avoid;
+      margin-bottom: 20px;
+    }
+
+    .cta-block h2 {
+      font-family: var(--serif);
+      font-size: 32px;
+      font-weight: 500;
+      letter-spacing: -.04em;
+      line-height: .96;
+      margin-bottom: 10px;
+    }
+
+    .cta-block p { color: rgba(255,255,255,.72); font-size: 13px; }
+
+    .contact-box {
+      background: rgba(255,255,255,.09);
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .contact-box .clabel {
+      display: block;
+      color: var(--gold-2);
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: .16em;
+      font-weight: 800;
+      margin-top: 12px;
+    }
+
+    .contact-box .clabel:first-child { margin-top: 0; }
+    .contact-box .cval { font-weight: 700; font-size: 13px; margin-top: 2px; }
+
+    .pdf-footer {
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+      padding: 16px 0 20px;
+      border-top: 1px solid var(--line);
+      margin-top: 8px;
+    }
+
+    .no-print { display: none !important; }
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,400;0,600;0,800;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --serif: 'Playfair Display', Georgia, serif;
+      --sans: 'Outfit', Arial, sans-serif;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="watermark">Vietnam Safar · VN-HAN-NB-4D-GCC-2027 · Booking Itinerary</div>
+
+  <!-- ═══════════════════ PAGE 1 — Cover ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="cover" style="background-image: linear-gradient(160deg,rgba(17,19,15,.88),rgba(17,19,15,.55) 55%,rgba(17,19,15,.18)), url('/assets/vietnam-safar-logo.png');">
+      <div class="cover-body">
+        <div>
+          <div style="font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-2);margin-bottom:10px;font-weight:700;">Confidential Booking Document</div>
+          <div class="cover-kicker">Confirmed Booking Itinerary • 4D3N • 2026-09-20 to 2026-09-30</div>
+          <h1>A refined Northern Vietnam journey blending Hanoi’s timeless charm with the serene beauty of Ninh Binh, curated for private comfort and culturally mindful travel.</h1>
+          <p class="cover-lede">Information mapping and assumptions used: the brief is mapped to a 4-day, 3-night private luxury quotation for 2 adults from QA, focused on Hanoi and Ninh Binh in Northern Vietnam, with a 5-star hotel standard and halal-friendly positioning. The supplied end date 2027-12-12 conflicts with the stated durationDays of 4; this draft therefore maps the program as 2027-12-04 to 2027-12-07 and flags the date mismatch for reconfirmation.
+
+A graceful Northern Vietnam escape unfolds with Hanoi as the elegant base and Ninh Binh as the scenic highlight. The journey is designed for GCC and Saudi-oriented travellers who expect privacy, comfort, and careful cultural sensitivity—balancing heritage, soft adventure, and refined hospitality. The quotation below is indicative only, with final services subject to supplier confirmation.</p>
+        </div>
+        <div class="quote-card">
+          <h2>Booking Snapshot</h2>
+          <div class="qrow"><span>Prepared for</span><strong>Private FIT couple, 2 adults from QA seeking a luxury, culturally respectful Northern Vietnam escape.</strong></div>
+          <div class="qrow"><span>Travel dates</span><strong>2026-09-20 to 2026-09-30</strong></div>
+          <div class="qrow"><span>Guests</span><strong>2 Adults + 0 Children</strong></div>
+          <div class="qrow"><span>Travel style</span><strong>5-star</strong></div>
+          <div class="qrow"><span>Route</span><strong>Hanoi – Ninh Binh</strong></div>
+          <div class="qrow"><span>Booking Ref</span><strong>VN-HAN-NB-4D-GCC-2027</strong></div>
+        </div>
+      </div>
+      <div class="cover-strip">
+        <div class="strip-item"><span>Duration</span><strong>4D3N</strong></div>
+        <div class="strip-item"><span>Best for</span><strong>QA</strong></div>
+        <div class="strip-item"><span>Travel pace</span><strong>Relaxed</strong></div>
+        <div class="strip-item"><span>Service</span><strong>Private</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ PAGE 2 — Overview & Bookings Summary ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="page-header">
+      <span class="brand">Vietnam Safar — Booking Itinerary</span>
+      <span class="ref">VN-HAN-NB-4D-GCC-2027</span>
+    </div>
+    <div class="page-inner">
+      <div class="section-label">Section 1 — Overview</div>
+      <h2 class="section-h2">TRIP CONFIRMATION</h2>
+      <p class="section-p"> — A refined Northern Vietnam journey blending Hanoi’s timeless charm with the serene beauty of Ninh Binh, curated for private comfort and culturally mindful travel.</p>
+      
+      <div style="font-size:12px; color:var(--muted); margin-bottom: 24px; line-height: 1.7;">
+        
+        <p style="margin-bottom: 10px;">Information mapping and assumptions used: the brief is mapped to a 4-day, 3-night private luxury quotation for 2 adults from QA, focused on Hanoi and Ninh Binh in Northern Vietnam, with a 5-star hotel standard and halal-friendly positioning. The supplied end date 2027-12-12 conflicts with the stated durationDays of 4; this draft therefore maps the program as 2027-12-04 to 2027-12-07 and flags the date mismatch for reconfirmation.
+
+A graceful Northern Vietnam escape unfolds with Hanoi as the elegant base and Ninh Binh as the scenic highlight. The journey is designed for GCC and Saudi-oriented travellers who expect privacy, comfort, and careful cultural sensitivity—balancing heritage, soft adventure, and refined hospitality. The quotation below is indicative only, with final services subject to supplier confirmation.</p>
+        
+      </div>
+
+      
+      <div class="section-label">Section 2 — Confirmed Bookings</div>
+      <div class="overview-grid">
+        
+        <div class="overview-panel">
+          <h3 class="panel-title">🏨 Accommodations</h3>
+          <div class="panel-list">
+            
+            <div class="panel-item">
+              <div class="panel-item-meta">
+                <span>84 Trần Nhân Tông, Nguyễn Du, Hai Bà Trưng, Hà Nội</span>
+                <strong>1 Nights</strong>
+              </div>
+              <h4>Luxury Hotel</h4>
+              <p class="panel-item-sub">Standard Room (2027-12-04 to 2027-12-07)</p>
+            </div>
+            
+            <div class="panel-item">
+              <div class="panel-item-meta">
+                <span>Hoàn Kiếm, near Nhà Chung / St. Joseph Cathedral area</span>
+                <strong>1 Nights</strong>
+              </div>
+              <h4>Luxury Hotel</h4>
+              <p class="panel-item-sub">Standard Room (2027-12-04 to 2027-12-07)</p>
+            </div>
+            
+            <div class="panel-item">
+              <div class="panel-item-meta">
+                <span>24-26-28 Nhà Chung, Hàng Trống, Hoàn Kiếm, Hà Nội</span>
+                <strong>1 Nights</strong>
+              </div>
+              <h4>Luxury Hotel</h4>
+              <p class="panel-item-sub">Standard Room (2027-12-04 to 2027-12-07)</p>
+            </div>
+            
+            <div class="panel-item">
+              <div class="panel-item-meta">
+                <span>Tay Ho / West Lake area, Hanoi</span>
+                <strong>1 Nights</strong>
+              </div>
+              <h4>Luxury Hotel</h4>
+              <p class="panel-item-sub">Standard Room (2027-12-04 to 2027-12-07)</p>
+            </div>
+            
+          </div>
+        </div>
+        
+
+        
+      </div>
+      
+    </div>
+  </div>
+
+  <!-- ═══════════════════ PAGES 3+ — Daily Itinerary timeline ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="page-header">
+      <span class="brand">Vietnam Safar — Booking Itinerary</span>
+      <span class="ref">VN-HAN-NB-4D-GCC-2027</span>
+    </div>
+    <div class="page-inner">
+      <div class="section-label">Section 3 — Daily Schedule & Services</div>
+      <h2 class="section-h2">Day-by-Day Program</h2>
+      <p class="section-p">Detailed program listing confirmed daily tours and transfers.</p>
+
+      <div class="itinerary">
+        
+        <div class="day-card">
+          <div class="day-num">1</div>
+          <div>
+            <div class="day-badge">DAY 1 · 2026-09-20</div>
+            <h3></h3>
+            
+            <p style="margin-bottom: 6px;">Arrival in Hanoi and a gentle introduction to the capital’s layered elegance, where the pace is unhurried and the first impression is one of discreet comfort and private service.</p>
+            
+
+            <!-- Hotels -->
+            
+
+            <!-- Activities -->
+            
+
+            <!-- Transfers -->
+            
+
+            <!-- Flights -->
+            
+
+            <!-- Guides -->
+            
+          </div>
+          <div class="day-meta">
+            <div class="overnight-label">OVERNIGHT</div>
+            <div class="overnight-val">Hanoi</div>
+            
+          </div>
+        </div>
+        
+        <div class="day-card">
+          <div class="day-num">2</div>
+          <div>
+            <div class="day-badge">DAY 2 · 2026-09-21</div>
+            <h3></h3>
+            
+            <p style="margin-bottom: 6px;">A cultured Hanoi day shaped with premium balance—heritage, lakeside atmosphere, and the city’s timeless character presented at an elegant pace.</p>
+            
+
+            <!-- Hotels -->
+            
+
+            <!-- Activities -->
+            
+
+            <!-- Transfers -->
+            
+
+            <!-- Flights -->
+            
+
+            <!-- Guides -->
+            
+          </div>
+          <div class="day-meta">
+            <div class="overnight-label">OVERNIGHT</div>
+            <div class="overnight-val">Hanoi</div>
+            
+          </div>
+        </div>
+        
+        <div class="day-card">
+          <div class="day-num">3</div>
+          <div>
+            <div class="day-badge">DAY 3 · 2026-09-22</div>
+            <h3></h3>
+            
+            <p style="margin-bottom: 6px;">A scenic full-day escape to Ninh Binh, where limestone peaks, quiet waterways, and countryside serenity create the most cinematic chapter of the journey.</p>
+            
+
+            <!-- Hotels -->
+            
+
+            <!-- Activities -->
+            
+
+            <!-- Transfers -->
+            
+
+            <!-- Flights -->
+            
+
+            <!-- Guides -->
+            
+          </div>
+          <div class="day-meta">
+            <div class="overnight-label">OVERNIGHT</div>
+            <div class="overnight-val">Ninh Binh</div>
+            
+          </div>
+        </div>
+        
+        <div class="day-card">
+          <div class="day-num">4</div>
+          <div>
+            <div class="day-badge">DAY 4 · 2026-09-23</div>
+            <h3></h3>
+            
+            <p style="margin-bottom: 6px;">Departure day with a calm, elegant close to the program, allowing time for final breakfast, check-out, and a smooth transfer onward.</p>
+            
+
+            <!-- Hotels -->
+            
+
+            <!-- Activities -->
+            
+
+            <!-- Transfers -->
+            
+
+            <!-- Flights -->
+            
+
+            <!-- Guides -->
+            
+          </div>
+          <div class="day-meta">
+            <div class="overnight-label">OVERNIGHT</div>
+            <div class="overnight-val">Hanoi</div>
+            
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Pricing Section ── -->
+  
+  <div class="pdf-page">
+    <div class="page-header">
+      <span class="brand">Vietnam Safar — Booking Itinerary</span>
+      <span class="ref">VN-HAN-NB-4D-GCC-2027</span>
+    </div>
+    <div class="page-inner">
+      <div class="section-label">Section 4 — Pricing Snapshot</div>
+      <h2 class="section-h2">Indicative Luxury Quotation – Northern Vietnam 4D3N</h2>
+      <p class="section-p">Confirmed package prices and selections.</p>
+
+      <div class="pricing-block">
+        <h2>B2B Net Price: QAR 24,000,000</h2>
+        <p class="sub">Grand total for 2 Adults + 0 Children. Currency: QAR.</p>
+        <div class="price-cards">
+          
+          <div class="price-card featured">
+            <span>5-star</span>
+            
+            <small style="color:rgba(255,255,255,.55);font-size:9px;display:block;margin-top:4px">Private Luxury Package for 2 Adults</small>
+            
+            <strong>QAR 12,000,000 / person</strong>
+            <small>per person</small><br>
+            <span style="font-size:11px;opacity:.8">Total: QAR 24,000,000</span>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+  
+
+  <!-- ═══════════════════ LAST PAGE — Inclusions/Exclusions & Concierge ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="page-header">
+      <span class="brand">Vietnam Safar — Booking Itinerary</span>
+      <span class="ref">VN-HAN-NB-4D-GCC-2027</span>
+    </div>
+    <div class="page-inner">
+      <div class="section-label">Section 4 — Terms & Contacts</div>
+      <h2 class="section-h2">Inclusions & Policies</h2>
+      <p class="section-p">Detailed details of inclusions, exclusions, and contact support.</p>
+
+      <div class="two-col" style="margin-bottom: 24px;">
+        <div class="panel">
+          <h3>Inclusions</h3>
+          <ul>
+            
+            <li>Private airport pick-up and drop-off</li>
+            
+            <li>Private air-conditioned transportation throughout</li>
+            
+            <li>Accommodation with daily breakfast</li>
+            
+            <li>Meals as mentioned in the program</li>
+            
+            <li>All sightseeing entrance fees as mentioned</li>
+            
+            <li>English-speaking local guide</li>
+            
+          </ul>
+        </div>
+        <div class="panel">
+          <h3>Exclusions</h3>
+          <ul>
+            
+            <li>International flights</li>
+            
+            <li>Vietnam visa and visa processing fees</li>
+            
+            <li>Travel insurance</li>
+            
+            <li>Personal expenses, laundry, beverages and tips</li>
+            
+            <li>Optional activities not mentioned in the program</li>
+            
+          </ul>
+        </div>
+      </div>
+
+      
+
+      <div class="cta-block">
+        <div>
+          <h2>Secured Booking</h2>
+          <p>This itinerary reflects confirmed bookings. If any local timing needs adjusting, please let your travel coordinator know prior to departure.</p>
+        </div>
+        <div class="contact-box">
+          <span class="clabel">Vietnam Hotline 24/7</span>
+          <span class="cval">+84 911 538 738</span>
+
+          <span class="clabel">Email Support</span>
+          <span class="cval">sales@vietnamsafar.vn</span>
+
+          <span class="clabel">Website</span>
+          <span class="cval">www.vietnamsafar.vn</span>
+        </div>
+      </div>
+
+      <div class="pdf-footer">
+        A refined Northern Vietnam journey blending Hanoi’s timeless charm with the serene beauty of Ninh Binh, curated for private comfort and culturally mindful travel. — Detailed booking itinerary prepared for Private FIT couple, 2 adults from QA seeking a luxury, culturally respectful Northern Vietnam escape..
+      </div>
+    </div>
+  </div>
+
+  <script class="no-print">
+    window.onload = function() {
+      window.print();
+    }
+  </script>
+</body>
+</html>
