@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────────────────────────────────────
-# Test: POST /quotations/b2c — Vietnam Luxury Family Journey 12D11N B2C
-# Usage: bash test_b2c.sh
+# Test: POST /quotations — Vietnam Luxury Family Journey 12D11N B2B
+# Usage: bash test_b2b.sh
 # ─────────────────────────────────────────────────────────────────────────────
 
 BASE_URL="${1:-http://localhost:8000}"
@@ -13,19 +13,19 @@ PORT="${PORT:-8000}"
 if ! nc -z localhost "$PORT" >/dev/null 2>&1; then
   echo "⚠️  FastAPI server is not running on $BASE_URL."
   echo "💡 Start the server using: python main.py"
-  echo "🔄 Falling back to running test_b2c.py in-memory..."
+  echo "🔄 Falling back to running test_b2b.py in-memory..."
   echo ""
-  if [ -f "test_b2c.py" ]; then
-    python3 test_b2c.py
+  if [ -f "test_b2b.py" ]; then
+    python3 test_b2b.py
     exit $?
   else
-    echo "❌ test_b2c.py not found."
+    echo "❌ test_b2b.py not found."
     exit 7
   fi
 fi
 
 curl --connect-timeout 10 --max-time 30 \
-  -X POST "$BASE_URL/quotations/b2c" \
+  -X POST "$BASE_URL/quotations" \
   -H "Content-Type: application/json" \
   -s \
   -w "\n\n--- HTTP STATUS: %{http_code} ---\n" \

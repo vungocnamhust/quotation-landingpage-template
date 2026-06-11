@@ -667,7 +667,18 @@
 
     <div class="section-label" style="margin-top:20px;">Section 2 — Journey Overview</div>
     <h2 class="section-h2">{{ overview_h2 }}</h2>
-    <p style="font-size:13px; color:var(--muted); line-height:1.7;">{{ overview_p }}</p>
+    <p style="font-size:13px; color:var(--muted); line-height:1.7; margin-bottom: 24px;">{{ overview_p }}</p>
+
+    <div class="section-label">Section 3 — Your Journey Visualized</div>
+    <h2 class="section-h2">Your Journey Visualized</h2>
+    <div style="display: flex; align-items: center; justify-content: center; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px 24px; margin-top: 10px; flex-wrap: wrap; gap: 10px;">
+      {% for dest in destinations %}
+      <span style="font-family: var(--serif); font-size: 15px; color: var(--emerald); font-weight: 600;">{{ dest.name }}</span>
+      {% if not loop.last %}
+      <span style="color: var(--gold); font-size: 13px; font-weight: bold;">➔</span>
+      {% endif %}
+      {% endfor %}
+    </div>
   </div>
 </div>
 
@@ -678,7 +689,7 @@
     <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
   </div>
   <div class="page-inner">
-    <div class="section-label">Section 3 — Why This Journey Works Well</div>
+    <div class="section-label">Section 4 — Why This Journey Works Well</div>
     <h2 class="section-h2">Value Propositions</h2>
     <p class="section-p">Core features ensuring comfort and alignment with the guests' expectations.</p>
 
@@ -722,7 +733,7 @@
     <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
   </div>
   <div class="page-inner">
-    <div class="section-label">Service Program</div>
+    <div class="section-label">Section 5 — Service Program</div>
     <h2 class="section-h2">{{ itinerary_h2 }}</h2>
     <p class="section-p">{{ itinerary_p }}</p>
 
@@ -773,7 +784,7 @@
     <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
   </div>
   <div class="page-inner">
-    <div class="section-label">Section 5 — Selected Hotel Plan</div>
+    <div class="section-label">Section 6 — Selected Hotel Plan</div>
     <h2 class="section-h2">Hotel Arrangement</h2>
     <p class="section-p">Proposed accommodation plan. Similar options can be requested.</p>
 
@@ -809,7 +820,7 @@
     <p style="font-size:11px; color:var(--muted); font-style:italic; margin-bottom:24px;">Hotel arrangements will be tailored and detailed here for your specific travel dates.</p>
     {% endif %}
 
-    <div class="section-label">Section 6 — B2B Package Pricing</div>
+    <div class="section-label">Section 7 — B2B Package Pricing</div>
     <div class="pricing-block" style="margin-bottom: 0;">
       <h2>{{ pricing_h2 }}</h2>
       <p class="sub">{{ pricing_p }}</p>
@@ -860,7 +871,7 @@
     <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
   </div>
   <div class="page-inner">
-    <div class="section-label">Section 7 — Package Inclusions &amp; Exclusions</div>
+    <div class="section-label">Section 8 — Package Inclusions &amp; Exclusions</div>
     <h2 class="section-h2">What is Included</h2>
     <p class="section-p">Detailed list of inclusions and exclusions for this proposal.</p>
 
@@ -880,7 +891,7 @@
     </div>
 
     {% if show_muslim_care %}
-    <div class="section-label">Section 8 — Muslim-Friendly Travel Care</div>
+    <div class="section-label">Section 9 — Muslim-Friendly Travel Care</div>
     <h2 class="section-h2">Halal &amp; Prayer Coordination</h2>
     <div style="margin-top: 10px; padding: 16px; background: rgba(23, 65, 46, 0.03); border-left: 3px solid var(--emerald); border-radius: 8px; font-size: 11px; color: var(--muted); line-height: 1.6;">
       Vietnam Safar can assist with halal-friendly meal planning where available, no-pork meal notes, seafood or vegetarian alternatives where halal-certified restaurants are limited, and flexible prayer stops during touring days where practical. Halal-certified restaurants are more available in major cities such as Hanoi, Da Nang and Ho Chi Minh City. In mountain, cruise or countryside destinations, suitable seafood, vegetarian or no-pork meals may be recommended.
@@ -896,7 +907,7 @@
     <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
   </div>
   <div class="page-inner">
-    <div class="section-label">Section 9 — Optional Enhancements</div>
+    <div class="section-label">Section 10 — Optional Enhancements</div>
     <h2 class="section-h2">Personalize Your Proposal</h2>
     <p class="section-p">Select optional upgrades to enhance the guests' experience.</p>
 
@@ -909,7 +920,7 @@
       {% endfor %}
     </div>
 
-    <div class="section-label">Section 10 — Price Conditions &amp; Notes</div>
+    <div class="section-label">Section 11 — Price Conditions &amp; Notes</div>
     <h2 class="section-h2">Price Conditions</h2>
     <p class="section-p" style="margin-bottom:12px;">{{ terms_p }}</p>
 
@@ -932,7 +943,7 @@
     <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
   </div>
   <div class="page-inner">
-    <div class="section-label">Section 11 — Booking &amp; Payment Terms</div>
+    <div class="section-label">Section 12 — Booking &amp; Payment Terms</div>
     <h2 class="section-h2">Booking Terms</h2>
     <p class="section-p">Commercial conditions and cancellation policies.</p>
 
@@ -965,7 +976,7 @@
       </table>
     </div>
 
-    <div class="section-label">Section 12 — Finalization Checklist</div>
+    <div class="section-label">Section 13 — Finalization Checklist</div>
     
     <div class="cta-block" style="margin-bottom: 10px; padding: 24px; grid-template-columns: 1fr 180px; gap: 14px;">
       <div>

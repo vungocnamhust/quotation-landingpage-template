@@ -1,35 +1,10 @@
-#!/usr/bin/env bash
-# ─────────────────────────────────────────────────────────────────────────────
-# Test: POST /quotations/b2c — Vietnam Luxury Family Journey 12D11N B2C
-# Usage: bash test_b2c.sh
-# ─────────────────────────────────────────────────────────────────────────────
+import json
+from fastapi.testclient import TestClient
+from main import app
 
-BASE_URL="${1:-http://localhost:8000}"
+client = TestClient(app)
 
-# Check if the server is running on the specified port
-PORT=$(echo "$BASE_URL" | grep -oE '[0-9]+$')
-PORT="${PORT:-8000}"
-
-if ! nc -z localhost "$PORT" >/dev/null 2>&1; then
-  echo "⚠️  FastAPI server is not running on $BASE_URL."
-  echo "💡 Start the server using: python main.py"
-  echo "🔄 Falling back to running test_b2c.py in-memory..."
-  echo ""
-  if [ -f "test_b2c.py" ]; then
-    python3 test_b2c.py
-    exit $?
-  else
-    echo "❌ test_b2c.py not found."
-    exit 7
-  fi
-fi
-
-curl --connect-timeout 10 --max-time 30 \
-  -X POST "$BASE_URL/quotations/b2c" \
-  -H "Content-Type: application/json" \
-  -s \
-  -w "\n\n--- HTTP STATUS: %{http_code} ---\n" \
-  -d '{
+payload = {
   "quotationNumber": "QT-2026-0001",
   "quotationNarrative": "A refined Vietnam family journey created for Qatari travelers seeking a slower, more elegant way to experience the country’s natural beauty.",
   "landingpageContent": {
@@ -129,4 +104,12 @@ curl --connect-timeout 10 --max-time 30 \
       "source_day_numbers": [1]
     }
   ]
-}'
+}
+
+print("Sending POST request to /quotations (B2B)...")
+response = client.post("/quotations", json=payload)
+print("Response status code:", response.status_code)
+try:
+    print("Response JSON:", json.dumps(response.json(), indent=2))
+except Exception as e:
+    print("Response text:", response.text)
