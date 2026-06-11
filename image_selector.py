@@ -5,7 +5,7 @@ from openai import AsyncOpenAI
 
 # Initialize OpenAI client (make sure OPENAI_API_KEY is set in your environment variables)
 load_dotenv()
-client = AsyncOpenAI()
+client = AsyncOpenAI(timeout=10.0)
 
 PROVINCES = [
     "an-giang", "ba-ria-vung-tau", "bac-lieu", "bac-kan", "bac-giang", "bac-ninh", "ben-tre", 

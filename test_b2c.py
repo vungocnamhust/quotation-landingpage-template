@@ -1,17 +1,10 @@
-#!/usr/bin/env bash
-# ─────────────────────────────────────────────────────────────────────────────
-# Test: POST /quotations — Vietnam Luxury Family Journey 12D11N
-# Usage: bash test_create_quotation.sh
-# ─────────────────────────────────────────────────────────────────────────────
+import json
+from fastapi.testclient import TestClient
+from main import app
 
-BASE_URL="${1:-http://localhost:8000}"
+client = TestClient(app)
 
-curl --connect-timeout 10 --max-time 30 \
-  -X POST "$BASE_URL/quotations" \
-  -H "Content-Type: application/json" \
-  -s \
-  -w "\n\n--- HTTP STATUS: %{http_code} ---\n" \
-  -d '{
+payload = {
   "quotationNumber": "QT-2026-0001",
   "quotationNarrative": "A refined Vietnam family journey created for Qatari travelers seeking a slower, more elegant way to experience the country’s natural beauty.",
   "landingpageContent": {
@@ -111,4 +104,12 @@ curl --connect-timeout 10 --max-time 30 \
       "source_day_numbers": [1]
     }
   ]
-}'
+}
+
+print("Sending POST request to /quotations/b2c...")
+response = client.post("/quotations/b2c", json=payload)
+print("Response status code:", response.status_code)
+try:
+    print("Response JSON:", json.dumps(response.json(), indent=2))
+except Exception as e:
+    print("Response text:", response.text)

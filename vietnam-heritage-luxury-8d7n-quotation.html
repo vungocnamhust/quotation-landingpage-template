@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en"
-  style="--hero-img: url('{{ img_0 }}'); {% for dest in destinations %} --img-{{ loop.index }}: url('{{ dest.image_url or '/assets/vietnam-safar-logo.png' }}'); {% endfor %}">
+  style="--hero-img: url('/assets/quang-ninh/halong.jpg');  --img-1: url('/assets/ha-noi/hanoi1.jpg');  --img-2: url('/assets/quang-ninh/halong.jpg');  --img-3: url('/assets/quang-nam/hoian2.jpg');  --img-4: url('/assets/vietnam-safar-logo.png'); ">
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{{ tour_title }} - Luxury Quotation</title>
+  <title>VIETNAM LUXURY IMPERIAL &amp; COASTAL JOURNEY — 8D7N - Luxury Quotation</title>
   <!-- PWA Metadata -->
-  <link rel="manifest" href="/manifest.json?id={{ quotation_id }}&type=quotations" />
+  <link rel="manifest" href="/manifest.json?id=quo_9e2f3c2284ae&type=quotations" />
   <meta name="theme-color" content="#17412e" />
   <link rel="apple-touch-icon" href="/assets/vietnam-safar-logo.png" />
   <!-- Leaflet CSS & JS -->
@@ -1306,6 +1306,330 @@
     #nav-notification-btn svg {
       vertical-align: middle;
     }
+
+    /* ── B2C Premium UI Styles ───────────────────────────────────────── */
+    .inline-social-proof {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .inline-social-proof .avatars {
+      display: flex;
+    }
+
+    .inline-social-proof .avatar-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid var(--charcoal);
+      margin-left: -8px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-2));
+      color: #1c160d;
+      font-size: 10px;
+      font-weight: 700;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    }
+
+    .inline-social-proof .avatar-circle img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .inline-social-proof .avatar-circle:first-child {
+      margin-left: 0;
+    }
+
+    .inline-social-proof span {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.76);
+      font-weight: 500;
+    }
+
+    .video-wrapper {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+      border: 2px solid var(--gold);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .video-wrapper:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 24px 48px rgba(216, 189, 133, 0.2);
+    }
+
+    .video-wrapper iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .designer-container {
+      max-width: 900px;
+    }
+
+    .designer-card {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 48px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 36px;
+      padding: 44px;
+      box-shadow: var(--shadow);
+      align-items: center;
+    }
+
+    .designer-avatar-large {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--emerald), var(--emerald-2));
+      color: var(--gold-2);
+      font-family: var(--serif);
+      font-size: 54px;
+      font-weight: 500;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 16px 40px rgba(23, 65, 46, 0.2);
+      border: 3px solid var(--gold);
+      overflow: hidden;
+    }
+
+    .designer-avatar-large img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .designer-info span {
+      color: var(--gold);
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: .2em;
+      font-weight: 700;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .designer-info h2 {
+      font-family: var(--serif);
+      font-size: 36px;
+      color: var(--emerald);
+      margin: 0 0 16px 0;
+    }
+
+    .designer-quote {
+      font-size: 16px;
+      line-height: 1.7;
+      font-style: italic;
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+
+    .designer-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      font-size: 14px;
+      color: var(--ink);
+      border-top: 1px solid var(--line);
+      padding-top: 18px;
+      margin-bottom: 18px;
+    }
+
+    .designer-signature {
+      font-family: 'Georgia', serif;
+      font-size: 24px;
+      color: var(--gold);
+      font-style: italic;
+      text-align: right;
+    }
+
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .testimonial-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(17, 19, 15, 0.03);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.3s ease;
+    }
+
+    .testimonial-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 45px rgba(17, 19, 15, 0.08);
+    }
+
+    .testimonial-card .stars {
+      color: var(--gold);
+      font-size: 16px;
+      margin-bottom: 12px;
+    }
+
+    .testimonial-card h3 {
+      font-family: var(--serif);
+      font-size: 20px;
+      color: var(--emerald);
+      margin: 0 0 12px 0;
+    }
+
+    .testimonial-card p {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 20px;
+      flex-grow: 1;
+    }
+
+    .client-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-top: 1px dashed var(--line);
+      padding-top: 14px;
+    }
+
+    .client-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold-2), var(--gold));
+      color: #1c160d;
+      font-weight: 700;
+      font-size: 12px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+
+    .client-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .client-meta strong {
+      display: block;
+      font-size: 14px;
+      color: var(--ink);
+    }
+
+    .client-meta span {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .faq-list {
+      display: grid;
+      gap: 16px;
+    }
+
+    .faq-item {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .faq-toggle {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: none;
+      border: none;
+      padding: 22px 28px;
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--emerald);
+      text-align: left;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .faq-icon {
+      font-size: 22px;
+      color: var(--gold);
+      transition: transform 0.3s ease;
+    }
+
+    .faq-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1), padding 0.3s ease;
+      padding: 0 28px;
+    }
+
+    .faq-content p {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 22px;
+      margin-top: 0;
+    }
+
+    .faq-item.active {
+      border-color: var(--gold);
+      box-shadow: 0 10px 25px rgba(183, 137, 75, 0.05);
+    }
+
+    .faq-item.active .faq-icon {
+      transform: rotate(45deg);
+    }
+
+    .faq-item.active .faq-content {
+      max-height: 250px;
+      padding: 0 28px 22px;
+    }
+
+    @media(max-width: 980px) {
+      .testimonials-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .designer-card {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 24px;
+        padding: 28px;
+      }
+
+      .designer-avatar-large {
+        margin: 0 auto;
+      }
+
+      .designer-signature {
+        text-align: center;
+      }
+
+      .designer-details {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 
@@ -1325,7 +1649,7 @@
               d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z" />
           </svg>
         </button>
-        <a class="btn dark" href="/quotations/{{ quotation_id }}/pdf" target="_blank" id="btn-pdf-view">📄 PDF
+        <a class="btn dark" href="/quotations/quo_9e2f3c2284ae/pdf" target="_blank" id="btn-pdf-view">📄 PDF
           Preview</a>
         <button class="btn dark" onclick="window.print()" style="background:rgba(23,65,46,.6)">🖨️ Print</button>
       </div>
@@ -1336,36 +1660,55 @@
     <header class="hero">
       <div class="container hero-content">
         <div>
-          <div class="kicker" data-editable="kicker">{{ kicker }}</div>
-          <h1 data-editable="tour_title">{{ tour_title }}</h1>
-          <p class="hero-lede" data-editable="lede">{{ lede }}</p>
+          <div class="kicker" data-editable="kicker">Private Luxury Quotation ‒ 8D7N ‒ 2026-09-20 – 2026-09-27</div>
+          <h1 data-editable="tour_title">VIETNAM LUXURY IMPERIAL &amp; COASTAL JOURNEY — 8D7N</h1>
+          <p class="hero-lede" data-editable="lede">A premium 8-day private heritage journey weaving through
+            Vietnam&#39;s iconic wonders, from the historic charm of Hanoi and mystical waters of Halong Bay to the
+            lantern-lit streets of Hoi An.</p>
           <div class="hero-actions no-print">
             <a class="btn gold" href="#quotation">View Luxury Rates</a>
             <a class="btn outline" href="#itinerary">Explore the Journey</a>
+          </div>
+          <div class="inline-social-proof no-print">
+            <div class="avatars">
+              <div class="avatar-circle"><img
+                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=100&h=100"
+                  alt="Kim Quy"></div>
+              <div class="avatar-circle"><img
+                  src="https://images.unsplash.com/photo-1589156280159-27698a70f29e?auto=format&fit=crop&q=80&w=100&h=100"
+                  alt="Fatima"></div>
+              <div class="avatar-circle"><img
+                  src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=100&h=100"
+                  alt="Sarah"></div>
+              <div class="avatar-circle"><img
+                  src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=100&h=100"
+                  alt="James"></div>
+            </div>
+            <span>Rated 4.9/5★ by 1,200+ luxury travelers</span>
           </div>
         </div>
         <aside class="quote-card">
           <h2>Quotation Snapshot</h2>
           <div class="quote-list">
-            <div class="quote-row"><span>Prepared for</span><strong data-editable="customer_name">{{ customer_name
-                }}</strong></div>
-            <div class="quote-row"><span>Prepared by</span><strong data-editable="seller_name">{{ seller_name
-                }}</strong></div>
-            {% if guests_txt %}
-            <div class="quote-row"><span>Guests</span><strong>{{ guests_txt }}</strong></div>
-            {% endif %}
-            {% if travel_dates %}
-            <div class="quote-row"><span>Travel dates</span><strong>{{ travel_dates }}</strong></div>
-            {% endif %}
-            {% if route_txt %}
-            <div class="quote-row"><span>Route</span><strong>{{ route_txt }}</strong></div>
-            {% endif %}
-            {% if travel_style %}
-            <div class="quote-row"><span>Style</span><strong>{{ travel_style }}</strong></div>
-            {% endif %}
-            <div class="quote-row"><span>Ref.</span><strong data-editable="quotation_number">{{ quotation_number
-                }}</strong></div>
-            <div class="quote-row"><span>Contact</span><strong data-editable="contact">{{ contact }}</strong></div>
+            <div class="quote-row"><span>Prepared for</span><strong data-editable="customer_name">2 Adults (Couple /
+                Honeymooners)</strong></div>
+            <div class="quote-row"><span>Prepared by</span><strong data-editable="seller_name">Vietnam Safar – Discovery
+                Asia Travel Group</strong></div>
+
+            <div class="quote-row"><span>Guests</span><strong>2 Adults (Couple / Honeymooners)</strong></div>
+
+
+            <div class="quote-row"><span>Travel dates</span><strong>2026-09-20 – 2026-09-27</strong></div>
+
+
+            <div class="quote-row"><span>Route</span><strong>Hanoi – Halong Bay – Da Nang – Hoi An</strong></div>
+
+
+            <div class="quote-row"><span>Style</span><strong>Private VIP transfers, english speaking guides, all entry
+                tickets included.</strong></div>
+
+            <div class="quote-row"><span>Ref.</span><strong data-editable="quotation_number">QT-2026-8D7N</strong></div>
+            <div class="quote-row"><span>Contact</span><strong data-editable="contact">+84 911 538 738</strong></div>
           </div>
         </aside>
       </div>
@@ -1373,40 +1716,104 @@
 
     <section class="luxury-strip">
       <div class="container strip-grid">
-        <div class="strip-card"><span>Duration</span><strong data-editable="glance_duration">{{ duration_label
-            }}</strong></div>
-        <div class="strip-card"><span>Market &amp; Nationality</span><strong data-editable="glance_market">{{
-            glance_market }}</strong></div>
-        <div class="strip-card"><span>Guest Profile</span><strong data-editable="glance_profile">{{ glance_profile
-            }}</strong></div>
-        <div class="strip-card"><span>Hotel Standard</span><strong data-editable="glance_standard">{{ glance_standard
-            }}</strong></div>
-        <div class="strip-card"><span>Meal Preference</span><strong data-editable="glance_meals">{{ glance_meals
-            }}</strong></div>
+        <div class="strip-card"><span>Duration</span><strong data-editable="glance_duration">8D7N</strong></div>
+        <div class="strip-card"><span>Market &amp; Nationality</span><strong data-editable="glance_market">Global Luxury
+            Travelers</strong></div>
+        <div class="strip-card"><span>Guest Profile</span><strong data-editable="glance_profile">2 Adults (Couple /
+            Honeymooners)</strong></div>
+        <div class="strip-card"><span>Hotel Standard</span><strong data-editable="glance_standard">5★ Ultra-Luxury &amp;
+            Boutique Resorts</strong></div>
+        <div class="strip-card"><span>Meal Preference</span><strong data-editable="glance_meals">All-inclusive
+            Breakfasts + Curated Gourmet Dinning</strong></div>
         <div class="strip-card"><span>Route Sequence</span><strong data-editable="route_txt"
-            style="font-size: 15px; font-weight: 500; font-family: var(--serif); line-height: 1.3; margin-top: 6px;">{{
-            route_txt }}</strong></div>
+            style="font-size: 15px; font-weight: 500; font-family: var(--serif); line-height: 1.3; margin-top: 6px;">Hanoi
+            – Halong Bay – Da Nang – Hoi An</strong></div>
         <div class="strip-card"><span>Tour Type</span><strong data-editable="glance_tour_type">Private with Local
             Support</strong></div>
         <div class="strip-card"><span>Pricing Ref / Code</span><strong data-editable="glance_tour_code"
-            style="font-size: 16px;">{{ glance_price_type }} ({{ glance_tour_code }})</strong></div>
+            style="font-size: 16px;">Indicative (VS-8D7N-HERITAGE)</strong></div>
       </div>
     </section>
 
     <section id="overview">
       <div class="container">
         <div class="section-head">
-          <h2 data-editable="overview_h2">{{ overview_h2 }}</h2>
-          <p data-editable="overview_p">{{ overview_p }}</p>
+          <h2 data-editable="overview_h2">Prepared for: 2 Adults (Couple / Honeymooners) — VIETNAM LUXURY IMPERIAL &amp;
+            COASTAL JOURNEY — 8D7N</h2>
+          <p data-editable="overview_p">A premium 8-day private heritage journey weaving through Vietnam&#39;s iconic
+            wonders, from the historic charm of Hanoi and mystical waters of Halong Bay to the lantern-lit streets of
+            Hoi An.</p>
         </div>
         <div class="experience-grid">
-          {% for exp in experiences %}
+
           <article class="experience">
-            <span class="num" data-editable="exp_num_{{ loop.index }}">{{ exp.num }}</span>
-            <h3 data-editable="exp_title_{{ loop.index }}">{{ exp.title }}</h3>
-            <p data-editable="exp_desc_{{ loop.index }}">{{ exp.desc }}</p>
+            <span class="num" data-editable="exp_num_1">01</span>
+            <h3 data-editable="exp_title_1">Day 1: Hanoi</h3>
+            <p data-editable="exp_desc_1">Welcome to Hanoi. Private VIP immigration handling at Noi Bai Airport,
+              followed by a luxury transfer to your hotel. Unwind and enjoy a welcome Vietnamese...</p>
           </article>
-          {% endfor %}
+
+          <article class="experience">
+            <span class="num" data-editable="exp_num_2">02</span>
+            <h3 data-editable="exp_title_2">Day 2: Hanoi</h3>
+            <p data-editable="exp_desc_2">Explore Hanoi&#39;s rich cultural landmarks: Ho Chi Minh Mausoleum, the
+              historic Temple of Literature, and a cyclo ride through the 36 streets of the Old Quarter....</p>
+          </article>
+
+          <article class="experience">
+            <span class="num" data-editable="exp_num_3">03</span>
+            <h3 data-editable="exp_title_3">Day 3: Halong Bay</h3>
+            <p data-editable="exp_desc_3">Scenic drive to Halong Bay. Board your ultra-luxury cruise ship. Sail past
+              spectacular limestone karsts, visit hidden caves, and enjoy sunset cocktails on the...</p>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <section id="journey-video" class="no-print"
+      style="padding: 60px 0; background: var(--ivory-2); border-radius: 40px; margin: 40px 0;">
+      <div class="container" style="max-width: 960px; margin: 0 auto; padding: 0 20px;">
+        <div class="section-head" style="margin-bottom: 32px; text-align: center; grid-template-columns: 1fr;">
+          <h2
+            style="font-family: var(--serif); font-size: clamp(28px, 3.5vw, 44px); color: var(--ink); margin: 0 0 10px;">
+            Feel the Journey</h2>
+          <p style="color: var(--muted); margin: 0; font-size: 16px;">Experience the vibrant beauty, diverse heritage,
+            and timeless charm of Vietnam before you travel.</p>
+        </div>
+        <div class="video-wrapper">
+          <iframe src="https://www.youtube.com/embed/641_kZ-Q0N8?rel=0&modestbranding=1"
+            title="12 Best Places to Visit in Vietnam" frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen></iframe>
+        </div>
+      </div>
+    </section>
+
+    <section id="meet-designer" class="no-print"
+      style="background: var(--ivory-2); padding: 72px 0; border-radius: 40px; margin: 40px 0;">
+      <div class="container designer-container">
+        <div class="designer-card">
+          <div class="designer-img-container">
+            <div class="designer-avatar-large">
+              <img
+                src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400&h=400"
+                alt="Kim Quy - Luxury Travel Designer">
+            </div>
+          </div>
+          <div class="designer-info">
+            <span>Your Dedicated Specialist</span>
+            <h2>Meet Kim Quy</h2>
+            <p class="designer-quote">"I am Kim Quy, your dedicated travel designer. I handpicked every hotel, private
+              transfer, and local guide on this itinerary to ensure your family experiences the true depth of Vietnam in
+              comfort, privacy, and at your own slow pace. I will personally oversee your journey from behind the
+              scenes."</p>
+            <div class="designer-details">
+              <div><strong>Expertise:</strong> Family & Multigenerational Travel, Heritage Paths</div>
+              <div><strong>Experience:</strong> 8+ years designing bespoke luxury journeys</div>
+            </div>
+            <div class="designer-signature">Kim Quy</div>
+          </div>
         </div>
       </div>
     </section>
@@ -1428,28 +1835,36 @@
             <span class="num" style="color: var(--gold-2);">01</span>
             <h3 style="color: white; font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">Private &amp;
               Flexible</h3>
-            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_private">{{ why_private }}</p>
+            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_private">Your personal chauffeur
+              and dedicated English-speaking historian guide are at your exclusive disposal, ensuring the pace is
+              entirely yours to set.</p>
           </article>
           <article class="experience"
             style="background: rgba(255, 255, 255, 0.05); border-color: rgba(216, 189, 133, 0.25); color: white;">
             <span class="num" style="color: var(--gold-2);">02</span>
             <h3 style="color: white; font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">Comfort &amp;
               Pacing</h3>
-            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_comfort">{{ why_comfort }}</p>
+            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_comfort">Rest easy with
+              pre-selected five-star boutique hotels, private business-class internal flights, and spacious
+              Mercedes-Benz V-Class transfers throughout the trip.</p>
           </article>
           <article class="experience"
             style="background: rgba(255, 255, 255, 0.05); border-color: rgba(216, 189, 133, 0.25); color: white;">
             <span class="num" style="color: var(--gold-2);">03</span>
             <h3 style="color: white; font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">Muslim-Friendly
               Care</h3>
-            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_muslim">{{ why_muslim }}</p>
+            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_muslim">Dietary requests are fully
+              respected; we have pre-arranged halal-certified dining options and pork-free gourmet menus at every
+              destination.</p>
           </article>
           <article class="experience"
             style="background: rgba(255, 255, 255, 0.05); border-color: rgba(216, 189, 133, 0.25); color: white;">
             <span class="num" style="color: var(--gold-2);">04</span>
             <h3 style="color: white; font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">Balanced
               Highlights</h3>
-            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_balanced">{{ why_balanced }}</p>
+            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_balanced">Perfectly balanced
+              between the high-energy culture of Hanoi, the serene cruising of Halong Bay, and the atmospheric
+              slow-living coastal beauty of Hoi An.</p>
           </article>
         </div>
       </div>
@@ -1458,20 +1873,39 @@
     <section id="journey">
       <div class="container">
         <div class="section-head">
-          <h2 data-editable="journey_h2">{{ journey_h2 }}</h2>
-          <p data-editable="journey_p">{{ journey_p }}</p>
+          <h2 data-editable="journey_h2">Destination imagery woven into the quotation.</h2>
+          <p data-editable="journey_p">Cinematic destination panels crafted for a premium travel proposal.</p>
         </div>
         <div class="gallery">
-          {% for dest in destinations %}
-          <div class="image-tile {% if loop.index == 1 %}large{% endif %}"
-            style="background-image: var(--img-{{ loop.index }})">
+
+          <div class="image-tile large" style="background-image: var(--img-1)">
             <div class="image-caption">
-              <small data-editable="gal{{ loop.index }}_label">{% if loop.index == 1 %}Highlight{% else %}Destination{%
-                endif %}</small>
-              <strong data-editable="gal{{ loop.index }}_title">{{ dest.name }}</strong>
+              <small data-editable="gal1_label">Highlight</small>
+              <strong data-editable="gal1_title">Hà Nội</strong>
             </div>
           </div>
-          {% endfor %}
+
+          <div class="image-tile " style="background-image: var(--img-2)">
+            <div class="image-caption">
+              <small data-editable="gal2_label">Destination</small>
+              <strong data-editable="gal2_title">Vịnh Hạ Long</strong>
+            </div>
+          </div>
+
+          <div class="image-tile " style="background-image: var(--img-3)">
+            <div class="image-caption">
+              <small data-editable="gal3_label">Destination</small>
+              <strong data-editable="gal3_title">Hội An</strong>
+            </div>
+          </div>
+
+          <div class="image-tile " style="background-image: var(--img-4)">
+            <div class="image-caption">
+              <small data-editable="gal4_label">Destination</small>
+              <strong data-editable="gal4_title">Đà Nẵng</strong>
+            </div>
+          </div>
+
         </div>
       </div>
     </section>
@@ -1501,50 +1935,326 @@
     <section id="itinerary">
       <div class="container">
         <div class="section-head">
-          <h2 data-editable="itinerary_h2">{{ itinerary_h2 }}</h2>
-          <p data-editable="itinerary_p">{{ itinerary_p }}</p>
+          <h2 data-editable="itinerary_h2">Day-by-Day Journey Program</h2>
+          <p data-editable="itinerary_p">Your private 8D7N journey — 8 days, carefully crafted.</p>
         </div>
         <div class="itinerary">
-          {% for day in itinerary %}
+
           <article class="day">
-            <div class="day-label">{{ day.dayNumber }}</div>
+            <div class="day-label">1</div>
             <div>
-              <span class="num" data-editable="day_num_{{ loop.index }}">DAY {{ day.dayNumber }}{% if day.date %}
-                &nbsp;&middot;&nbsp; {{ day.date }}{% endif %}</span>
-              <h3 data-editable="day_title_{{ loop.index }}">{{ day.title }}</h3>
-              {% for para in day.description %}
-              <p data-editable="day_desc_{{ loop.index }}_{{ loop.index0 }}">{{ para }}</p>
-              {% endfor %}
-              {% if day.activities %}
+              <span class="num" data-editable="day_num_1">DAY 1</span>
+              <h3 data-editable="day_title_1">Explore Hanoi</h3>
+
+              <p data-editable="day_desc_1_0">Welcome to Hanoi. Private VIP immigration handling at Noi Bai Airport,
+                followed by a luxury transfer to your hotel. Unwind and enjoy a welcome Vietnamese fusion dinner.</p>
+
+
               <p style="font-size:13px;color:#706a5d;margin-top:8px">
                 <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
-                {{ day.activities | join(' &nbsp;·&nbsp; ') }}
+                VIP Airport Fast-track, luxury airport transfer, welcome dinner.
               </p>
-              {% endif %}
-              {% if day.notes %}
+
+
               <div
                 style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
                 <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
                 <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
-                  {% for note in day.notes %}
-                  <li style="margin-bottom: 2px;">{{ note }}</li>
-                  {% endfor %}
+
+                  <li style="margin-bottom: 2px;">Sense of Pace: Relaxed</li>
+
                 </ul>
               </div>
-              {% endif %}
+
             </div>
             <div class="day-meta">
-              {% if day.overnight %}
+
               <span style="font-size:11px;letter-spacing:.12em">OVERNIGHT</span><br>
-              <span style="font-size:15px;font-family:Georgia,serif">{{ day.overnight }}</span><br><br>
-              {% endif %}
-              {% if day.meals %}
+              <span style="font-size:15px;font-family:Georgia,serif">Hanoi</span><br><br>
+
+
               <span style="font-size:11px;letter-spacing:.12em">MEALS</span><br>
-              <span style="font-size:13px">{{ day.meals | join(' · ') }}</span>
-              {% endif %}
+              <span style="font-size:13px">Dinner</span>
+
             </div>
           </article>
-          {% endfor %}
+
+          <article class="day">
+            <div class="day-label">2</div>
+            <div>
+              <span class="num" data-editable="day_num_2">DAY 2</span>
+              <h3 data-editable="day_title_2">Explore Hanoi</h3>
+
+              <p data-editable="day_desc_1_0">Explore Hanoi&#39;s rich cultural landmarks: Ho Chi Minh Mausoleum, the
+                historic Temple of Literature, and a cyclo ride through the 36 streets of the Old Quarter. End with a
+                unique Train Street coffee experience.</p>
+
+
+              <p style="font-size:13px;color:#706a5d;margin-top:8px">
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                English guide, private transport, entrance tickets, Old Quarter cyclo tour.
+              </p>
+
+
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+
+                  <li style="margin-bottom: 2px;">Sense of Pace: Immersive</li>
+
+                </ul>
+              </div>
+
+            </div>
+            <div class="day-meta">
+
+              <span style="font-size:11px;letter-spacing:.12em">OVERNIGHT</span><br>
+              <span style="font-size:15px;font-family:Georgia,serif">Hanoi</span><br><br>
+
+
+              <span style="font-size:11px;letter-spacing:.12em">MEALS</span><br>
+              <span style="font-size:13px">Breakfast &amp; Lunch</span>
+
+            </div>
+          </article>
+
+          <article class="day">
+            <div class="day-label">3</div>
+            <div>
+              <span class="num" data-editable="day_num_3">DAY 3</span>
+              <h3 data-editable="day_title_3">Explore Halong Bay</h3>
+
+              <p data-editable="day_desc_1_0">Scenic drive to Halong Bay. Board your ultra-luxury cruise ship. Sail past
+                spectacular limestone karsts, visit hidden caves, and enjoy sunset cocktails on the sundeck.</p>
+
+
+              <p style="font-size:13px;color:#706a5d;margin-top:8px">
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Luxury transfer to Halong Bay, luxury cruise cabin, onboard activities, all meals.
+              </p>
+
+
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+
+                  <li style="margin-bottom: 2px;">Sense of Pace: Relaxed</li>
+
+                </ul>
+              </div>
+
+            </div>
+            <div class="day-meta">
+
+              <span style="font-size:11px;letter-spacing:.12em">OVERNIGHT</span><br>
+              <span style="font-size:15px;font-family:Georgia,serif">Halong Bay</span><br><br>
+
+
+              <span style="font-size:11px;letter-spacing:.12em">MEALS</span><br>
+              <span style="font-size:13px">Breakfast, Lunch, Dinner</span>
+
+            </div>
+          </article>
+
+          <article class="day">
+            <div class="day-label">4</div>
+            <div>
+              <span class="num" data-editable="day_num_4">DAY 4</span>
+              <h3 data-editable="day_title_4">Explore Da Nang</h3>
+
+              <p data-editable="day_desc_1_0">Morning tai-chi on the sundeck and light breakfast. Cruise back to port,
+                then transfer directly to Noi Bai Airport for a quick flight to Da Nang. Private transfer to Hoi An
+                Ancient Town.</p>
+
+
+              <p style="font-size:13px;color:#706a5d;margin-top:8px">
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Flight Hanoi - Da Nang, cruise activities, airport transfers, hotel check-in.
+              </p>
+
+
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+
+                  <li style="margin-bottom: 2px;">Sense of Pace: Active</li>
+
+                </ul>
+              </div>
+
+            </div>
+            <div class="day-meta">
+
+              <span style="font-size:11px;letter-spacing:.12em">OVERNIGHT</span><br>
+              <span style="font-size:15px;font-family:Georgia,serif">Da Nang</span><br><br>
+
+
+              <span style="font-size:11px;letter-spacing:.12em">MEALS</span><br>
+              <span style="font-size:13px">Breakfast &amp; Brunch</span>
+
+            </div>
+          </article>
+
+          <article class="day">
+            <div class="day-label">5</div>
+            <div>
+              <span class="num" data-editable="day_num_5">DAY 5</span>
+              <h3 data-editable="day_title_5">Explore Hoi An</h3>
+
+              <p data-editable="day_desc_1_0">Walking tour of Hoi An Ancient Town. Discover Chinese assembly halls, the
+                Japanese Covered Bridge, and participate in a private, hands-on traditional lantern-making workshop.</p>
+
+
+              <p style="font-size:13px;color:#706a5d;margin-top:8px">
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Hoi An walking tour tickets, lantern workshop session, private guide.
+              </p>
+
+
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+
+                  <li style="margin-bottom: 2px;">Sense of Pace: Immersive</li>
+
+                </ul>
+              </div>
+
+            </div>
+            <div class="day-meta">
+
+              <span style="font-size:11px;letter-spacing:.12em">OVERNIGHT</span><br>
+              <span style="font-size:15px;font-family:Georgia,serif">Hoi An</span><br><br>
+
+
+              <span style="font-size:11px;letter-spacing:.12em">MEALS</span><br>
+              <span style="font-size:13px">Breakfast &amp; Lunch</span>
+
+            </div>
+          </article>
+
+          <article class="day">
+            <div class="day-label">6</div>
+            <div>
+              <span class="num" data-editable="day_num_6">DAY 6</span>
+              <h3 data-editable="day_title_6">Explore Hoi An</h3>
+
+              <p data-editable="day_desc_1_0">Discover the ancient Cham ruins at My Son Sanctuary, followed by a scenic
+                cruise on the Thu Bon River. Spend a relaxing afternoon exploring Hoi An&#39;s boutique shops or beach
+                clubs.</p>
+
+
+              <p style="font-size:13px;color:#706a5d;margin-top:8px">
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                My Son Sanctuary entrance, river boat cruise, private guide, transport.
+              </p>
+
+
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+
+                  <li style="margin-bottom: 2px;">Sense of Pace: Moderate</li>
+
+                </ul>
+              </div>
+
+            </div>
+            <div class="day-meta">
+
+              <span style="font-size:11px;letter-spacing:.12em">OVERNIGHT</span><br>
+              <span style="font-size:15px;font-family:Georgia,serif">Hoi An</span><br><br>
+
+
+              <span style="font-size:11px;letter-spacing:.12em">MEALS</span><br>
+              <span style="font-size:13px">Breakfast</span>
+
+            </div>
+          </article>
+
+          <article class="day">
+            <div class="day-label">7</div>
+            <div>
+              <span class="num" data-editable="day_num_7">DAY 7</span>
+              <h3 data-editable="day_title_7">Explore Da Nang</h3>
+
+              <p data-editable="day_desc_1_0">Take a day trip to the Sun World Ba Na Hills. Ride the world&#39;s longest
+                cable car system and walk along the iconic Golden Bridge held by giant stone hands.</p>
+
+
+              <p style="font-size:13px;color:#706a5d;margin-top:8px">
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Cable car tickets, Ba Na Hills entry, private transfers, local guide.
+              </p>
+
+
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+
+                  <li style="margin-bottom: 2px;">Sense of Pace: Active</li>
+
+                </ul>
+              </div>
+
+            </div>
+            <div class="day-meta">
+
+              <span style="font-size:11px;letter-spacing:.12em">OVERNIGHT</span><br>
+              <span style="font-size:15px;font-family:Georgia,serif">Da Nang</span><br><br>
+
+
+              <span style="font-size:11px;letter-spacing:.12em">MEALS</span><br>
+              <span style="font-size:13px">Breakfast &amp; Lunch</span>
+
+            </div>
+          </article>
+
+          <article class="day">
+            <div class="day-label">8</div>
+            <div>
+              <span class="num" data-editable="day_num_8">DAY 8</span>
+              <h3 data-editable="day_title_8">Explore Da Nang</h3>
+
+              <p data-editable="day_desc_1_0">Morning at leisure. Final private transfer to Da Nang International
+                Airport for your departure flight, carrying beautiful memories of Vietnam.</p>
+
+
+              <p style="font-size:13px;color:#706a5d;margin-top:8px">
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Private airport departure transfer.
+              </p>
+
+
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+
+                  <li style="margin-bottom: 2px;">Sense of Pace: Relaxed</li>
+
+                </ul>
+              </div>
+
+            </div>
+            <div class="day-meta">
+
+              <span style="font-size:11px;letter-spacing:.12em">OVERNIGHT</span><br>
+              <span style="font-size:15px;font-family:Georgia,serif">Da Nang</span><br><br>
+
+
+              <span style="font-size:11px;letter-spacing:.12em">MEALS</span><br>
+              <span style="font-size:13px">Breakfast</span>
+
+            </div>
+          </article>
+
         </div>
       </div>
     </section>
@@ -1560,7 +2270,7 @@
             Subject to availability at confirmation.</p>
         </div>
 
-        {% if hotels %}
+
         <div style="overflow-x: auto; margin-top: 32px; border-radius: 18px; border: 1px solid var(--line);">
           <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
             <thead>
@@ -1572,65 +2282,193 @@
               </tr>
             </thead>
             <tbody>
-              {% for item in hotels %}
-              <tr
-                style="border-bottom: 1px solid var(--line); background: {% if loop.index % 2 == 0 %}rgba(183, 137, 75, 0.03){% else %}white{% endif %};">
-                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">{{ item.destination }}</td>
-                <td style="padding: 16px 20px;">{{ item.checkInDate or 'TBA' }}</td>
-                <td style="padding: 16px 20px;">{{ item.checkOutDate or 'TBA' }}</td>
-                <td style="padding: 16px 20px; font-family: var(--serif); font-size: 15px; color: var(--ink);">{{
-                  item.hotelArrangement }}</td>
+
+              <tr style="border-bottom: 1px solid var(--line); background: white;">
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">Hanoi</td>
+                <td style="padding: 16px 20px;">2026-09-20</td>
+                <td style="padding: 16px 20px;">2026-09-22</td>
+                <td style="padding: 16px 20px; font-family: var(--serif); font-size: 15px; color: var(--ink);">Sofitel
+                  Legend Metropole Hanoi (Grand Luxury Room)</td>
               </tr>
-              {% endfor %}
+
+              <tr style="border-bottom: 1px solid var(--line); background: rgba(183, 137, 75, 0.03);">
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">Halong Bay</td>
+                <td style="padding: 16px 20px;">2026-09-22</td>
+                <td style="padding: 16px 20px;">2026-09-23</td>
+                <td style="padding: 16px 20px; font-family: var(--serif); font-size: 15px; color: var(--ink);">Orchid
+                  Classic Cruise (Suite with Private Balcony)</td>
+              </tr>
+
+              <tr style="border-bottom: 1px solid var(--line); background: white;">
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">Hoi An</td>
+                <td style="padding: 16px 20px;">2026-09-23</td>
+                <td style="padding: 16px 20px;">2026-09-27</td>
+                <td style="padding: 16px 20px; font-family: var(--serif); font-size: 15px; color: var(--ink);">Four
+                  Seasons Resort The Nam Hai (One-Bedroom Villa)</td>
+              </tr>
+
             </tbody>
           </table>
         </div>
-        {% else %}
-        <p style="color: var(--muted); font-style: italic; margin-top: 20px;">Hotel arrangements will be tailored and
-          detailed here for your specific travel dates.</p>
-        {% endif %}
 
-        {% if room_notes %}
+
+
         <div
           style="margin-top: 20px; padding: 18px; background: rgba(183, 137, 75, 0.06); border-radius: 14px; border: 1px dashed var(--gold);">
           <strong
             style="color: var(--gold); text-transform: uppercase; font-size: 11px; letter-spacing: 0.12em; display: block; margin-bottom: 6px;">Room
             Notes &amp; Special Requests</strong>
-          <div data-editable="room_notes" style="font-size: 14px; color: var(--muted);">{{ room_notes }}</div>
+          <div data-editable="room_notes" style="font-size: 14px; color: var(--muted);">King size bed requested. Quiet
+            room on high floor or private corner location.</div>
         </div>
-        {% endif %}
+
+      </div>
+    </section>
+
+    <section id="testimonials" class="no-print" style="background: var(--ivory); padding: 72px 0;">
+      <div class="container">
+        <div class="section-head" style="margin-bottom: 44px; grid-template-columns: 1fr;">
+          <h2>Loved by Discerning Travelers</h2>
+          <p style="margin-top: 8px;">Read stories from families and luxury travelers who explored Vietnam on our
+            slow-nature private paths.</p>
+        </div>
+        <div class="testimonials-grid">
+          <div class="testimonial-card">
+            <div class="stars">★★★★★</div>
+            <h3>"Unforgettable Family Holiday"</h3>
+            <p>"The slow pace was perfect for my parents and children. Metropole Hanoi was splendid, and our private
+              guide made us feel completely safe and welcome at every stop. The halal-friendly food arrangements were
+              flawless."</p>
+            <div class="client-meta">
+              <div class="client-avatar">
+                <img
+                  src="https://images.unsplash.com/photo-1589156280159-27698a70f29e?auto=format&fit=crop&q=80&w=150&h=150"
+                  alt="Fatima Al-Thani">
+              </div>
+              <div>
+                <strong>Fatima Al-Thani</strong>
+                <span>Family Journey (Qatar)</span>
+              </div>
+            </div>
+          </div>
+          <div class="testimonial-card">
+            <div class="stars">★★★★★</div>
+            <h3>"Exceptional Luxury & Service"</h3>
+            <p>"Vietnam Safar designed a masterpiece. The overnight cruise in Ha Long Bay felt like a private haven, and
+              the luxury transport between Sapa and Hanoi was incredibly comfortable. Highly recommend to anyone seeking
+              pure luxury."</p>
+            <div class="client-meta">
+              <div class="client-avatar">
+                <img
+                  src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150&h=150"
+                  alt="James Miller">
+              </div>
+              <div>
+                <strong>James Miller</strong>
+                <span>Bespoke Tour (Australia)</span>
+              </div>
+            </div>
+          </div>
+          <div class="testimonial-card">
+            <div class="stars">★★★★★</div>
+            <h3>"Flawless and Relaxed Pacing"</h3>
+            <p>"Every single transfer was prompt. The VIP Ford Transit was spacious and spotless. The itinerary gave us
+              enough time to relax by the beach and explore local culture. Truly zero friction."</p>
+            <div class="client-meta">
+              <div class="client-avatar">
+                <img
+                  src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150&h=150"
+                  alt="Sarah Richardson">
+              </div>
+              <div>
+                <strong>Sarah Richardson</strong>
+                <span>Slow Nature Tour (UK)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq" class="no-print"
+      style="background: var(--ivory-2); padding: 72px 0; border-radius: 40px; margin: 40px 0;">
+      <div class="container" style="max-width: 800px;">
+        <div class="section-head" style="grid-template-columns: 1fr; text-align: center; margin-bottom: 44px;">
+          <h2>Frequently Asked Questions</h2>
+          <p style="margin-top: 8px;">Answers to common concerns regarding private pacing, transparent pricing, and
+            travel support.</p>
+        </div>
+        <div class="faq-list">
+          <div class="faq-item">
+            <button class="faq-toggle">
+              <span>What happens if my domestic flight is delayed?</span>
+              <span class="faq-icon">+</span>
+            </button>
+            <div class="faq-content">
+              <p>Our dedicated local concierge monitors your flights in real-time. If there is a delay, we automatically
+                reschedule your private driver and guide so that your transition remains entirely seamless without extra
+                costs.</p>
+            </div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-toggle">
+              <span>Are these rates fully transparent?</span>
+              <span class="faq-icon">+</span>
+            </button>
+            <div class="faq-content">
+              <p>Yes, all prices are 100% transparent. There are no hidden fees, local taxes, or surprise surcharges
+                added later. The price shown is exactly what you pay for the listed services.</p>
+            </div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-toggle">
+              <span>What standards can I expect from the private transport?</span>
+              <span class="faq-icon">+</span>
+            </button>
+            <div class="faq-content">
+              <p>We use only luxury late-model vehicles. For families of 4-8, we deploy VIP 16-seat Ford Transit D-Car
+                limousines equipped with plush reclining leather seats, individual USB ports, air conditioning, and
+                complimentary cold water.</p>
+            </div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-toggle">
+              <span>How flexible is the daily itinerary?</span>
+              <span class="faq-icon">+</span>
+            </button>
+            <div class="faq-content">
+              <p>Because your vehicle and English-speaking guide are 100% private, you have full control over the pace.
+                If you wish to spend more time at a particular temple or start the day later, simply coordinate with
+                your guide.</p>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
     <section id="quotation">
       <div class="container">
         <div class="pricing">
-          <h2 data-editable="pricing_h2">{{ pricing_h2 }}</h2>
-          <p data-editable="pricing_p">{{ pricing_p }}</p>
+          <h2 data-editable="pricing_h2">B2B Net Price: USD 14,950</h2>
+          <p data-editable="pricing_p">Grand total for 2 Adults (Couple / Honeymooners). Currency: USD. Final rates
+            subject to reconfirmation.</p>
           <div class="price-grid">
-            {% for opt in price_options %}
-            <div class="price-card {% if opt.isConfirmedMainOption %}featured{% endif %}">
-              <span>{{ opt.hotelCategory }}</span>
-              {% if opt.optionName %}
-              <small style="color:rgba(255,255,255,.55);font-size:11px;display:block;margin-top:4px">{{ opt.optionName
-                }}</small>
-              {% endif %}
-              <strong data-editable="price_pax_{{ loop.index }}" style="font-size:28px">{{
-                opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~
-                opt.pricePerPerson.currency) }}</strong>
+
+            <div class="price-card featured">
+              <span>5★ Ultra-Luxury &amp; Boutique Resorts</span>
+
+              <small style="color:rgba(255,255,255,.55);font-size:11px;display:block;margin-top:4px">Main confirmed
+                option</small>
+
+              <strong data-editable="price_pax_1" style="font-size:28px">USD 7,475 / person</strong>
               <small>per person</small><br>
-              <span style="font-size:13px;opacity:.8">Total: {{ opt.totalPrice.displayText or
-                ('{:,.0f}'.format(opt.totalPrice.amount) ~ ' ' ~ opt.totalPrice.currency) }}</span>
-              {% if opt.isConfirmedMainOption %}
+              <span style="font-size:13px;opacity:.8">Total: USD 14,950</span>
+
               <div style="margin-top:12px;font-size:10px;letter-spacing:.14em;color:#d8bd85;font-weight:800">✓ CONFIRMED
                 MAIN OPTION</div>
-              {% elif opt.isAlternativeOption %}
-              <div
-                style="margin-top:12px;font-size:10px;letter-spacing:.14em;color:rgba(216,189,133,.6);font-weight:700">
-                ALTERNATIVE OPTION</div>
-              {% endif %}
+
             </div>
-            {% endfor %}
+
           </div>
           <div
             style="margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1); display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 18px; font-size: 13px; color: rgba(255,255,255,0.7); text-align: left;">
@@ -1638,29 +2476,31 @@
               <strong
                 style="color: var(--gold-2); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.1em;">Price
                 Basis</strong>
-              <span data-editable="glance_basis">{{ glance_basis }}</span>
+              <span data-editable="glance_basis">Twin-sharing basis</span>
             </div>
             <div>
               <strong
                 style="color: var(--gold-2); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.1em;">Domestic
                 Flights</strong>
-              <span data-editable="glance_flights">{{ glance_flights }}</span>
+              <span data-editable="glance_flights">Included (Hanoi to Da Nang - Business Class)</span>
             </div>
             <div>
               <strong
                 style="color: var(--gold-2); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.1em;">Validity</strong>
-              <span data-editable="glance_validity">{{ glance_validity }}</span>
+              <span data-editable="glance_validity">Valid for travel from September to December 2026</span>
             </div>
             <div>
               <strong
                 style="color: var(--gold-2); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.1em;">Rate
                 Classification</strong>
-              <span data-editable="glance_partner_note">{{ glance_partner_note }}</span>
+              <span data-editable="glance_partner_note">Private VIP transfers, english speaking guides, all entry
+                tickets included.</span>
             </div>
           </div>
-          {% if payment_terms %}
-          <p class="subtle" style="margin-top:20px" data-editable="payment_terms">{{ payment_terms }}</p>
-          {% endif %}
+
+          <p class="subtle" style="margin-top:20px" data-editable="payment_terms">Refer to Booking &amp; Payment terms
+            below.</p>
+
         </div>
       </div>
     </section>
@@ -1670,47 +2510,46 @@
         <article class="panel">
           <h3>Inclusions</h3>
           <ul id="inclusions-list">
-            {% for line in inclusions %}
-            <li data-editable="inc_{{ loop.index }}">{{ line }}</li>
-            {% endfor %}
+
+            <li data-editable="inc_1">VIP Airport Fast-track, luxury airport transfer, welcome dinner.</li>
+
+            <li data-editable="inc_2">English guide, private transport, entrance tickets, Old Quarter cyclo tour.</li>
+
+            <li data-editable="inc_3">Luxury transfer to Halong Bay, luxury cruise cabin, onboard activities, all meals.
+            </li>
+
+            <li data-editable="inc_4">Flight Hanoi - Da Nang, cruise activities, airport transfers, hotel check-in.</li>
+
+            <li data-editable="inc_5">Hoi An walking tour tickets, lantern workshop session, private guide.</li>
+
+            <li data-editable="inc_6">My Son Sanctuary entrance, river boat cruise, private guide, transport.</li>
+
+            <li data-editable="inc_7">Cable car tickets, Ba Na Hills entry, private transfers, local guide.</li>
+
+            <li data-editable="inc_8">Private airport departure transfer.</li>
+
           </ul>
         </article>
         <article class="panel">
           <h3>Exclusions</h3>
           <ul id="exclusions-list">
-            {% for line in exclusions %}
-            <li data-editable="exc_{{ loop.index }}">{{ line }}</li>
-            {% endfor %}
+
+            <li data-editable="exc_1">International flights</li>
+
+            <li data-editable="exc_2">Vietnam visa and visa processing fees</li>
+
+            <li data-editable="exc_3">Travel insurance</li>
+
+            <li data-editable="exc_4">Personal expenses, laundry, beverages and tips</li>
+
+            <li data-editable="exc_5">Optional activities not mentioned in the program</li>
+
           </ul>
         </article>
       </div>
     </section>
 
-    {% if show_muslim_care %}
-    <section id="muslim-care"
-      style="background: var(--card); border: 1px solid var(--line); border-radius: 40px; padding: 54px; margin: 40px 0; box-shadow: 0 18px 45px rgba(17,19,15,0.04);">
-      <div class="container">
-        <div class="section-head" style="grid-template-columns: 1fr;">
-          <h2
-            style="font-family: var(--serif); font-size: clamp(32px, 4vw, 48px); color: var(--emerald); margin: 0 0 10px;">
-            Muslim-Friendly Travel Care</h2>
-          <p style="color: var(--muted); margin: 0;">Carefully coordinated services ensuring comfort, halal-friendly
-            meals, and prayer mindfulness.</p>
-        </div>
-        <div
-          style="margin-top: 24px; padding: 24px; background: rgba(23, 65, 46, 0.03); border-left: 4px solid var(--emerald); border-radius: 8px;">
-          <p style="margin: 0; font-size: 15px; color: var(--muted); line-height: 1.7;"
-            data-editable="muslim_care_text">
-            Vietnam Safar can assist with halal-friendly meal planning where available, no-pork meal notes, seafood or
-            vegetarian alternatives where halal-certified restaurants are limited, and flexible prayer stops during
-            touring days where practical. Halal-certified restaurants are more available in major cities such as Hanoi,
-            Da Nang and Ho Chi Minh City. In mountain, cruise or countryside destinations, suitable seafood, vegetarian
-            or no-pork meals may be recommended.
-          </p>
-        </div>
-      </div>
-    </section>
-    {% endif %}
+
 
     <section id="enhancements" style="padding: 72px 0;">
       <div class="container">
@@ -1723,19 +2562,33 @@
         </div>
         <div
           style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 18px; margin-top: 32px;">
-          {% for item in optional_enhancements %}
+
           <div
             style="background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px rgba(17,19,15,0.03); transition: transform 0.2s ease, box-shadow 0.2s ease;"
             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 15px 35px rgba(17,19,15,0.06)';"
             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px rgba(17,19,15,0.03)';">
-            <h4 style="margin: 0; font-family: var(--serif); font-size: 18px; color: var(--emerald);">{{ item.title }}
+            <h4 style="margin: 0; font-family: var(--serif); font-size: 18px; color: var(--emerald);">Private Evening
+              Street Food Tour by Vintage Vespa in Hanoi
             </h4>
             <div
               style="margin-top: 12px; display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); border: 1px solid var(--line); padding: 4px 10px; border-radius: 99px;">
-              {{ item.status }}
+              Recommended
             </div>
           </div>
-          {% endfor %}
+
+          <div
+            style="background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px rgba(17,19,15,0.03); transition: transform 0.2s ease, box-shadow 0.2s ease;"
+            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 15px 35px rgba(17,19,15,0.06)';"
+            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px rgba(17,19,15,0.03)';">
+            <h4 style="margin: 0; font-family: var(--serif); font-size: 18px; color: var(--emerald);">Private Sunrise
+              Yacht and Champagne Cruise in Da Nang Bay
+            </h4>
+            <div
+              style="margin-top: 12px; display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); border: 1px solid var(--line); padding: 4px 10px; border-radius: 99px;">
+              Recommended
+            </div>
+          </div>
+
         </div>
       </div>
     </section>
@@ -1747,12 +2600,20 @@
           <p>The following conditions apply to this B2B quotation.</p>
         </div>
         <div class="experience-grid">
-          {% for para in price_cond_paras %}
+
           <article class="experience">
-            <span class="num">NOTE {{ loop.index }}</span>
-            <p data-editable="price_cond_{{ loop.index }}">{{ para }}</p>
+            <span class="num">NOTE 1</span>
+            <p data-editable="price_cond_1">Rates are B2B net indicative and subject to reconfirmation at the time of
+              booking.</p>
           </article>
-          {% endfor %}
+
+          <article class="experience">
+            <span class="num">NOTE 2</span>
+            <p data-editable="price_cond_2">Final price may vary depending on hotel availability, resort category,
+              cruise selection, domestic flight fare, rooming arrangement, child policy, and final travel services
+              confirmed.</p>
+          </article>
+
         </div>
       </div>
     </section>
@@ -1778,19 +2639,23 @@
             <tbody>
               <tr style="border-bottom: 1px solid var(--line); background: white;">
                 <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">Deposit</td>
-                <td style="padding: 16px 20px;" data-editable="term_deposit">{{ term_deposit }}</td>
+                <td style="padding: 16px 20px;" data-editable="term_deposit">30% deposit upon booking confirmation to
+                  secure luxury accommodations.</td>
               </tr>
               <tr style="border-bottom: 1px solid var(--line); background: rgba(183, 137, 75, 0.03);">
                 <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">Balance</td>
-                <td style="padding: 16px 20px;" data-editable="term_balance">{{ term_balance }}</td>
+                <td style="padding: 16px 20px;" data-editable="term_balance">70% balance due 30 days prior to departure.
+                </td>
               </tr>
               <tr style="border-bottom: 1px solid var(--line); background: white;">
                 <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">Cancellation</td>
-                <td style="padding: 16px 20px;" data-editable="term_cancellation">{{ term_cancellation }}</td>
+                <td style="padding: 16px 20px;" data-editable="term_cancellation">Free cancellation up to 45 days prior
+                  to arrival. 50% between 44 to 15 days.</td>
               </tr>
               <tr style="background: rgba(183, 137, 75, 0.03);">
                 <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">Confirmation</td>
-                <td style="padding: 16px 20px;" data-editable="term_confirmation">{{ term_confirmation }}</td>
+                <td style="padding: 16px 20px;" data-editable="term_confirmation">Subject to availability. Confirmations
+                  sent within 24 hours of deposit.</td>
               </tr>
             </tbody>
           </table>
@@ -1803,16 +2668,17 @@
         <div class="cta">
           <div>
             <div class="kicker">Next step</div>
-            <h2 data-editable="cta_h2">{{ cta_h2 }}</h2>
+            <h2 data-editable="cta_h2">Confirm dates, then refine the luxury layer.</h2>
             <div class="two-col" style="margin-top: 24px; text-align: left; font-size: 13px;">
               <div>
                 <strong
                   style="color: var(--gold-2); text-transform: uppercase; font-size: 11px; letter-spacing: 0.1em; display: block; margin-bottom: 8px;">Final
                   Details Required</strong>
                 <ul style="margin: 0; padding-left: 16px; display: grid; gap: 6px; color: rgba(255,255,255,0.8);">
-                  {% for item in final_req %}
-                  <li style="line-height: 1.4;">{{ item }}</li>
-                  {% endfor %}
+
+                  <li style="line-height: 1.4;">Colored passport scan valid for at least 6 months and visa details if
+                    required.</li>
+
                 </ul>
               </div>
               <div>
@@ -1820,25 +2686,26 @@
                   style="color: var(--gold-2); text-transform: uppercase; font-size: 11px; letter-spacing: 0.1em; display: block; margin-bottom: 8px;">After
                   Confirmation</strong>
                 <ul style="margin: 0; padding-left: 16px; display: grid; gap: 6px; color: rgba(255,255,255,0.8);">
-                  {% for item in final_after %}
-                  <li style="line-height: 1.4;">{{ item }}</li>
-                  {% endfor %}
+
+                  <li style="line-height: 1.4;">24/7 VIP Concierge contact details will be shared 7 days prior to
+                    departure.</li>
+
                 </ul>
               </div>
             </div>
           </div>
           <div class="contact">
             <label>Website</label>
-            <div data-editable="contact_web">{{ contact_web }}</div>
+            <div data-editable="contact_web">www.vietnamsafar.vn</div>
             <label>WhatsApp</label>
-            <div data-editable="contact_phone">{{ contact_phone }}</div>
-            <label>Prepared by</label>
-            <div data-editable="seller_name2">{{ seller_name }}</div>
-            {% if seller_email %}
+            <div data-editable="contact_phone">+84 911 538 738</div>
+            <label>Travel Advisor</label>
+            <div data-editable="seller_name2">Kim Quy (Senior Specialist)</div>
+
             <div style="margin-top:24px" class="no-print">
-              <a class="btn gold" href="mailto:{{ seller_email }}">Request final confirmation</a>
+              <a class="btn gold" href="mailto:sales@vietnamsafar.vn">Contact Kim Quy</a>
             </div>
-            {% endif %}
+
           </div>
         </div>
       </div>
@@ -1847,7 +2714,8 @@
     <!-- PWA Install Section -->
     <section id="pwa-install-section" class="no-print"
       style="padding: 72px 0; background: var(--ivory-2); border-top: 1px solid var(--line);">
-      <div class="container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center;">
+      <div class="container"
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; align-items: center; justify-items: center;">
         <div>
           <span class="kicker">Vietnam Safar App</span>
           <h2
@@ -1858,7 +2726,7 @@
             đồ du lịch và liên hệ với chuyên viên thiết kế tour ngay cả khi không có mạng Internet.
           </p>
           <div style="display: flex; flex-wrap: wrap; gap: 14px;">
-            <button id="btn-pwa-install-hero" class="btn gold" style="display: none;">Cài Đặt Ứng Dụng</button>
+            <button id="btn-pwa-install-hero" class="btn gold">Cài Đặt Ứng Dụng</button>
             <div
               style="display: inline-flex; align-items: center; gap: 10px; opacity: 0.6; font-size: 12px; font-weight: 700; color: var(--muted);">
               <span>✓ Hỗ trợ ngoại tuyến</span>
@@ -1910,17 +2778,18 @@
   </main>
 
   <footer class="footer">
-    <div class="container" data-editable="footer_text">{{ footer_text }}</div>
+    <div class="container" data-editable="footer_text">VIETNAM LUXURY IMPERIAL &amp; COASTAL JOURNEY — 8D7N — Luxury
+      quotation prepared for 2 Adults (Couple / Honeymooners).</div>
   </footer>
 
   <!-- ── Publish Bar ─────────────────────────────────────────── -->
   <div id="publish-bar" class="no-print">
     <div class="pb-left">
       <div class="pb-dot"></div>
-      <div class="pb-label">✏️ Editing <strong>{{ quotation_id }}</strong></div>
+      <div class="pb-label">✏️ Editing <strong>quo_9e2f3c2284ae</strong></div>
     </div>
     <span id="publish-status"></span>
-    <a id="btn-pdf" href="/quotations/{{ quotation_id }}/pdf" target="_blank" style="background:rgba(183,137,75,.18);border:1px solid rgba(183,137,75,.5);color:#d8bd85;
+    <a id="btn-pdf" href="/quotations/quo_9e2f3c2284ae/pdf" target="_blank" style="background:rgba(183,137,75,.18);border:1px solid rgba(183,137,75,.5);color:#d8bd85;
               border-radius:999px;padding:11px 22px;font-weight:700;font-size:12px;
               letter-spacing:.08em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
               transition:.2s ease;display:inline-flex;align-items:center;gap:6px;"
@@ -1932,7 +2801,7 @@
   </div>
 
   <script>
-    const QUOTATION_ID = "{{ quotation_id }}";
+    const QUOTATION_ID = "quo_9e2f3c2284ae";
 
     document.querySelectorAll('[data-editable]').forEach(el => {
       el.contentEditable = 'true';
@@ -2047,7 +2916,7 @@
   </script>
 
   <script id="itinerary-data" type="application/json">
-    {{ itinerary | tojson | safe }}
+    [{"activities": ["VIP Airport Fast-track, luxury airport transfer, welcome dinner."], "date": "", "dayNumber": 1, "description": ["Welcome to Hanoi. Private VIP immigration handling at Noi Bai Airport, followed by a luxury transfer to your hotel. Unwind and enjoy a welcome Vietnamese fusion dinner."], "destinations": ["Hanoi"], "meals": ["Dinner"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Hanoi", "title": "Explore Hanoi"}, {"activities": ["English guide, private transport, entrance tickets, Old Quarter cyclo tour."], "date": "", "dayNumber": 2, "description": ["Explore Hanoi\u0027s rich cultural landmarks: Ho Chi Minh Mausoleum, the historic Temple of Literature, and a cyclo ride through the 36 streets of the Old Quarter. End with a unique Train Street coffee experience."], "destinations": ["Hanoi"], "meals": ["Breakfast \u0026 Lunch"], "notes": ["Sense of Pace: Immersive"], "overnight": "Hanoi", "title": "Explore Hanoi"}, {"activities": ["Luxury transfer to Halong Bay, luxury cruise cabin, onboard activities, all meals."], "date": "", "dayNumber": 3, "description": ["Scenic drive to Halong Bay. Board your ultra-luxury cruise ship. Sail past spectacular limestone karsts, visit hidden caves, and enjoy sunset cocktails on the sundeck."], "destinations": ["Halong Bay"], "meals": ["Breakfast, Lunch, Dinner"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Halong Bay", "title": "Explore Halong Bay"}, {"activities": ["Flight Hanoi - Da Nang, cruise activities, airport transfers, hotel check-in."], "date": "", "dayNumber": 4, "description": ["Morning tai-chi on the sundeck and light breakfast. Cruise back to port, then transfer directly to Noi Bai Airport for a quick flight to Da Nang. Private transfer to Hoi An Ancient Town."], "destinations": ["Da Nang"], "meals": ["Breakfast \u0026 Brunch"], "notes": ["Sense of Pace: Active"], "overnight": "Da Nang", "title": "Explore Da Nang"}, {"activities": ["Hoi An walking tour tickets, lantern workshop session, private guide."], "date": "", "dayNumber": 5, "description": ["Walking tour of Hoi An Ancient Town. Discover Chinese assembly halls, the Japanese Covered Bridge, and participate in a private, hands-on traditional lantern-making workshop."], "destinations": ["Hoi An"], "meals": ["Breakfast \u0026 Lunch"], "notes": ["Sense of Pace: Immersive"], "overnight": "Hoi An", "title": "Explore Hoi An"}, {"activities": ["My Son Sanctuary entrance, river boat cruise, private guide, transport."], "date": "", "dayNumber": 6, "description": ["Discover the ancient Cham ruins at My Son Sanctuary, followed by a scenic cruise on the Thu Bon River. Spend a relaxing afternoon exploring Hoi An\u0027s boutique shops or beach clubs."], "destinations": ["Hoi An"], "meals": ["Breakfast"], "notes": ["Sense of Pace: Moderate"], "overnight": "Hoi An", "title": "Explore Hoi An"}, {"activities": ["Cable car tickets, Ba Na Hills entry, private transfers, local guide."], "date": "", "dayNumber": 7, "description": ["Take a day trip to the Sun World Ba Na Hills. Ride the world\u0027s longest cable car system and walk along the iconic Golden Bridge held by giant stone hands."], "destinations": ["Da Nang"], "meals": ["Breakfast \u0026 Lunch"], "notes": ["Sense of Pace: Active"], "overnight": "Da Nang", "title": "Explore Da Nang"}, {"activities": ["Private airport departure transfer."], "date": "", "dayNumber": 8, "description": ["Morning at leisure. Final private transfer to Da Nang International Airport for your departure flight, carrying beautiful memories of Vietnam."], "destinations": ["Da Nang"], "meals": ["Breakfast"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Da Nang", "title": "Explore Da Nang"}]
   </script>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -2365,20 +3234,25 @@
         }
       }
 
+      const isDismissed = localStorage.getItem('pwa_notif_dismissed');
+      if (!isDismissed) {
+        setTimeout(() => {
+          promptCard.classList.add('show');
+        }, 3000);
+      }
+
       if ('Notification' in window) {
         updateBellState();
-        const isDismissed = localStorage.getItem('pwa_notif_dismissed');
-        if (Notification.permission === 'default' && !isDismissed) {
-          setTimeout(() => {
-            promptCard.classList.add('show');
-          }, 3000);
-        }
       } else {
-        if (promptCard) promptCard.style.display = 'none';
         if (navBellBtn) navBellBtn.style.display = 'none';
       }
 
       function requestNotifPermission() {
+        if (!('Notification' in window)) {
+          alert('Để nhận thông báo và tải ứng dụng trên thiết bị này, vui lòng chọn "Share" (Chia sẻ) và "Add to Home Screen" (Thêm vào MH chính).');
+          if (promptCard) promptCard.classList.remove('show');
+          return;
+        }
         Notification.requestPermission().then(permission => {
           updateBellState();
           if (permission === 'granted') {
@@ -2460,15 +3334,14 @@
         e.preventDefault();
         // Stash the event so it can be triggered later.
         deferredInstallPrompt = e;
-        // Update UI to notify the user they can install the PWA
-        if (installButtonHero) {
-          installButtonHero.style.display = 'block';
-        }
       });
 
       if (installButtonHero) {
         installButtonHero.addEventListener('click', async () => {
-          if (!deferredInstallPrompt) return;
+          if (!deferredInstallPrompt) {
+            alert('Để cài đặt ứng dụng trên thiết bị này (đặc biệt là iOS/iPhone), vui lòng nhấn nút "Share" (Chia sẻ) ở trình duyệt và chọn "Add to Home Screen" (Thêm vào MH chính).');
+            return;
+          }
           // Show the install prompt
           deferredInstallPrompt.prompt();
           // Wait for the user to respond to the prompt
@@ -2476,15 +3349,23 @@
           console.log(`User response to the install prompt: ${outcome}`);
           // We've used the prompt, and can't use it again, discard it
           deferredInstallPrompt = null;
-          installButtonHero.style.display = 'none';
         });
       }
 
       window.addEventListener('appinstalled', (evt) => {
         console.log('Vietnam Safar app was installed successfully');
-        if (installButtonHero) {
-          installButtonHero.style.display = 'none';
-        }
+      });
+
+      // Accordion FAQ Toggles
+      document.querySelectorAll('.faq-toggle').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const item = btn.closest('.faq-item');
+          const isActive = item.classList.contains('active');
+          document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
+          if (!isActive) {
+            item.classList.add('active');
+          }
+        });
       });
     });
   </script>

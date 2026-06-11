@@ -1306,6 +1306,330 @@
     #nav-notification-btn svg {
       vertical-align: middle;
     }
+
+    /* ── B2C Premium UI Styles ───────────────────────────────────────── */
+    .inline-social-proof {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .inline-social-proof .avatars {
+      display: flex;
+    }
+
+    .inline-social-proof .avatar-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid var(--charcoal);
+      margin-left: -8px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-2));
+      color: #1c160d;
+      font-size: 10px;
+      font-weight: 700;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    }
+
+    .inline-social-proof .avatar-circle img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .inline-social-proof .avatar-circle:first-child {
+      margin-left: 0;
+    }
+
+    .inline-social-proof span {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.76);
+      font-weight: 500;
+    }
+
+    .video-wrapper {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+      border: 2px solid var(--gold);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .video-wrapper:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 24px 48px rgba(216, 189, 133, 0.2);
+    }
+
+    .video-wrapper iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .designer-container {
+      max-width: 900px;
+    }
+
+    .designer-card {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 48px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 36px;
+      padding: 44px;
+      box-shadow: var(--shadow);
+      align-items: center;
+    }
+
+    .designer-avatar-large {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--emerald), var(--emerald-2));
+      color: var(--gold-2);
+      font-family: var(--serif);
+      font-size: 54px;
+      font-weight: 500;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 16px 40px rgba(23, 65, 46, 0.2);
+      border: 3px solid var(--gold);
+      overflow: hidden;
+    }
+
+    .designer-avatar-large img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .designer-info span {
+      color: var(--gold);
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: .2em;
+      font-weight: 700;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .designer-info h2 {
+      font-family: var(--serif);
+      font-size: 36px;
+      color: var(--emerald);
+      margin: 0 0 16px 0;
+    }
+
+    .designer-quote {
+      font-size: 16px;
+      line-height: 1.7;
+      font-style: italic;
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+
+    .designer-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      font-size: 14px;
+      color: var(--ink);
+      border-top: 1px solid var(--line);
+      padding-top: 18px;
+      margin-bottom: 18px;
+    }
+
+    .designer-signature {
+      font-family: 'Georgia', serif;
+      font-size: 24px;
+      color: var(--gold);
+      font-style: italic;
+      text-align: right;
+    }
+
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .testimonial-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(17, 19, 15, 0.03);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.3s ease;
+    }
+
+    .testimonial-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 45px rgba(17, 19, 15, 0.08);
+    }
+
+    .testimonial-card .stars {
+      color: var(--gold);
+      font-size: 16px;
+      margin-bottom: 12px;
+    }
+
+    .testimonial-card h3 {
+      font-family: var(--serif);
+      font-size: 20px;
+      color: var(--emerald);
+      margin: 0 0 12px 0;
+    }
+
+    .testimonial-card p {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 20px;
+      flex-grow: 1;
+    }
+
+    .client-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-top: 1px dashed var(--line);
+      padding-top: 14px;
+    }
+
+    .client-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold-2), var(--gold));
+      color: #1c160d;
+      font-weight: 700;
+      font-size: 12px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+
+    .client-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .client-meta strong {
+      display: block;
+      font-size: 14px;
+      color: var(--ink);
+    }
+
+    .client-meta span {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .faq-list {
+      display: grid;
+      gap: 16px;
+    }
+
+    .faq-item {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .faq-toggle {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: none;
+      border: none;
+      padding: 22px 28px;
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--emerald);
+      text-align: left;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .faq-icon {
+      font-size: 22px;
+      color: var(--gold);
+      transition: transform 0.3s ease;
+    }
+
+    .faq-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1), padding 0.3s ease;
+      padding: 0 28px;
+    }
+
+    .faq-content p {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 22px;
+      margin-top: 0;
+    }
+
+    .faq-item.active {
+      border-color: var(--gold);
+      box-shadow: 0 10px 25px rgba(183, 137, 75, 0.05);
+    }
+
+    .faq-item.active .faq-icon {
+      transform: rotate(45deg);
+    }
+
+    .faq-item.active .faq-content {
+      max-height: 250px;
+      padding: 0 28px 22px;
+    }
+
+    @media(max-width: 980px) {
+      .testimonials-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .designer-card {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 24px;
+        padding: 28px;
+      }
+
+      .designer-avatar-large {
+        margin: 0 auto;
+      }
+
+      .designer-signature {
+        text-align: center;
+      }
+
+      .designer-details {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 
@@ -1342,6 +1666,23 @@
           <div class="hero-actions no-print">
             <a class="btn gold" href="#quotation">View Luxury Rates</a>
             <a class="btn outline" href="#itinerary">Explore the Journey</a>
+          </div>
+          <div class="inline-social-proof no-print">
+            <div class="avatars">
+              <div class="avatar-circle"><img
+                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=100&h=100"
+                  alt="Kim Quy"></div>
+              <div class="avatar-circle"><img
+                  src="https://images.unsplash.com/photo-1589156280159-27698a70f29e?auto=format&fit=crop&q=80&w=100&h=100"
+                  alt="Fatima"></div>
+              <div class="avatar-circle"><img
+                  src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=100&h=100"
+                  alt="Sarah"></div>
+              <div class="avatar-circle"><img
+                  src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=100&h=100"
+                  alt="James"></div>
+            </div>
+            <span>Rated 4.9/5★ by 1,200+ luxury travelers</span>
           </div>
         </div>
         <aside class="quote-card">
@@ -1407,6 +1748,53 @@
             <p data-editable="exp_desc_{{ loop.index }}">{{ exp.desc }}</p>
           </article>
           {% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <section id="journey-video" class="no-print"
+      style="padding: 60px 0; background: var(--ivory-2); border-radius: 40px; margin: 40px 0;">
+      <div class="container" style="max-width: 960px; margin: 0 auto; padding: 0 20px;">
+        <div class="section-head" style="margin-bottom: 32px; text-align: center; grid-template-columns: 1fr;">
+          <h2
+            style="font-family: var(--serif); font-size: clamp(28px, 3.5vw, 44px); color: var(--ink); margin: 0 0 10px;">
+            Feel the Journey</h2>
+          <p style="color: var(--muted); margin: 0; font-size: 16px;">Experience the vibrant beauty, diverse heritage,
+            and timeless charm of Vietnam before you travel.</p>
+        </div>
+        <div class="video-wrapper">
+          <iframe src="https://www.youtube.com/embed/641_kZ-Q0N8?rel=0&modestbranding=1"
+            title="12 Best Places to Visit in Vietnam" frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen></iframe>
+        </div>
+      </div>
+    </section>
+
+    <section id="meet-designer" class="no-print"
+      style="background: var(--ivory-2); padding: 72px 0; border-radius: 40px; margin: 40px 0;">
+      <div class="container designer-container">
+        <div class="designer-card">
+          <div class="designer-img-container">
+            <div class="designer-avatar-large">
+              <img
+                src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400&h=400"
+                alt="Kim Quy - Luxury Travel Designer">
+            </div>
+          </div>
+          <div class="designer-info">
+            <span>Your Dedicated Specialist</span>
+            <h2>Meet Kim Quy</h2>
+            <p class="designer-quote">"I am Kim Quy, your dedicated travel designer. I handpicked every hotel, private
+              transfer, and local guide on this itinerary to ensure your family experiences the true depth of Vietnam in
+              comfort, privacy, and at your own slow pace. I will personally oversee your journey from behind the
+              scenes."</p>
+            <div class="designer-details">
+              <div><strong>Expertise:</strong> Family & Multigenerational Travel, Heritage Paths</div>
+              <div><strong>Experience:</strong> 8+ years designing bespoke luxury journeys</div>
+            </div>
+            <div class="designer-signature">Kim Quy</div>
+          </div>
         </div>
       </div>
     </section>
@@ -1599,6 +1987,127 @@
           <div data-editable="room_notes" style="font-size: 14px; color: var(--muted);">{{ room_notes }}</div>
         </div>
         {% endif %}
+      </div>
+    </section>
+
+    <section id="testimonials" class="no-print" style="background: var(--ivory); padding: 72px 0;">
+      <div class="container">
+        <div class="section-head" style="margin-bottom: 44px; grid-template-columns: 1fr;">
+          <h2>Loved by Discerning Travelers</h2>
+          <p style="margin-top: 8px;">Read stories from families and luxury travelers who explored Vietnam on our
+            slow-nature private paths.</p>
+        </div>
+        <div class="testimonials-grid">
+          <div class="testimonial-card">
+            <div class="stars">★★★★★</div>
+            <h3>"Unforgettable Family Holiday"</h3>
+            <p>"The slow pace was perfect for my parents and children. Metropole Hanoi was splendid, and our private
+              guide made us feel completely safe and welcome at every stop. The halal-friendly food arrangements were
+              flawless."</p>
+            <div class="client-meta">
+              <div class="client-avatar">
+                <img
+                  src="https://images.unsplash.com/photo-1589156280159-27698a70f29e?auto=format&fit=crop&q=80&w=150&h=150"
+                  alt="Fatima Al-Thani">
+              </div>
+              <div>
+                <strong>Fatima Al-Thani</strong>
+                <span>Family Journey (Qatar)</span>
+              </div>
+            </div>
+          </div>
+          <div class="testimonial-card">
+            <div class="stars">★★★★★</div>
+            <h3>"Exceptional Luxury & Service"</h3>
+            <p>"Vietnam Safar designed a masterpiece. The overnight cruise in Ha Long Bay felt like a private haven, and
+              the luxury transport between Sapa and Hanoi was incredibly comfortable. Highly recommend to anyone seeking
+              pure luxury."</p>
+            <div class="client-meta">
+              <div class="client-avatar">
+                <img
+                  src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150&h=150"
+                  alt="James Miller">
+              </div>
+              <div>
+                <strong>James Miller</strong>
+                <span>Bespoke Tour (Australia)</span>
+              </div>
+            </div>
+          </div>
+          <div class="testimonial-card">
+            <div class="stars">★★★★★</div>
+            <h3>"Flawless and Relaxed Pacing"</h3>
+            <p>"Every single transfer was prompt. The VIP Ford Transit was spacious and spotless. The itinerary gave us
+              enough time to relax by the beach and explore local culture. Truly zero friction."</p>
+            <div class="client-meta">
+              <div class="client-avatar">
+                <img
+                  src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150&h=150"
+                  alt="Sarah Richardson">
+              </div>
+              <div>
+                <strong>Sarah Richardson</strong>
+                <span>Slow Nature Tour (UK)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq" class="no-print"
+      style="background: var(--ivory-2); padding: 72px 0; border-radius: 40px; margin: 40px 0;">
+      <div class="container" style="max-width: 800px;">
+        <div class="section-head" style="grid-template-columns: 1fr; text-align: center; margin-bottom: 44px;">
+          <h2>Frequently Asked Questions</h2>
+          <p style="margin-top: 8px;">Answers to common concerns regarding private pacing, transparent pricing, and
+            travel support.</p>
+        </div>
+        <div class="faq-list">
+          <div class="faq-item">
+            <button class="faq-toggle">
+              <span>What happens if my domestic flight is delayed?</span>
+              <span class="faq-icon">+</span>
+            </button>
+            <div class="faq-content">
+              <p>Our dedicated local concierge monitors your flights in real-time. If there is a delay, we automatically
+                reschedule your private driver and guide so that your transition remains entirely seamless without extra
+                costs.</p>
+            </div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-toggle">
+              <span>Are these rates fully transparent?</span>
+              <span class="faq-icon">+</span>
+            </button>
+            <div class="faq-content">
+              <p>Yes, all prices are 100% transparent. There are no hidden fees, local taxes, or surprise surcharges
+                added later. The price shown is exactly what you pay for the listed services.</p>
+            </div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-toggle">
+              <span>What standards can I expect from the private transport?</span>
+              <span class="faq-icon">+</span>
+            </button>
+            <div class="faq-content">
+              <p>We use only luxury late-model vehicles. For families of 4-8, we deploy VIP 16-seat Ford Transit D-Car
+                limousines equipped with plush reclining leather seats, individual USB ports, air conditioning, and
+                complimentary cold water.</p>
+            </div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-toggle">
+              <span>How flexible is the daily itinerary?</span>
+              <span class="faq-icon">+</span>
+            </button>
+            <div class="faq-content">
+              <p>Because your vehicle and English-speaking guide are 100% private, you have full control over the pace.
+                If you wish to spend more time at a particular temple or start the day later, simply coordinate with
+                your guide.</p>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -1832,11 +2341,11 @@
             <div data-editable="contact_web">{{ contact_web }}</div>
             <label>WhatsApp</label>
             <div data-editable="contact_phone">{{ contact_phone }}</div>
-            <label>Prepared by</label>
-            <div data-editable="seller_name2">{{ seller_name }}</div>
+            <label>Travel Advisor</label>
+            <div data-editable="seller_name2">Kim Quy (Senior Specialist)</div>
             {% if seller_email %}
             <div style="margin-top:24px" class="no-print">
-              <a class="btn gold" href="mailto:{{ seller_email }}">Request final confirmation</a>
+              <a class="btn gold" href="mailto:{{ seller_email }}">Contact Kim Quy</a>
             </div>
             {% endif %}
           </div>
@@ -1847,7 +2356,8 @@
     <!-- PWA Install Section -->
     <section id="pwa-install-section" class="no-print"
       style="padding: 72px 0; background: var(--ivory-2); border-top: 1px solid var(--line);">
-      <div class="container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center;">
+      <div class="container"
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; align-items: center; justify-items: center;">
         <div>
           <span class="kicker">Vietnam Safar App</span>
           <h2
@@ -1858,7 +2368,7 @@
             đồ du lịch và liên hệ với chuyên viên thiết kế tour ngay cả khi không có mạng Internet.
           </p>
           <div style="display: flex; flex-wrap: wrap; gap: 14px;">
-            <button id="btn-pwa-install-hero" class="btn gold" style="display: none;">Cài Đặt Ứng Dụng</button>
+            <button id="btn-pwa-install-hero" class="btn gold">Cài Đặt Ứng Dụng</button>
             <div
               style="display: inline-flex; align-items: center; gap: 10px; opacity: 0.6; font-size: 12px; font-weight: 700; color: var(--muted);">
               <span>✓ Hỗ trợ ngoại tuyến</span>
@@ -2365,20 +2875,25 @@
         }
       }
 
+      const isDismissed = localStorage.getItem('pwa_notif_dismissed');
+      if (!isDismissed) {
+        setTimeout(() => {
+          promptCard.classList.add('show');
+        }, 3000);
+      }
+
       if ('Notification' in window) {
         updateBellState();
-        const isDismissed = localStorage.getItem('pwa_notif_dismissed');
-        if (Notification.permission === 'default' && !isDismissed) {
-          setTimeout(() => {
-            promptCard.classList.add('show');
-          }, 3000);
-        }
       } else {
-        if (promptCard) promptCard.style.display = 'none';
         if (navBellBtn) navBellBtn.style.display = 'none';
       }
 
       function requestNotifPermission() {
+        if (!('Notification' in window)) {
+          alert('Để nhận thông báo và tải ứng dụng trên thiết bị này, vui lòng chọn "Share" (Chia sẻ) và "Add to Home Screen" (Thêm vào MH chính).');
+          if (promptCard) promptCard.classList.remove('show');
+          return;
+        }
         Notification.requestPermission().then(permission => {
           updateBellState();
           if (permission === 'granted') {
@@ -2460,15 +2975,14 @@
         e.preventDefault();
         // Stash the event so it can be triggered later.
         deferredInstallPrompt = e;
-        // Update UI to notify the user they can install the PWA
-        if (installButtonHero) {
-          installButtonHero.style.display = 'block';
-        }
       });
 
       if (installButtonHero) {
         installButtonHero.addEventListener('click', async () => {
-          if (!deferredInstallPrompt) return;
+          if (!deferredInstallPrompt) {
+            alert('Để cài đặt ứng dụng trên thiết bị này (đặc biệt là iOS/iPhone), vui lòng nhấn nút "Share" (Chia sẻ) ở trình duyệt và chọn "Add to Home Screen" (Thêm vào MH chính).');
+            return;
+          }
           // Show the install prompt
           deferredInstallPrompt.prompt();
           // Wait for the user to respond to the prompt
@@ -2476,15 +2990,23 @@
           console.log(`User response to the install prompt: ${outcome}`);
           // We've used the prompt, and can't use it again, discard it
           deferredInstallPrompt = null;
-          installButtonHero.style.display = 'none';
         });
       }
 
       window.addEventListener('appinstalled', (evt) => {
         console.log('Vietnam Safar app was installed successfully');
-        if (installButtonHero) {
-          installButtonHero.style.display = 'none';
-        }
+      });
+
+      // Accordion FAQ Toggles
+      document.querySelectorAll('.faq-toggle').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const item = btn.closest('.faq-item');
+          const isActive = item.classList.contains('active');
+          document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
+          if (!isActive) {
+            item.classList.add('active');
+          }
+        });
       });
     });
   </script>

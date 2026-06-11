@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>A refined private journey through Hanoi, Ninh Binh, and Ha Long Bay, designed for halal-friendly comfort, smooth pacing, and memorable family travel. — PDF Quotation</title>
+  <title>{{ tour_title }} — PDF Quotation</title>
   <style>
     :root {
       --ivory: #f8f3e9;
@@ -585,40 +585,40 @@
 </head>
 <body>
 
-<div class="watermark">Vietnam Safar · VN-NORTH-4D-GCC-BH-2026-09 · Confidential B2B</div>
+<div class="watermark">Vietnam Safar · {{ quotation_number }} · Luxury Proposal</div>
 
 <!-- ═══════════════════ PAGE 1 — Cover ═══════════════════ -->
 <div class="pdf-page">
-  <div class="cover" style="background-image: linear-gradient(160deg,rgba(17,19,15,.88),rgba(17,19,15,.55) 55%,rgba(17,19,15,.18)), url('/assets/ninh-binh/tamcoc.jpg');">
+  <div class="cover" style="background-image: linear-gradient(160deg,rgba(17,19,15,.88),rgba(17,19,15,.55) 55%,rgba(17,19,15,.18)), url('{{ img_0 }}');">
     <div class="cover-body">
       <div>
-        <div style="font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-2);margin-bottom:10px;font-weight:700;">Confidential B2B Proposal</div>
-        <div class="cover-kicker">Private Luxury Quotation ‒ 4D3N ‒ 2026-09-02 – 2026-09-05</div>
-        <h1>A refined private journey through Hanoi, Ninh Binh, and Ha Long Bay, designed for halal-friendly comfort, smooth pacing, and memorable family travel.</h1>
-        <p class="cover-lede">Information mapping: the input is a premium GCC/Saudi, halal-friendly family request for Northern Vietnam, 4 days, for 2 adults and 1 child aged 6, starting 2026-09-02, with an indicative budget of 24,000,000 VND. The draft is therefore structured as a private, comfort-led Northern Vietnam program centered on Hanoi, Ninh Binh, and Ha Long Bay, which aligns with the proven halal-friendly private product style already used for Saudi/GCC partners, including private transport, 4-star positioning, and halal-conscious meal planning   . Assumptions used: no specific hotel or cruise supplier has been named, so accommodation remains generic and subject to final reconfirmation; domestic flights are not required for this 4-day Northern Vietnam routing; the 24,000,000 VND is treated as an indicative total package budget rather than a final contracted price.</p>
+        <div style="font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-2);margin-bottom:10px;font-weight:700;">Private Luxury Proposal</div>
+        <div class="cover-kicker">{{ kicker }}</div>
+        <h1>{{ tour_title }}</h1>
+        <p class="cover-lede">{{ lede }}</p>
       </div>
       <div class="quote-card">
         <h2>Quotation Snapshot</h2>
-        <div class="qrow"><span>Prepared for</span><strong>Private family travel for 2 adults and 1 child (age 6), premium comfort focus</strong></div>
-        <div class="qrow"><span>Prepared by</span><strong>Vietnam Safar – Discovery Asia Travel Group</strong></div>
-        
-        <div class="qrow"><span>Guests</span><strong>Private family travel for 2 adults and 1 child (age 6), premium comfort focus</strong></div>
-        
-        
-        <div class="qrow"><span>Travel dates</span><strong>2026-09-02 – 2026-09-05</strong></div>
-        
-        
-        <div class="qrow"><span>Route</span><strong>Hanoi – Hanoi / Ninh Binh – Ha Long Bay – Ha Long Bay / Hanoi</strong></div>
-        
-        <div class="qrow"><span>Ref.</span><strong>VN-NORTH-4D-GCC-BH-2026-09</strong></div>
-        <div class="qrow"><span>Contact</span><strong>+84 911 538 738</strong></div>
+        <div class="qrow"><span>Prepared for</span><strong>{{ customer_name }}</strong></div>
+        <div class="qrow"><span>Prepared by</span><strong>{{ seller_name }}</strong></div>
+        {% if guests_txt %}
+        <div class="qrow"><span>Guests</span><strong>{{ guests_txt }}</strong></div>
+        {% endif %}
+        {% if travel_dates %}
+        <div class="qrow"><span>Travel dates</span><strong>{{ travel_dates }}</strong></div>
+        {% endif %}
+        {% if route_txt %}
+        <div class="qrow"><span>Route</span><strong>{{ route_txt }}</strong></div>
+        {% endif %}
+        <div class="qrow"><span>Ref.</span><strong>{{ quotation_number }}</strong></div>
+        <div class="qrow"><span>Contact</span><strong>{{ contact }}</strong></div>
       </div>
     </div>
     <div class="cover-strip">
-      <div class="strip-item"><span>Duration</span><strong>4D3N</strong></div>
-      <div class="strip-item"><span>Best for</span><strong>GCC / Saudi / Halal-friendly</strong></div>
-      <div class="strip-item"><span>Travel pace</span><strong>Relaxed</strong></div>
-      <div class="strip-item"><span>Service</span><strong>Private</strong></div>
+      <div class="strip-item"><span>Duration</span><strong>{{ strip_duration }}</strong></div>
+      <div class="strip-item"><span>Best for</span><strong>{{ strip_best_for }}</strong></div>
+      <div class="strip-item"><span>Travel pace</span><strong>{{ strip_pace }}</strong></div>
+      <div class="strip-item"><span>Service</span><strong>{{ strip_service }}</strong></div>
     </div>
   </div>
 </div>
@@ -626,8 +626,8 @@
 <!-- ═══════════════════ PAGE 2 — Glance & Overview ═══════════════════ -->
 <div class="pdf-page">
   <div class="page-header">
-    <span class="brand">Vietnam Safar — B2B Travel Proposal</span>
-    <span class="ref">VN-NORTH-4D-GCC-BH-2026-09 · 2026-09-02</span>
+    <span class="brand">Vietnam Safar — Luxury Travel Proposal</span>
+    <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
   </div>
   <div class="page-inner">
     <div class="section-label">Section 1 — Journey at a Glance</div>
@@ -637,23 +637,23 @@
     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 28px;">
       <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
         <span style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Duration</span>
-        <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">4D3N</strong>
+        <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">{{ duration_label }}</strong>
       </div>
       <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
         <span style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Market &amp; Nationality</span>
-        <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">GCC / Saudi / Halal-friendly</strong>
+        <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">{{ glance_market }}</strong>
       </div>
       <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
         <span style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Guest Profile</span>
-        <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">Private family travel for 2 adults and 1 child (age 6), premium comfort focus</strong>
+        <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">{{ glance_profile }}</strong>
       </div>
       <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
         <span style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Hotel Standard</span>
-        <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">4-star or similar premium standard, subject to final confirmation</strong>
+        <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">{{ glance_standard }}</strong>
       </div>
       <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
         <span style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Meal Preference</span>
-        <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">Halal-friendly arrangements, with seafood/vegetarian alternatives as required</strong>
+        <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">{{ glance_meals }}</strong>
       </div>
       <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
         <span style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Tour Type</span>
@@ -661,21 +661,21 @@
       </div>
       <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; grid-column: span 3;">
         <span style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Route Sequence</span>
-        <strong style="display:block; font-size:13px; color:var(--emerald); margin-top:3px; font-family:var(--serif); font-weight:500;">Hanoi – Hanoi / Ninh Binh – Ha Long Bay – Ha Long Bay / Hanoi</strong>
+        <strong style="display:block; font-size:13px; color:var(--emerald); margin-top:3px; font-family:var(--serif); font-weight:500;">{{ route_txt }}</strong>
       </div>
     </div>
 
     <div class="section-label" style="margin-top:20px;">Section 2 — Journey Overview</div>
-    <h2 class="section-h2">Prepared for: Private family travel for 2 adults and 1 child (age 6), premium comfort focus — A refined private journey through Hanoi, Ninh Binh, and Ha Long Bay, designed for halal-friendly comfort, smooth pacing, and memorable family travel.</h2>
-    <p style="font-size:13px; color:var(--muted); line-height:1.7;">Information mapping: the input is a premium GCC/Saudi, halal-friendly family request for Northern Vietnam, 4 days, for 2 adults and 1 child aged 6, starting 2026-09-02, with an indicative budget of 24,000,000 VND. The draft is therefore structured as a private, comfort-led Northern Vietnam program centered on Hanoi, Ninh Binh, and Ha Long Bay, which aligns with the proven halal-friendly private product style already used for Saudi/GCC partners, including private transport, 4-star positioning, and halal-conscious meal planning   . Assumptions used: no specific hotel or cruise supplier has been named, so accommodation remains generic and subject to final reconfirmation; domestic flights are not required for this 4-day Northern Vietnam routing; the 24,000,000 VND is treated as an indicative total package budget rather than a final contracted price.</p>
+    <h2 class="section-h2">{{ overview_h2 }}</h2>
+    <p style="font-size:13px; color:var(--muted); line-height:1.7;">{{ overview_p }}</p>
   </div>
 </div>
 
 <!-- ═══════════════════ PAGE 3 — Why Works & Gallery ═══════════════════ -->
 <div class="pdf-page">
   <div class="page-header">
-    <span class="brand">Vietnam Safar — B2B Travel Proposal</span>
-    <span class="ref">VN-NORTH-4D-GCC-BH-2026-09 · 2026-09-02</span>
+    <span class="brand">Vietnam Safar — Luxury Travel Proposal</span>
+    <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
   </div>
   <div class="page-inner">
     <div class="section-label">Section 3 — Why This Journey Works Well</div>
@@ -685,46 +685,32 @@
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px;">
       <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
         <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">Private &amp; Flexible</strong>
-        <p style="font-size:11px; color:var(--muted); line-height:1.4;">A private setup gives the family complete control over pace, comfort, and prayer-aware timing, with no compromise on ease or privacy.</p>
+        <p style="font-size:11px; color:var(--muted); line-height:1.4;">{{ why_private }}</p>
       </div>
       <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
         <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">Comfort &amp; Pacing</strong>
-        <p style="font-size:11px; color:var(--muted); line-height:1.4;">The routing is intentionally compact, reducing unnecessary transit while keeping the experience polished, scenic, and relaxed from arrival to departure.</p>
+        <p style="font-size:11px; color:var(--muted); line-height:1.4;">{{ why_comfort }}</p>
       </div>
       <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
         <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">Muslim-Friendly Care</strong>
-        <p style="font-size:11px; color:var(--muted); line-height:1.4;">The program is positioned for halal-friendly expectations, with meal planning and service coordination aligned to GCC traveler requirements.</p>
+        <p style="font-size:11px; color:var(--muted); line-height:1.4;">{{ why_muslim }}</p>
       </div>
       <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
         <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">Balanced Highlights</strong>
-        <p style="font-size:11px; color:var(--muted); line-height:1.4;">Hanoi, Ninh Binh, and Ha Long Bay deliver a clean, high-value Northern Vietnam showcase that feels complete without becoming rushed.</p>
+        <p style="font-size:11px; color:var(--muted); line-height:1.4;">{{ why_balanced }}</p>
       </div>
     </div>
 
     <div class="section-label">Destination Gallery</div>
     <div class="gallery" style="margin-top:8px;">
-      
-      <div class="img-tile large" style="background-image:url('/assets/ha-noi/duongtau.jpg')">
+      {% for dest in destinations %}
+      <div class="img-tile {% if loop.index == 1 %}large{% endif %}" style="background-image:url('{{ dest.image_url or '/assets/vietnam-safar-logo.png' }}')">
         <div class="img-caption">
-          <small>Highlight</small>
-          <strong>Hà Nội</strong>
+          <small>{% if loop.index == 1 %}Highlight{% else %}Destination{% endif %}</small>
+          <strong>{{ dest.name }}</strong>
         </div>
       </div>
-      
-      <div class="img-tile " style="background-image:url('/assets/ninh-binh/tamcoc.jpg')">
-        <div class="img-caption">
-          <small>Destination</small>
-          <strong>Ninh Bình</strong>
-        </div>
-      </div>
-      
-      <div class="img-tile " style="background-image:url('/assets/quang-ninh/halong.jpg')">
-        <div class="img-caption">
-          <small>Destination</small>
-          <strong>Vịnh Hạ Long</strong>
-        </div>
-      </div>
-      
+      {% endfor %}
     </div>
   </div>
 </div>
@@ -733,151 +719,49 @@
 <div class="pdf-page">
   <div class="page-header">
     <span class="brand">Vietnam Safar — Luxury Quotation</span>
-    <span class="ref">VN-NORTH-4D-GCC-BH-2026-09 · 2026-09-02</span>
+    <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
   </div>
   <div class="page-inner">
     <div class="section-label">Service Program</div>
-    <h2 class="section-h2">Day-by-Day Journey Program</h2>
-    <p class="section-p">Your private 4D3N journey — 4 days, carefully crafted.</p>
+    <h2 class="section-h2">{{ itinerary_h2 }}</h2>
+    <p class="section-p">{{ itinerary_p }}</p>
 
     <div class="itinerary">
-      
+      {% for day in itinerary %}
       <div class="day-card">
-        <div class="day-num">1</div>
+        <div class="day-num">{{ day.dayNumber }}</div>
         <div>
-          <div class="day-badge">DAY 1</div>
-          <h3>Explore Hanoi</h3>
-          
-          <p>Arrival in the capital sets a graceful tone: private welcome, smooth transfer, and an easy first evening that allows the family to settle in without pressure.</p>
-          
-          
+          <div class="day-badge">DAY {{ day.dayNumber }}{% if day.date %} · {{ day.date }}{% endif %}</div>
+          <h3>{{ day.title }}</h3>
+          {% for para in day.description %}
+          <p>{{ para }}</p>
+          {% endfor %}
+          {% if day.activities %}
           <p style="margin-top:6px;font-size:10px;color:#b7894b">
-            <strong>Highlights:</strong> Private airport meet &amp; greet, private transfer to hotel, assisted check-in, and a relaxed evening at leisure. Halal-friendly dinner guidance can be arranged on request.
+            <strong>Highlights:</strong> {{ day.activities | join(' · ') }}
           </p>
-          
-          
+          {% endif %}
+          {% if day.notes %}
           <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
             <strong>Notes:</strong>
             <ul style="margin:2px 0 0;padding-left:10px;">
-              <li>Sense of Pace: Relaxed and restorative</li>
+              {% for note in day.notes %}<li>{{ note }}</li>{% endfor %}
             </ul>
           </div>
-          
+          {% endif %}
         </div>
         <div class="day-meta">
-          
+          {% if day.overnight %}
           <div class="price-sub" style="margin-bottom:2px">OVERNIGHT</div>
-          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Hanoi</div>
-          
-          
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">{{ day.overnight }}</div>
+          {% endif %}
+          {% if day.meals %}
           <div class="price-sub" style="margin-top:8px;margin-bottom:2px">MEALS</div>
-          <div style="font-size:11px">Dinner at leisure; halal-friendly restaurant recommendations available.</div>
-          
+          <div style="font-size:11px">{{ day.meals | join(' · ') }}</div>
+          {% endif %}
         </div>
       </div>
-      
-      <div class="day-card">
-        <div class="day-num">2</div>
-        <div>
-          <div class="day-badge">DAY 2</div>
-          <h3>Explore Hanoi / Ninh Binh</h3>
-          
-          <p>A full, elegant day of Northern Vietnam discovery, combining Hanoi’s cultural texture with Ninh Binh’s limestone scenery, in line with the proven Hanoi–Ninh Binh day structure used in the source programs  .</p>
-          
-          
-          <p style="margin-top:6px;font-size:10px;color:#b7894b">
-            <strong>Highlights:</strong> Private guided sightseeing, Hanoi highlights, full-day Ninh Binh excursion, scenic boat experience at Trang An, entrance fees as applicable, and private return transfer.
-          </p>
-          
-          
-          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
-            <strong>Notes:</strong>
-            <ul style="margin:2px 0 0;padding-left:10px;">
-              <li>Sense of Pace: Immersive yet comfortable</li>
-            </ul>
-          </div>
-          
-        </div>
-        <div class="day-meta">
-          
-          <div class="price-sub" style="margin-bottom:2px">OVERNIGHT</div>
-          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Hanoi / Ninh Binh</div>
-          
-          
-          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">MEALS</div>
-          <div style="font-size:11px">Breakfast at hotel, lunch en route or locally arranged; dinner at leisure in Hanoi.</div>
-          
-        </div>
-      </div>
-      
-      <div class="day-card">
-        <div class="day-num">3</div>
-        <div>
-          <div class="day-badge">DAY 3</div>
-          <h3>Explore Ha Long Bay</h3>
-          
-          <p>The journey becomes cinematic as the family transfers to Ha Long Bay and boards an overnight cruise, bringing the iconic limestone seascape into focus with calm, polished elegance.</p>
-          
-          
-          <p style="margin-top:6px;font-size:10px;color:#b7894b">
-            <strong>Highlights:</strong> Private transfer to the coast, overnight cruise accommodation, onboard meals, scenic cruising, and leisure time on deck with optional light activities subject to cruise program.
-          </p>
-          
-          
-          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
-            <strong>Notes:</strong>
-            <ul style="margin:2px 0 0;padding-left:10px;">
-              <li>Sense of Pace: Refined and scenic</li>
-            </ul>
-          </div>
-          
-        </div>
-        <div class="day-meta">
-          
-          <div class="price-sub" style="margin-bottom:2px">OVERNIGHT</div>
-          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Ha Long Bay</div>
-          
-          
-          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">MEALS</div>
-          <div style="font-size:11px">Breakfast, lunch, and dinner on the cruise; halal-friendly/seafood/vegetarian request to be advised in advance.</div>
-          
-        </div>
-      </div>
-      
-      <div class="day-card">
-        <div class="day-num">4</div>
-        <div>
-          <div class="day-badge">DAY 4</div>
-          <h3>Explore Ha Long Bay / Hanoi</h3>
-          
-          <p>The final day unfolds gently with a tranquil morning on the bay, a leisurely brunch, and a smooth transfer back toward Hanoi for departure arrangements.</p>
-          
-          
-          <p style="margin-top:6px;font-size:10px;color:#b7894b">
-            <strong>Highlights:</strong> Brunch on board, cruise check-out, private transfer back to Hanoi or airport, and end-of-tour assistance.
-          </p>
-          
-          
-          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
-            <strong>Notes:</strong>
-            <ul style="margin:2px 0 0;padding-left:10px;">
-              <li>Sense of Pace: Unhurried and seamless</li>
-            </ul>
-          </div>
-          
-        </div>
-        <div class="day-meta">
-          
-          <div class="price-sub" style="margin-bottom:2px">OVERNIGHT</div>
-          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Ha Long Bay / Hanoi</div>
-          
-          
-          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">MEALS</div>
-          <div style="font-size:11px">Brunch on cruise; additional meals depend on flight timing.</div>
-          
-        </div>
-      </div>
-      
+      {% endfor %}
     </div>
   </div>
 </div>
@@ -885,15 +769,15 @@
 <!-- ═══════════════════ PAGE 5 — Hotel Plan & Pricing ═══════════════════ -->
 <div class="pdf-page">
   <div class="page-header">
-    <span class="brand">Vietnam Safar — B2B Travel Proposal</span>
-    <span class="ref">VN-NORTH-4D-GCC-BH-2026-09 · 2026-09-02</span>
+    <span class="brand">Vietnam Safar — Luxury Travel Proposal</span>
+    <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
   </div>
   <div class="page-inner">
     <div class="section-label">Section 5 — Selected Hotel Plan</div>
     <h2 class="section-h2">Hotel Arrangement</h2>
     <p class="section-p">Proposed accommodation plan. Similar options can be requested.</p>
 
-    
+    {% if hotels %}
     <div style="border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 16px;">
       <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11px;">
         <thead>
@@ -905,67 +789,64 @@
           </tr>
         </thead>
         <tbody>
-          
-          <tr style="border-bottom: 1px solid var(--line); background: white;">
-            <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Hanoi</td>
-            <td style="padding: 10px 14px;">2026-09-02</td>
-            <td style="padding: 10px 14px;">2026-09-04</td>
-            <td style="padding: 10px 14px; font-family: var(--serif); color: var(--ink);">Premium 4-star city hotel or similar, selected for comfort, cleanliness, family convenience, and easy access to Northern Vietnam sightseeing.</td>
+          {% for item in hotels %}
+          <tr style="border-bottom: 1px solid var(--line); background: {% if loop.index % 2 == 0 %}rgba(183, 137, 75, 0.03){% else %}white{% endif %};">
+            <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">{{ item.destination }}</td>
+            <td style="padding: 10px 14px;">{{ item.checkInDate or 'TBA' }}</td>
+            <td style="padding: 10px 14px;">{{ item.checkOutDate or 'TBA' }}</td>
+            <td style="padding: 10px 14px; font-family: var(--serif); color: var(--ink);">{{ item.hotelArrangement }}</td>
           </tr>
-          
-          <tr style="border-bottom: 1px solid var(--line); background: rgba(183, 137, 75, 0.03);">
-            <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Ha Long Bay</td>
-            <td style="padding: 10px 14px;">2026-09-04</td>
-            <td style="padding: 10px 14px;">2026-09-05</td>
-            <td style="padding: 10px 14px; font-family: var(--serif); color: var(--ink);">Premium overnight cruise cabin or similar, subject to final availability and family rooming requirements.</td>
-          </tr>
-          
+          {% endfor %}
         </tbody>
       </table>
     </div>
-    
+    {% if room_notes %}
     <div style="margin-top: 10px; padding: 10px 14px; background: rgba(183, 137, 75, 0.05); border-radius: 8px; border: 1px dashed var(--gold); font-size: 10px; color: var(--muted); margin-bottom: 24px;">
-      <strong>Room Notes &amp; Requests:</strong> Assumed rooming: 1 double/twin room with 1 extra bed or family-style arrangement for the child, subject to hotel and cruise configuration. Final bedding, adjoining rooms, and child policy to be reconfirmed.
+      <strong>Room Notes &amp; Requests:</strong> {{ room_notes }}
     </div>
-    
-    
+    {% endif %}
+    {% else %}
+    <p style="font-size:11px; color:var(--muted); font-style:italic; margin-bottom:24px;">Hotel arrangements will be tailored and detailed here for your specific travel dates.</p>
+    {% endif %}
 
-    <div class="section-label">Section 6 — B2B Package Pricing</div>
+    <div class="section-label">Section 6 — Package Pricing</div>
     <div class="pricing-block" style="margin-bottom: 0;">
-      <h2>B2B Net Price: VND 14,720,000</h2>
-      <p class="sub">Grand total for Private family travel for 2 adults and 1 child (age 6), premium comfort focus. Currency: VND. Final rates subject to reconfirmation.</p>
+      <h2>{{ pricing_h2 }}</h2>
+      <p class="sub">{{ pricing_p }}</p>
       <div class="price-cards">
-        
-        <div class="price-card featured">
-          <span>Private family package for 2 adults + 1 child (age 6)</span>
-          
-          <small style="display:block;margin-top:3px;font-size:9px;opacity:.7">Indicative total budget for 4 days / 3 nights in Northern Vietnam on a private, halal-friendly, premium basis. No specific hotel or cruise name is fixed yet.</small>
-          
-          <strong>VND 24,000,000 / person</strong>
+        {% for opt in price_options %}
+        <div class="price-card {% if opt.isConfirmedMainOption %}featured{% endif %}">
+          <span>{{ opt.hotelCategory }}</span>
+          {% if opt.optionName %}
+          <small style="display:block;margin-top:3px;font-size:9px;opacity:.7">{{ opt.optionName }}</small>
+          {% endif %}
+          <strong>{{ opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~ opt.pricePerPerson.currency) }}</strong>
           <small>per person</small><br>
-          <small>Total: VND 48,000,000</small>
-          
+          <small>Total: {{ opt.totalPrice.displayText or ('{:,.0f}'.format(opt.totalPrice.amount) ~ ' ' ~ opt.totalPrice.currency) }}</small>
+          {% if opt.isConfirmedMainOption %}
           <div style="margin-top:8px;font-size:8px;letter-spacing:.14em;color:#d8bd85;font-weight:800">✓ CONFIRMED</div>
-          
+          {% elif opt.isAlternativeOption %}
+          <div style="margin-top:8px;font-size:8px;letter-spacing:.14em;color:rgba(216,189,133,.6);font-weight:700">ALTERNATIVE</div>
+          {% endif %}
         </div>
-        
+        {% endfor %}
       </div>
       <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.1); display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; font-size: 10px; color: rgba(255,255,255,0.7);">
         <div>
           <strong style="color: var(--gold-2); display: block; margin-bottom: 2px;">Price Basis</strong>
-          <span>Indicative total budget for a private family package on 2 adults + 1 child basis</span>
+          <span>{{ glance_basis }}</span>
         </div>
         <div>
           <strong style="color: var(--gold-2); display: block; margin-bottom: 2px;">Domestic Flights</strong>
-          <span>Not included / not required for this itinerary</span>
+          <span>{{ glance_flights }}</span>
         </div>
         <div>
           <strong style="color: var(--gold-2); display: block; margin-bottom: 2px;">Validity</strong>
-          <span>Indicative only, subject to availability and final supplier reconfirmation at the time of booking.</span>
+          <span>{{ glance_validity }}</span>
         </div>
         <div>
           <strong style="color: var(--gold-2); display: block; margin-bottom: 2px;">Rate Classification</strong>
-          <span>Built for Saudi and GCC travel partners seeking a concise yet premium Northern Vietnam program with private transport, halal-conscious dining, and a balanced sightseeing rhythm consistent with the Northern Vietnam product style in the source portfolio  .</span>
+          <span>{{ glance_partner_note }}</span>
         </div>
       </div>
     </div>
@@ -975,8 +856,8 @@
 <!-- ═══════════════════ PAGE 6 — Inc/Exc & Muslim Care ═══════════════════ -->
 <div class="pdf-page">
   <div class="page-header">
-    <span class="brand">Vietnam Safar — B2B Travel Proposal</span>
-    <span class="ref">VN-NORTH-4D-GCC-BH-2026-09 · 2026-09-02</span>
+    <span class="brand">Vietnam Safar — Luxury Travel Proposal</span>
+    <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
   </div>
   <div class="page-inner">
     <div class="section-label">Section 7 — Package Inclusions &amp; Exclusions</div>
@@ -987,32 +868,32 @@
       <div class="panel">
         <h3>Inclusions</h3>
         <ul>
-          <li>Private airport meet &amp; greet, private transfer to hotel, assisted check-in, and a relaxed evening at leisure. Halal-friendly dinner guidance can be arranged on request.</li><li>Private guided sightseeing, Hanoi highlights, full-day Ninh Binh excursion, scenic boat experience at Trang An, entrance fees as applicable, and private return transfer.</li><li>Private transfer to the coast, overnight cruise accommodation, onboard meals, scenic cruising, and leisure time on deck with optional light activities subject to cruise program.</li><li>Brunch on board, cruise check-out, private transfer back to Hanoi or airport, and end-of-tour assistance.</li>
+          {% for line in inclusions %}<li>{{ line }}</li>{% endfor %}
         </ul>
       </div>
       <div class="panel">
         <h3>Exclusions</h3>
         <ul>
-          <li>International flights</li><li>Vietnam visa and visa processing fees</li><li>Travel insurance</li><li>Personal expenses, laundry, beverages and tips</li><li>Optional activities not mentioned in the program</li>
+          {% for line in exclusions %}<li>{{ line }}</li>{% endfor %}
         </ul>
       </div>
     </div>
 
-    
+    {% if show_muslim_care %}
     <div class="section-label">Section 8 — Muslim-Friendly Travel Care</div>
     <h2 class="section-h2">Halal &amp; Prayer Coordination</h2>
     <div style="margin-top: 10px; padding: 16px; background: rgba(23, 65, 46, 0.03); border-left: 3px solid var(--emerald); border-radius: 8px; font-size: 11px; color: var(--muted); line-height: 1.6;">
       Vietnam Safar can assist with halal-friendly meal planning where available, no-pork meal notes, seafood or vegetarian alternatives where halal-certified restaurants are limited, and flexible prayer stops during touring days where practical. Halal-certified restaurants are more available in major cities such as Hanoi, Da Nang and Ho Chi Minh City. In mountain, cruise or countryside destinations, suitable seafood, vegetarian or no-pork meals may be recommended.
     </div>
-    
+    {% endif %}
   </div>
 </div>
 
 <!-- ═══════════════════ PAGE 7 — Enhancements & Notes ═══════════════════ -->
 <div class="pdf-page">
   <div class="page-header">
-    <span class="brand">Vietnam Safar — B2B Travel Proposal</span>
-    <span class="ref">VN-NORTH-4D-GCC-BH-2026-09 · 2026-09-02</span>
+    <span class="brand">Vietnam Safar — Luxury Travel Proposal</span>
+    <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
   </div>
   <div class="page-inner">
     <div class="section-label">Section 9 — Optional Enhancements</div>
@@ -1020,40 +901,25 @@
     <p class="section-p">Select optional upgrades to enhance the guests' experience.</p>
 
     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 28px;">
-      
+      {% for item in optional_enhancements %}
       <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
-        <strong style="display:block; font-family:var(--serif); font-size:13px; color:var(--emerald); margin-bottom:4px;">VIP airport fast-track assistance</strong>
-        <span style="font-size:9px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--gold);">On request</span>
+        <strong style="display:block; font-family:var(--serif); font-size:13px; color:var(--emerald); margin-bottom:4px;">{{ item.title }}</strong>
+        <span style="font-size:9px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--gold);">{{ item.status }}</span>
       </div>
-      
-      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
-        <strong style="display:block; font-family:var(--serif); font-size:13px; color:var(--emerald); margin-bottom:4px;">Higher-category hotel or premium cruise upgrade</strong>
-        <span style="font-size:9px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--gold);">Subject to availability</span>
-      </div>
-      
-      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
-        <strong style="display:block; font-family:var(--serif); font-size:13px; color:var(--emerald); margin-bottom:4px;">Halal dining coordination with pre-selected restaurant options</strong>
-        <span style="font-size:9px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--gold);">Recommended</span>
-      </div>
-      
+      {% endfor %}
     </div>
 
     <div class="section-label">Section 10 — Price Conditions &amp; Notes</div>
     <h2 class="section-h2">Price Conditions</h2>
-    <p class="section-p" style="margin-bottom:12px;">Rates are B2B net indicative and subject to reconfirmation at the time of booking.</p>
+    <p class="section-p" style="margin-bottom:12px;">{{ terms_p }}</p>
 
     <div class="terms-grid">
-      
+      {% for para in price_cond_paras %}
       <div class="term-card">
-        <div class="label">Note 1</div>
-        <p>Rates are B2B net indicative and subject to reconfirmation at the time of booking.</p>
+        <div class="label">Note {{ loop.index }}</div>
+        <p>{{ para }}</p>
       </div>
-      
-      <div class="term-card">
-        <div class="label">Note 2</div>
-        <p>Final price may vary depending on hotel availability, resort category, cruise selection, domestic flight fare, rooming arrangement, child policy, and final travel services confirmed.</p>
-      </div>
-      
+      {% endfor %}
     </div>
 
   </div>
@@ -1062,8 +928,8 @@
 <!-- ═══════════════════ PAGE 8 — Booking Terms & Finalization ═══════════════════ -->
 <div class="pdf-page">
   <div class="page-header">
-    <span class="brand">Vietnam Safar — B2B Travel Proposal</span>
-    <span class="ref">VN-NORTH-4D-GCC-BH-2026-09 · 2026-09-02</span>
+    <span class="brand">Vietnam Safar — Luxury Travel Proposal</span>
+    <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
   </div>
   <div class="page-inner">
     <div class="section-label">Section 11 — Booking &amp; Payment Terms</div>
@@ -1081,19 +947,19 @@
         <tbody>
           <tr style="border-bottom: 1px solid var(--line); background: white;">
             <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Deposit</td>
-            <td style="padding: 10px 14px;">Deposit requirement to be confirmed once hotel and cruise options are held.</td>
+            <td style="padding: 10px 14px;">{{ term_deposit }}</td>
           </tr>
           <tr style="border-bottom: 1px solid var(--line); background: rgba(183, 137, 75, 0.03);">
             <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Balance</td>
-            <td style="padding: 10px 14px;">Balance payment schedule to be confirmed in the final booking notice.</td>
+            <td style="padding: 10px 14px;">{{ term_balance }}</td>
           </tr>
           <tr style="border-bottom: 1px solid var(--line); background: white;">
             <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Cancellation</td>
-            <td style="padding: 10px 14px;">Cancellation terms will follow the final supplier policy once the booking is confirmed.</td>
+            <td style="padding: 10px 14px;">{{ term_cancellation }}</td>
           </tr>
           <tr style="background: rgba(183, 137, 75, 0.03);">
             <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Confirmation</td>
-            <td style="padding: 10px 14px;">This quotation remains indicative and is subject to written reconfirmation, room availability, and final supplier approval.</td>
+            <td style="padding: 10px 14px;">{{ term_confirmation }}</td>
           </tr>
         </tbody>
       </table>
@@ -1103,36 +969,36 @@
     
     <div class="cta-block" style="margin-bottom: 10px; padding: 24px; grid-template-columns: 1fr 180px; gap: 14px;">
       <div>
-        <h2>Confirm dates, then refine the luxury layer.</h2>
+        <h2>{{ cta_h2 }}</h2>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; font-size: 10px; margin-top: 14px; text-align: left;">
           <div>
             <strong style="color: var(--gold-2); display:block; margin-bottom:4px; text-transform:uppercase;">Details Required</strong>
             <ul style="padding-left:12px; display:grid; gap:3px; color:rgba(255,255,255,0.85);">
-              <li>Passport copies, full flight details, rooming preference, child age confirmation, dietary notes, and any special assistance requests are required before final confirmation.</li>
+              {% for item in final_req %}<li>{{ item }}</li>{% endfor %}
             </ul>
           </div>
           <div>
             <strong style="color: var(--gold-2); display:block; margin-bottom:4px; text-transform:uppercase;">Next Steps</strong>
             <ul style="padding-left:12px; display:grid; gap:3px; color:rgba(255,255,255,0.85);">
-              <li>Once confirmed, the partner will receive the final voucher set, supplier reconfirmation, transfer coordination details, and any halal dining or child arrangement notes required for smooth operation.</li>
+              {% for item in final_after %}<li>{{ item }}</li>{% endfor %}
             </ul>
           </div>
         </div>
       </div>
       <div class="contact-box" style="padding: 12px;">
         <span class="clabel" style="margin-top:0;">Prepared by</span>
-        <div class="cval" style="font-size:11px;">Vietnam Safar – Discovery Asia Travel Group</div>
+        <div class="cval" style="font-size:11px;">{{ seller_name }}</div>
         <span class="clabel">WhatsApp</span>
-        <div class="cval" style="font-size:11px;">+84 911 538 738</div>
+        <div class="cval" style="font-size:11px;">{{ contact_phone }}</div>
         <span class="clabel">Website</span>
-        <div class="cval" style="font-size:11px;">www.vietnamsafar.vn</div>
+        <div class="cval" style="font-size:11px;">{{ contact_web }}</div>
       </div>
     </div>
 
     <div class="pdf-footer" style="padding: 10px 0; font-size: 10px;">
-      A refined private journey through Hanoi, Ninh Binh, and Ha Long Bay, designed for halal-friendly comfort, smooth pacing, and memorable family travel. — Luxury quotation prepared for Private family travel for 2 adults and 1 child (age 6), premium comfort focus.<br>
+      {{ footer_text }}<br>
       <span style="color:var(--gold);font-weight:700;">vietnamsafar.vn</span> &nbsp;·&nbsp;
-      This document is a confidential B2B quotation prepared exclusively for Private family travel for 2 adults and 1 child (age 6), premium comfort focus.
+      This document is a private luxury quotation prepared exclusively for {{ customer_name }}.
     </div>
   </div>
 </div>

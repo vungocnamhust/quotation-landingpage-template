@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────────────────────────────────────
-# Test: POST /quotations — Vietnam Luxury Family Journey 12D11N
-# Usage: bash test_create_quotation.sh
+# Test: POST /quotations/b2c — Vietnam Luxury Family Journey 12D11N B2C
+# Usage: bash test_b2c.sh
 # ─────────────────────────────────────────────────────────────────────────────
 
 BASE_URL="${1:-http://localhost:8000}"
 
 curl --connect-timeout 10 --max-time 30 \
-  -X POST "$BASE_URL/quotations" \
+  -X POST "$BASE_URL/quotations/b2c" \
   -H "Content-Type: application/json" \
   -s \
   -w "\n\n--- HTTP STATUS: %{http_code} ---\n" \

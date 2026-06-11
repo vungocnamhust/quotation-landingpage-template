@@ -348,6 +348,21 @@ class DetailItineraryPayload(BaseModel):
     pricing: Optional[TourPricing] = None
 # ── Context builder (pure fn — no I/O) ───────────────────────────────────────
 
+
+def truncate_text(text: Optional[str], max_chars: int) -> str:
+    if not text:
+        return ""
+    text_str = str(text).strip()
+    if len(text_str) <= max_chars:
+        return text_str
+    # Try to split on last space to avoid cutting words
+    truncated = text_str[:max_chars].rsplit(" ", 1)[0]
+    if not truncated:
+        truncated = text_str[:max_chars - 3]
+    return truncated.strip() + "..."
+
+# ── Context builder (pure fn — no I/O) ───────────────────────────────────────
+
 def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, destinations: list[dict]):
     """Build template context. Shared by /quotations (landingpage) and /quotations/{id}/pdf."""
     default_img = "/assets/vietnam-safar-logo.png"
@@ -358,8 +373,8 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
     seller_phone = "+84 911 538 738"
 
     # Resolve key display strings from new Spec 36 schema
-    tour_title    = payload.landingpageContent.heroSection.subtitle
-    prepared_for  = payload.journeyGlance.guestProfile
+    tour_title    = truncate_text(payload.landingpageContent.heroSection.subtitle, 100)
+    prepared_for  = truncate_text(payload.journeyGlance.guestProfile, 60)
     
     # Calculate duration
     days_count = len(payload.itinerary)
@@ -374,7 +389,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         if start_date and end_date:
             travel_dates = f"{start_date} \u2013 {end_date}"
             
-    guests_txt    = payload.journeyGlance.guestProfile
+    guests_txt    = truncate_text(payload.journeyGlance.guestProfile, 100)
     
     # Extract route from itinerary destinations in sequence
     route_list = []
@@ -383,8 +398,8 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
             route_list.append(d.destination)
     route_txt = " \u2013 ".join(route_list)
     
-    nationality   = payload.journeyGlance.market
-    travel_style  = payload.journeyGlance.partnerNote
+    nationality   = truncate_text(payload.journeyGlance.market, 60)
+    travel_style  = truncate_text(payload.journeyGlance.partnerNote, 100)
 
     # Construct pricing context from agent custom pricing dict or default
     price_options = []
@@ -411,7 +426,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         total_price = f"{currency} {grand_total_num:,.0f}"
         
         price_options = [{
-            "hotelCategory": payload.journeyGlance.hotelStandard,
+            "hotelCategory": truncate_text(payload.journeyGlance.hotelStandard, 80),
             "optionName": "Main confirmed option",
             "pricePerPerson": {
                 "amount": price_per_person,
@@ -440,8 +455,8 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
             tot_txt = f"{currency} {total_price_amt:,.0f}"
             
             price_options.append({
-                "hotelCategory": opt.label,
-                "optionName": opt.notes,
+                "hotelCategory": truncate_text(opt.label, 80),
+                "optionName": truncate_text(opt.notes, 150),
                 "pricePerPerson": {
                     "amount": price_per_person_amt,
                     "currency": currency,
@@ -456,7 +471,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
                 },
                 "isConfirmedMainOption": True,
                 "isAlternativeOption": False,
-                "notes": [opt.notes] if opt.notes else []
+                "notes": [truncate_text(opt.notes, 150)] if opt.notes else []
             })
         grand_total_num = payload.pricing.grandTotal or 0.0
         total_price = f"{currency} {grand_total_num:,.0f}"
@@ -484,14 +499,17 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         "Optional activities not mentioned in the program",
     ]
 
+    inc_lines = [truncate_text(x, 120) for x in inc_lines]
+    exc_lines = [truncate_text(x, 120) for x in exc_lines]
+
     # Overview paragraphs
-    overview_paras = [payload.quotationNarrative]
+    overview_paras = [truncate_text(payload.quotationNarrative, 500)]
     overview_heading = "PROGRAM OVERVIEW"
-    lede = payload.quotationNarrative
+    lede = truncate_text(payload.quotationNarrative, 500)
 
     # Gallery helpers
     def _d_img(i): return destinations[i].get("image_url", default_img) if i < len(destinations) else default_img
-    def _d_name(i): return destinations[i].get("name", "") if i < len(destinations) else ""
+    def _d_name(i): return truncate_text(destinations[i].get("name", ""), 40) if i < len(destinations) else ""
 
     img_0 = hero_image_url
     img_1 = _d_img(0)
@@ -501,8 +519,8 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
 
     # Highlight experiences — first 3 itinerary days
     experiences = [
-        {"num": f"{i+1:02d}", "title": f"Day {day.dayNumber}: {day.destination}",
-         "desc": day.summary}
+        {"num": f"{i+1:02d}", "title": truncate_text(f"Day {day.dayNumber}: {day.destination}", 80),
+         "desc": truncate_text(day.summary, 160)}
         for i, day in enumerate(payload.itinerary[:3])
     ]
     while len(experiences) < 3:
@@ -514,6 +532,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         "Rates are B2B net indicative and subject to reconfirmation at the time of booking.",
         "Final price may vary depending on hotel availability, resort category, cruise selection, domestic flight fare, rooming arrangement, child policy, and final travel services confirmed."
     ]
+    price_cond_paras = [truncate_text(x, 250) for x in price_cond_paras]
 
     # --- GAP ALIGNMENT LOGIC ---
     show_muslim_care = False
@@ -532,47 +551,57 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
 
     # Journey at a Glance defaults/fallbacks
     glance = payload.journeyGlance
-    glance_market = glance.market
-    glance_profile = glance.guestProfile
-    glance_standard = glance.hotelStandard
-    glance_meals = glance.mealPreference
-    glance_price_type = glance.priceType
-    glance_tour_code = glance.tourCode
-    glance_flights = glance.domesticFlights
-    glance_basis = glance.priceBasis
-    glance_partner_note = glance.partnerNote
-    glance_validity = glance.validity
+    glance_market = truncate_text(glance.market, 60)
+    glance_profile = truncate_text(glance.guestProfile, 100)
+    glance_standard = truncate_text(glance.hotelStandard, 80)
+    glance_meals = truncate_text(glance.mealPreference, 100)
+    glance_price_type = truncate_text(glance.priceType, 60)
+    glance_tour_code = truncate_text(glance.tourCode, 40)
+    glance_flights = truncate_text(glance.domesticFlights, 100)
+    glance_basis = truncate_text(glance.priceBasis, 80)
+    glance_partner_note = truncate_text(glance.partnerNote, 100)
+    glance_validity = truncate_text(glance.validity, 60)
 
     # Why works defaults/fallbacks
     why = payload.whyWorks
-    why_private = why.privateFlexible
-    why_comfort = why.comfort
-    why_muslim = why.muslimFriendly
-    why_balanced = why.balancedHighlights
+    why_private = truncate_text(why.privateFlexible, 250)
+    why_comfort = truncate_text(why.comfort, 250)
+    why_muslim = truncate_text(why.muslimFriendly, 250)
+    why_balanced = truncate_text(why.balancedHighlights, 250)
 
     # Selected Hotel Plan defaults/fallbacks
     hotel_plan_items = []
     hotel_room_notes = ""
     if payload.hotelPlan:
-        hotel_plan_items = [item.model_dump(mode="json") for item in payload.hotelPlan.hotels]
-        hotel_room_notes = payload.hotelPlan.roomNotes or ""
+        for item in payload.hotelPlan.hotels:
+            h_dict = item.model_dump(mode="json")
+            h_dict["name"] = truncate_text(h_dict.get("name"), 80)
+            h_dict["roomType"] = truncate_text(h_dict.get("roomType"), 80)
+            h_dict["destination"] = truncate_text(h_dict.get("destination"), 60)
+            h_dict["notes"] = truncate_text(h_dict.get("notes"), 150)
+            hotel_plan_items.append(h_dict)
+        hotel_room_notes = truncate_text(payload.hotelPlan.roomNotes or "", 200)
 
     # Optional Enhancements defaults/fallbacks
     opt_enhancements = []
     if payload.optionalEnhancements:
-        opt_enhancements = [item.model_dump(mode="json") for item in payload.optionalEnhancements]
+        for item in payload.optionalEnhancements:
+            opt_dict = item.model_dump(mode="json")
+            opt_dict["name"] = truncate_text(opt_dict.get("name"), 80)
+            opt_dict["description"] = truncate_text(opt_dict.get("description"), 200)
+            opt_enhancements.append(opt_dict)
 
     # Booking Terms defaults/fallbacks
     b_terms = payload.bookingTerms
-    term_deposit = b_terms.deposit
-    term_balance = b_terms.balance
-    term_cancellation = b_terms.cancellation
-    term_confirmation = b_terms.confirmation
+    term_deposit = truncate_text(b_terms.deposit, 300)
+    term_balance = truncate_text(b_terms.balance, 300)
+    term_cancellation = truncate_text(b_terms.cancellation, 300)
+    term_confirmation = truncate_text(b_terms.confirmation, 300)
 
     # Finalization defaults/fallbacks
     final = payload.finalization
-    final_req = [final.finalDetailsRequired]
-    final_after = [final.afterConfirmation]
+    final_req = [truncate_text(final.finalDetailsRequired, 300)]
+    final_after = [truncate_text(final.afterConfirmation, 300)]
 
     # Build itinerary days matching template expectations
     mapped_itinerary = []
@@ -580,13 +609,13 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         mapped_itinerary.append({
             "dayNumber": d.dayNumber,
             "date": "",  # date is not explicitly in itinerary day in the new schema, but can be empty
-            "title": f"Explore {d.destination}",
-            "description": [d.summary],
-            "overnight": d.destination,
-            "meals": [d.dining] if d.dining else [],
-            "activities": [d.mainInclusions] if d.mainInclusions else [],
-            "notes": [f"Sense of Pace: {d.senseOfPace}"] if d.senseOfPace else [],
-            "destinations": [d.destination]
+            "title": truncate_text(f"Explore {d.destination}", 80),
+            "description": [truncate_text(d.summary, 350)],
+            "overnight": truncate_text(d.destination, 40),
+            "meals": [truncate_text(d.dining, 80)] if d.dining else [],
+            "activities": [truncate_text(d.mainInclusions, 120)] if d.mainInclusions else [],
+            "notes": [truncate_text(f"Sense of Pace: {d.senseOfPace}", 80)] if d.senseOfPace else [],
+            "destinations": [truncate_text(d.destination, 40)]
         })
 
     return {
@@ -595,7 +624,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         "img_0": img_0, "img_1": img_1, "img_2": img_2, "img_3": img_3, "img_4": img_4,
         "destinations":   destinations,
         # Hero / header
-        "quotation_title": payload.landingpageContent.heroSection.headline,
+        "quotation_title": truncate_text(payload.landingpageContent.heroSection.headline, 100),
         "tour_title":      tour_title,
         "kicker":          f"Private Luxury Quotation \u2012 {duration_lbl} \u2012 {travel_dates}",
         "lede":            lede,
@@ -727,23 +756,23 @@ def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, her
     seller_email = (seller.email if seller else None) or "sales@vietnamsafar.vn"
     seller_phone = (seller.phone if seller else None) or "+84 911 538 738"
 
-    tour_title    = payload.tourTitle
-    prepared_for  = payload.preparedFor
+    tour_title    = truncate_text(payload.tourTitle, 100)
+    prepared_for  = truncate_text(payload.preparedFor, 60)
     duration_lbl  = payload.duration.label or f"{payload.duration.days}D{payload.duration.nights}"
     travel_dates  = payload.travelDates.displayText or f"{payload.travelDates.startDate} – {payload.travelDates.endDate}"
-    guests_txt    = payload.guests.displayText or f"{payload.guests.totalGuests} guests"
+    guests_txt    = truncate_text(payload.guests.displayText or f"{payload.guests.totalGuests} guests", 100)
     route_txt     = " – ".join(payload.route)
-    nationality   = payload.nationality or ""
-    travel_style  = " | ".join(payload.travelStyle) if payload.travelStyle else "Private"
+    nationality   = truncate_text(payload.nationality or "", 60)
+    travel_style  = truncate_text(" | ".join(payload.travelStyle) if payload.travelStyle else "Private", 100)
 
     # Narrative overview
-    overview_paras = payload.programOverview.paragraphs  # type: ignore
-    overview_heading = payload.programOverview.heading or "PROGRAM OVERVIEW"  # type: ignore
-    lede = overview_paras[0] if overview_paras else "A detailed booking itinerary crafted for your journey."
+    overview_paras = [truncate_text(p, 500) for p in payload.programOverview.paragraphs] if payload.programOverview and payload.programOverview.paragraphs else []
+    overview_heading = truncate_text(payload.programOverview.heading or "PROGRAM OVERVIEW", 60) if payload.programOverview else "PROGRAM OVERVIEW"
+    lede = truncate_text(overview_paras[0] if overview_paras else "A detailed booking itinerary crafted for your journey.", 500)
 
     # Gallery helpers
     def _d_img(i): return destinations[i].get("image_url", default_img) if i < len(destinations) else default_img
-    def _d_name(i): return destinations[i].get("name", "") if i < len(destinations) else ""
+    def _d_name(i): return truncate_text(destinations[i].get("name", ""), 40) if i < len(destinations) else ""
 
     img_0 = hero_image_url
     img_1 = _d_img(0)
@@ -753,8 +782,8 @@ def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, her
 
     # Highlight experiences — first 3 itinerary days
     experiences = [
-        {"num": f"{i+1:02d}", "title": day.title,
-         "desc": day.description[0] if day.description else f"Day {day.dayNumber} of the journey."}
+        {"num": f"{i+1:02d}", "title": truncate_text(day.title, 80),
+         "desc": truncate_text(day.description[0] if day.description else f"Day {day.dayNumber} of the journey.", 160)}
         for i, day in enumerate(payload.itinerary[:3])
     ]
     while len(experiences) < 3:
@@ -776,6 +805,9 @@ def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, her
         "Personal expenses, laundry, beverages and tips",
         "Optional activities not mentioned in the program",
     ]
+
+    inc_lines = [truncate_text(x, 120) for x in inc_lines]
+    exc_lines = [truncate_text(x, 120) for x in exc_lines]
 
     # Pricing fields from payload
     main_option   = next((o for o in payload.pricing.priceOptions if o.isConfirmedMainOption), None) if payload.pricing else None
@@ -800,6 +832,10 @@ def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, her
             if h.checkInDate and h.checkOutDate and h.checkInDate <= day_date < h.checkOutDate:  # type: ignore
                 h_dict = h.model_dump(mode="json")
                 h_dict["_index"] = idx
+                h_dict["name"] = truncate_text(h_dict.get("name"), 80)
+                h_dict["roomType"] = truncate_text(h_dict.get("roomType"), 80)
+                h_dict["destination"] = truncate_text(h_dict.get("destination"), 60)
+                h_dict["notes"] = truncate_text(h_dict.get("notes"), 150)
                 day_hotels.append(h_dict)
         
         # Match activities
@@ -808,6 +844,9 @@ def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, her
             if act.date == day_date:
                 act_dict = act.model_dump(mode="json")
                 act_dict["_index"] = idx
+                act_dict["activityName"] = truncate_text(act_dict.get("activityName"), 80)
+                act_dict["operator"] = truncate_text(act_dict.get("operator"), 80)
+                act_dict["notes"] = truncate_text(act_dict.get("notes"), 150)
                 day_activities.append(act_dict)
 
         # Match transfers
@@ -816,6 +855,10 @@ def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, her
             if tx.date == day_date:
                 tx_dict = tx.model_dump(mode="json")
                 tx_dict["_index"] = idx
+                tx_dict["vehicleRequirement"] = truncate_text(tx_dict.get("vehicleRequirement"), 80)
+                tx_dict["fromLocation"] = truncate_text(tx_dict.get("fromLocation"), 60)
+                tx_dict["toLocation"] = truncate_text(tx_dict.get("toLocation"), 60)
+                tx_dict["notes"] = truncate_text(tx_dict.get("notes"), 150)
                 day_transfers.append(tx_dict)
 
         # Match flights
@@ -824,6 +867,11 @@ def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, her
             if fl.date == day_date:
                 fl_dict = fl.model_dump(mode="json")
                 fl_dict["_index"] = idx
+                fl_dict["flightNumber"] = truncate_text(fl_dict.get("flightNumber"), 30)
+                fl_dict["airline"] = truncate_text(fl_dict.get("airline"), 50)
+                fl_dict["fromCity"] = truncate_text(fl_dict.get("fromCity"), 40)
+                fl_dict["toCity"] = truncate_text(fl_dict.get("toCity"), 40)
+                fl_dict["notes"] = truncate_text(fl_dict.get("notes"), 150)
                 day_flights.append(fl_dict)
 
         # Match guides
@@ -832,19 +880,22 @@ def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, her
             if gd.dates and day_date in gd.dates:
                 gd_dict = gd.model_dump(mode="json")
                 gd_dict["_index"] = idx
+                gd_dict["guideName"] = truncate_text(gd_dict.get("guideName"), 60)
+                gd_dict["destination"] = truncate_text(gd_dict.get("destination"), 60)
+                gd_dict["notes"] = truncate_text(gd_dict.get("notes"), 150)
                 day_guides.append(gd_dict)
 
         days_list.append({
             "dayNumber": day.dayNumber,
             "date": day_date,
-            "title": day.title,
-            "description": day.description,
-            "overnight": day.overnight,
-            "meals": day.meals or [],
-            "destinations": day.destinations or [],
-            "activities": day.activities or [],
-            "optionalActivities": day.optionalActivities or [],
-            "notes": day.notes or [],
+            "title": truncate_text(day.title, 80),
+            "description": [truncate_text(d, 350) for d in day.description],
+            "overnight": truncate_text(day.overnight, 40),
+            "meals": [truncate_text(m, 80) for m in (day.meals or [])],
+            "destinations": [truncate_text(dest, 40) for dest in (day.destinations or [])],
+            "activities": [truncate_text(act, 120) for act in (day.activities or [])],
+            "optionalActivities": [truncate_text(opt, 120) for opt in (day.optionalActivities or [])],
+            "notes": [truncate_text(nt, 150) for nt in (day.notes or [])],
             "booked_hotels": day_hotels,
             "booked_activities": day_activities,
             "booked_transfers": day_transfers,
@@ -857,7 +908,7 @@ def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, her
         "img_0": img_0, "img_1": img_1, "img_2": img_2, "img_3": img_3, "img_4": img_4,
         "destinations":     destinations,
         # Hero / header
-        "quotation_title":  payload.quotationTitle,
+        "quotation_title":  truncate_text(payload.quotationTitle, 100),
         "tour_title":       tour_title,
         "kicker":           f"Confirmed Booking Itinerary • {duration_lbl} • {travel_dates}",
         "lede":             lede,
@@ -889,20 +940,66 @@ def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, her
         # Daily Itinerary with matched services
         "itinerary":        days_list,
         # Consolidated list of booked services (useful for summary tabs/cards!)
-        "hotels":           [h.model_dump(mode="json") for h in payload.hotels],
-        "activities":       [act.model_dump(mode="json") for act in payload.activities],
-        "transfers":        [tx.model_dump(mode="json") for tx in payload.transfers],
-        "flights":          [fl.model_dump(mode="json") for fl in payload.flights],
-        "guides":           [gd.model_dump(mode="json") for gd in payload.guides],
+        "hotels":           [
+            {
+                **h.model_dump(mode="json"),
+                "name": truncate_text(h.name, 80),
+                "roomType": truncate_text(h.roomType, 80),
+                "destination": truncate_text(h.destination, 60),
+                "notes": truncate_text(h.notes, 150)
+            } for h in payload.hotels
+        ],
+        "activities":       [
+            {
+                **act.model_dump(mode="json"),
+                "activityName": truncate_text(act.activityName, 80),
+                "operator": truncate_text(act.operator, 80),
+                "notes": truncate_text(act.notes, 150)
+            } for act in payload.activities
+        ],
+        "transfers":        [
+            {
+                **tx.model_dump(mode="json"),
+                "vehicleRequirement": truncate_text(tx.vehicleRequirement, 80),
+                "fromLocation": truncate_text(tx.fromLocation, 60),
+                "toLocation": truncate_text(tx.toLocation, 60),
+                "notes": truncate_text(tx.notes, 150)
+            } for tx in payload.transfers
+        ],
+        "flights":          [
+            {
+                **fl.model_dump(mode="json"),
+                "flightNumber": truncate_text(fl.flightNumber, 30),
+                "airline": truncate_text(fl.airline, 50),
+                "fromCity": truncate_text(fl.fromCity, 40),
+                "toCity": truncate_text(fl.toCity, 40),
+                "notes": truncate_text(fl.notes, 150)
+            } for fl in payload.flights
+        ],
+        "guides":           [
+            {
+                **gd.model_dump(mode="json"),
+                "guideName": truncate_text(gd.guideName, 60),
+                "destination": truncate_text(gd.destination, 60),
+                "notes": truncate_text(gd.notes, 150)
+            } for gd in payload.guides
+        ],
         # Inclusions / exclusions
         "inclusions":       inc_lines,
         "exclusions":       exc_lines,
-        "notes":            payload.notes or [],
+        "notes":            [truncate_text(x, 200) for x in (payload.notes or [])],
         # Pricing section
         "currency":       currency,
-        "pricing_title":  payload.pricing.pricingTitle or "PRICE QUOTATION – B2B NET INDICATIVE" if payload.pricing else "",
-        "pricing_basis":  payload.pricing.basis or "B2B net indicative" if payload.pricing else "",
-        "price_options":  [o.model_dump(mode="json") for o in payload.pricing.priceOptions] if payload.pricing else [],
+        "pricing_title":  truncate_text(payload.pricing.pricingTitle or "PRICE QUOTATION – B2B NET INDICATIVE" if payload.pricing else "", 100),
+        "pricing_basis":  truncate_text(payload.pricing.basis or "B2B net indicative" if payload.pricing else "", 80),
+        "price_options":  [
+            {
+                **o.model_dump(mode="json"),
+                "hotelCategory": truncate_text(o.hotelCategory, 80),
+                "optionName": truncate_text(o.optionName, 80),
+                "notes": [truncate_text(n, 150) for n in o.notes] if o.notes else []
+            } for o in payload.pricing.priceOptions
+        ] if payload.pricing else [],
         "price_per_pax":  price_per_pax,
         "total_price":    total_price,
         "grand_total":    grand_total_num,
@@ -916,6 +1013,154 @@ def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, her
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
+
+
+@app.post("/quotations/b2c")
+async def create_quotation_b2c(request: Request):
+    """
+    Receives structured B2C quotation data,
+    renders a B2C Jinja2 landing page template, stores it, and returns the preview URL.
+    """
+    body = await request.json()
+    log.debug("[/quotations/b2c] Incoming keys: %s", list(body.keys()))
+
+    # Unwrap ChatGPT Action wrapper if present
+    data = body.get("params", body)
+    log.debug("[/quotations/b2c] Data keys after unwrap: %s", list(data.keys()))
+
+    try:
+        payload = TourQuotationPayload.model_validate(data)
+    except ValidationError as exc:
+        errors = exc.errors()
+        log.error("[/quotations/b2c] Pydantic validation failed — %d error(s):\n%s",
+                  len(errors), json.dumps(errors, indent=2, default=str))
+        return JSONResponse(status_code=422, content={"detail": errors,
+            "hint": "Field path is in 'loc'. Check which required field is missing."})
+
+    quotation_id = f"quo_{uuid.uuid4().hex[:12]}"
+
+    # ── Extract destinations from route + itinerary for the gallery ──────────
+    route_list = []
+    for d in payload.itinerary:
+        if d.destination and d.destination not in route_list:
+            route_list.append(d.destination)
+    route_text = " ".join(route_list)
+    itinerary_text = " ".join(
+        (day.destination or "") + " " + (day.summary or "")
+        for day in payload.itinerary
+    )
+    text_context = route_text + " " + itinerary_text
+
+    from image_selector import extract_and_map_destinations, get_random_image_for_province
+    destinations = await extract_and_map_destinations(text_context, max_items=None)
+    
+    # Resolve image urls for each destination
+    for d in destinations:
+        d["image_url"] = get_random_image_for_province(d.get("slug"))
+
+    log.debug("[/quotations/b2c] Extracted destinations: %s", destinations)
+
+    default_img = "/assets/vietnam-safar-logo.png"
+    
+    # Hero image: Pick a random image from the resolved destinations, or default
+    valid_images = [d["image_url"] for d in destinations if d.get("image_url") != default_img]
+    if valid_images:
+        import random
+        hero_image_url = random.choice(valid_images)
+    else:
+        hero_image_url = default_img
+
+    log.debug("[/quotations/b2c] Hero image resolved: %s", hero_image_url)
+
+    ctx = _build_ctx(quotation_id, payload, hero_image_url, destinations)
+
+    # ── Render landing page HTML ───────────────────────────────────────────────
+    loop = asyncio.get_event_loop()
+    tmpl_lp  = templates.get_template("vietnam_heritage_luxury_b2c.html")
+    tmpl_pdf = templates.get_template("vietnam_heritage_luxury_b2c_pdf.html")
+
+    rendered_html, rendered_pdf = await asyncio.gather(
+        loop.run_in_executor(None, partial(tmpl_lp.render,  **ctx)),
+        loop.run_in_executor(None, partial(tmpl_pdf.render, **ctx)),
+    )
+
+    # ── Update in-memory store ────────────────────────────────────────────
+    quotations[quotation_id] = {
+        "payload":       payload.model_dump(mode="json"),
+        "ctx":           ctx,
+        "html":          rendered_html,
+        "pdf_html":      rendered_pdf,
+        "status":        "pending",
+        "published_url": None,
+        "pdf_url":       None,
+        "version":       0,
+    }
+
+    # ── Publish v1.html + pdf.html to GitHub (production flow) ──────────────
+    published_url: str | None = None
+    pdf_static_url: str | None = None
+    ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
+
+    if ENVIRONMENT == "production":
+        if not os.getenv("GITHUB_TOKEN") or not os.getenv("GITHUB_REPO"):
+            log.error("[/quotations/b2c] GITHUB_TOKEN or GITHUB_REPO not set — cannot persist on Vercel.")
+            raise HTTPException(
+                status_code=500,
+                detail="Server misconfiguration: GITHUB_TOKEN / GITHUB_REPO env vars are missing.",
+            )
+        try:
+            # Publish landing page and PDF in parallel
+            published_url, pdf_static_url = await asyncio.gather(
+                publish_to_github(
+                    quotation_id=quotation_id,
+                    html_content=rendered_html,
+                    version=1,
+                ),
+                publish_file_to_github(
+                    file_path=f"published/{quotation_id}/pdf.html",
+                    html_content=rendered_pdf,
+                    commit_message=f"Publish PDF view for quotation {quotation_id}",
+                ),
+            )
+            quotations[quotation_id]["status"]        = "published"
+            quotations[quotation_id]["published_url"] = published_url
+            quotations[quotation_id]["pdf_url"]       = pdf_static_url
+            quotations[quotation_id]["version"]       = 1
+            log.info("[/quotations/b2c] ✓ v1 + pdf.html committed to GitHub → %s", published_url)
+        except Exception as exc:
+            log.exception("[/quotations/b2c] GitHub publish FAILED for %s: %s", quotation_id, exc)
+            raise HTTPException(
+                status_code=502,
+                detail=f"GitHub publish failed: {exc}. Check GITHUB_TOKEN permissions.",
+            )
+
+    else:
+        # ── Localhost only: persist to disk ────────────────────────────────────
+        quo_dir = os.path.join("published", quotation_id)
+        os.makedirs(quo_dir, exist_ok=True)
+        with open(os.path.join(quo_dir, "v1.html"),  "w", encoding="utf-8") as _f:
+            _f.write(rendered_html)
+        with open(os.path.join(quo_dir, "pdf.html"), "w", encoding="utf-8") as _f:
+            _f.write(rendered_pdf)
+        with open(os.path.join(quo_dir, "ctx.json"), "w", encoding="utf-8") as _f:
+            json.dump(ctx, _f, ensure_ascii=False, default=str)
+        quotations[quotation_id]["status"]  = "published"
+        quotations[quotation_id]["version"] = 1
+        log.info("[/quotations/b2c] Localhost: v1.html + pdf.html + ctx.json written to disk.")
+
+    log.info("[/quotations/b2c] ✓ id=%s  preparedFor=%s  days=%d",
+             quotation_id, payload.journeyGlance.guestProfile, len(payload.itinerary))
+
+    quotation_url = f"{PUBLIC_BASE_URL}/quotations/{quotation_id}"
+    return {
+        "quotationId":  quotation_id,
+        "status":       "published",
+        "version":      1,
+        "message":      "B2C Landing page published. Open quotationUrl to preview and edit inline.",
+        "quotationUrl": quotation_url,
+        "pdfUrl":       f"{PUBLIC_BASE_URL}/quotations/{quotation_id}/pdf",
+    }
+
 
 @app.post("/quotations")
 async def create_quotation(request: Request):
@@ -1835,6 +2080,136 @@ async def serve_landing_page():
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon():
     return FileResponse("assets/vietnam-safar-logo.png", media_type="image/png")
+
+
+@app.get("/sw.js", include_in_schema=False)
+async def service_worker():
+    from fastapi.responses import Response
+    content = """// Service Worker for Vietnam Safar PWA
+const CACHE_NAME = 'vietnam-safar-v2';
+const ASSETS = [
+  '/',
+  '/favicon.ico',
+  '/assets/vietnam-safar-logo.png'
+];
+
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.addAll(ASSETS);
+    }).then(() => self.skipWaiting())
+  );
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys => {
+      return Promise.all(
+        keys.map(key => {
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
+        })
+      );
+    }).then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener('fetch', event => {
+  if (!event.request.url.startsWith('http')) return;
+
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => {
+        return caches.match(event.request) || caches.match('/');
+      })
+    );
+    return;
+  }
+  
+  event.respondWith(
+    caches.match(event.request).then(cachedResponse => {
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+      return fetch(event.request).then(networkResponse => {
+        if (networkResponse && networkResponse.status === 200 && (event.request.url.includes('/assets/') || event.request.url.includes('unpkg.com') || event.request.url.includes('basemaps.cartocdn.com'))) {
+          const cacheCopy = networkResponse.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, cacheCopy);
+          });
+        }
+        return networkResponse;
+      }).catch(() => {});
+    })
+  );
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const urlToOpen = event.notification.data?.url || '/';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
+      for (let i = 0; i < windowClients.length; i++) {
+        const client = windowClients[i];
+        if (client.url === urlToOpen && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(urlToOpen);
+      }
+    })
+  );
+});
+"""
+    return Response(content=content, media_type="application/javascript")
+
+
+@app.get("/manifest.json", include_in_schema=False)
+async def web_manifest(id: str = None, type: str = None):
+    name = "Vietnam Safar - Luxury Travel"
+    start_url = "/"
+    if id and type:
+        start_url = f"/{type}/{id}"
+        if type == "quotations":
+            entry = quotations.get(id)
+            if entry and entry.get("ctx"):
+                q_title = entry["ctx"].get("quotation_title") or entry["ctx"].get("tour_title")
+                if q_title:
+                    name = f"Itinerary: {q_title}"
+        elif type == "itineraries":
+            entry = itineraries.get(id)
+            if entry and entry.get("ctx"):
+                i_title = entry["ctx"].get("tour_title") or entry["ctx"].get("quotation_title")
+                if i_title:
+                    name = f"Itinerary: {i_title}"
+                    
+    manifest_data = {
+        "name": name,
+        "short_name": "Vietnam Safar",
+        "description": "Your luxury travel itinerary and quotation custom-tailored by Vietnam Safar.",
+        "start_url": start_url,
+        "display": "standalone",
+        "background_color": "#f8f3e9",
+        "theme_color": "#17412e",
+        "orientation": "any",
+        "icons": [
+            {
+                "src": "/assets/vietnam-safar-logo.png",
+                "sizes": "192x192",
+                "type": "image/png",
+                "purpose": "any maskable"
+            },
+            {
+                "src": "/assets/vietnam-safar-logo.png",
+                "sizes": "512x512",
+                "type": "image/png",
+                "purpose": "any maskable"
+            }
+        ]
+    }
+    return manifest_data
 
 
 @app.get("/privacy", response_class=HTMLResponse)

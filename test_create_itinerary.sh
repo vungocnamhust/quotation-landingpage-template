@@ -4,9 +4,10 @@
 # Usage: bash test_create_itinerary.sh
 # ─────────────────────────────────────────────────────────────────────────────
 
-BASE_URL="${1:-http://localhost:9013}"
+BASE_URL="${1:-http://localhost:8000}"
 
-curl -X POST "$BASE_URL/itineraries" \
+curl --connect-timeout 10 --max-time 30 \
+  -X POST "$BASE_URL/itineraries" \
   -H "Content-Type: application/json" \
   -s \
   -w "\n\n--- HTTP STATUS: %{http_code} ---\n" \

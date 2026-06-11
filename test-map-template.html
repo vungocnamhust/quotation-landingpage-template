@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bản đồ Việt Nam Testing Template</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; padding: 0; font-family: sans-serif; }
+        #map { width: 100vw; height: 100vh; }
+        .info-box {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            max-width: 300px;
+        }
+        
+        /* Tweak map tile colors to match the luxury warm tone without fading into the background */
+        .leaflet-tile {
+            filter: sepia(0.3) hue-rotate(-10deg) saturate(0.9) contrast(1.05) brightness(0.98);
+        }
+    </style>
+</head>
+<body>
+    <div class="info-box">
+        <h3>Testing Template: Bản Đồ Việt Nam</h3>
+        <p>Bản đồ hiển thị bằng Tile Server đã được tùy chỉnh để thể hiện đúng chủ quyền với hai quần đảo Hoàng Sa và Trường Sa.</p>
+    </div>
+
+    <div id="map"></div>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // 1. Khởi tạo bản đồ tại tọa độ trung tâm Việt Nam
+        var map = L.map('map').setView([16.0, 108.0], 5);
+        
+        // Thay thế bằng Tile của Google Maps (có hỗ trợ tiếng Việt & hiển thị Hoàng Sa, Trường Sa)
+        // vì URL eKMap cần có API Key thương mại mới hoạt động được.
+        var vietmanMapUrl = 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi'; 
+        
+        // 3. Khai báo và đưa lớp bản đồ mới này vào hiển thị
+        L.tileLayer(vietmanMapUrl, {
+            maxZoom: 18,
+            attribution: '&copy; Bản đồ chủ quyền Việt Nam | Dữ liệu bản đồ &copy; Google'
+        }).addTo(map);
+
+        // Thêm một marker đánh dấu Hà Nội để kiểm tra
+        L.marker([21.0285, 105.8542]).addTo(map)
+            .bindPopup('<b>Hà Nội</b><br>Thủ đô nước Cộng hòa Xã hội Chủ nghĩa Việt Nam.')
+            .openPopup();
+    </script>
+</body>
+</html>
