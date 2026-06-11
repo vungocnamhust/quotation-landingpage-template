@@ -503,9 +503,20 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
     exc_lines = [truncate_text(x, 120) for x in exc_lines]
 
     # Overview paragraphs
-    overview_paras = [truncate_text(payload.quotationNarrative, 500)]
-    overview_heading = "PROGRAM OVERVIEW"
-    lede = truncate_text(payload.quotationNarrative, 500)
+    overview_paras = []
+    if getattr(payload, "programOverview", None) and payload.programOverview.paragraphs:
+        overview_paras = [truncate_text(p, 500) for p in payload.programOverview.paragraphs]
+        overview_heading = truncate_text(payload.programOverview.heading or "PROGRAM OVERVIEW", 60)
+    elif payload.quotationNarrative:
+        paras = [p.strip() for p in payload.quotationNarrative.split('\n') if p.strip()]
+        overview_paras = [truncate_text(p, 500) for p in paras]
+        overview_heading = "PROGRAM OVERVIEW"
+    
+    if not overview_paras:
+        overview_paras = ["A refined travel experience designed for your journey."]
+        overview_heading = "PROGRAM OVERVIEW"
+        
+    lede = truncate_text(overview_paras[0], 500)
 
     # Gallery helpers
     def _d_img(i): return destinations[i].get("image_url", default_img) if i < len(destinations) else default_img

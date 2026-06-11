@@ -7,6 +7,15 @@ client = TestClient(app)
 payload = {
   "quotationNumber": "QT-2026-0001",
   "quotationNarrative": "A refined Vietnam family journey created for Qatari travelers seeking a slower, more elegant way to experience the country’s natural beauty.",
+  "programOverview": {
+    "heading": "PROGRAM OVERVIEW",
+    "paragraphs": [
+      "A refined Vietnam family journey created for Qatari travelers seeking a slower, more elegant way to experience the country’s natural beauty. This program avoids rushed sightseeing and focuses instead on comfort, scenery, fresh mountain air, gentle cultural encounters, peaceful cruising, and beachside relaxation.",
+      "The journey begins in Hanoi, where the family eases into Vietnam with soft cultural discovery and private arrangements. It then continues to Ninh Binh, a cinematic landscape of limestone mountains, rivers, rice fields, and quiet countryside. From there, the program moves into the northern highlands of Sapa, where cool air, terraced valleys, and mountain viewpoints create a peaceful nature retreat.",
+      "The experience continues with an overnight cruise in Ha Long Bay, one of Vietnam’s most iconic natural wonders, before the family flies south to Da Nang for coastal comfort, resort relaxation, Ba Na Hills, the Golden Bridge, and the lantern-lit charm of Hoi An.",
+      "This itinerary is especially suitable for a family with children, with private transfers, flexible timing, easy sightseeing days, and enough leisure time to enjoy the hotels, beach, and scenery."
+    ]
+  },
   "landingpageContent": {
     "heroSection": {
       "headline": "LUXURY QUOTATION",

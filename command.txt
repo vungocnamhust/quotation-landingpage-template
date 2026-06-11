@@ -1,7 +1,7 @@
-curl -X POST https: //5217-2001-ee0-4081-895b-500a-a9e0-d3e2-dd0d.ngrok-free.app/quotations \
+curl -X POST https: //localhost/quotations \
 -H "Content-Type: application/json" \
 -d '{
-  "domain": "5217-2001-ee0-4081-895b-500a-a9e0-d3e2-dd0d.ngrok-free.app",
+  "domain": "localhost",
   "method": "post",
   "path": "/quotations",
   "operation": "createQuotation",
@@ -465,16 +465,16 @@ curl -X POST https: //5217-2001-ee0-4081-895b-500a-a9e0-d3e2-dd0d.ngrok-free.app
         "Public summary: Luxury private halal-friendly Vietnam family journey for 8 guests from Qatar, 12D11N, covering Hanoi, Ninh Binh, Sapa, Ha Long Bay, Da Nang and Hoi An.",
         "Confirmed main option: 5★ Luxury.",
         "Alternative option retained: 4★ Premium.",
-        "Quotation preview: https://5217-2001-ee0-4081-895b-500a-a9e0-d3e2-dd0d.ngrok-free.app/quotations/quo_effb6b1d7c83",
-        "PDF: https://5217-2001-ee0-4081-895b-500a-a9e0-d3e2-dd0d.ngrok-free.app/quotations/quo_effb6b1d7c83/pdf"
+        "Quotation preview: https://localhost/quotations/quo_effb6b1d7c83",
+        "PDF: https://localhost/quotations/quo_effb6b1d7c83/pdf"
       ],
       "internalNotes": [
         "Full raw quotation is stored in rawQuotation.",
         "If backend does not support rawQuotation, use this field as fallback storage for the complete finalized quotation."
       ],
       "output": {
-        "quotationUrl": "https://5217-2001-ee0-4081-895b-500a-a9e0-d3e2-dd0d.ngrok-free.app/quotations/quo_effb6b1d7c83",
-        "pdfUrl": "https://5217-2001-ee0-4081-895b-500a-a9e0-d3e2-dd0d.ngrok-free.app/quotations/quo_effb6b1d7c83/pdf"
+        "quotationUrl": "https://localhost/quotations/quo_effb6b1d7c83",
+        "pdfUrl": "https://localhost/quotations/quo_effb6b1d7c83/pdf"
       }
     }
   }

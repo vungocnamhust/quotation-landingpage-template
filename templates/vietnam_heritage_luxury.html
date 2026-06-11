@@ -807,7 +807,7 @@
       flex-direction: column;
       gap: 12px;
       overflow-y: auto;
-      padding-right: 8px;
+      padding: 6px 8px 6px 6px;
       height: 100%;
     }
 
@@ -1395,18 +1395,13 @@
 
     <section id="overview">
       <div class="container">
-        <div class="section-head">
+        <div class="section-head" style="align-items: start;">
           <h2 data-editable="overview_h2">{{ overview_h2 }}</h2>
-          <p data-editable="overview_p">{{ overview_p }}</p>
-        </div>
-        <div class="experience-grid">
-          {% for exp in experiences %}
-          <article class="experience">
-            <span class="num" data-editable="exp_num_{{ loop.index }}">{{ exp.num }}</span>
-            <h3 data-editable="exp_title_{{ loop.index }}">{{ exp.title }}</h3>
-            <p data-editable="exp_desc_{{ loop.index }}">{{ exp.desc }}</p>
-          </article>
-          {% endfor %}
+          <div class="overview-body" style="display: grid; gap: 14px;">
+            {% for para in overview_paras %}
+            <p data-editable="overview_p_{{ loop.index }}" style="margin: 0; font-size: 15px; line-height: 1.6; color: var(--muted);">{{ para }}</p>
+            {% endfor %}
+          </div>
         </div>
       </div>
     </section>

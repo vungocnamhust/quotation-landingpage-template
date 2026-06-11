@@ -253,6 +253,9 @@ class TourQuotationPayload(FrozenModel):
             "emotionally resonant travel experience."
         )
     )
+    programOverview: Optional[TextSection] = pydantic_Field(
+        default=None, description="Optional program overview section containing paragraphs."
+    )
     landingpageContent: LandingpageContent
     journeyGlance: JourneyGlance
     whyWorks: WhyWorks
