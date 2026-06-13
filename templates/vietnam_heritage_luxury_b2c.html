@@ -2460,7 +2460,7 @@
     <button id="btn-publish" onclick="publishPage()">🚀 Publish to Web</button>
   </div>
 
-  <script>
+  <script id="editor-scripts">
     const QUOTATION_ID = "{{ quotation_id }}";
 
     document.querySelectorAll('[data-editable]').forEach(el => {
@@ -2584,24 +2584,23 @@
     async function publishPage() {
       const btn = document.getElementById('btn-publish');
       const status = document.getElementById('publish-status');
-      const bar = document.getElementById('publish-bar');
-
-      bar.style.display = 'none';
-      document.querySelectorAll('[data-editable]').forEach(el => el.removeAttribute('contenteditable'));
-      document.querySelectorAll('.img-change-btn').forEach(el => el.remove());
-      document.querySelectorAll('.block-delete-btn').forEach(el => el.remove());
-      document.querySelectorAll('.removable-block').forEach(el => el.classList.remove('removable-block'));
-
-      const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-
-      bar.style.display = '';
-      document.querySelectorAll('[data-editable]').forEach(el => { el.contentEditable = 'true'; });
-      initImageChangers();
-      initRemovableBlocks();
 
       btn.disabled = true;
       btn.textContent = '⏳ Publishing...';
       status.textContent = 'Committing to GitHub...';
+
+      const clone = document.documentElement.cloneNode(true);
+      const pb = clone.querySelector('#publish-bar');
+      if (pb) pb.remove();
+      const editorScript = clone.querySelector('#editor-scripts');
+      if (editorScript) editorScript.remove();
+
+      clone.querySelectorAll('[data-editable]').forEach(el => el.removeAttribute('contenteditable'));
+      clone.querySelectorAll('.img-change-btn').forEach(el => el.remove());
+      clone.querySelectorAll('.block-delete-btn').forEach(el => el.remove());
+      clone.querySelectorAll('.removable-block').forEach(el => el.classList.remove('removable-block'));
+
+      const html = '<!DOCTYPE html>\n' + clone.outerHTML;
 
       try {
         const res = await fetch(`/quotations/${QUOTATION_ID}/publish`, {
