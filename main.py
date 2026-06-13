@@ -1531,9 +1531,15 @@ async def create_itinerary(request: Request):
     if payload.notes:
         text_context += " " + " ".join(payload.notes)
 
-    from image_selector import extract_and_map_destinations, get_random_image_for_province
+    from image_selector import (
+        extract_and_map_destinations,
+        get_random_image_for_province,
+        get_province_slug_for_location,
+        resolve_slug_locally,
+        resolve_slug_from_known,
+    )
     destinations = await extract_and_map_destinations(text_context, max_items=None)
-    
+
     # Resolve image urls for each destination
     for d in destinations:
         d["image_url"] = get_random_image_for_province(d.get("slug"))
@@ -1541,7 +1547,7 @@ async def create_itinerary(request: Request):
     log.debug("[/itineraries] Extracted destinations: %s", destinations)
 
     default_img = "/assets/vietnam-safar-logo.png"
-    
+
     # Hero image: Pick a random image from the resolved destinations, or default
     valid_images = [d["image_url"] for d in destinations if d.get("image_url") != default_img]
     if valid_images:
@@ -1552,17 +1558,57 @@ async def create_itinerary(request: Request):
 
     log.debug("[/itineraries] Hero image resolved: %s", hero_image_url)
 
-    # Let's check hotels and activities image URLs. If they don't have them, we can try resolving one!
-    for h in payload.hotels:
-        if not h.imageUrl:
-            from image_selector import get_province_slug_for_location
-            slug = await get_province_slug_for_location(h.destination or h.addressArea)  # type: ignore
+    # ── Smart slug resolver for hotels & activities ───────────────────────────
+    # Tái sử dụng kết quả đã extract — KHÔNG gọi OpenAI thêm nếu không cần thiết.
+    #
+    # Thứ tự ưu tiên:
+    #   1. resolve_slug_locally()     → tra KEYWORD_MAP tĩnh (không cần mạng)
+    #   2. resolve_slug_from_known()  → tra bảng destinations đã extract (không cần mạng)
+    #   3. random.choice(extracted_slugs) → fallback ngẫu nhiên từ tour này (không cần mạng)
+    #   4. get_province_slug_for_location() → last resort: gọi OpenAI (hiếm khi cần)
+    #
+    extracted_slugs = [d["slug"] for d in destinations if d.get("slug")]
+    known_slugs = {d["name"].lower(): d["slug"] for d in destinations if d.get("name") and d.get("slug")}
+
+    async def _resolve_slug_smart(location: str | None) -> str | None:
+        """3-tier resolver: local map → known slugs → random fallback → OpenAI last resort."""
+        if not location:
+            return random.choice(extracted_slugs) if extracted_slugs else None
+        # Tầng 1: local keyword map (pure Python)
+        slug = resolve_slug_locally(location)
+        if slug:
+            log.debug("[slug] '%s' → '%s' (local map)", location, slug)
+            return slug
+        # Tầng 2: từ bảng destinations đã extract (pure Python)
+        slug = resolve_slug_from_known(location, known_slugs)
+        if slug:
+            log.debug("[slug] '%s' → '%s' (known slugs)", location, slug)
+            return slug
+        # Tầng 3: chọn ngẫu nhiên từ slugs đã biết trong tour (pure Python)
+        if extracted_slugs:
+            slug = random.choice(extracted_slugs)
+            log.debug("[slug] '%s' → '%s' (random fallback)", location, slug)
+            return slug
+        # Tầng 4: last resort — gọi OpenAI (chỉ khi không có bất kỳ thông tin nào)
+        log.warning("[slug] '%s' → calling OpenAI (last resort)", location)
+        return await get_province_slug_for_location(location)
+
+    # Hotels — resolve tất cả song song (asyncio.gather)
+    hotels_without_img = [h for h in payload.hotels if not h.imageUrl]
+    if hotels_without_img:
+        hotel_slugs = await asyncio.gather(
+            *[_resolve_slug_smart(h.destination or h.addressArea) for h in hotels_without_img]  # type: ignore
+        )
+        for h, slug in zip(hotels_without_img, hotel_slugs):
             h.imageUrl = get_random_image_for_province(slug)
 
-    for act in payload.activities:
-        if not act.imageUrl:
-            from image_selector import get_province_slug_for_location
-            slug = await get_province_slug_for_location(act.area or act.activityName)
+    # Activities — resolve tất cả song song (asyncio.gather)
+    activities_without_img = [act for act in payload.activities if not act.imageUrl]
+    if activities_without_img:
+        activity_slugs = await asyncio.gather(
+            *[_resolve_slug_smart(act.area or act.activityName) for act in activities_without_img]
+        )
+        for act, slug in zip(activities_without_img, activity_slugs):
             act.imageUrl = get_random_image_for_province(slug)
 
     ctx = _build_itinerary_ctx(itinerary_id, payload, hero_image_url, destinations)
