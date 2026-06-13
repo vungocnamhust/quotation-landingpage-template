@@ -373,7 +373,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
     seller_phone = "+84 911 538 738"
 
     # Resolve key display strings from new Spec 36 schema
-    tour_title    = truncate_text(payload.landingpageContent.heroSection.subtitle, 100)
+    tour_title    = truncate_text(payload.landingpageContent.heroSection.subtitle, 70)
     prepared_for  = truncate_text(payload.journeyGlance.guestProfile, 60)
     
     # Calculate duration
@@ -767,7 +767,7 @@ def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, her
     seller_email = (seller.email if seller else None) or "sales@vietnamsafar.vn"
     seller_phone = (seller.phone if seller else None) or "+84 911 538 738"
 
-    tour_title    = truncate_text(payload.tourTitle, 100)
+    tour_title    = truncate_text(payload.tourTitle, 70)
     prepared_for  = truncate_text(payload.preparedFor, 60)
     duration_lbl  = payload.duration.label or f"{payload.duration.days}D{payload.duration.nights}"
     travel_dates  = payload.travelDates.displayText or f"{payload.travelDates.startDate} – {payload.travelDates.endDate}"

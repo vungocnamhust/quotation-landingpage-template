@@ -197,10 +197,10 @@
 
     .hero h1 {
       font-family: var(--serif);
-      font-size: clamp(42px, 5vw, 96px);
-      line-height: .93;
+      font-size: clamp(32px, 4.5vw, 56px);
+      line-height: 1.15;
       font-weight: 500;
-      letter-spacing: -.06em;
+      letter-spacing: -.02em;
       margin: 0 0 24px;
       max-width: 850px
     }
@@ -1019,7 +1019,8 @@
       }
 
       .hero h1 {
-        font-size: 52px
+        font-size: clamp(24px, 7vw, 36px);
+        line-height: 1.2;
       }
 
       .cta {
@@ -2206,6 +2207,57 @@
       border-top: 1px solid var(--line);
       padding-top: 18px;
     }
+
+    /* ── Removable Blocks ─────────────────────────────────────────── */
+    .removable-block {
+      position: relative;
+    }
+    .removable-block:hover {
+      outline: 2px dashed rgba(225, 29, 72, 0.5) !important;
+      outline-offset: -2px;
+    }
+    .block-delete-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #e11d48;
+      color: white;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      cursor: pointer;
+      z-index: 99;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 10px rgba(225, 29, 72, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .removable-block:hover > .block-delete-btn {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .block-delete-btn:hover {
+      background: #be123c;
+      transform: scale(1.1);
+    }
+    /* Special handling for table rows */
+    tr.removable-block:hover {
+      outline: none !important;
+      background: rgba(225, 29, 72, 0.05) !important;
+    }
+    tr.removable-block .block-delete-btn {
+      top: 50%;
+      right: 4px;
+      transform: translateY(-50%);
+    }
+    tr.removable-block:hover > td:last-child {
+      position: relative;
+    }
   </style>
 
   <!-- ── Pricing Editor Modal ── -->
@@ -2357,6 +2409,53 @@
       const tiles = document.querySelectorAll('.gallery .image-tile');
       tiles.forEach((tile, index) => {
         addImageChanger(`.gallery .image-tile:nth-child(${index + 1})`, `--img-${index + 1}`);
+      });
+    }
+
+    function initRemovableBlocks() {
+      const removableSelectors = [
+        'section',
+        '.day',
+        '.experience',
+        '.image-tile',
+        '.strip-card',
+        '.price-card',
+        '#hotels tbody tr',
+        '.faq-item',
+        '.testimonial-card',
+        '#inclusions-list li',
+        '#exclusions-list li',
+        '.quote-row',
+        '.inline-social-proof'
+      ];
+
+      document.querySelectorAll(removableSelectors.join(', ')).forEach(el => {
+        if (el.classList.contains('removable-block')) return;
+        el.classList.add('removable-block');
+
+        const btn = document.createElement('div');
+        btn.innerHTML = '🗑️';
+        btn.className = 'block-delete-btn no-print';
+        btn.title = 'Remove this block';
+
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          if (confirm('Remove this block? This action cannot be undone.')) {
+            el.remove();
+            recalculateGrandTotal(); // Re-calculate in case a pricing card is deleted
+          }
+        };
+
+        if (el.tagName === 'TR') {
+          const lastTd = el.lastElementChild;
+          if (lastTd) {
+            lastTd.style.position = 'relative';
+            lastTd.appendChild(btn);
+          }
+        } else {
+          el.appendChild(btn);
+        }
       });
     }
 
@@ -2622,6 +2721,7 @@
     initPricingClickHandlers();
     recalculateGrandTotal();
     initImageChangers();
+    initRemovableBlocks();
 
     async function publishPage() {
       const btn = document.getElementById('btn-publish');
@@ -2631,12 +2731,15 @@
       bar.style.display = 'none';
       document.querySelectorAll('[data-editable]').forEach(el => el.removeAttribute('contenteditable'));
       document.querySelectorAll('.img-change-btn').forEach(el => el.remove());
+      document.querySelectorAll('.block-delete-btn').forEach(el => el.remove());
+      document.querySelectorAll('.removable-block').forEach(el => el.classList.remove('removable-block'));
 
       const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
 
       bar.style.display = '';
       document.querySelectorAll('[data-editable]').forEach(el => { el.contentEditable = 'true'; });
       initImageChangers();
+      initRemovableBlocks();
 
       btn.disabled = true;
       btn.textContent = '⏳ Publishing...';
@@ -2679,12 +2782,15 @@
       bar.style.display = 'none';
       document.querySelectorAll('[data-editable]').forEach(el => el.removeAttribute('contenteditable'));
       document.querySelectorAll('.img-change-btn').forEach(el => el.remove());
+      document.querySelectorAll('.block-delete-btn').forEach(el => el.remove());
+      document.querySelectorAll('.removable-block').forEach(el => el.classList.remove('removable-block'));
 
       const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
 
       bar.style.display = '';
       document.querySelectorAll('[data-editable]').forEach(el => { el.contentEditable = 'true'; });
       initImageChangers();
+      initRemovableBlocks();
 
       btn.disabled = true;
       publishBtn.disabled = true;
