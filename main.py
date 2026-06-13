@@ -1382,6 +1382,9 @@ async def get_quotation_pdf(quotation_id: str):
     entry = quotations.get(quotation_id)
     if entry and entry.get("pdf_url"):
         return RedirectResponse(url=entry["pdf_url"], status_code=302)
+        
+    if entry and entry.get("pdf_html"):
+        return HTMLResponse(content=entry["pdf_html"])
 
     # 2. Production: static pdf.html is on Vercel CDN — redirect there
     ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
@@ -1389,15 +1392,13 @@ async def get_quotation_pdf(quotation_id: str):
         static_pdf_url = f"{PUBLIC_BASE_URL}/published/{quotation_id}/pdf.html"
         return RedirectResponse(url=static_pdf_url, status_code=302)
 
-    # 3. Localhost fallback: dynamic render from disk ctx.json
-    ctx = _load_ctx(quotation_id)
-    if not ctx:
-        raise HTTPException(status_code=404, detail=f"Quotation '{quotation_id}' not found.")
-    loop = asyncio.get_event_loop()
-    tmpl = templates.get_template("vietnam_heritage_luxury_pdf.html")
-    rendered = await loop.run_in_executor(None, partial(tmpl.render, **ctx))
-    log.info("[/pdf] Served dynamic PDF view for %s", quotation_id)
-    return HTMLResponse(content=rendered)
+    # 3. Local disk fallback (if server restarted but files exist)
+    path = os.path.join("published", quotation_id, "pdf.html")
+    if os.path.isfile(path):
+        with open(path, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+            
+    raise HTTPException(status_code=404, detail=f"PDF for quotation '{quotation_id}' not found.")
 
 
 @app.get("/quotations/{quotation_id}", response_class=HTMLResponse)
@@ -1743,20 +1744,21 @@ async def get_itinerary_pdf(itinerary_id: str):
     entry = itineraries.get(itinerary_id)
     if entry and entry.get("pdf_url"):
         return RedirectResponse(url=entry["pdf_url"], status_code=302)
+        
+    if entry and entry.get("pdf_html"):
+        return HTMLResponse(content=entry["pdf_html"])
 
     ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
     if ENVIRONMENT == "production":
         static_pdf_url = f"{PUBLIC_BASE_URL}/published/{itinerary_id}/pdf.html"
         return RedirectResponse(url=static_pdf_url, status_code=302)
 
-    ctx = _load_itinerary_ctx(itinerary_id)
-    if not ctx:
-        raise HTTPException(status_code=404, detail=f"Itinerary '{itinerary_id}' not found.")
-    loop = asyncio.get_event_loop()
-    tmpl = templates.get_template("detail_itinerary_landingpage_template_pdf.html")
-    rendered = await loop.run_in_executor(None, partial(tmpl.render, **ctx))
-    log.info("[/itineraries/pdf] Served dynamic PDF view for %s", itinerary_id)
-    return HTMLResponse(content=rendered)
+    path = os.path.join("published", itinerary_id, "pdf.html")
+    if os.path.isfile(path):
+        with open(path, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+
+    raise HTTPException(status_code=404, detail=f"PDF for itinerary '{itinerary_id}' not found.")
 
 
 @app.post("/itineraries/{itinerary_id}/publish")

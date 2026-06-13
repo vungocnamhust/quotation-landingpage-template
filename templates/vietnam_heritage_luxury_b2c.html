@@ -1037,7 +1037,6 @@
         text-align: center;
       }
 
-      #btn-pdf,
       #btn-publish {
         flex: 1;
         min-width: 120px;
@@ -2457,14 +2456,7 @@
       <div class="pb-label">✏️ Editing <strong>{{ quotation_id }}</strong></div>
     </div>
     <span id="publish-status"></span>
-    <a id="btn-pdf" href="/quotations/{{ quotation_id }}/pdf" target="_blank" style="background:rgba(183,137,75,.18);border:1px solid rgba(183,137,75,.5);color:#d8bd85;
-              border-radius:999px;padding:11px 22px;font-weight:700;font-size:12px;
-              letter-spacing:.08em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
-              transition:.2s ease;display:inline-flex;align-items:center;gap:6px;"
-      onmouseover="this.style.background='rgba(183,137,75,.28)'"
-      onmouseout="this.style.background='rgba(183,137,75,.18)'">
-      📄 Export PDF
-    </a>
+
     <button id="btn-publish" onclick="publishPage()">🚀 Publish to Web</button>
   </div>
 
