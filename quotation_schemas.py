@@ -2,16 +2,20 @@
 
 from __future__ import annotations
 
-from typing import List, Literal, Optional, Union, Any
-from pydantic import BaseModel, ConfigDict, Field as pydantic_Field
+from typing import Any, List, Literal, Optional, Union
+
+from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import Field as pydantic_Field
 
 
 class FrozenModel(BaseModel):
     """Base model configured to ignore extra fields for robustness on the landing page API."""
+
     model_config = ConfigDict(frozen=True, extra="ignore")
 
 
 # --- Helpers & Shared Schema components ---
+
 
 class Duration(FrozenModel):
     days: int
@@ -108,6 +112,28 @@ class JourneyGlance(FrozenModel):
         description="Loose generic statement on validity, subject to final confirmation."
     )
 
+    @model_validator(mode="before")
+    @classmethod
+    def lenient_glance(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+        defaults = {
+            "market": "B2B",
+            "guestProfile": "Standard Group",
+            "hotelStandard": "5-star (Luxury)",
+            "mealPreference": "Standard",
+            "priceType": "Indicative",
+            "tourCode": "TBD",
+            "domesticFlights": "Not included",
+            "priceBasis": "Twin/Double Sharing Basis",
+            "partnerNote": "",
+            "validity": "Subject to availability and confirmation",
+        }
+        for k, v in defaults.items():
+            if k not in data or data[k] is None:
+                data[k] = v
+        return data
+
 
 class WhyWorks(FrozenModel):
     privateFlexible: str = pydantic_Field(
@@ -125,6 +151,22 @@ class WhyWorks(FrozenModel):
             "balance and curation of journey highlights."
         )
     )
+
+    @model_validator(mode="before")
+    @classmethod
+    def lenient_why(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+        defaults = {
+            "privateFlexible": "Fully private tour with flexible pacing to suit your needs.",
+            "comfort": "Premium A/C vehicle transport and handpicked hotels.",
+            "muslimFriendly": "Halal-conscious dining options and prayer stop flexibility.",
+            "balancedHighlights": "Optimized itinerary balancing iconic sites with leisure time.",
+        }
+        for k, v in defaults.items():
+            if k not in data or data[k] is None:
+                data[k] = v
+        return data
 
 
 class HotelPlanHotel(FrozenModel):
@@ -164,6 +206,22 @@ class BookingTerms(FrozenModel):
         description="Generic placeholder wording on booking confirmation."
     )
 
+    @model_validator(mode="before")
+    @classmethod
+    def lenient_terms(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+        defaults = {
+            "deposit": "As per standard booking policy.",
+            "balance": "Payable prior to tour commencement.",
+            "cancellation": "Subject to cancellation charges as per terms.",
+            "confirmation": "Subject to availability upon payment.",
+        }
+        for k, v in defaults.items():
+            if k not in data or data[k] is None:
+                data[k] = v
+        return data
+
 
 class Finalization(FrozenModel):
     finalDetailsRequired: str = pydantic_Field(
@@ -175,6 +233,20 @@ class Finalization(FrozenModel):
     afterConfirmation: str = pydantic_Field(
         description="Description of key actions and support after booking confirmation."
     )
+
+    @model_validator(mode="before")
+    @classmethod
+    def lenient_final(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+        defaults = {
+            "finalDetailsRequired": "Passport copies and flight details required for booking.",
+            "afterConfirmation": "Our operations team will coordinate vouchers and guide details.",
+        }
+        for k, v in defaults.items():
+            if k not in data or data[k] is None:
+                data[k] = v
+        return data
 
 
 class PriceOption(FrozenModel):
@@ -283,8 +355,68 @@ class TourQuotationPayload(FrozenModel):
         default=None, description="Optional quotation reference code."
     )
 
+    @model_validator(mode="before")
+    @classmethod
+    def lenient_payload(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+
+        # 1. Handle missing/empty metadata lists and dicts
+        if "retrievalStatus" not in data or data["retrievalStatus"] is None:
+            data["retrievalStatus"] = {
+                "hotel": "pending",
+                "activity": "pending",
+                "guide": "pending",
+                "transfer": "pending",
+                "flight": "pending",
+            }
+        elif isinstance(data["retrievalStatus"], dict):
+            # Ensure all required keys exist
+            rs = data["retrievalStatus"]
+            for key in ["hotel", "activity", "guide", "transfer", "flight"]:
+                if key not in rs or rs[key] is None:
+                    rs[key] = "pending"
+            data["retrievalStatus"] = rs
+
+        if "candidateBlocks" not in data or data["candidateBlocks"] is None:
+            data["candidateBlocks"] = []
+        if "optionalEnhancements" not in data or data["optionalEnhancements"] is None:
+            data["optionalEnhancements"] = []
+
+        # 2. Normalize pricing
+        pricing = data.get("pricing")
+        if pricing is not None:
+            if isinstance(pricing, dict):
+                # If it has "totalPriceUsd", it is custom pricing engine output; keep as dict.
+                # If it does not have "totalPriceUsd", it is standard pricing; coerce/normalize it.
+                if "totalPriceUsd" not in pricing:
+                    if "currency" not in pricing or pricing["currency"] is None:
+                        pricing["currency"] = "USD"
+                    if "pricingTitle" not in pricing or pricing["pricingTitle"] is None:
+                        pricing["pricingTitle"] = "PRICE QUOTATION – B2B NET INDICATIVE"
+                    if "basis" not in pricing or pricing["basis"] is None:
+                        pricing["basis"] = "B2B net indicative"
+                    if "priceOptions" not in pricing or pricing["priceOptions"] is None:
+                        pricing["priceOptions"] = []
+
+                    price_opts = []
+                    for opt in pricing.get("priceOptions", []):
+                        if isinstance(opt, dict):
+                            if "label" not in opt or opt["label"] is None:
+                                opt["label"] = "Standard Option"
+                            if "notes" not in opt or opt["notes"] is None:
+                                opt["notes"] = ""
+                            if "amount" not in opt:
+                                opt["amount"] = None
+                            price_opts.append(opt)
+                    pricing["priceOptions"] = price_opts
+                    data["pricing"] = pricing
+
+        return data
+
 
 # --- Extract Candidate Block Schemas (Kept for alignment/reference) ---
+
 
 class PaxComposition(FrozenModel):
     adults: int
@@ -351,11 +483,7 @@ class TransferBrief(FrozenModel):
     vehicle_requirement: Literal["4-seat", "7-seat", "16-seat", "29-seat", "45-seat"]
     search_query: str
 
-    model_config = {
-        "populate_by_name": True,
-        "frozen": True,
-        "extra": "ignore"
-    }
+    model_config = {"populate_by_name": True, "frozen": True, "extra": "ignore"}
 
 
 class Wave1(FrozenModel):
@@ -367,11 +495,13 @@ class Wave1(FrozenModel):
 
 class QuotationPayload(FrozenModel):
     """Output format of Extract Candidate Block."""
+
     wave1: Wave1
     wave2_transfers: List[TransferBrief]
 
 
 # --- Extract Candidate Block New Schemas ---
+
 
 class ServiceBlockPax(FrozenModel):
     adults: int
@@ -509,6 +639,7 @@ class ServiceBlock(FrozenModel):
 
 
 # --- Service Retrieval Results Schemas ---
+
 
 class CandidateSupplier(FrozenModel):
     supplier_id: Optional[str] = None

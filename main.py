@@ -2486,3 +2486,372 @@ async def privacy_policy():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Agent-Facing Endpoints — Simplified for Hermes Pool multi-agent pipeline
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _build_agent_ctx(
+    session_id: str,
+    tour_brief: dict,
+    pricing: dict,
+    services: dict,
+    customer_name: str,
+    destinations: list[dict],
+    hero_image_url: str,
+) -> dict:
+    """Build Jinja2 template context from simplified agent workspace data.
+
+    Maps sparse agent output (services, pricing, tour_brief) into the full
+    template context dict expected by vietnam_heritage_luxury_b2c.html.
+    Missing fields get empty defaults — no UndefinedError at render time.
+    """
+    # ── Seller info ─────────────────────────────────────────────────
+    seller_name = os.getenv("SELLER_NAME", "Vietnam Safar \u2013 Discovery Asia Travel Group")
+    seller_email = os.getenv("SELLER_EMAIL", "sales@vietnamsafar.vn")
+    seller_phone = os.getenv("SELLER_PHONE", "+84 911 538 738")
+
+    # ── Tour brief fields ────────────────────────────────────────────
+    title = tour_brief.get("title", "") or tour_brief.get("tour_name", "")
+    subtitle = tour_brief.get("subtitle", "") or tour_brief.get("description", "")
+    dests_list = tour_brief.get("destinations", [])
+    pax_adults = tour_brief.get("adults", 2)
+    pax_children = tour_brief.get("children", 0)
+    pax_total = pax_adults + pax_children
+    days = tour_brief.get("days", 0) or tour_brief.get("duration_days", 0)
+    nights = max(0, days - 1) if days else 0
+    duration_lbl = f"{days}D{nights}N" if days else ""
+    route_txt = " \u2013 ".join(dests_list)
+    guests_txt = f"{pax_adults} Adults" + (f" + {pax_children} Children" if pax_children else "")
+    nationality = tour_brief.get("nationality", "") or tour_brief.get("market", "")
+    travel_dates = tour_brief.get("travel_dates", "") or tour_brief.get("dates", "")
+    travel_style = tour_brief.get("travel_style", "") or tour_brief.get("style", "")
+    hotel_standard = tour_brief.get("hotel_standard", "") or tour_brief.get("hotelStandard", "")
+    meal_pref = tour_brief.get("meal_preference", "") or tour_brief.get("mealPreference", "")
+    tour_code = tour_brief.get("tour_code", "") or tour_brief.get("tourCode", "")
+
+    # ── Pricing ──────────────────────────────────────────────────────
+    currency = pricing.get("currency", "USD")
+    hotel_price = float(pricing.get("hotel", 0) or 0)
+    guide_price = float(pricing.get("guide", 0) or 0)
+    transport_price = float(pricing.get("transport", 0) or 0)
+    activity_price = float(pricing.get("activity", 0) or 0)
+    total = hotel_price + guide_price + transport_price + activity_price
+    price_per_person = total / max(1, pax_adults)
+
+    p_pax_txt = f"{currency} {price_per_person:,.0f} / person" if total > 0 else ""
+    total_txt = f"{currency} {total:,.0f}" if total > 0 else ""
+
+    price_options = [{
+        "hotelCategory": hotel_standard or "Standard",
+        "optionName": "Main option",
+        "pricePerPerson": {
+            "amount": price_per_person,
+            "currency": currency,
+            "displayText": p_pax_txt,
+            "isFromPrice": False,
+        },
+        "totalPrice": {
+            "amount": total,
+            "currency": currency,
+            "displayText": total_txt,
+            "isFromPrice": False,
+        },
+        "isConfirmedMainOption": True,
+        "isAlternativeOption": False,
+        "notes": ["Calculated from agent workspace data"],
+    }] if total > 0 else []
+
+    # ── Hotels (from services) ───────────────────────────────────────
+    hotel_data = services.get("hotel", {}) or {}
+    hotel_plan_items = [{
+        "destination": hotel_data.get("destination", ""),
+        "checkInDate": hotel_data.get("check_in", ""),
+        "checkOutDate": hotel_data.get("check_out", ""),
+        "hotelArrangement": hotel_data.get("name", ""),
+        "status": "confirmed",
+    }] if hotel_data else []
+    hotel_room_notes = hotel_data.get("notes", "")
+
+    # ── Services ─────────────────────────────────────────────────────
+    guide_data = services.get("guide", {}) or {}
+    transport_data = services.get("transport", {}) or {}
+    activities_data = services.get("activities", []) or []
+
+    # ── Itinerary ────────────────────────────────────────────────────
+    days_list = tour_brief.get("itinerary", [])
+    if not days_list and days:
+        # Build a simple day-by-day from destinations
+        for i, dest in enumerate(dests_list or ["Destination"]):
+            days_list.append({
+                "dayNumber": i + 1,
+                "title": f"Explore {dest}",
+                "date": "",
+                "overnight": dest,
+                "meals": [],
+                "activities": ["Sightseeing and exploration"],
+                "notes": [],
+                "description": f"Discover the beauty of {dest}.",
+                "destinations": [dest],
+            })
+
+    mapped_itinerary = []
+    for d in days_list:
+        mapped_itinerary.append({
+            "dayNumber": d.get("dayNumber", 0),
+            "title": d.get("title", ""),
+            "date": d.get("date", ""),
+            "overnight": d.get("overnight", ""),
+            "meals": d.get("meals", []) or [],
+            "activities": d.get("activities", []) or [],
+            "notes": d.get("notes", []) or [],
+            "description": d.get("description", ""),
+            "destinations": [d.get("destination", "")] if d.get("destination") else [],
+        })
+
+    # ── Destinations for gallery ─────────────────────────────────────
+    gallery_destinations = []
+    for i, dest in enumerate(destinations or []):
+        img_url = dest.get("image_url", "") or hero_image_url
+        gallery_destinations.append({
+            "name": dest.get("name", ""),
+            "image_url": img_url,
+        })
+
+    # ── Why works section ────────────────────────────────────────────
+    why_private = (
+        "Your personal sanctuary on the move \u2014 private guides, dedicated transport, "
+        "and experiences curated exclusively for you."
+    )
+    why_comfort = (
+        "Handpicked accommodations, seamless logistics, and a pace that lets you "
+        "truly absorb each destination."
+    )
+    why_muslim = (
+        "Halal Dining, prayer-friendly scheduling, and culturally aware hosts "
+        "who understand your needs."
+    )
+    why_balanced = (
+        "A carefully balanced rhythm of discovery, relaxation, and cultural ",
+        "immersion \u2014 crafted for meaningful travel.",
+    )
+
+    # Set image CSS variables
+    img_vars = {}
+    for i, dest in enumerate(gallery_destinations[:5]):
+        img_vars[f"img_{i}"] = dest["image_url"]
+
+    return {
+        "quotation_id": session_id,
+        "destinations": gallery_destinations,
+        "tour_title": title,
+        "quotation_title": title,
+        "kicker": f"Private Luxury Quotation \u2012 {duration_lbl} \u2012 {travel_dates}" if duration_lbl else "Private Luxury Quotation",
+        "lede": subtitle,
+        "customer_name": customer_name,
+        "nationality": nationality,
+        "travel_style": travel_style,
+        "guests_txt": guests_txt,
+        "route_txt": route_txt,
+        "travel_dates": travel_dates,
+        "duration_label": duration_lbl,
+        # Pricing
+        "currency": currency,
+        "total_price": total_txt,
+        "price_per_pax": p_pax_txt,
+        "grand_total": total,
+        "subtotal": total,
+        "tax_total": 0.0,
+        "pricing_title": "PRICE QUOTATION \u2013 INDICATIVE",
+        "pricing_basis": "Indicative pricing, subject to reconfirmation",
+        "price_options": price_options,
+        "pricing_h2": f"Total: {total_txt}" if total_txt else "",
+        "pricing_p": f"Grand total for {guests_txt}. Currency: {currency}. Final rates subject to reconfirmation.",
+        # Itinerary
+        "itinerary_h2": "Day-by-Day Journey",
+        "itinerary_p": f"Your private journey \u2014 {len(mapped_itinerary)} days of exploration." if mapped_itinerary else "",
+        "itinerary": mapped_itinerary,
+        # Overview
+        "overview_heading": "Journey Overview",
+        "overview_h2": f"{customer_name} \u2014 {title}",
+        "overview_p": subtitle,
+        "overview_paras": [subtitle] if subtitle else [],
+        # Why works
+        "why_private": why_private,
+        "why_comfort": why_comfort,
+        "why_muslim": why_muslim,
+        "why_balanced": why_balanced,
+        # Hotels
+        "hotels": hotel_plan_items,
+        "room_notes": hotel_room_notes,
+        "optional_enhancements": [],
+        # Contact
+        "contact": seller_name,
+        "contact_phone": seller_phone,
+        "contact_web": "www.vietnamsafar.vn",
+        "seller_email": seller_email,
+        "seller_name": seller_name,
+        # Inclusions / exclusions
+        "inclusions": [],
+        "exclusions": [],
+        # Payment terms
+        "payment_terms": "Refer to Booking & Payment terms.",
+        "term_deposit": "",
+        "term_balance": "",
+        "term_cancellation": "",
+        "term_confirmation": "",
+        "final_req": "",
+        "final_after": "",
+        "cta_h2": "Confirm your travel dates to finalize.",
+        "cta_p": "Share any additional requirements \u2014 we will reconfirm availability and return a finalized quotation.",
+        # Price conditions
+        "price_cond_paras": [""],
+        "terms_p": "",
+        # Footer
+        "footer_text": f"{title} \u2014 Luxury quotation prepared for {customer_name}." if title else "Luxury quotation.",
+        # Journey glance
+        "show_muslim_care": True,
+        "glance_market": nationality,
+        "glance_profile": guests_txt,
+        "glance_standard": hotel_standard,
+        "glance_meals": meal_pref,
+        "glance_price_type": "Indicative",
+        "glance_tour_code": tour_code,
+        "glance_flights": "",
+        "glance_basis": "Indicative pricing, subject to reconfirmation",
+        "glance_partner_note": "",
+        "glance_validity": "Subject to confirmation at time of booking",
+        # Raw
+        "raw_quotation": "",
+        # Images
+        **img_vars,
+    }
+
+
+@app.post("/api/v1/landing-page")
+async def create_landing_page_agent(request: Request):
+    """Simplified landing page endpoint for Hermes Pool multi-agent pipeline.
+
+    Accepts workspace data from session.md instead of full TourQuotationPayload.
+    Uses existing template rendering + file persistence infrastructure.
+
+    Request body:
+    {
+        "session_id": "session-xxx",
+        "tour_brief": { "title", "destinations", "adults", "children", "days", ... },
+        "pricing": { "hotel", "guide", "transport", "activity", "currency" },
+        "services": { "hotel": {...}, "guide": {...}, "transport": {...}, "activities": [...] },
+        "customer_name": "...",
+        "agent_notes": "..."
+    }
+
+    Returns:
+    {
+        "quotationId": "...",
+        "quotationUrl": "...",
+        "pdfUrl": "...",
+        "localPath": "...",
+        "status": "published"
+    }
+    """
+    body = await request.json()
+
+    session_id = body.get("session_id", f"quo_{uuid.uuid4().hex[:12]}")
+    tour_brief = body.get("tour_brief", {})
+    pricing = body.get("pricing", {})
+    services = body.get("services", {})
+    customer_name = body.get("customer_name", "Valued Customer")
+    agent_notes = body.get("agent_notes", "")
+
+    log.info("[/api/v1/landing-page] session=%s customer=%s", session_id, customer_name)
+
+    # ── 1. Image selection ──────────────────────────────────────────────
+    route_list = tour_brief.get("destinations", [])
+    route_text = " ".join(route_list)
+    itinerary_text = " ".join(
+        d.get("title", "") or d.get("destination", "")
+        for d in (tour_brief.get("itinerary", []) or [])
+    )
+    text_context = route_text + " " + itinerary_text
+
+    from image_selector import extract_and_map_destinations, get_random_image_for_province
+
+    destinations = await extract_and_map_destinations(text_context, max_items=None) if text_context.strip() else []
+    for d in destinations:
+        d["image_url"] = get_random_image_for_province(d.get("slug"))
+    default_img = "/assets/vietnam-safar-logo.png"
+    valid_images = [d["image_url"] for d in destinations if d.get("image_url") != default_img]
+    if valid_images:
+        import random
+        hero_image_url = random.choice(valid_images)
+    else:
+        hero_image_url = default_img
+
+    log.debug("[/api/v1/landing-page] destinations=%d hero=%s", len(destinations), hero_image_url)
+
+    # ── 2. Build template context ───────────────────────────────────────
+    ctx = _build_agent_ctx(session_id, tour_brief, pricing, services, customer_name, destinations, hero_image_url)
+
+    # ── 3. Render templates ─────────────────────────────────────────────
+    loop = asyncio.get_event_loop()
+    tmpl_lp = templates.get_template("vietnam_heritage_luxury_b2c.html")
+    tmpl_pdf = templates.get_template("vietnam_heritage_luxury_b2c_pdf.html")
+
+    rendered_html, rendered_pdf = await asyncio.gather(
+        loop.run_in_executor(None, partial(tmpl_lp.render, **ctx)),
+        loop.run_in_executor(None, partial(tmpl_pdf.render, **ctx)),
+    )
+
+    # ── 4. Write to disk (always — both local and production) ───────────
+    quo_dir = os.path.join("published", session_id)
+    os.makedirs(quo_dir, exist_ok=True)
+
+    v1_path = os.path.join(quo_dir, "v1.html")
+    pdf_path = os.path.join(quo_dir, "pdf.html")
+    ctx_path = os.path.join(quo_dir, "ctx.json")
+
+    with open(v1_path, "w", encoding="utf-8") as f:
+        f.write(rendered_html)
+    with open(pdf_path, "w", encoding="utf-8") as f:
+        f.write(rendered_pdf)
+    with open(ctx_path, "w", encoding="utf-8") as f:
+        json.dump(ctx, f, ensure_ascii=False, default=str)
+
+    log.info("[/api/v1/landing-page] Written: %s, %s, %s", v1_path, pdf_path, ctx_path)
+
+    # ── 5. Optional GitHub publish (production only) ────────────────────
+    ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
+    published_url: str | None = None
+    pdf_static_url: str | None = None
+
+    if ENVIRONMENT == "production" and os.getenv("GITHUB_TOKEN") and os.getenv("GITHUB_REPO"):
+        try:
+            from github_publish import publish_file_to_github, publish_to_github
+
+            published_url, pdf_static_url = await asyncio.gather(
+                publish_to_github(session_id, rendered_html, version=1),
+                publish_file_to_github(
+                    file_path=f"published/{session_id}/pdf.html",
+                    html_content=rendered_pdf,
+                    commit_message=f"Publish PDF for quotation {session_id}",
+                ),
+            )
+            log.info("[/api/v1/landing-page] GitHub published: %s", published_url)
+        except Exception as exc:
+            log.warning("[/api/v1/landing-page] GitHub publish skipped: %s", exc)
+
+    # ── 6. Build response URL ───────────────────────────────────────────
+    base_url = os.getenv("PUBLIC_BASE_URL", "http://localhost:8001")
+    quotation_url = published_url or f"{base_url}/published/{session_id}/v1.html"
+    pdf_url = pdf_static_url or f"{base_url}/published/{session_id}/pdf.html"
+    local_path = str(v1_path)
+
+    return {
+        "quotationId": session_id,
+        "quotationUrl": quotation_url,
+        "pdfUrl": pdf_url,
+        "localPath": local_path,
+        "status": "published",
+        "version": 1,
+    }
