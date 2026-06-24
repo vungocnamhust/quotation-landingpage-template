@@ -1,0 +1,3192 @@
+
+<!DOCTYPE html>
+<html lang="en"
+  style="--hero-img: url('/assets/vietnam-safar-logo.png'); ">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A refined city-and-heritage journey designed for smooth transitions,... - Booking Itinerary</title>
+  <!-- PWA Metadata -->
+  <link rel="manifest" href="/manifest.json?id=iti_aa2d37267540&type=itineraries" />
+  <meta name="theme-color" content="#17412e" />
+  <link rel="apple-touch-icon" href="/assets/vietnam-safar-logo.png" />
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <style>
+    :root {
+      --ivory: #f8f3e9;
+      --ivory-2: #efe4d1;
+      --ink: #11130f;
+      --charcoal: #171915;
+      --muted: #706a5d;
+      --emerald: #17412e;
+      --emerald-2: #0e2f22;
+      --gold: #b7894b;
+      --gold-2: #d8bd85;
+      --line: rgba(183, 137, 75, .28);
+      --card: #fffaf1;
+      --shadow: 0 30px 80px rgba(17, 19, 15, .16);
+      --serif: Georgia, 'Times New Roman', serif;
+      --sans: Arial, Helvetica, sans-serif;
+    }
+
+    /* Tweak map tile colors to match the luxury warm tone without fading into the background */
+    .leaflet-tile {
+      filter: sepia(0.7) hue-rotate(-10deg) saturate(0.4) contrast(1.05) brightness(0.98);
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    /* Enforce word wrapping globally to prevent text layout overflow */
+    body, p, h1, h2, h3, h4, h5, h6, li, span, strong, div, td, th {
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+      word-break: break-word;
+    }
+
+    html {
+      scroll-behavior: smooth
+    }
+
+    body {
+      margin: 0;
+      background: var(--ivory);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.65;
+      overflow-wrap: break-word;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit
+    }
+
+    .container {
+      width: min(1180px, 92%);
+      margin: 0 auto
+    }
+
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(248, 243, 233, .86);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--line)
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 0
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-size: 12px;
+      color: var(--emerald)
+    }
+
+    .brand img {
+      width: 44px;
+      height: 44px;
+      object-fit: contain;
+      border-radius: 50%;
+      background: white
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 26px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: #4e4a41
+    }
+
+    .nav-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      border: none;
+      border-radius: 999px;
+      padding: 13px 19px;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      font-size: 11px;
+      cursor: pointer;
+      transition: .2s ease
+    }
+
+    .btn.gold {
+      background: linear-gradient(135deg, var(--gold), var(--gold-2));
+      color: #1c160d;
+      box-shadow: 0 16px 36px rgba(183, 137, 75, .28)
+    }
+
+    .btn.dark {
+      background: var(--emerald);
+      color: white
+    }
+
+    .btn.outline {
+      background: rgba(255, 255, 255, .08);
+      border: 1px solid rgba(255, 255, 255, .35);
+      color: white
+    }
+
+    .btn:hover {
+      transform: translateY(-2px)
+    }
+
+    .hero {
+      position: relative;
+      min-height: 820px;
+      background: linear-gradient(90deg, rgba(17, 19, 15, .92), rgba(17, 19, 15, .62), rgba(17, 19, 15, .18)), var(--hero-img) center/cover no-repeat;
+      color: white;
+      overflow: hidden
+    }
+
+    .hero:after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0 0;
+      height: 210px;
+      background: linear-gradient(180deg, transparent, var(--ivory))
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      padding: 112px 0 128px;
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 54px;
+      align-items: end
+    }
+
+    .kicker {
+      color: var(--gold-2);
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 22px
+    }
+
+    .hero h1 {
+      font-family: var(--serif);
+      font-size: clamp(32px, 4.5vw, 56px);
+      line-height: 1.15;
+      font-weight: 500;
+      letter-spacing: -.02em;
+      margin: 0 0 24px;
+      max-width: 850px
+    }
+
+    .hero-lede {
+      font-size: 20px;
+      max-width: 65ch;
+      color: rgba(255, 255, 255, .82);
+      margin: 0 0 30px
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px
+    }
+
+    .quote-card {
+      background: rgba(255, 250, 241, .92);
+      color: var(--ink);
+      border: 1px solid rgba(255, 255, 255, .7);
+      border-radius: 34px;
+      padding: 28px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px)
+    }
+
+    .quote-card h2 {
+      font-family: var(--serif);
+      font-size: 30px;
+      line-height: 1;
+      margin: 0 0 18px
+    }
+
+    .quote-list {
+      display: grid;
+      gap: 12px
+    }
+
+    .quote-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      padding-bottom: 11px;
+      border-bottom: 1px solid rgba(17, 19, 15, .1);
+      font-size: 14px;
+      color: var(--muted)
+    }
+
+    .quote-row strong {
+      color: var(--ink);
+      text-align: right
+    }
+
+    .luxury-strip {
+      position: relative;
+      z-index: 3;
+      margin-top: -76px
+    }
+
+    .strip-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px
+    }
+
+    .strip-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 26px;
+      padding: 22px;
+      box-shadow: 0 14px 45px rgba(17, 19, 15, .08);
+      min-width: 0; /* Ensure overflow works on grid items */
+    }
+
+    .strip-card span {
+      display: block;
+      color: var(--gold);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .18em;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .strip-card strong {
+      display: block;
+      font-family: var(--serif);
+      font-size: clamp(18px, 1.8vw, 26px);
+      font-weight: 500;
+      color: var(--emerald);
+      margin-top: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    section {
+      padding: 72px 0
+    }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: 1fr .78fr;
+      gap: 42px;
+      align-items: end;
+      margin-bottom: 34px
+    }
+
+    .section-head h2 {
+      font-family: var(--serif);
+      font-size: clamp(32px, 4vw + 0.5rem, 64px);
+      line-height: .98;
+      letter-spacing: -.055em;
+      font-weight: 500;
+      margin: 0
+    }
+
+    .section-head p {
+      color: var(--muted);
+      font-size: 17px;
+      margin: 0;
+      max-width: 70ch;
+    }
+
+    /* ── Overview grid styles ── */
+    .overview-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 24px;
+    }
+
+    .overview-panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 32px;
+      padding: 30px;
+      box-shadow: 0 18px 45px rgba(17, 19, 15, .05);
+    }
+
+    .panel-title {
+      font-family: var(--serif);
+      font-size: 24px;
+      color: var(--emerald);
+      margin-top: 0;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .panel-list {
+      display: grid;
+      gap: 16px;
+    }
+
+    .panel-item {
+      padding-bottom: 14px;
+      border-bottom: 1px dashed rgba(183, 137, 75, .2);
+    }
+
+    .panel-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .panel-item-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--gold);
+      font-weight: 700;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .panel-item h4 {
+      font-size: 16px;
+      font-weight: 700;
+      margin: 0 0 4px 0;
+      color: var(--ink);
+    }
+
+    .panel-item-sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    /* ── Booked services daily itinerary styles ── */
+    .booked-services-group {
+      margin-top: 24px;
+      padding-top: 18px;
+      border-top: 1px dashed var(--line);
+    }
+
+    .service-group-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .15em;
+      font-weight: 700;
+      color: var(--gold);
+      margin-bottom: 12px;
+    }
+
+    .service-card {
+      display: flex;
+      gap: 18px;
+      background: rgba(255, 255, 255, 0.4);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 18px;
+      margin-bottom: 14px;
+      box-shadow: 0 4px 20px rgba(17, 19, 15, 0.02);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .service-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(17, 19, 15, 0.05);
+      border-color: var(--gold-2);
+    }
+
+    .service-img {
+      width: 140px;
+      height: 105px;
+      border-radius: 12px;
+      background-position: center;
+      background-size: cover;
+      background-repeat: no-repeat;
+      flex-shrink: 0;
+    }
+
+    .service-details {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .service-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .service-header h4 {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 500;
+      margin: 0;
+      color: var(--emerald);
+    }
+
+    .service-status {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    .service-status.confirmed,
+    .service-status.booked {
+      background: rgba(23, 65, 46, 0.1);
+      color: var(--emerald);
+      border: 1px solid rgba(23, 65, 46, 0.2);
+    }
+
+    .service-status.pending {
+      background: rgba(245, 158, 11, 0.1);
+      color: #b45309;
+      border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .service-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .service-dates {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 4px;
+      display: flex;
+      gap: 16px;
+    }
+
+    .service-subtext {
+      font-size: 13px;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+
+    .service-notes {
+      font-size: 13px;
+      font-style: italic;
+      color: var(--muted);
+      margin: 4px 0 0 0;
+    }
+
+    .badge-private {
+      background: rgba(183, 137, 75, 0.1);
+      color: var(--gold);
+      padding: 1px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr .8fr;
+      grid-auto-rows: 310px;
+      gap: 16px
+    }
+
+    .image-tile {
+      position: relative;
+      border-radius: 34px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      background: center/cover no-repeat
+    }
+
+    .image-tile.large {
+      grid-row: span 2
+    }
+
+    .image-tile:before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 34%, rgba(17, 19, 15, .72))
+    }
+
+    .image-caption {
+      position: absolute;
+      left: 24px;
+      right: 24px;
+      bottom: 22px;
+      color: white
+    }
+
+    .image-caption small {
+      display: block;
+      color: var(--gold-2);
+      text-transform: uppercase;
+      letter-spacing: .18em;
+      font-weight: 700
+    }
+
+    .image-caption strong {
+      font-family: var(--serif);
+      font-size: 27px;
+      font-weight: 500
+    }
+
+    .experience-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px
+    }
+
+    .experience {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 30px;
+      padding: 28px;
+      box-shadow: 0 18px 45px rgba(17, 19, 15, .06)
+    }
+
+    .num {
+      color: var(--gold);
+      font-weight: 800;
+      letter-spacing: .18em;
+      font-size: 12px
+    }
+
+    .experience h3,
+    .day h3,
+    .panel h3 {
+      font-family: var(--serif);
+      font-size: 27px;
+      line-height: 1.08;
+      font-weight: 500;
+      margin: 12px 0 10px;
+      color: var(--emerald)
+    }
+
+    .experience p,
+    .day p,
+    .panel p,
+    .panel li {
+      color: var(--muted);
+      font-size: 15px;
+      max-width: 75ch;
+      display: -webkit-box;
+      -webkit-line-clamp: 6;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .itinerary {
+      display: grid;
+      gap: 16px
+    }
+
+    .day {
+      display: grid;
+      grid-template-columns: 132px 1fr 170px;
+      gap: 24px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 30px;
+      padding: 24px;
+      align-items: start;
+      box-shadow: 0 18px 45px rgba(17, 19, 15, .05);
+      break-inside: avoid
+    }
+
+    .day-label {
+      height: 70px;
+      width: 70px;
+      border-radius: 50%;
+      background: var(--emerald);
+      color: white;
+      display: grid;
+      place-items: center;
+      font-family: var(--serif);
+      font-size: 24px
+    }
+
+    .day-meta {
+      font-size: 13px;
+      color: var(--gold);
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      text-align: right;
+      padding-top: 14px
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 32px;
+      padding: 30px;
+      box-shadow: 0 18px 45px rgba(17, 19, 15, .05);
+      break-inside: avoid
+    }
+
+    .panel ul {
+      margin: 14px 0 0;
+      padding-left: 20px;
+      display: grid;
+      gap: 9px
+    }
+
+    .cta {
+      background: linear-gradient(135deg, var(--emerald-2), #11130f 64%, #332711);
+      color: white;
+      border-radius: 44px;
+      padding: 54px;
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 44px;
+      align-items: center;
+      box-shadow: var(--shadow);
+      break-inside: avoid
+    }
+
+    .cta h2 {
+      font-family: var(--serif);
+      font-size: clamp(36px, 4vw + 1rem, 68px);
+      font-weight: 500;
+      letter-spacing: -.06em;
+      line-height: .96;
+      margin: 0 0 18px
+    }
+
+    .cta p {
+      color: rgba(255, 255, 255, .76);
+      font-size: 17px
+    }
+
+    .contact {
+      background: rgba(255, 255, 255, .08);
+      border: 1px solid rgba(255, 255, 255, .22);
+      border-radius: 28px;
+      padding: 26px
+    }
+
+    .contact label {
+      display: block;
+      color: var(--gold-2);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .16em;
+      font-weight: 800;
+      margin-top: 16px
+    }
+
+    .contact label:first-child {
+      margin-top: 0
+    }
+
+    .contact div {
+      font-weight: 800;
+      font-size: 18px;
+      margin-top: 4px
+    }
+
+    .footer {
+      padding: 42px 0 54px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px
+    }
+
+    .subtle {
+      color: var(--muted);
+      font-size: 13px
+    }
+
+    /* ── Journey Map styles ─────────────────────────────────────────── */
+    .map-layout {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 24px;
+      margin-top: 32px;
+      height: 520px;
+    }
+
+    .map-container {
+      border-radius: 34px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--line);
+      height: 100%;
+      position: relative;
+      z-index: 1;
+    }
+
+    .map-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+      padding: 6px 8px 6px 6px;
+      height: 100%;
+    }
+
+    .sidebar-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 16px 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(17, 19, 15, 0.02);
+    }
+
+    .sidebar-card:hover,
+    .sidebar-card.active {
+      transform: translateY(-2px);
+      border-color: var(--gold);
+      background: #fffefb;
+      box-shadow: 0 10px 25px rgba(183, 137, 75, 0.08);
+    }
+
+    .sidebar-card span.days-badge {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--gold);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      display: inline-block;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-card h4 {
+      font-family: var(--serif);
+      font-size: 18px;
+      color: var(--emerald);
+      margin: 0 0 6px 0;
+    }
+
+    .sidebar-card p {
+      font-size: 13px;
+      color: var(--muted);
+      margin: 0;
+      line-height: 1.4;
+    }
+
+    /* Leaflet integration styling overrides */
+    .leaflet-container {
+      background: var(--ivory) !important;
+      font-family: var(--sans) !important;
+    }
+
+    .leaflet-tile-container {
+      filter: sepia(0.2) hue-rotate(4deg) saturate(0.9) contrast(1) brightness(1);
+    }
+
+    .leaflet-popup-content-wrapper {
+      background: var(--card) !important;
+      border: 1px solid var(--line) !important;
+      border-radius: 16px !important;
+      box-shadow: var(--shadow) !important;
+    }
+
+    .leaflet-popup-content {
+      font-family: var(--sans);
+      color: var(--ink);
+      font-size: 13px;
+      line-height: 1.5;
+      margin: 12px 16px !important;
+    }
+
+    .leaflet-popup-content h4 {
+      font-family: var(--serif);
+      font-size: 15px;
+      color: var(--emerald);
+      margin: 0 0 4px 0;
+    }
+
+    .leaflet-popup-tip {
+      background: var(--card) !important;
+      border: 1px solid var(--line) !important;
+    }
+
+    /* Custom Marker */
+    .custom-marker {
+      position: relative;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .marker-core {
+      width: 24px;
+      height: 24px;
+      background: var(--emerald);
+      border: 2px solid var(--gold-2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 800;
+      font-size: 11px;
+      box-shadow: 0 4px 12px rgba(17, 19, 15, 0.2);
+      transition: all 0.3s ease;
+      z-index: 2;
+    }
+
+    .custom-marker:hover .marker-core,
+    .custom-marker.active .marker-core {
+      background: var(--gold);
+      border-color: var(--ivory);
+      transform: scale(1.15);
+      box-shadow: 0 6px 16px rgba(183, 137, 75, 0.4);
+    }
+
+    .marker-pulse {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      background: rgba(183, 137, 75, 0.25);
+      border-radius: 50%;
+      animation: pulse-ring 2.2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    @keyframes pulse-ring {
+      0% {
+        transform: scale(0.5);
+        opacity: 1;
+      }
+
+      80%,
+      100% {
+        transform: scale(1.4);
+        opacity: 0;
+      }
+    }
+
+    /* Sidebar Scrollbar */
+    .map-sidebar::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .map-sidebar::-webkit-scrollbar-track {
+      background: rgba(183, 137, 75, 0.05);
+    }
+
+    .map-sidebar::-webkit-scrollbar-thumb {
+      background: var(--line);
+      border-radius: 2px;
+    }
+
+    .no-screen {
+      display: none
+    }
+
+    @media(max-width: 1440px) {
+      .container {
+        width: min(1180px, 95%);
+      }
+      .hero-content {
+        gap: 36px;
+      }
+      .day {
+        grid-template-columns: 110px 1fr 140px;
+        gap: 16px;
+        padding: 20px;
+      }
+      .day-label {
+        height: 60px;
+        width: 60px;
+        font-size: 20px;
+      }
+      .strip-grid {
+        gap: 10px;
+      }
+      .strip-card {
+        padding: 16px;
+      }
+    }
+
+    @media(max-width:980px) {
+      .nav-links {
+        display: none
+      }
+
+      .hero-content,
+      .section-head,
+      .cta,
+      .two-col,
+      .overview-grid {
+        grid-template-columns: 1fr
+      }
+
+      .strip-grid,
+      .experience-grid {
+        grid-template-columns: 1fr 1fr
+      }
+
+      .gallery {
+        grid-template-columns: 1fr;
+        grid-auto-rows: 280px
+      }
+
+      .image-tile.large {
+        grid-row: auto
+      }
+
+      .day {
+        grid-template-columns: 1fr
+      }
+
+      .day-meta {
+        text-align: left;
+        padding-top: 0
+      }
+
+      .hero {
+        min-height: auto
+      }
+
+      .hero-content {
+        padding: 86px 0 130px
+      }
+
+      .map-layout {
+        grid-template-columns: 1fr;
+        height: 750px;
+      }
+
+      .map-container {
+        height: 400px;
+      }
+
+      .map-sidebar {
+        height: 320px;
+      }
+    }
+
+    @media(max-width:620px) {
+      .nav-actions {
+        display: none
+      }
+
+      .strip-grid,
+      .experience-grid {
+        grid-template-columns: 1fr
+      }
+
+      .hero h1 {
+        font-size: clamp(24px, 7vw, 36px);
+        line-height: 1.2;
+      }
+
+      .cta {
+        padding: 28px;
+        border-radius: 30px
+      }
+
+      .service-card {
+        flex-direction: column;
+        padding: 14px;
+      }
+
+      .service-img {
+        width: 100%;
+        height: 160px;
+      }
+    }
+
+    @media print {
+      .no-print {
+        display: none !important
+      }
+
+      .no-screen {
+        display: block
+      }
+
+      html,
+      body {
+        background: var(--ivory) !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact
+      }
+
+      .nav {
+        position: relative
+      }
+
+      .hero {
+        min-height: 720px
+      }
+
+      .hero-content {
+        padding: 72px 0 100px
+      }
+
+      section {
+        padding: 44px 0
+      }
+
+      .container {
+        width: 92%
+      }
+
+      .day,
+      .panel,
+      .cta,
+      .strip-card,
+      .experience,
+      .image-tile,
+      .service-card,
+      .overview-panel {
+        break-inside: avoid
+      }
+
+      .gallery {
+        grid-auto-rows: 260px
+      }
+
+      .footer {
+        page-break-after: auto
+      }
+
+      @page {
+        size: A4;
+        margin: 0
+      }
+    }
+
+    /* ── Inline editing ─────────────────────────────────────────── */
+    [data-editable] {
+      outline: none;
+      border-radius: 4px;
+      transition: background .15s, box-shadow .15s
+    }
+
+    [data-editable]:hover {
+      background: rgba(183, 137, 75, .09);
+      cursor: text
+    }
+
+    [data-editable]:focus {
+      background: rgba(183, 137, 75, .14);
+      box-shadow: 0 0 0 2px rgba(183, 137, 75, .45)
+    }
+
+    /* ── Publish Bar ────────────────────────────────────────────── */
+    #publish-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 9999;
+      background: rgba(23, 65, 46, .96);
+      backdrop-filter: blur(18px);
+      border-top: 1px solid rgba(183, 137, 75, .35);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 32px;
+      gap: 16px
+    }
+    @media(max-width: 768px) {
+      body {
+        padding-bottom: 110px !important;
+      }
+      #publish-bar {
+        flex-wrap: wrap;
+        padding: 12px 16px;
+        gap: 8px;
+        justify-content: center;
+      }
+      #publish-bar .pb-left {
+        width: 100%;
+        justify-content: center;
+      }
+      #publish-status {
+        width: 100%;
+        order: 3;
+        margin: 2px 0;
+        text-align: center;
+      }
+      #btn-pdf,
+      #btn-publish {
+        flex: 1;
+        min-width: 120px;
+        justify-content: center;
+        font-size: 11px !important;
+        padding: 10px 14px !important;
+        text-align: center;
+        display: inline-flex;
+        align-items: center;
+      }
+    }
+
+    #publish-bar .pb-left {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    #publish-bar .pb-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #f59e0b;
+      animation: pulse 2s infinite;
+      flex-shrink: 0
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .4
+      }
+    }
+
+    #publish-bar .pb-label {
+      color: rgba(255, 255, 255, .8);
+      font-size: 13px
+    }
+
+    #publish-bar .pb-label strong {
+      color: #d8bd85
+    }
+
+    #publish-status {
+      font-size: 13px;
+      color: rgba(255, 255, 255, .6);
+      flex: 1;
+      text-align: center
+    }
+
+    #btn-publish {
+      background: linear-gradient(135deg, #b7894b, #d8bd85);
+      color: #1c160d;
+      border: none;
+      border-radius: 999px;
+      padding: 11px 28px;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: .2s ease;
+      white-space: nowrap
+    }
+
+    #btn-publish:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(183, 137, 75, .4)
+    }
+
+    #btn-publish:disabled {
+      opacity: .6;
+      cursor: not-allowed
+    }
+
+    #btn-approve {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #ffffff;
+      border: none;
+      border-radius: 999px;
+      padding: 11px 28px;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: .2s ease;
+      white-space: nowrap;
+      margin-left: 8px;
+    }
+
+    #btn-approve:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(16, 185, 129, .4)
+    }
+
+    #btn-approve:disabled {
+      opacity: .6;
+      cursor: not-allowed
+    }
+
+    /* ── Image Selector Button ── */
+    .img-change-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 10;
+      background: rgba(23, 65, 46, .85);
+      border: 1px solid var(--line);
+      color: var(--gold-2);
+      padding: 6px 12px;
+      font-size: 10px;
+      font-weight: bold;
+      border-radius: 4px;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+      transition: .2s ease;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .img-change-btn:hover {
+      background: var(--emerald);
+      transform: scale(1.05);
+    }
+
+    /* ── PWA Notification Widget ── */
+    .notification-prompt-card {
+      position: fixed;
+      bottom: 88px;
+      right: 24px;
+      width: 340px;
+      background: rgba(255, 250, 241, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(183, 137, 75, 0.3);
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+
+    .notification-prompt-card.show {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .notification-prompt-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .notification-prompt-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--serif);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--emerald);
+    }
+
+    .notification-prompt-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 18px;
+      padding: 4px;
+      line-height: 1;
+      transition: color 0.2s;
+    }
+
+    .notification-prompt-close:hover {
+      color: var(--ink);
+    }
+
+    .notification-prompt-body {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .notification-prompt-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .notification-btn-allow {
+      flex: 1;
+      background: linear-gradient(135deg, var(--gold), var(--gold-2));
+      color: #1c160d;
+      border: none;
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .notification-btn-allow:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(183, 137, 75, 0.3);
+    }
+
+    .notification-btn-later {
+      background: rgba(17, 19, 15, 0.05);
+      color: var(--ink);
+      border: 1px solid rgba(17, 19, 15, 0.1);
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .notification-btn-later:hover {
+      background: rgba(17, 19, 15, 0.1);
+    }
+
+    .notification-success-card {
+      position: fixed;
+      bottom: 88px;
+      right: 24px;
+      background: rgba(23, 65, 46, 0.9);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--gold-2);
+      border-radius: 20px;
+      padding: 16px 20px;
+      box-shadow: var(--shadow);
+      z-index: 10001;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: white;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+
+    .notification-success-card.show {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .notification-success-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 50%;
+      color: var(--gold-2);
+      font-weight: bold;
+    }
+
+    .notification-success-text h4 {
+      margin: 0;
+      font-family: var(--serif);
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .notification-success-text p {
+      margin: 2px 0 0;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.75);
+    }
+
+    #nav-notification-btn {
+      color: var(--muted);
+      border: 1px solid var(--line);
+      background: transparent;
+      padding: 10px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      margin-right: 8px;
+    }
+
+    #nav-notification-btn:hover {
+      background: rgba(183, 137, 75, 0.1);
+      transform: scale(1.05);
+    }
+
+    #nav-notification-btn svg {
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,400;0,600;0,800;1,400&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --serif: 'Playfair Display', Georgia, serif;
+      --sans: 'Outfit', Arial, sans-serif;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="nav no-print">
+    <div class="container">
+      <div class="nav-inner">
+        <a class="brand" href="/">
+          <img src="/assets/vietnam-safar-logo.png" alt="Vietnam Safar" />
+          <span>Vietnam Safar</span>
+        </a>
+        <div class="nav-links">
+          <a href="#overview">Overview</a>
+          <a href="#services-overview">Bookings</a>
+          <a href="#route-map">Route Map</a>
+          <a href="#itinerary">Timeline</a>
+          <a href="#inclusions">Inclusions</a>
+        </div>
+        <div class="nav-actions">
+          <button id="nav-notification-btn" title="Enable Notifications">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+              <path
+                d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z" />
+            </svg>
+          </button>
+          <button class="btn dark" onclick="window.print()">🖨️ PDF Version</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── Hero Banner ── -->
+  <header class="hero">
+    <div class="container">
+      <div class="hero-content">
+        <div>
+          <div class="kicker" data-editable="true">Confirmed Booking Itinerary • 5D4N • 2026-09-20 to 2026-09-30</div>
+          <h1 data-editable="true">A refined city-and-heritage journey designed for smooth transitions,...</h1>
+          <p class="hero-lede" data-editable="true">Field mapping: route = Tokyo - Kyoto, duration = 5 days / 4 nights, guests = 4 adults, market = VN, hotel standard = 4-star, budget target = VND 120,000,000. Assumptions used: the provided endDate matches the startDate, so the 5-day programme is treated as 2026-12-10 to 2026-12-14; exact hotel names, supplier confirmation, flight timings, and intercity transport mode remain to be confirmed. This draft follows the premium B2B style reflected in the uploaded partner materials: private services,...</p>
+          <div class="hero-actions no-print">
+            <a class="btn gold" href="#itinerary">Explore Timeline</a>
+            <a class="btn outline" href="#services-overview">Booked Services</a>
+          </div>
+        </div>
+
+        <div class="quote-card">
+          <h2 data-editable="true">Trip Summary</h2>
+          <div class="quote-list">
+            <div class="quote-row">
+              <span>Prepared for:</span>
+              <strong data-editable="true">4 adults travelling as a private FIT / small private group</strong>
+            </div>
+            
+            <div class="quote-row">
+              <span>Nationality:</span>
+              <strong data-editable="true">VN</strong>
+            </div>
+            
+            <div class="quote-row">
+              <span>Dates:</span>
+              <strong data-editable="true">2026-09-20 to 2026-09-30</strong>
+            </div>
+            <div class="quote-row">
+              <span>Duration:</span>
+              <strong data-editable="true">5D4N</strong>
+            </div>
+            <div class="quote-row">
+              <span>Guests:</span>
+              <strong data-editable="true">4 Adults + 0 Children</strong>
+            </div>
+            <div class="quote-row">
+              <span>Travel Style:</span>
+              <strong data-editable="true">4-star</strong>
+            </div>
+            <div class="quote-row" style="border-bottom:none">
+              <span>Route:</span>
+              <strong data-editable="true">Tokyo – Tokyo to Kyoto – Kyoto – Kyoto / Departure</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Luxury Strip ── -->
+  <div class="luxury-strip no-print">
+    <div class="container">
+      <div class="strip-grid">
+        <div class="strip-card">
+          <span>Pace</span>
+          <strong data-editable="true">Relaxed & Balanced</strong>
+        </div>
+        <div class="strip-card">
+          <span>Service</span>
+          <strong data-editable="true">Fully Private</strong>
+        </div>
+        <div class="strip-card">
+          <span>Standard</span>
+          <strong data-editable="true">Handpicked Luxury</strong>
+        </div>
+        <div class="strip-card">
+          <span>Support</span>
+          <strong data-editable="true">24/7 Local Concierge</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Overview ── -->
+  <section id="overview">
+    <div class="container">
+      <div class="section-head">
+        <h2 data-editable="true">TRIP CONFIRMATION</h2>
+        <p data-editable="true">A refined booking itinerary mapping confirmed reservations and daily schedule detail.
+        </p>
+      </div>
+
+      <div class="two-col">
+        <div class="panel">
+          <h3 data-editable="true">Welcome to Vietnam</h3>
+          <div class="overview-body">
+            
+            <p data-editable="true">Field mapping: route = Tokyo - Kyoto, duration = 5 days / 4 nights, guests = 4 adults, market = VN, hotel standard = 4-star, budget target = VND 120,000,000. Assumptions used: the provided endDate matches the startDate, so the 5-day programme is treated as 2026-12-10 to 2026-12-14; exact hotel names, supplier confirmation, flight timings, and intercity transport mode remain to be confirmed. This draft follows the premium B2B style reflected in the uploaded partner materials: private services,...</p>
+            
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3 data-editable="true">Key Program Elements</h3>
+          <p data-editable="true">Every service on this program has been checked and verified for premium quality and
+            comfort.</p>
+          <ul style="list-style-type: none; padding-left: 0;">
+            
+            <li style="margin-bottom: 14px;">
+              <span class="num">01</span>
+              <strong style="display:block; font-size:16px; margin: 4px 0 2px;" data-editable="true"></strong>
+              <span data-editable="true">Arrival in Japan and a graceful beginning in Tokyo, where the programme opens with a calm handover into the city’s contemporary rhythm. The first evening is...</span>
+            </li>
+            
+            <li style="margin-bottom: 14px;">
+              <span class="num">02</span>
+              <strong style="display:block; font-size:16px; margin: 4px 0 2px;" data-editable="true"></strong>
+              <span data-editable="true">A refined Tokyo discovery day that captures the city’s modern elegance, curated sightseeing energy, and premium urban atmosphere. The day is best positioned as...</span>
+            </li>
+            
+            <li style="margin-bottom: 14px;">
+              <span class="num">03</span>
+              <strong style="display:block; font-size:16px; margin: 4px 0 2px;" data-editable="true"></strong>
+              <span data-editable="true">The programme transitions from Tokyo’s metropolitan pulse to Kyoto’s quieter heritage landscape. This is the signature movement day of the journey, ideally...</span>
+            </li>
+            
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Booked Services Overview ── -->
+  
+  <section id="services-overview">
+    <div class="container">
+      <div class="section-head">
+        <h2 data-editable="true">BOOKED SERVICES SUMMARY</h2>
+        <p data-editable="true">A quick overview of all confirmed reservations for your custom travel program.</p>
+      </div>
+
+      <div class="overview-grid">
+        
+
+        
+      </div>
+    </div>
+  </section>
+  
+
+  <!-- ── Destinations Gallery ── -->
+  <section id="gallery">
+    <div class="container">
+      <div class="gallery">
+        <div class="image-tile large" style="background-image: var(--img-1)">
+          <div class="image-caption">
+            <small>Highlight</small>
+            <strong>Vietnam Highlight</strong>
+          </div>
+        </div>
+        <div class="image-tile" style="background-image: var(--img-2)">
+          <div class="image-caption">
+            <small>Destination</small>
+            <strong>Beautiful Stop</strong>
+          </div>
+        </div>
+        <div class="image-tile" style="background-image: var(--img-3)">
+          <div class="image-caption">
+            <small>Experience</small>
+            <strong>Local Culture</strong>
+          </div>
+        </div>
+        <div class="image-tile" style="background-image: var(--img-4)">
+          <div class="image-caption">
+            <small>Journey</small>
+            <strong>Scenic Route</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Journey Map Section ── -->
+  <section id="route-map" class="no-print" style="padding: 72px 0;">
+    <div class="container">
+      <div class="section-head">
+        <h2>Your Journey Visualized</h2>
+        <p>An interactive map showing your curated path through Vietnam's iconic landmarks and luxury stopovers. Click
+          on a destination in the list or the map to explore highlights.</p>
+      </div>
+      <div class="map-layout">
+        <div id="map" class="map-container">
+          <div
+            style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--ivory-2); color: var(--muted); font-size: 14px;">
+            <span style="font-size: 24px; margin-bottom: 8px;">🗺️</span>
+            <span>Loading Interactive Route Map...</span>
+          </div>
+        </div>
+        <div class="map-sidebar" id="map-sidebar">
+          <!-- Sidebar cards will be generated by JavaScript -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Day by Day Timeline ── -->
+  <section id="itinerary">
+    <div class="container">
+      <div class="section-head">
+        <h2 data-editable="true">DAILY SCHEDULE DETAIL</h2>
+        <p data-editable="true">Your customized itinerary along with the associated confirmed travel services.</p>
+      </div>
+
+      <div class="itinerary">
+        
+        <div class="day">
+          <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+            <div class="day-label">Day 1</div>
+            <div style="font-size:12px; font-weight:700; color:var(--muted)">2026-09-20</div>
+          </div>
+
+          <div style="width: 100%;">
+            <span class="num">
+               Overnight: Tokyo
+              
+            </span>
+            <h3 data-editable="true"></h3>
+
+            <div class="day-description-box">
+              
+              <p data-editable="true">Arrival in Japan and a graceful beginning in Tokyo, where the programme opens with a calm handover into the city’s contemporary rhythm. The first evening is designed to be light, polished, and comfortable, allowing the guests to settle in without rush.</p>
+              
+            </div>
+
+            <!-- Match Booked Hotels staying tonight -->
+            
+
+            <!-- Match Booked Activities on this day -->
+            
+
+            <!-- Match Booked Transfers on this day -->
+            
+
+            <!-- Match Booked Flights on this day -->
+            
+
+            <!-- Match Booked Guides on this day -->
+            
+
+          </div>
+
+          <div class="day-meta">
+            <div>Tokyo</div>
+            
+          </div>
+        </div>
+        
+        <div class="day">
+          <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+            <div class="day-label">Day 2</div>
+            <div style="font-size:12px; font-weight:700; color:var(--muted)">2026-09-21</div>
+          </div>
+
+          <div style="width: 100%;">
+            <span class="num">
+               Overnight: Tokyo
+              
+            </span>
+            <h3 data-editable="true"></h3>
+
+            <div class="day-description-box">
+              
+              <p data-editable="true">A refined Tokyo discovery day that captures the city’s modern elegance, curated sightseeing energy, and premium urban atmosphere. The day is best positioned as an immersive yet well-paced introduction to the capital.</p>
+              
+            </div>
+
+            <!-- Match Booked Hotels staying tonight -->
+            
+
+            <!-- Match Booked Activities on this day -->
+            
+
+            <!-- Match Booked Transfers on this day -->
+            
+
+            <!-- Match Booked Flights on this day -->
+            
+
+            <!-- Match Booked Guides on this day -->
+            
+
+          </div>
+
+          <div class="day-meta">
+            <div>Tokyo</div>
+            
+          </div>
+        </div>
+        
+        <div class="day">
+          <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+            <div class="day-label">Day 3</div>
+            <div style="font-size:12px; font-weight:700; color:var(--muted)">2026-09-22</div>
+          </div>
+
+          <div style="width: 100%;">
+            <span class="num">
+               Overnight: Tokyo to Kyoto
+              
+            </span>
+            <h3 data-editable="true"></h3>
+
+            <div class="day-description-box">
+              
+              <p data-editable="true">The programme transitions from Tokyo’s metropolitan pulse to Kyoto’s quieter heritage landscape. This is the signature movement day of the journey, ideally arranged through a premium intercity transfer solution such as Shinkansen or an equivalent confirmed arrangement.</p>
+              
+            </div>
+
+            <!-- Match Booked Hotels staying tonight -->
+            
+
+            <!-- Match Booked Activities on this day -->
+            
+
+            <!-- Match Booked Transfers on this day -->
+            
+
+            <!-- Match Booked Flights on this day -->
+            
+
+            <!-- Match Booked Guides on this day -->
+            
+
+          </div>
+
+          <div class="day-meta">
+            <div>Tokyo to Kyoto</div>
+            
+          </div>
+        </div>
+        
+        <div class="day">
+          <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+            <div class="day-label">Day 4</div>
+            <div style="font-size:12px; font-weight:700; color:var(--muted)">2026-09-23</div>
+          </div>
+
+          <div style="width: 100%;">
+            <span class="num">
+               Overnight: Kyoto
+              
+            </span>
+            <h3 data-editable="true"></h3>
+
+            <div class="day-description-box">
+              
+              <p data-editable="true">Kyoto unfolds in a more intimate, cultural tone, offering a graceful counterpoint to Tokyo. This day is ideal for temple-lined streets, heritage ambience, and a premium sightseeing rhythm that feels immersive but never hurried.</p>
+              
+            </div>
+
+            <!-- Match Booked Hotels staying tonight -->
+            
+
+            <!-- Match Booked Activities on this day -->
+            
+
+            <!-- Match Booked Transfers on this day -->
+            
+
+            <!-- Match Booked Flights on this day -->
+            
+
+            <!-- Match Booked Guides on this day -->
+            
+
+          </div>
+
+          <div class="day-meta">
+            <div>Kyoto</div>
+            
+          </div>
+        </div>
+        
+        <div class="day">
+          <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+            <div class="day-label">Day 5</div>
+            <div style="font-size:12px; font-weight:700; color:var(--muted)">2026-09-24</div>
+          </div>
+
+          <div style="width: 100%;">
+            <span class="num">
+               Overnight: Kyoto / Departure
+              
+            </span>
+            <h3 data-editable="true"></h3>
+
+            <div class="day-description-box">
+              
+              <p data-editable="true">A measured final day with departure handling and the option to arrange an onward transfer or airport connection as needed. The programme closes in a calm, efficient manner that preserves the premium feel right through to the end.</p>
+              
+            </div>
+
+            <!-- Match Booked Hotels staying tonight -->
+            
+
+            <!-- Match Booked Activities on this day -->
+            
+
+            <!-- Match Booked Transfers on this day -->
+            
+
+            <!-- Match Booked Flights on this day -->
+            
+
+            <!-- Match Booked Guides on this day -->
+            
+
+          </div>
+
+          <div class="day-meta">
+            <div>Kyoto / Departure</div>
+            
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Pricing Section ── -->
+  
+  <section id="quotation" style="padding-top:0">
+    <div class="container">
+      <div class="pricing">
+        <h2 data-editable="true">B2B Net Price: VND 120,000,000</h2>
+        <p data-editable="true">Grand total for 4 Adults + 0 Children. Currency: VND.</p>
+        <div class="price-grid">
+          
+          <div class="price-card featured">
+            <span>4-star</span>
+            
+            <small style="color:rgba(255,255,255,.55);font-size:11px;display:block;margin-top:4px">Private 4-Star Programme for 4 Adults</small>
+            
+            <strong data-editable="true" style="font-size:28px" class="price-per-person-display">VND 30,000,000 / person</strong>
+            <small>per person</small><br>
+            <span style="font-size:13px;opacity:.8">Total: <span class="total-price-display">VND 120,000,000</span></span>
+            
+            <div style="margin-top:12px;font-size:10px;letter-spacing:.14em;color:#d8bd85;font-weight:800">✓ CONFIRMED
+              MAIN OPTION</div>
+            
+          </div>
+          
+        </div>
+      </div>
+    </div>
+  </section>
+  
+
+  <!-- ── Inclusions & Exclusions ── -->
+  <section id="inclusions" style="padding-top:0">
+    <div class="container">
+      <div class="two-col">
+        <div class="panel">
+          <h3 data-editable="true">What is Included</h3>
+          <ul>
+            
+            <li data-editable="true">Private airport pick-up and drop-off</li>
+            
+            <li data-editable="true">Private air-conditioned transportation throughout</li>
+            
+            <li data-editable="true">Accommodation with daily breakfast</li>
+            
+            <li data-editable="true">Meals as mentioned in the program</li>
+            
+            <li data-editable="true">All sightseeing entrance fees as mentioned</li>
+            
+            <li data-editable="true">English-speaking local guide</li>
+            
+          </ul>
+        </div>
+        <div class="panel">
+          <h3 data-editable="true">What is Excluded</h3>
+          <ul>
+            
+            <li data-editable="true">International flights</li>
+            
+            <li data-editable="true">Vietnam visa and visa processing fees</li>
+            
+            <li data-editable="true">Travel insurance</li>
+            
+            <li data-editable="true">Personal expenses, laundry, beverages and tips</li>
+            
+            <li data-editable="true">Optional activities not mentioned in the program</li>
+            
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Notes & Final Conditions ── -->
+  
+
+  <!-- ── CTA / Confirm ── -->
+  <section class="no-print">
+    <div class="container">
+      <div class="cta">
+        <div>
+          <h2 data-editable="true">Confirm and Prepare for Takeoff</h2>
+          <p data-editable="true">Your booking is fully secured. Please review the details above and let your concierge
+            know if any local timing needs adjusting before arrival.</p>
+        </div>
+
+        <div class="contact">
+          <label>Vietnam Concierge 24/7</label>
+          <div data-editable="true">+84 911 538 738</div>
+
+          <label>Email Support</label>
+          <div data-editable="true"><a href="mailto:sales@vietnamsafar.vn">sales@vietnamsafar.vn</a></div>
+
+          <label>Website</label>
+          <div data-editable="true"><a href="https://www.vietnamsafar.vn" target="_blank">www.vietnamsafar.vn</a></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Footer ── -->
+  <footer class="footer">
+    <div class="container">
+      <div class="subtle" data-editable="true">A refined city-and-heritage journey designed for smooth transitions,... — Detailed booking itinerary prepared for 4 adults travelling as a private FIT / small private group.</div>
+      <p style="margin-top: 14px; font-size: 11px; opacity: 0.6;">© 2026 Vietnam Safar - Discovery Asia Travel Group.
+        All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- ── Publish Bar ── -->
+  <div id="publish-bar" class="no-print">
+    <div class="pb-left">
+      <div class="pb-dot"></div>
+      <div class="pb-label">You are viewing the <strong>Live Booking Itinerary</strong>. Click on any text to edit
+        inline.</div>
+    </div>
+    <span id="publish-status"></span>
+    <button id="btn-publish" onclick="publishPage()">🚀 Publish to Web</button>
+    <button id="btn-approve" onclick="approvePage()">✅ Save & Approve</button>
+  </div>
+
+  <!-- ── Image Uploader (Hidden) ── -->
+  <input type="file" id="file-uploader" style="display: none;" accept="image/*" />
+
+  <style class="no-print">
+    /* Pricing Modal styles */
+    .pricing-modal {
+      display: none;
+      position: fixed;
+      z-index: 20000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(17, 19, 15, 0.65);
+      backdrop-filter: blur(8px);
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pricing-modal-content {
+      background-color: var(--card);
+      border: 2px solid var(--gold);
+      border-radius: 28px;
+      padding: 32px;
+      width: min(480px, 90%);
+      box-shadow: var(--shadow);
+      position: relative;
+      animation: modalSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalSlide {
+      from {
+        transform: translateY(24px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .pricing-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 22px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 12px;
+    }
+
+    .pricing-modal-header h3 {
+      font-family: var(--serif);
+      font-size: 24px;
+      color: var(--emerald);
+      margin: 0;
+    }
+
+    .pricing-modal-close {
+      background: none;
+      border: none;
+      font-size: 28px;
+      color: var(--muted);
+      cursor: pointer;
+      line-height: 1;
+      padding: 0;
+    }
+
+    .pricing-modal-close:hover {
+      color: var(--emerald);
+    }
+
+    .pricing-form-group {
+      margin-bottom: 18px;
+    }
+
+    .pricing-form-group label {
+      display: block;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--gold);
+      margin-bottom: 6px;
+    }
+
+    .pricing-form-group input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: white;
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .pricing-form-group input:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(183, 137, 75, 0.15);
+    }
+
+    .pricing-modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 28px;
+      border-top: 1px solid var(--line);
+      padding-top: 18px;
+    }
+
+    /* ── Removable Blocks ─────────────────────────────────────────── */
+    .removable-block {
+      position: relative;
+    }
+    .removable-block:hover {
+      outline: 2px dashed rgba(225, 29, 72, 0.5) !important;
+      outline-offset: -2px;
+    }
+    .block-delete-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #e11d48;
+      color: white;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      cursor: pointer;
+      z-index: 99;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 10px rgba(225, 29, 72, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .removable-block:hover > .block-delete-btn {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .block-delete-btn:hover {
+      background: #be123c;
+      transform: scale(1.1);
+    }
+    /* Special handling for table rows */
+    tr.removable-block:hover {
+      outline: none !important;
+      background: rgba(225, 29, 72, 0.05) !important;
+    }
+    tr.removable-block .block-delete-btn {
+      top: 50%;
+      right: 4px;
+      transform: translateY(-50%);
+    }
+    tr.removable-block:hover > td:last-child {
+      position: relative;
+    }
+  </style>
+
+  <!-- ── Pricing Editor Modal ── -->
+  <div id="pricing-modal" class="pricing-modal no-print" style="display:none">
+    <div class="pricing-modal-content">
+      <div class="pricing-modal-header">
+        <h3 id="pricing-modal-title">Edit Pricing</h3>
+        <button class="pricing-modal-close" onclick="closePricingModal()">&times;</button>
+      </div>
+      <div id="pricing-modal-body">
+
+        <!-- Hotel Fields -->
+        <div id="fields-hotel" class="fields-group" style="display:none">
+          <div class="pricing-form-group">
+            <label for="inp-hotel-rooms">Rooms</label>
+            <input type="number" id="inp-hotel-rooms" min="1" step="1">
+          </div>
+          <div class="pricing-form-group">
+            <label for="inp-hotel-nights">Nights</label>
+            <input type="number" id="inp-hotel-nights" min="1" step="1">
+          </div>
+          <div class="pricing-form-group">
+            <label for="inp-hotel-price">Price per Night (VND)</label>
+            <input type="number" id="inp-hotel-price" min="0" step="1">
+          </div>
+        </div>
+
+        <!-- Activity Fields -->
+        <div id="fields-activity" class="fields-group" style="display:none">
+          <div class="pricing-form-group">
+            <label for="inp-act-adults">Adult Pax</label>
+            <input type="number" id="inp-act-adults" min="0" step="1">
+          </div>
+          <div class="pricing-form-group">
+            <label for="inp-act-price-adult">Price per Adult (VND)</label>
+            <input type="number" id="inp-act-price-adult" min="0" step="1">
+          </div>
+          <div class="pricing-form-group">
+            <label for="inp-act-children">Child Pax</label>
+            <input type="number" id="inp-act-children" min="0" step="1">
+          </div>
+          <div class="pricing-form-group">
+            <label for="inp-act-price-child">Price per Child (VND)</label>
+            <input type="number" id="inp-act-price-child" min="0" step="1">
+          </div>
+        </div>
+
+        <!-- Transfer Fields -->
+        <div id="fields-transfer" class="fields-group" style="display:none">
+          <div class="pricing-form-group">
+            <label for="inp-tx-base">Base Cost (VND)</label>
+            <input type="number" id="inp-tx-base" min="0" step="1">
+          </div>
+          <div class="pricing-form-group">
+            <label for="inp-tx-tolls">Tolls / Route Fees (VND)</label>
+            <input type="number" id="inp-tx-tolls" min="0" step="1">
+          </div>
+          <div class="pricing-form-group">
+            <label for="inp-tx-overnight">Driver Overnight (VND)</label>
+            <input type="number" id="inp-tx-overnight" min="0" step="1">
+          </div>
+          <div class="pricing-form-group">
+            <label for="inp-tx-surcharges">Surcharges (VND)</label>
+            <input type="number" id="inp-tx-surcharges" min="0" step="1">
+          </div>
+          <div class="pricing-form-group">
+            <label for="inp-tx-vat">VAT / Taxes (VND)</label>
+            <input type="number" id="inp-tx-vat" min="0" step="1">
+          </div>
+        </div>
+
+        <!-- Flight Fields -->
+        <div id="fields-flight" class="fields-group" style="display:none">
+          <div class="pricing-form-group">
+            <label for="inp-flight-passengers">Passengers</label>
+            <input type="number" id="inp-flight-passengers" min="1" step="1">
+          </div>
+          <div class="pricing-form-group">
+            <label for="inp-flight-price">Price per Ticket (VND)</label>
+            <input type="number" id="inp-flight-price" min="0" step="1">
+          </div>
+        </div>
+
+        <!-- Guide Fields -->
+        <div id="fields-guide" class="fields-group" style="display:none">
+          <div class="pricing-form-group">
+            <label for="inp-guide-days">Days</label>
+            <input type="number" id="inp-guide-days" min="1" step="1">
+          </div>
+          <div class="pricing-form-group">
+            <label for="inp-guide-rate">Price per Day (VND)</label>
+            <input type="number" id="inp-guide-rate" min="0" step="1">
+          </div>
+        </div>
+
+      </div>
+      <div class="pricing-modal-actions">
+        <button class="btn outline" style="color:var(--ink);border:1px solid var(--line);background:none"
+          onclick="closePricingModal()">Cancel</button>
+        <button class="btn gold" onclick="savePricingModal()">Save Formula</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Scripts ── -->
+  <script class="no-print">
+    const ITINERARY_ID = "iti_aa2d37267540";
+    const CURRENCY_SYMBOL = "đ";
+
+
+    // Setup editable attributes
+    document.querySelectorAll('[data-editable]').forEach(el => {
+      el.contentEditable = 'true';
+    });
+
+    // Custom background image change logic
+    let currentCssVar = null;
+    const fileInput = document.getElementById('file-uploader');
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file && currentCssVar) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          document.documentElement.style.setProperty(currentCssVar, `url('${event.target.result}')`);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    function addImageChanger(selector, cssVar) {
+      const el = document.querySelector(selector);
+      if (!el) return;
+
+      const btn = document.createElement('button');
+      btn.className = 'img-change-btn';
+      btn.textContent = '📸 Change Image';
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        currentCssVar = cssVar;
+        fileInput.click();
+      };
+      if (window.getComputedStyle(el).position === 'static') el.style.position = 'relative';
+      el.appendChild(btn);
+    }
+
+    function initImageChangers() {
+      addImageChanger('.hero', '--hero-img');
+      const tiles = document.querySelectorAll('.gallery .image-tile');
+      tiles.forEach((tile, index) => {
+        addImageChanger(`.gallery .image-tile:nth-child(${index + 1})`, `--img-${index + 1}`);
+      });
+    }
+
+    function initRemovableBlocks() {
+      const removableSelectors = [
+        'section',
+        '.day',
+        '.experience',
+        '.image-tile',
+        '.strip-card',
+        '.price-card',
+        '#hotels tbody tr',
+        '.faq-item',
+        '.testimonial-card',
+        '#inclusions-list li',
+        '#exclusions-list li',
+        '.quote-row',
+        '.inline-social-proof'
+      ];
+
+      document.querySelectorAll(removableSelectors.join(', ')).forEach(el => {
+        if (el.classList.contains('removable-block')) return;
+        el.classList.add('removable-block');
+
+        const btn = document.createElement('div');
+        btn.innerHTML = '🗑️';
+        btn.className = 'block-delete-btn no-print';
+        btn.title = 'Remove this block';
+
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          if (confirm('Remove this block? This action cannot be undone.')) {
+            el.remove();
+            recalculateGrandTotal(); // Re-calculate in case a pricing card is deleted
+          }
+        };
+
+        if (el.tagName === 'TR') {
+          const lastTd = el.lastElementChild;
+          if (lastTd) {
+            lastTd.style.position = 'relative';
+            lastTd.appendChild(btn);
+          }
+        } else {
+          el.appendChild(btn);
+        }
+      });
+    }
+
+    // JS for pricing modal and formula editor
+    let activeCard = null;
+
+    const GUESTS_ADULTS = parseInt("4") || 0;
+    const GUESTS_CHILDREN = parseInt("0") || 0;
+    const TOTAL_GUESTS = GUESTS_ADULTS + GUESTS_CHILDREN || 1;
+
+    function formatNumber(num) {
+      return Math.round(num).toLocaleString('en-US');
+    }
+
+    function initPricingClickHandlers() {
+      document.querySelectorAll('.price-formula').forEach(formulaSpan => {
+        formulaSpan.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const card = formulaSpan.closest('.service-card');
+          if (card) {
+            openPricingModal(card);
+          }
+        });
+      });
+    }
+
+    function openPricingModal(card) {
+      activeCard = card;
+      const type = card.dataset.type;
+
+      document.querySelectorAll('.fields-group').forEach(group => {
+        group.style.display = 'none';
+      });
+
+      const fieldsGroup = document.getElementById(`fields-${type}`);
+      if (fieldsGroup) {
+        fieldsGroup.style.display = 'block';
+      }
+
+      const titleEl = document.getElementById('pricing-modal-title');
+      const cardTitle = card.querySelector('h4').textContent.trim();
+      titleEl.textContent = `Edit Formula: ${cardTitle}`;
+
+      if (type === 'hotel') {
+        document.getElementById('inp-hotel-rooms').value = card.dataset.rooms || 1;
+        document.getElementById('inp-hotel-nights').value = card.dataset.nights || 0;
+        document.getElementById('inp-hotel-price').value = Math.round(card.dataset.pricePerNight || 0);
+      } else if (type === 'activity') {
+        document.getElementById('inp-act-adults').value = card.dataset.adults || GUESTS_ADULTS;
+        document.getElementById('inp-act-price-adult').value = Math.round(card.dataset.priceAdult || 0);
+        document.getElementById('inp-act-children').value = card.dataset.children || GUESTS_CHILDREN;
+        document.getElementById('inp-act-price-child').value = Math.round(card.dataset.priceChild || 0);
+      } else if (type === 'transfer') {
+        document.getElementById('inp-tx-base').value = Math.round(card.dataset.baseCost || 0);
+        document.getElementById('inp-tx-tolls').value = Math.round(card.dataset.tolls || 0);
+        document.getElementById('inp-tx-overnight').value = Math.round(card.dataset.overnight || 0);
+        document.getElementById('inp-tx-surcharges').value = Math.round(card.dataset.surcharges || 0);
+        document.getElementById('inp-tx-vat').value = Math.round(card.dataset.vat || 0);
+      } else if (type === 'flight') {
+        document.getElementById('inp-flight-passengers').value = card.dataset.passengers || TOTAL_GUESTS;
+        document.getElementById('inp-flight-price').value = Math.round(card.dataset.priceTicket || 0);
+      } else if (type === 'guide') {
+        document.getElementById('inp-guide-days').value = card.dataset.days || 0;
+        document.getElementById('inp-guide-rate').value = Math.round(card.dataset.priceDay || 0);
+      }
+
+      const modal = document.getElementById('pricing-modal');
+      modal.style.display = 'flex';
+    }
+
+    function closePricingModal() {
+      const modal = document.getElementById('pricing-modal');
+      modal.style.display = 'none';
+      activeCard = null;
+    }
+
+    function savePricingModal() {
+      if (!activeCard) return;
+      const type = activeCard.dataset.type;
+      const index = activeCard.dataset.index;
+
+      // Find all matching cards
+      const matchingCards = document.querySelectorAll(`.service-card[data-type="${type}"][data-index="${index}"]`);
+
+      matchingCards.forEach(card => {
+        if (type === 'hotel') {
+          card.dataset.rooms = document.getElementById('inp-hotel-rooms').value;
+          card.dataset.nights = document.getElementById('inp-hotel-nights').value;
+          card.dataset.pricePerNight = document.getElementById('inp-hotel-price').value;
+        } else if (type === 'activity') {
+          card.dataset.adults = document.getElementById('inp-act-adults').value;
+          card.dataset.priceAdult = document.getElementById('inp-act-price-adult').value;
+          card.dataset.children = document.getElementById('inp-act-children').value;
+          card.dataset.priceChild = document.getElementById('inp-act-price-child').value;
+        } else if (type === 'transfer') {
+          card.dataset.baseCost = document.getElementById('inp-tx-base').value;
+          card.dataset.tolls = document.getElementById('inp-tx-tolls').value;
+          card.dataset.overnight = document.getElementById('inp-tx-overnight').value;
+          card.dataset.surcharges = document.getElementById('inp-tx-surcharges').value;
+          card.dataset.vat = document.getElementById('inp-tx-vat').value;
+        } else if (type === 'flight') {
+          card.dataset.passengers = document.getElementById('inp-flight-passengers').value;
+          card.dataset.priceTicket = document.getElementById('inp-flight-price').value;
+        } else if (type === 'guide') {
+          card.dataset.days = document.getElementById('inp-guide-days').value;
+          card.dataset.priceDay = document.getElementById('inp-guide-rate').value;
+        }
+
+        recalculateCard(card);
+      });
+
+      recalculateGrandTotal();
+      closePricingModal();
+    }
+
+    function recalculateCard(card) {
+      const type = card.dataset.type;
+
+      if (type === 'hotel') {
+        const rooms = parseInt(card.dataset.rooms) || 0;
+        const nights = parseInt(card.dataset.nights) || 0;
+        const price = parseFloat(card.dataset.pricePerNight) || 0;
+        const total = rooms * nights * price;
+
+        const roomsVal = card.querySelector('.rooms-val');
+        const nightsVal = card.querySelector('.nights-val');
+        const priceVal = card.querySelector('.price-val');
+        const totalVal = card.querySelector('.total-val');
+
+        if (roomsVal) roomsVal.textContent = rooms;
+        if (nightsVal) nightsVal.textContent = nights;
+        if (priceVal) priceVal.textContent = formatNumber(price);
+        if (totalVal) totalVal.textContent = formatNumber(total);
+
+      } else if (type === 'activity') {
+        const priceAdult = parseFloat(card.dataset.priceAdult) || 0;
+        const priceChild = parseFloat(card.dataset.priceChild) || 0;
+        const adults = parseInt(card.dataset.adults) || 0;
+        const children = parseInt(card.dataset.children) || 0;
+        const total = (priceAdult * adults) + (priceChild * children);
+
+        const adultsVal = card.querySelector('.adults-val');
+        const priceAdultVal = card.querySelector('.price-adult-val');
+        const childrenVal = card.querySelector('.children-val');
+        const priceChildVal = card.querySelector('.price-child-val');
+        const totalVal = card.querySelector('.total-val');
+
+        if (adultsVal) adultsVal.textContent = adults;
+        if (priceAdultVal) priceAdultVal.textContent = formatNumber(priceAdult);
+        if (childrenVal) childrenVal.textContent = children;
+        if (priceChildVal) priceChildVal.textContent = formatNumber(priceChild);
+        if (totalVal) totalVal.textContent = formatNumber(total);
+
+      } else if (type === 'transfer') {
+        const base = parseFloat(card.dataset.baseCost) || 0;
+        const tolls = parseFloat(card.dataset.tolls) || 0;
+        const overnight = parseFloat(card.dataset.overnight) || 0;
+        const surcharges = parseFloat(card.dataset.surcharges) || 0;
+        const vat = parseFloat(card.dataset.vat) || 0;
+        const total = base + tolls + overnight + surcharges + vat;
+
+        const baseVal = card.querySelector('.base-val');
+        const feesVal = card.querySelector('.fees-val');
+        const totalVal = card.querySelector('.total-val');
+
+        if (baseVal) baseVal.textContent = formatNumber(base);
+        if (feesVal) feesVal.textContent = formatNumber(tolls + overnight + surcharges + vat);
+        if (totalVal) totalVal.textContent = formatNumber(total);
+
+      } else if (type === 'flight') {
+        const ticket = parseFloat(card.dataset.priceTicket) || 0;
+        const passengers = parseInt(card.dataset.passengers) || 0;
+        const total = ticket * passengers;
+
+        const passengersVal = card.querySelector('.passengers-val');
+        const priceTicketVal = card.querySelector('.price-ticket-val');
+        const totalVal = card.querySelector('.total-val');
+
+        if (passengersVal) passengersVal.textContent = passengers;
+        if (priceTicketVal) priceTicketVal.textContent = formatNumber(ticket);
+        if (totalVal) totalVal.textContent = formatNumber(total);
+
+      } else if (type === 'guide') {
+        const rate = parseFloat(card.dataset.priceDay) || 0;
+        const days = parseInt(card.dataset.days) || 0;
+        const total = rate * days;
+
+        const daysVal = card.querySelector('.days-val');
+        const priceDayVal = card.querySelector('.price-day-val');
+        const totalVal = card.querySelector('.total-val');
+
+        if (daysVal) daysVal.textContent = days;
+        if (priceDayVal) priceDayVal.textContent = formatNumber(rate);
+        if (totalVal) totalVal.textContent = formatNumber(total);
+      }
+    }
+
+    function recalculateGrandTotal() {
+      let grandTotal = 0;
+      const countedKeys = new Set();
+
+      document.querySelectorAll('.service-card').forEach(card => {
+        const type = card.dataset.type;
+        const index = card.dataset.index;
+        const key = `${type}-${index}`;
+        if (countedKeys.has(key)) {
+          return;
+        }
+        countedKeys.add(key);
+
+        let cardTotal = 0;
+        if (type === 'hotel') {
+          const rooms = parseInt(card.dataset.rooms) || 0;
+          const nights = parseInt(card.dataset.nights) || 0;
+          const price = parseFloat(card.dataset.pricePerNight) || 0;
+          cardTotal = rooms * nights * price;
+        } else if (type === 'activity') {
+          const priceAdult = parseFloat(card.dataset.priceAdult) || 0;
+          const priceChild = parseFloat(card.dataset.priceChild) || 0;
+          const adults = parseInt(card.dataset.adults) || 0;
+          const children = parseInt(card.dataset.children) || 0;
+          cardTotal = (priceAdult * adults) + (priceChild * children);
+        } else if (type === 'transfer') {
+          const base = parseFloat(card.dataset.baseCost) || 0;
+          const tolls = parseFloat(card.dataset.tolls) || 0;
+          const overnight = parseFloat(card.dataset.overnight) || 0;
+          const surcharges = parseFloat(card.dataset.surcharges) || 0;
+          const vat = parseFloat(card.dataset.vat) || 0;
+          cardTotal = base + tolls + overnight + surcharges + vat;
+        } else if (type === 'flight') {
+          const ticket = parseFloat(card.dataset.priceTicket) || 0;
+          const passengers = parseInt(card.dataset.passengers) || 0;
+          cardTotal = ticket * passengers;
+        } else if (type === 'guide') {
+          const rate = parseFloat(card.dataset.priceDay) || 0;
+          const days = parseInt(card.dataset.days) || 0;
+          cardTotal = rate * days;
+        }
+        grandTotal += cardTotal;
+      });
+
+      const featuredPriceCard = document.querySelector('.price-card.featured') || document.querySelector('.price-card');
+      if (featuredPriceCard) {
+        const perPersonVal = featuredPriceCard.querySelector('.price-per-person-display');
+        const totalVal = featuredPriceCard.querySelector('.total-price-display');
+        const divisor = GUESTS_ADULTS || TOTAL_GUESTS || 1;
+        const perPersonAmount = grandTotal / divisor;
+
+        if (perPersonVal) {
+          perPersonVal.textContent = `${CURRENCY_SYMBOL}${formatNumber(perPersonAmount)} per adult`;
+        }
+        if (totalVal) {
+          totalVal.textContent = `${CURRENCY_SYMBOL}${formatNumber(grandTotal)} total`;
+        }
+      }
+
+      const pricingHeading = document.querySelector('#quotation h2');
+      if (pricingHeading) {
+        pricingHeading.textContent = `B2B Net Price: ${CURRENCY_SYMBOL}${formatNumber(grandTotal)} total`;
+      }
+    }
+
+    initPricingClickHandlers();
+    recalculateGrandTotal();
+    initImageChangers();
+    initRemovableBlocks();
+
+    async function publishPage() {
+      const btn = document.getElementById('btn-publish');
+      const status = document.getElementById('publish-status');
+      const bar = document.getElementById('publish-bar');
+
+      bar.style.display = 'none';
+      document.querySelectorAll('[data-editable]').forEach(el => el.removeAttribute('contenteditable'));
+      document.querySelectorAll('.img-change-btn').forEach(el => el.remove());
+      document.querySelectorAll('.block-delete-btn').forEach(el => el.remove());
+      document.querySelectorAll('.removable-block').forEach(el => el.classList.remove('removable-block'));
+
+      const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+
+      bar.style.display = '';
+      document.querySelectorAll('[data-editable]').forEach(el => { el.contentEditable = 'true'; });
+      initImageChangers();
+      initRemovableBlocks();
+
+      btn.disabled = true;
+      btn.textContent = '⏳ Publishing...';
+      status.textContent = 'Committing changes...';
+
+      try {
+        const res = await fetch(`/itineraries/${ITINERARY_ID}/publish`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ html })
+        });
+        const data = await res.json();
+        if (data.published_url) {
+          status.innerHTML = `✅ <a href="${data.published_url}" target="_blank" style="color:#d8bd85">${data.published_url}</a>`;
+          btn.textContent = '🔁 Re-publish';
+        } else {
+          status.textContent = '❌ ' + (data.detail || 'Publish failed');
+          btn.textContent = '🚀 Publish to Web';
+        }
+      } catch (e) {
+        status.textContent = '❌ ' + e.message;
+        btn.textContent = '🚀 Publish to Web';
+      }
+      btn.disabled = false;
+    }
+
+    async function approvePage() {
+      const btn = document.getElementById('btn-approve');
+      const publishBtn = document.getElementById('btn-publish');
+      const status = document.getElementById('publish-status');
+      const bar = document.getElementById('publish-bar');
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token') || '';
+      if (!token) {
+        alert('Missing authentication token in URL query parameter. Cannot approve.');
+        return;
+      }
+
+      bar.style.display = 'none';
+      document.querySelectorAll('[data-editable]').forEach(el => el.removeAttribute('contenteditable'));
+      document.querySelectorAll('.img-change-btn').forEach(el => el.remove());
+      document.querySelectorAll('.block-delete-btn').forEach(el => el.remove());
+      document.querySelectorAll('.removable-block').forEach(el => el.classList.remove('removable-block'));
+
+      const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+
+      bar.style.display = '';
+      document.querySelectorAll('[data-editable]').forEach(el => { el.contentEditable = 'true'; });
+      initImageChangers();
+      initRemovableBlocks();
+
+      btn.disabled = true;
+      publishBtn.disabled = true;
+      btn.textContent = '⏳ Approving...';
+      status.textContent = 'Submitting approval...';
+
+      try {
+        const res = await fetch(`/itineraries/${ITINERARY_ID}/approve`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ html, token })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          status.innerHTML = `✅ Approved successfully!`;
+          btn.textContent = 'Approved';
+          alert('Itinerary approved successfully!');
+        } else {
+          status.textContent = '❌ ' + (data.detail || 'Approval failed');
+          btn.textContent = '✅ Save & Approve';
+        }
+      } catch (e) {
+        status.textContent = '❌ ' + e.message;
+        btn.textContent = '✅ Save & Approve';
+      }
+      btn.disabled = false;
+      publishBtn.disabled = false;
+    }
+  </script>
+
+  <script id="itinerary-data" type="application/json">
+    [{"activities": [""], "booked_activities": [], "booked_flights": [], "booked_guides": [], "booked_hotels": [], "booked_transfers": [], "date": "2026-09-20", "dayNumber": 1, "description": ["Arrival in Japan and a graceful beginning in Tokyo, where the programme opens with a calm handover into the city\u2019s contemporary rhythm. The first evening is designed to be light, polished, and comfortable, allowing the guests to settle in without rush."], "destinations": ["Tokyo"], "meals": [], "notes": [], "optionalActivities": [], "overnight": "Tokyo", "title": ""}, {"activities": [""], "booked_activities": [], "booked_flights": [], "booked_guides": [], "booked_hotels": [], "booked_transfers": [], "date": "2026-09-21", "dayNumber": 2, "description": ["A refined Tokyo discovery day that captures the city\u2019s modern elegance, curated sightseeing energy, and premium urban atmosphere. The day is best positioned as an immersive yet well-paced introduction to the capital."], "destinations": ["Tokyo"], "meals": [], "notes": [], "optionalActivities": [], "overnight": "Tokyo", "title": ""}, {"activities": [""], "booked_activities": [], "booked_flights": [], "booked_guides": [], "booked_hotels": [], "booked_transfers": [], "date": "2026-09-22", "dayNumber": 3, "description": ["The programme transitions from Tokyo\u2019s metropolitan pulse to Kyoto\u2019s quieter heritage landscape. This is the signature movement day of the journey, ideally arranged through a premium intercity transfer solution such as Shinkansen or an equivalent confirmed arrangement."], "destinations": ["Tokyo to Kyoto"], "meals": [], "notes": [], "optionalActivities": [], "overnight": "Tokyo to Kyoto", "title": ""}, {"activities": [""], "booked_activities": [], "booked_flights": [], "booked_guides": [], "booked_hotels": [], "booked_transfers": [], "date": "2026-09-23", "dayNumber": 4, "description": ["Kyoto unfolds in a more intimate, cultural tone, offering a graceful counterpoint to Tokyo. This day is ideal for temple-lined streets, heritage ambience, and a premium sightseeing rhythm that feels immersive but never hurried."], "destinations": ["Kyoto"], "meals": [], "notes": [], "optionalActivities": [], "overnight": "Kyoto", "title": ""}, {"activities": [""], "booked_activities": [], "booked_flights": [], "booked_guides": [], "booked_hotels": [], "booked_transfers": [], "date": "2026-09-24", "dayNumber": 5, "description": ["A measured final day with departure handling and the option to arrange an onward transfer or airport connection as needed. The programme closes in a calm, efficient manner that preserves the premium feel right through to the end."], "destinations": ["Kyoto / Departure"], "meals": [], "notes": [], "optionalActivities": [], "overnight": "Kyoto / Departure", "title": ""}]
+  </script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const DEST_COORDS = {
+        "hanoi": [21.0285, 105.8542],
+        "ha noi": [21.0285, 105.8542],
+        "ninh binh": [20.2539, 105.9750],
+        "ninhbinh": [20.2539, 105.9750],
+        "ha long": [20.9599, 107.0436],
+        "halong": [20.9599, 107.0436],
+        "ha long bay": [20.9599, 107.0436],
+        "halong bay": [20.9599, 107.0436],
+        "ho chi minh": [10.8231, 106.6297],
+        "hcmc": [10.8231, 106.6297],
+        "ho chi minh city": [10.8231, 106.6297],
+        "saigon": [10.8231, 106.6297],
+        "sai gon": [10.8231, 106.6297],
+        "mekong": [10.2435, 106.3756],
+        "mekong delta": [10.2435, 106.3756],
+        "ben tre": [10.2401, 106.3768],
+        "bentre": [10.2401, 106.3768],
+        "my tho": [10.3592, 106.3653],
+        "mytho": [10.3592, 106.3653],
+        "hue": [16.4637, 107.5909],
+        "da nang": [16.0544, 108.2022],
+        "danang": [16.0544, 108.2022],
+        "hoi an": [15.8801, 108.3380],
+        "hoian": [15.8801, 108.3380],
+        "sapa": [22.3364, 103.8438],
+        "phu quoc": [10.2899, 103.9840],
+        "nha trang": [12.2388, 109.1967],
+        "da lat": [11.9404, 108.4583]
+      };
+
+      function findCoordinates(destText) {
+        if (!destText) return null;
+        const norm = destText.toLowerCase()
+          .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        for (const [key, coords] of Object.entries(DEST_COORDS)) {
+          if (norm.includes(key)) return coords;
+        }
+        return null;
+      }
+
+      function getDistance(c1, c2) {
+        const R = 6371;
+        const dLat = (c2[0] - c1[0]) * Math.PI / 180;
+        const dLon = (c2[1] - c1[1]) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos(c1[0] * Math.PI / 180) * Math.cos(c2[0] * Math.PI / 180) *
+          Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+      }
+
+      function getBezierPoints(p1, p2, count = 30) {
+        const midLat = (p1[0] + p2[0]) / 2;
+        const midLng = (p1[1] + p2[1]) / 2;
+        const dx = p2[1] - p1[1];
+        const dy = p2[0] - p1[0];
+        const len = Math.sqrt(dx * dx + dy * dy);
+        const scale = len * 0.15;
+        const ctrlLat = midLat - (dx / len) * scale;
+        const ctrlLng = midLng + (dy / len) * scale;
+        const points = [];
+        for (let i = 0; i <= count; i++) {
+          const t = i / count;
+          const lat = (1 - t) * (1 - t) * p1[0] + 2 * (1 - t) * t * ctrlLat + t * t * p2[0];
+          const lng = (1 - t) * (1 - t) * p1[1] + 2 * (1 - t) * t * ctrlLng + t * t * p2[1];
+          points.push([lat, lng]);
+        }
+        return points;
+      }
+
+      const dataEl = document.getElementById('itinerary-data');
+      if (!dataEl) return;
+      const rawDays = JSON.parse(dataEl.textContent);
+
+      const daysData = rawDays.map(day => {
+        let dest = "";
+        if (Array.isArray(day.destinations) && day.destinations.length > 0) {
+          dest = day.destinations[0];
+        } else if (typeof day.destination === 'string') {
+          dest = day.destination;
+        } else if (typeof day.overnight === 'string') {
+          dest = day.overnight;
+        }
+
+        let desc = "";
+        if (Array.isArray(day.description)) {
+          desc = day.description.join(' ');
+        } else if (typeof day.description === 'string') {
+          desc = day.description;
+        } else if (typeof day.summary === 'string') {
+          desc = day.summary;
+        }
+
+        return {
+          dayNumber: day.dayNumber,
+          destination: dest,
+          title: day.title || `Day ${day.dayNumber}`,
+          description: desc,
+          overnight: day.overnight || ""
+        };
+      });
+
+      const mapDestinations = [];
+      const coordPoints = [];
+
+      daysData.forEach(day => {
+        const coords = findCoordinates(day.destination);
+        if (!coords) return;
+
+        const last = mapDestinations[mapDestinations.length - 1];
+        if (!last || last.coords[0] !== coords[0] || last.coords[1] !== coords[1]) {
+          mapDestinations.push({
+            name: day.destination.split(/->|-|\|/)[0].trim(),
+            coords: coords,
+            days: [day.dayNumber],
+            titles: [day.title]
+          });
+          coordPoints.push(coords);
+        } else {
+          last.days.push(day.dayNumber);
+          last.titles.push(day.title);
+        }
+      });
+
+      if (mapDestinations.length === 0) {
+        document.getElementById('route-map').style.display = 'none';
+        return;
+      }
+
+      const map = L.map('map', {
+        zoomControl: true,
+        scrollWheelZoom: false
+      });
+
+      // Thay thế bằng Tile của Google Maps (có hỗ trợ tiếng Việt & hiển thị Hoàng Sa, Trường Sa) 
+      // vì URL eKMap cần có API Key thương mại mới hoạt động được.
+      const vietmanMapUrl = 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi'; 
+      L.tileLayer(vietmanMapUrl, {
+        maxZoom: 18,
+        attribution: '&copy; Bản đồ chủ quyền Việt Nam | Dữ liệu bản đồ &copy; Google'
+      }).addTo(map);
+
+      const sidebarContainer = document.getElementById('map-sidebar');
+      sidebarContainer.innerHTML = '';
+
+      const markers = [];
+      const polylines = [];
+
+      mapDestinations.forEach((dest, idx) => {
+        const dayRangeStr = dest.days.length > 1
+          ? `Days ${dest.days[0]}-${dest.days[dest.days.length - 1]}`
+          : `Day ${dest.days[0]}`;
+
+        const html = `
+          <div class="custom-marker" id="marker-wrapper-${idx}">
+            <div class="marker-pulse"></div>
+            <div class="marker-core">${idx + 1}</div>
+          </div>
+        `;
+
+        const customIcon = L.divIcon({
+          html: html,
+          className: '',
+          iconSize: [28, 28],
+          iconAnchor: [14, 14]
+        });
+
+        const popupContent = `
+          <div class="map-popup">
+            <h4>${dest.name}</h4>
+            <strong style="color:var(--gold); font-size: 11px;">${dayRangeStr.toUpperCase()}</strong>
+            <p style="margin: 6px 0 0; font-size:12px; color:var(--muted);">${dest.titles[0]}</p>
+          </div>
+        `;
+
+        const marker = L.marker(dest.coords, { icon: customIcon })
+          .addTo(map)
+          .bindPopup(popupContent, { offset: [0, -10] });
+
+        markers.push(marker);
+
+        const card = document.createElement('div');
+        card.className = `sidebar-card ${idx === 0 ? 'active' : ''}`;
+        card.innerHTML = `
+          <span class="days-badge">${dayRangeStr}</span>
+          <h4>${idx + 1}. ${dest.name}</h4>
+          <p>${dest.titles[0]}</p>
+        `;
+
+        card.addEventListener('click', () => {
+          selectDestination(idx);
+        });
+
+        sidebarContainer.appendChild(card);
+        dest.cardEl = card;
+      });
+
+      for (let i = 0; i < coordPoints.length - 1; i++) {
+        const p1 = coordPoints[i];
+        const p2 = coordPoints[i + 1];
+        const dist = getDistance(p1, p2);
+
+        let pathPoints;
+        let isFlight = dist > 300;
+
+        if (isFlight) {
+          pathPoints = getBezierPoints(p1, p2);
+        } else {
+          pathPoints = [p1, p2];
+        }
+
+        const lineOptions = {
+          color: isFlight ? 'var(--gold)' : 'var(--emerald)',
+          weight: 3,
+          opacity: 0.8,
+          dashArray: isFlight ? '6, 8' : 'none'
+        };
+
+        const polyline = L.polyline(pathPoints, lineOptions).addTo(map);
+        polylines.push(polyline);
+      }
+
+      map.fitBounds(L.latLngBounds(coordPoints), {
+        padding: [50, 50],
+        maxZoom: 12
+      });
+
+      function selectDestination(index) {
+        const dest = mapDestinations[index];
+        map.setView(dest.coords, Math.max(map.getZoom(), 8), { animate: true });
+        markers[index].openPopup();
+
+        document.querySelectorAll('.sidebar-card').forEach(c => c.classList.remove('active'));
+        dest.cardEl.classList.add('active');
+        dest.cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+        document.querySelectorAll('.custom-marker').forEach(m => m.classList.remove('active'));
+        const activeMarkerEl = document.getElementById(`marker-wrapper-${index}`);
+        if (activeMarkerEl) {
+          activeMarkerEl.classList.add('active');
+        }
+      }
+
+      markers.forEach((marker, idx) => {
+        marker.on('click', () => {
+          selectDestination(idx);
+        });
+      });
+    });
+  </script>
+
+  <!-- PWA Notification Prompt -->
+  <div id="pwa-notification-prompt" class="notification-prompt-card no-print">
+    <div class="notification-prompt-header">
+      <div class="notification-prompt-title">
+        <span>🔔</span> Stay Updated
+      </div>
+      <button class="notification-prompt-close" id="pwa-notification-close">&times;</button>
+    </div>
+    <div class="notification-prompt-body">
+      Enable notifications to get live updates for your itinerary, guide details, and booking status.
+    </div>
+    <div class="notification-prompt-actions">
+      <button class="notification-btn-later" id="pwa-notification-later">Later</button>
+      <button class="notification-btn-allow" id="pwa-notification-allow">Enable</button>
+    </div>
+  </div>
+
+  <!-- Notification Success Toast -->
+  <div id="pwa-notification-success" class="notification-success-card no-print">
+    <div class="notification-success-icon">✓</div>
+    <div class="notification-success-text">
+      <h4>Notifications Active</h4>
+      <p>You'll receive live itinerary updates here.</p>
+    </div>
+  </div>
+
+  <!-- PWA & Notifications Controller -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // Register Service Worker
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('SW registered:', reg.scope))
+            .catch(err => console.error('SW registration failed:', err));
+        });
+      }
+
+      const promptCard = document.getElementById('pwa-notification-prompt');
+      const successCard = document.getElementById('pwa-notification-success');
+      const allowBtn = document.getElementById('pwa-notification-allow');
+      const laterBtn = document.getElementById('pwa-notification-later');
+      const closeBtn = document.getElementById('pwa-notification-close');
+      const navBellBtn = document.getElementById('nav-notification-btn');
+
+      function updateBellState() {
+        if (!navBellBtn) return;
+        if (Notification.permission === 'granted') {
+          navBellBtn.style.color = 'var(--gold)';
+          navBellBtn.style.borderColor = 'var(--gold)';
+          navBellBtn.title = 'Notifications Active (Click to test)';
+        } else if (Notification.permission === 'denied') {
+          navBellBtn.style.color = '#e11d48';
+          navBellBtn.style.borderColor = '#e11d48';
+          navBellBtn.title = 'Notifications Blocked';
+        } else {
+          navBellBtn.style.color = '';
+          navBellBtn.style.borderColor = '';
+          navBellBtn.title = 'Enable Notifications';
+        }
+      }
+
+      if ('Notification' in window) {
+        updateBellState();
+        const isDismissed = localStorage.getItem('pwa_notif_dismissed');
+        if (Notification.permission === 'default' && !isDismissed) {
+          setTimeout(() => {
+            promptCard.classList.add('show');
+          }, 3000);
+        }
+      } else {
+        if (promptCard) promptCard.style.display = 'none';
+        if (navBellBtn) navBellBtn.style.display = 'none';
+      }
+
+      function requestNotifPermission() {
+        Notification.requestPermission().then(permission => {
+          updateBellState();
+          if (permission === 'granted') {
+            if (promptCard) promptCard.classList.remove('show');
+            showSuccessToast();
+            triggerTestNotification("Welcome to Vietnam Safar!", "Notifications are active. We'll update you on your itinerary status here.");
+          } else {
+            if (promptCard) promptCard.classList.remove('show');
+          }
+        });
+      }
+
+      function showSuccessToast() {
+        if (!successCard) return;
+        successCard.classList.add('show');
+        setTimeout(() => {
+          successCard.classList.remove('show');
+        }, 4000);
+      }
+
+      function triggerTestNotification(title, body) {
+        if (Notification.permission !== 'granted') return;
+
+        const options = {
+          body: body,
+          icon: '/assets/vietnam-safar-logo.png',
+          badge: '/assets/vietnam-safar-logo.png',
+          vibrate: [100, 50, 100],
+          data: {
+            url: window.location.href
+          }
+        };
+
+        if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+          navigator.serviceWorker.ready.then(reg => {
+            reg.showNotification(title, options);
+          });
+        } else {
+          new Notification(title, options);
+        }
+      }
+
+      if (allowBtn) {
+        allowBtn.addEventListener('click', requestNotifPermission);
+      }
+
+      if (laterBtn) {
+        laterBtn.addEventListener('click', () => {
+          promptCard.classList.remove('show');
+          localStorage.setItem('pwa_notif_dismissed', 'true');
+        });
+      }
+
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+          promptCard.classList.remove('show');
+        });
+      }
+
+      if (navBellBtn) {
+        navBellBtn.addEventListener('click', () => {
+          if (Notification.permission === 'default') {
+            requestNotifPermission();
+          } else if (Notification.permission === 'granted') {
+            triggerTestNotification("Itinerary Update", "Your private guide has been assigned: Mr. Minh (Phone: +84 911 538 738).");
+            showSuccessToast();
+          } else {
+            alert("Please enable notifications in your browser settings to receive updates.");
+          }
+        });
+      }
+    });
+  </script>
+</body>
+
+</html>
