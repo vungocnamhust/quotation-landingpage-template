@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>9 days of curated discovery, private comfort, and memories that begin... — PDF Quotation</title>
+  <style>
+    :root {
+      --ivory: #f8f3e9;
+      --ink: #11130f;
+      --muted: #706a5d;
+      --emerald: #17412e;
+      --emerald-2: #0e2f22;
+      --gold: #b7894b;
+      --gold-2: #d8bd85;
+      --line: rgba(183,137,75,.28);
+      --card: #fffaf1;
+      --charcoal: #171915;
+      --serif: Georgia, 'Times New Roman', serif;
+      --sans: Arial, Helvetica, sans-serif;
+    }
+
+    @page { size: A4 portrait; margin: 0; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.6;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* Screen-only viewer styles */
+    @media screen {
+      body {
+        background: #525659; /* PDF viewer gray */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 40px 0;
+        gap: 20px;
+      }
+    }
+
+    @media print {
+      body { 
+        background-color: var(--ivory) !important; 
+        padding: 0; 
+        display: block; 
+      }
+      .pdf-page {
+        width: auto !important;
+        min-height: auto !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+      }
+      .cover {
+        height: 100vh !important;
+      }
+    }
+
+    /* ── Page wrapper ── */
+    .pdf-page {
+      width: 794px;
+      min-height: 1123px;
+      background: var(--ivory);
+      page-break-after: always;
+      position: relative;
+    }
+    .pdf-page:last-of-type { page-break-after: auto; }
+
+    @media screen {
+      .pdf-page {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+      }
+    }
+
+    /* ── Page watermark (fixed = repeats on every print page) ── */
+    .watermark {
+      position: fixed;
+      bottom: 10px;
+      right: 20px;
+      font-size: 9px;
+      color: rgba(0,0,0,.22);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      font-family: var(--sans);
+    }
+
+    /* ═══════════════════════════════════════════
+       PAGE 1 — Cover
+    ═══════════════════════════════════════════ */
+    .cover {
+      width: 794px;
+      height: 1123px;
+      background: linear-gradient(160deg, rgba(17,19,15,.88) 0%, rgba(17,19,15,.55) 55%, rgba(17,19,15,.18) 100%),
+                  center/cover no-repeat;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 0;
+    }
+
+    .cover-body {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 24px;
+      align-items: end;
+      padding: 48px 48px 54px;
+    }
+
+    .cover-kicker {
+      color: var(--gold-2);
+      font-size: 10px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .cover h1 {
+      font-family: var(--serif);
+      font-size: 42px;
+      line-height: 1.15;
+      font-weight: 500;
+      letter-spacing: -.02em;
+      margin-bottom: 16px;
+      max-width: 420px;
+    }
+
+    .cover-lede {
+      font-size: 14px;
+      color: rgba(255,255,255,.76);
+      max-width: 380px;
+      line-height: 1.6;
+    }
+
+    /* Quote card on cover */
+    .quote-card {
+      background: rgba(255,250,241,.93);
+      color: var(--ink);
+      border-radius: 24px;
+      padding: 22px 24px;
+      border: 1px solid rgba(255,255,255,.6);
+    }
+
+    .quote-card h2 {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 14px;
+      color: var(--emerald);
+    }
+
+    .qrow {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(17,19,15,.1);
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .qrow:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .qrow strong { color: var(--ink); text-align: right; font-size: 11px; }
+
+    /* Strip bar at bottom of cover */
+    .cover-strip {
+      background: rgba(23,65,46,.92);
+      display: grid;
+      grid-template-columns: repeat(4,1fr);
+      padding: 16px 48px;
+    }
+
+    .strip-item { text-align: center; }
+    .strip-item span {
+      display: block;
+      color: var(--gold-2);
+      font-size: 8px;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .strip-item strong {
+      font-family: var(--serif);
+      font-size: 20px;
+      font-weight: 500;
+      color: white;
+      display: block;
+      margin-top: 3px;
+    }
+
+    /* ═══════════════════════════════════════════
+       Shared section styles
+    ═══════════════════════════════════════════ */
+    .page-inner { padding: 44px 48px; }
+
+    .section-label {
+      color: var(--gold);
+      font-size: 9px;
+      letter-spacing: .24em;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .section-h2 {
+      font-family: var(--serif);
+      font-size: 36px;
+      line-height: .98;
+      letter-spacing: -.04em;
+      font-weight: 500;
+      color: var(--emerald);
+      margin-bottom: 8px;
+    }
+
+    .section-p {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 24px;
+    }
+
+    /* ═══════════════════════════════════════════
+       PAGE 2 — Overview + Gallery
+    ═══════════════════════════════════════════ */
+    .experience-grid {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .exp-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .exp-num {
+      color: var(--gold);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .18em;
+    }
+
+    .exp-card h3 {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--emerald);
+      margin: 8px 0 6px;
+      line-height: 1.1;
+    }
+
+    .exp-card p { font-size: 12px; color: var(--muted); }
+
+    /* Gallery 2-col for A4 */
+    .gallery {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      grid-auto-rows: 200px;
+      gap: 10px;
+    }
+
+    .img-tile {
+      border-radius: 18px;
+      overflow: hidden;
+      background: center/cover no-repeat;
+      position: relative;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    .img-tile.large { grid-row: span 2; }
+
+    .img-tile::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 40%, rgba(17,19,15,.7));
+    }
+
+    .img-caption {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 14px;
+      color: white;
+    }
+
+    .img-caption small {
+      display: block;
+      color: var(--gold-2);
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: .18em;
+      font-weight: 700;
+    }
+
+    .img-caption strong {
+      font-family: var(--serif);
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    /* ═══════════════════════════════════════════
+       PAGE 3 — Itinerary
+    ═══════════════════════════════════════════ */
+    .itinerary { display: grid; gap: 10px; }
+
+    .day-card {
+      display: grid;
+      grid-template-columns: 56px 1fr 140px;
+      gap: 16px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      align-items: start;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .day-num {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--emerald);
+      color: white;
+      display: grid;
+      place-items: center;
+      font-family: var(--serif);
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .day-card h3 {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--emerald);
+      margin: 2px 0 5px;
+      line-height: 1.1;
+    }
+
+    .day-badge {
+      font-size: 8px;
+      color: var(--gold);
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .day-card p { font-size: 11px; color: var(--muted); }
+
+    .day-meta {
+      text-align: right;
+      padding-top: 6px;
+    }
+
+    .day-meta .price {
+      font-family: var(--serif);
+      font-size: 22px;
+      color: var(--emerald);
+      font-weight: 500;
+    }
+
+    .day-meta .price-sub { font-size: 10px; color: var(--muted); }
+    .day-meta .qty { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+
+    /* ═══════════════════════════════════════════
+       PAGE 4 — Pricing + Inc/Exc
+    ═══════════════════════════════════════════ */
+    .pricing-block {
+      background: var(--charcoal);
+      border-radius: 24px;
+      padding: 32px;
+      color: white;
+      margin-bottom: 16px;
+      break-inside: avoid;
+    }
+
+    .pricing-block h2 {
+      font-family: var(--serif);
+      font-size: 32px;
+      font-weight: 500;
+      letter-spacing: -.04em;
+      margin-bottom: 8px;
+    }
+
+    .pricing-block .sub {
+      color: rgba(255,255,255,.68);
+      font-size: 12px;
+      margin-bottom: 20px;
+    }
+
+    .price-cards {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 12px;
+    }
+
+    .price-card {
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(216,189,133,.35);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .price-card.featured {
+      background: linear-gradient(180deg,rgba(183,137,75,.25),rgba(255,255,255,.06));
+      border-color: var(--gold-2);
+    }
+
+    .price-card span {
+      color: var(--gold-2);
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    .price-card strong {
+      display: block;
+      font-family: var(--serif);
+      font-size: 28px;
+      font-weight: 500;
+      margin: 6px 0 2px;
+    }
+
+    .price-card small { font-size: 10px; color: rgba(255,255,255,.65); }
+
+    .price-note {
+      margin-top: 14px;
+      font-size: 11px;
+      color: rgba(255,255,255,.55);
+    }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 20px;
+      break-inside: avoid;
+    }
+
+    .panel h3 {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--emerald);
+      margin-bottom: 10px;
+    }
+
+    .panel ul {
+      padding-left: 18px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .panel ul li { font-size: 12px; color: var(--muted); }
+
+    /* ═══════════════════════════════════════════
+       PAGE 5 — Terms + CTA + Footer
+    ═══════════════════════════════════════════ */
+    .terms-grid {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .term-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      break-inside: avoid;
+    }
+
+    .term-card .label {
+      font-size: 8px;
+      color: var(--gold);
+      font-weight: 800;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .term-card h3 {
+      font-family: var(--serif);
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--emerald);
+      margin-bottom: 6px;
+    }
+
+    .term-card p { font-size: 11px; color: var(--muted); }
+
+    .cta-block {
+      background: linear-gradient(135deg, var(--emerald-2), #11130f 64%, #332711);
+      color: white;
+      border-radius: 24px;
+      padding: 32px;
+      display: grid;
+      grid-template-columns: 1fr 220px;
+      gap: 28px;
+      align-items: center;
+      break-inside: avoid;
+      margin-bottom: 20px;
+    }
+
+    .cta-block h2 {
+      font-family: var(--serif);
+      font-size: 32px;
+      font-weight: 500;
+      letter-spacing: -.04em;
+      line-height: .96;
+      margin-bottom: 10px;
+    }
+
+    .cta-block p { color: rgba(255,255,255,.72); font-size: 13px; }
+
+    .contact-box {
+      background: rgba(255,255,255,.09);
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .contact-box .clabel {
+      display: block;
+      color: var(--gold-2);
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: .16em;
+      font-weight: 800;
+      margin-top: 12px;
+    }
+
+    .contact-box .clabel:first-child { margin-top: 0; }
+    .contact-box .cval { font-weight: 700; font-size: 13px; margin-top: 2px; }
+
+    .pdf-footer {
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+      padding: 16px 0 20px;
+      border-top: 1px solid var(--line);
+      margin-top: 8px;
+    }
+
+    /* Page header bar (pages 2-5) */
+    .page-header {
+      background: var(--emerald);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 48px;
+    }
+
+    .page-header .brand {
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .page-header .ref {
+      color: var(--gold-2);
+      font-size: 9px;
+      letter-spacing: .1em;
+    }
+  </style>
+</head>
+<body>
+
+<div class="watermark">Vietnam Safar · quo_e773356fed68 · Confidential B2B</div>
+
+<!-- ═══════════════════ PAGE 1 — Cover ═══════════════════ -->
+<div class="pdf-page">
+  <div class="cover" style="background-image: linear-gradient(160deg,rgba(17,19,15,.88),rgba(17,19,15,.55) 55%,rgba(17,19,15,.18)), url('/assets/quang-nam/hoian1.jpg');">
+    <div class="cover-body">
+      <div>
+        <div style="font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-2);margin-bottom:10px;font-weight:700;">Confidential B2B Proposal</div>
+        <div class="cover-kicker">Private Luxury Quotation ‒ 9D8N ‒ 2026-08-10 – 2026-08-18</div>
+        <h1>9 days of curated discovery, private comfort, and memories that begin...</h1>
+        <p class="cover-lede">A curated journey through Vietnam&#39;s heartland, crafted for the Mitchell family as their first introduction to the country&#39;s timeless beauty. From the tree-lined boulevards of Hanoi to the emerald waters of Ha Long Bay, the lantern-lit streets of Hoi An, and the golden coastline of Da Nang, every moment is designed to spark wonder for adults and children alike — private, unhurried, and deeply human.</p>
+      </div>
+      <div class="quote-card">
+        <h2>Quotation Snapshot</h2>
+        <div class="qrow"><span>Prepared for</span><strong>American family of four — two adults and two children aged...</strong></div>
+        <div class="qrow"><span>Overview</span><strong>PROGRAM OVERVIEW</strong></div>
+        
+        <div class="qrow"><span>Guests</span><strong>American family of four — two adults and two children aged 8 and 12, first visit to Vietnam seeking...</strong></div>
+        
+        
+        <div class="qrow"><span>Travel dates</span><strong>2026-08-10 – 2026-08-18</strong></div>
+        
+        
+        <div class="qrow"><span>Route</span><strong>Hanoi – Ninh Binh – Ha Long Bay – Ha Long Bay → Da Nang – Da Nang / Ba Na Hills – Hoi An – Da Nang</strong></div>
+        
+        <div class="qrow"><span>Ref.</span><strong>quo_e773356fed68</strong></div>
+        <div class="qrow"><span>Contact</span><strong>+84 911 538 738</strong></div>
+      </div>
+    </div>
+    <div class="cover-strip">
+      <div class="strip-item"><span>Duration</span><strong>9D8N</strong></div>
+      <div class="strip-item"><span>Best for</span><strong>B2C</strong></div>
+      <div class="strip-item"><span>Travel pace</span><strong>Relaxed</strong></div>
+      <div class="strip-item"><span>Service</span><strong>Private</strong></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE 2 — Glance & Overview ═══════════════════ -->
+<div class="pdf-page">
+  <div class="page-header">
+    <span class="brand">Vietnam Safar — B2B Travel Proposal</span>
+    <span class="ref">quo_e773356fed68 · 2026-08-10</span>
+  </div>
+  <div class="page-inner">
+    <div class="section-label">Section 1 — Journey at a Glance</div>
+    <h2 class="section-h2">Journey Specifications</h2>
+    <p class="section-p">Core parameters of this B2B travel proposal.</p>
+    
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 28px;">
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
+        <span style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Duration</span>
+        <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">9D8N</strong>
+      </div>
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
+        <span style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Market &amp; Nationality</span>
+        <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">B2C</strong>
+      </div>
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
+        <span style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Guest Profile</span>
+        <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">American family of four — two adults and two children aged 8 and 12, first visit to Vietnam seeking...</strong>
+      </div>
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
+        <span style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Hotel Standard</span>
+        <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">5-star hotels and resorts — connecting/family rooms preferred</strong>
+      </div>
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
+        <span style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Meal Preference</span>
+        <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">Breakfast included. Daily lunches at handpicked local restaurants. Child-friendly menus. One child...</strong>
+      </div>
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
+        <span style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Tour Type</span>
+        <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">Private Services</strong>
+      </div>
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; grid-column: span 3;">
+        <span style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Route Sequence</span>
+        <strong style="display:block; font-size:13px; color:var(--emerald); margin-top:3px; font-family:var(--serif); font-weight:500;">Hanoi – Ninh Binh – Ha Long Bay – Ha Long Bay → Da Nang – Da Nang / Ba Na Hills – Hoi An – Da Nang</strong>
+      </div>
+    </div>
+
+    <div class="section-label" style="margin-top:20px;">Section 2 — Journey Overview</div>
+    <h2 class="section-h2">Prepared for: American family of four — two adults and two children aged... — 9 days of curated discovery, private comfort, and memories that begin...</h2>
+    <p style="font-size:13px; color:var(--muted); line-height:1.7; margin-bottom: 24px;">A curated journey through Vietnam&#39;s heartland, crafted for the Mitchell family as their first introduction to the country&#39;s timeless beauty. From the tree-lined boulevards of Hanoi to the emerald waters of Ha Long Bay, the lantern-lit streets of Hoi An, and the golden coastline of Da Nang, every moment is designed to spark wonder for adults and children alike — private, unhurried, and deeply human.</p>
+
+    <div class="section-label">Section 3 — Your Journey Visualized</div>
+    <h2 class="section-h2">Your Journey Visualized</h2>
+    <div style="display: flex; align-items: center; justify-content: center; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px 24px; margin-top: 10px; flex-wrap: wrap; gap: 10px;">
+      
+      <span style="font-family: var(--serif); font-size: 15px; color: var(--emerald); font-weight: 600;">Hà Nội</span>
+      
+      <span style="color: var(--gold); font-size: 13px; font-weight: bold;">➔</span>
+      
+      
+      <span style="font-family: var(--serif); font-size: 15px; color: var(--emerald); font-weight: 600;">Ninh Bình</span>
+      
+      <span style="color: var(--gold); font-size: 13px; font-weight: bold;">➔</span>
+      
+      
+      <span style="font-family: var(--serif); font-size: 15px; color: var(--emerald); font-weight: 600;">Vịnh Hạ Long</span>
+      
+      <span style="color: var(--gold); font-size: 13px; font-weight: bold;">➔</span>
+      
+      
+      <span style="font-family: var(--serif); font-size: 15px; color: var(--emerald); font-weight: 600;">Đà Nẵng</span>
+      
+      <span style="color: var(--gold); font-size: 13px; font-weight: bold;">➔</span>
+      
+      
+      <span style="font-family: var(--serif); font-size: 15px; color: var(--emerald); font-weight: 600;">Hội An</span>
+      
+      
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE 3 — Why Works & Gallery ═══════════════════ -->
+<div class="pdf-page">
+  <div class="page-header">
+    <span class="brand">Vietnam Safar — B2B Travel Proposal</span>
+    <span class="ref">quo_e773356fed68 · 2026-08-10</span>
+  </div>
+  <div class="page-inner">
+    <div class="section-label">Section 4 — Why This Journey Works Well</div>
+    <h2 class="section-h2">Value Propositions</h2>
+    <p class="section-p">Core features ensuring comfort and alignment with the guests' expectations.</p>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px;">
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
+        <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">Private &amp; Flexible</strong>
+        <p style="font-size:11px; color:var(--muted); line-height:1.4;">Every moment is yours alone. Private guide, private vehicle, private boat on Ha Long Bay. No joining strangers, no fixed schedules — your family&#39;s rhythm sets the pace.</p>
+      </div>
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
+        <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">Comfort &amp; Pacing</strong>
+        <p style="font-size:11px; color:var(--muted); line-height:1.4;">5-star stays from Hanoi&#39;s luxury hotels to Da Nang&#39;s beachfront resorts. Spacious family rooms, connecting suites, and a 5-star overnight cruise designed for comfort at sea.</p>
+      </div>
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
+        <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">Muslim-Friendly Care</strong>
+        <p style="font-size:11px; color:var(--muted); line-height:1.4;">While not specifically Muslim-focused, the itinerary avoids pork-centric meals by default, and all restaurants can accommodate peanut allergy with advance notice.</p>
+      </div>
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
+        <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">Balanced Highlights</strong>
+        <p style="font-size:11px; color:var(--muted); line-height:1.4;">Each day alternates between enriching discovery and relaxed downtime. A morning at the Temple of Literature, an afternoon at the pool. A day exploring ancient Hoi An, an evening of lantern-lit magic. No fatigue, no rush — just right for young...</p>
+      </div>
+    </div>
+
+    <div class="section-label">Destination Gallery</div>
+    <div class="gallery" style="margin-top:8px;">
+      
+      <div class="img-tile large" style="background-image:url('/assets/ha-noi/duongtau.jpg')">
+        <div class="img-caption">
+          <small>Highlight</small>
+          <strong>Hà Nội</strong>
+        </div>
+      </div>
+      
+      <div class="img-tile " style="background-image:url('/assets/ninh-binh/trangan.jpg')">
+        <div class="img-caption">
+          <small>Destination</small>
+          <strong>Ninh Bình</strong>
+        </div>
+      </div>
+      
+      <div class="img-tile " style="background-image:url('/assets/quang-ninh/halong.jpg')">
+        <div class="img-caption">
+          <small>Destination</small>
+          <strong>Vịnh Hạ Long</strong>
+        </div>
+      </div>
+      
+      <div class="img-tile " style="background-image:url('/assets/vietnam-safar-logo.png')">
+        <div class="img-caption">
+          <small>Destination</small>
+          <strong>Đà Nẵng</strong>
+        </div>
+      </div>
+      
+      <div class="img-tile " style="background-image:url('/assets/quang-nam/hoian1.jpg')">
+        <div class="img-caption">
+          <small>Destination</small>
+          <strong>Hội An</strong>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE 4 — Itinerary ═══════════════════ -->
+<div class="pdf-page">
+  <div class="page-header">
+    <span class="brand">Vietnam Safar — Luxury Quotation</span>
+    <span class="ref">quo_e773356fed68 · 2026-08-10</span>
+  </div>
+  <div class="page-inner">
+    <div class="section-label">Section 5 — Service Program</div>
+    <h2 class="section-h2">Day-by-Day Journey Program</h2>
+    <p class="section-p">Your private 9D8N journey — 9 days, carefully crafted.</p>
+
+    <div class="itinerary">
+      
+      <div class="day-card">
+        <div class="day-num">1</div>
+        <div>
+          <div class="day-badge">DAY 1</div>
+          <h3>Explore Hanoi</h3>
+          
+          <p>A gentle welcome to Vietnam. Morning arrival at Noi Bai, private transfer to your 5-star haven in the heart of Hanoi. Afternoon stroll around Hoan Kiem Lake — the city&#39;s gentle pulse — and an evening of water puppetry that captivates young and old alike.</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>Highlights:</strong> Private airport transfer, hotel check-in, walking tour of Hoan Kiem Lake &amp; Ngoc Son Temple, water puppet show.
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>Notes:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>Sense of Pace: Relaxed intro — no rush, let jet lag settle.</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">OVERNIGHT</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Hanoi</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">MEALS</div>
+          <div style="font-size:11px">Dinner at a lake-view restaurant with child-friendly menu (peanut allergy...</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">2</div>
+        <div>
+          <div class="day-badge">DAY 2</div>
+          <h3>Explore Hanoi</h3>
+          
+          <p>Storytelling through centuries. Morning at the Temple of Literature — Vietnam&#39;s first university, where the courtyard invites children to run and explore. Afternoon becomes a hands-on cooking class: banh xeo (sizzling pancakes), fresh spring rolls, and the secrets of Vietnamese family cuisine.</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>Highlights:</strong> Temple of Literature, private cooking class with market tour, local pho lunch. Evening free to wander the Old Quarter.
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>Notes:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>Sense of Pace: Moderate — morning cultural, afternoon hands-on.</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">OVERNIGHT</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Hanoi</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">MEALS</div>
+          <div style="font-size:11px">Breakfast at hotel, lunch at a heritage pho restaurant, dinner at leisure.</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">3</div>
+        <div>
+          <div class="day-badge">DAY 3</div>
+          <h3>Explore Ninh Binh</h3>
+          
+          <p>A day outside time. Journey south to the ancient capital of Hoa Lu, where stories of emperors and battles unfold. Afternoon unfolds on the Trang An river — a sampan glides through limestone caves and emerald rice paddies, the landscape so surreal it feels like stepping into a painting.</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>Highlights:</strong> Private transfer Hanoi–Ninh Binh round trip, Hoa Lu ancient capital, Trang An boat tour (life jackets provided),...
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>Notes:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>Sense of Pace: Leisurely — morning history, afternoon nature boat ride.</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">OVERNIGHT</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Ninh Binh</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">MEALS</div>
+          <div style="font-size:11px">Breakfast at hotel, lunch at a riverside local restaurant, dinner at leisure in...</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">4</div>
+        <div>
+          <div class="day-badge">DAY 4</div>
+          <h3>Explore Ha Long Bay</h3>
+          
+          <p>The legend unfolds. A private drive to Ha Long Bay, stepping aboard a 5-star luxury cruise that becomes your floating home for the night. Afternoon kayaking (children paired with adults), a visit to Surprising Cave, sunset mocktails for the kids on the sundeck, and a cooking demonstration before a private dinner under the stars.</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>Highlights:</strong> Private transfer Hanoi–Ha Long, luxury cruise check-in, kayaking or sampan boat, Surprising Cave, sunset party, cooking...
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>Notes:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>Sense of Pace: Relaxed — midday embarkation, leisurely afternoon at sea.</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">OVERNIGHT</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Ha Long Bay</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">MEALS</div>
+          <div style="font-size:11px">Lunch buffet on cruise, dinner set menu (peanut allergy flagged).</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">5</div>
+        <div>
+          <div class="day-badge">DAY 5</div>
+          <h3>Explore Ha Long Bay → Da Nang</h3>
+          
+          <p>Dawn on the bay, then wings south. Sunrise tai chi on deck, a final glance at the karst peaks, then disembark. Private transfer to Hanoi&#39;s airport for a short flight to Da Nang, where the warm coast awaits. Check into your beachfront resort — the sound of waves replaces the morning quiet of the bay.</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>Highlights:</strong> Tai chi session, breakfast on cruise, private transfer to Hanoi airport, domestic flight Hanoi–Da Nang (economy),...
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>Notes:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>Sense of Pace: Transition day — gentle morning, travel afternoon, settle in.</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">OVERNIGHT</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Ha Long Bay → Da Nang</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">MEALS</div>
+          <div style="font-size:11px">Breakfast on cruise, lunch at leisure, dinner at beachfront restaurant.</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">6</div>
+        <div>
+          <div class="day-badge">DAY 6</div>
+          <h3>Explore Da Nang / Ba Na Hills</h3>
+          
+          <p>Above the clouds. Take the world-class cable car to Ba Na Hills, where the Golden Bridge appears to float between heaven and earth. Children delight in the Fantasy Park indoor games and the whimsical French village. Lunch at altitude, then descend back to the coast for a free afternoon by the pool.</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>Highlights:</strong> Ba Na Hills cable car, Golden Bridge, Le Jardin D&#39;Amour gardens, Linh Ung Pagoda, Fantasy Park.
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>Notes:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>Sense of Pace: Moderate — morning mountain, afternoon free/pool.</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">OVERNIGHT</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Da Nang / Ba Na Hills</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">MEALS</div>
+          <div style="font-size:11px">Breakfast at resort, lunch at Ba Na Hills (buffet), dinner at leisure.</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">7</div>
+        <div>
+          <div class="day-badge">DAY 7</div>
+          <h3>Explore Hoi An</h3>
+          
+          <p>The timeless town. Morning explores Hoi An&#39;s ancient quarter — the Japanese Bridge, old merchant houses, and pagodas. Afternoon brings laughter as the family boards traditional basket boats, spinning through coconut groves. Evening is the heart of this day: a private lantern-lit walk, dinner at a heritage restaurant, and releasing flower lanterns...</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>Highlights:</strong> Hoi An ancient town walking tour (Japanese Bridge, assembly halls), basket boat ride in Bay Mau coconut forest, private...
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>Notes:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>Sense of Pace: Leisurely — morning culture walk, afternoon fun, evening magic.</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">OVERNIGHT</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Hoi An</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">MEALS</div>
+          <div style="font-size:11px">Breakfast at resort, lunch at Hoi An (Cao Lau, Banh Mi), dinner as part of...</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">8</div>
+        <div>
+          <div class="day-badge">DAY 8</div>
+          <h3>Explore Da Nang</h3>
+          
+          <p>A day for the family, and nothing else. Sleep in, enjoy a late breakfast by the pool, build sandcastles on My Khe Beach, or take a gentle drive to Son Tra Peninsula to visit the Lady Buddha and spot langurs in the wild. Choice is yours — the day exists simply for being together.</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>Highlights:</strong> Free day at resort beach and pool. Optional: Son Tra Peninsula tour (Linh Ung Pagoda, monkey mountain).
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>Notes:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>Sense of Pace: Unstructured — do as much or as little as you wish.</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">OVERNIGHT</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Da Nang</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">MEALS</div>
+          <div style="font-size:11px">Breakfast at resort, lunch at leisure, dinner at seafood restaurant on the...</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">9</div>
+        <div>
+          <div class="day-badge">DAY 9</div>
+          <h3>Explore Da Nang</h3>
+          
+          <p>Farewell to Vietnam. A final leisurely morning by the sea, check-out, last-minute souvenirs at Han Market, then private transfer to Da Nang International Airport for your evening departure. The journey ends, but the stories are yours forever.</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>Highlights:</strong> Leisure morning, hotel check-out, Han Market visit (optional), private airport transfer.
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>Notes:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>Sense of Pace: Easy — morning free, afternoon departure.</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">OVERNIGHT</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Da Nang</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">MEALS</div>
+          <div style="font-size:11px">Breakfast at resort, lunch at leisure.</div>
+          
+        </div>
+      </div>
+      
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE 5 — Hotel Plan & Pricing ═══════════════════ -->
+<div class="pdf-page">
+  <div class="page-header">
+    <span class="brand">Vietnam Safar — B2B Travel Proposal</span>
+    <span class="ref">quo_e773356fed68 · 2026-08-10</span>
+  </div>
+  <div class="page-inner">
+    <div class="section-label">Section 6 — Selected Hotel Plan</div>
+    <h2 class="section-h2">Hotel Arrangement</h2>
+    <p class="section-p">Proposed accommodation plan. Similar options can be requested.</p>
+
+    
+    <div style="border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 16px;">
+      <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11px;">
+        <thead>
+          <tr style="background: var(--emerald); color: white;">
+            <th style="padding: 10px 14px; width: 120px;">Destination</th>
+            <th style="padding: 10px 14px; width: 80px;">Check-In</th>
+            <th style="padding: 10px 14px; width: 80px;">Check-Out</th>
+            <th style="padding: 10px 14px;">Hotel Arrangement</th>
+          </tr>
+        </thead>
+        <tbody>
+          
+          <tr style="border-bottom: 1px solid var(--line); background: white;">
+            <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Hanoi</td>
+            <td style="padding: 10px 14px;">2026-08-10</td>
+            <td style="padding: 10px 14px;">2026-08-12</td>
+            <td style="padding: 10px 14px; font-family: var(--serif); color: var(--ink);">5-star luxury hotel in central Hanoi — connecting or family rooms. Recommended: Dusit Le Palais Tu Hoa (family-friendly, pool, connecting rooms available) or Apricot Hotel (Old Quarter location).</td>
+          </tr>
+          
+          <tr style="border-bottom: 1px solid var(--line); background: rgba(183, 137, 75, 0.03);">
+            <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Ha Long Bay</td>
+            <td style="padding: 10px 14px;">2026-08-13</td>
+            <td style="padding: 10px 14px;">2026-08-14</td>
+            <td style="padding: 10px 14px; font-family: var(--serif); color: var(--ink);">Overnight luxury 5-star cruise on Ha Long/Lan Ha Bay. Deluxe ocean-view cabin, en-suite, air-conditioned. All meals and activities included onboard.</td>
+          </tr>
+          
+          <tr style="border-bottom: 1px solid var(--line); background: white;">
+            <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Da Nang</td>
+            <td style="padding: 10px 14px;">2026-08-14</td>
+            <td style="padding: 10px 14px;">2026-08-18</td>
+            <td style="padding: 10px 14px; font-family: var(--serif); color: var(--ink);">5-star beachfront resort on My Khe Beach — connecting rooms. Recommended: Furama Resort Danang (kids club, 3 pools, UNESCO-listed beach) or Grand Tourance.</td>
+          </tr>
+          
+        </tbody>
+      </table>
+    </div>
+    
+    <div style="margin-top: 10px; padding: 10px 14px; background: rgba(183, 137, 75, 0.05); border-radius: 8px; border: 1px dashed var(--gold); font-size: 10px; color: var(--muted); margin-bottom: 24px;">
+      <strong>Room Notes &amp; Requests:</strong> Family with 2 children aged 8 and 12. Prefer 2 rooms (1 double + 1 twin) or a family connecting suite. Both hotels confirmed for connecting room configuration.
+    </div>
+    
+    
+
+    <div class="section-label">Section 7 — B2B Package Pricing</div>
+    <div class="pricing-block" style="margin-bottom: 0;">
+      <h2>B2B Net Price: USD 0</h2>
+      <p class="sub">Grand total for American family of four — two adults and two children aged 8 and 12, first visit to Vietnam seeking.... Currency: USD. Final rates subject to reconfirmation.</p>
+      <div class="price-cards">
+        
+        <div class="price-card featured">
+          <span>Per Adult (2 adults)</span>
+          
+          <small style="display:block;margin-top:3px;font-size:9px;opacity:.7">Twin/double sharing</small>
+          
+          <strong>USD 0 / person</strong>
+          <small>per person</small><br>
+          <small>Total: USD 0</small>
+          
+          <div style="margin-top:8px;font-size:8px;letter-spacing:.14em;color:#d8bd85;font-weight:800">✓ CONFIRMED</div>
+          
+        </div>
+        
+        <div class="price-card featured">
+          <span>Per Child (2 children, ages 8 &amp; 12)</span>
+          
+          <small style="display:block;margin-top:3px;font-size:9px;opacity:.7">Sharing room with parents, half-board basis</small>
+          
+          <strong>USD 0 / person</strong>
+          <small>per person</small><br>
+          <small>Total: USD 0</small>
+          
+          <div style="margin-top:8px;font-size:8px;letter-spacing:.14em;color:#d8bd85;font-weight:800">✓ CONFIRMED</div>
+          
+        </div>
+        
+      </div>
+      <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.1); display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; font-size: 10px; color: rgba(255,255,255,0.7);">
+        <div>
+          <strong style="color: var(--gold-2); display: block; margin-bottom: 2px;">Price Basis</strong>
+          <span>Per person, twin/double sharing. Children under 12 sharing with parents at...</span>
+        </div>
+        <div>
+          <strong style="color: var(--gold-2); display: block; margin-bottom: 2px;">Domestic Flights</strong>
+          <span>Hanoi → Da Nang on Day 5 (economy, 4 seats) — included in indicative estimate</span>
+        </div>
+        <div>
+          <strong style="color: var(--gold-2); display: block; margin-bottom: 2px;">Validity</strong>
+          <span>Indicative pricing valid 30 days, subject to availability...</span>
+        </div>
+        <div>
+          <strong style="color: var(--gold-2); display: block; margin-bottom: 2px;">Rate Classification</strong>
+          <span>Private family journey — dedicated English-speaking guide, private vehicle throughout. Relaxed pace...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE 6 — Inc/Exc & Muslim Care ═══════════════════ -->
+<div class="pdf-page">
+  <div class="page-header">
+    <span class="brand">Vietnam Safar — B2B Travel Proposal</span>
+    <span class="ref">quo_e773356fed68 · 2026-08-10</span>
+  </div>
+  <div class="page-inner">
+    <div class="section-label">Section 8 — Package Inclusions &amp; Exclusions</div>
+    <h2 class="section-h2">What is Included</h2>
+    <p class="section-p">Detailed list of inclusions and exclusions for this proposal.</p>
+
+    <div class="two-col" style="margin-bottom: 24px;">
+      <div class="panel">
+        <h3>Inclusions</h3>
+        <ul>
+          <li>Private airport transfer, hotel check-in, walking tour of Hoan Kiem Lake &amp; Ngoc Son Temple, water puppet show.</li><li>Temple of Literature, private cooking class with market tour, local pho lunch. Evening free to wander the Old Quarter.</li><li>Private transfer Hanoi–Ninh Binh round trip, Hoa Lu ancient capital, Trang An boat tour (life jackets provided),...</li><li>Private transfer Hanoi–Ha Long, luxury cruise check-in, kayaking or sampan boat, Surprising Cave, sunset party, cooking...</li><li>Tai chi session, breakfast on cruise, private transfer to Hanoi airport, domestic flight Hanoi–Da Nang (economy),...</li><li>Ba Na Hills cable car, Golden Bridge, Le Jardin D&#39;Amour gardens, Linh Ung Pagoda, Fantasy Park.</li><li>Hoi An ancient town walking tour (Japanese Bridge, assembly halls), basket boat ride in Bay Mau coconut forest, private...</li><li>Free day at resort beach and pool. Optional: Son Tra Peninsula tour (Linh Ung Pagoda, monkey mountain).</li><li>Leisure morning, hotel check-out, Han Market visit (optional), private airport transfer.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Exclusions</h3>
+        <ul>
+          <li>International flights</li><li>Vietnam visa and visa processing fees</li><li>Travel insurance</li><li>Personal expenses, laundry, beverages and tips</li><li>Optional activities not mentioned in the program</li>
+        </ul>
+      </div>
+    </div>
+
+    
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE 7 — Enhancements & Notes ═══════════════════ -->
+<div class="pdf-page">
+  <div class="page-header">
+    <span class="brand">Vietnam Safar — B2B Travel Proposal</span>
+    <span class="ref">quo_e773356fed68 · 2026-08-10</span>
+  </div>
+  <div class="page-inner">
+    <div class="section-label">Section 10 — Optional Enhancements</div>
+    <h2 class="section-h2">Personalize Your Proposal</h2>
+    <p class="section-p">Select optional upgrades to enhance the guests' experience.</p>
+
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 28px;">
+      
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
+        <strong style="display:block; font-family:var(--serif); font-size:13px; color:var(--emerald); margin-bottom:4px;">Private Vietnamese Tea Ceremony at Hoi An Heritage House</strong>
+        <span style="font-size:9px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--gold);">Recommended</span>
+      </div>
+      
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
+        <strong style="display:block; font-family:var(--serif); font-size:13px; color:var(--emerald); margin-bottom:4px;">Evening Dinner Cruise on Han River, Da Nang</strong>
+        <span style="font-size:9px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--gold);">On request</span>
+      </div>
+      
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
+        <strong style="display:block; font-family:var(--serif); font-size:13px; color:var(--emerald); margin-bottom:4px;">Private Cyclo Tour Through Hanoi Old Quarter</strong>
+        <span style="font-size:9px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--gold);">Recommended</span>
+      </div>
+      
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
+        <strong style="display:block; font-family:var(--serif); font-size:13px; color:var(--emerald); margin-bottom:4px;">Professional Family Photo Session in Hoi An Lantern Town</strong>
+        <span style="font-size:9px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--gold);">Recommended</span>
+      </div>
+      
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
+        <strong style="display:block; font-family:var(--serif); font-size:13px; color:var(--emerald); margin-bottom:4px;">My Son Sanctuary Day Trip (instead of free day)</strong>
+        <span style="font-size:9px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--gold);">On request</span>
+      </div>
+      
+    </div>
+
+    <div class="section-label">Section 11 — Price Conditions &amp; Notes</div>
+    <h2 class="section-h2">Price Conditions</h2>
+    <p class="section-p" style="margin-bottom:12px;">Rates are B2B net indicative and subject to reconfirmation at the time of booking.</p>
+
+    <div class="terms-grid">
+      
+      <div class="term-card">
+        <div class="label">Note 1</div>
+        <p>Rates are B2B net indicative and subject to reconfirmation at the time of booking.</p>
+      </div>
+      
+      <div class="term-card">
+        <div class="label">Note 2</div>
+        <p>Final price may vary depending on hotel availability, resort category, cruise selection, domestic flight fare, rooming arrangement, child policy, and final travel services confirmed.</p>
+      </div>
+      
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE 8 — Booking Terms & Finalization ═══════════════════ -->
+<div class="pdf-page">
+  <div class="page-header">
+    <span class="brand">Vietnam Safar — B2B Travel Proposal</span>
+    <span class="ref">quo_e773356fed68 · 2026-08-10</span>
+  </div>
+  <div class="page-inner">
+    <div class="section-label">Section 12 — Booking &amp; Payment Terms</div>
+    <h2 class="section-h2">Booking Terms</h2>
+    <p class="section-p">Commercial conditions and cancellation policies.</p>
+
+    <div style="border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 24px;">
+      <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11px;">
+        <thead>
+          <tr style="background: var(--emerald); color: white;">
+            <th style="padding: 10px 14px; width: 180px;">Term</th>
+            <th style="padding: 10px 14px;">Condition</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom: 1px solid var(--line); background: white;">
+            <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Deposit</td>
+            <td style="padding: 10px 14px;">50% deposit required at time of booking to secure services.</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--line); background: rgba(183, 137, 75, 0.03);">
+            <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Balance</td>
+            <td style="padding: 10px 14px;">Remaining 50% balance due 30 days prior to departure.</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--line); background: white;">
+            <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Cancellation</td>
+            <td style="padding: 10px 14px;">Free cancellation up to 30 days before departure. 50% charge within 30 days. 100% charge within 14 days.</td>
+          </tr>
+          <tr style="background: rgba(183, 137, 75, 0.03);">
+            <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Confirmation</td>
+            <td style="padding: 10px 14px;">All services will be confirmed in writing within 48 hours of deposit receipt.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-label">Section 13 — Finalization Checklist</div>
+    
+    <div class="cta-block" style="margin-bottom: 10px; padding: 24px; grid-template-columns: 1fr 180px; gap: 14px;">
+      <div>
+        <h2>Confirm dates, then refine the luxury layer.</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; font-size: 10px; margin-top: 14px; text-align: left;">
+          <div>
+            <strong style="color: var(--gold-2); display:block; margin-bottom:4px; text-transform:uppercase;">Details Required</strong>
+            <ul style="padding-left:12px; display:grid; gap:3px; color:rgba(255,255,255,0.85);">
+              <li>Passport copies for all travellers, flight itinerary for international arrival, confirmed dietary requirements (peanut allergy documentation if needed), emergency contact details.</li>
+            </ul>
+          </div>
+          <div>
+            <strong style="color: var(--gold-2); display:block; margin-bottom:4px; text-transform:uppercase;">Next Steps</strong>
+            <ul style="padding-left:12px; display:grid; gap:3px; color:rgba(255,255,255,0.85);">
+              <li>Final itinerary with all hotel names, cruise details, flight e-tickets, guide contact, and 24/7 emergency support line provided 14 days before departure.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="contact-box" style="padding: 12px;">
+        <span class="clabel" style="margin-top:0;">Prepared by</span>
+        <div class="cval" style="font-size:11px;">Vietnam Safar – Discovery Asia Travel Group</div>
+        <span class="clabel">WhatsApp</span>
+        <div class="cval" style="font-size:11px;">+84 911 538 738</div>
+        <span class="clabel">Website</span>
+        <div class="cval" style="font-size:11px;">www.vietnamsafar.vn</div>
+      </div>
+    </div>
+
+    <div class="pdf-footer" style="padding: 10px 0; font-size: 10px;">
+      9 days of curated discovery, private comfort, and memories that begin... — Luxury quotation prepared for American family of four — two adults and two children aged....<br>
+      <span style="color:var(--gold);font-weight:700;">vietnamsafar.vn</span> &nbsp;·&nbsp;
+      This document is a confidential B2B quotation prepared exclusively for American family of four — two adults and two children aged....
+    </div>
+  </div>
+</div>
+
+<script>
+  // Auto-trigger print dialog when opened as PDF view
+  window.addEventListener('load', function() {
+    setTimeout(function() { window.print(); }, 600);
+  });
+</script>
+</body>
+</html>
