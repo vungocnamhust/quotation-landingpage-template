@@ -1003,10 +1003,7 @@ STATIC_DICTIONARY = {
         "ar": "يرجى مشاركة تواريخ السفر، فئة الفندق المفضلة، قائمة توزيع الغرف، وأي متطلبات غذائية أو حركية. سنقوم بتأكيد الإمكانية وإرسال عرض السعر النهائي.",
         "vi": "Hãy chia sẻ ngày đi, hạng khách sạn mong muốn, danh sách phòng và bất kỳ yêu cầu ăn uống hoặc đi lại nào. Chúng tôi sẽ xác nhận tình trạng dịch vụ và gửi báo giá hoàn chỉnh."
     },
-    "PRICE QUOTATION – B2B NET INDICATIVE": {
-        "ar": "عرض السعر - صافي تقديري لشركاء B2B",
-        "vi": "BÁO GIÁ – GIÁ NET B2B THAM KHẢO"
-    },
+
     "Confirmed Booking Itinerary": {
         "ar": "برنامج الرحلة المؤكد",
         "vi": "Hành trình đặt chỗ đã xác nhận"
@@ -2089,7 +2086,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         "itinerary":    mapped_itinerary,
         # Pricing section
         "currency":       currency,
-        "pricing_title":  translate_filter("PRICE QUOTATION – B2B NET INDICATIVE", lang),
+        "pricing_title":  translate_filter("Journey Investment", lang),
         "pricing_basis":  glance_basis,
         "price_options":  price_options,
         "price_per_pax":  price_per_pax,
@@ -2480,7 +2477,7 @@ def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, her
         "notes":            [truncate_text(x, 200) for x in (payload.notes or [])],
         # Pricing section
         "currency":       currency,
-        "pricing_title":  translate_filter(truncate_text(payload.pricing.pricingTitle or "PRICE QUOTATION – B2B NET INDICATIVE" if payload.pricing else "", 100), lang),
+        "pricing_title":  translate_filter(truncate_text(payload.pricing.pricingTitle or "Journey Investment" if payload.pricing else "", 100), lang),
         "pricing_basis":  translate_filter(truncate_text(payload.pricing.basis or "B2B net indicative" if payload.pricing else "", 80), lang),
         "price_options":  [
             {

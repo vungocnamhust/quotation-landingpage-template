@@ -1847,7 +1847,7 @@
       left: 16px !important;
     }
     
-    @media (max-width: 768px) {
+            @media (max-width: 768px) {
       .container {
         width: min(1180px, 90%) !important;
       }
@@ -1910,8 +1910,54 @@
       #payment-terms table {
         min-width: 480px;
       }
+      .nav-inner {
+        height: 60px !important;
+      }
+      .nav-actions {
+        display: flex !important;
+        gap: 8px !important;
+      }
+      .brand {
+        font-size: 14px !important;
+      }
+      .brand img {
+        width: 24px !important;
+        height: 24px !important;
+      }
+      .lang-switcher-btn .lang-text,
+      .lang-switcher-btn .lang-caret {
+        display: none !important;
+      }
+      .lang-switcher-btn {
+        padding: 8px !important;
+        border-radius: 50% !important;
+        width: 32px !important;
+        height: 32px !important;
+        justify-content: center !important;
+      }
+      #btn-pdf-view .pdf-btn-text,
+      .nav-actions .pdf-btn-text {
+        display: none !important;
+      }
+      #btn-pdf-view,
+      .nav-actions .btn.dark {
+        padding: 8px !important;
+        border-radius: 50% !important;
+        width: 32px !important;
+        height: 32px !important;
+        justify-content: center !important;
+        font-size: 13px !important;
+      }
+      #nav-notification-btn {
+        width: 32px !important;
+        height: 32px !important;
+        padding: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+      }
     }
-  </style>
+    </style>
 </head>
 
 <body>
@@ -1929,7 +1975,7 @@
         <div class="lang-switcher">
           <button class="lang-switcher-btn" onclick="toggleLangDropdown(event)">
             <span>🌐</span>
-            <span>
+            <span class="lang-text">
               English
               
             </span>
@@ -1947,7 +1993,7 @@
               d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z" />
           </svg>
         </button>
-        <a class="btn dark" href="/quotations/quo_3e9bcd4f2f85/pdf?lang=en" target="_blank" id="btn-pdf-view">📄 PDF Preview</a>
+        <a class="btn dark" href="/quotations/quo_3e9bcd4f2f85/pdf?lang=en" target="_blank" id="btn-pdf-view">📄 <span class="pdf-btn-text">PDF Preview</span></a>
       </div>
     </div>
   </nav>
@@ -3174,6 +3220,18 @@
     <section id="hotels"
       style="background: var(--card); border: 1px solid var(--line); border-radius: 40px; padding: 54px; margin: 40px 0; box-shadow: 0 18px 45px rgba(17,19,15,0.04);">
       <style>
+        .hotel-info {
+          width: 280px;
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-start;
+          align-items: flex-start;
+          text-align: left;
+        }
+        html[dir="rtl"] .hotel-info {
+          align-items: flex-end;
+          text-align: right;
+        }
         @media (max-width: 768px) {
           .hotel-images-grid {
             grid-template-columns: 1fr !important;
@@ -3189,6 +3247,10 @@
             width: 100% !important;
             align-items: flex-start !important;
             text-align: left !important;
+          }
+          html[dir="rtl"] .hotel-info {
+            align-items: flex-end !important;
+            text-align: right !important;
           }
         }
       </style>
@@ -3225,7 +3287,7 @@
               <div class="hotel-intro" style="flex: 1; min-width: 280px;">
                 <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_1">Minasi Premium Hotel is a boutique luxury hotel nestled in Hanoi&#39;s historic quarters, offering elegant design, personalized service, and modern comforts.</p>
               </div>
-              <div class="hotel-info" style="width: 280px; display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-end; text-align: right;">
+              <div class="hotel-info">
                 <h4 style="font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--emerald); margin: 0; letter-spacing: 0.04em; text-transform: uppercase;" data-editable="hotel_info_name_1">Minasi Premium Hotel</h4>
                 <span style="font-size: 14px; font-weight: 500; color: var(--ink); margin-top: 8px;" data-editable="hotel_date_1">10 Aug – 13 Aug 2026</span>
                 <span style="font-size: 12px; color: var(--muted); margin-top: 6px; letter-spacing: 0.05em;" data-editable="hotel_tel_1">TEL: +84 24 3927 5588</span>
@@ -3255,7 +3317,7 @@
               <div class="hotel-intro" style="flex: 1; min-width: 280px;">
                 <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_2">La Casta Cruise is a luxury 5-star cruise on Halong Bay, offering spacious junior suites with private ocean-view balconies and high-class amenities.</p>
               </div>
-              <div class="hotel-info" style="width: 280px; display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-end; text-align: right;">
+              <div class="hotel-info">
                 <h4 style="font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--emerald); margin: 0; letter-spacing: 0.04em; text-transform: uppercase;" data-editable="hotel_info_name_2">La Casta Cruise</h4>
                 <span style="font-size: 14px; font-weight: 500; color: var(--ink); margin-top: 8px;" data-editable="hotel_date_2">13 Aug – 14 Aug 2026</span>
                 <span style="font-size: 12px; color: var(--muted); margin-top: 6px; letter-spacing: 0.05em;" data-editable="hotel_tel_2">TEL: +84 96 123 4567</span>
@@ -3285,7 +3347,7 @@
               <div class="hotel-intro" style="flex: 1; min-width: 280px;">
                 <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_3">Minasi Premium Hotel is a boutique luxury hotel nestled in Hanoi&#39;s historic quarters, offering elegant design, personalized service, and modern comforts.</p>
               </div>
-              <div class="hotel-info" style="width: 280px; display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-end; text-align: right;">
+              <div class="hotel-info">
                 <h4 style="font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--emerald); margin: 0; letter-spacing: 0.04em; text-transform: uppercase;" data-editable="hotel_info_name_3">Minasi Premium Hotel</h4>
                 <span style="font-size: 14px; font-weight: 500; color: var(--ink); margin-top: 8px;" data-editable="hotel_date_3">14 Aug – 15 Aug 2026</span>
                 <span style="font-size: 12px; color: var(--muted); margin-top: 6px; letter-spacing: 0.05em;" data-editable="hotel_tel_3">TEL: +84 24 3927 5588</span>
@@ -3315,7 +3377,7 @@
               <div class="hotel-intro" style="flex: 1; min-width: 280px;">
                 <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_4">Bora Hotel in Sapa offers breathtaking mountain views and stylish, cozy accommodations for travelers exploring the beautiful northern highlands.</p>
               </div>
-              <div class="hotel-info" style="width: 280px; display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-end; text-align: right;">
+              <div class="hotel-info">
                 <h4 style="font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--emerald); margin: 0; letter-spacing: 0.04em; text-transform: uppercase;" data-editable="hotel_info_name_4">Bora Hotel</h4>
                 <span style="font-size: 14px; font-weight: 500; color: var(--ink); margin-top: 8px;" data-editable="hotel_date_4">15 Aug – 19 Aug 2026</span>
                 <span style="font-size: 12px; color: var(--muted); margin-top: 6px; letter-spacing: 0.05em;" data-editable="hotel_tel_4">TEL: +84 214 387 1999</span>
@@ -3345,7 +3407,7 @@
               <div class="hotel-intro" style="flex: 1; min-width: 280px;">
                 <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_5">Minasi Premium Hotel is a boutique luxury hotel nestled in Hanoi&#39;s historic quarters, offering elegant design, personalized service, and modern comforts.</p>
               </div>
-              <div class="hotel-info" style="width: 280px; display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-end; text-align: right;">
+              <div class="hotel-info">
                 <h4 style="font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--emerald); margin: 0; letter-spacing: 0.04em; text-transform: uppercase;" data-editable="hotel_info_name_5">Minasi Premium Hotel</h4>
                 <span style="font-size: 14px; font-weight: 500; color: var(--ink); margin-top: 8px;" data-editable="hotel_date_5">19 Aug – 20 Aug 2026</span>
                 <span style="font-size: 12px; color: var(--muted); margin-top: 6px; letter-spacing: 0.05em;" data-editable="hotel_tel_5">TEL: +84 24 3927 5588</span>
@@ -3375,7 +3437,7 @@
               <div class="hotel-intro" style="flex: 1; min-width: 280px;">
                 <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_6">Minh Toan SAFI Ocean Hotel overlooks the stunning My Khe Beach in Da Nang, offering spacious ocean-view rooms and premium seaside hospitality.</p>
               </div>
-              <div class="hotel-info" style="width: 280px; display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-end; text-align: right;">
+              <div class="hotel-info">
                 <h4 style="font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--emerald); margin: 0; letter-spacing: 0.04em; text-transform: uppercase;" data-editable="hotel_info_name_6">Minh Toan SAFI Ocean Hotel</h4>
                 <span style="font-size: 14px; font-weight: 500; color: var(--ink); margin-top: 8px;" data-editable="hotel_date_6">20 Aug – 24 Aug 2026</span>
                 <span style="font-size: 12px; color: var(--muted); margin-top: 6px; letter-spacing: 0.05em;" data-editable="hotel_tel_6">TEL: +84 236 3731 888</span>
@@ -3405,7 +3467,7 @@
               <div class="hotel-intro" style="flex: 1; min-width: 280px;">
                 <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_7">CICILIA Rouge Dalat brings colonial vintage charm and sophisticated boutique luxury to the misty streets of Dalat.</p>
               </div>
-              <div class="hotel-info" style="width: 280px; display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-end; text-align: right;">
+              <div class="hotel-info">
                 <h4 style="font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--emerald); margin: 0; letter-spacing: 0.04em; text-transform: uppercase;" data-editable="hotel_info_name_7">CICILIA Rouge Dalat</h4>
                 <span style="font-size: 14px; font-weight: 500; color: var(--ink); margin-top: 8px;" data-editable="hotel_date_7">24 Aug – 27 Aug 2026</span>
                 <span style="font-size: 12px; color: var(--muted); margin-top: 6px; letter-spacing: 0.05em;" data-editable="hotel_tel_7">TEL: +84 263 382 8888</span>
@@ -3435,7 +3497,7 @@
               <div class="hotel-intro" style="flex: 1; min-width: 280px;">
                 <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_8">Cicilia Saigon Center offers elegant and contemporary accommodations in the heart of District 1, Ho Chi Minh City.</p>
               </div>
-              <div class="hotel-info" style="width: 280px; display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-end; text-align: right;">
+              <div class="hotel-info">
                 <h4 style="font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--emerald); margin: 0; letter-spacing: 0.04em; text-transform: uppercase;" data-editable="hotel_info_name_8">Cicilia Saigon Center</h4>
                 <span style="font-size: 14px; font-weight: 500; color: var(--ink); margin-top: 8px;" data-editable="hotel_date_8">27 Aug – 30 Aug 2026</span>
                 <span style="font-size: 12px; color: var(--muted); margin-top: 6px; letter-spacing: 0.05em;" data-editable="hotel_tel_8">TEL: +84 28 3823 8888</span>
