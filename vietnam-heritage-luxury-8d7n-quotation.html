@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en"
-  style="--hero-img: url('/assets/ha-noi/hanoi1.jpg');  --img-1: url('/assets/ha-noi/hanoi1.jpg');  --img-2: url('/assets/quang-ninh/halong-bay.jpg');  --img-3: url('/assets/quang-nam/hoian2.jpg');  --img-4: url('/assets/vietnam-safar-logo.png'); ">
+  style="--hero-img: url('/assets/ha-noi/hanoi1.jpg');  --img-1: url('/assets/ha-noi/hanoi1.jpg');  --img-2: url('/assets/quang-ninh/halong.jpg');  --img-3: url('/assets/vietnam-safar-logo.png');  --img-4: url('/assets/quang-nam/hoian1.jpg'); ">
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>VIETNAM LUXURY IMPERIAL &amp; COASTAL JOURNEY — 8D7N - Luxury Quotation</title>
   <!-- PWA Metadata -->
-  <link rel="manifest" href="/manifest.json?id=quo_0c4bcb30ec6a&type=quotations" />
+  <link rel="manifest" href="/manifest.json?id=quo_955538d24307&type=quotations" />
   <meta name="theme-color" content="#17412e" />
   <link rel="apple-touch-icon" href="/assets/vietnam-safar-logo.png" />
   <!-- Leaflet CSS & JS -->
@@ -267,6 +267,21 @@
       text-align: right
     }
 
+    .quote-row.stacked {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+
+    .quote-row.stacked strong {
+      text-align: left;
+    }
+
+    .carousel-dot.active {
+      background: white !important;
+      transform: scale(1.3);
+    }
+
     .luxury-strip {
       position: relative;
       z-index: 3;
@@ -353,18 +368,11 @@
       border-radius: 34px;
       overflow: hidden;
       box-shadow: var(--shadow);
-      background: center/cover no-repeat
+      background: #efe4d1;
     }
 
     .image-tile.large {
       grid-row: span 2
-    }
-
-    .image-tile:before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(180deg, transparent 34%, rgba(17, 19, 15, .72))
     }
 
     .image-caption {
@@ -1037,7 +1045,6 @@
         text-align: center;
       }
 
-      #btn-pdf,
       #btn-publish {
         flex: 1;
         min-width: 120px;
@@ -1397,22 +1404,10 @@
       width: 200px;
       height: 200px;
       border-radius: 50%;
-      background: linear-gradient(135deg, var(--emerald), var(--emerald-2));
-      color: var(--gold-2);
-      font-family: var(--serif);
-      font-size: 54px;
-      font-weight: 500;
-      display: grid;
-      place-items: center;
+      background: var(--designer-img, url('https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400&h=400')) center/cover no-repeat;
       box-shadow: 0 16px 40px rgba(23, 65, 46, 0.2);
       border: 3px solid var(--gold);
       overflow: hidden;
-    }
-
-    .designer-avatar-large img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
     }
 
     .designer-info span {
@@ -1631,6 +1626,57 @@
         grid-template-columns: 1fr;
       }
     }
+
+    /* ── Removable Blocks ─────────────────────────────────────────── */
+    .removable-block {
+      position: relative;
+    }
+    .removable-block:hover {
+      outline: 2px dashed rgba(225, 29, 72, 0.5) !important;
+      outline-offset: -2px;
+    }
+    .block-delete-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #e11d48;
+      color: white;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      cursor: pointer;
+      z-index: 99;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 10px rgba(225, 29, 72, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .removable-block:hover > .block-delete-btn {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .block-delete-btn:hover {
+      background: #be123c;
+      transform: scale(1.1);
+    }
+    /* Special handling for table rows */
+    tr.removable-block:hover {
+      outline: none !important;
+      background: rgba(225, 29, 72, 0.05) !important;
+    }
+    tr.removable-block .block-delete-btn {
+      top: 50%;
+      right: 4px;
+      transform: translateY(-50%);
+    }
+    tr.removable-block:hover > td:last-child {
+      position: relative;
+    }
   </style>
 </head>
 
@@ -1650,9 +1696,7 @@
               d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z" />
           </svg>
         </button>
-        <a class="btn dark" href="/quotations/quo_0c4bcb30ec6a/pdf" target="_blank" id="btn-pdf-view">📄 PDF
-          Preview</a>
-        <button class="btn dark" onclick="window.print()" style="background:rgba(23,65,46,.6)">🖨️ Print</button>
+        <a class="btn dark" href="/quotations/quo_955538d24307/pdf" target="_blank" id="btn-pdf-view">📄 PDF Preview</a>
       </div>
     </div>
   </nav>
@@ -1687,10 +1731,10 @@
           </div>
         </div>
         <aside class="quote-card">
-          <h2>Quotation Snapshot</h2>
+          <h2>Journey Overview</h2>
           <div class="quote-list">
             <div class="quote-row"><span>Prepared for</span><strong data-editable="customer_name">2 Adults (Couple / Honeymooners)</strong></div>
-            <div class="quote-row"><span>Prepared by</span><strong data-editable="seller_name">Vietnam Safar – Discovery Asia Travel Group</strong></div>
+            <div class="quote-row"><span>Overview</span><strong data-editable="overview_heading">PROGRAM OVERVIEW</strong></div>
             
             <div class="quote-row"><span>Guests</span><strong>2 Adults (Couple / Honeymooners)</strong></div>
             
@@ -1698,10 +1742,10 @@
             <div class="quote-row"><span>Travel dates</span><strong>2026-09-20 – 2026-09-27</strong></div>
             
             
-            <div class="quote-row"><span>Route</span><strong>Hanoi – Halong Bay – Da Nang – Hoi An</strong></div>
+            <div class="quote-row stacked"><span>Route</span><strong>Hanoi – Halong Bay – Da Nang – Hoi An</strong></div>
             
             
-            <div class="quote-row"><span>Style</span><strong>Private VIP transfers, english speaking guides, all entry tickets included.</strong></div>
+            <div class="quote-row stacked"><span>Style</span><strong>Private VIP transfers, english speaking guides, all entry tickets included.</strong></div>
             
             <div class="quote-row"><span>Ref.</span><strong data-editable="quotation_number">QT-2026-8D7N</strong></div>
             <div class="quote-row"><span>Contact</span><strong data-editable="contact">+84 911 538 738</strong></div>
@@ -1710,48 +1754,17 @@
       </div>
     </header>
 
-    <section class="luxury-strip">
-      <div class="container strip-grid">
-        <div class="strip-card"><span>Duration</span><strong data-editable="glance_duration">8D7N</strong></div>
-        <div class="strip-card"><span>Market &amp; Nationality</span><strong data-editable="glance_market">Global Luxury Travelers</strong></div>
-        <div class="strip-card"><span>Guest Profile</span><strong data-editable="glance_profile">2 Adults (Couple / Honeymooners)</strong></div>
-        <div class="strip-card"><span>Hotel Standard</span><strong data-editable="glance_standard">5★ Ultra-Luxury &amp; Boutique Resorts</strong></div>
-        <div class="strip-card"><span>Meal Preference</span><strong data-editable="glance_meals">All-inclusive Breakfasts + Curated Gourmet Dinning</strong></div>
-        <div class="strip-card"><span>Route Sequence</span><strong data-editable="route_txt"
-            style="font-size: 15px; font-weight: 500; font-family: var(--serif); line-height: 1.3; margin-top: 6px;">Hanoi – Halong Bay – Da Nang – Hoi An</strong></div>
-        <div class="strip-card"><span>Tour Type</span><strong data-editable="glance_tour_type">Private with Local
-            Support</strong></div>
-        <div class="strip-card"><span>Pricing Ref / Code</span><strong data-editable="glance_tour_code"
-            style="font-size: 16px;">Indicative (VS-8D7N-HERITAGE)</strong></div>
-      </div>
-    </section>
+
 
     <section id="overview">
       <div class="container">
-        <div class="section-head">
+        <div class="section-head" style="align-items: start;">
           <h2 data-editable="overview_h2">Prepared for: 2 Adults (Couple / Honeymooners) — VIETNAM LUXURY IMPERIAL &amp; COASTAL JOURNEY — 8D7N</h2>
-          <p data-editable="overview_p">A premium 8-day private heritage journey weaving through Vietnam&#39;s iconic wonders, from the historic charm of Hanoi and mystical waters of Halong Bay to the lantern-lit streets of Hoi An.</p>
-        </div>
-        <div class="experience-grid">
-          
-          <article class="experience">
-            <span class="num" data-editable="exp_num_1">01</span>
-            <h3 data-editable="exp_title_1">Day 1: Hanoi</h3>
-            <p data-editable="exp_desc_1">Welcome to Hanoi. Private VIP immigration handling at Noi Bai Airport, followed by a luxury transfer to your hotel. Unwind and enjoy a welcome Vietnamese...</p>
-          </article>
-          
-          <article class="experience">
-            <span class="num" data-editable="exp_num_2">02</span>
-            <h3 data-editable="exp_title_2">Day 2: Hanoi</h3>
-            <p data-editable="exp_desc_2">Explore Hanoi&#39;s rich cultural landmarks: Ho Chi Minh Mausoleum, the historic Temple of Literature, and a cyclo ride through the 36 streets of the Old Quarter....</p>
-          </article>
-          
-          <article class="experience">
-            <span class="num" data-editable="exp_num_3">03</span>
-            <h3 data-editable="exp_title_3">Day 3: Halong Bay</h3>
-            <p data-editable="exp_desc_3">Scenic drive to Halong Bay. Board your ultra-luxury cruise ship. Sail past spectacular limestone karsts, visit hidden caves, and enjoy sunset cocktails on the...</p>
-          </article>
-          
+          <div class="overview-body" style="display: grid; gap: 14px;">
+            
+            <p data-editable="overview_p_1" style="margin: 0; font-size: 15px; line-height: 1.6; color: var(--muted);">A premium 8-day private heritage journey weaving through Vietnam&#39;s iconic wonders, from the historic charm of Hanoi and mystical waters of Halong Bay to the lantern-lit streets of Hoi An.</p>
+            
+          </div>
         </div>
       </div>
     </section>
@@ -1759,7 +1772,7 @@
     <section id="route-map" class="no-print" style="padding: 72px 0;">
       <div class="container">
         <div class="section-head">
-          <h2>Your Journey Visualized</h2>
+          <h2>Your Journey, Mapped</h2>
           <p>An interactive map showing your curated path through Vietnam's iconic landmarks and luxury stopovers. Click
             on a destination in the list or the map to explore highlights.</p>
         </div>
@@ -1784,7 +1797,7 @@
         <div class="section-head" style="grid-template-columns: 1fr;">
           <h2
             style="color: var(--gold-2); font-family: var(--serif); font-size: clamp(32px, 4vw, 54px); margin: 0 0 10px;">
-            Why This Journey Works Well for the Guests</h2>
+            The Anatomy of the Experience</h2>
           <p style="color: rgba(255, 255, 255, 0.72); margin: 0;">Tailored care, balanced pacing, and seamless logistics
             designed specifically for your group.</p>
         </div>
@@ -1825,40 +1838,135 @@
     <section id="journey">
       <div class="container">
         <div class="section-head">
-          <h2 data-editable="journey_h2">Destination imagery woven into the quotation.</h2>
+          <h2 data-editable="journey_h2">Through Local Eyes</h2>
           <p data-editable="journey_p">Cinematic destination panels crafted for a premium travel proposal.</p>
         </div>
         <div class="gallery">
           
-          <div class="image-tile large"
-            style="background-image: var(--img-1)">
-            <div class="image-caption">
+          <div class="image-tile large">
+            <div class="carousel-inner" style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
+              
+                
+                <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/ha-noi/duongtau.jpg') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/ha-noi/hanoi1.jpg') center/cover no-repeat;"></div>
+                
+              
+            </div>
+            
+            <!-- Gradient Overlay -->
+            <div style="position: absolute; inset: 0; background: linear-gradient(180deg, transparent 34%, rgba(17,19,15,0.72)); pointer-events: none; z-index: 2;"></div>
+
+            <!-- Controls (only show if there is more than 1 image) -->
+            
+            <button class="carousel-control prev no-print" aria-label="Previous image" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); background: rgba(17,19,15,0.4); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 18px; line-height: 1; transition: background 0.2s, opacity 0.2s; backdrop-filter: blur(4px); padding-bottom: 2px;">‹</button>
+            <button class="carousel-control next no-print" aria-label="Next image" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); background: rgba(17,19,15,0.4); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 18px; line-height: 1; transition: background 0.2s, opacity 0.2s; backdrop-filter: blur(4px); padding-bottom: 2px;">›</button>
+            
+            <div class="carousel-dots no-print" style="position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3;">
+              
+              <button class="carousel-dot active" aria-label="Go to slide 1" style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+              
+              <button class="carousel-dot " aria-label="Go to slide 2" style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+              
+            </div>
+            
+            
+            <div class="image-caption" style="z-index: 3;">
               <small data-editable="gal1_label">Highlight</small>
-              <strong data-editable="gal1_title">Hà Nội</strong>
+              <strong data-editable="gal1_title">Hanoi</strong>
             </div>
           </div>
           
-          <div class="image-tile "
-            style="background-image: var(--img-2)">
-            <div class="image-caption">
+          <div class="image-tile ">
+            <div class="carousel-inner" style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
+              
+                
+                <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-ninh/halong-bay.jpg') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-ninh/halong.jpg') center/cover no-repeat;"></div>
+                
+              
+            </div>
+            
+            <!-- Gradient Overlay -->
+            <div style="position: absolute; inset: 0; background: linear-gradient(180deg, transparent 34%, rgba(17,19,15,0.72)); pointer-events: none; z-index: 2;"></div>
+
+            <!-- Controls (only show if there is more than 1 image) -->
+            
+            <button class="carousel-control prev no-print" aria-label="Previous image" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); background: rgba(17,19,15,0.4); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 18px; line-height: 1; transition: background 0.2s, opacity 0.2s; backdrop-filter: blur(4px); padding-bottom: 2px;">‹</button>
+            <button class="carousel-control next no-print" aria-label="Next image" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); background: rgba(17,19,15,0.4); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 18px; line-height: 1; transition: background 0.2s, opacity 0.2s; backdrop-filter: blur(4px); padding-bottom: 2px;">›</button>
+            
+            <div class="carousel-dots no-print" style="position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3;">
+              
+              <button class="carousel-dot active" aria-label="Go to slide 1" style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+              
+              <button class="carousel-dot " aria-label="Go to slide 2" style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+              
+            </div>
+            
+            
+            <div class="image-caption" style="z-index: 3;">
               <small data-editable="gal2_label">Destination</small>
-              <strong data-editable="gal2_title">Vịnh Hạ Long</strong>
+              <strong data-editable="gal2_title">Halong Bay</strong>
             </div>
           </div>
           
-          <div class="image-tile "
-            style="background-image: var(--img-3)">
-            <div class="image-caption">
+          <div class="image-tile ">
+            <div class="carousel-inner" style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
+              
+                
+                <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/vietnam-safar-logo.png') center/cover no-repeat;"></div>
+                
+              
+            </div>
+            
+            <!-- Gradient Overlay -->
+            <div style="position: absolute; inset: 0; background: linear-gradient(180deg, transparent 34%, rgba(17,19,15,0.72)); pointer-events: none; z-index: 2;"></div>
+
+            <!-- Controls (only show if there is more than 1 image) -->
+            
+            
+            <div class="image-caption" style="z-index: 3;">
               <small data-editable="gal3_label">Destination</small>
-              <strong data-editable="gal3_title">Hội An</strong>
+              <strong data-editable="gal3_title">Da Nang</strong>
             </div>
           </div>
           
-          <div class="image-tile "
-            style="background-image: var(--img-4)">
-            <div class="image-caption">
+          <div class="image-tile ">
+            <div class="carousel-inner" style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
+              
+                
+                <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-nam/hoian1.jpg') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-nam/hoian2.jpg') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-nam/hoian3.jpg') center/cover no-repeat;"></div>
+                
+              
+            </div>
+            
+            <!-- Gradient Overlay -->
+            <div style="position: absolute; inset: 0; background: linear-gradient(180deg, transparent 34%, rgba(17,19,15,0.72)); pointer-events: none; z-index: 2;"></div>
+
+            <!-- Controls (only show if there is more than 1 image) -->
+            
+            <button class="carousel-control prev no-print" aria-label="Previous image" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); background: rgba(17,19,15,0.4); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 18px; line-height: 1; transition: background 0.2s, opacity 0.2s; backdrop-filter: blur(4px); padding-bottom: 2px;">‹</button>
+            <button class="carousel-control next no-print" aria-label="Next image" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); background: rgba(17,19,15,0.4); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 18px; line-height: 1; transition: background 0.2s, opacity 0.2s; backdrop-filter: blur(4px); padding-bottom: 2px;">›</button>
+            
+            <div class="carousel-dots no-print" style="position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3;">
+              
+              <button class="carousel-dot active" aria-label="Go to slide 1" style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+              
+              <button class="carousel-dot " aria-label="Go to slide 2" style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+              
+              <button class="carousel-dot " aria-label="Go to slide 3" style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+              
+            </div>
+            
+            
+            <div class="image-caption" style="z-index: 3;">
               <small data-editable="gal4_label">Destination</small>
-              <strong data-editable="gal4_title">Đà Nẵng</strong>
+              <strong data-editable="gal4_title">Hoi An</strong>
             </div>
           </div>
           
@@ -1866,11 +1974,58 @@
       </div>
     </section>
 
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll('.image-tile').forEach(tile => {
+          const inner = tile.querySelector('.carousel-inner');
+          if (!inner) return;
+          const slides = tile.querySelectorAll('.carousel-slide');
+          if (slides.length <= 1) return;
+          
+          let currentIndex = 0;
+          
+          const updateCarousel = () => {
+            inner.style.transform = `translateX(-${currentIndex * 100}%)`;
+            tile.querySelectorAll('.carousel-dot').forEach((dot, idx) => {
+              dot.classList.toggle('active', idx === currentIndex);
+            });
+          };
+          
+          const prevBtn = tile.querySelector('.carousel-control.prev');
+          const nextBtn = tile.querySelector('.carousel-control.next');
+          
+          if (prevBtn) {
+            prevBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              currentIndex = (currentIndex - 1 + slides.length) % slides.length;
+              updateCarousel();
+            });
+          }
+          
+          if (nextBtn) {
+            nextBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              currentIndex = (currentIndex + 1) % slides.length;
+              updateCarousel();
+            });
+          }
+          
+          tile.querySelectorAll('.carousel-dot').forEach((dot, idx) => {
+            dot.addEventListener('click', (e) => {
+              e.stopPropagation();
+              currentIndex = idx;
+              updateCarousel();
+            });
+          });
+        });
+      });
+    </script>
+
     <section id="itinerary">
       <div class="container">
         <div class="section-head">
           <h2 data-editable="itinerary_h2">Day-by-Day Journey Program</h2>
-          <p data-editable="itinerary_p">Your private 8D7N journey — 8 days, carefully crafted.</p>
+          <p data-editable="itinerary_p">Your private 8D7N journey from 20 to 27 Sep 2026 — carefully crafted.</p>
         </div>
         <div class="itinerary">
           
@@ -1878,7 +2033,7 @@
             <div class="day-label">1</div>
             <div>
               <span class="num" data-editable="day_num_1">DAY 1</span>
-              <h3 data-editable="day_title_1">Explore Hanoi</h3>
+              <h3 data-editable="day_title_1">The Living Heritage of Hanoi</h3>
               
               <p data-editable="day_desc_1_0">Welcome to Hanoi. Private VIP immigration handling at Noi Bai Airport, followed by a luxury transfer to your hotel. Unwind and enjoy a welcome Vietnamese fusion dinner.</p>
               
@@ -1902,11 +2057,11 @@
             </div>
             <div class="day-meta">
               
-              <span style="font-size:11px;letter-spacing:.12em">OVERNIGHT</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
               <span style="font-size:15px;font-family:Georgia,serif">Hanoi</span><br><br>
               
               
-              <span style="font-size:11px;letter-spacing:.12em">MEALS</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Meals</span><br>
               <span style="font-size:13px">Dinner</span>
               
             </div>
@@ -1916,7 +2071,7 @@
             <div class="day-label">2</div>
             <div>
               <span class="num" data-editable="day_num_2">DAY 2</span>
-              <h3 data-editable="day_title_2">Explore Hanoi</h3>
+              <h3 data-editable="day_title_2">A Design-Led Journey Through Hanoi</h3>
               
               <p data-editable="day_desc_1_0">Explore Hanoi&#39;s rich cultural landmarks: Ho Chi Minh Mausoleum, the historic Temple of Literature, and a cyclo ride through the 36 streets of the Old Quarter. End with a unique Train Street coffee experience.</p>
               
@@ -1940,12 +2095,12 @@
             </div>
             <div class="day-meta">
               
-              <span style="font-size:11px;letter-spacing:.12em">OVERNIGHT</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
               <span style="font-size:15px;font-family:Georgia,serif">Hanoi</span><br><br>
               
               
-              <span style="font-size:11px;letter-spacing:.12em">MEALS</span><br>
-              <span style="font-size:13px">Breakfast &amp; Lunch</span>
+              <span style="font-size:11px;letter-spacing:.12em">Meals</span><br>
+              <span style="font-size:13px">Breakfast · Lunch</span>
               
             </div>
           </article>
@@ -1954,7 +2109,7 @@
             <div class="day-label">3</div>
             <div>
               <span class="num" data-editable="day_num_3">DAY 3</span>
-              <h3 data-editable="day_title_3">Explore Halong Bay</h3>
+              <h3 data-editable="day_title_3">The Living Heritage of Halong Bay</h3>
               
               <p data-editable="day_desc_1_0">Scenic drive to Halong Bay. Board your ultra-luxury cruise ship. Sail past spectacular limestone karsts, visit hidden caves, and enjoy sunset cocktails on the sundeck.</p>
               
@@ -1978,12 +2133,12 @@
             </div>
             <div class="day-meta">
               
-              <span style="font-size:11px;letter-spacing:.12em">OVERNIGHT</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
               <span style="font-size:15px;font-family:Georgia,serif">Halong Bay</span><br><br>
               
               
-              <span style="font-size:11px;letter-spacing:.12em">MEALS</span><br>
-              <span style="font-size:13px">Breakfast, Lunch, Dinner</span>
+              <span style="font-size:11px;letter-spacing:.12em">Meals</span><br>
+              <span style="font-size:13px">Breakfast · Lunch · Dinner</span>
               
             </div>
           </article>
@@ -1992,7 +2147,7 @@
             <div class="day-label">4</div>
             <div>
               <span class="num" data-editable="day_num_4">DAY 4</span>
-              <h3 data-editable="day_title_4">Explore Da Nang</h3>
+              <h3 data-editable="day_title_4">Behind Closed Doors: The Da Nang Chapter</h3>
               
               <p data-editable="day_desc_1_0">Morning tai-chi on the sundeck and light breakfast. Cruise back to port, then transfer directly to Noi Bai Airport for a quick flight to Da Nang. Private transfer to Hoi An Ancient Town.</p>
               
@@ -2016,12 +2171,12 @@
             </div>
             <div class="day-meta">
               
-              <span style="font-size:11px;letter-spacing:.12em">OVERNIGHT</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
               <span style="font-size:15px;font-family:Georgia,serif">Da Nang</span><br><br>
               
               
-              <span style="font-size:11px;letter-spacing:.12em">MEALS</span><br>
-              <span style="font-size:13px">Breakfast &amp; Brunch</span>
+              <span style="font-size:11px;letter-spacing:.12em">Meals</span><br>
+              <span style="font-size:13px">Breakfast · Brunch</span>
               
             </div>
           </article>
@@ -2030,7 +2185,7 @@
             <div class="day-label">5</div>
             <div>
               <span class="num" data-editable="day_num_5">DAY 5</span>
-              <h3 data-editable="day_title_5">Explore Hoi An</h3>
+              <h3 data-editable="day_title_5">Hoi An Unveiled: A Private Insider Expedition</h3>
               
               <p data-editable="day_desc_1_0">Walking tour of Hoi An Ancient Town. Discover Chinese assembly halls, the Japanese Covered Bridge, and participate in a private, hands-on traditional lantern-making workshop.</p>
               
@@ -2054,12 +2209,12 @@
             </div>
             <div class="day-meta">
               
-              <span style="font-size:11px;letter-spacing:.12em">OVERNIGHT</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
               <span style="font-size:15px;font-family:Georgia,serif">Hoi An</span><br><br>
               
               
-              <span style="font-size:11px;letter-spacing:.12em">MEALS</span><br>
-              <span style="font-size:13px">Breakfast &amp; Lunch</span>
+              <span style="font-size:11px;letter-spacing:.12em">Meals</span><br>
+              <span style="font-size:13px">Breakfast · Lunch</span>
               
             </div>
           </article>
@@ -2068,7 +2223,7 @@
             <div class="day-label">6</div>
             <div>
               <span class="num" data-editable="day_num_6">DAY 6</span>
-              <h3 data-editable="day_title_6">Explore Hoi An</h3>
+              <h3 data-editable="day_title_6">The Hoi An Dossier: A Tailored Agenda</h3>
               
               <p data-editable="day_desc_1_0">Discover the ancient Cham ruins at My Son Sanctuary, followed by a scenic cruise on the Thu Bon River. Spend a relaxing afternoon exploring Hoi An&#39;s boutique shops or beach clubs.</p>
               
@@ -2092,11 +2247,11 @@
             </div>
             <div class="day-meta">
               
-              <span style="font-size:11px;letter-spacing:.12em">OVERNIGHT</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
               <span style="font-size:15px;font-family:Georgia,serif">Hoi An</span><br><br>
               
               
-              <span style="font-size:11px;letter-spacing:.12em">MEALS</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Meals</span><br>
               <span style="font-size:13px">Breakfast</span>
               
             </div>
@@ -2106,7 +2261,7 @@
             <div class="day-label">7</div>
             <div>
               <span class="num" data-editable="day_num_7">DAY 7</span>
-              <h3 data-editable="day_title_7">Explore Da Nang</h3>
+              <h3 data-editable="day_title_7">The Da Nang Collection: A Curated Sojourn</h3>
               
               <p data-editable="day_desc_1_0">Take a day trip to the Sun World Ba Na Hills. Ride the world&#39;s longest cable car system and walk along the iconic Golden Bridge held by giant stone hands.</p>
               
@@ -2130,12 +2285,12 @@
             </div>
             <div class="day-meta">
               
-              <span style="font-size:11px;letter-spacing:.12em">OVERNIGHT</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
               <span style="font-size:15px;font-family:Georgia,serif">Da Nang</span><br><br>
               
               
-              <span style="font-size:11px;letter-spacing:.12em">MEALS</span><br>
-              <span style="font-size:13px">Breakfast &amp; Lunch</span>
+              <span style="font-size:11px;letter-spacing:.12em">Meals</span><br>
+              <span style="font-size:13px">Breakfast · Lunch</span>
               
             </div>
           </article>
@@ -2144,7 +2299,7 @@
             <div class="day-label">8</div>
             <div>
               <span class="num" data-editable="day_num_8">DAY 8</span>
-              <h3 data-editable="day_title_8">Explore Da Nang</h3>
+              <h3 data-editable="day_title_8">Impressions of Da Nang: A Paced Exploration</h3>
               
               <p data-editable="day_desc_1_0">Morning at leisure. Final private transfer to Da Nang International Airport for your departure flight, carrying beautiful memories of Vietnam.</p>
               
@@ -2168,11 +2323,11 @@
             </div>
             <div class="day-meta">
               
-              <span style="font-size:11px;letter-spacing:.12em">OVERNIGHT</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
               <span style="font-size:15px;font-family:Georgia,serif">Da Nang</span><br><br>
               
               
-              <span style="font-size:11px;letter-spacing:.12em">MEALS</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Meals</span><br>
               <span style="font-size:13px">Breakfast</span>
               
             </div>
@@ -2184,6 +2339,25 @@
 
     <section id="hotels"
       style="background: var(--card); border: 1px solid var(--line); border-radius: 40px; padding: 54px; margin: 40px 0; box-shadow: 0 18px 45px rgba(17,19,15,0.04);">
+      <style>
+        @media (max-width: 768px) {
+          .hotel-images-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .hotel-image-wrapper {
+            height: 220px !important;
+          }
+          .hotel-footer-layout {
+            flex-direction: column;
+            gap: 20px !important;
+          }
+          .hotel-info {
+            width: 100% !important;
+            align-items: flex-start !important;
+            text-align: left !important;
+          }
+        }
+      </style>
       <div class="container">
         <div class="section-head" style="grid-template-columns: 1fr;">
           <h2
@@ -2194,50 +2368,104 @@
         </div>
 
         
-        <div style="overflow-x: auto; margin-top: 32px; border-radius: 18px; border: 1px solid var(--line);">
-          <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
-            <thead>
-              <tr style="background: var(--emerald); color: white;">
-                <th style="padding: 16px 20px;">Destination</th>
-                <th style="padding: 16px 20px;">Check-In</th>
-                <th style="padding: 16px 20px;">Check-Out</th>
-                <th style="padding: 16px 20px;">Hotel Arrangement</th>
-              </tr>
-            </thead>
-            <tbody>
-              
-              <tr
-                style="border-bottom: 1px solid var(--line); background: white;">
-                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">Hanoi</td>
-                <td style="padding: 16px 20px;">2026-09-20</td>
-                <td style="padding: 16px 20px;">2026-09-22</td>
-                <td style="padding: 16px 20px; font-family: var(--serif); font-size: 15px; color: var(--ink);">Sofitel Legend Metropole Hanoi (Grand Luxury Room)</td>
-              </tr>
-              
-              <tr
-                style="border-bottom: 1px solid var(--line); background: rgba(183, 137, 75, 0.03);">
-                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">Halong Bay</td>
-                <td style="padding: 16px 20px;">2026-09-22</td>
-                <td style="padding: 16px 20px;">2026-09-23</td>
-                <td style="padding: 16px 20px; font-family: var(--serif); font-size: 15px; color: var(--ink);">Orchid Classic Cruise (Suite with Private Balcony)</td>
-              </tr>
-              
-              <tr
-                style="border-bottom: 1px solid var(--line); background: white;">
-                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">Hoi An</td>
-                <td style="padding: 16px 20px;">2026-09-23</td>
-                <td style="padding: 16px 20px;">2026-09-27</td>
-                <td style="padding: 16px 20px; font-family: var(--serif); font-size: 15px; color: var(--ink);">Four Seasons Resort The Nam Hai (One-Bedroom Villa)</td>
-              </tr>
-              
-            </tbody>
-          </table>
+        <div class="hotel-plan-container" style="display: flex; flex-direction: column; gap: 48px; margin-top: 40px;">
+          
+          <div class="hotel-card" style="border-bottom: 1px solid var(--line); padding-bottom: 40px; ">
+            <!-- Header (City / Country & Hotel Name) -->
+            <div class="hotel-header" style="margin-bottom: 20px;">
+              <span class="hotel-city" style="display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--muted); text-transform: uppercase; margin-bottom: 4px;" data-editable="hotel_city_1">HANOI, VIETNAM</span>
+              <h3 class="hotel-name" style="font-family: var(--serif); font-size: 26px; font-weight: 700; color: var(--ink); margin: 0; letter-spacing: 0.02em;" data-editable="hotel_name_1">Sofitel Legend Metropole Hanoi</h3>
+            </div>
+            
+            <!-- Side-by-Side Images -->
+            <div class="hotel-images-grid" style="display: grid; grid-template-columns: 1fr 1.6fr; gap: 16px; margin: 20px 0;">
+              <div class="hotel-image-wrapper" style="height: 280px; border-radius: 4px; overflow: hidden; position: relative;">
+                <img src="/assets/hotels/metropole_facade.jpg" alt="Sofitel Legend Metropole Hanoi" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+              </div>
+              <div class="hotel-image-wrapper" style="height: 280px; border-radius: 4px; overflow: hidden; position: relative;">
+                <img src="/assets/hotels/metropole_room.jpg" alt="Sofitel Legend Metropole Hanoi Room" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+              </div>
+            </div>
+            
+            <!-- Footer Columns (Introduction & Info/Tel) -->
+            <div class="hotel-footer-layout" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 40px; margin-top: 20px; flex-wrap: wrap;">
+              <div class="hotel-intro" style="flex: 1; min-width: 280px;">
+                <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_1">A historic landmark since 1901, the Sofitel Legend Metropole Hanoi features French colonial grandeur blended with contemporary luxury. Located in the heart of Hanoi, it has welcomed playwrights, ambassadors, and heads of state. The hotel offers guestrooms adorned with rich wood, classic elegance, and refined Vietnamese touches. Indulge in culinary excellence at Le Beaulieu or relax at the heritage-rich Bamboo Bar by the garden pool, experiencing timeless colonial prestige.</p>
+              </div>
+              <div class="hotel-info" style="width: 280px; display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-end; text-align: right;">
+                <h4 style="font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--emerald); margin: 0; letter-spacing: 0.04em; text-transform: uppercase;" data-editable="hotel_info_name_1">Sofitel Legend Metropole Hanoi</h4>
+                <span style="font-size: 14px; font-weight: 500; color: var(--ink); margin-top: 8px;" data-editable="hotel_date_1">20 Sep – 22 Sep</span>
+                <span style="font-size: 12px; color: var(--muted); margin-top: 6px; letter-spacing: 0.05em;" data-editable="hotel_tel_1">TEL: +84 24 3826 6919</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="hotel-card" style="border-bottom: 1px solid var(--line); padding-bottom: 40px; ">
+            <!-- Header (City / Country & Hotel Name) -->
+            <div class="hotel-header" style="margin-bottom: 20px;">
+              <span class="hotel-city" style="display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--muted); text-transform: uppercase; margin-bottom: 4px;" data-editable="hotel_city_2">HALONG BAY, VIETNAM</span>
+              <h3 class="hotel-name" style="font-family: var(--serif); font-size: 26px; font-weight: 700; color: var(--ink); margin: 0; letter-spacing: 0.02em;" data-editable="hotel_name_2">Orchid Classic Cruise</h3>
+            </div>
+            
+            <!-- Side-by-Side Images -->
+            <div class="hotel-images-grid" style="display: grid; grid-template-columns: 1fr 1.6fr; gap: 16px; margin: 20px 0;">
+              <div class="hotel-image-wrapper" style="height: 280px; border-radius: 4px; overflow: hidden; position: relative;">
+                <img src="/assets/hotels/orchid_cruise.jpg" alt="Orchid Classic Cruise" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+              </div>
+              <div class="hotel-image-wrapper" style="height: 280px; border-radius: 4px; overflow: hidden; position: relative;">
+                <img src="/assets/hotels/orchid_room.jpg" alt="Orchid Classic Cruise Room" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+              </div>
+            </div>
+            
+            <!-- Footer Columns (Introduction & Info/Tel) -->
+            <div class="hotel-footer-layout" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 40px; margin-top: 20px; flex-wrap: wrap;">
+              <div class="hotel-intro" style="flex: 1; min-width: 280px;">
+                <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_2">Cruising the pristine waters of Lan Ha Bay and Halong Bay, Orchid Classic Cruise offers an intimate boutique experience with charter-level luxury. Featuring elegant Indochine architecture combined with modern wooden furnishings, the cruise hosts spacious suites, each featuring a private ocean-view balcony and a walk-in shower. Guests can relax in the outdoor jacuzzi, enjoy sunset cocktails on the sundeck, and savor fine dining showcasing local seafood delicacies.</p>
+              </div>
+              <div class="hotel-info" style="width: 280px; display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-end; text-align: right;">
+                <h4 style="font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--emerald); margin: 0; letter-spacing: 0.04em; text-transform: uppercase;" data-editable="hotel_info_name_2">Orchid Classic Cruise</h4>
+                <span style="font-size: 14px; font-weight: 500; color: var(--ink); margin-top: 8px;" data-editable="hotel_date_2">22 Sep – 23 Sep</span>
+                <span style="font-size: 12px; color: var(--muted); margin-top: 6px; letter-spacing: 0.05em;" data-editable="hotel_tel_2">TEL: +84 96 123 4567</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="hotel-card" style="border-bottom: 1px solid var(--line); padding-bottom: 40px; border-bottom: none; padding-bottom: 0;">
+            <!-- Header (City / Country & Hotel Name) -->
+            <div class="hotel-header" style="margin-bottom: 20px;">
+              <span class="hotel-city" style="display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--muted); text-transform: uppercase; margin-bottom: 4px;" data-editable="hotel_city_3">HOI AN, VIETNAM</span>
+              <h3 class="hotel-name" style="font-family: var(--serif); font-size: 26px; font-weight: 700; color: var(--ink); margin: 0; letter-spacing: 0.02em;" data-editable="hotel_name_3">Four Seasons Resort The Nam Hai</h3>
+            </div>
+            
+            <!-- Side-by-Side Images -->
+            <div class="hotel-images-grid" style="display: grid; grid-template-columns: 1fr 1.6fr; gap: 16px; margin: 20px 0;">
+              <div class="hotel-image-wrapper" style="height: 280px; border-radius: 4px; overflow: hidden; position: relative;">
+                <img src="/assets/hotels/nam_hai_facade.jpg" alt="Four Seasons Resort The Nam Hai" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+              </div>
+              <div class="hotel-image-wrapper" style="height: 280px; border-radius: 4px; overflow: hidden; position: relative;">
+                <img src="/assets/hotels/nam_hai_room.jpg" alt="Four Seasons Resort The Nam Hai Room" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+              </div>
+            </div>
+            
+            <!-- Footer Columns (Introduction & Info/Tel) -->
+            <div class="hotel-footer-layout" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 40px; margin-top: 20px; flex-wrap: wrap;">
+              <div class="hotel-intro" style="flex: 1; min-width: 280px;">
+                <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_3">An oasis of luxury along a pristine portal of Hoi An&#39;s coastline, Four Seasons Resort The Nam Hai offers a sleek, design-led sanctuary. Inspired by traditional wind-and-water principles, the villas are designed with high ceilings, central platforms, and private terrace views. Guests can lounge by three infinity pools, experience holistic therapies at the floating spa pavilions, and relish exceptional Vietnamese culinary artistry under the shade of mature coconut palms.</p>
+              </div>
+              <div class="hotel-info" style="width: 280px; display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-end; text-align: right;">
+                <h4 style="font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--emerald); margin: 0; letter-spacing: 0.04em; text-transform: uppercase;" data-editable="hotel_info_name_3">Four Seasons Resort The Nam Hai</h4>
+                <span style="font-size: 14px; font-weight: 500; color: var(--ink); margin-top: 8px;" data-editable="hotel_date_3">23 Sep – 27 Sep</span>
+                <span style="font-size: 12px; color: var(--muted); margin-top: 6px; letter-spacing: 0.05em;" data-editable="hotel_tel_3">TEL: +84 235 394 0000</span>
+              </div>
+            </div>
+          </div>
+          
         </div>
         
 
         
         <div
-          style="margin-top: 20px; padding: 18px; background: rgba(183, 137, 75, 0.06); border-radius: 14px; border: 1px dashed var(--gold);">
+          style="margin-top: 32px; padding: 18px; background: rgba(183, 137, 75, 0.06); border-radius: 14px; border: 1px dashed var(--gold);">
           <strong
             style="color: var(--gold); text-transform: uppercase; font-size: 11px; letter-spacing: 0.12em; display: block; margin-bottom: 6px;">Room
             Notes &amp; Special Requests</strong>
@@ -2247,131 +2475,12 @@
       </div>
     </section>
 
-    <section id="testimonials" class="no-print" style="background: var(--ivory); padding: 72px 0;">
-      <div class="container">
-        <div class="section-head" style="margin-bottom: 44px; grid-template-columns: 1fr;">
-          <h2>Loved by Discerning Travelers</h2>
-          <p style="margin-top: 8px;">Read stories from families and luxury travelers who explored Vietnam on our
-            slow-nature private paths.</p>
-        </div>
-        <div class="testimonials-grid">
-          <div class="testimonial-card">
-            <div class="stars">★★★★★</div>
-            <h3>"Unforgettable Family Holiday"</h3>
-            <p>"The slow pace was perfect for my parents and children. Metropole Hanoi was splendid, and our private
-              guide made us feel completely safe and welcome at every stop. The halal-friendly food arrangements were
-              flawless."</p>
-            <div class="client-meta">
-              <div class="client-avatar">
-                <img
-                  src="https://images.unsplash.com/photo-1589156280159-27698a70f29e?auto=format&fit=crop&q=80&w=150&h=150"
-                  alt="Fatima Al-Thani">
-              </div>
-              <div>
-                <strong>Fatima Al-Thani</strong>
-                <span>Family Journey (Qatar)</span>
-              </div>
-            </div>
-          </div>
-          <div class="testimonial-card">
-            <div class="stars">★★★★★</div>
-            <h3>"Exceptional Luxury & Service"</h3>
-            <p>"Vietnam Safar designed a masterpiece. The overnight cruise in Ha Long Bay felt like a private haven, and
-              the luxury transport between Sapa and Hanoi was incredibly comfortable. Highly recommend to anyone seeking
-              pure luxury."</p>
-            <div class="client-meta">
-              <div class="client-avatar">
-                <img
-                  src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150&h=150"
-                  alt="James Miller">
-              </div>
-              <div>
-                <strong>James Miller</strong>
-                <span>Bespoke Tour (Australia)</span>
-              </div>
-            </div>
-          </div>
-          <div class="testimonial-card">
-            <div class="stars">★★★★★</div>
-            <h3>"Flawless and Relaxed Pacing"</h3>
-            <p>"Every single transfer was prompt. The VIP Ford Transit was spacious and spotless. The itinerary gave us
-              enough time to relax by the beach and explore local culture. Truly zero friction."</p>
-            <div class="client-meta">
-              <div class="client-avatar">
-                <img
-                  src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150&h=150"
-                  alt="Sarah Richardson">
-              </div>
-              <div>
-                <strong>Sarah Richardson</strong>
-                <span>Slow Nature Tour (UK)</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
 
-    <section id="faq" class="no-print"
-      style="background: var(--ivory-2); padding: 72px 0; border-radius: 40px; margin: 40px 0;">
-      <div class="container" style="max-width: 800px;">
-        <div class="section-head" style="grid-template-columns: 1fr; text-align: center; margin-bottom: 44px;">
-          <h2>Frequently Asked Questions</h2>
-          <p style="margin-top: 8px;">Answers to common concerns regarding private pacing, transparent pricing, and
-            travel support.</p>
-        </div>
-        <div class="faq-list">
-          <div class="faq-item">
-            <button class="faq-toggle">
-              <span>What happens if my domestic flight is delayed?</span>
-              <span class="faq-icon">+</span>
-            </button>
-            <div class="faq-content">
-              <p>Our dedicated local concierge monitors your flights in real-time. If there is a delay, we automatically
-                reschedule your private driver and guide so that your transition remains entirely seamless without extra
-                costs.</p>
-            </div>
-          </div>
-          <div class="faq-item">
-            <button class="faq-toggle">
-              <span>Are these rates fully transparent?</span>
-              <span class="faq-icon">+</span>
-            </button>
-            <div class="faq-content">
-              <p>Yes, all prices are 100% transparent. There are no hidden fees, local taxes, or surprise surcharges
-                added later. The price shown is exactly what you pay for the listed services.</p>
-            </div>
-          </div>
-          <div class="faq-item">
-            <button class="faq-toggle">
-              <span>What standards can I expect from the private transport?</span>
-              <span class="faq-icon">+</span>
-            </button>
-            <div class="faq-content">
-              <p>We use only luxury late-model vehicles. For families of 4-8, we deploy VIP 16-seat Ford Transit D-Car
-                limousines equipped with plush reclining leather seats, individual USB ports, air conditioning, and
-                complimentary cold water.</p>
-            </div>
-          </div>
-          <div class="faq-item">
-            <button class="faq-toggle">
-              <span>How flexible is the daily itinerary?</span>
-              <span class="faq-icon">+</span>
-            </button>
-            <div class="faq-content">
-              <p>Because your vehicle and English-speaking guide are 100% private, you have full control over the pace.
-                If you wish to spend more time at a particular temple or start the day later, simply coordinate with
-                your guide.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
 
     <section id="quotation">
       <div class="container">
         <div class="pricing">
-          <h2 data-editable="pricing_h2">B2B Net Price: USD 14,950</h2>
+          <h2 data-editable="pricing_h2">Your Journey Investment: USD 14,950</h2>
           <p data-editable="pricing_p">Grand total for 2 Adults (Couple / Honeymooners). Currency: USD. Final rates subject to reconfirmation.</p>
           <div class="price-grid">
             
@@ -2380,9 +2489,11 @@
               
               <small style="color:rgba(255,255,255,.55);font-size:11px;display:block;margin-top:4px">Main confirmed option</small>
               
-              <strong data-editable="price_pax_1" style="font-size:28px">USD 7,475 / person</strong>
+              
+              <strong data-editable="price_pax_1" style="font-size:28px">USD 7,475</strong>
               <small>per person</small><br>
               <span style="font-size:13px;opacity:.8">Total: USD 14,950</span>
+              
               
               <div style="margin-top:12px;font-size:10px;letter-spacing:.14em;color:#d8bd85;font-weight:800">✓ CONFIRMED
                 MAIN OPTION</div>
@@ -2390,145 +2501,67 @@
             </div>
             
           </div>
-          <div
-            style="margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1); display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 18px; font-size: 13px; color: rgba(255,255,255,0.7); text-align: left;">
-            <div>
-              <strong
-                style="color: var(--gold-2); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.1em;">Price
-                Basis</strong>
-              <span data-editable="glance_basis">Twin-sharing basis</span>
-            </div>
-            <div>
-              <strong
-                style="color: var(--gold-2); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.1em;">Domestic
-                Flights</strong>
-              <span data-editable="glance_flights">Included (Hanoi to Da Nang - Business Class)</span>
-            </div>
-            <div>
-              <strong
-                style="color: var(--gold-2); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.1em;">Validity</strong>
-              <span data-editable="glance_validity">Valid for travel from September to December 2026</span>
-            </div>
-            <div>
-              <strong
-                style="color: var(--gold-2); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.1em;">Rate
-                Classification</strong>
-              <span data-editable="glance_partner_note">Private VIP transfers, english speaking guides, all entry tickets included.</span>
-            </div>
-          </div>
           
-          <p class="subtle" style="margin-top:20px" data-editable="payment_terms">Refer to Booking &amp; Payment terms below.</p>
+          <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 14px; color: rgba(255,255,255,0.8); line-height: 1.6; text-align: left;">
+            <strong style="color: var(--gold-2); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.15em; font-size: 11px; font-weight: 700;">Important Note</strong>
+            <p style="margin: 0;" data-editable="price_cond_first">Rates are B2B net indicative and subject to reconfirmation at the time of booking.</p>
+          </div>
           
         </div>
       </div>
     </section>
 
     <section>
-      <div class="container two-col">
-        <article class="panel">
-          <h3>Inclusions</h3>
-          <ul id="inclusions-list">
-            
-            <li data-editable="inc_1">VIP Airport Fast-track, luxury airport transfer, welcome dinner.</li>
-            
-            <li data-editable="inc_2">English guide, private transport, entrance tickets, Old Quarter cyclo tour.</li>
-            
-            <li data-editable="inc_3">Luxury transfer to Halong Bay, luxury cruise cabin, onboard activities, all meals.</li>
-            
-            <li data-editable="inc_4">Flight Hanoi - Da Nang, cruise activities, airport transfers, hotel check-in.</li>
-            
-            <li data-editable="inc_5">Hoi An walking tour tickets, lantern workshop session, private guide.</li>
-            
-            <li data-editable="inc_6">My Son Sanctuary entrance, river boat cruise, private guide, transport.</li>
-            
-            <li data-editable="inc_7">Cable car tickets, Ba Na Hills entry, private transfers, local guide.</li>
-            
-            <li data-editable="inc_8">Private airport departure transfer.</li>
-            
-          </ul>
-        </article>
-        <article class="panel">
-          <h3>Exclusions</h3>
-          <ul id="exclusions-list">
-            
-            <li data-editable="exc_1">International flights</li>
-            
-            <li data-editable="exc_2">Vietnam visa and visa processing fees</li>
-            
-            <li data-editable="exc_3">Travel insurance</li>
-            
-            <li data-editable="exc_4">Personal expenses, laundry, beverages and tips</li>
-            
-            <li data-editable="exc_5">Optional activities not mentioned in the program</li>
-            
-          </ul>
-        </article>
+      <div class="container">
+        <div class="section-head" style="grid-template-columns: 1fr; margin-bottom: 32px;">
+          <h2 data-editable="inc_exc_h2">What Your Journey Includes</h2>
+        </div>
+        <div class="two-col">
+          <article class="panel">
+            <h3>Inclusions</h3>
+            <ul id="inclusions-list">
+              
+              <li data-editable="inc_1">VIP Airport Fast-track, luxury airport transfer, welcome dinner.</li>
+              
+              <li data-editable="inc_2">English guide, private transport, entrance tickets, Old Quarter cyclo tour.</li>
+              
+              <li data-editable="inc_3">Luxury transfer to Halong Bay, luxury cruise cabin, onboard activities, all meals.</li>
+              
+              <li data-editable="inc_4">Flight Hanoi - Da Nang, cruise activities, airport transfers, hotel check-in.</li>
+              
+              <li data-editable="inc_5">Hoi An walking tour tickets, lantern workshop session, private guide.</li>
+              
+              <li data-editable="inc_6">My Son Sanctuary entrance, river boat cruise, private guide, transport.</li>
+              
+              <li data-editable="inc_7">Cable car tickets, Ba Na Hills entry, private transfers, local guide.</li>
+              
+              <li data-editable="inc_8">Private airport departure transfer.</li>
+              
+            </ul>
+          </article>
+          <article class="panel">
+            <h3>Exclusions</h3>
+            <ul id="exclusions-list">
+              
+              <li data-editable="exc_1">International flights</li>
+              
+              <li data-editable="exc_2">Vietnam visa and visa processing fees</li>
+              
+              <li data-editable="exc_3">Travel insurance</li>
+              
+              <li data-editable="exc_4">Personal expenses, laundry, beverages and tips</li>
+              
+              <li data-editable="exc_5">Optional activities not mentioned in the program</li>
+              
+            </ul>
+          </article>
+        </div>
       </div>
     </section>
 
     
 
-    <section id="enhancements" style="padding: 72px 0;">
-      <div class="container">
-        <div class="section-head" style="grid-template-columns: 1fr;">
-          <h2
-            style="font-family: var(--serif); font-size: clamp(32px, 4vw, 48px); color: var(--emerald); margin: 0 0 10px;">
-            Optional Enhancements</h2>
-          <p style="color: var(--muted); margin: 0;">Select optional upgrades to personalize your B2B proposal for the
-            guests.</p>
-        </div>
-        <div
-          style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 18px; margin-top: 32px;">
-          
-          <div
-            style="background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px rgba(17,19,15,0.03); transition: transform 0.2s ease, box-shadow 0.2s ease;"
-            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 15px 35px rgba(17,19,15,0.06)';"
-            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px rgba(17,19,15,0.03)';">
-            <h4 style="margin: 0; font-family: var(--serif); font-size: 18px; color: var(--emerald);">Private Evening Street Food Tour by Vintage Vespa in Hanoi
-            </h4>
-            <div
-              style="margin-top: 12px; display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); border: 1px solid var(--line); padding: 4px 10px; border-radius: 99px;">
-              Recommended
-            </div>
-          </div>
-          
-          <div
-            style="background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px rgba(17,19,15,0.03); transition: transform 0.2s ease, box-shadow 0.2s ease;"
-            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 15px 35px rgba(17,19,15,0.06)';"
-            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px rgba(17,19,15,0.03)';">
-            <h4 style="margin: 0; font-family: var(--serif); font-size: 18px; color: var(--emerald);">Private Sunrise Yacht and Champagne Cruise in Da Nang Bay
-            </h4>
-            <div
-              style="margin-top: 12px; display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); border: 1px solid var(--line); padding: 4px 10px; border-radius: 99px;">
-              Recommended
-            </div>
-          </div>
-          
-        </div>
-      </div>
-    </section>
 
-    <section id="terms">
-      <div class="container">
-        <div class="section-head">
-          <h2>Price Conditions &amp; Notes</h2>
-          <p>The following conditions apply to this B2B quotation.</p>
-        </div>
-        <div class="experience-grid">
-          
-          <article class="experience">
-            <span class="num">NOTE 1</span>
-            <p data-editable="price_cond_1">Rates are B2B net indicative and subject to reconfirmation at the time of booking.</p>
-          </article>
-          
-          <article class="experience">
-            <span class="num">NOTE 2</span>
-            <p data-editable="price_cond_2">Final price may vary depending on hotel availability, resort category, cruise selection, domestic flight fare, rooming arrangement, child policy, and final travel services confirmed.</p>
-          </article>
-          
-        </div>
-      </div>
-    </section>
 
     <section id="payment-terms"
       style="background: var(--card); border: 1px solid var(--line); border-radius: 40px; padding: 54px; margin: 40px 0; box-shadow: 0 18px 45px rgba(17,19,15,0.04);">
@@ -2575,25 +2608,19 @@
       style="background: var(--ivory-2); padding: 72px 0; border-radius: 40px; margin: 40px 0;">
       <div class="container designer-container">
         <div class="designer-card">
-          <div class="designer-img-container">
-            <div class="designer-avatar-large">
-              <img
-                src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400&h=400"
-                alt="Kim Quy - Luxury Travel Designer">
+          <div class="designer-img-container" id="designer-avatar-container">
+            <div class="designer-avatar-large" style="background-image: var(--designer-img, url('https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400&h=400')); background-size: cover; background-position: center;">
             </div>
           </div>
           <div class="designer-info">
-            <span>Your Dedicated Specialist</span>
-            <h2>Meet Kim Quy</h2>
-            <p class="designer-quote">"I am Kim Quy, your dedicated travel designer. I handpicked every hotel, private
-              transfer, and local guide on this itinerary to ensure your family experiences the true depth of Vietnam in
-              comfort, privacy, and at your own slow pace. I will personally oversee your journey from behind the
-              scenes."</p>
+            <span data-editable="designer_kicker">Your Dedicated Specialist</span>
+            <h2 data-editable="designer_title">Meet Your Travel Specialist</h2>
+            <p class="designer-quote" data-editable="designer_quote">"I am your dedicated travel specialist. I handpicked every hotel, private transfer, and local guide on this itinerary to ensure you experience the true depth of Vietnam in comfort, privacy, and at your own pace. I will personally oversee your journey from behind the scenes."</p>
             <div class="designer-details">
-              <div><strong>Expertise:</strong> Family & Multigenerational Travel, Heritage Paths</div>
-              <div><strong>Experience:</strong> 8+ years designing bespoke luxury journeys</div>
+              <div><strong>Expertise:</strong> <span data-editable="designer_expertise">Custom Itineraries, Luxury Travel, Local Experiences</span></div>
+              <div><strong>Experience:</strong> <span data-editable="designer_experience">5+ years designing bespoke journeys</span></div>
             </div>
-            <div class="designer-signature">Kim Quy</div>
+            <div class="designer-signature" data-editable="designer_signature">Your Travel Specialist</div>
           </div>
         </div>
       </div>
@@ -2645,70 +2672,7 @@
       </div>
     </section>
 
-    <!-- PWA Install Section -->
-    <section id="pwa-install-section" class="no-print"
-      style="padding: 72px 0; background: var(--ivory-2); border-top: 1px solid var(--line);">
-      <div class="container"
-        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; align-items: center; justify-items: center;">
-        <div>
-          <span class="kicker">Vietnam Safar App</span>
-          <h2
-            style="font-family: var(--serif); font-size: clamp(32px, 4vw, 44px); color: var(--emerald); margin: 12px 0 16px;">
-            Tải Ứng Dụng Hành Trình</h2>
-          <p style="color: var(--muted); font-size: 15px; line-height: 1.7; margin-bottom: 24px;">
-            Cài đặt ứng dụng trực tiếp trên điện thoại hoặc máy tính của bạn để cập nhật lịch trình nhanh chóng, xem bản
-            đồ du lịch và liên hệ với chuyên viên thiết kế tour ngay cả khi không có mạng Internet.
-          </p>
-          <div style="display: flex; flex-wrap: wrap; gap: 14px;">
-            <button id="btn-pwa-install-hero" class="btn gold">Cài Đặt Ứng Dụng</button>
-            <div
-              style="display: inline-flex; align-items: center; gap: 10px; opacity: 0.6; font-size: 12px; font-weight: 700; color: var(--muted);">
-              <span>✓ Hỗ trợ ngoại tuyến</span>
-              <span>•</span>
-              <span>✓ Thông báo đẩy</span>
-            </div>
-          </div>
-        </div>
-        <div style="position: relative; text-align: center;">
-          <div
-            style="width: 250px; height: 500px; background: #000; border-radius: 40px; border: 8px solid #333; margin: 0 auto; box-shadow: var(--shadow); overflow: hidden; position: relative;">
-            <div
-              style="position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 110px; height: 18px; background: #000; border-bottom-left-radius: 12px; z-index: 5;">
-            </div>
-            <div
-              style="height: 100%; background: var(--ivory); padding: 20px; text-align: left; display: flex; flex-direction: column; justify-content: space-between;">
-              <div
-                style="display: flex; justify-content: space-between; align-items: center; font-size: 10px; font-weight: bold; color: var(--emerald);">
-                <span>12:30</span>
-                <span style="font-size: 12px;">📶 🔋</span>
-              </div>
-              <div style="margin-top: 15px; flex-grow: 1;">
-                <img src="/assets/vietnam-safar-logo.png"
-                  style="width: 36px; height: 36px; border-radius: 50%; display: block;" />
-                <h4 style="font-family: var(--serif); color: var(--emerald); margin: 10px 0 5px; font-size: 16px;">
-                  Vietnam Safar</h4>
-                <p style="font-size: 11px; color: var(--muted); margin: 0 0 15px;">Hành trình của bạn đã sẵn sàng</p>
 
-                <div
-                  style="background: white; border: 1px solid var(--line); border-radius: 12px; padding: 10px; font-size: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 8px;">
-                  <strong style="color: var(--gold); display: block; margin-bottom: 2px;">NGÀY 1 • HÀ NỘI</strong>
-                  Xin chào Hà Nội. Nhận phòng và thưởng thức bữa tối.
-                </div>
-                <div
-                  style="background: white; border: 1px solid var(--line); border-radius: 12px; padding: 10px; font-size: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
-                  <strong style="color: var(--gold); display: block; margin-bottom: 2px;">NGÀY 2 • VỊNH HẠ LONG</strong>
-                  Di chuyển đến vịnh Hạ Long và lên du thuyền.
-                </div>
-              </div>
-              <div
-                style="background: var(--emerald); color: white; text-align: center; border-radius: 99px; padding: 8px; font-size: 11px; font-weight: bold;">
-                Mở Bản Đồ
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
   </main>
 
   <footer class="footer">
@@ -2719,29 +2683,22 @@
   <div id="publish-bar" class="no-print">
     <div class="pb-left">
       <div class="pb-dot"></div>
-      <div class="pb-label">✏️ Editing <strong>quo_0c4bcb30ec6a</strong></div>
+      <div class="pb-label">✏️ Editing <strong>quo_955538d24307</strong></div>
     </div>
     <span id="publish-status"></span>
-    <a id="btn-pdf" href="/quotations/quo_0c4bcb30ec6a/pdf" target="_blank" style="background:rgba(183,137,75,.18);border:1px solid rgba(183,137,75,.5);color:#d8bd85;
-              border-radius:999px;padding:11px 22px;font-weight:700;font-size:12px;
-              letter-spacing:.08em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
-              transition:.2s ease;display:inline-flex;align-items:center;gap:6px;"
-      onmouseover="this.style.background='rgba(183,137,75,.28)'"
-      onmouseout="this.style.background='rgba(183,137,75,.18)'">
-      📄 Export PDF
-    </a>
+
     <button id="btn-publish" onclick="publishPage()">🚀 Publish to Web</button>
   </div>
 
-  <script>
-    const QUOTATION_ID = "quo_0c4bcb30ec6a";
+  <script id="editor-scripts">
+    const QUOTATION_ID = "quo_955538d24307";
 
     document.querySelectorAll('[data-editable]').forEach(el => {
       el.contentEditable = 'true';
       el.spellcheck = false;
     });
 
-    let currentCssVar = '';
+    let currentImageTarget = null;
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = 'image/*';
@@ -2770,15 +2727,20 @@
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
           const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-          document.documentElement.style.setProperty(currentCssVar, `url('${dataUrl}')`);
+          
+          if (typeof currentImageTarget === 'string') {
+            document.documentElement.style.setProperty(currentImageTarget, `url('${dataUrl}')`);
+          } else if (currentImageTarget instanceof HTMLImageElement) {
+            currentImageTarget.src = dataUrl;
+          }
         }
         img.src = evt.target.result;
       }
       reader.readAsDataURL(file);
     });
 
-    function addImageChanger(selector, cssVar) {
-      const el = document.querySelector(selector);
+    function addImageChanger(selectorOrElement, target) {
+      const el = typeof selectorOrElement === 'string' ? document.querySelector(selectorOrElement) : selectorOrElement;
       if (!el) return;
       if (el.querySelector('.img-change-btn')) return; // already exists
       const btn = document.createElement('div');
@@ -2789,7 +2751,7 @@
       btn.onmouseout = () => btn.style.opacity = '0.3';
       btn.onclick = (e) => {
         e.stopPropagation();
-        currentCssVar = cssVar;
+        currentImageTarget = target;
         fileInput.click();
       };
       if (getComputedStyle(el).position === 'static') el.style.position = 'relative';
@@ -2798,33 +2760,91 @@
 
     function initImageChangers() {
       addImageChanger('.hero', '--hero-img');
+      addImageChanger('#designer-avatar-container', '--designer-img');
       const tiles = document.querySelectorAll('.gallery .image-tile');
       tiles.forEach((tile, index) => {
         addImageChanger(`.gallery .image-tile:nth-child(${index + 1})`, `--img-${index + 1}`);
+      });
+      // Add image changers to all hotel images
+      const hotelImgWrappers = document.querySelectorAll('.hotel-images-grid .hotel-image-wrapper');
+      hotelImgWrappers.forEach((wrapper) => {
+        const img = wrapper.querySelector('img');
+        if (img) {
+          addImageChanger(wrapper, img);
+        }
+      });
+    }
+
+    function initRemovableBlocks() {
+      const removableSelectors = [
+        'section',
+        '.day',
+        '.experience',
+        '.image-tile',
+        '.strip-card',
+        '.price-card',
+        '#hotels tbody tr',
+        '.faq-item',
+        '.testimonial-card',
+        '#inclusions-list li',
+        '#exclusions-list li',
+        '.quote-row',
+        '.inline-social-proof'
+      ];
+
+      document.querySelectorAll(removableSelectors.join(', ')).forEach(el => {
+        if (el.classList.contains('removable-block')) return;
+        el.classList.add('removable-block');
+
+        const btn = document.createElement('div');
+        btn.innerHTML = '🗑️';
+        btn.className = 'block-delete-btn no-print';
+        btn.title = 'Remove this block';
+
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          if (confirm('Remove this block? This action cannot be undone.')) {
+            el.remove();
+          }
+        };
+
+        if (el.tagName === 'TR') {
+          const lastTd = el.lastElementChild;
+          if (lastTd) {
+            lastTd.style.position = 'relative';
+            lastTd.appendChild(btn);
+          }
+        } else {
+          el.appendChild(btn);
+        }
       });
     }
 
     // Init on load
     initImageChangers();
+    initRemovableBlocks();
 
     async function publishPage() {
       const btn = document.getElementById('btn-publish');
       const status = document.getElementById('publish-status');
-      const bar = document.getElementById('publish-bar');
-
-      bar.style.display = 'none';
-      document.querySelectorAll('[data-editable]').forEach(el => el.removeAttribute('contenteditable'));
-      document.querySelectorAll('.img-change-btn').forEach(el => el.remove());
-
-      const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-
-      bar.style.display = '';
-      document.querySelectorAll('[data-editable]').forEach(el => { el.contentEditable = 'true'; });
-      initImageChangers();
 
       btn.disabled = true;
       btn.textContent = '⏳ Publishing...';
       status.textContent = 'Committing to GitHub...';
+
+      const clone = document.documentElement.cloneNode(true);
+      const pb = clone.querySelector('#publish-bar');
+      if (pb) pb.remove();
+      const editorScript = clone.querySelector('#editor-scripts');
+      if (editorScript) editorScript.remove();
+
+      clone.querySelectorAll('[data-editable]').forEach(el => el.removeAttribute('contenteditable'));
+      clone.querySelectorAll('.img-change-btn').forEach(el => el.remove());
+      clone.querySelectorAll('.block-delete-btn').forEach(el => el.remove());
+      clone.querySelectorAll('.removable-block').forEach(el => el.classList.remove('removable-block'));
+
+      const html = '<!DOCTYPE html>\n' + clone.outerHTML;
 
       try {
         const res = await fetch(`/quotations/${QUOTATION_ID}/publish`, {
@@ -2849,7 +2869,7 @@
   </script>
 
   <script id="itinerary-data" type="application/json">
-    [{"activities": ["VIP Airport Fast-track, luxury airport transfer, welcome dinner."], "date": "", "dayNumber": 1, "description": ["Welcome to Hanoi. Private VIP immigration handling at Noi Bai Airport, followed by a luxury transfer to your hotel. Unwind and enjoy a welcome Vietnamese fusion dinner."], "destinations": ["Hanoi"], "meals": ["Dinner"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Hanoi", "title": "Explore Hanoi"}, {"activities": ["English guide, private transport, entrance tickets, Old Quarter cyclo tour."], "date": "", "dayNumber": 2, "description": ["Explore Hanoi\u0027s rich cultural landmarks: Ho Chi Minh Mausoleum, the historic Temple of Literature, and a cyclo ride through the 36 streets of the Old Quarter. End with a unique Train Street coffee experience."], "destinations": ["Hanoi"], "meals": ["Breakfast \u0026 Lunch"], "notes": ["Sense of Pace: Immersive"], "overnight": "Hanoi", "title": "Explore Hanoi"}, {"activities": ["Luxury transfer to Halong Bay, luxury cruise cabin, onboard activities, all meals."], "date": "", "dayNumber": 3, "description": ["Scenic drive to Halong Bay. Board your ultra-luxury cruise ship. Sail past spectacular limestone karsts, visit hidden caves, and enjoy sunset cocktails on the sundeck."], "destinations": ["Halong Bay"], "meals": ["Breakfast, Lunch, Dinner"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Halong Bay", "title": "Explore Halong Bay"}, {"activities": ["Flight Hanoi - Da Nang, cruise activities, airport transfers, hotel check-in."], "date": "", "dayNumber": 4, "description": ["Morning tai-chi on the sundeck and light breakfast. Cruise back to port, then transfer directly to Noi Bai Airport for a quick flight to Da Nang. Private transfer to Hoi An Ancient Town."], "destinations": ["Da Nang"], "meals": ["Breakfast \u0026 Brunch"], "notes": ["Sense of Pace: Active"], "overnight": "Da Nang", "title": "Explore Da Nang"}, {"activities": ["Hoi An walking tour tickets, lantern workshop session, private guide."], "date": "", "dayNumber": 5, "description": ["Walking tour of Hoi An Ancient Town. Discover Chinese assembly halls, the Japanese Covered Bridge, and participate in a private, hands-on traditional lantern-making workshop."], "destinations": ["Hoi An"], "meals": ["Breakfast \u0026 Lunch"], "notes": ["Sense of Pace: Immersive"], "overnight": "Hoi An", "title": "Explore Hoi An"}, {"activities": ["My Son Sanctuary entrance, river boat cruise, private guide, transport."], "date": "", "dayNumber": 6, "description": ["Discover the ancient Cham ruins at My Son Sanctuary, followed by a scenic cruise on the Thu Bon River. Spend a relaxing afternoon exploring Hoi An\u0027s boutique shops or beach clubs."], "destinations": ["Hoi An"], "meals": ["Breakfast"], "notes": ["Sense of Pace: Moderate"], "overnight": "Hoi An", "title": "Explore Hoi An"}, {"activities": ["Cable car tickets, Ba Na Hills entry, private transfers, local guide."], "date": "", "dayNumber": 7, "description": ["Take a day trip to the Sun World Ba Na Hills. Ride the world\u0027s longest cable car system and walk along the iconic Golden Bridge held by giant stone hands."], "destinations": ["Da Nang"], "meals": ["Breakfast \u0026 Lunch"], "notes": ["Sense of Pace: Active"], "overnight": "Da Nang", "title": "Explore Da Nang"}, {"activities": ["Private airport departure transfer."], "date": "", "dayNumber": 8, "description": ["Morning at leisure. Final private transfer to Da Nang International Airport for your departure flight, carrying beautiful memories of Vietnam."], "destinations": ["Da Nang"], "meals": ["Breakfast"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Da Nang", "title": "Explore Da Nang"}]
+    [{"activities": ["VIP Airport Fast-track, luxury airport transfer, welcome dinner."], "date": "", "dayNumber": 1, "description": ["Welcome to Hanoi. Private VIP immigration handling at Noi Bai Airport, followed by a luxury transfer to your hotel. Unwind and enjoy a welcome Vietnamese fusion dinner."], "destinations": ["Hanoi"], "meals": ["Dinner"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Hanoi", "title": "The Living Heritage of Hanoi"}, {"activities": ["English guide, private transport, entrance tickets, Old Quarter cyclo tour."], "date": "", "dayNumber": 2, "description": ["Explore Hanoi\u0027s rich cultural landmarks: Ho Chi Minh Mausoleum, the historic Temple of Literature, and a cyclo ride through the 36 streets of the Old Quarter. End with a unique Train Street coffee experience."], "destinations": ["Hanoi"], "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Immersive"], "overnight": "Hanoi", "title": "A Design-Led Journey Through Hanoi"}, {"activities": ["Luxury transfer to Halong Bay, luxury cruise cabin, onboard activities, all meals."], "date": "", "dayNumber": 3, "description": ["Scenic drive to Halong Bay. Board your ultra-luxury cruise ship. Sail past spectacular limestone karsts, visit hidden caves, and enjoy sunset cocktails on the sundeck."], "destinations": ["Halong Bay"], "meals": ["Breakfast", "Lunch", "Dinner"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Halong Bay", "title": "The Living Heritage of Halong Bay"}, {"activities": ["Flight Hanoi - Da Nang, cruise activities, airport transfers, hotel check-in."], "date": "", "dayNumber": 4, "description": ["Morning tai-chi on the sundeck and light breakfast. Cruise back to port, then transfer directly to Noi Bai Airport for a quick flight to Da Nang. Private transfer to Hoi An Ancient Town."], "destinations": ["Da Nang"], "meals": ["Breakfast", "Brunch"], "notes": ["Sense of Pace: Active"], "overnight": "Da Nang", "title": "Behind Closed Doors: The Da Nang Chapter"}, {"activities": ["Hoi An walking tour tickets, lantern workshop session, private guide."], "date": "", "dayNumber": 5, "description": ["Walking tour of Hoi An Ancient Town. Discover Chinese assembly halls, the Japanese Covered Bridge, and participate in a private, hands-on traditional lantern-making workshop."], "destinations": ["Hoi An"], "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Immersive"], "overnight": "Hoi An", "title": "Hoi An Unveiled: A Private Insider Expedition"}, {"activities": ["My Son Sanctuary entrance, river boat cruise, private guide, transport."], "date": "", "dayNumber": 6, "description": ["Discover the ancient Cham ruins at My Son Sanctuary, followed by a scenic cruise on the Thu Bon River. Spend a relaxing afternoon exploring Hoi An\u0027s boutique shops or beach clubs."], "destinations": ["Hoi An"], "meals": ["Breakfast"], "notes": ["Sense of Pace: Moderate"], "overnight": "Hoi An", "title": "The Hoi An Dossier: A Tailored Agenda"}, {"activities": ["Cable car tickets, Ba Na Hills entry, private transfers, local guide."], "date": "", "dayNumber": 7, "description": ["Take a day trip to the Sun World Ba Na Hills. Ride the world\u0027s longest cable car system and walk along the iconic Golden Bridge held by giant stone hands."], "destinations": ["Da Nang"], "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Active"], "overnight": "Da Nang", "title": "The Da Nang Collection: A Curated Sojourn"}, {"activities": ["Private airport departure transfer."], "date": "", "dayNumber": 8, "description": ["Morning at leisure. Final private transfer to Da Nang International Airport for your departure flight, carrying beautiful memories of Vietnam."], "destinations": ["Da Nang"], "meals": ["Breakfast"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Da Nang", "title": "Impressions of Da Nang: A Paced Exploration"}]
   </script>
   <script>
     document.addEventListener("DOMContentLoaded", function () {

@@ -262,6 +262,16 @@
       text-align: right
     }
 
+    .quote-row.stacked {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+
+    .quote-row.stacked strong {
+      text-align: left;
+    }
+
     .luxury-strip {
       position: relative;
       z-index: 3;
@@ -1193,29 +1203,22 @@
           </div>
         </div>
         <aside class="quote-card">
-          <h2>Quotation Snapshot</h2>
+          <h2>Journey Overview</h2>
           <div class="quote-list">
             <div class="quote-row"><span>Prepared for</span><strong>Luxury B2B Travel Partners</strong></div>
             <div class="quote-row"><span>Prepared by</span><strong>Vietnam Safar - Discovery Asia Travel Group</strong>
             </div>
             <div class="quote-row"><span>Tour code</span><strong>VS-KSA-8D-HNNBIHL-SGNMKD</strong></div>
-            <div class="quote-row"><span>Route</span><strong>Hanoi - Ninh Binh - Ha Long Bay - HCMC - Mekong
+            <div class="quote-row stacked"><span>Route</span><strong>Hanoi - Ninh Binh - Ha Long Bay - HCMC - Mekong
                 Delta</strong></div>
-            <div class="quote-row"><span>Style</span><strong>Private | Scenic | Relaxed | Luxury-ready</strong></div>
+            <div class="quote-row stacked"><span>Style</span><strong>Private | Scenic | Relaxed | Luxury-ready</strong></div>
             <div class="quote-row"><span>Contact</span><strong>www.vietnamsafar.vn<br>+84 911 538 738</strong></div>
           </div>
         </aside>
       </div>
     </header>
 
-    <section class="luxury-strip">
-      <div class="container strip-grid">
-        <div class="strip-card"><span>Duration</span><strong>8D / 7N</strong></div>
-        <div class="strip-card"><span>Best for</span><strong>Couples & Families</strong></div>
-        <div class="strip-card"><span>Travel pace</span><strong>Relaxed</strong></div>
-        <div class="strip-card"><span>Service</span><strong>Private</strong></div>
-      </div>
-    </section>
+
 
     <section id="overview">
       <div class="container">
@@ -1275,7 +1278,7 @@
     <section id="route-map" class="no-print" style="padding: 72px 0;">
       <div class="container">
         <div class="section-head">
-          <h2>Your Journey Visualized</h2>
+          <h2>Your Journey, Mapped</h2>
           <p>An interactive map showing your curated path through Vietnam's iconic landmarks and luxury stopovers. Click
             on a destination in the list or the map to explore highlights.</p>
         </div>

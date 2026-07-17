@@ -3,58 +3,456 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bản đồ Việt Nam Testing Template</title>
+    <title>Demo: Irregular Destination Map Markers</title>
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+    
     <style>
-        body { margin: 0; padding: 0; font-family: sans-serif; }
-        #map { width: 100vw; height: 100vh; }
-        .info-box {
+        :root {
+            --bg-color: #0d0f12;
+            --card-bg: rgba(22, 28, 36, 0.7);
+            --gold: #C5A880;
+            --gold-light: #dfcbb3;
+            --gold-dark: #917653;
+            --emerald: #3E7B5C;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --glass-border: rgba(197, 168, 128, 0.25);
+            --glass-blur: blur(12px);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-main);
+            overflow: hidden;
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Layout structure */
+        .app-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        #map {
+            flex: 1;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Sidebar UI */
+        .sidebar {
+            width: 420px;
+            background: rgba(13, 15, 18, 0.88);
+            backdrop-filter: var(--glass-blur);
+            border-right: 1px solid var(--glass-border);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            padding: 30px;
+            box-sizing: border-box;
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
+            overflow-y: auto;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 26px;
+            font-weight: 600;
+            margin: 0 0 10px 0;
+            color: var(--gold);
+            letter-spacing: 0.5px;
+        }
+
+        .subtitle {
+            font-size: 13.5px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 18px;
+            font-weight: 500;
+            margin: 20px 0 12px 0;
+            color: var(--gold-light);
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 8px;
+        }
+
+        /* Tech option selector cards */
+        .tech-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tech-card:hover {
+            border-color: var(--gold);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(197, 168, 128, 0.15);
+            background: rgba(22, 28, 36, 0.9);
+        }
+
+        .tech-card.active {
+            border-color: var(--gold);
+            background: rgba(197, 168, 128, 0.08);
+            box-shadow: inset 0 0 15px rgba(197, 168, 128, 0.1);
+        }
+
+        .tech-card.active::before {
+            content: '';
             position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 1000;
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            max-width: 300px;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 4px;
+            background: var(--gold);
         }
-        
-        /* Tweak map tile colors to match the luxury warm tone without fading into the background */
+
+        .tech-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .tech-name {
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--text-main);
+        }
+
+        .tech-badge {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: var(--emerald);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .tech-desc {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* Map styling adjustments */
         .leaflet-tile {
-            filter: sepia(0.3) hue-rotate(-10deg) saturate(0.9) contrast(1.05) brightness(0.98);
+            filter: sepia(0.55) hue-rotate(-15deg) saturate(0.7) contrast(1.15) brightness(0.85) invert(0.9) hue-rotate(180deg);
         }
+
+        .leaflet-container {
+            background: #090b0d !important;
+        }
+
+        /* Leaflet Icon overrides */
+        .leaflet-div-icon {
+            background: transparent !important;
+            border: none !important;
+        }
+
+        /* Custom Marker Wrapper */
+        .custom-irregular-marker {
+            width: 90px;
+            height: 90px;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* Dùng drop-shadow của CSS để bóng đổ chạy sát theo viền SVG */
+            filter: drop-shadow(0 12px 16px rgba(0, 0, 0, 0.65));
+        }
+
+        .custom-irregular-marker:hover {
+            transform: scale(1.18) translateY(-6px);
+            z-index: 1000 !important;
+        }
+
+        /* SVG Marker Styling */
+        .marker-svg-container {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .marker-path {
+            transition: filter 0.3s ease;
+        }
+
+        .custom-irregular-marker:hover .marker-path {
+            filter: brightness(1.08);
+        }
+
+        /* Hiệu ứng radar phát sáng lan tỏa chạy theo đúng viền hình dáng không cố định ở phía sau */
+        .marker-path-radar {
+            fill: none;
+            stroke: var(--gold);
+            stroke-width: 2.5px;
+            transform-origin: 50px 50px; /* Căn giữa toạ độ 100x100 */
+            opacity: 0;
+            pointer-events: none;
+            animation: svgRadarPulse 2.8s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
+        }
+
+        @keyframes svgRadarPulse {
+            0% {
+                transform: scale(0.96);
+                opacity: 0.85;
+                stroke-width: 3.5px;
+            }
+            100% {
+                transform: scale(1.3);
+                opacity: 0;
+                stroke-width: 0.5px;
+            }
+        }
+
+        /* Luxury popup styles */
+        .leaflet-popup-content-wrapper {
+            background: rgba(18, 22, 28, 0.9) !important;
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main) !important;
+            border-radius: 12px !important;
+            padding: 6px;
+        }
+
+        .leaflet-popup-tip {
+            background: rgba(18, 22, 28, 0.9) !important;
+            border: 1px solid var(--glass-border);
+        }
+
+        .popup-card h3 {
+            font-family: 'Playfair Display', serif;
+            color: var(--gold);
+            margin: 0 0 6px 0;
+            font-size: 16px;
+        }
+
+        .popup-card p {
+            margin: 0;
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        /* Outer pulse radar deleted in favor of SVG path-radar */
     </style>
 </head>
 <body>
-    <div class="info-box">
-        <h3>Testing Template: Bản Đồ Việt Nam</h3>
-        <p>Bản đồ hiển thị bằng Tile Server đã được tùy chỉnh để thể hiện đúng chủ quyền với hai quần đảo Hoàng Sa và Trường Sa.</p>
+
+    <div class="app-container">
+        <!-- Sidebar Controls -->
+        <div class="sidebar">
+            <h1>Bản Đồ Điểm Đến</h1>
+            <p class="subtitle">Giải pháp hiển thị ảnh trong suốt (transparent) tràn viền theo hình dạng không cố định (irregular shapes) bằng kỹ thuật <strong>SVG Pattern lồng ảnh</strong>.</p>
+            
+            <div class="section-title">Chọn Giải Pháp Kỹ Thuật</div>
+            
+            <!-- Tech 1 -->
+            <div class="tech-card active" onclick="switchStyle('pebble_flat')">
+                <div class="tech-header">
+                    <span class="tech-name">1. Giọt Nước Dẹt (ASCII)</span>
+                    <span class="tech-badge">Khuyên Dùng</span>
+                </div>
+                <div class="tech-desc">Hình dạng giọt nước bị ép dẹt nằm ngang đúng theo mô tả của bạn. Có đỉnh trên phẳng nhẹ, hai bên sườn đứng và đáy bo tròn mềm mại.</div>
+            </div>
+
+            <!-- Tech 2 -->
+            <div class="tech-card" onclick="switchStyle('pebble_smooth')">
+                <div class="tech-header">
+                    <span class="tech-name">2. Viên Sỏi Cuội Nằm Ngang</span>
+                    <span class="tech-badge" style="background:#5c73a8">Natural</span>
+                </div>
+                <div class="tech-desc">Mô phỏng viên sỏi suối tự nhiên nằm ngang. Thon dẹt ở hai bên, mang lại cảm giác tĩnh lặng và vững chãi, rất phù hợp làm đại diện cho các đảo đá hay viên đá.</div>
+            </div>
+
+            <!-- Tech 3 -->
+            <div class="tech-card" onclick="switchStyle('pebble_wave')">
+                <div class="tech-header">
+                    <span class="tech-name">3. Đám Mây / Hồ Nước Dẹt</span>
+                    <span class="tech-badge" style="background:#856404">Organic</span>
+                </div>
+                <div class="tech-desc">Đường nét uốn lượn tự sinh động hơn, bất đối xứng nhẹ, tạo cảm giác như một hồ nước hoặc đám mây bồng bềnh trôi trên bản đồ.</div>
+            </div>
+
+            <!-- Tech 4 -->
+            <div class="tech-card" onclick="switchStyle('pebble_stone')">
+                <div class="tech-header">
+                    <span class="tech-name">4. Viên Sỏi Thiền Đứng (Zen)</span>
+                    <span class="tech-badge" style="background:#b84c4c">Zen Style</span>
+                </div>
+                <div class="tech-desc">Dạng sỏi dẹt đứng, hai đầu thuôn gọn nhẹ. Tạo điểm nhấn cân bằng hoàn hảo giữa yếu tố định vị bản đồ và trưng bày hình ảnh điểm đến.</div>
+            </div>
+            
+            <div class="section-title">Điểm Ưu Việt Của SVG Pattern:</div>
+            <div style="font-size: 13px; color: var(--text-muted); line-height: 1.55;">
+                <ul style="padding-left: 20px; margin: 5px 0;">
+                    <li><strong>Hợp nhất ảnh và viền:</strong> Đường viền vàng là thuộc tính <code>stroke</code> vẽ trực tiếp lên đường dẫn <code>path</code> chứa ảnh, triệt tiêu hoàn toàn lỗi lệch viền của CSS cũ.</li>
+                    <li><strong>Không biến dạng ảnh:</strong> Áp dụng <code>preserveAspectRatio="xMidYMid slice"</code> giúp ảnh tự động co giãn bao phủ (cover) toàn bộ hình dạng tương tự <code>object-fit: cover</code>.</li>
+                    <li><strong>Hiệu năng cực cao:</strong> Render vector nguyên bản qua GPU giúp bản đồ mượt mà khi zoom và di chuyển.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Map Container -->
+        <div id="map"></div>
     </div>
 
-    <div id="map"></div>
-    
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // 1. Khởi tạo bản đồ tại tọa độ trung tâm Việt Nam
-        var map = L.map('map').setView([16.0, 108.0], 5);
-        
-        // Thay thế bằng Tile của Google Maps (có hỗ trợ tiếng Việt & hiển thị Hoàng Sa, Trường Sa)
-        // vì URL eKMap cần có API Key thương mại mới hoạt động được.
-        var vietmanMapUrl = 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi'; 
-        
-        // 3. Khai báo và đưa lớp bản đồ mới này vào hiển thị
-        L.tileLayer(vietmanMapUrl, {
+        // 1. Khởi tạo map
+        const map = L.map('map', {
+            zoomControl: false,
+            scrollWheelZoom: true
+        }).setView([16.0, 108.0], 6);
+
+        // Nút zoom đặt ở góc dưới phải
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+        // Tile Map Google dạng tối ngầu
+        const mapUrl = 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi';
+        L.tileLayer(mapUrl, {
             maxZoom: 18,
-            attribution: '&copy; Bản đồ chủ quyền Việt Nam | Dữ liệu bản đồ &copy; Google'
+            attribution: '&copy; Bản đồ chủ quyền Việt Nam | Google Maps'
         }).addTo(map);
 
-        // Thêm một marker đánh dấu Hà Nội để kiểm tra
-        L.marker([21.0285, 105.8542]).addTo(map)
-            .bindPopup('<b>Hà Nội</b><br>Thủ đô nước Cộng hòa Xã hội Chủ nghĩa Việt Nam.')
-            .openPopup();
+        // Dữ liệu điểm đến
+        const destinations = [
+            {
+                id: "halong",
+                name: "Vịnh Hạ Long",
+                coords: [20.9101, 107.1824],
+                img: "assets/halong-bay.jpg",
+                desc: "Di sản thiên nhiên thế giới với hàng ngàn đảo đá vôi kỳ vĩ vươn lên từ làn nước ngọc lục bảo."
+            },
+            {
+                id: "mekong",
+                name: "Mekong Delta",
+                coords: [10.0260, 105.7725],
+                img: "assets/mekong-delta.jpg",
+                desc: "Vùng đất trù phú với mê cung sông ngòi, rừng ngập mặn và những khu chợ nổi đậm đà bản sắc."
+            }
+        ];
+
+        // Tập hợp các định nghĩa SVG Path tương ứng với các giải pháp hình dạng
+        const shapes = {
+            pebble_flat: {
+                viewBox: "0 0 100 100",
+                path: "M30,22 L70,22 C84,22 93,32 91,50 C89,68 82,78 68,78 L32,78 C18,78 9,68 9,50 C9,32 16,22 30,22 Z"
+            },
+            pebble_smooth: {
+                viewBox: "0 0 100 100",
+                path: "M15,45 C20,20 40,16 55,18 C70,20 85,25 88,45 C91,65 75,80 50,82 C25,84 10,70 15,45 Z"
+            },
+            pebble_wave: {
+                viewBox: "0 0 100 100",
+                path: "M10,50 C12,28 32,15 62,15 C92,15 95,38 90,52 C85,66 70,82 45,82 C20,82 8,72 10,50 Z"
+            },
+            pebble_stone: {
+                viewBox: "0 0 100 100",
+                path: "M28,15 C45,10 55,10 72,15 C85,25 85,75 72,85 C55,90 45,90 28,85 C15,75 15,25 28,15 Z"
+            }
+        };
+
+        // Biến lưu các Marker hiện tại
+        let currentMarkers = [];
+        let activeStyle = 'pebble_flat';
+
+        // Hàm tạo mã SVG động cho từng Marker sử dụng SVG Pattern lồng ảnh tràn viền
+        function getSVGMarkerHTML(dest, style, index) {
+            const shape = shapes[style];
+            const patternId = `img-pattern-${dest.id}-${style}`;
+            
+            return `
+                <div class="custom-irregular-marker">
+                    <svg viewBox="${shape.viewBox}" class="marker-svg-container" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <!-- Pattern chứa ảnh chụp điểm đến. Thuộc tính preserveAspectRatio="xMidYMid slice" giúp ảnh tự bao phủ tương tự object-fit: cover -->
+                            <pattern id="${patternId}" x="0" y="0" width="1" height="1" patternContentUnits="objectBoundingBox">
+                                <image href="${dest.img}" x="0" y="0" width="1" height="1" preserveAspectRatio="xMidYMid slice" />
+                            </pattern>
+                        </defs>
+                        <!-- Vòng radar phát sáng lan tỏa chính xác theo hình dáng không cố định ở phía sau -->
+                        <path d="${shape.path}" class="marker-path-radar" />
+                        <!-- Ảnh điểm đến tràn viền phủ kín hoàn toàn hình dạng không cố định, không có viền bao quanh -->
+                        <path d="${shape.path}" fill="url(#${patternId})" class="marker-path" />
+                    </svg>
+                </div>
+            `;
+        }
+
+        // Render markers lên bản đồ
+        function renderMarkers() {
+            // Xóa các markers cũ
+            currentMarkers.forEach(m => map.removeLayer(m));
+            currentMarkers = [];
+
+            destinations.forEach((dest, idx) => {
+                const markerHtml = getSVGMarkerHTML(dest, activeStyle, idx);
+                
+                const customIcon = L.divIcon({
+                    html: markerHtml,
+                    className: '',
+                    iconSize: [90, 90], // Tăng nhẹ kích thước giúp hiển thị chi tiết hình ảnh rõ nét hơn
+                    iconAnchor: [45, 45]
+                });
+
+                const popupContent = `
+                    <div class="popup-card">
+                        <h3>${dest.name}</h3>
+                        <p>${dest.desc}</p>
+                    </div>
+                `;
+
+                const marker = L.marker(dest.coords, { icon: customIcon })
+                    .addTo(map)
+                    .bindPopup(popupContent, { offset: [0, -25] });
+
+                marker.on('click', () => {
+                    map.setView(dest.coords, 9, { animate: true });
+                });
+
+                currentMarkers.push(marker);
+            });
+        }
+
+        // Chuyển đổi giữa các giải pháp kỹ thuật
+        function switchStyle(styleName) {
+            activeStyle = styleName;
+            
+            // Cập nhật trạng thái active card bên sidebar
+            document.querySelectorAll('.tech-card').forEach(card => card.classList.remove('active'));
+            const index = ['pebble_flat', 'pebble_smooth', 'pebble_wave', 'pebble_stone'].indexOf(styleName);
+            document.querySelectorAll('.tech-card')[index].classList.add('active');
+
+            renderMarkers();
+        }
+
+        // Khởi động render lần đầu
+        renderMarkers();
     </script>
 </body>
 </html>
