@@ -1848,6 +1848,52 @@
     }
     
     @media (max-width: 768px) {
+      .container {
+        width: min(1180px, 90%) !important;
+      }
+      .hero {
+        min-height: auto !important;
+        background: linear-gradient(180deg, rgba(17, 19, 15, 0.92) 0%, rgba(17, 19, 15, 0.75) 50%, rgba(17, 19, 15, 0.6) 100%), var(--hero-img) center/cover no-repeat !important;
+      }
+      .hero-content {
+        grid-template-columns: 1fr !important;
+        padding: 64px 0 80px !important;
+        gap: 28px !important;
+      }
+      .hero h1 {
+        font-size: clamp(24px, 6vw, 36px) !important;
+        margin-bottom: 16px !important;
+      }
+      .hero-lede {
+        font-size: 16px !important;
+        margin-bottom: 24px !important;
+      }
+      .hero-actions {
+        flex-direction: column !important;
+        width: 100% !important;
+        gap: 12px !important;
+      }
+      .hero-actions .btn {
+        width: 100% !important;
+        justify-content: center !important;
+      }
+      .quote-card {
+        padding: 20px !important;
+        border-radius: 24px !important;
+      }
+      .quote-card h2 {
+        font-size: 22px !important;
+        margin-bottom: 12px !important;
+      }
+      .quote-row {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 4px !important;
+        padding-bottom: 8px !important;
+      }
+      .quote-row strong {
+        text-align: left !important;
+      }
       #payment-terms, #hotels {
         padding: 32px 20px !important;
         border-radius: 24px !important;
