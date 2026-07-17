@@ -1806,6 +1806,27 @@
       color: #1c160d;
     }
 
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .btn-inline-translate.loading {
+      color: transparent !important;
+      pointer-events: none;
+      background: var(--emerald) !important;
+    }
+
+    .btn-inline-translate.loading::after {
+      content: "";
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border: 2px solid transparent;
+      border-top-color: var(--gold-2);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
     html[dir="rtl"] .btn-inline-translate {
       right: auto;
       left: 2px;
@@ -2586,8 +2607,55 @@
   </script>
 
   <script id="editor-scripts">
-    const QUOTATION_ID = "{{ quotation_id }}";
-    const CURRENT_LANG = "{{ lang or 'en' }}";
+    if (typeof window.QUOTATION_ID === 'undefined') {
+      window.QUOTATION_ID = "{{ quotation_id }}";
+    }
+    if (typeof window.CURRENT_LANG === 'undefined') {
+      window.CURRENT_LANG = "{{ lang or 'en' }}";
+    }
+
+    // Set globals for compatibility if not already defined
+    if (typeof QUOTATION_ID === 'undefined') {
+      window.QUOTATION_ID = "{{ quotation_id }}";
+    }
+    if (typeof CURRENT_LANG === 'undefined') {
+      window.CURRENT_LANG = "{{ lang or 'en' }}";
+    }
+
+    // Dynamically inject inline translate button styles to support previously published static pages
+    (function() {
+      const styleId = 'btn-translate-loading-styles';
+      if (!document.getElementById(styleId)) {
+        const style = document.createElement('style');
+        style.id = styleId;
+        style.textContent = `
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+          .btn-inline-translate.loading {
+            color: transparent !important;
+            pointer-events: none;
+            background: var(--emerald) !important;
+          }
+          .btn-inline-translate.loading::after {
+            content: "";
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border: 2px solid transparent;
+            border-top-color: var(--gold-2);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            left: 0;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            margin: auto;
+          }
+        `;
+        document.head.appendChild(style);
+      }
+    })();
 
     // Sync language dropdown and links with URL parameters
     (function() {
@@ -2699,7 +2767,7 @@
       const btn = element.parentNode.querySelector('.btn-inline-translate');
       if (btn) {
         btn.disabled = true;
-        btn.innerText = '⏳';
+        btn.classList.add('loading');
       }
       
       try {
@@ -2722,12 +2790,24 @@
       } finally {
         if (btn) {
           btn.disabled = false;
-          btn.innerText = 'A⇄文';
+          btn.classList.remove('loading');
         }
       }
     }
 
     document.querySelectorAll('[data-editable]').forEach(el => {
+      // Prevent double wrapping
+      if (el.parentNode.classList.contains('luxury-editable-wrapper')) {
+        const existingBtn = el.parentNode.querySelector('.btn-inline-translate');
+        if (existingBtn) {
+          existingBtn.onclick = (e) => {
+            e.stopPropagation();
+            translateBlock(el);
+          };
+        }
+        return;
+      }
+
       el.contentEditable = 'true';
       el.spellcheck = false;
 
