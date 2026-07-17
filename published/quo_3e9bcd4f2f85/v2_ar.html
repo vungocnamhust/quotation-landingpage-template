@@ -1846,6 +1846,25 @@
       right: auto !important;
       left: 16px !important;
     }
+    
+    @media (max-width: 768px) {
+      #payment-terms, #hotels {
+        padding: 32px 20px !important;
+        border-radius: 24px !important;
+        margin: 24px 0 !important;
+      }
+      #why-works, #meet-designer {
+        padding: 40px 20px !important;
+        border-radius: 24px !important;
+        margin: 24px 0 !important;
+      }
+      #payment-terms th.term-th {
+        width: 130px !important;
+      }
+      #payment-terms table {
+        min-width: 480px;
+      }
+    }
   </style>
 </head>
 
@@ -1891,7 +1910,7 @@
     <header class="hero">
       <div class="container hero-content">
         <div>
-          <div class="kicker" data-editable="kicker">Private Luxury Quotation ‒ 21D20N ‒ 2026-08-10 – 2026-08-30</div>
+          <div class="kicker" data-editable="kicker">عرض سعر خاص فاخر ‒ 21D20N ‒ 2026-08-10 – 2026-08-30</div>
           <h1 data-editable="tour_title">اكتشف روعة الطبيعة وسحر الثقافة عبر 21 يومًا من الاسترخاء والمغامرة...</h1>
           <p class="hero-lede" data-editable="lede">رحلة استثنائية فاخرة ومصممة بعناية تمتد على مدار 21 يومًا لربط أرقى الوجهات في فيتنام. من سحر هانوي التاريخي ونقاء خليج هاليغ، إلى مرتفعات سابا الشامخة، وصولاً إلى شواطئ دا نانغ الرملية وهدوء دالات الرومانسية وحيوية هو تشي منه. صُممت هذه الرحلة خصيصاً للمسافرين الباحثين عن الفخامة والخصوصية، مع توفير كافة الخدمات الممتازة والتسهيلات التي تضمن راحة تامة طوال الإقامة.</p>
           <div class="hero-actions no-print">
@@ -1902,8 +1921,8 @@
         <aside class="quote-card">
           <h2>نظرة عامة على الرحلة</h2>
           <div class="quote-list">
-            <div class="quote-row"><span>Prepared for</span><strong data-editable="customer_name">2 Adults (شخصين)</strong></div>
-            <div class="quote-row"><span>Overview</span><strong data-editable="overview_heading">PROGRAM OVERVIEW</strong></div>
+            <div class="quote-row"><span>مُعدّ لصالح</span><strong data-editable="customer_name">2 Adults (شخصين)</strong></div>
+            <div class="quote-row"><span>Overview</span><strong data-editable="overview_heading">نظرة عامة على البرنامج</strong></div>
             
             <div class="quote-row"><span>Guests</span><strong>2 Adults (شخصين)</strong></div>
             
@@ -1959,7 +1978,7 @@
         <div class="section-head" style="grid-template-columns: 1fr;">
           <h2
             style="color: white; font-family: var(--serif); font-size: clamp(32px, 4vw, 54px); margin: 0 0 10px;">
-            تفاصيل التجربة</h2>
+            لماذا تلهم هذه الرحلة</h2>
           <p style="color: rgba(255, 255, 255, 0.72); margin: 0;">رعاية مخصصة، وتيرة متوازنة، ولوجستيات سلسة مصممة خصيصًا لمجموعتكم.</p>
         </div>
         <div
@@ -1995,7 +2014,7 @@
     <section id="journey">
       <div class="container">
         <div class="section-head">
-          <h2 data-editable="journey_h2">من خلال عيون محلية</h2>
+          <h2 data-editable="journey_h2">المدن في إطارات</h2>
           <p data-editable="journey_p">لوحات وجهة سينمائية تم إعدادها لمقترح سفر متميز.</p>
         </div>
         <div class="gallery">
@@ -3569,7 +3588,7 @@
           <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
             <thead>
               <tr style="background: var(--emerald); color: white;">
-                <th style="padding: 16px 20px; width: 250px;">البند</th>
+                <th class="term-th" style="padding: 16px 20px; width: 250px;">البند</th>
                 <th style="padding: 16px 20px;">الشرط</th>
               </tr>
             </thead>
@@ -3667,7 +3686,7 @@
   </main>
 
   <footer class="footer">
-    <div class="container" data-editable="footer_text">اكتشف روعة الطبيعة وسحر الثقافة عبر 21 يومًا من الاسترخاء والمغامرة... — Luxury quotation prepared for 2 Adults (شخصين).</div>
+    <div class="container" data-editable="footer_text">اكتشف روعة الطبيعة وسحر الثقافة عبر 21 يومًا من الاسترخاء والمغامرة... — عرض سعر فاخر مُعدّ لصالح 2 Adults (شخصين).</div>
   </footer>
 
   <!-- ── Publish Bar ─────────────────────────────────────────── -->

@@ -1846,6 +1846,25 @@
       right: auto !important;
       left: 16px !important;
     }
+    
+    @media (max-width: 768px) {
+      #payment-terms, #hotels {
+        padding: 32px 20px !important;
+        border-radius: 24px !important;
+        margin: 24px 0 !important;
+      }
+      #why-works, #meet-designer {
+        padding: 40px 20px !important;
+        border-radius: 24px !important;
+        margin: 24px 0 !important;
+      }
+      #payment-terms th.term-th {
+        width: 130px !important;
+      }
+      #payment-terms table {
+        min-width: 480px;
+      }
+    }
   </style>
 </head>
 
@@ -1959,7 +1978,7 @@
         <div class="section-head" style="grid-template-columns: 1fr;">
           <h2
             style="color: white; font-family: var(--serif); font-size: clamp(32px, 4vw, 54px); margin: 0 0 10px;">
-            Why This Journey Inspires</h2>
+            A Perfectly Paced Journey</h2>
           <p style="color: rgba(255, 255, 255, 0.72); margin: 0;">Tailored care, balanced pacing, and seamless logistics designed specifically for your group.</p>
         </div>
         <div
@@ -1995,7 +2014,7 @@
     <section id="journey">
       <div class="container">
         <div class="section-head">
-          <h2 data-editable="journey_h2">The cities in frames</h2>
+          <h2 data-editable="journey_h2">Through Local Eyes</h2>
           <p data-editable="journey_p">Cinematic destination panels crafted for a premium travel proposal.</p>
         </div>
         <div class="gallery">
@@ -3569,7 +3588,7 @@
           <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
             <thead>
               <tr style="background: var(--emerald); color: white;">
-                <th style="padding: 16px 20px; width: 250px;">Term</th>
+                <th class="term-th" style="padding: 16px 20px; width: 250px;">Term</th>
                 <th style="padding: 16px 20px;">Condition</th>
               </tr>
             </thead>

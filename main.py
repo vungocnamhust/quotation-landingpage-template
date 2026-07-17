@@ -218,7 +218,7 @@ STATIC_DICTIONARY = {
     },
     "Hotel Standard": {
         "vi": "Tiêu Chuẩn Khách Sạn",
-        "ar": "فئة Phân Hạng Khách Sạn"
+        "ar": "فئة الفندق"
     },
     "Meal Preference": {
         "vi": "Tùy Chọn Bữa Ăn",
@@ -258,7 +258,7 @@ STATIC_DICTIONARY = {
     },
     "Package Inclusions & Exclusions": {
         "vi": "Danh Mục Dịch Vụ Bao Gồm & Loại Trừ",
-        "ar": "الخدمات المشمولة والمستثناة từ Bảo B2B"
+        "ar": "الخدمات المشمولة والمستثناة من الباقة B2B"
     },
     "Destination Gallery": {
         "vi": "Bộ Sưu Tập Hình Ảnh",
@@ -982,6 +982,42 @@ STATIC_DICTIONARY = {
     "I am your dedicated travel specialist. I handpicked every hotel, private transfer, and local guide on this itinerary to ensure you experience the true depth of Vietnam in comfort, privacy, and at your own pace. I will personally oversee your journey from behind the scenes.": {
         "vi": "Tôi là chuyên gia thiết kế hành trình riêng của bạn. Tôi đã tự tay chọn lọc từng khách sạn, chuyến xe riêng tư và hướng dẫn viên bản địa trong lịch trình này để đảm bảo bạn được trải nghiệm chiều sâu thực sự của Việt Nam một cách thoải mái, riêng tư nhất và theo nhịp độ của riêng bạn. Tôi sẽ đích thân đồng hành và giám sát chuyến đi của bạn.",
         "ar": "أنا مصمم رحلتك المخصص. لقد اخترت بنفسي كل فندق، وسيلة نقل خاصة، ومرشد محلي في هذا المسار لضمان تجربتك للعمق الحقيقي لفيتنام بكل راحة وخصوصية وبوتيرتك الخاصة. سأشرف شخصيًا على رحلتك خلف الكواليس."
+    },
+    "Private Luxury Quotation": {
+        "ar": "عرض سعر خاص فاخر",
+        "vi": "Báo giá sang trọng riêng tư"
+    },
+    "Prepared for": {
+        "ar": "مُعدّ لصالح",
+        "vi": "Chuẩn bị cho"
+    },
+    "Luxury quotation prepared for": {
+        "ar": "عرض سعر فاخر مُعدّ لصالح",
+        "vi": "Báo giá sang trọng được chuẩn bị cho"
+    },
+    "Refer to Booking & Payment terms below.": {
+        "ar": "يرجى الرجوع إلى شروط الحجز والدفع أدناه.",
+        "vi": "Vui lòng tham khảo các điều khoản Đặt chỗ & Thanh toán bên dưới."
+    },
+    "Share travel dates, preferred hotel tier, rooming list and any dietary or mobility requirements. We will reconfirm availability and return a finalized quotation.": {
+        "ar": "يرجى مشاركة تواريخ السفر، فئة الفندق المفضلة، قائمة توزيع الغرف، وأي متطلبات غذائية أو حركية. سنقوم بتأكيد الإمكانية وإرسال عرض السعر النهائي.",
+        "vi": "Hãy chia sẻ ngày đi, hạng khách sạn mong muốn, danh sách phòng và bất kỳ yêu cầu ăn uống hoặc đi lại nào. Chúng tôi sẽ xác nhận tình trạng dịch vụ và gửi báo giá hoàn chỉnh."
+    },
+    "PRICE QUOTATION – B2B NET INDICATIVE": {
+        "ar": "عرض السعر - صافي تقديري لشركاء B2B",
+        "vi": "BÁO GIÁ – GIÁ NET B2B THAM KHẢO"
+    },
+    "Confirmed Booking Itinerary": {
+        "ar": "برنامج الرحلة المؤكد",
+        "vi": "Hành trình đặt chỗ đã xác nhận"
+    },
+    "Detailed booking itinerary prepared for": {
+        "ar": "برنامج رحلة مفصل مُعدّ لصالح",
+        "vi": "Hành trình chi tiết được chuẩn bị cho"
+    },
+    "PROGRAM OVERVIEW": {
+        "ar": "نظرة عامة على البرنامج",
+        "vi": "TỔNG QUAN CHƯƠNG TRÌNH"
     }
 }
 
@@ -2007,7 +2043,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         # Hero / header
         "quotation_title": truncate_text(payload.landingpageContent.heroSection.headline, 100),
         "tour_title":      tour_title,
-        "kicker":          f"Private Luxury Quotation \u2012 {duration_lbl} \u2012 {travel_dates}",
+        "kicker":          f"{translate_filter('Private Luxury Quotation', lang)} \u2012 {duration_lbl} \u2012 {travel_dates}",
         "lede":            lede,
         # Guest & trip meta
         "customer_name":   prepared_for,
@@ -2035,8 +2071,8 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         "strip_pace":      "Relaxed",
         "strip_service":   "Private",
         # Overview section
-        "overview_heading": overview_heading,
-        "overview_h2":      f"Prepared for: {prepared_for} \u2014 {tour_title}",
+        "overview_heading": translate_filter(overview_heading, lang),
+        "overview_h2":      f"{translate_filter('Prepared for', lang)}: {prepared_for} \u2014 {tour_title}",
         "overview_p":       payload.quotationNarrative,
         "overview_paras":   overview_paras,
         # Experiences (first 3 days)
@@ -2078,7 +2114,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         "cta_h2": translate_filter("Confirm dates, then refine the luxury layer.", lang),
         "cta_p":  translate_filter("Share travel dates, preferred hotel tier, rooming list and any dietary or mobility requirements. We will reconfirm availability and return a finalized quotation.", lang),
         # Footer
-        "footer_text": f"{tour_title} — Luxury quotation prepared for {prepared_for}.",
+        "footer_text": f"{tour_title} — {translate_filter('Luxury quotation prepared for', lang)} {prepared_for}.",
         # Raw quotation (for reference / debugging)
         "raw_quotation":  "",
         # GAP ALIGNMENT context
@@ -2360,7 +2396,7 @@ def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, her
         # Hero / header
         "quotation_title":  truncate_text(payload.quotationTitle, 100),
         "tour_title":       tour_title,
-        "kicker":           f"Confirmed Booking Itinerary • {duration_lbl} • {travel_dates}",
+        "kicker":           f"{translate_filter('Confirmed Booking Itinerary', lang)} • {duration_lbl} • {travel_dates}",
         "lede":             lede,
         # Guest & trip meta
         "customer_name":    prepared_for,
@@ -2381,7 +2417,7 @@ def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, her
         "quotation_number": payload.quotationNumber or itinerary_id,
         "valid_until":      "N/A",
         # Overview
-        "overview_heading": overview_heading,
+        "overview_heading": translate_filter(overview_heading, lang),
         "overview_h2":      f"{prepared_for} — {tour_title}",
         "overview_p":       " ".join(overview_paras),
         "overview_paras":   overview_paras,
@@ -2462,7 +2498,7 @@ def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, her
         "pricing_h2":     pricing_h2_val,
         "pricing_p":      f"{translate_filter('Total', lang)}: {guests_txt}. {translate_filter('Currency', lang)}: {currency}." if total_price else "",
         # Footer
-        "footer_text":      f"{tour_title} — Detailed booking itinerary prepared for {prepared_for}.",
+        "footer_text":      f"{tour_title} — {translate_filter('Detailed booking itinerary prepared for', lang)} {prepared_for}.",
         "lang":             lang,
         "template_name":    template_name,
         "translation_status": _load_translation_status(itinerary_id, default_lang=lang),

@@ -1846,6 +1846,25 @@
       right: auto !important;
       left: 16px !important;
     }
+    
+    @media (max-width: 768px) {
+      #payment-terms, #hotels {
+        padding: 32px 20px !important;
+        border-radius: 24px !important;
+        margin: 24px 0 !important;
+      }
+      #why-works, #meet-designer {
+        padding: 40px 20px !important;
+        border-radius: 24px !important;
+        margin: 24px 0 !important;
+      }
+      #payment-terms th.term-th {
+        width: 130px !important;
+      }
+      #payment-terms table {
+        min-width: 480px;
+      }
+    }
   </style>
 </head>
 
@@ -1891,7 +1910,7 @@
     <header class="hero">
       <div class="container hero-content">
         <div>
-          <div class="kicker" data-editable="kicker">Private Luxury Quotation ‒ 21D20N ‒ 2026-08-10 – 2026-08-30</div>
+          <div class="kicker" data-editable="kicker">Báo giá sang trọng riêng tư ‒ 21D20N ‒ 2026-08-10 – 2026-08-30</div>
           <h1 data-editable="tour_title">Khám phá vẻ đẹp kỳ vĩ của thiên nhiên và nét quyến rũ của văn hóa qua...</h1>
           <p class="hero-lede" data-editable="lede">Một hành trình ngoại hạng xa xỉ và được thiết kế tỉ mỉ kéo dài 21 ngày kết nối những điểm đến tinh hoa nhất Việt Nam. Từ vẻ đẹp lịch sử của Hà Nội, sự tinh khôi của Vịnh Hạ Long, đến những đỉnh cao hùng vĩ của Sa Pa, rồi những bãi biển cát trắng Đà Nẵng, sự yên bình lãng mạn của Đà Lạt và nhịp sống sôi động của Thành phố Hồ Chí Minh. Hành trình này được thiết kế dành riêng cho những du khách tìm kiếm sự xa hoa và riêng tư, với đầy đủ các dịch vụ đẳng cấp và tiện nghi đảm bảo sự thoải mái trọn...</p>
           <div class="hero-actions no-print">
@@ -1902,8 +1921,8 @@
         <aside class="quote-card">
           <h2>Tổng Quan Hành Trình</h2>
           <div class="quote-list">
-            <div class="quote-row"><span>Prepared for</span><strong data-editable="customer_name">2 Người lớn (شخصين)</strong></div>
-            <div class="quote-row"><span>Overview</span><strong data-editable="overview_heading">PROGRAM OVERVIEW</strong></div>
+            <div class="quote-row"><span>Chuẩn bị cho</span><strong data-editable="customer_name">2 Người lớn (شخصين)</strong></div>
+            <div class="quote-row"><span>Overview</span><strong data-editable="overview_heading">TỔNG QUAN CHƯƠNG TRÌNH</strong></div>
             
             <div class="quote-row"><span>Guests</span><strong>2 Người lớn (شخصين)</strong></div>
             
@@ -1959,7 +1978,7 @@
         <div class="section-head" style="grid-template-columns: 1fr;">
           <h2
             style="color: white; font-family: var(--serif); font-size: clamp(32px, 4vw, 54px); margin: 0 0 10px;">
-            Chi Tiết Trải Nghiệm</h2>
+            Một Hành Trình Có Nhịp Độ Hoàn Hảo</h2>
           <p style="color: rgba(255, 255, 255, 0.72); margin: 0;">Dịch vụ được cá nhân hóa, nhịp độ cân bằng và hậu cần liền mạch được thiết kế riêng cho đoàn của bạn.</p>
         </div>
         <div
@@ -1995,7 +2014,7 @@
     <section id="journey">
       <div class="container">
         <div class="section-head">
-          <h2 data-editable="journey_h2">Những Thành Phố Trong Khung Cảnh</h2>
+          <h2 data-editable="journey_h2">Bộ Sưu Tập Thành Phố</h2>
           <p data-editable="journey_p">Hình ảnh điểm đến đậm chất điện ảnh được thiết kế cho đề xuất du lịch cao cấp.</p>
         </div>
         <div class="gallery">
@@ -3569,7 +3588,7 @@
           <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
             <thead>
               <tr style="background: var(--emerald); color: white;">
-                <th style="padding: 16px 20px; width: 250px;">Điều Khoản</th>
+                <th class="term-th" style="padding: 16px 20px; width: 250px;">Điều Khoản</th>
                 <th style="padding: 16px 20px;">Điều Kiện</th>
               </tr>
             </thead>
@@ -3667,7 +3686,7 @@
   </main>
 
   <footer class="footer">
-    <div class="container" data-editable="footer_text">Khám phá vẻ đẹp kỳ vĩ của thiên nhiên và nét quyến rũ của văn hóa qua... — Luxury quotation prepared for 2 Người lớn (شخصين).</div>
+    <div class="container" data-editable="footer_text">Khám phá vẻ đẹp kỳ vĩ của thiên nhiên và nét quyến rũ của văn hóa qua... — Báo giá sang trọng được chuẩn bị cho 2 Người lớn (شخصين).</div>
   </footer>
 
   <!-- ── Publish Bar ─────────────────────────────────────────── -->

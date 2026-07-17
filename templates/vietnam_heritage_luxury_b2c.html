@@ -1781,6 +1781,25 @@
       right: auto !important;
       left: 16px !important;
     }
+    
+    @media (max-width: 768px) {
+      #payment-terms, #hotels {
+        padding: 32px 20px !important;
+        border-radius: 24px !important;
+        margin: 24px 0 !important;
+      }
+      #why-works, #meet-designer {
+        padding: 40px 20px !important;
+        border-radius: 24px !important;
+        margin: 24px 0 !important;
+      }
+      #payment-terms th.term-th {
+        width: 130px !important;
+      }
+      #payment-terms table {
+        min-width: 480px;
+      }
+    }
   </style>
 </head>
 
@@ -2264,7 +2283,7 @@
           <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
             <thead>
               <tr style="background: var(--emerald); color: white;">
-                <th style="padding: 16px 20px; width: 250px;">{{ "Term" | translate(lang) }}</th>
+                <th class="term-th" style="padding: 16px 20px; width: 250px;">{{ "Term" | translate(lang) }}</th>
                 <th style="padding: 16px 20px;">{{ "Condition" | translate(lang) }}</th>
               </tr>
             </thead>
