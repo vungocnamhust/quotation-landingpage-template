@@ -19,6 +19,20 @@ PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "").rstrip("/")
 GITHUB_API = "https://api.github.com"
 
 
+def _get_next_version_local(quotation_id: str) -> int:
+    import glob
+    existing = glob.glob(os.path.join("published", quotation_id, "v*.html"))
+    versions = [1]
+    for f in existing:
+        name = os.path.basename(f)
+        if name.endswith(".html"):
+            name_no_ext = name[:-5]
+            base_name = name_no_ext.split("_")[0]
+            if base_name.startswith("v") and base_name[1:].isdigit():
+                versions.append(int(base_name[1:]) + 1)
+    return max(versions)
+
+
 async def get_next_version(quotation_id: str) -> int:
     """
     Fetch the contents of the published/{quotation_id} directory from GitHub API
@@ -26,10 +40,7 @@ async def get_next_version(quotation_id: str) -> int:
     """
     ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
     if ENVIRONMENT != "production" or not GITHUB_TOKEN or not GITHUB_REPO:
-        # Fallback for local dev
-        import glob
-        existing = glob.glob(os.path.join("published", quotation_id, "v*.html"))
-        return len(existing) + 1
+        return _get_next_version_local(quotation_id)
 
     api_url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/published/{quotation_id}"
     headers = {
@@ -47,18 +58,15 @@ async def get_next_version(quotation_id: str) -> int:
                 versions = [1]
                 for f in files:
                     name = f.get("name", "")
-                    if name.startswith("v") and name.endswith(".html"):
-                        try:
-                            v_num = int(name[1:-5])
-                            versions.append(v_num + 1)
-                        except ValueError:
-                            pass
+                    if name.endswith(".html"):
+                        name_no_ext = name[:-5]
+                        base_name = name_no_ext.split("_")[0]
+                        if base_name.startswith("v") and base_name[1:].isdigit():
+                            versions.append(int(base_name[1:]) + 1)
                 return max(versions)
                 
-    # If folder doesn't exist or error, start at v1 (or fallback to local disk)
-    import glob
-    existing = glob.glob(os.path.join("published", quotation_id, "v*.html"))
-    return len(existing) + 1
+    return _get_next_version_local(quotation_id)
+
 
 
 async def _put_github_file(
@@ -105,15 +113,16 @@ async def _put_github_file(
     raise RuntimeError("GitHub PUT failed after all retries.")  # should never reach
 
 
-async def publish_to_github(quotation_id: str, html_content: str, version: int) -> str:
+async def publish_to_github(quotation_id: str, html_content: str, version: int, lang: str = None, baseline_lang: str = "en") -> str:
     """
-    Commit published/{quotation_id}/v{version}.html to the GitHub repo.
+    Commit published/{quotation_id}/v{version}.html (or language specific suffix) to the GitHub repo.
     Returns the public Vercel URL of the published page.
     """
     if not GITHUB_TOKEN or not GITHUB_REPO:
         raise ValueError("GITHUB_TOKEN and GITHUB_REPO must be set in environment.")
 
-    filename  = f"v{version}.html"
+    lang_suffix = f"_{lang}" if lang and lang != baseline_lang else ""
+    filename  = f"v{version}{lang_suffix}.html"
     file_path = f"published/{quotation_id}/{filename}"
     api_url   = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{file_path}"
     headers   = {
@@ -131,6 +140,7 @@ async def publish_to_github(quotation_id: str, html_content: str, version: int) 
     public_url = f"{PUBLIC_BASE_URL}/published/{quotation_id}/{filename}"
     log.info("[github] ✓ Committed %s → %s", file_path, public_url)
     return public_url
+
 
 
 async def publish_file_to_github(

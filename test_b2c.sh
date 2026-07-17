@@ -4,11 +4,11 @@
 # Usage: bash test_b2c.sh
 # ─────────────────────────────────────────────────────────────────────────────
 
-BASE_URL="${1:-http://localhost:8000}"
+BASE_URL="${1:-http://localhost:8111}"
 
 # Check if the server is running on the specified port
 PORT=$(echo "$BASE_URL" | grep -oE '[0-9]+$')
-PORT="${PORT:-8000}"
+PORT="${PORT:-8111}"
 
 if ! nc -z localhost "$PORT" >/dev/null 2>&1; then
   echo "⚠️  FastAPI server is not running on $BASE_URL."

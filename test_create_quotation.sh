@@ -4,7 +4,7 @@
 # Usage: bash test_create_quotation.sh
 # ─────────────────────────────────────────────────────────────────────────────
 
-BASE_URL="${1:-http://localhost:8000}"
+BASE_URL="${1:-http://localhost:8111}"
 
 curl --connect-timeout 10 --max-time 30 \
   -X POST "$BASE_URL/quotations" \

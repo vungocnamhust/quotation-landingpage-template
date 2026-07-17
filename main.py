@@ -2870,11 +2870,206 @@ def parse_edited_fields(html_content: str) -> dict:
     parser.feed(html_content)
     return parser.edited_fields
 
-async def _get_latest_published_html(quotation_id: str, lang: str = None) -> str | None:
+def get_existing_editable_keys(html_content: str) -> set[str]:
+    import re
+    return set(re.findall(r'data-editable=["\']([^"\']+)["\']', html_content))
+
+def extract_editor_components(rendered_html: str) -> str:
+    """
+    Extracts the publish-bar, loading overlay, translation-status,
+    and editor-scripts from the rendered Jinja2 template.
+    """
+    idx_bar = rendered_html.find('id="publish-bar"')
+    if idx_bar == -1:
+        idx_bar = rendered_html.find("id='publish-bar'")
+    if idx_bar == -1:
+        return ""
+        
+    idx_start = rendered_html.rfind('<div', 0, idx_bar)
+    if idx_start == -1:
+        idx_start = idx_bar
+        
+    idx_scripts = rendered_html.find('id="editor-scripts"')
+    if idx_scripts == -1:
+        idx_scripts = rendered_html.find("id='editor-scripts'")
+    if idx_scripts == -1:
+        return ""
+        
+    idx_end_script = rendered_html.find('</script>', idx_scripts)
+    if idx_end_script == -1:
+        return ""
+    idx_end = idx_end_script + len('</script>')
+    
+    return rendered_html[idx_start:idx_end]
+
+def make_itinerary_editor_visible(html_content: str) -> str:
+    import re
+    # Strip style="display: none;" from #publish-bar
+    pattern = r'(<div[^>]*id=["\']publish-bar["\'][^>]*style=["\']display:\s*none;?["\'][^>]*>)'
+    def repl(match):
+        tag = match.group(1)
+        tag = re.sub(r'style=["\']display:\s*none;?["\']', '', tag)
+        return tag
+    return re.sub(pattern, repl, html_content)
+
+def sync_itinerary_deletions_to_payloads(ctx: dict, active_days: set[int], active_cards: dict):
+    if "itinerary" in ctx:
+        ctx["itinerary"] = [day for day in ctx["itinerary"] if day.get("dayNumber") in active_days]
+    if "hotels" in ctx:
+        ctx["hotels"] = [h for i, h in enumerate(ctx["hotels"]) if i in active_cards["hotel"]]
+    if "activities" in ctx:
+        ctx["activities"] = [act for i, act in enumerate(ctx["activities"]) if i in active_cards["activity"]]
+    if "transfers" in ctx:
+        ctx["transfers"] = [tx for i, tx in enumerate(ctx["transfers"]) if i in active_cards["transfer"]]
+    if "flights" in ctx:
+        ctx["flights"] = [fl for i, fl in enumerate(ctx["flights"]) if i in active_cards["flight"]]
+    if "guides" in ctx:
+        ctx["guides"] = [gd for i, gd in enumerate(ctx["guides"]) if i in active_cards["guide"]]
+
+    def filter_payload(p_dict):
+        if not p_dict:
+            return
+        if "itinerary" in p_dict:
+            p_dict["itinerary"] = [day for day in p_dict["itinerary"] if day.get("dayNumber") in active_days]
+        if "hotels" in p_dict:
+            p_dict["hotels"] = [h for i, h in enumerate(p_dict["hotels"]) if i in active_cards["hotel"]]
+        if "activities" in p_dict:
+            p_dict["activities"] = [act for i, act in enumerate(p_dict["activities"]) if i in active_cards["activity"]]
+        if "transfers" in p_dict:
+            p_dict["transfers"] = [tx for i, tx in enumerate(p_dict["transfers"]) if i in active_cards["transfer"]]
+        if "flights" in p_dict:
+            p_dict["flights"] = [fl for i, fl in enumerate(p_dict["flights"]) if i in active_cards["flight"]]
+        if "guides" in p_dict:
+            p_dict["guides"] = [gd for i, gd in enumerate(p_dict["guides"]) if i in active_cards["guide"]]
+
+    if "baseline_payload" in ctx:
+        filter_payload(ctx["baseline_payload"])
+
+    if "translations" in ctx:
+        for lang_key in ctx["translations"]:
+            filter_payload(ctx["translations"][lang_key])
+
+def filter_and_override_ctx_by_html(lang_ctx: dict, html_content: str, override_text: bool = True):
+    """
+    Filters out deleted blocks and optionally overrides text content of remaining blocks
+    based on the published HTML content.
+    """
+    existing_keys = get_existing_editable_keys(html_content)
+    edited_fields = parse_edited_fields(html_content)
+    
+    # Simple variables
+    if override_text:
+        for key in [
+            'tour_title', 'kicker', 'lede', 'customer_name', 'overview_heading', 
+            'guests_txt', 'travel_dates', 'route_txt', 'travel_style', 
+            'quotation_number', 'contact', 'why_private', 'why_comfort', 
+            'why_muslim', 'why_balanced', 'journey_h2', 'journey_p', 
+            'itinerary_h2', 'itinerary_p', 'room_notes', 'pricing_h2', 
+            'pricing_p', 'muslim_care_text', 'term_deposit', 'term_balance', 
+            'term_cancellation', 'term_confirmation', 'cta_h2', 'designer_kicker', 
+            'designer_title', 'designer_quote', 'designer_expertise', 
+            'designer_experience', 'designer_signature'
+        ]:
+            if key in edited_fields:
+                lang_ctx[key] = edited_fields[key]
+            
+    # 1. Filter and update itinerary days
+    new_itinerary = []
+    for idx, day in enumerate(lang_ctx.get('itinerary', []), 1):
+        t_key = f"day_title_{idx}"
+        if t_key in existing_keys:
+            if override_text:
+                if t_key in edited_fields:
+                    day['title'] = edited_fields[t_key]
+                    
+                # Rebuild day description paragraphs
+                any_desc_edited = any(f"day_desc_{idx}_{p}" in edited_fields for p in range(20))
+                if any_desc_edited:
+                    desc_paras = []
+                    p = 0
+                    while True:
+                        p_key = f"day_desc_{idx}_{p}"
+                        if p_key in edited_fields:
+                            desc_paras.append(edited_fields[p_key])
+                            p += 1
+                        elif p_key in existing_keys:
+                            orig_desc = day.get('description', [])
+                            if p < len(orig_desc):
+                                desc_paras.append(orig_desc[p])
+                            else:
+                                desc_paras.append("")
+                            p += 1
+                        else:
+                            break
+                    day['description'] = desc_paras
+            new_itinerary.append(day)
+    lang_ctx['itinerary'] = new_itinerary
+    
+    # 2. Filter and update hotels
+    new_hotels = []
+    for h_idx, hotel in enumerate(lang_ctx.get('hotels', []), 1):
+        name_key = f"hotel_name_{h_idx}"
+        if name_key in existing_keys:
+            if override_text:
+                city_key = f"hotel_city_{h_idx}"
+                date_key = f"hotel_date_{h_idx}"
+                tel_key = f"hotel_tel_{h_idx}"
+                intro_key = f"hotel_intro_{h_idx}"
+                info_key = f"hotel_info_name_{h_idx}"
+                
+                if name_key in edited_fields:
+                    hotel['hotel_name'] = edited_fields[name_key]
+                if city_key in edited_fields:
+                    hotel['city_country'] = edited_fields[city_key]
+                if date_key in edited_fields:
+                    hotel['check_in_out'] = edited_fields[date_key]
+                if tel_key in edited_fields:
+                    hotel['telephone'] = edited_fields[tel_key]
+                if intro_key in edited_fields:
+                    hotel['hotel_intro'] = edited_fields[intro_key]
+                if info_key in edited_fields:
+                    hotel['room_name'] = edited_fields[info_key]
+            new_hotels.append(hotel)
+    lang_ctx['hotels'] = new_hotels
+    
+    # 3. Filter and update inclusions
+    new_inclusions = []
+    for inc_idx, item in enumerate(lang_ctx.get('inclusions', []), 1):
+        key = f"inc_{inc_idx}"
+        if key in existing_keys:
+            if override_text and key in edited_fields:
+                new_inclusions.append(edited_fields[key])
+            else:
+                new_inclusions.append(item)
+    lang_ctx['inclusions'] = new_inclusions
+    
+    # 4. Filter and update exclusions
+    new_exclusions = []
+    for exc_idx, item in enumerate(lang_ctx.get('exclusions', []), 1):
+        key = f"exc_{exc_idx}"
+        if key in existing_keys:
+            if override_text and key in edited_fields:
+                new_exclusions.append(edited_fields[key])
+            else:
+                new_exclusions.append(item)
+    lang_ctx['exclusions'] = new_exclusions
+    
+    # 5. Filter and update pricing per pax
+    new_price_options = []
+    for p_idx, opt in enumerate(lang_ctx.get('price_options', []), 1):
+        key = f"price_pax_{p_idx}"
+        if key in existing_keys:
+            if override_text and key in edited_fields:
+                opt['pricePerPerson']['displayText'] = edited_fields[key]
+            new_price_options.append(opt)
+    lang_ctx['price_options'] = new_price_options
+
+async def _get_latest_published_html(quotation_id: str, lang: str = None, fallback: bool = True) -> str | None:
     """Gets the latest published HTML content from memory, disk, or GitHub."""
-    entry = quotations.get(quotation_id)
-    if entry and entry.get("html"):
-        return entry["html"]
+    if not lang:
+        entry = quotations.get(quotation_id)
+        if entry and entry.get("html"):
+            return entry["html"]
 
     from github_publish import get_next_version
     next_version = await get_next_version(quotation_id)
@@ -2885,9 +3080,10 @@ async def _get_latest_published_html(quotation_id: str, lang: str = None) -> str
     # Try language specific published file first (e.g. v1_ar.html)
     lang_suffix = f"_{lang}" if lang else ""
     file_options = [
-        f"{quotation_id}/v{current_version}{lang_suffix}.html",
-        f"{quotation_id}/v{current_version}.html"
+        f"{quotation_id}/v{current_version}{lang_suffix}.html"
     ]
+    if fallback and lang:
+        file_options.append(f"{quotation_id}/v{current_version}.html")
     
     for file_path in file_options:
         local_path = os.path.join("published", file_path)
@@ -2974,96 +3170,18 @@ async def get_quotation_pdf(quotation_id: str, request: Request):
         lang_ctx["translation_status"] = ctx_data.get("translation_status", {"baseline_lang": baseline_lang, "available_langs": [baseline_lang]})
         
         # Override fields with edited content if available
-        html_content = await _get_latest_published_html(quotation_id, lang=target_lang)
+        # Try to load language-specific published HTML (no fallback)
+        latest_lang = None if target_lang == baseline_lang else target_lang
+        html_content = await _get_latest_published_html(quotation_id, lang=latest_lang, fallback=False)
         if html_content:
-            edited_fields = parse_edited_fields(html_content)
-            
-            # Simple variables
-            for key in [
-                'tour_title', 'kicker', 'lede', 'customer_name', 'overview_heading', 
-                'guests_txt', 'travel_dates', 'route_txt', 'travel_style', 
-                'quotation_number', 'contact', 'why_private', 'why_comfort', 
-                'why_muslim', 'why_balanced', 'journey_h2', 'journey_p', 
-                'itinerary_h2', 'itinerary_p', 'room_notes', 'pricing_h2', 
-                'pricing_p', 'muslim_care_text', 'term_deposit', 'term_balance', 
-                'term_cancellation', 'term_confirmation', 'cta_h2', 'designer_kicker', 
-                'designer_title', 'designer_quote', 'designer_expertise', 
-                'designer_experience', 'designer_signature'
-            ]:
-                if key in edited_fields:
-                    lang_ctx[key] = edited_fields[key]
-                    
-            # Overwrite itinerary day items
-            for day in lang_ctx.get('itinerary', []):
-                idx = day.get('dayNumber')
-                if idx is not None:
-                    t_key = f"day_title_{idx}"
-                    if t_key in edited_fields:
-                        day['title'] = edited_fields[t_key]
-                        
-                    # Rebuild day description paragraphs
-                    p_index = 0
-                    desc_paras = []
-                    while True:
-                        p_key = f"day_desc_{idx}_{p_index}"
-                        if p_key in edited_fields:
-                            desc_paras.append(edited_fields[p_key])
-                            p_index += 1
-                        else:
-                            break
-                    if desc_paras:
-                        day['description'] = desc_paras
-
-            # Overwrite hotel plan items
-            for h_idx, hotel in enumerate(lang_ctx.get('hotels', []), 1):
-                name_key = f"hotel_name_{h_idx}"
-                city_key = f"hotel_city_{h_idx}"
-                date_key = f"hotel_date_{h_idx}"
-                tel_key = f"hotel_tel_{h_idx}"
-                intro_key = f"hotel_intro_{h_idx}"
-                info_key = f"hotel_info_name_{h_idx}"
-                
-                if name_key in edited_fields:
-                    hotel['hotel_name'] = edited_fields[name_key]
-                if city_key in edited_fields:
-                    hotel['city_country'] = edited_fields[city_key]
-                if date_key in edited_fields:
-                    hotel['check_in_out'] = edited_fields[date_key]
-                if tel_key in edited_fields:
-                    hotel['telephone'] = edited_fields[tel_key]
-                if intro_key in edited_fields:
-                    hotel['hotel_intro'] = edited_fields[intro_key]
-                if info_key in edited_fields:
-                    hotel['room_name'] = edited_fields[info_key]
-
-            # Overwrite inclusions & exclusions lists
-            inclusions = lang_ctx.get('inclusions', [])
-            new_inclusions = []
-            for inc_idx, item in enumerate(inclusions, 1):
-                key = f"inc_{inc_idx}"
-                if key in edited_fields:
-                    new_inclusions.append(edited_fields[key])
-                else:
-                    new_inclusions.append(item)
-            if new_inclusions:
-                lang_ctx['inclusions'] = new_inclusions
-
-            exclusions = lang_ctx.get('exclusions', [])
-            new_exclusions = []
-            for exc_idx, item in enumerate(exclusions, 1):
-                key = f"exc_{exc_idx}"
-                if key in edited_fields:
-                    new_exclusions.append(edited_fields[key])
-                else:
-                    new_exclusions.append(item)
-            if new_exclusions:
-                lang_ctx['exclusions'] = new_exclusions
-
-            # Overwrite pricing per pax
-            for p_idx, opt in enumerate(lang_ctx.get('price_options', []), 1):
-                key = f"price_pax_{p_idx}"
-                if key in edited_fields:
-                    opt['pricePerPerson']['displayText'] = edited_fields[key]
+            filter_and_override_ctx_by_html(lang_ctx, html_content, override_text=True)
+        else:
+            # If target language HTML is missing, check if baseline published HTML exists
+            # to filter out deleted blocks while keeping translation values
+            if target_lang != baseline_lang:
+                baseline_html = await _get_latest_published_html(quotation_id, lang=None, fallback=False)
+                if baseline_html:
+                    filter_and_override_ctx_by_html(lang_ctx, baseline_html, override_text=False)
         
         rendered_html = tmpl.render(**lang_ctx)
         return HTMLResponse(content=rendered_html)
@@ -3170,6 +3288,27 @@ async def get_quotation(quotation_id: str, request: Request):
         lang_ctx["baseline_lang"] = baseline_lang
         lang_ctx["translation_status"] = ctx_data.get("translation_status", {"baseline_lang": baseline_lang, "available_langs": [baseline_lang]})
         
+        # Try to load language-specific published HTML (no fallback)
+        latest_lang = None if target_lang == baseline_lang else target_lang
+        html_content = await _get_latest_published_html(quotation_id, lang=latest_lang, fallback=False)
+        if html_content:
+            # Re-inject editor components
+            editor_block = extract_editor_components(tmpl.render(**lang_ctx))
+            if editor_block:
+                idx_body = html_content.rfind('</body>')
+                if idx_body != -1:
+                    html_content = html_content[:idx_body] + editor_block + html_content[idx_body:]
+                else:
+                    html_content += editor_block
+            return HTMLResponse(content=html_content)
+            
+        # If language-specific published HTML is missing, check if baseline published HTML exists
+        # so we can filter out deleted blocks and override baseline edits when rendering fallback JINJA2
+        if target_lang != baseline_lang:
+            baseline_html = await _get_latest_published_html(quotation_id, lang=None, fallback=False)
+            if baseline_html:
+                filter_and_override_ctx_by_html(lang_ctx, baseline_html, override_text=False)
+                
         rendered_html = tmpl.render(**lang_ctx)
         return HTMLResponse(content=rendered_html)
     except Exception as err:
@@ -3188,24 +3327,38 @@ class ApproveRequest(BaseModel):
     token: str
 
 @app.post("/quotations/{quotation_id}/publish")
-async def publish_quotation(quotation_id: str, body: PublishRequest):
+async def publish_quotation(quotation_id: str, body: PublishRequest, lang: str = None, language: str = None):
     """
     Commit the edited HTML (sent from browser) to GitHub published/ folder.
     Does NOT require the in-memory store — quotation_id + html come from the request.
     This makes the endpoint resilient across Vercel serverless instances.
     """
+    target_lang = lang or language
+    if target_lang not in ("en", "vi", "ar"):
+        target_lang = None
+
     # Fetch the next version from GitHub directly to ensure it works across serverless instances
     from github_publish import get_next_version, publish_to_github
     version = await get_next_version(quotation_id)
 
     ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
     
+    ctx_data = _load_ctx_data(quotation_id)
+    baseline_lang = "en"
+    if ctx_data:
+        baseline_lang = ctx_data.get("baseline_lang", "en")
+
+    lang_suffix = f"_{target_lang}" if target_lang and target_lang != baseline_lang else ""
+    filename = f"v{version}{lang_suffix}.html"
+
     if ENVIRONMENT == "production":
         try:
             published_url = await publish_to_github(
                 quotation_id=quotation_id,
                 html_content=body.html,
                 version=version,
+                lang=target_lang,
+                baseline_lang=baseline_lang
             )
         except Exception as exc:
             log.exception("[publish] Failed for %s", quotation_id)
@@ -3214,7 +3367,6 @@ async def publish_quotation(quotation_id: str, body: PublishRequest):
         # Localhost: write to disk
         quo_dir = os.path.join("published", quotation_id)
         os.makedirs(quo_dir, exist_ok=True)
-        filename = f"v{version}.html"
         file_path = os.path.join(quo_dir, filename)
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(body.html)
@@ -3229,7 +3381,7 @@ async def publish_quotation(quotation_id: str, body: PublishRequest):
         entry["html"]          = body.html
         entry["version"]       = version
 
-    log.info("[publish] ✓ %s v%d → %s", quotation_id, version, published_url)
+    log.info("[publish] ✓ %s v%d (lang=%s) → %s", quotation_id, version, target_lang, published_url)
     return {"published_url": published_url, "version": version, "status": "published"}
 
 
@@ -3527,6 +3679,40 @@ async def get_itinerary(itinerary_id: str, request: Request):
         lang_ctx["baseline_lang"] = baseline_lang
         lang_ctx["translation_status"] = ctx_data.get("translation_status", {"baseline_lang": baseline_lang, "available_langs": [baseline_lang]})
         
+        # Try to load language-specific published HTML (no fallback)
+        latest_lang = None if target_lang == baseline_lang else target_lang
+        html_content = await _get_latest_published_html(itinerary_id, lang=latest_lang, fallback=False)
+        if html_content:
+            # Re-enable editor publish bar by making it visible
+            html_content = make_itinerary_editor_visible(html_content)
+            return HTMLResponse(content=html_content)
+            
+        # If language-specific published HTML is missing, check if baseline published HTML exists
+        # so we can filter out deleted blocks when rendering fallback JINJA2
+        if target_lang != baseline_lang:
+            baseline_html = await _get_latest_published_html(itinerary_id, lang=None, fallback=False)
+            if baseline_html:
+                from html.parser import HTMLParser
+                class ActiveParser(HTMLParser):
+                    def __init__(self):
+                        super().__init__()
+                        self.active_days = set()
+                        self.active_cards = {"hotel": set(), "activity": set(), "transfer": set(), "flight": set(), "guide": set()}
+                    def handle_starttag(self, tag, attrs):
+                        attrs_dict = dict(attrs)
+                        if tag == 'div' and 'data-day-number' in attrs_dict:
+                            try: self.active_days.add(int(attrs_dict['data-day-number']))
+                            except ValueError: pass
+                        if 'class' in attrs_dict and 'service-card' in attrs_dict['class']:
+                            c_type = attrs_dict.get("data-type")
+                            idx_str = attrs_dict.get("data-index")
+                            if c_type in self.active_cards and idx_str is not None:
+                                try: self.active_cards[c_type].add(int(idx_str))
+                                except ValueError: pass
+                p = ActiveParser()
+                p.feed(baseline_html)
+                sync_itinerary_deletions_to_payloads(lang_ctx, p.active_days, p.active_cards)
+                
         rendered_html = tmpl.render(**lang_ctx)
         return HTMLResponse(content=rendered_html)
     except Exception as err:
@@ -3599,7 +3785,7 @@ async def get_itinerary_pdf(itinerary_id: str, request: Request):
 
 
 @app.post("/itineraries/{itinerary_id}/publish")
-async def publish_itinerary(itinerary_id: str, body: PublishRequest):
+async def publish_itinerary(itinerary_id: str, body: PublishRequest, lang: str = None, language: str = None):
     """ Saves inline edits back to the system. """
     from github_publish import get_next_version, publish_to_github
     version = await get_next_version(itinerary_id)
@@ -3611,16 +3797,32 @@ async def publish_itinerary(itinerary_id: str, body: PublishRequest):
         def __init__(self):
             super().__init__()
             self.cards = []
+            self.active_days = set()
+            self.active_cards = {"hotel": set(), "activity": set(), "transfer": set(), "flight": set(), "guide": set()}
             
         def handle_starttag(self, tag, attrs):
             attrs_dict = dict(attrs)
+            if tag == 'div' and 'data-day-number' in attrs_dict:
+                try:
+                    self.active_days.add(int(attrs_dict['data-day-number']))
+                except ValueError:
+                    pass
             if 'class' in attrs_dict and 'service-card' in attrs_dict['class']:  # type: ignore
                 self.cards.append(attrs_dict)
+                c_type = attrs_dict.get("data-type")
+                idx_str = attrs_dict.get("data-index")
+                if c_type in self.active_cards and idx_str is not None:
+                    try:
+                        self.active_cards[c_type].add(int(idx_str))
+                    except ValueError:
+                        pass
 
     parser = ServiceCardParser()
     parser.feed(body.html)
     
     ctx = _load_itinerary_ctx(itinerary_id)
+    if ctx:
+        sync_itinerary_deletions_to_payloads(ctx, parser.active_days, parser.active_cards)
     rendered_pdf = None
     if ctx:
         for card in parser.cards:
@@ -3731,12 +3933,25 @@ async def publish_itinerary(itinerary_id: str, body: PublishRequest):
                 _f.write(rendered_pdf)
 
     ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
+    target_lang = lang or language
+    if target_lang not in ("en", "vi", "ar"):
+        target_lang = None
+
+    baseline_lang = "en"
+    if ctx:
+        baseline_lang = ctx.get("baseline_lang", "en")
+
+    lang_suffix = f"_{target_lang}" if target_lang and target_lang != baseline_lang else ""
+    filename = f"v{version}{lang_suffix}.html"
+
     if ENVIRONMENT == "production":
         try:
             published_url = await publish_to_github(
                 quotation_id=itinerary_id,
                 html_content=body.html,
                 version=version,
+                lang=target_lang,
+                baseline_lang=baseline_lang
             )
         except Exception as exc:
             log.exception("[publish_itinerary] Failed for %s", itinerary_id)
@@ -3745,7 +3960,6 @@ async def publish_itinerary(itinerary_id: str, body: PublishRequest):
         # Localhost: write to disk
         iti_dir = os.path.join("published", itinerary_id)
         os.makedirs(iti_dir, exist_ok=True)
-        filename = f"v{version}.html"
         file_path = os.path.join(iti_dir, filename)
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(body.html)
@@ -3782,16 +3996,32 @@ async def approve_itinerary(itinerary_id: str, body: ApproveRequest):
         def __init__(self):
             super().__init__()
             self.cards = []
+            self.active_days = set()
+            self.active_cards = {"hotel": set(), "activity": set(), "transfer": set(), "flight": set(), "guide": set()}
             
         def handle_starttag(self, tag, attrs):
             attrs_dict = dict(attrs)
+            if tag == 'div' and 'data-day-number' in attrs_dict:
+                try:
+                    self.active_days.add(int(attrs_dict['data-day-number']))
+                except ValueError:
+                    pass
             if 'class' in attrs_dict and 'service-card' in attrs_dict['class']:  # type: ignore
                 self.cards.append(attrs_dict)
+                c_type = attrs_dict.get("data-type")
+                idx_str = attrs_dict.get("data-index")
+                if c_type in self.active_cards and idx_str is not None:
+                    try:
+                        self.active_cards[c_type].add(int(idx_str))
+                    except ValueError:
+                        pass
 
     parser = ServiceCardParser()
     parser.feed(body.html)
     
     ctx = _load_itinerary_ctx(itinerary_id)
+    if ctx:
+        sync_itinerary_deletions_to_payloads(ctx, parser.active_days, parser.active_cards)
     rendered_pdf = None
     if ctx:
         for card in parser.cards:
