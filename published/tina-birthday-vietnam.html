@@ -100,7 +100,10 @@ function titleFor(item){
 function slotsFor(item){
   const morning = item[2], afternoon = item[3];
   if(isFullDay(item)){
-    return `<div class="slots full-day"><div class="slot fullday"><em>Full Day</em>${morning}</div></div>`;
+    const fullDayText = item[0] === 3
+      ? "Ninh Binh Full Day Tour, Spend the night at Emeralda Resort Ninh Binh"
+      : morning;
+    return `<div class="slots full-day"><div class="slot fullday"><em>Full Day</em>${fullDayText}</div></div>`;
   }
   return `<div class="slots"><div class="slot"><em>Morning</em>${morning || "—"}</div><div class="slot"><em>Afternoon / Evening</em>${afternoon || "—"}</div></div>`;
 }

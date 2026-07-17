@@ -1483,7 +1483,7 @@
       width: 200px;
       height: 200px;
       border-radius: 50%;
-      background: var(--designer-img, url('https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400&h=400')) center/cover no-repeat;
+      background: var(--designer-img, url('/assets/dias_team/director.png')) center/cover no-repeat;
       box-shadow: 0 16px 40px rgba(23, 65, 46, 0.2);
       border: 3px solid var(--gold);
       overflow: hidden;
@@ -1836,6 +1836,16 @@
     html[dir="rtl"] .policy-grid {
       direction: rtl;
     }
+
+    html[dir="rtl"] .carousel-control.prev {
+      left: auto !important;
+      right: 16px !important;
+    }
+    
+    html[dir="rtl"] .carousel-control.next {
+      right: auto !important;
+      left: 16px !important;
+    }
   </style>
 </head>
 
@@ -1936,8 +1946,8 @@
             </div>
             <!-- Map Mode Switcher -->
             <div class="map-mode-toggle no-print" style="position: absolute; top: 16px; right: 16px; z-index: 1000; display: flex; gap: 4px; background: rgba(17, 19, 15, 0.75); padding: 4px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
-              <button id="toggle-mode-classic" class="mode-btn active" onclick="switchMapMode('classic')">Classic</button>
-              <button id="toggle-mode-image" class="mode-btn" onclick="switchMapMode('image')">Image</button>
+              <button id="toggle-mode-classic" class="mode-btn active" onclick="switchMapMode('classic')">{{ "Classic" | translate(lang) }}</button>
+              <button id="toggle-mode-image" class="mode-btn" onclick="switchMapMode('image')">{{ "Image" | translate(lang) }}</button>
             </div>
           </div>
           <div class="map-sidebar" id="map-sidebar">
@@ -1973,7 +1983,7 @@
           <article class="experience"
             style="background: rgba(255, 255, 255, 0.05); border-color: rgba(216, 189, 133, 0.25); color: white;">
             <span class="num" style="color: var(--gold-2);">03</span>
-            <h3 style="color: white; font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">{{ "Muslim-Friendly Care" | translate(lang) }}</h3>
+            <h3 style="color: white; font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">{{ "Dietary & Special Care" | translate(lang) }}</h3>
             <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_muslim">{{ why_muslim }}</p>
           </article>
           <article class="experience"
@@ -2021,7 +2031,7 @@
             {% endif %}
             
             <div class="image-caption" style="z-index: 3;">
-              <small data-editable="gal{{ loop.index }}_label">{% if loop.index == 1 %}{{ "Highlight" | translate(lang) }}{% else %}{{ "Destination" | translate(lang) }}{% endif %}</small>
+              <small data-editable="gal{{ loop.index }}_label">{% if loop.index == 1 %}{{ "Highlight" | translate(lang) }}{% elif loop.index == 3 %}{{ "Experience" | translate(lang) }}{% elif loop.index == 4 %}{{ "Journey" | translate(lang) }}{% else %}{{ "Destination" | translate(lang) }}{% endif %}</small>
               <strong data-editable="gal{{ loop.index }}_title">{{ dest.name }}</strong>
             </div>
           </div>
@@ -2036,12 +2046,17 @@
           const inner = tile.querySelector('.carousel-inner');
           if (!inner) return;
           const slides = tile.querySelectorAll('.carousel-slide');
-          if (slides.length <= 1) return;
           
           let currentIndex = 0;
+          tile.dataset.currentIndex = currentIndex;
+          
+          if (slides.length <= 1) return;
           
           const updateCarousel = () => {
-            inner.style.transform = `translateX(-${currentIndex * 100}%)`;
+            tile.dataset.currentIndex = currentIndex;
+            const isRTL = document.documentElement.getAttribute('dir') === 'rtl';
+            const shift = isRTL ? currentIndex * 100 : -currentIndex * 100;
+            inner.style.transform = `translateX(${shift}%)`;
             tile.querySelectorAll('.carousel-dot').forEach((dot, idx) => {
               dot.classList.toggle('active', idx === currentIndex);
             });
@@ -2263,22 +2278,35 @@
     <section>
       <div class="container">
         <div class="section-head" style="grid-template-columns: 1fr; margin-bottom: 32px;">
-          <h2 data-editable="inc_exc_h2">{{ "What Your Journey Includes" | translate(lang) }}</h2>
+          <h2 data-editable="inc_exc_h2">{{ inclusions_title | default("What Your Journey Includes" | translate(lang)) }}</h2>
         </div>
         <div class="two-col">
           <article class="panel">
             <h3>{{ "Inclusions" | translate(lang) }}</h3>
-            <ul id="inclusions-list">
-              {% for line in inclusions %}
-              <li data-editable="inc_{{ loop.index }}">{{ line }}</li>
+            {% if inclusions_lede %}
+            <p style="font-size:14px; color:var(--muted); line-height:1.6; margin-bottom:16px; margin-top:-8px;">{{ inclusions_lede }}</p>
+            {% endif %}
+            <ul id="inclusions-list" style="list-style-type:none; padding-left:0;">
+              {% for item in inclusions %}
+                {% if item is mapping %}
+                  <li style="margin-bottom:16px; line-height:1.6;">
+                    <strong style="color:var(--emerald); display:block; font-size:15px; margin-bottom:2px;">{{ item.title }}</strong>
+                    <span style="font-size:13px; color:var(--muted);">{{ item.desc }}</span>
+                  </li>
+                {% else %}
+                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_{{ loop.index }}">{{ item }}</li>
+                {% endif %}
               {% endfor %}
             </ul>
           </article>
           <article class="panel">
-            <h3>{{ "Exclusions" | translate(lang) }}</h3>
-            <ul id="exclusions-list">
-              {% for line in exclusions %}
-              <li data-editable="exc_{{ loop.index }}">{{ line }}</li>
+            <h3>{{ exclusions_title | default("Exclusions" | translate(lang)) }}</h3>
+            {% if exclusions_lede %}
+            <p style="font-size:14px; color:var(--muted); line-height:1.6; margin-bottom:16px; margin-top:-8px;">{{ exclusions_lede }}</p>
+            {% endif %}
+            <ul id="exclusions-list" style="list-style-type:disc; padding-left:20px;">
+              {% for item in exclusions %}
+              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_{{ loop.index }}">{{ item }}</li>
               {% endfor %}
             </ul>
           </article>
@@ -2300,11 +2328,7 @@
           style="margin-top: 24px; padding: 24px; background: rgba(23, 65, 46, 0.03); border-left: 4px solid var(--emerald); border-radius: 8px;">
           <p style="margin: 0; font-size: 15px; color: var(--muted); line-height: 1.7;"
             data-editable="muslim_care_text">
-            Vietnam Safar can assist with halal-friendly meal planning where available, no-pork meal notes, seafood or
-            vegetarian alternatives where halal-certified restaurants are limited, and flexible prayer stops during
-            touring days where practical. Halal-certified restaurants are more available in major cities such as Hanoi,
-            Da Nang and Ho Chi Minh City. In mountain, cruise or countryside destinations, suitable seafood, vegetarian
-            or no-pork meals may be recommended.
+            {{ "Vietnam Safar can assist with halal-friendly meal planning where available, no-pork meal notes, seafood or vegetarian alternatives where halal-certified restaurants are limited, and flexible prayer stops during touring days where practical. Halal-certified restaurants are more available in major cities such as Hanoi, Da Nang and Ho Chi Minh City. In mountain, cruise or countryside destinations, suitable seafood, vegetarian or no-pork meals may be recommended." | translate(lang) }}
           </p>
         </div>
       </div>
@@ -2359,16 +2383,16 @@
       <div class="container designer-container">
         <div class="designer-card">
           <div class="designer-img-container" id="designer-avatar-container">
-            <div class="designer-avatar-large" style="background-image: var(--designer-img, url('https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400&h=400')); background-size: cover; background-position: center;">
+            <div class="designer-avatar-large" style="background-image: var(--designer-img, url('/assets/dias_team/director.png')); background-size: cover; background-position: center;">
             </div>
           </div>
           <div class="designer-info">
             <span data-editable="designer_kicker">{{ "Your Dedicated Specialist" | translate(lang) }}</span>
             <h2 data-editable="designer_title">{{ "Meet Your Travel Specialist" | translate(lang) }}</h2>
-            <p class="designer-quote" data-editable="designer_quote">"I am your dedicated travel specialist. I handpicked every hotel, private transfer, and local guide on this itinerary to ensure you experience the true depth of Vietnam in comfort, privacy, and at your own pace. I will personally oversee your journey from behind the scenes."</p>
+            <p class="designer-quote" data-editable="designer_quote">"{{ "I am your dedicated travel specialist. I handpicked every hotel, private transfer, and local guide on this itinerary to ensure you experience the true depth of Vietnam in comfort, privacy, and at your own pace. I will personally oversee your journey from behind the scenes." | translate(lang) }}"</p>
             <div class="designer-details">
-              <div><strong>{{ "Expertise:" | translate(lang) }}</strong> <span data-editable="designer_expertise">Custom Itineraries, Luxury Travel, Local Experiences</span></div>
-              <div><strong>{{ "Experience:" | translate(lang) }}</strong> <span data-editable="designer_experience">5+ years designing bespoke journeys</span></div>
+              <div><strong>{{ "Expertise:" | translate(lang) }}</strong> <span data-editable="designer_expertise">{{ "Custom Itineraries, Luxury Travel, Local Experiences" | translate(lang) }}</span></div>
+              <div><strong>{{ "Experience:" | translate(lang) }}</strong> <span data-editable="designer_experience">{{ "Years designing bespoke journeys" | translate(lang) }}</span></div>
             </div>
             <div class="designer-signature" data-editable="designer_signature">{{ "Your Travel Specialist" | translate(lang) }}</div>
           </div>
@@ -2445,9 +2469,9 @@
         <div class="ring"></div>
         <div class="active-glow"></div>
       </div>
-      <h3>Translating Journey...</h3>
-      <p>Crafting a bespoke luxury narrative in <span id="loading-lang-name">English</span></p>
-      <button class="btn-cancel" onclick="cancelTranslation()">CANCEL</button>
+      <h3>{{ "Translating Journey..." | translate(lang) }}</h3>
+      <p>{{ "Crafting a bespoke luxury narrative in" | translate(lang) }} <span id="loading-lang-name">English</span></p>
+      <button class="btn-cancel" onclick="cancelTranslation()">{{ "CANCEL" | translate(lang) }}</button>
     </div>
   </div>
 
@@ -2655,6 +2679,8 @@
             document.documentElement.style.setProperty(currentImageTarget, `url('${dataUrl}')`);
           } else if (currentImageTarget instanceof HTMLImageElement) {
             currentImageTarget.src = dataUrl;
+          } else if (currentImageTarget instanceof HTMLElement) {
+            currentImageTarget.style.backgroundImage = `url('${dataUrl}')`;
           }
         }
         img.src = evt.target.result;
@@ -2674,7 +2700,13 @@
       btn.onmouseout = () => btn.style.opacity = '0.3';
       btn.onclick = (e) => {
         e.stopPropagation();
-        currentImageTarget = target;
+        if (el.classList.contains('image-tile')) {
+          const activeIndex = parseInt(el.dataset.currentIndex || '0', 10);
+          const slides = el.querySelectorAll('.carousel-slide');
+          currentImageTarget = slides[activeIndex] || el;
+        } else {
+          currentImageTarget = target;
+        }
         fileInput.click();
       };
       if (getComputedStyle(el).position === 'static') el.style.position = 'relative';
@@ -2686,7 +2718,7 @@
       addImageChanger('#designer-avatar-container', '--designer-img');
       const tiles = document.querySelectorAll('.gallery .image-tile');
       tiles.forEach((tile, index) => {
-        addImageChanger(`.gallery .image-tile:nth-child(${index + 1})`, `--img-${index + 1}`);
+        addImageChanger(tile, tile);
       });
       // Add image changers to all hotel images
       const hotelImgWrappers = document.querySelectorAll('.hotel-images-grid .hotel-image-wrapper');
@@ -2812,6 +2844,7 @@
     {{ itinerary | tojson | safe }}
   </script>
   <script>
+    window.currentLang = "{{ lang }}";
     document.addEventListener("DOMContentLoaded", function () {
       const DEST_COORDS = {
         "hanoi": [21.0285, 105.8542],
@@ -2844,8 +2877,53 @@
         "da lat": [11.9404, 108.4583]
       };
 
+      const SLUG_COORDS = {
+        "ha-noi": [21.0285, 105.8542],
+        "quang-ninh": [20.9599, 107.0436],
+        "lao-cai": [22.3364, 103.8438],
+        "da-nang": [16.0544, 108.2022],
+        "quang-nam": [15.8801, 108.3380],
+        "lam-dong": [11.9404, 108.4583],
+        "ho-chi-minh": [10.8231, 106.6297],
+        "khanh-hoa": [12.2388, 109.1967],
+        "ninh-binh": [20.2539, 105.9750],
+        "thua-thien-hue": [16.4637, 107.5909],
+        "kien-giang": [10.2899, 103.9840],
+        "binh-thuan": [10.9333, 108.1000],
+        "can-tho": [10.0401, 105.7882],
+        "mekong": [10.2435, 106.3756],
+        "ha-giang": [22.8233, 104.9836],
+        "nghe-an": [18.6736, 105.6811],
+        "quang-binh": [17.4833, 106.6000],
+        "hai-phong": [20.8449, 106.6881],
+        "dak-lak": [12.6667, 108.0500],
+        "gia-lai": [13.9833, 108.0000],
+        "kon-tum": [14.3500, 108.0000],
+        "ba-ria-vung-tau": [10.4114, 107.1363],
+        "thanh-hoa": [19.8075, 105.7764],
+        "phu-yen": [13.0881, 109.3025],
+        "binh-dinh": [13.7753, 109.2294],
+        "dien-bien": [21.3833, 103.0167],
+        "son-la": [21.3333, 103.9167],
+        "lai-chau": [22.4000, 103.4500],
+        "yen-bai": [21.7000, 104.8667],
+        "hoa-binh": [20.8167, 105.3333],
+        "lang-son": [21.8500, 106.7500],
+        "dong-nai": [10.9574, 106.8427],
+        "binh-duong": [11.0000, 106.6667],
+        "tien-giang": [10.3592, 106.3653],
+        "dong-thap": [10.4500, 105.6333],
+        "vinh-long": [10.2500, 105.9667],
+        "an-giang": [10.3833, 105.4333],
+        "cao-bang": [22.6667, 106.2500]
+      };
+
       function findCoordinates(destText) {
         if (!destText) return null;
+        const slug = resolveSlugLocally(destText);
+        if (slug && SLUG_COORDS[slug]) {
+          return SLUG_COORDS[slug];
+        }
         const norm = destText.toLowerCase()
           .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         for (const [key, coords] of Object.entries(DEST_COORDS)) {
@@ -2895,14 +2973,14 @@
         if (!location) return null;
         const normalized = location.toLowerCase().trim();
         const keywordMap = {
-          "hà nội": "ha-noi", "ha noi": "ha-noi", "hanoi": "ha-noi", "hanoï": "ha-noi",
-          "hồ chí minh": "ho-chi-minh", "ho chi minh": "ho-chi-minh", "hcm": "ho-chi-minh", "saigon": "ho-chi-minh", "sài gòn": "ho-chi-minh", "sai gon": "ho-chi-minh", "tphcm": "ho-chi-minh",
-          "đà nẵng": "da-nang", "da nang": "da-nang", "danang": "da-nang",
-          "quảng nam": "quang-nam", "quang nam": "quang-nam", "hội an": "quang-nam", "hoi an": "quang-nam", "hoian": "quang-nam",
-          "quảng ninh": "quang-ninh", "quang ninh": "quang-ninh", "hạ long": "quang-ninh", "ha long": "quang-ninh", "halong": "quang-ninh", "vịnh hạ long": "quang-ninh", "vinh ha long": "quang-ninh", "cat ba": "quang-ninh", "cát bà": "quang-ninh",
-          "lào cai": "lao-cai", "lao cai": "lao-cai", "laocai": "lao-cai", "sapa": "lao-cai", "sa pa": "lao-cai", "bắc hà": "lao-cai", "bac ha": "lao-cai",
-          "khánh hoà": "khanh-hoa", "khanh hoa": "khanh-hoa", "nha trang": "khanh-hoa", "nhatrang": "khanh-hoa",
-          "lâm đồng": "lam-dong", "lam dong": "lam-dong", "đà lạt": "lam-dong", "da lat": "lam-dong", "dalat": "lam-dong",
+          "hà nội": "ha-noi", "ha noi": "ha-noi", "hanoi": "ha-noi", "hanoï": "ha-noi", "هانوي": "ha-noi",
+          "hồ chí minh": "ho-chi-minh", "ho chi minh": "ho-chi-minh", "hcm": "ho-chi-minh", "saigon": "ho-chi-minh", "sài gòn": "ho-chi-minh", "sai gon": "ho-chi-minh", "tphcm": "ho-chi-minh", "مدينة هو تشي منه": "ho-chi-minh", "هو تشي منه": "ho-chi-minh", "سايغون": "ho-chi-minh",
+          "đà nẵng": "da-nang", "da nang": "da-nang", "danang": "da-nang", "دانانغ": "da-nang", "دا نانغ": "da-nang",
+          "quảng nam": "quang-nam", "quang nam": "quang-nam", "hội an": "quang-nam", "hoi an": "quang-nam", "hoian": "quang-nam", "هوي آن": "quang-nam", "هوي ان": "quang-nam",
+          "quảng ninh": "quang-ninh", "quang ninh": "quang-ninh", "hạ long": "quang-ninh", "ha long": "quang-ninh", "halong": "quang-ninh", "vịnh hạ long": "quang-ninh", "vinh ha long": "quang-ninh", "cat ba": "quang-ninh", "cát bà": "quang-ninh", "خليج هاليغ": "quang-ninh", "هالونغ": "quang-ninh", "خليج هالونج": "quang-ninh",
+          "lào cai": "lao-cai", "lao cai": "lao-cai", "laocai": "lao-cai", "sapa": "lao-cai", "sa pa": "lao-cai", "bắc hà": "lao-cai", "bac ha": "lao-cai", "سابا": "lao-cai",
+          "khánh hoà": "khanh-hoa", "khanh hoa": "khanh-hoa", "nha trang": "khanh-hoa", "nhatrang": "khanh-hoa", "نها ترانغ": "khanh-hoa", "نها ترانج": "khanh-hoa",
+          "lâm đồng": "lam-dong", "lam dong": "lam-dong", "đà lạt": "lam-dong", "da lat": "lam-dong", "dalat": "lam-dong", "دالات": "lam-dong",
           "thừa thiên huế": "thua-thien-hue", "thua thien hue": "thua-thien-hue", "huế": "thua-thien-hue", "hue": "thua-thien-hue", "lăng cô": "thua-thien-hue", "lang co": "thua-thien-hue",
           "kiên giang": "kien-giang", "kien giang": "kien-giang", "phú quốc": "kien-giang", "phu quoc": "kien-giang", "phuquoc": "kien-giang",
           "bình thuận": "binh-thuan", "binh thuan": "binh-thuan", "mũi né": "binh-thuan", "mui ne": "binh-thuan", "phan thiết": "binh-thuan", "phan thiet": "binh-thuan",
@@ -3035,9 +3113,11 @@
         markers.length = 0;
 
         mapDestinations.forEach((dest, idx) => {
+          const dayText = window.currentLang === 'vi' ? 'Ngày' : (window.currentLang === 'ar' ? 'يوم' : 'Day');
+          const daysText = window.currentLang === 'vi' ? 'Ngày' : (window.currentLang === 'ar' ? 'أيام' : 'Days');
           const dayRangeStr = dest.days.length > 1
-            ? `Days ${dest.days[0]}-${dest.days[dest.days.length - 1]}`
-            : `Day ${dest.days[0]}`;
+            ? `${daysText} ${dest.days[0]}-${dest.days[dest.days.length - 1]}`
+            : `${dayText} ${dest.days[0]}`;
 
           let html = '';
           let iconSize = [];
@@ -3191,16 +3271,16 @@
   <div id="pwa-notification-prompt" class="notification-prompt-card no-print">
     <div class="notification-prompt-header">
       <div class="notification-prompt-title">
-        <span>🔔</span> Stay Updated
+        <span>🔔</span> {{ "Stay Updated" | translate(lang) }}
       </div>
       <button class="notification-prompt-close" id="pwa-notification-close">&times;</button>
     </div>
     <div class="notification-prompt-body">
-      Enable notifications to get live updates for your itinerary, guide details, and booking status.
+      {{ "Enable notifications to get live updates for your itinerary, guide details, and booking status." | translate(lang) }}
     </div>
     <div class="notification-prompt-actions">
-      <button class="notification-btn-later" id="pwa-notification-later">Later</button>
-      <button class="notification-btn-allow" id="pwa-notification-allow">Enable</button>
+      <button class="notification-btn-later" id="pwa-notification-later">{{ "Later" | translate(lang) }}</button>
+      <button class="notification-btn-allow" id="pwa-notification-allow">{{ "Enable" | translate(lang) }}</button>
     </div>
   </div>
 
@@ -3208,8 +3288,8 @@
   <div id="pwa-notification-success" class="notification-success-card no-print">
     <div class="notification-success-icon">✓</div>
     <div class="notification-success-text">
-      <h4>Notifications Active</h4>
-      <p>You'll receive live itinerary updates here.</p>
+      <h4>{{ "Notifications Active" | translate(lang) }}</h4>
+      <p>{{ "You'll receive live itinerary updates here." | translate(lang) }}</p>
     </div>
   </div>
 

@@ -681,39 +681,39 @@
 <!-- ═══════════════════ PAGE 3 — Why Works & Gallery ═══════════════════ -->
 <div class="pdf-page">
   <div class="page-header">
-    <span class="brand">Vietnam Safar — Luxury Travel Proposal</span>
+    <span class="brand">{{ "Vietnam Safar — B2B Travel Proposal" | translate(lang) }}</span>
     <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
   </div>
   <div class="page-inner">
     <div class="section-label">Section 2 — {{ ['Behind the Itinerary Curation', 'Why This Journey Inspires', 'The Anatomy of the Experience', 'A Perfectly Paced Journey'] | random }}</div>
-    <h2 class="section-h2">Value Propositions</h2>
+    <h2 class="section-h2">{{ "Journey Specifications" | translate(lang) }}</h2>
     <p class="section-p">Core features ensuring comfort and alignment with the guests' expectations.</p>
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px;">
       <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
-        <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">Private &amp; Flexible</strong>
+        <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">{{ "Private & Flexible" | translate(lang) }}</strong>
         <p style="font-size:11px; color:var(--muted); line-height:1.4;">{{ why_private }}</p>
       </div>
       <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
-        <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">Comfort &amp; Pacing</strong>
+        <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">{{ "Comfort & Pacing" | translate(lang) }}</strong>
         <p style="font-size:11px; color:var(--muted); line-height:1.4;">{{ why_comfort }}</p>
       </div>
       <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
-        <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">Muslim-Friendly Care</strong>
+        <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">{{ "Dietary & Special Care" | translate(lang) }}</strong>
         <p style="font-size:11px; color:var(--muted); line-height:1.4;">{{ why_muslim }}</p>
       </div>
       <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
-        <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">Balanced Highlights</strong>
+        <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">{{ "Balanced Highlights" | translate(lang) }}</strong>
         <p style="font-size:11px; color:var(--muted); line-height:1.4;">{{ why_balanced }}</p>
       </div>
     </div>
 
-    <div class="section-label">Destination Gallery</div>
+    <div class="section-label">{{ "Destination Gallery" | translate(lang) }}</div>
     <div class="gallery" style="margin-top:8px;">
       {% for dest in destinations %}
       <div class="img-tile {% if loop.index == 1 %}large{% endif %}" style="background-image:url('{{ dest.image_url or '/assets/vietnam-safar-logo.png' }}')">
         <div class="img-caption">
-          <small>{% if loop.index == 1 %}Highlight{% else %}Destination{% endif %}</small>
+          <small>{% if loop.index == 1 %}{{ "Highlight" | translate(lang) }}{% elif loop.index == 3 %}{{ "Experience" | translate(lang) }}{% elif loop.index == 4 %}{{ "Journey" | translate(lang) }}{% else %}{{ "Destination" | translate(lang) }}{% endif %}</small>
           <strong>{{ dest.name }}</strong>
         </div>
       </div>

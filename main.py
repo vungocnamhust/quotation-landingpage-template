@@ -148,6 +148,48 @@ def get_luxury_day_title(city: str, day_number: int, lang: str) -> str:
     raw_tpl = tpl.get(lang_key, tpl["en"])
     return raw_tpl.format(city=city)
 
+# Coordinates mapping for Vietnam travel destinations (matches Leaflet SLUG_COORDS)
+SLUG_COORDS = {
+    "ha-noi": [21.0285, 105.8542],
+    "quang-ninh": [20.9599, 107.0436],
+    "lao-cai": [22.3364, 103.8438],
+    "da-nang": [16.0544, 108.2022],
+    "quang-nam": [15.8801, 108.3380],
+    "lam-dong": [11.9404, 108.4583],
+    "ho-chi-minh": [10.8231, 106.6297],
+    "khanh-hoa": [12.2388, 109.1967],
+    "ninh-binh": [20.2539, 105.9750],
+    "thua-thien-hue": [16.4637, 107.5909],
+    "kien-giang": [10.2899, 103.9840],
+    "binh-thuan": [10.9333, 108.1000],
+    "can-tho": [10.0401, 105.7882],
+    "mekong": [10.2435, 106.3756],
+    "ha-giang": [22.8233, 104.9836],
+    "nghe-an": [18.6736, 105.6811],
+    "quang-binh": [17.4833, 106.6000],
+    "hai-phong": [20.8449, 106.6881],
+    "dak-lak": [12.6667, 108.0500],
+    "gia-lai": [13.9833, 108.0000],
+    "kon-tum": [14.3500, 108.0000],
+    "ba-ria-vung-tau": [10.4114, 107.1363],
+    "thanh-hoa": [19.8075, 105.7764],
+    "phu-yen": [13.0881, 109.3025],
+    "binh-dinh": [13.7753, 109.2294],
+    "dien-bien": [21.3833, 103.0167],
+    "son-la": [21.3333, 103.9167],
+    "lai-chau": [22.4000, 103.4500],
+    "yen-bai": [21.7000, 104.8667],
+    "hoa-binh": [20.8167, 105.3333],
+    "lang-son": [21.8500, 106.7500],
+    "dong-nai": [10.9574, 106.8427],
+    "binh-duong": [11.0000, 106.6667],
+    "tien-giang": [10.3592, 106.3653],
+    "dong-thap": [10.4500, 105.6333],
+    "vinh-long": [10.2500, 105.9667],
+    "an-giang": [10.3833, 105.4333],
+    "cao-bang": [22.6667, 106.2500]
+}
+
 # ── Translation System ────────────────────────────────────────────────────────
 STATIC_DICTIONARY = {
     "Timeline": {
@@ -290,6 +332,70 @@ STATIC_DICTIONARY = {
         "vi": "Kế hoạch khách sạn sẽ được tùy chỉnh và chi tiết tại đây dựa trên ngày đi cụ thể của bạn.",
         "ar": "سيتم تصميم تفاصيل خطة الفنادق وتخصيصها هنا بناءً على تواريخ سفرك المحددة."
     },
+    "Fully private tour with flexible pacing to suit your needs.": {
+        "vi": "Hành trình hoàn toàn riêng tư với nhịp độ linh hoạt theo nhu cầu của bạn.",
+        "ar": "جولة خاصة بالكامل مع وتيرة مرنة لتناسب احتياجاتك."
+    },
+    "Premium A/C vehicle transport and handpicked hotels.": {
+        "vi": "Vận chuyển bằng xe máy lạnh cao cấp và các khách sạn được tuyển chọn kỹ lưỡng.",
+        "ar": "وسائل نقل برية خاصة مكيفة وفنادق مختارة بعناية."
+    },
+    "Dietary requests, meal planning, and specific preferences are carefully coordinated.": {
+        "vi": "Các yêu cầu về chế độ ăn uống, kế hoạch bữa ăn và sở thích đặc biệt đều được điều phối chu đáo.",
+        "ar": "تنسيق متطلبات النظام الغذائي والوجبات والتفضيلات الخاصة بعناية."
+    },
+    "Optimized itinerary balancing iconic sites with leisure time.": {
+        "vi": "Lộ trình tối ưu hóa giúp cân bằng giữa các điểm tham quan biểu tượng và thời gian nghỉ ngơi.",
+        "ar": "مسار رحلة محسّن يوازن بين المعالم الشهيرة وأوقات الراحة."
+    },
+    "As per standard booking policy.": {
+        "vi": "Theo chính sách đặt chỗ tiêu chuẩn.",
+        "ar": "وفقًا لسياسة الحجز القياسية."
+    },
+    "Payable prior to tour commencement.": {
+        "vi": "Thanh toán trước khi hành trình bắt đầu.",
+        "ar": "مستحق الدفع trước khi بدء الرحلة."
+    },
+    "Subject to cancellation charges as per terms.": {
+        "vi": "Áp dụng phí hủy theo các điều khoản quy định.",
+        "ar": "تخضع لرسوم الإلغاء وفقًا للشروط."
+    },
+    "Subject to availability upon payment.": {
+        "vi": "Tùy thuộc vào tình trạng phòng trống tại thời điểm thanh toán.",
+        "ar": "خاضع للتوافر عند الدفع."
+    },
+    "Passport copies and flight details required for booking.": {
+        "vi": "Yêu cầu cung cấp bản sao hộ chiếu và thông tin chuyến bay để đặt dịch vụ.",
+        "ar": "مطلوب نسخ من جواز السفر وتفاصيل الرحلة للحجز."
+    },
+    "Our operations team will coordinate vouchers and guide details.": {
+        "vi": "Đội ngũ vận hành của chúng tôi sẽ điều phối voucher và thông tin hướng dẫn viên.",
+        "ar": "سيعمل فريق العمليات لدينا على تنسيق القسائم وتفاصيل المرشد."
+    },
+    "5-star (Luxury)": {
+        "vi": "5 sao (Sang trọng)",
+        "ar": "5 نجوم (فاخر)"
+    },
+    "Twin/Double Sharing Basis": {
+        "vi": "Cơ sở chia sẻ phòng đôi/hai giường",
+        "ar": "على أساس المشاركة المزدوجة/التوأم"
+    },
+    "Subject to availability and confirmation": {
+        "vi": "Tùy thuộc vào tình trạng sẵn có và xác nhận",
+        "ar": "خاضع للتوافر والتأكيد"
+    },
+    "Not included": {
+        "vi": "Không bao gồm",
+        "ar": "غير مشمول"
+    },
+    "Included": {
+        "vi": "Được bao gồm",
+        "ar": "مشمول"
+    },
+    "Twin-sharing basis": {
+        "vi": "Cơ sở chia sẻ phòng đôi/hai giường",
+        "ar": "على أساس المشاركة المزدوجة/التوأم"
+    },
     "Balanced Highlights": {
         "vi": "Điểm Nhấn Cân Bằng",
         "ar": "أبرز الفعاليات المتوازنة"
@@ -346,7 +452,11 @@ STATIC_DICTIONARY = {
     },
     "Expertise:": { "ar": "التخصص:", "vi": "Chuyên Môn:" },
     "Experience:": { "ar": "الخبرة:", "vi": "Kinh Nghiệm:" },
-    "Your Travel Specialist": { "ar": "مصمم رحلتك", "vi": "Chuyên Gia Hành Trình" },
+    "Your Travel Specialist": {
+        "ar": "Anh Son Le",
+        "vi": "Le",
+        "en": "Anh Son Le"
+    },
     "Next step": { "ar": "الخطوة التالية", "vi": "Bước Tiếp Theo" },
     "Confirm dates, then refine the luxury layer.": {
         "ar": "أكّد التواريخ ثم اضبط مستوى الفخامة.",
@@ -365,20 +475,535 @@ STATIC_DICTIONARY = {
     "Highlights:": { "ar": "أبرز الفعاليات:", "vi": "Điểm Nổi Bật:" },
     "Notes:": { "ar": "ملاحظات:", "vi": "Ghi Chú:" },
     "Overnight": { "ar": "المبيت", "vi": "Qua Đêm" },
-    "Meals": { "ar": "الوجبات", "vi": "Bữa Ăn" }
+    "Meals": { "ar": "الوجبات", "vi": "Bữa Ăn" },
+    # Inclusions, Exclusions new structured formats
+    "What Your Journey Includes": {
+        "vi": "Những Gì Hành Trình Bao Gồm",
+        "ar": "ما تشمله برنامج رحلتك"
+    },
+    "Your journey has been thoughtfully arranged to ensure a seamless and comfortable experience throughout.": {
+        "vi": "Hành trình của bạn đã được sắp xếp chu đáo để đảm bảo trải nghiệm suôn sẻ và thoải mái trong suốt chuyến đi.",
+        "ar": "لقد تم ترتيب رحلتك بعناية لضمان تجربة سلسة ومريحة طوال الوقت."
+    },
+    "Handpicked Accommodation": {
+        "vi": "Khách Sạn Được Lựa Chọn Cẩn Thận",
+        "ar": "إقامة مختارة بعناية"
+    },
+    "Carefully selected hotels and stays as detailed in your journey proposal.": {
+        "vi": "Các khách sạn và nơi lưu trú được lựa chọn kỹ lưỡng như chi tiết trong đề xuất hành trình.",
+        "ar": "فنادق وإقامات مختارة بعناية كما هو مفصل في مقترح رحلتك."
+    },
+    "Private Transportation": {
+        "vi": "Phương Tiện Vận Chuyển Riêng Tư",
+        "ar": "وسائل نقل خاصة"
+    },
+    "Private ground transportation and scheduled transfers throughout the journey, as specified in the itinerary.": {
+        "vi": "Phương tiện vận chuyển mặt đất riêng tư và đưa đón theo lịch trình suốt hành trình, như quy định trong lịch trình.",
+        "ar": "وسائل نقل برية خاصة وتنقلات مجدولة طوال الرحلة، كما هو حدد في مسار الرحلة."
+    },
+    "Curated Experiences": {
+        "vi": "Trải Nghiệm Được Thiết Kế Riêng",
+        "ar": "تجارب منسقة"
+    },
+    "Entrance arrangements and experiences included as outlined in your itinerary.": {
+        "vi": "Bố trí lối vào và các trải nghiệm được bao gồm như phác thảo trong lịch trình của bạn.",
+        "ar": "رسوم الدخول والأنشطة المشمولة والموضحة في مسار رحلتك."
+    },
+    "Expert Local Guidance": {
+        "vi": "Hướng Dẫn Viên Địa Phương Chuyên Nghiệp",
+        "ar": "إرشاد محلي خبير"
+    },
+    "Services of carefully selected, licensed local guides where specified.": {
+        "vi": "Dịch vụ của hướng dẫn viên địa phương có giấy phép được lựa chọn cẩn thận khi được chỉ định.",
+        "ar": "خدمات مرشدين محليين مرخصين ومختارين بعناية عند تحديد ذلك."
+    },
+    "Dining Experiences": {
+        "vi": "Trải Nghiệm Ẩm Thực",
+        "ar": "تجارب تناول الطعام"
+    },
+    "Meals and dining arrangements as detailed in the itinerary.": {
+        "vi": "Các bữa ăn và bố trí ăn uống như chi tiết trong lịch trình.",
+        "ar": "الوجبات وترتيبات تناول الطعام كما هي مفصلة في مسار الرحلة."
+    },
+    "Journey Connections": {
+        "vi": "Kết Nối Hành Trình",
+        "ar": "روابط التنقل"
+    },
+    "Domestic flights, rail journeys, ferries, or other transportation included where specifically stated in the itinerary.": {
+        "vi": "Các chuyến bay nội địa, hành trình đường sắt, phà hoặc phương tiện vận chuyển khác được bao gồm khi được ghi rõ trong lịch trình.",
+        "ar": "رحلات الطيران الداخلية، أو السكك الحديدية، أو العبّارات، أو غيرها من وسائل النقل المشمولة عند ذكرها بوضوح في مسار الرحلة."
+    },
+    "Not Included": {
+        "vi": "Những Gì Không Bao Gồm",
+        "ar": "الخدمات غير المشمولة"
+    },
+    "To keep your journey transparent and clearly defined, the following are not included unless specifically stated otherwise:": {
+        "vi": "Để giữ cho hành trình của bạn minh bạch và rõ ràng, các khoản sau đây không được bao gồm trừ khi có tuyên bố cụ thể khác:",
+        "ar": "للحفاظ على شفافية ووضوح رحلتك، لا تشمل الرحلة الخدمات التالية ما لم يُنص على خلاف ذلك:"
+    },
+    "Visa fees and travel documentation": {
+        "vi": "Lệ phí visa và giấy tờ du lịch",
+        "ar": "رسوم التأشيرة ووثائق السفر"
+    },
+    "Personal expenses": {
+        "vi": "Chi phí cá nhân",
+        "ar": "المصاريف الشخصية"
+    },
+    "Optional experiences not specified in the itinerary": {
+        "vi": "Các trải nghiệm tùy chọn không được chỉ định trong lịch trình",
+        "ar": "التجارب الاختيارية غير المحددة في مسار الرحلة"
+    },
+    "Tips and gratuities": {
+        "vi": "Tiền tips và tiền boa",
+        "ar": "البقشيش والإكراميات"
+    },
+    "Any services not expressly listed as included": {
+        "vi": "Bất kỳ dịch vụ nào không được liệt kê rõ ràng là bao gồm",
+        "ar": "أي خدمات أخرى لم يتم ذكرها صراحة ضمن الخدمات المشمولة"
+    },
+    "Day-by-Day Journey Program": {
+        "vi": "Chương Trình Hành Trình Chi Tiết",
+        "ar": "برنامج الرحلة يومًا بيوم"
+    },
+    "Translating Journey...": {
+        "vi": "Đang Dịch Hành Trình...",
+        "ar": "جاري ترجمة الرحلة..."
+    },
+    "CANCEL": {
+        "vi": "HỦY BỎ",
+        "ar": "إلغاء"
+    },
+    # Inclusions & Exclusions & Conditions
+    "Private air-conditioned transportation throughout": {
+        "vi": "Phương tiện vận chuyển riêng tư có điều hòa suốt hành trình",
+        "ar": "وسائل نقل خاصة مكيفة طوال الرحلة"
+    },
+    "Accommodation with daily breakfast": {
+        "vi": "Lưu trú kèm bữa ăn sáng hàng ngày",
+        "ar": "الإقامة مع وجبة إفطار يومية"
+    },
+    "Meals as mentioned in the program": {
+        "vi": "Các bữa ăn theo chương trình",
+        "ar": "الوجبات كما هي مذكورة في البرنامج"
+    },
+    "All sightseeing entrance fees as mentioned": {
+        "vi": "Toàn bộ vé tham quan các điểm theo chương trình",
+        "ar": "جميع رسوم دخول المعالم السياحية المذكورة"
+    },
+    "English-speaking local guide": {
+        "vi": "Hướng dẫn viên bản địa nói tiếng Anh",
+        "ar": "مرشد محلي يتحدث الإنجليزية"
+    },
+    "International flights": {
+        "vi": "Vé máy bay quốc tế",
+        "ar": "رحلات الطيران الدولية"
+    },
+    "Vietnam visa and visa processing fees": {
+        "vi": "Lệ phí cấp và xử lý visa Việt Nam",
+        "ar": "تأشيرة فيتنام ورسوم معالجة التأشيرة"
+    },
+    "Travel insurance": {
+        "vi": "Bảo hiểm du lịch",
+        "ar": "التأمين على السفر"
+    },
+    "Personal expenses, laundry, beverages and tips": {
+        "vi": "Chi phí cá nhân, giặt ủi, đồ uống và tiền tip",
+        "ar": "المصاريف الشخصية والغسيل والمشروبات والإكراميات"
+    },
+    "Optional activities not mentioned in the program": {
+        "vi": "Các hoạt động tùy chọn ngoài chương trình",
+        "ar": "الأنشطة الاختيارية غير المذكورة في البرنامج"
+    },
+    "Rates are B2B net indicative and subject to reconfirmation at the time of booking.": {
+        "vi": "Giá đề xuất net B2B mang tính chất tham khảo và sẽ được xác nhận lại khi đặt dịch vụ.",
+        "ar": "الأسعار تقديرية وصافية لشركاء B2B وتخضع لإعادة التأكيد عند الحجز."
+    },
+    "Final price may vary depending on hotel availability, resort category, cruise selection, domestic flight fare, rooming arrangement, child policy, and final travel services confirmed.": {
+        "vi": "Giá cuối cùng có thể thay đổi tùy thuộc vào tình trạng phòng khách sạn, hạng phòng, lựa chọn du thuyền, giá vé máy bay nội địa, cách sắp xếp phòng, chính sách trẻ em và các dịch vụ du lịch được xác nhận cuối cùng.",
+        "ar": "قد يختلف السعر النهائي اعتمادًا على توفر الفنادق، فئة المنتجع، اختيار الكروز، أسعار الطيران الداخلي، ترتيبات الغرف، سياسة الأطفال، والخدمات المؤكدة نهائياً."
+    },
+
+    # Template static text & headings
+    "Behind the Itinerary Curation": {
+        "vi": "Hậu Trường Thiết Kế Hành Trình",
+        "ar": "خلف كواليس تصميم المسار"
+    },
+    "Why This Journey Inspires": {
+        "vi": "Tại Sao Hành Trình Này Đầy Cảm Hứng",
+        "ar": "لماذا تلهم هذه الرحلة"
+    },
+    "The Anatomy of the Experience": {
+        "vi": "Chi Tiết Trải Nghiệm",
+        "ar": "تفاصيل التجربة"
+    },
+    "A Perfectly Paced Journey": {
+        "vi": "Một Hành Trình Có Nhịp Độ Hoàn Hảo",
+        "ar": "رحلة ذات وتيرة مثالية"
+    },
+    "Value Propositions": {
+        "vi": "Giá Trị Cốt Lõi",
+        "ar": "مزايا الرحلة"
+    },
+    "Tailored care, balanced pacing, and seamless logistics designed specifically for your group.": {
+        "vi": "Dịch vụ được cá nhân hóa, nhịp độ cân bằng và hậu cần liền mạch được thiết kế riêng cho đoàn của bạn.",
+        "ar": "رعاية مخصصة، وتيرة متوازنة، ولوجستيات سلسة مصممة خصيصًا لمجموعتكم."
+    },
+    "Muslim-Friendly Travel Care": {
+        "vi": "Dịch Vụ Thân Thiện Với Người Hồi Giáo",
+        "ar": "الرعاية الصديقة للمسلمين"
+    },
+    "Carefully coordinated services ensuring comfort, halal-friendly meals, and prayer mindfulness.": {
+        "vi": "Các dịch vụ được điều phối cẩn thận đảm bảo sự thoải mái, bữa ăn thân thiện với người Hồi giáo và thời gian cầu nguyện thích hợp.",
+        "ar": "خدمات منسقة بعناية تضمن الراحة، ووجبات صديقة للمسلمين، ومراعاة أوقات الصلاة."
+    },
+    "Crafting a bespoke luxury narrative in": {
+        "vi": "Đang kiến tạo hành trình sang trọng độc bản tại",
+        "ar": "جاري صياغة مسار رحلة فاخر مخصص في"
+    },
+
+    # PWA Notifications Prompt
+    "Stay Updated": {
+        "vi": "Cập Nhật Thông Tin",
+        "ar": "ابق على اطلاع"
+    },
+    "Enable notifications to get live updates for your itinerary, guide details, and booking status.": {
+        "vi": "Bật thông báo để nhận cập nhật trực tiếp về lịch trình, thông tin hướng dẫn viên và trạng thái đặt chỗ.",
+        "ar": "قم بتمكين الإشعارات للحصول على تحديثات مباشرة لمسار رحلتك وتفاصيل المرشد وحالة الحجز."
+    },
+    "Later": {
+        "vi": "Để sau",
+        "ar": "لاحقاً"
+    },
+    "Enable": {
+        "vi": "Bật",
+        "ar": "تمكين"
+    },
+    "Notifications Active": {
+        "vi": "Đã Bật Thông Báo",
+        "ar": "الإشعارات نشطة"
+    },
+    "You'll receive live itinerary updates here.": {
+        "vi": "Bạn sẽ nhận được cập nhật lịch trình trực tiếp tại đây.",
+        "ar": "ستتلقى تحديثات مباشرة لمسار الرحلة هنا."
+    },
+    "Vịnh Hạ Long": {
+        "en": "Halong Bay",
+        "ar": "Halong Bay",
+        "vi": "Vịnh Hạ Long"
+    },
+    "Hạ Long": {
+        "en": "Halong",
+        "ar": "Halong",
+        "vi": "Hạ Long"
+    },
+    "Hà Nội": {
+        "en": "Hanoi",
+        "ar": "Hanoi",
+        "vi": "Hà Nội"
+    },
+    "Đà Nẵng": {
+        "en": "Da Nang",
+        "ar": "Da Nang",
+        "vi": "Đà Nẵng"
+    },
+    "Hội An": {
+        "en": "Hoi An",
+        "ar": "Hoi An",
+        "vi": "Hội An"
+    },
+    "Hồ Chí Minh": {
+        "en": "Ho Chi Minh City",
+        "ar": "Ho Chi Minh City",
+        "vi": "Hồ Chí Minh"
+    },
+    "Thành phố Hồ Chí Minh": {
+        "en": "Ho Chi Minh City",
+        "ar": "Ho Chi Minh City",
+        "vi": "Thành phố Hồ Chí Minh"
+    },
+    "Sa Pa": {
+        "en": "Sapa",
+        "ar": "Sapa",
+        "vi": "Sa Pa"
+    },
+    "Ninh Bình": {
+        "en": "Ninh Binh",
+        "ar": "Ninh Binh",
+        "vi": "Ninh Bình"
+    },
+    "Đồng bằng sông Cửu Long": {
+        "en": "Mekong Delta",
+        "ar": "Mekong Delta",
+        "vi": "Đồng bằng sông Cửu Long"
+    },
+    # Interactive Map Section
+    "Your Journey, Mapped": {
+        "ar": "رحلتك على الخريطة",
+        "vi": "Hành Trình Của Bạn Trên Bản Đồ"
+    },
+    "An interactive map showing your curated path through Vietnam's iconic landmarks and luxury stopovers. Click on a destination in the list or the map to explore highlights.": {
+        "ar": "خريطة تفاعلية تعرض مسارك المنسق عبر معالم فيتنام الشهيرة ومحطات التوقف الفاخرة. انقر على وجهة في القائمة أو الخريطة لاستكشاف المعالم البارزة.",
+        "vi": "Bản đồ tương tác hiển thị lộ trình được thiết kế riêng của bạn qua các địa danh mang tính biểu tượng và điểm dừng chân sang trọng của Việt Nam. Nhấp vào một điểm đến trong danh sách hoặc bản đồ để khám phá các điểm nổi bật."
+    },
+    "Classic": {
+        "ar": "كلاسيكي",
+        "vi": "Bản đồ"
+    },
+    "Image": {
+        "ar": "صورة",
+        "vi": "Hình ảnh"
+    },
+    "Loading Interactive Route Map...": {
+        "ar": "جاري تحميل الخريطة التفاعلية...",
+        "vi": "Đang Tải Bản Đồ Lộ Trình Tương Tác..."
+    },
+    "Journey Overview": {
+        "ar": "نظرة عامة على الرحلة",
+        "vi": "Tổng Quan Hành Trình"
+    },
+
+    # Value Propositions (Why it works)
+    "Private & Flexible": {
+        "ar": "خصوصية ومرونة",
+        "vi": "Riêng Tư & Linh Hoạt"
+    },
+    "Comfort & Pacing": {
+        "ar": "الراحة والوتيرة",
+        "vi": "Thoải Mái & Nhịp Độ"
+    },
+    "Muslim-Friendly Care": {
+        "ar": "الرعاية الصديقة للمسلمين",
+        "vi": "Dịch Vụ Thân Thiện Với Người Hồi Giáo"
+    },
+    "Dietary & Special Care": {
+        "ar": "الرعاية الغذائية والخاصة",
+        "vi": "Chế Độ Ăn & Chăm Sóc Đặc Biệt"
+    },
+    "Balanced Highlights": {
+        "ar": "أبرز الفعاليات المتوازنة",
+        "vi": "Điểm Nhấn Cân Bằng"
+    },
+
+    # Destination Gallery Labels
+    "The city collection": {
+        "ar": "مجموعة المدينة",
+        "vi": "Bộ sưu tập đô thị"
+    },
+    "Cinematic destination panels crafted for a premium travel proposal.": {
+        "ar": "لوحات وجهة سينمائية تم إعدادها لمقترح سفر متميز.",
+        "vi": "Hình ảnh điểm đến đậm chất điện ảnh được thiết kế cho đề xuất du lịch cao cấp."
+    },
+    "Destination Gallery": {
+        "ar": "معرض الصور",
+        "vi": "Bộ Sưu Tập Hình Ảnh"
+    },
+    "Highlight": {
+        "ar": "أبرز المعالم",
+        "vi": "Điểm Nổi Bật"
+    },
+    "Experience": {
+        "ar": "التجربة",
+        "vi": "Trải Nghiệm"
+    },
+    "Journey": {
+        "ar": "الرحلة",
+        "vi": "Hành Trình"
+    },
+    "Destination": {
+        "ar": "الوجهة",
+        "vi": "Điểm Đến"
+    },
+
+    # Day Pacing
+    "Sense of Pace: Active": {
+        "ar": "وتيرة السفر: نشطة",
+        "vi": "Nhịp độ: Năng động"
+    },
+    "Sense of Pace: Moderate": {
+        "ar": "وتيرة السفر: معتدلة",
+        "vi": "Nhịp độ: Vừa phải"
+    },
+    "Minasi Premium Hotel is a boutique luxury hotel nestled in Hanoi's historic quarters, offering elegant design, personalized service, and modern comforts.": {
+        "vi": "Minasi Premium Hotel là khách sạn boutique sang trọng tọa lạc tại khu phố cổ lịch sử của Hà Nội, mang đến thiết kế thanh lịch, dịch vụ cá nhân hóa và tiện nghi hiện đại.",
+        "ar": "يعد فندق ميناسي بريميوم فندقاً فاخراً يقع في الأحياء التاريخية بمدينة هانوي، ويتميز بتصميم أنيق وخدمة مخصصة ووسائل راحة حديثة."
+    },
+    "La Casta Cruise is a luxury 5-star cruise on Halong Bay, offering spacious junior suites with private ocean-view balconies and high-class amenities.": {
+        "vi": "Du thuyền La Casta là du thuyền 5 sao sang trọng trên Vịnh Hạ Long, cung cấp các phòng suite rộng rãi với ban công riêng hướng biển và các tiện nghi cao cấp.",
+        "ar": "تعتبر رحلة لا كاستا كروز البحرية من فئة 5 نجوم الفاخرة في خليج هاليغ، وتوفر أجنحة جونيور واسعة مع شرفات خاصة مطلة على المحيط ووسائل راحة راقية."
+    },
+    "Bora Hotel in Sapa offers breathtaking mountain views and stylish, cozy accommodations for travelers exploring the beautiful northern highlands.": {
+        "vi": "Bora Hotel tại Sapa mang đến tầm nhìn ra núi non ngoạn mục cùng không gian lưu trú phong cách, ấm cúng cho du khách khám phá vùng cao phía bắc xinh đẹp.",
+        "ar": "يوفر فندق بورا في سابا إطلالات جبلية خلابة وأماكن إقامة أنيقة ومريحة للمسافرين الذين يستكشفون المرتفعات الشمالية الجميلة."
+    },
+    "CICILIA Rouge Dalat brings colonial vintage charm and sophisticated boutique luxury to the misty streets of Dalat.": {
+        "vi": "CICILIA Rouge Dalat mang nét quyến rũ cổ điển thời thuộc địa và sự sang trọng tinh tế của boutique đến những con phố sương mù của Đà Lạt.",
+        "ar": "يضفي فندق سيسيليا روج دالات سحرًا عتيقًا من العهد الاستعماري وفخامة راقية على شوارع دالات الضبابية."
+    },
+    "Minh Toan SAFI Ocean Hotel overlooks the stunning My Khe Beach in Da Nang, offering spacious ocean-view rooms and premium seaside hospitality.": {
+        "vi": "Khách sạn Minh Toàn SAFI Ocean hướng tầm nhìn ra bãi biển Mỹ Khê tuyệt đẹp ở Đà Nẵng, cung cấp các phòng rộng rãi hướng biển và dịch vụ nghỉ dưỡng cao cấp ven biển.",
+        "ar": "يطل فندق مينه توان صافي أوشن على شاطئ ماي خي المذهل في دا نانغ، ويتميز بغرف واسعة مطلة على البحر وضيافة راقية على شاطئ البحر."
+    },
+    "Cicilia Saigon Center offers elegant and contemporary accommodations in the heart of District 1, Ho Chi Minh City.": {
+        "vi": "Cicilia Saigon Center cung cấp chỗ nghỉ thanh lịch và hiện đại ngay tại trung tâm Quận 1, Thành phố Hồ Chí Minh.",
+        "ar": "يوفر فندق سيسيليا سايغون سنتر أماكن إقامة أنيقة وعصرية في قلب المنطقة 1 بمدينة هو تشي منه."
+    },
+    "offers refined luxury accommodations, personalized service, and modern comforts.": {
+        "vi": "mang đến chỗ nghỉ sang trọng tinh tế, dịch vụ cá nhân hóa và các tiện nghi hiện đại.",
+        "ar": "يقدم أماكن إقامة فاخرة وخدمات مخصصة ووسائل راحة حديثة."
+    },
+    "The cities in frames": {
+        "vi": "Những Thành Phố Trong Khung Cảnh",
+        "ar": "المدن في إطارات"
+    },
+    "Through Local Eyes": {
+        "vi": "Qua Góc Nhìn Bản Địa",
+        "ar": "من خلال عيون محلية"
+    },
+    "The city collection": {
+        "vi": "Bộ Sưu Tập Thành Phố",
+        "ar": "مجموعة المدينة"
+    },
+    "Sense of Pace: Immersive": {
+        "ar": "وتيرة السفر: غامرة",
+        "vi": "Nhịp độ: Trải nghiệm sâu"
+    },
+    "Sense of Pace: Balanced": {
+        "ar": "وتيرة السفر: متوازنة",
+        "vi": "Nhịp độ: Cân bằng"
+    },
+    "Sense of Pace: Relaxed": {
+        "ar": "وتيرة السفر: مريحة",
+        "vi": "Nhịp độ: Thư thái"
+    },
+
+    # Pricing Headers
+    "Journey Investment": {
+        "ar": "الاستثمار في الرحلة",
+        "vi": "Hành Trình Đầu Tư"
+    },
+    "Total": {
+        "ar": "الإجمالي",
+        "vi": "Tổng"
+    },
+    "Currency": {
+        "ar": "العملة",
+        "vi": "Tiền tệ"
+    },
+    "Final rates subject to reconfirmation.": {
+        "ar": "الأسعار النهائية تخضع لإعادة التأكيد.",
+        "vi": "Giá cuối cùng có thể thay đổi khi xác nhận."
+    },
+
+    # Day Title Prefix
+    "Day": {
+        "ar": "يوم",
+        "vi": "Ngày"
+    },
+    "DAY": {
+        "ar": "يوم",
+        "vi": "NGÀY"
+    },
+
+    # Vietnamese Destinations translations
+    "Hanoi": {
+        "vi": "Hà Nội",
+        "ar": "Hanoi"
+    },
+    "Ha Long Bay": {
+        "vi": "Vịnh Hạ Long",
+        "ar": "Ha Long Bay"
+    },
+    "Halong Bay": {
+        "vi": "Vịnh Hạ Long",
+        "ar": "Halong Bay"
+    },
+    "Halong": {
+        "vi": "Hạ Long",
+        "ar": "Halong"
+    },
+    "Sapa": {
+        "vi": "Sa Pa",
+        "ar": "Sapa"
+    },
+    "Da Nang": {
+        "vi": "Đà Nẵng",
+        "ar": "Da Nang"
+    },
+    "Hoi An": {
+        "vi": "Hội An",
+        "ar": "Hoi An"
+    },
+    "Dalat": {
+        "vi": "Đà Lạt",
+        "ar": "Dalat"
+    },
+    "Ninh Binh": {
+        "vi": "Ninh Bình",
+        "ar": "Ninh Binh"
+    },
+    "Ninh Bình": {
+        "vi": "Ninh Bình",
+        "ar": "نينه بينه"
+    },
+    "Mekong Delta": {
+        "vi": "Đồng bằng sông Cửu Long",
+        "ar": "Mekong Delta"
+    },
+    "Ho Chi Minh City": {
+        "vi": "Hồ Chí Minh",
+        "ar": "Ho Chi Minh City"
+    },
+    "Ho Chi Minh": {
+        "vi": "Hồ Chí Minh",
+        "ar": "Ho Chi Minh"
+    },
+    "Saigon": {
+        "vi": "Hồ Chí Minh",
+        "ar": "Ho Chi Minh City"
+    },
+
+    # Specialist Section
+    "Custom Itineraries, Luxury Travel, Local Experiences": {
+        "vi": "Thiết kế lịch trình riêng, Du lịch sang trọng, Trải nghiệm bản địa",
+        "ar": "مسارات مخصصة، سفر فاخر، تجارب محلية"
+    },
+    "Years designing bespoke journeys": {
+        "vi": "Nhiều năm thiết kế các hành trình độc bản",
+        "ar": "سنوات من الخبرة في تصميم الرحلات المخصصة"
+    },
+    "Your Dedicated Specialist": {
+        "vi": "Chuyên Viên Riêng Của Bạn",
+        "ar": "مستشارك المتخصص"
+    },
+    "Meet Your Travel Specialist": {
+        "vi": "Gặp Gỡ Chuyên Gia Thiết Kế Hành Trình",
+        "ar": "تعرّف على مصمم رحلتك"
+    },
+    "I am your dedicated travel specialist. I handpicked every hotel, private transfer, and local guide on this itinerary to ensure you experience the true depth of Vietnam in comfort, privacy, and at your own pace. I will personally oversee your journey from behind the scenes.": {
+        "vi": "Tôi là chuyên gia thiết kế hành trình riêng của bạn. Tôi đã tự tay chọn lọc từng khách sạn, chuyến xe riêng tư và hướng dẫn viên bản địa trong lịch trình này để đảm bảo bạn được trải nghiệm chiều sâu thực sự của Việt Nam một cách thoải mái, riêng tư nhất và theo nhịp độ của riêng bạn. Tôi sẽ đích thân đồng hành và giám sát chuyến đi của bạn.",
+        "ar": "أنا مصمم رحلتك المخصص. لقد اخترت بنفسي كل فندق، وسيلة نقل خاصة، ومرشد محلي في هذا المسار لضمان تجربتك للعمق الحقيقي لفيتنام بكل راحة وخصوصية وبوتيرتك الخاصة. سأشرف شخصيًا على رحلتك خلف الكواليس."
+    }
 }
 
 def translate_filter(text: str, lang: str = "en") -> str:
     if not text:
         return ""
-    if not lang or lang == "en":
-        return text
     clean_text = text.strip()
-    return STATIC_DICTIONARY.get(clean_text, {}).get(lang, text)
+    # 1. Tra từ điển tĩnh trước
+    if clean_text in STATIC_DICTIONARY:
+        val = STATIC_DICTIONARY[clean_text].get(lang or "en")
+        if val:
+            return val
+    # 2. Nếu không phải tiếng Việt ("vi") mà không tìm thấy bản dịch, thực hiện bỏ dấu tiếng Việt để hiển thị không dấu
+    if lang != "vi":
+        import unicodedata
+        s = ''.join(c for c in unicodedata.normalize('NFD', clean_text) if unicodedata.category(c) != 'Mn')
+        return s.replace('Đ', 'D').replace('đ', 'd')
+    return clean_text
 
 templates.env.filters["translate"] = translate_filter
 
-async def translate_payload_llm(payload_dict: dict, target_lang: str, payload_type: str = "quotation") -> dict:
+async def translate_payload_llm(payload_dict: dict, target_lang: str, payload_type: str = "quotation", baseline_lang: str = "en") -> dict:
     """
     Translates all translatable string values in a payload dictionary to target_lang
     using a single batch LLM request with high-end luxury copywriting tone.
@@ -399,9 +1024,16 @@ async def translate_payload_llm(payload_dict: dict, target_lang: str, payload_ty
             return False
         if val_clean.startswith("QT-") or val_clean.startswith("VS-"):
             return False
-        # Ignore strictly technical or numeric keys
-        ignored_keys = {"currency", "priceType", "status", "startDate", "endDate", "checkInDate", "checkOutDate"}
+        # Ignore strictly technical or numeric keys or literal status options
+        ignored_keys = {
+            "currency", "priceType", "status", "startDate", "endDate", 
+            "checkInDate", "checkOutDate", "block_id", "service_type",
+            "hotel", "activity", "guide", "transfer", "flight"
+        }
         if key in ignored_keys:
+            return False
+        # Also ignore literal values for status fields
+        if val_clean in {"pending", "not_required"}:
             return False
         return True
 
@@ -409,6 +1041,8 @@ async def translate_payload_llm(payload_dict: dict, target_lang: str, payload_ty
         extracted = []
         if isinstance(data, dict):
             for k, v in data.items():
+                if k in {"retrievalStatus", "candidateBlocks"}:
+                    continue
                 current_path = f"{path}.{k}" if path else k
                 if isinstance(v, str) and is_translatable(k, v):
                     extracted.append((current_path, v))
@@ -441,12 +1075,28 @@ async def translate_payload_llm(payload_dict: dict, target_lang: str, payload_ty
 
     # Clone the dictionary to avoid side effects
     working_dict = copy.deepcopy(payload_dict)
-    pairs = _extract(working_dict)
-    if not pairs:
+    all_pairs = _extract(working_dict)
+    if not all_pairs:
+        return working_dict
+
+    # Check against STATIC_DICTIONARY first to save LLM tokens
+    pairs_to_translate = []
+    local_translations = {}
+    
+    for path, val in all_pairs:
+        clean_val = val.strip()
+        if clean_val in STATIC_DICTIONARY and target_lang in STATIC_DICTIONARY[clean_val]:
+            local_translations[path] = STATIC_DICTIONARY[clean_val][target_lang]
+        else:
+            pairs_to_translate.append((path, val))
+
+    # If all items are pre-translated, we can skip the LLM call entirely!
+    if not pairs_to_translate:
+        _inject(working_dict, local_translations)
         return working_dict
 
     # Prepare batch prompt
-    flat_texts = [p[1] for p in pairs]
+    flat_texts = [p[1] for p in pairs_to_translate]
     
     # Extract some context if available
     tour_title = ""
@@ -510,9 +1160,9 @@ async def translate_payload_llm(payload_dict: dict, target_lang: str, payload_ty
             log.warning("[translate_payload_llm] LLM returned invalid array size: expected %d, got %s", len(flat_texts), type(translated_list))
             return payload_dict
 
-        # Build injection map
-        trans_map = {}
-        for (path, _), trans in zip(pairs, translated_list):
+        # Build injection map combining local and LLM translations
+        trans_map = copy.deepcopy(local_translations)
+        for (path, _), trans in zip(pairs_to_translate, translated_list):
             trans_map[path] = trans
 
         _inject(working_dict, trans_map)
@@ -596,7 +1246,7 @@ async def _translate_item_on_demand(item_id: str, target_lang: str, is_itinerary
         
     try:
         log.info("[translation] Translating %s from %s to %s via LLM...", item_id, baseline_lang, target_lang)
-        translated_dict = await translate_payload_llm(baseline_payload_dict, target_lang)
+        translated_dict = await translate_payload_llm(baseline_payload_dict, target_lang, baseline_lang=baseline_lang)
         
         # Validate translated dict
         if is_itinerary:
@@ -651,7 +1301,7 @@ async def _translate_item_on_demand(item_id: str, target_lang: str, is_itinerary
 quotations: dict[str, dict] = {}
 itineraries: dict[str, dict] = {}
 
-PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "http://localhost:8001")
+PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "http://localhost:8111")
 
 
 # ── Debug middleware — logs every incoming request and response ──────────────
@@ -1076,31 +1726,46 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         grand_total_num = payload.pricing.grandTotal or 0.0
         total_price = f"{currency} {grand_total_num:,.0f}"
 
+    default_inclusions = [
+        {"title": "Handpicked Accommodation", "desc": "Carefully selected hotels and stays as detailed in your journey proposal."},
+        {"title": "Private Transportation", "desc": "Private ground transportation and scheduled transfers throughout the journey, as specified in the itinerary."},
+        {"title": "Curated Experiences", "desc": "Entrance arrangements and experiences included as outlined in your itinerary."},
+        {"title": "Expert Local Guidance", "desc": "Services of carefully selected, licensed local guides where specified."},
+        {"title": "Dining Experiences", "desc": "Meals and dining arrangements as detailed in the itinerary."},
+        {"title": "Journey Connections", "desc": "Domestic flights, rail journeys, ferries, or other transportation included where specifically stated in the itinerary."}
+    ]
+    default_exclusions = [
+        "International flights",
+        "Visa fees and travel documentation",
+        "Travel insurance",
+        "Personal expenses",
+        "Optional experiences not specified in the itinerary",
+        "Tips and gratuities",
+        "Any services not expressly listed as included"
+    ]
+
     # Extract inclusions from itinerary day mainInclusions dynamically
     inc_lines = []
     for d in payload.itinerary:
         if d.mainInclusions and d.mainInclusions not in inc_lines:
             inc_lines.append(d.mainInclusions)
+            
     if not inc_lines:
         inc_lines = [
-            "Private airport pick-up and drop-off",
-            "Private air-conditioned transportation throughout",
-            "Accommodation with daily breakfast",
-            "Meals as mentioned in the program",
-            "All sightseeing entrance fees as mentioned",
-            "English-speaking local guide",
+            {
+                "title": translate_filter(item["title"], lang),
+                "desc": translate_filter(item["desc"], lang)
+            } for item in default_inclusions
         ]
+    else:
+        inc_lines = [translate_filter(truncate_text(x, 120), lang) for x in inc_lines]
         
-    exc_lines = [
-        "International flights",
-        "Vietnam visa and visa processing fees",
-        "Travel insurance",
-        "Personal expenses, laundry, beverages and tips",
-        "Optional activities not mentioned in the program",
-    ]
+    exc_lines = [translate_filter(truncate_text(x, 120), lang) for x in default_exclusions]
 
-    inc_lines = [truncate_text(x, 120) for x in inc_lines]
-    exc_lines = [truncate_text(x, 120) for x in exc_lines]
+    inclusions_title = translate_filter("What Your Journey Includes", lang)
+    inclusions_lede = translate_filter("Your journey has been thoughtfully arranged to ensure a seamless and comfortable experience throughout.", lang)
+    exclusions_title = translate_filter("Not Included", lang)
+    exclusions_lede = translate_filter("To keep your journey transparent and clearly defined, the following are not included unless specifically stated otherwise:", lang)
 
     # Overview paragraphs
     overview_paras = []
@@ -1118,6 +1783,41 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         
     lede = truncate_text(overview_paras[0], 500)
 
+    # Fallback to local parsing if destinations list is empty (e.g. offline/sandbox test)
+    if not destinations and payload.itinerary:
+        from image_selector import resolve_slug_locally, get_random_image_for_province, get_all_images_for_province
+        seen_names = set()
+        for day in payload.itinerary:
+            if day.destination and day.destination not in seen_names:
+                seen_names.add(day.destination)
+                slug = resolve_slug_locally(day.destination)
+                if slug:
+                    dest_dict = {
+                        "name": day.destination,
+                        "slug": slug,
+                        "image_url": get_random_image_for_province(slug),
+                        "images": get_all_images_for_province(slug)
+                    }
+                    destinations.append(dest_dict)
+
+    # Translate destinations name for multi-language
+    translated_destinations = []
+    for d in destinations:
+        d_copy = d.copy()
+        raw_name = d_copy.get("name", "")
+        d_copy["name"] = translate_filter(raw_name, lang)
+        translated_destinations.append(d_copy)
+    destinations = translated_destinations
+
+    # Translate destinations name for multi-language
+    translated_destinations = []
+    for d in destinations:
+        d_copy = d.copy()
+        raw_name = d_copy.get("name", "")
+        d_copy["name"] = translate_filter(raw_name, lang)
+        translated_destinations.append(d_copy)
+    destinations = translated_destinations
+
     # Gallery helpers
     def _d_img(i): return destinations[i].get("image_url", default_img) if i < len(destinations) else default_img
     def _d_name(i): return truncate_text(destinations[i].get("name", ""), 40) if i < len(destinations) else ""
@@ -1130,7 +1830,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
 
     # Highlight experiences — first 3 itinerary days
     experiences = [
-        {"num": f"{i+1:02d}", "title": truncate_text(f"Day {day.dayNumber}: {day.destination}", 80),
+        {"num": f"{i+1:02d}", "title": truncate_text(f"{translate_filter('Day', lang)} {day.dayNumber}: {translate_filter(day.destination, lang)}", 80),
          "desc": truncate_text(day.summary, 160)}
         for i, day in enumerate(payload.itinerary[:3])
     ]
@@ -1143,7 +1843,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         "Rates are B2B net indicative and subject to reconfirmation at the time of booking.",
         "Final price may vary depending on hotel availability, resort category, cruise selection, domestic flight fare, rooming arrangement, child policy, and final travel services confirmed."
     ]
-    price_cond_paras = [truncate_text(x, 250) for x in price_cond_paras]
+    price_cond_paras = [translate_filter(truncate_text(x, 250), lang) for x in price_cond_paras]
 
     # --- GAP ALIGNMENT LOGIC ---
     show_muslim_care = False
@@ -1184,12 +1884,14 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
     hotel_plan_items = []
     hotel_room_notes = ""
     if payload.hotelPlan:
-        for item in payload.hotelPlan.hotels:
+        for idx, item in enumerate(payload.hotelPlan.hotels):
             details = get_luxury_hotel_details(
                 item.hotelArrangement, 
                 item.destination, 
                 item.checkInDate, 
-                item.checkOutDate
+                item.checkOutDate,
+                index=idx,
+                lang=lang
             )
             hotel_plan_items.append(details)
         hotel_room_notes = truncate_text(payload.hotelPlan.roomNotes or "", 200)
@@ -1228,13 +1930,52 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
             "overnight": truncate_text(d.destination, 40),
             "meals": [truncate_text(d.dining, 80)] if d.dining else [],
             "activities": [truncate_text(d.mainInclusions, 120)] if d.mainInclusions else [],
-            "notes": [truncate_text(f"Sense of Pace: {d.senseOfPace}", 80)] if d.senseOfPace else [],
-            "destinations": [truncate_text(d.destination, 40)]
+            "notes": [translate_filter(truncate_text(f"Sense of Pace: {d.senseOfPace}", 80), lang)] if d.senseOfPace else [],
+            "destinations": [translate_filter(truncate_text(d.destination, 40), lang)]
         })
+
+    # Multi-language support for dynamic itinerary subtitle
+    days_cnt = len(payload.itinerary)
+    if lang == "vi":
+        itinerary_p_val = f"Hành trình riêng tư {duration_lbl} của bạn — {days_cnt} ngày, được thiết kế tỉ mỉ."
+    elif lang == "ar":
+        itinerary_p_val = f"رحلتك الخاصة {duration_lbl} — {days_cnt} يوماً، تم تصميمها بعناية."
+    else:
+        itinerary_p_val = f"Your private {duration_lbl} journey — {days_cnt} days, carefully crafted."
+
+    # Journey investment header translation
+    pricing_h2_title = translate_filter("Journey Investment", lang)
+    pricing_h2_val = f"{pricing_h2_title}: {total_price}" if total_price else ""
+
+    # Generate static map URL based on destinations coordinates
+    coords_list = []
+    for d in destinations:
+        slug = d.get("slug")
+        if slug and slug in SLUG_COORDS:
+            lat, lng = SLUG_COORDS[slug]
+            if not coords_list or coords_list[-1] != (lat, lng):
+                coords_list.append((lat, lng))
+
+    static_map_url = ""
+    if coords_list:
+        markers = []
+        for idx, (lat, lng) in enumerate(coords_list):
+            markers.append(f"{lng},{lat},pm2gnm{idx+1}")
+        pt_param = "~".join(markers)
+        
+        pl_coords = []
+        for lat, lng in coords_list:
+            pl_coords.append(f"{lng},{lat}")
+        pl_param = f"c:17412eff,w:4,{','.join(pl_coords)}"
+        
+        static_map_url = f"https://static-maps.yandex.ru/1.x/?l=map&size=650,350&lang=en_US&pt={pt_param}"
+        if len(coords_list) > 1:
+            static_map_url += f"&pl={pl_param}"
 
     return {
         # IDs & images
         "quotation_id":   quotation_id,
+        "static_map_url": static_map_url,
         "img_0": img_0, "img_1": img_1, "img_2": img_2, "img_3": img_3, "img_4": img_4,
         "destinations":   destinations,
         # Hero / header
@@ -1275,18 +2016,18 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         # Experiences (first 3 days)
         "experiences":      experiences,
         # Gallery section
-        "journey_h2":   "Destination imagery woven into the quotation.",
-        "journey_p":    "Cinematic destination panels crafted for a premium travel proposal.",
-        "gal1_label":   "Highlight" if len(destinations) > 0 else "Destination",
-        "gal1_title":   _d_name(0), "gal2_label": "Destination", "gal2_title": _d_name(1),
-        "gal3_label":   "Experience", "gal3_title": _d_name(2), "gal4_label": "Journey", "gal4_title": _d_name(3),
+        "journey_h2":   translate_filter("Destination imagery woven into the quotation.", lang),
+        "journey_p":    translate_filter("Cinematic destination panels crafted for a premium travel proposal.", lang),
+        "gal1_label":   translate_filter("Highlight", lang) if len(destinations) > 0 else translate_filter("Destination", lang),
+        "gal1_title":   _d_name(0), "gal2_label": translate_filter("Destination", lang), "gal2_title": _d_name(1),
+        "gal3_label":   translate_filter("Experience", lang), "gal3_title": _d_name(2), "gal4_label": translate_filter("Journey", lang), "gal4_title": _d_name(3),
         # Itinerary section
-        "itinerary_h2": "Day-by-Day Journey Program",
-        "itinerary_p":  f"Your private {duration_lbl} journey \u2014 {len(payload.itinerary)} days, carefully crafted.",
+        "itinerary_h2": translate_filter("Day-by-Day Journey Program", lang),
+        "itinerary_p":  itinerary_p_val,
         "itinerary":    mapped_itinerary,
         # Pricing section
         "currency":       currency,
-        "pricing_title":  "PRICE QUOTATION \u2013 B2B NET INDICATIVE",
+        "pricing_title":  translate_filter("PRICE QUOTATION – B2B NET INDICATIVE", lang),
         "pricing_basis":  glance_basis,
         "price_options":  price_options,
         "price_per_pax":  price_per_pax,
@@ -1294,20 +2035,24 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         "grand_total":    grand_total_num,
         "subtotal":       grand_total_num,
         "tax_total":      0.0,
-        "pricing_h2":     f"B2B Net Price: {total_price}",
-        "pricing_p":      f"Grand total for {guests_txt}. Currency: {currency}. Final rates subject to reconfirmation.",
+        "pricing_h2":     pricing_h2_val,
+        "pricing_p":      f"{translate_filter('Total', lang)}: {guests_txt}. {translate_filter('Currency', lang)}: {currency}. {translate_filter('Final rates subject to reconfirmation.', lang)}",
         # Inclusions / exclusions
         "inclusions":     inc_lines,
         "exclusions":     exc_lines,
+        "inclusions_title": inclusions_title,
+        "inclusions_lede": inclusions_lede,
+        "exclusions_title": exclusions_title,
+        "exclusions_lede": exclusions_lede,
         # Price conditions
         "price_cond_paras": price_cond_paras,
-        "payment_terms":    "Refer to Booking & Payment terms below.",
+        "payment_terms":    translate_filter("Refer to Booking & Payment terms below.", lang),
         "terms_p":          price_cond_paras[0],
         # CTA
-        "cta_h2": "Confirm dates, then refine the luxury layer.",
-        "cta_p":  "Share travel dates, preferred hotel tier, rooming list and any dietary or mobility requirements. We will reconfirm availability and return a finalized quotation.",
+        "cta_h2": translate_filter("Confirm dates, then refine the luxury layer.", lang),
+        "cta_p":  translate_filter("Share travel dates, preferred hotel tier, rooming list and any dietary or mobility requirements. We will reconfirm availability and return a finalized quotation.", lang),
         # Footer
-        "footer_text": f"{tour_title} \u2014 Luxury quotation prepared for {prepared_for}.",
+        "footer_text": f"{tour_title} — Luxury quotation prepared for {prepared_for}.",
         # Raw quotation (for reference / debugging)
         "raw_quotation":  "",
         # GAP ALIGNMENT context
@@ -1387,6 +2132,24 @@ def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, her
     overview_heading = truncate_text(payload.programOverview.heading or "PROGRAM OVERVIEW", 60) if payload.programOverview else "PROGRAM OVERVIEW"
     lede = truncate_text(overview_paras[0] if overview_paras else "A detailed booking itinerary crafted for your journey.", 500)
 
+    # Translate destinations name for multi-language
+    translated_destinations = []
+    for d in destinations:
+        d_copy = d.copy()
+        raw_name = d_copy.get("name", "")
+        d_copy["name"] = translate_filter(raw_name, lang)
+        translated_destinations.append(d_copy)
+    destinations = translated_destinations
+
+    # Translate destinations name for multi-language
+    translated_destinations = []
+    for d in destinations:
+        d_copy = d.copy()
+        raw_name = d_copy.get("name", "")
+        d_copy["name"] = translate_filter(raw_name, lang)
+        translated_destinations.append(d_copy)
+    destinations = translated_destinations
+
     # Gallery helpers
     def _d_img(i): return destinations[i].get("image_url", default_img) if i < len(destinations) else default_img
     def _d_name(i): return truncate_text(destinations[i].get("name", ""), 40) if i < len(destinations) else ""
@@ -1406,30 +2169,49 @@ def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, her
             title = get_luxury_day_title(city, day.dayNumber, lang)
         else:
             title = truncate_text(title, 80)
-        desc = truncate_text(day.description[0] if day.description else f"Day {day.dayNumber} of the journey.", 160)
+        desc = truncate_text(day.description[0] if day.description else f"{translate_filter('Day', lang)} {day.dayNumber} of the journey.", 160)
         experiences.append({"num": f"{i+1:02d}", "title": title, "desc": desc})
     while len(experiences) < 3:
         experiences.append({"num": f"{len(experiences)+1:02d}", "title": "Premium Experience",
                             "desc": "A carefully curated moment in this journey."})
 
-    inc_lines = payload.inclusions or [
-        "Private airport pick-up and drop-off",
-        "Private air-conditioned transportation throughout",
-        "Accommodation with daily breakfast",
-        "Meals as mentioned in the program",
-        "All sightseeing entrance fees as mentioned",
-        "English-speaking local guide",
+    default_inclusions = [
+        {"title": "Handpicked Accommodation", "desc": "Carefully selected hotels and stays as detailed in your journey proposal."},
+        {"title": "Private Transportation", "desc": "Private ground transportation and scheduled transfers throughout the journey, as specified in the itinerary."},
+        {"title": "Curated Experiences", "desc": "Entrance arrangements and experiences included as outlined in your itinerary."},
+        {"title": "Expert Local Guidance", "desc": "Services of carefully selected, licensed local guides where specified."},
+        {"title": "Dining Experiences", "desc": "Meals and dining arrangements as detailed in the itinerary."},
+        {"title": "Journey Connections", "desc": "Domestic flights, rail journeys, ferries, or other transportation included where specifically stated in the itinerary."}
     ]
-    exc_lines = payload.exclusions or [
+    default_exclusions = [
         "International flights",
-        "Vietnam visa and visa processing fees",
+        "Visa fees and travel documentation",
         "Travel insurance",
-        "Personal expenses, laundry, beverages and tips",
-        "Optional activities not mentioned in the program",
+        "Personal expenses",
+        "Optional experiences not specified in the itinerary",
+        "Tips and gratuities",
+        "Any services not expressly listed as included"
     ]
 
-    inc_lines = [truncate_text(x, 120) for x in inc_lines]
-    exc_lines = [truncate_text(x, 120) for x in exc_lines]
+    if getattr(payload, "inclusions", None):
+        inc_lines = [translate_filter(truncate_text(x, 120), lang) for x in payload.inclusions]
+    else:
+        inc_lines = [
+            {
+                "title": translate_filter(item["title"], lang),
+                "desc": translate_filter(item["desc"], lang)
+            } for item in default_inclusions
+        ]
+        
+    if getattr(payload, "exclusions", None):
+        exc_lines = [translate_filter(truncate_text(x, 120), lang) for x in payload.exclusions]
+    else:
+        exc_lines = [translate_filter(truncate_text(x, 120), lang) for x in default_exclusions]
+
+    inclusions_title = translate_filter("What Your Journey Includes", lang)
+    inclusions_lede = translate_filter("Your journey has been thoughtfully arranged to ensure a seamless and comfortable experience throughout.", lang)
+    exclusions_title = translate_filter("Not Included", lang)
+    exclusions_lede = translate_filter("To keep your journey transparent and clearly defined, the following are not included unless specifically stated otherwise:", lang)
 
     # Pricing fields from payload
     main_option   = next((o for o in payload.pricing.priceOptions if o.isConfirmedMainOption), None) if payload.pricing else None
@@ -1519,18 +2301,31 @@ def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, her
             "date": day_date,
             "title": title,
             "description": [truncate_text(d, 350) for d in day.description],
-            "overnight": truncate_text(day.overnight, 40),
+            "overnight": translate_filter(truncate_text(day.overnight, 40), lang),
             "meals": [truncate_text(m, 80) for m in (day.meals or [])],
-            "destinations": [truncate_text(dest, 40) for dest in (day.destinations or [])],
+            "destinations": [translate_filter(truncate_text(dest, 40), lang) for dest in (day.destinations or [])],
             "activities": [truncate_text(act, 120) for act in (day.activities or [])],
             "optionalActivities": [truncate_text(opt, 120) for opt in (day.optionalActivities or [])],
-            "notes": [truncate_text(nt, 150) for nt in (day.notes or [])],
+            "notes": [translate_filter(truncate_text(nt, 150), lang) for nt in (day.notes or [])],
             "booked_hotels": day_hotels,
             "booked_activities": day_activities,
             "booked_transfers": day_transfers,
             "booked_flights": day_flights,
             "booked_guides": day_guides,
         })
+
+    # Multi-language support for dynamic itinerary subtitle
+    days_cnt = len(payload.itinerary)
+    if lang == "vi":
+        itinerary_p_val = f"Hành trình riêng tư {duration_lbl} của bạn — {days_cnt} ngày, được thiết kế tỉ mỉ."
+    elif lang == "ar":
+        itinerary_p_val = f"رحلتك الخاصة {duration_lbl} — {days_cnt} يوماً، تم تصميمها بعناية."
+    else:
+        itinerary_p_val = f"Your private {duration_lbl} journey — {days_cnt} days, carefully crafted."
+
+    # Journey investment header translation
+    pricing_h2_title = translate_filter("Journey Investment", lang)
+    pricing_h2_val = f"{pricing_h2_title}: {total_price}" if total_price else ""
 
     return {
         "itinerary_id":     itinerary_id,
@@ -1616,11 +2411,15 @@ def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, her
         # Inclusions / exclusions
         "inclusions":       inc_lines,
         "exclusions":       exc_lines,
+        "inclusions_title": inclusions_title,
+        "inclusions_lede": inclusions_lede,
+        "exclusions_title": exclusions_title,
+        "exclusions_lede": exclusions_lede,
         "notes":            [truncate_text(x, 200) for x in (payload.notes or [])],
         # Pricing section
         "currency":       currency,
-        "pricing_title":  truncate_text(payload.pricing.pricingTitle or "PRICE QUOTATION – B2B NET INDICATIVE" if payload.pricing else "", 100),
-        "pricing_basis":  truncate_text(payload.pricing.basis or "B2B net indicative" if payload.pricing else "", 80),
+        "pricing_title":  translate_filter(truncate_text(payload.pricing.pricingTitle or "PRICE QUOTATION – B2B NET INDICATIVE" if payload.pricing else "", 100), lang),
+        "pricing_basis":  translate_filter(truncate_text(payload.pricing.basis or "B2B net indicative" if payload.pricing else "", 80), lang),
         "price_options":  [
             {
                 **o.model_dump(mode="json"),
@@ -1634,8 +2433,8 @@ def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, her
         "grand_total":    grand_total_num,
         "subtotal":       payload.pricing.subtotal if payload.pricing else 0.0,
         "tax_total":      payload.pricing.taxTotal if payload.pricing else 0.0,
-        "pricing_h2":     f"B2B Net Price: {total_price}" if total_price else "",
-        "pricing_p":      f"Grand total for {guests_txt}. Currency: {currency}." if total_price else "",
+        "pricing_h2":     pricing_h2_val,
+        "pricing_p":      f"{translate_filter('Total', lang)}: {guests_txt}. {translate_filter('Currency', lang)}: {currency}." if total_price else "",
         # Footer
         "footer_text":      f"{tour_title} — Detailed booking itinerary prepared for {prepared_for}.",
         "lang":             lang,
@@ -1686,12 +2485,13 @@ async def create_quotation_b2c(request: Request):
     )
     text_context = route_text + " " + itinerary_text
 
-    from image_selector import extract_and_map_destinations, get_random_image_for_province
+    from image_selector import extract_and_map_destinations, get_random_image_for_province, get_all_images_for_province
     destinations = await extract_and_map_destinations(text_context, max_items=None)
     
     # Resolve image urls for each destination
     for d in destinations:
         d["image_url"] = get_random_image_for_province(d.get("slug"))
+        d["images"] = get_all_images_for_province(d.get("slug"))
 
     log.debug("[/quotations/b2c] Extracted destinations: %s", destinations)
 
@@ -1857,12 +2657,13 @@ async def create_quotation(request: Request):
     )
     text_context = route_text + " " + itinerary_text
 
-    from image_selector import extract_and_map_destinations, get_random_image_for_province
+    from image_selector import extract_and_map_destinations, get_random_image_for_province, get_all_images_for_province
     destinations = await extract_and_map_destinations(text_context, max_items=None)
     
     # Resolve image urls for each destination
     for d in destinations:
         d["image_url"] = get_random_image_for_province(d.get("slug"))
+        d["images"] = get_all_images_for_province(d.get("slug"))
 
     log.debug("[/quotations] Extracted destinations: %s", destinations)
 
@@ -2038,6 +2839,83 @@ async def get_published_file(file_path: str):
 # ── GET /quotations/{id}/pdf — A4-optimised PDF view ─────────────────────
 # IMPORTANT: must be registered BEFORE the {quotation_id} catch-all route.
 
+from html.parser import HTMLParser
+
+class EditableFieldsParser(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.edited_fields = {}
+        self.current_field = None
+        self.current_data = []
+
+    def handle_starttag(self, tag, attrs):
+        attrs_dict = dict(attrs)
+        if "data-editable" in attrs_dict:
+            self.current_field = attrs_dict["data-editable"]
+            self.current_data = []
+
+    def handle_data(self, data):
+        if self.current_field is not None:
+            self.current_data.append(data)
+
+    def handle_endtag(self, tag):
+        if self.current_field is not None:
+            val = "".join(self.current_data).strip()
+            self.edited_fields[self.current_field] = val
+            self.current_field = None
+            self.current_data = []
+
+def parse_edited_fields(html_content: str) -> dict:
+    parser = EditableFieldsParser()
+    parser.feed(html_content)
+    return parser.edited_fields
+
+async def _get_latest_published_html(quotation_id: str, lang: str = None) -> str | None:
+    """Gets the latest published HTML content from memory, disk, or GitHub."""
+    entry = quotations.get(quotation_id)
+    if entry and entry.get("html"):
+        return entry["html"]
+
+    from github_publish import get_next_version
+    next_version = await get_next_version(quotation_id)
+    if next_version <= 1:
+        return None
+    current_version = next_version - 1
+    
+    # Try language specific published file first (e.g. v1_ar.html)
+    lang_suffix = f"_{lang}" if lang else ""
+    file_options = [
+        f"{quotation_id}/v{current_version}{lang_suffix}.html",
+        f"{quotation_id}/v{current_version}.html"
+    ]
+    
+    for file_path in file_options:
+        local_path = os.path.join("published", file_path)
+        if os.path.isfile(local_path):
+            try:
+                with open(local_path, "r", encoding="utf-8") as f:
+                    return f.read()
+            except Exception:
+                pass
+
+        # Fetch from GitHub if production
+        ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
+        if ENVIRONMENT == "production":
+            repo = os.getenv("GITHUB_REPO")
+            token = os.getenv("GITHUB_TOKEN")
+            if repo and token:
+                import httpx
+                async with httpx.AsyncClient(timeout=10) as client:
+                    headers = {
+                        "Authorization": f"token {token}", 
+                        "Accept": "application/vnd.github.v3.raw"
+                    }
+                    gh_url = f"https://api.github.com/repos/{repo}/contents/published/{file_path}"
+                    resp = await client.get(gh_url, headers=headers)
+                    if resp.status_code == 200:
+                        return resp.text
+    return None
+
 @app.get("/quotations/{quotation_id}/pdf", response_class=HTMLResponse)
 async def get_quotation_pdf(quotation_id: str, request: Request):
     """
@@ -2094,6 +2972,98 @@ async def get_quotation_pdf(quotation_id: str, request: Request):
         lang_ctx["translations"] = translations
         lang_ctx["baseline_lang"] = baseline_lang
         lang_ctx["translation_status"] = ctx_data.get("translation_status", {"baseline_lang": baseline_lang, "available_langs": [baseline_lang]})
+        
+        # Override fields with edited content if available
+        html_content = await _get_latest_published_html(quotation_id, lang=target_lang)
+        if html_content:
+            edited_fields = parse_edited_fields(html_content)
+            
+            # Simple variables
+            for key in [
+                'tour_title', 'kicker', 'lede', 'customer_name', 'overview_heading', 
+                'guests_txt', 'travel_dates', 'route_txt', 'travel_style', 
+                'quotation_number', 'contact', 'why_private', 'why_comfort', 
+                'why_muslim', 'why_balanced', 'journey_h2', 'journey_p', 
+                'itinerary_h2', 'itinerary_p', 'room_notes', 'pricing_h2', 
+                'pricing_p', 'muslim_care_text', 'term_deposit', 'term_balance', 
+                'term_cancellation', 'term_confirmation', 'cta_h2', 'designer_kicker', 
+                'designer_title', 'designer_quote', 'designer_expertise', 
+                'designer_experience', 'designer_signature'
+            ]:
+                if key in edited_fields:
+                    lang_ctx[key] = edited_fields[key]
+                    
+            # Overwrite itinerary day items
+            for day in lang_ctx.get('itinerary', []):
+                idx = day.get('dayNumber')
+                if idx is not None:
+                    t_key = f"day_title_{idx}"
+                    if t_key in edited_fields:
+                        day['title'] = edited_fields[t_key]
+                        
+                    # Rebuild day description paragraphs
+                    p_index = 0
+                    desc_paras = []
+                    while True:
+                        p_key = f"day_desc_{idx}_{p_index}"
+                        if p_key in edited_fields:
+                            desc_paras.append(edited_fields[p_key])
+                            p_index += 1
+                        else:
+                            break
+                    if desc_paras:
+                        day['description'] = desc_paras
+
+            # Overwrite hotel plan items
+            for h_idx, hotel in enumerate(lang_ctx.get('hotels', []), 1):
+                name_key = f"hotel_name_{h_idx}"
+                city_key = f"hotel_city_{h_idx}"
+                date_key = f"hotel_date_{h_idx}"
+                tel_key = f"hotel_tel_{h_idx}"
+                intro_key = f"hotel_intro_{h_idx}"
+                info_key = f"hotel_info_name_{h_idx}"
+                
+                if name_key in edited_fields:
+                    hotel['hotel_name'] = edited_fields[name_key]
+                if city_key in edited_fields:
+                    hotel['city_country'] = edited_fields[city_key]
+                if date_key in edited_fields:
+                    hotel['check_in_out'] = edited_fields[date_key]
+                if tel_key in edited_fields:
+                    hotel['telephone'] = edited_fields[tel_key]
+                if intro_key in edited_fields:
+                    hotel['hotel_intro'] = edited_fields[intro_key]
+                if info_key in edited_fields:
+                    hotel['room_name'] = edited_fields[info_key]
+
+            # Overwrite inclusions & exclusions lists
+            inclusions = lang_ctx.get('inclusions', [])
+            new_inclusions = []
+            for inc_idx, item in enumerate(inclusions, 1):
+                key = f"inc_{inc_idx}"
+                if key in edited_fields:
+                    new_inclusions.append(edited_fields[key])
+                else:
+                    new_inclusions.append(item)
+            if new_inclusions:
+                lang_ctx['inclusions'] = new_inclusions
+
+            exclusions = lang_ctx.get('exclusions', [])
+            new_exclusions = []
+            for exc_idx, item in enumerate(exclusions, 1):
+                key = f"exc_{exc_idx}"
+                if key in edited_fields:
+                    new_exclusions.append(edited_fields[key])
+                else:
+                    new_exclusions.append(item)
+            if new_exclusions:
+                lang_ctx['exclusions'] = new_exclusions
+
+            # Overwrite pricing per pax
+            for p_idx, opt in enumerate(lang_ctx.get('price_options', []), 1):
+                key = f"price_pax_{p_idx}"
+                if key in edited_fields:
+                    opt['pricePerPerson']['displayText'] = edited_fields[key]
         
         rendered_html = tmpl.render(**lang_ctx)
         return HTMLResponse(content=rendered_html)
@@ -2309,12 +3279,14 @@ async def create_itinerary(request: Request):
         get_province_slug_for_location,
         resolve_slug_locally,
         resolve_slug_from_known,
+        get_all_images_for_province,
     )
     destinations = await extract_and_map_destinations(text_context, max_items=None)
 
     # Resolve image urls for each destination
     for d in destinations:
         d["image_url"] = get_random_image_for_province(d.get("slug"))
+        d["images"] = get_all_images_for_province(d.get("slug"))
 
     log.debug("[/itineraries] Extracted destinations: %s", destinations)
 
@@ -3350,7 +4322,7 @@ async def privacy_policy():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8111, reload=True)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -3498,8 +4470,8 @@ def _build_agent_ctx(
         "truly absorb each destination."
     )
     why_muslim = (
-        "Halal Dining, prayer-friendly scheduling, and culturally aware hosts "
-        "who understand your needs."
+        "Dietary requests, meal planning, and specific preferences are carefully "
+        "coordinated to suit all travelers."
     )
     why_balanced = (
         "A carefully balanced rhythm of discovery, relaxation, and cultural ",
@@ -3644,11 +4616,12 @@ async def create_landing_page_agent(request: Request):
     )
     text_context = route_text + " " + itinerary_text
 
-    from image_selector import extract_and_map_destinations, get_random_image_for_province
+    from image_selector import extract_and_map_destinations, get_random_image_for_province, get_all_images_for_province
 
     destinations = await extract_and_map_destinations(text_context, max_items=None) if text_context.strip() else []
     for d in destinations:
         d["image_url"] = get_random_image_for_province(d.get("slug"))
+        d["images"] = get_all_images_for_province(d.get("slug"))
     default_img = "/assets/vietnam-safar-logo.png"
     valid_images = [d["image_url"] for d in destinations if d.get("image_url") != default_img]
     if valid_images:
@@ -3711,7 +4684,7 @@ async def create_landing_page_agent(request: Request):
             log.warning("[/api/v1/landing-page] GitHub publish skipped: %s", exc)
 
     # ── 6. Build response URL ───────────────────────────────────────────
-    base_url = os.getenv("PUBLIC_BASE_URL", "http://localhost:8001")
+    base_url = os.getenv("PUBLIC_BASE_URL", "http://localhost:8111")
     quotation_url = published_url or f"{base_url}/published/{session_id}/v1.html"
     pdf_url = pdf_static_url or f"{base_url}/published/{session_id}/pdf.html"
     local_path = str(v1_path)
@@ -3737,17 +4710,26 @@ def format_hotel_dates(checkin: str, checkout: str) -> str:
 
 
 # ── Dynamic hotel details fuzzy resolver (Fusion Search + info.json) ──────────
+def strip_accents(text: str) -> str:
+    import unicodedata
+    if not text:
+        return ""
+    normalized = unicodedata.normalize('NFD', text)
+    stripped = "".join(c for c in normalized if unicodedata.category(c) != 'Mn')
+    return stripped.replace('Đ', 'D').replace('đ', 'd')
+
 HOTEL_STOP_WORDS = {
     'hotel', 'resort', 'cruise', 'spa', 'villas', 'luxury', 'premium', 
     'boutique', 'stay', 'suites', 'center', 'ocean', 'safi', 'premium',
-    'classic', 'legend', 'metropole', 'retreat', 'lodge', 'palace'
+    'classic', 'legend', 'metropole', 'retreat', 'lodge', 'palace',
+    'khach', 'san', 'khachsan', 'nha', 'du', 'thuyen', 'duthuyen'
 }
 
 def tokenize_hotel_name(text: str) -> set:
     import re
     if not text:
         return set()
-    clean = re.sub(r'[^a-zA-Z0-9\s-]', '', text).lower()
+    clean = re.sub(r'[^a-zA-Z0-9\s-]', '', strip_accents(text)).lower()
     tokens = set(re.split(r'[\s-]', clean))
     return {t for t in tokens if t and t not in HOTEL_STOP_WORDS}
 
@@ -3757,8 +4739,8 @@ def char_similarity(str1: str, str2: str) -> float:
 
 def calculate_match_score(hotel_name: str, city_name: str, city_dir: str, hotel_dir: str) -> float:
     score = 0.0
-    norm_city_input = city_name.lower().replace(" ", "").replace("-", "")
-    norm_city_dir = city_dir.lower().replace(" ", "").replace("-", "")
+    norm_city_input = strip_accents(city_name).lower().replace(" ", "").replace("-", "")
+    norm_city_dir = strip_accents(city_dir).lower().replace(" ", "").replace("-", "")
     
     city_aliases = {
         "saigon": {"saigon", "hochiminh", "hochiminhcity", "hcmc"},
@@ -3806,7 +4788,7 @@ def calculate_match_score(hotel_name: str, city_name: str, city_dir: str, hotel_
             
     return score
 
-def resolve_hotel_details(hotel_name: str, city_name: str, base_dir: str = "assets/hotels") -> dict | None:
+def resolve_hotel_details(hotel_name: str, city_name: str, base_dir: str = "assets/hotels", index: int = 0, lang: str = "en") -> dict | None:
     if not os.path.exists(base_dir):
         return None
         
@@ -3852,7 +4834,8 @@ def resolve_hotel_details(hotel_name: str, city_name: str, base_dir: str = "asse
         
         name = hotel_name.split("(")[0].strip() if hotel_name else "Luxury Hotel"
         tel = "+84 28 3933 3226"
-        intro = f"{name} offers refined luxury accommodations, personalized service, and modern comforts."
+        suffix = translate_filter("offers refined luxury accommodations, personalized service, and modern comforts.", lang)
+        intro = f"{name} {suffix}"
         
         info_path = os.path.join(matched_path, "info.json")
         if os.path.exists(info_path):
@@ -3877,26 +4860,36 @@ def resolve_hotel_details(hotel_name: str, city_name: str, base_dir: str = "asse
             
         root_imgs = sorted([f for f in os.listdir(matched_path) if f.lower().endswith(('.jpg', '.jpeg', '.png', '.webp'))])
         
-        # Resolve exterior image
+        # Translate introduction
+        if "offers refined luxury accommodations" in intro:
+            suffix = translate_filter("offers refined luxury accommodations, personalized service, and modern comforts.", lang)
+            intro = f"{name} {suffix}"
+        else:
+            intro = translate_filter(intro, lang)
+
+        # Resolve exterior image using modulo on index to rotate/shuffle images
         if ext_imgs:
-            ext_img = f"/assets/hotels/{city_dir}/{hotel_dir}/exterior/{ext_imgs[0]}"
+            ext_idx = index % len(ext_imgs)
+            ext_img = f"/assets/hotels/{city_dir}/{hotel_dir}/exterior/{ext_imgs[ext_idx]}"
         elif int_imgs:
-            ext_img = f"/assets/hotels/{city_dir}/{hotel_dir}/interior/{int_imgs[0]}"
+            ext_idx = index % len(int_imgs)
+            ext_img = f"/assets/hotels/{city_dir}/{hotel_dir}/interior/{int_imgs[ext_idx]}"
         elif root_imgs:
-            ext_img = f"/assets/hotels/{city_dir}/{hotel_dir}/{root_imgs[0]}"
+            ext_idx = index % len(root_imgs)
+            ext_img = f"/assets/hotels/{city_dir}/{hotel_dir}/{root_imgs[ext_idx]}"
         else:
             ext_img = ""
 
-        # Resolve interior image
+        # Resolve interior image (offsetting index by 1 to get a different picture)
         if int_imgs:
-            idx = 1 if len(int_imgs) > 1 else 0
-            int_img = f"/assets/hotels/{city_dir}/{hotel_dir}/interior/{int_imgs[idx]}"
+            int_idx = (index + 1) % len(int_imgs)
+            int_img = f"/assets/hotels/{city_dir}/{hotel_dir}/interior/{int_imgs[int_idx]}"
         elif ext_imgs:
-            idx = 1 if len(ext_imgs) > 1 else 0
-            int_img = f"/assets/hotels/{city_dir}/{hotel_dir}/exterior/{ext_imgs[idx]}"
+            int_idx = (index + 1) % len(ext_imgs)
+            int_img = f"/assets/hotels/{city_dir}/{hotel_dir}/exterior/{ext_imgs[int_idx]}"
         elif root_imgs:
-            idx = 1 if len(root_imgs) > 1 else 0
-            int_img = f"/assets/hotels/{city_dir}/{hotel_dir}/{root_imgs[idx]}"
+            int_idx = (index + 1) % len(root_imgs)
+            int_img = f"/assets/hotels/{city_dir}/{hotel_dir}/{root_imgs[int_idx]}"
         else:
             int_img = ""
             
@@ -3911,7 +4904,7 @@ def resolve_hotel_details(hotel_name: str, city_name: str, base_dir: str = "asse
     return None
 
 
-def get_luxury_hotel_details(hotel_name_or_arr: str, destination: str, checkin: str, checkout: str) -> dict:
+def get_luxury_hotel_details(hotel_name_or_arr: str, destination: str, checkin: str, checkout: str, index: int = 0, lang: str = "en") -> dict:
     name_lower = hotel_name_or_arr.lower() if hotel_name_or_arr else ""
     date_range = format_hotel_dates(checkin, checkout)
     city_country = f"{destination.upper()}, VIETNAM" if destination else "VIETNAM"
@@ -3932,12 +4925,13 @@ def get_luxury_hotel_details(hotel_name_or_arr: str, destination: str, checkin: 
             
     name = raw_name.split("(")[0].strip() if raw_name else "Luxury Hotel"
     tel = "+84 28 3933 3226"
-    intro = f"{name} offers refined luxury accommodations, personalized service, and modern comforts."
+    suffix = translate_filter("offers refined luxury accommodations, personalized service, and modern comforts.", lang)
+    intro = f"{name} {suffix}"
     hotel_img = ""
     room_img = ""
     
     # 1. Try resolving dynamically from the local database (Fusion Search + info.json)
-    resolved = resolve_hotel_details(raw_name, destination)
+    resolved = resolve_hotel_details(raw_name, destination, index=index, lang=lang)
     if resolved:
         name = resolved["name"]
         tel = resolved["tel"]

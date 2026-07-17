@@ -1,0 +1,2347 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <!-- Premium Typography Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <title>اكتشف روعة الطبيعة وسحر الثقافة عبر 21 يومًا من الاسترخاء والمغامرة... — PDF Version</title>
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <style>
+    :root {
+      --ivory: #f8f3e9;
+      --ink: #11130f;
+      --muted: #706a5d;
+      --emerald: #17412e;
+      --emerald-2: #0e2f22;
+      --gold: #b7894b;
+      --gold-2: #d8bd85;
+      --line: rgba(183,137,75,.28);
+      --card: #fffaf1;
+      --charcoal: #171915;
+      --serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+      --sans: 'Plus Jakarta Sans', Arial, Helvetica, sans-serif;
+    }
+
+    @page { size: A4 portrait; margin: 0; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.6;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* Screen-only viewer styles */
+    @media screen {
+      body {
+        background: #525659; /* PDF viewer gray */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 40px 0;
+        gap: 20px;
+      }
+    }
+
+    @media print {
+      body { 
+        background-color: var(--ivory) !important; 
+        padding: 0; 
+        display: block; 
+      }
+      .pdf-page {
+        width: auto !important;
+        min-height: auto !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+      }
+      .cover {
+        height: 100vh !important;
+      }
+    }
+
+    /* ── Page wrapper ── */
+    .pdf-page {
+      width: 794px;
+      min-height: 1123px;
+      background: var(--ivory);
+      page-break-after: always;
+      position: relative;
+    }
+    .pdf-page:last-of-type { page-break-after: auto; }
+
+    @media screen {
+      .pdf-page {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+      }
+    }
+
+    /* ── Page watermark (fixed = repeats on every print page) ── */
+    .watermark {
+      position: fixed;
+      bottom: 10px;
+      right: 20px;
+      font-size: 9px;
+      color: rgba(0,0,0,.22);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      font-family: var(--sans);
+    }
+
+    /* ═══════════════════════════════════════════
+       PAGE 1 — Cover
+    ═══════════════════════════════════════════ */
+    .cover {
+      width: 794px;
+      height: 1123px;
+      background: linear-gradient(160deg, rgba(17,19,15,.88) 0%, rgba(17,19,15,.55) 55%, rgba(17,19,15,.18) 100%),
+                  center/cover no-repeat;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 0;
+    }
+
+    .cover-body {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 24px;
+      align-items: end;
+      padding: 48px 48px 54px;
+    }
+
+    .cover-kicker {
+      color: var(--gold-2);
+      font-size: 10px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .cover h1 {
+      font-family: var(--serif);
+      font-size: 42px;
+      line-height: 1.15;
+      font-weight: 500;
+      letter-spacing: -.02em;
+      margin-bottom: 16px;
+      max-width: 420px;
+    }
+
+    .cover-lede {
+      font-size: 14px;
+      color: rgba(255,255,255,.76);
+      max-width: 380px;
+      line-height: 1.6;
+    }
+
+    /* Quote card on cover */
+    .quote-card {
+      background: rgba(255,250,241,.93);
+      color: var(--ink);
+      border-radius: 24px;
+      padding: 22px 24px;
+      border: 1px solid rgba(255,255,255,.6);
+    }
+
+    .quote-card h2 {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 14px;
+      color: var(--emerald);
+    }
+
+    .qrow {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(17,19,15,.1);
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .qrow:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .qrow strong { color: var(--ink); text-align: right; font-size: 11px; }
+
+    .qrow.stacked {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 3px;
+    }
+    .qrow.stacked strong {
+      text-align: left;
+    }
+
+    /* Strip bar at bottom of cover */
+    .cover-strip {
+      background: rgba(23,65,46,.92);
+      display: grid;
+      grid-template-columns: repeat(4,1fr);
+      padding: 16px 48px;
+    }
+
+    .strip-item { text-align: center; }
+    .strip-item span {
+      display: block;
+      color: var(--gold-2);
+      font-size: 8px;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .strip-item strong {
+      font-family: var(--serif);
+      font-size: 20px;
+      font-weight: 500;
+      color: white;
+      display: block;
+      margin-top: 3px;
+    }
+
+    /* ═══════════════════════════════════════════
+       Shared section styles
+    ═══════════════════════════════════════════ */
+    .page-inner { padding: 44px 48px; }
+
+    .section-label {
+      color: var(--gold);
+      font-size: 9px;
+      letter-spacing: .24em;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .section-h2 {
+      font-family: var(--serif);
+      font-size: 36px;
+      line-height: .98;
+      letter-spacing: -.04em;
+      font-weight: 500;
+      color: var(--emerald);
+      margin-bottom: 8px;
+    }
+
+    .section-p {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 24px;
+    }
+
+    /* ═══════════════════════════════════════════
+       PAGE 2 — Overview + Gallery
+    ═══════════════════════════════════════════ */
+    .experience-grid {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .exp-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .exp-num {
+      color: var(--gold);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .18em;
+    }
+
+    .exp-card h3 {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--emerald);
+      margin: 8px 0 6px;
+      line-height: 1.1;
+    }
+
+    .exp-card p { font-size: 12px; color: var(--muted); }
+
+    /* Gallery 2-col for A4 */
+    .gallery {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      grid-auto-rows: 200px;
+      gap: 10px;
+    }
+
+    .img-tile {
+      border-radius: 18px;
+      overflow: hidden;
+      background: center/cover no-repeat;
+      position: relative;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    .img-tile.large { grid-row: span 2; }
+
+    .img-tile::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 40%, rgba(17,19,15,.7));
+    }
+
+    .img-caption {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 14px;
+      color: white;
+    }
+
+    .img-caption small {
+      display: block;
+      color: var(--gold-2);
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: .18em;
+      font-weight: 700;
+    }
+
+    .img-caption strong {
+      font-family: var(--serif);
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    /* ═══════════════════════════════════════════
+       PAGE 3 — Itinerary
+    ═══════════════════════════════════════════ */
+    .itinerary { display: grid; gap: 10px; }
+
+    .day-card {
+      display: grid;
+      grid-template-columns: 56px 1fr 140px;
+      gap: 16px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      align-items: start;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .day-num {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--emerald);
+      color: white;
+      display: grid;
+      place-items: center;
+      font-family: var(--serif);
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .day-card h3 {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--emerald);
+      margin: 2px 0 5px;
+      line-height: 1.1;
+    }
+
+    .day-badge {
+      font-size: 8px;
+      color: var(--gold);
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .day-card p { font-size: 11px; color: var(--muted); }
+
+    .day-meta {
+      text-align: right;
+      padding-top: 6px;
+    }
+
+    .day-meta .price {
+      font-family: var(--serif);
+      font-size: 22px;
+      color: var(--emerald);
+      font-weight: 500;
+    }
+
+    .day-meta .price-sub { font-size: 10px; color: var(--muted); }
+    .day-meta .qty { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+
+    /* ═══════════════════════════════════════════
+       PAGE 4 — Pricing + Inc/Exc
+    ═══════════════════════════════════════════ */
+    .pricing-block {
+      background: var(--charcoal);
+      border-radius: 24px;
+      padding: 32px;
+      color: white;
+      margin-bottom: 16px;
+      break-inside: avoid;
+    }
+
+    .pricing-block h2 {
+      font-family: var(--serif);
+      font-size: 32px;
+      font-weight: 500;
+      letter-spacing: -.04em;
+      margin-bottom: 8px;
+    }
+
+    .pricing-block .sub {
+      color: rgba(255,255,255,.68);
+      font-size: 12px;
+      margin-bottom: 20px;
+    }
+
+    .price-cards {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 12px;
+    }
+
+    .price-card {
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(216,189,133,.35);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .price-card.featured {
+      background: linear-gradient(180deg,rgba(183,137,75,.25),rgba(255,255,255,.06));
+      border-color: var(--gold-2);
+    }
+
+    .price-card span {
+      color: var(--gold-2);
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    .price-card strong {
+      display: block;
+      font-family: var(--serif);
+      font-size: 28px;
+      font-weight: 500;
+      margin: 6px 0 2px;
+    }
+
+    .price-card small { font-size: 10px; color: rgba(255,255,255,.65); }
+
+    .price-note {
+      margin-top: 14px;
+      font-size: 11px;
+      color: rgba(255,255,255,.55);
+    }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 20px;
+      break-inside: avoid;
+    }
+
+    .panel h3 {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--emerald);
+      margin-bottom: 10px;
+    }
+
+    .panel ul {
+      padding-left: 18px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .panel ul li { font-size: 12px; color: var(--muted); }
+
+    /* ═══════════════════════════════════════════
+       PAGE 5 — Terms + CTA + Footer
+    ═══════════════════════════════════════════ */
+    .terms-grid {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .term-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      break-inside: avoid;
+    }
+
+    .term-card .label {
+      font-size: 8px;
+      color: var(--gold);
+      font-weight: 800;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .term-card h3 {
+      font-family: var(--serif);
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--emerald);
+      margin-bottom: 6px;
+    }
+
+    .term-card p { font-size: 11px; color: var(--muted); }
+
+    .cta-block {
+      background: linear-gradient(135deg, var(--emerald-2), #11130f 64%, #332711);
+      color: white;
+      border-radius: 24px;
+      padding: 32px;
+      display: grid;
+      grid-template-columns: 1fr 220px;
+      gap: 28px;
+      align-items: center;
+      break-inside: avoid;
+      margin-bottom: 20px;
+    }
+
+    .cta-block h2 {
+      font-family: var(--serif);
+      font-size: 32px;
+      font-weight: 500;
+      letter-spacing: -.04em;
+      line-height: .96;
+      margin-bottom: 10px;
+    }
+
+    .cta-block p { color: rgba(255,255,255,.72); font-size: 13px; }
+
+    .contact-box {
+      background: rgba(255,255,255,.09);
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .contact-box .clabel {
+      display: block;
+      color: var(--gold-2);
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: .16em;
+      font-weight: 800;
+      margin-top: 12px;
+    }
+
+    .contact-box .clabel:first-child { margin-top: 0; }
+    .contact-box .cval { font-weight: 700; font-size: 13px; margin-top: 2px; }
+
+    .pdf-footer {
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+      padding: 16px 0 20px;
+      border-top: 1px solid var(--line);
+      margin-top: 8px;
+    }
+
+    /* Page header bar (pages 2-5) */
+    .page-header {
+      background: var(--emerald);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 48px;
+    }
+
+    .page-header .brand {
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .page-header .ref {
+      color: var(--gold-2);
+      font-size: 9px;
+      letter-spacing: .1em;
+    }
+
+    html[dir="rtl"] {
+      direction: rtl;
+      --serif: 'Amiri', Georgia, serif;
+      --sans: 'Plus Jakarta Sans', Arial, sans-serif;
+    }
+    html[dir="rtl"] body {
+      direction: rtl;
+      text-align: right;
+    }
+    html[dir="rtl"] .qrow strong {
+      text-align: left;
+    }
+    html[dir="rtl"] .qrow.stacked strong {
+      text-align: right;
+    }
+    html[dir="rtl"] .day-meta {
+      text-align: left;
+    }
+    html[dir="rtl"] .hotel-pdf-card div[style*="text-align: right"] {
+      text-align: left !important;
+    }
+    html[dir="rtl"] table {
+      text-align: right;
+    }
+    html[dir="rtl"] th {
+      text-align: right;
+    }
+    html[dir="rtl"] .contact-box {
+      text-align: left;
+    }
+
+    /* Custom Leaflet Map Markers & Styling */
+    .custom-marker {
+      position: relative;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .marker-core {
+      width: 24px;
+      height: 24px;
+      background: var(--emerald);
+      border: 2px solid var(--gold-2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 800;
+      font-size: 11px;
+      box-shadow: 0 4px 12px rgba(17, 19, 15, 0.2);
+      z-index: 2;
+    }
+    .marker-pulse {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      background: rgba(183, 137, 75, 0.25);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .leaflet-control-attribution {
+      font-size: 8px !important;
+      background: rgba(255, 255, 255, 0.75) !important;
+    }
+    /* Clean up Map for Printing */
+    .leaflet-container {
+      background-color: var(--ivory) !important;
+    }
+    .leaflet-tile {
+      filter: sepia(0.7) hue-rotate(-10deg) saturate(0.4) contrast(1.05) brightness(0.98) !important;
+    }
+  </style>
+</head>
+<body>
+
+<div class="watermark">Vietnam Safar · QT-2026-ARAB-21D20N · عرض أسعار B2B سري</div>
+
+<!-- ═══════════════════ PAGE 1 — Cover ═══════════════════ -->
+<div class="pdf-page">
+  <div class="cover" style="background-image: linear-gradient(160deg,rgba(17,19,15,.88),rgba(17,19,15,.55) 55%,rgba(17,19,15,.18)), url('/assets/quang-ninh/halong-bay.jpg');">
+    <div class="cover-body">
+      <div>
+        <div style="font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-2);margin-bottom:10px;font-weight:700;">مقترح B2B سري</div>
+        <div class="cover-kicker">Private Luxury Quotation ‒ 21D20N ‒ 2026-08-10 – 2026-08-30</div>
+        <h1>اكتشف روعة الطبيعة وسحر الثقافة عبر 21 يومًا من الاسترخاء والمغامرة...</h1>
+        <p class="cover-lede">رحلة استثنائية فاخرة ومصممة بعناية تمتد على مدار 21 يومًا لربط أرقى الوجهات في فيتنام. من سحر هانوي التاريخي ونقاء خليج هاليغ، إلى مرتفعات سابا الشامخة، وصولاً إلى شواطئ دا نانغ الرملية وهدوء دالات الرومانسية وحيوية هو تشي منه. صُممت هذه الرحلة خصيصاً للمسافرين الباحثين عن الفخامة والخصوصية، مع توفير كافة الخدمات الممتازة والتسهيلات التي تضمن راحة تامة طوال الإقامة.</p>
+      </div>
+      <div class="quote-card">
+        <h2>نظرة عامة على الرحلة</h2>
+        <div class="qrow"><span>Prepared for</span><strong>2 Adults (شخصين)</strong></div>
+        <div class="qrow"><span>Overview</span><strong>PROGRAM OVERVIEW</strong></div>
+        
+        <div class="qrow"><span>Guests</span><strong>2 Adults (شخصين)</strong></div>
+        
+        
+        <div class="qrow"><span>Travel dates</span><strong>2026-08-10 – 2026-08-30</strong></div>
+        
+        
+        <div class="qrow stacked"><span>Route</span><strong>Hanoi – Halong Bay – Sapa – Da Nang – Dalat – Ho Chi Minh City</strong></div>
+        
+        
+        <div class="qrow stacked"><span>Style</span><strong>رحلة خاصة بالكامل مع سيارة وسائق مرشد سياحي خاص</strong></div>
+        
+        <div class="qrow"><span>Ref.</span><strong>QT-2026-ARAB-21D20N</strong></div>
+        <div class="qrow"><span>Contact</span><strong>+84 911 538 738</strong></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE 2 — Glance & Overview ═══════════════════ -->
+<div class="pdf-page">
+  <div class="page-header">
+    <span class="brand">Vietnam Safar — B2B Travel Proposal</span>
+    <span class="ref">QT-2026-ARAB-21D20N · 2026-08-10</span>
+  </div>
+  <div class="page-inner">
+
+    <div class="section-label" style="margin-top:20px;">Section 2 — Your Journey, Mapped</div>
+    <h2 class="section-h2">رحلتك على الخريطة</h2>
+
+    <div style="margin-top: 15px; border-radius: 18px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 4px 16px rgba(17,19,15,0.04);">
+      <div id="map" style="width: 100%; height: 420px; display: block; z-index: 1;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE 3 — Why Works & Gallery ═══════════════════ -->
+<div class="pdf-page">
+  <div class="page-header">
+    <span class="brand">Vietnam Safar — B2B Travel Proposal</span>
+    <span class="ref">QT-2026-ARAB-21D20N · 2026-08-10</span>
+  </div>
+  <div class="page-inner">
+    <div class="section-label">Section 3 — رحلة ذات وتيرة مثالية</div>
+    <h2 class="section-h2">Why This Itinerary Inspires</h2>
+    <p class="section-p">رعاية مخصصة، وتيرة متوازنة، ولوجستيات سلسة مصممة خصيصًا لمجموعتكم.</p>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px;">
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
+        <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">خصوصية ومرونة</strong>
+        <p style="font-size:11px; color:var(--muted); line-height:1.4;">تتيح لك السيارة الخاصة والمرشد الشخصي مرونة تامة لتعديل وتيرة الرحلة وجداول اليوم بما يناسب تفضيلاتك الخاصة وعائلتك.</p>
+      </div>
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
+        <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">الراحة والوتيرة</strong>
+        <p style="font-size:11px; color:var(--muted); line-height:1.4;">تم اختيار فنادق 4 نجوم عالية الجودة وكروز 5 نجوم بعناية فائقة لتوفير أقصى درجات الراحة والاسترخاء بعد الجولات اليومية.</p>
+      </div>
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
+        <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">الرعاية الغذائية والخاصة</strong>
+        <p style="font-size:11px; color:var(--muted); line-height:1.4;">جميع الوجبات المختارة تتوافق مع تفضيلات الأطعمة الحلال، مع التركيز على المأكولات البحرية الطازجة والخضروات والمأكولات الخالية من لحم الخنزير.</p>
+      </div>
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
+        <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">أبرز الفعاليات المتوازنة</strong>
+        <p style="font-size:11px; color:var(--muted); line-height:1.4;">مزيج متناغم يجمع بين سحر المعالم التاريخية، استكشاف الجبال المغطاة بالضباب، الاسترخاء الشاطئي والرحلات النهرية الهادئة.</p>
+      </div>
+    </div>
+
+    <div class="section-label">معرض الصور</div>
+    <div class="gallery" style="margin-top:8px;">
+      
+      <div class="img-tile large" style="background-image:url('/assets/ha-noi/hanoi1.jpg')">
+        <div class="img-caption">
+          <small>أبرز المعالم</small>
+          <strong>Hanoi</strong>
+        </div>
+      </div>
+      
+      <div class="img-tile " style="background-image:url('/assets/quang-ninh/halong-bay.jpg')">
+        <div class="img-caption">
+          <small>الوجهة</small>
+          <strong>Halong Bay</strong>
+        </div>
+      </div>
+      
+      <div class="img-tile " style="background-image:url('/assets/lao-cai/fansipan.jpg')">
+        <div class="img-caption">
+          <small>التجربة</small>
+          <strong>Sapa</strong>
+        </div>
+      </div>
+      
+      <div class="img-tile " style="background-image:url('/assets/da-nang/danang3.jpg')">
+        <div class="img-caption">
+          <small>الرحلة</small>
+          <strong>Da Nang</strong>
+        </div>
+      </div>
+      
+      <div class="img-tile " style="background-image:url('/assets/quang-nam/hoian3.jpg')">
+        <div class="img-caption">
+          <small>الوجهة</small>
+          <strong>Hoi An</strong>
+        </div>
+      </div>
+      
+      <div class="img-tile " style="background-image:url('/assets/lam-dong/dalat3.jpg')">
+        <div class="img-caption">
+          <small>الوجهة</small>
+          <strong>Da Lat</strong>
+        </div>
+      </div>
+      
+      <div class="img-tile " style="background-image:url('/assets/ho-chi-minh/hightower.jpg')">
+        <div class="img-caption">
+          <small>الوجهة</small>
+          <strong>Ho Chi Minh City</strong>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE 4 — Itinerary ═══════════════════ -->
+<div class="pdf-page">
+  <div class="page-header">
+    <span class="brand">Vietnam Safar — Luxury Quotation</span>
+    <span class="ref">QT-2026-ARAB-21D20N · 2026-08-10</span>
+  </div>
+  <div class="page-inner">
+    <div class="section-label">Section 4 — برنامج الخدمة</div>
+    <h2>برنامج الرحلة يومًا بيوم</h2>
+    <p class="section-p">رحلتك الخاصة 21D20N — 21 يوماً، تم تصميمها بعناية.</p>
+
+    <div class="itinerary">
+      
+      <div class="day-card">
+        <div class="day-num">1</div>
+        <div>
+          <div class="day-badge">يوم 1</div>
+          <h3>خلف الأبواب المغلقة: فصل Hanoi</h3>
+          
+          <p>الوصول إلى هانوي. استقبال حار في مطار نوي باي الدولي من قبل سائقنا الخاص والانتقال إلى فندق Minasi Premium Hotel للاسترخاء وبداية رحلتك الممتعة.</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>أبرز الفعاليات:</strong> الاستقبال في المطار، الانتقال بسيارة خاصة، زجاجات مياه الترحيب.
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>ملاحظات:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>وتيرة السفر: مريحة</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">المبيت</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Hanoi</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">الوجبات</div>
+          <div style="font-size:11px">عشاء ترحيبي خاص</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">2</div>
+        <div>
+          <div class="day-badge">يوم 2</div>
+          <h3>كشف أسرار Hanoi: رحلة استكشافية خاصة</h3>
+          
+          <p>ابدأ يومك بجولة ثقافية مميزة في هانوي تشمل زيارة سوق دونغ سوان الشهير، وتجربة ركوب السيكلو التقليدي عبر شوارع المدينة القديمة، تليها تجربة مميزة لتذوق قهوة البيض أو قهوة القطار الفريدة.</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>أبرز الفعاليات:</strong> جولة سيكلو، تذاكر دخول، مرشد سياحي خاص، سيارة خاصة.
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>ملاحظات:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>وتيرة السفر: غامرة</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">المبيت</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Hanoi</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">الوجبات</div>
+          <div style="font-size:11px">إفطار في الفندق</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">3</div>
+        <div>
+          <div class="day-badge">يوم 3</div>
+          <h3>التراث الحي لـ Hanoi</h3>
+          
+          <p>رحلة ليوم كامل لاستكشاف نينه بينه الساحرة، حيث تزور تام كوك للاستمتاع برحلة القوارب النهرية التقليدية وسط حقول الأرز الشاسعة والجبال الجيرية، ثم الصعود إلى قمة هانغ موا لإطلالة بانورامية رائعة.</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>أبرز الفعاليات:</strong> رحلة القارب في تام كوك، تذاكر هانغ موا، مرشد خاص، سيارة خاصة.
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>ملاحظات:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>وتيرة السفر: نشطة</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">المبيت</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Hanoi</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">الوجبات</div>
+          <div style="font-size:11px">إفطار وغداء محلي</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">4</div>
+        <div>
+          <div class="day-badge">يوم 4</div>
+          <h3>آفاق حصرية: داخل Halong Bay</h3>
+          
+          <p>الانتقال صباحاً من هانوي إلى خليج ها لونغ بواسطة سيارتنا الخاصة الفاخرة (حوالي 3 ساعات). الصعود على متن كروز La Casta الفاخر 5 نجوم للاستمتاع برحلة بحرية رائعة بين الجزر الجيرية الخلابة.</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>أبرز الفعاليات:</strong> الانتقال بسيارة خاصة، الإقامة في كروز فاخر، رحلات تجديف وقوارب الكاياك.
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>ملاحظات:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>وتيرة السفر: مريحة</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">المبيت</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Halong Bay</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">الوجبات</div>
+          <div style="font-size:11px">إفطار، غداء، وعشاء على متن الكروز</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">5</div>
+        <div>
+          <div class="day-badge">يوم 5</div>
+          <h3>دروس احترافية في Hanoi</h3>
+          
+          <p>ابدأ صباحك بممارسة رياضة التاي تشي على متن الكروز والتمتع بشروق الشمس الساحر. بعد طعام الغداء المبكر، يتم النزول من الكروز والعودة بالسيارة الخاصة إلى هانوي للمبيت في فندق Minasi Premium Hotel.</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>أبرز الفعاليات:</strong> رحلة بحرية صباحية، الانتقال بسيارة خاصة إلى هانوي.
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>ملاحظات:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>وتيرة السفر: مريحة</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">المبيت</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Hanoi</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">الوجبات</div>
+          <div style="font-size:11px">إفطار وغداء خفيف على متن الكروز</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">6</div>
+        <div>
+          <div class="day-badge">يوم 6</div>
+          <h3>مجموعة Sapa: إقامة منسقة</h3>
+          
+          <p>الانتقال من هانوي إلى سابا الجبلية بواسطة باص النوم المريح والمجهز (حوالي 6 ساعات). الاستمتاع بالطقس الجبلي البارد والمبيت في فندق Bora Hotel الفاخر وسط الإطلالات الجبلية الرائعة.</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>أبرز الفعاليات:</strong> تذاكر باص النوم الفاخر، الاستقبال والانتقال في سابا.
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>ملاحظات:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>وتيرة السفر: معتدلة</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">المبيت</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Sapa</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">الوجبات</div>
+          <div style="font-size:11px">إفطار في الفندق</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">7</div>
+        <div>
+          <div class="day-badge">يوم 7</div>
+          <h3>صورة أنيقة لـ Sapa</h3>
+          
+          <p>زيارة قمة فانسيبان، أعلى قمة في الهند الصينية بواسطة عربات التلفريك للاستمتاع بإطلالة فوق السحاب، ثم التوجه لاستكشاف قرية كات كات التقليدية والتعرف على ثقافة قبائل الهيمونغ المحلية.</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>أبرز الفعاليات:</strong> تذاكر تلفريك فانسيبان، رسوم دخول قرية كات كات، مرشد خاص، سيارة خاصة.
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>ملاحظات:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>وتيرة السفر: نشطة</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">المبيت</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Sapa</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">الوجبات</div>
+          <div style="font-size:11px">إفطار وغداء</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">8</div>
+        <div>
+          <div class="day-badge">يوم 8</div>
+          <h3>تفاصيل Sapa: الثقافة والتناقض</h3>
+          
+          <p>رحلة مشي هادئة عبر القرى الجبلية الجميلة لاو تشاي وتا فان لاستكشاف حقول الأرز المدرجة الخلابة، يعقبها زيارة إلى شلال الفضة الرائع المنساب من قمم الجبال.</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>أبرز الفعاليات:</strong> تذاكر دخول القرى والشلال، مرشد محلي، سيارة خاصة.
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>ملاحظات:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>وتيرة السفر: معتدلة</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">المبيت</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Sapa</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">الوجبات</div>
+          <div style="font-size:11px">إفطار وغداء محلي</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">9</div>
+        <div>
+          <div class="day-badge">يوم 9</div>
+          <h3>رحلة مستوحاة من التصميم عبر Sapa</h3>
+          
+          <p>تجربة المغامرة فوق الجسر الزجاجي الشاهق والمشي وسط الضباب، ثم التوجه للاسترخاء في مقهى موانا الشهير والتقاط أجمل الصور التذكارية أمام المنحوتات الفنية الرائعة المطلة على الوادي.</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>أبرز الفعاليات:</strong> تذاكر الجسر الزجاجي ورسوم مقهى موانا، سيارة خاصة.
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>ملاحظات:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>وتيرة السفر: غامرة</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">المبيت</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Sapa</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">الوجبات</div>
+          <div style="font-size:11px">إفطار في الفندق</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">10</div>
+        <div>
+          <div class="day-badge">يوم 10</div>
+          <h3>ملف Hanoi: جدول أعمال مخصص</h3>
+          
+          <p>توديع أجواء سابا الجبلية الساحرة والعودة بالباص المريح المخصص للنوم إلى العاصمة هانوي. تسجيل الوصول في فندق Minasi Premium Hotel وقضاء بقية اليوم في التسوق والاسترخاء بحرية.</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>أبرز الفعاليات:</strong> تذاكر باص النوم الفاخر، الانتقال إلى الفندق.
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>ملاحظات:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>وتيرة السفر: مريحة</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">المبيت</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Hanoi</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">الوجبات</div>
+          <div style="font-size:11px">إفطار في الفندق</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">11</div>
+        <div>
+          <div class="day-badge">يوم 11</div>
+          <h3>لوحات قصيرة من Da Nang</h3>
+          
+          <p>الانتقال إلى المطار للسفر بالطائرة الداخلية إلى مدينة دا نانغ الساحلية. استقبال وتوصيل إلى الفندق، وفي المساء التمتع برحلة بحرية رومانسية لمدة 45 دقيقة في نهر هان لمشاهدة جسر التنين وعروض الأنوار اللامعة.</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>أبرز الفعاليات:</strong> تذكرة الطيران الداخلي، الاستقبال وتوصيل المطار، تذاكر كروز نهر هان.
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>ملاحظات:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>وتيرة السفر: معتدلة</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">المبيت</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Da Nang</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">الوجبات</div>
+          <div style="font-size:11px">إفطار في الفندق</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">12</div>
+        <div>
+          <div class="day-badge">يوم 12</div>
+          <h3>Da Nang في إطارات: سرد مرئي</h3>
+          
+          <p>قضاء يوم كامل في منتجع با نا هيلز الشهير. ركوب أطول تلفريك في العالم، والمشي فوق الجسر الذهبي الأيقوني المحمول بواسطة اليدين الحجريتين العملاقتين، واستكشاف الألعاب الترفيهية والحدائق الفرنسية.</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>أبرز الفعاليات:</strong> تذاكر تلفريك ودخول با نا هيلز، مرشد سياحي، سيارة خاصة.
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>ملاحظات:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>وتيرة السفر: نشطة</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">المبيت</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Da Nang</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">الوجبات</div>
+          <div style="font-size:11px">إفطار وغداء بوفيه في با نا هيلز</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">13</div>
+        <div>
+          <div class="day-badge">يوم 13</div>
+          <h3>أصداء Da Nang</h3>
+          
+          <p>جولة مميزة تشمل ركوب قوارب السلة الخيزرانية الدائرية في غابة جوز الهند المائية، تليها زيارة إلى بلدة هوي آن القديمة المدرجة ضمن التراث العالمي لليونسكو للاستمتاع بالفوانيس الملونة ليلاً والشوارع التاريخية.</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>أبرز الفعاليات:</strong> تذاكر قوارب السلة، رسوم دخول هوي آن، مرشد سياحي، سيارة خاصة.
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>ملاحظات:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>وتيرة السفر: غامرة</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">المبيت</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Da Nang</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">الوجبات</div>
+          <div style="font-size:11px">إفطار وعشاء رومانسي في هوي آن</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">14</div>
+        <div>
+          <div class="day-badge">يوم 14</div>
+          <h3>روح وجوهر Da Nang</h3>
+          
+          <p>رحلة مليئة بالحماس والمغامرة المائية في منطقة هوا فو ثانه للاستمتاع بتجربة التجديف النهري الشيق وسط الطبيعة الاستوائية المورقة.</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>أبرز الفعاليات:</strong> تذاكر تجديف هوا فو ثانه والمعدات، مرشد خاص، سيارة خاصة.
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>ملاحظات:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>وتيرة السفر: نشطة</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">المبيت</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Da Nang</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">الوجبات</div>
+          <div style="font-size:11px">إفطار وغداء</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">15</div>
+        <div>
+          <div class="day-badge">يوم 15</div>
+          <h3>انطباعات عن Dalat: استكشاف متأنٍ</h3>
+          
+          <p>السفر بالطيران الداخلي من دا نانغ إلى مطار كام رانه (نها ترانغ) ومن ثم التوجه مباشرة بالسيارة إلى مدينة دالات الجبلية الباردة الملقبة بمدينة الضباب. الاستقرار في فندق CICILIA Rouge Dalat.</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>أبرز الفعاليات:</strong> تذكرة الطيران الداخلي، سيارة خاصة للانتقال من كام رانه إلى دالات.
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>ملاحظات:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>وتيرة السفر: معتدلة</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">المبيت</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Dalat</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">الوجبات</div>
+          <div style="font-size:11px">إفطار في الفندق</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">16</div>
+        <div>
+          <div class="day-badge">يوم 16</div>
+          <h3>إعادة تعريف Dalat: بين الأصالة والتجديد</h3>
+          
+          <p>استكشاف معالم دالات المميزة: زيارة جبل لانغ بيانغ الشهير، ركوب التلفريك لمشاهدة المناظر الطبيعية، زيارة بيت المجنون (Crazy House) ذو التصميم المعماري الفريد، والتجول في نفق الطين الفني.</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>أبرز الفعاليات:</strong> تذاكر الدخول ورسوم التلفريك، مرشد خاص، سيارة خاصة.
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>ملاحظات:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>وتيرة السفر: نشطة</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">المبيت</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Dalat</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">الوجبات</div>
+          <div style="font-size:11px">إفطار وغداء</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">17</div>
+        <div>
+          <div class="day-badge">يوم 17</div>
+          <h3>من الشوارع القديمة إلى الإيقاعات الحديثة: مشهد Dalat</h3>
+          
+          <p>جولة نهارية رائعة لزيارة Fresh Garden المليئة بالزهور الملونة، شلالات داتانلا مع تجربة زلاجة جبال الألب، شلال الفيل الضخم، والختام مع استراحة شرب القهوة في مقهى مي لينه المطل على مزارع البن الخضراء.</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>أبرز الفعاليات:</strong> تذاكر دخول وتجربة الزلاجة، مرشد، سيارة خاصة.
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>ملاحظات:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>وتيرة السفر: غامرة</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">المبيت</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Dalat</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">الوجبات</div>
+          <div style="font-size:11px">إفطار في الفندق</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">18</div>
+        <div>
+          <div class="day-badge">يوم 18</div>
+          <h3>روح Ho Chi Minh City: بين السكون والجمال</h3>
+          
+          <p>الانتقال بسيارتنا الخاصة من دالات إلى نها ترانغ للاستمتاع بمناظر الممرات الجبلية، ومن ثم السفر بالطائرة الداخلية إلى مدينة هو شي منه النابضة بالحياة. الاستقرار في فندق Cicilia Saigon Center.</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>أبرز الفعاليات:</strong> الانتقال بسيارة خاصة إلى مطار نها ترانغ، تذكرة الطيران الداخلي، استقبال وتوصيل فندق هو شي منه.
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>ملاحظات:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>وتيرة السفر: نشطة</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">المبيت</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Ho Chi Minh City</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">الوجبات</div>
+          <div style="font-size:11px">إفطار في الفندق</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">19</div>
+        <div>
+          <div class="day-badge">يوم 19</div>
+          <h3>خلف الأبواب المغلقة: فصل Ho Chi Minh City</h3>
+          
+          <p>زيارة أنفاق كو تشي التاريخية الشهيرة لمعرفة تاريخ المنطقة، والعودة إلى وسط المدينة لزيارة سوق بين ثانه الصاخب، مكتب بريد المدينة القديم، وتجربة شرب القهوة في مقهى الشقق السكنية الأيقوني.</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>أبرز الفعاليات:</strong> رسوم أنفاق كو تشي، مرشد خاص، سيارة خاصة.
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>ملاحظات:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>وتيرة السفر: غامرة</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">المبيت</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Ho Chi Minh City</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">الوجبات</div>
+          <div style="font-size:11px">إفطار وغداء</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">20</div>
+        <div>
+          <div class="day-badge">يوم 20</div>
+          <h3>كشف أسرار Ho Chi Minh City: رحلة استكشافية خاصة</h3>
+          
+          <p>رحلة ليوم كامل لاستكشاف دلتا ميكونغ، ركوب القوارب الخشبية التقليدية عبر القنوات المائية المظلله بأشجار جوز الهند وتذوق الفواكه الاستوائية الطازجة والاستماع إلى الموسيقى التقليدية.</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>أبرز الفعاليات:</strong> رحلة قارب دلتا ميكونغ، رسوم الجولات، غداء، مرشد خاص، سيارة خاصة.
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>ملاحظات:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>وتيرة السفر: معتدلة</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">المبيت</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Ho Chi Minh City</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">الوجبات</div>
+          <div style="font-size:11px">إفطار وغداء محلي حلال</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">21</div>
+        <div>
+          <div class="day-badge">يوم 21</div>
+          <h3>التراث الحي لـ Ho Chi Minh City</h3>
+          
+          <p>وقت حر للاسترخاء أو التسوق الأخير حتى موعد مغادرة رحلتك، حيث يقوم سائقنا الخاص بنقلك إلى مطار تان سون نهات الدولي للعودة إلى ديارك مع ذكريات لا تُنسى عن فيتنام.</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>أبرز الفعاليات:</strong> توصيل بسيارة خاصة إلى مطار تان سون نهات الدولي.
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>ملاحظات:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>وتيرة السفر: مريحة</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">المبيت</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Ho Chi Minh City</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">الوجبات</div>
+          <div style="font-size:11px">إفطار في الفندق</div>
+          
+        </div>
+      </div>
+      
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE 5 — Hotel Plan & Pricing ═══════════════════ -->
+<div class="pdf-page">
+  <div class="page-header">
+    <span class="brand">Vietnam Safar — B2B Travel Proposal</span>
+    <span class="ref">QT-2026-ARAB-21D20N · 2026-08-10</span>
+  </div>
+  <div class="page-inner">
+    <div class="section-label">Section 5 — Selected Hotel Plan</div>
+    <h2 class="section-h2">خطة الفنادق المختارة</h2>
+    <p class="section-p">الفنادق والرحلات البحرية الفاخرة المختارة لرحلتك. تخضع للتوافر عند التأكيد.</p>
+
+    
+    <div class="hotel-plan-pdf" style="margin-top: 15px;">
+      
+      <div class="hotel-pdf-card" style="page-break-inside: avoid; border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 20px; ">
+        <!-- Header -->
+        <div style="margin-bottom: 10px;">
+          <span style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">HANOI, VIETNAM</span>
+          <h3 style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">Minasi Premium Hotel</h3>
+        </div>
+        
+        <!-- Side-by-Side Images -->
+        <div style="margin: 10px 0; font-size: 0; width: 100%;">
+          <div style="width: 38%; display: inline-block; vertical-align: top; margin-right: 2%;">
+            <img src="/assets/hotels/hanoi/minasi-nguyen-truong-to/exterior/1.jpg" alt="Minasi Premium Hotel" style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+          </div>
+          <div style="width: 60%; display: inline-block; vertical-align: top;">
+            <img src="/assets/hotels/hanoi/minasi-nguyen-truong-to/interior/2.jpg" alt="Minasi Premium Hotel Room" style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+          </div>
+        </div>
+        
+        <!-- Footer Columns (Introduction & Info/Tel) -->
+        <div style="width: 100%; margin-top: 10px;">
+          <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
+            <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">يعد فندق ميناسي بريميوم فندقاً فاخراً يقع في الأحياء التاريخية بمدينة هانوي، ويتميز بتصميم أنيق وخدمة مخصصة ووسائل راحة حديثة.</p>
+          </div>
+          <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
+            <h4 style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">Minasi Premium Hotel</h4>
+            <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;">10 Aug – 13 Aug 2026</div>
+            <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">TEL: +84 24 3927 5588</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="hotel-pdf-card" style="page-break-inside: avoid; border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 20px; ">
+        <!-- Header -->
+        <div style="margin-bottom: 10px;">
+          <span style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">HALONG BAY, VIETNAM</span>
+          <h3 style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">La Casta Cruise</h3>
+        </div>
+        
+        <!-- Side-by-Side Images -->
+        <div style="margin: 10px 0; font-size: 0; width: 100%;">
+          <div style="width: 38%; display: inline-block; vertical-align: top; margin-right: 2%;">
+            <img src="/assets/hotels/halong/cruise-la-casta/exterior/2.jpg" alt="La Casta Cruise" style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+          </div>
+          <div style="width: 60%; display: inline-block; vertical-align: top;">
+            <img src="/assets/hotels/halong/cruise-la-casta/interior/3.jpg" alt="La Casta Cruise Room" style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+          </div>
+        </div>
+        
+        <!-- Footer Columns (Introduction & Info/Tel) -->
+        <div style="width: 100%; margin-top: 10px;">
+          <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
+            <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">تعتبر رحلة لا كاستا كروز البحرية من فئة 5 نجوم الفاخرة في خليج هاليغ، وتوفر أجنحة جونيور واسعة مع شرفات خاصة مطلة على المحيط ووسائل راحة راقية.</p>
+          </div>
+          <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
+            <h4 style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">La Casta Cruise</h4>
+            <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;">13 Aug – 14 Aug 2026</div>
+            <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">TEL: +84 96 123 4567</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="hotel-pdf-card" style="page-break-inside: avoid; border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 20px; ">
+        <!-- Header -->
+        <div style="margin-bottom: 10px;">
+          <span style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">HANOI, VIETNAM</span>
+          <h3 style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">Minasi Premium Hotel</h3>
+        </div>
+        
+        <!-- Side-by-Side Images -->
+        <div style="margin: 10px 0; font-size: 0; width: 100%;">
+          <div style="width: 38%; display: inline-block; vertical-align: top; margin-right: 2%;">
+            <img src="/assets/hotels/hanoi/minasi-nguyen-truong-to/exterior/1.jpg" alt="Minasi Premium Hotel" style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+          </div>
+          <div style="width: 60%; display: inline-block; vertical-align: top;">
+            <img src="/assets/hotels/hanoi/minasi-nguyen-truong-to/interior/1.jpg" alt="Minasi Premium Hotel Room" style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+          </div>
+        </div>
+        
+        <!-- Footer Columns (Introduction & Info/Tel) -->
+        <div style="width: 100%; margin-top: 10px;">
+          <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
+            <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">يعد فندق ميناسي بريميوم فندقاً فاخراً يقع في الأحياء التاريخية بمدينة هانوي، ويتميز بتصميم أنيق وخدمة مخصصة ووسائل راحة حديثة.</p>
+          </div>
+          <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
+            <h4 style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">Minasi Premium Hotel</h4>
+            <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;">14 Aug – 15 Aug 2026</div>
+            <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">TEL: +84 24 3927 5588</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="hotel-pdf-card" style="page-break-inside: avoid; border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 20px; ">
+        <!-- Header -->
+        <div style="margin-bottom: 10px;">
+          <span style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">SAPA, VIETNAM</span>
+          <h3 style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">Bora Hotel</h3>
+        </div>
+        
+        <!-- Side-by-Side Images -->
+        <div style="margin: 10px 0; font-size: 0; width: 100%;">
+          <div style="width: 38%; display: inline-block; vertical-align: top; margin-right: 2%;">
+            <img src="/assets/hotels/danang/bora-hotel/exterior/1.jpg" alt="Bora Hotel" style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+          </div>
+          <div style="width: 60%; display: inline-block; vertical-align: top;">
+            <img src="/assets/hotels/danang/bora-hotel/interior/1.jpg" alt="Bora Hotel Room" style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+          </div>
+        </div>
+        
+        <!-- Footer Columns (Introduction & Info/Tel) -->
+        <div style="width: 100%; margin-top: 10px;">
+          <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
+            <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">يوفر فندق بورا في سابا إطلالات جبلية خلابة وأماكن إقامة أنيقة ومريحة للمسافرين الذين يستكشفون المرتفعات الشمالية الجميلة.</p>
+          </div>
+          <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
+            <h4 style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">Bora Hotel</h4>
+            <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;">15 Aug – 19 Aug 2026</div>
+            <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">TEL: +84 214 387 1999</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="hotel-pdf-card" style="page-break-inside: avoid; border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 20px; ">
+        <!-- Header -->
+        <div style="margin-bottom: 10px;">
+          <span style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">HANOI, VIETNAM</span>
+          <h3 style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">Minasi Premium Hotel</h3>
+        </div>
+        
+        <!-- Side-by-Side Images -->
+        <div style="margin: 10px 0; font-size: 0; width: 100%;">
+          <div style="width: 38%; display: inline-block; vertical-align: top; margin-right: 2%;">
+            <img src="/assets/hotels/hanoi/minasi-nguyen-truong-to/exterior/1.jpg" alt="Minasi Premium Hotel" style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+          </div>
+          <div style="width: 60%; display: inline-block; vertical-align: top;">
+            <img src="/assets/hotels/hanoi/minasi-nguyen-truong-to/interior/3.jpg" alt="Minasi Premium Hotel Room" style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+          </div>
+        </div>
+        
+        <!-- Footer Columns (Introduction & Info/Tel) -->
+        <div style="width: 100%; margin-top: 10px;">
+          <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
+            <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">يعد فندق ميناسي بريميوم فندقاً فاخراً يقع في الأحياء التاريخية بمدينة هانوي، ويتميز بتصميم أنيق وخدمة مخصصة ووسائل راحة حديثة.</p>
+          </div>
+          <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
+            <h4 style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">Minasi Premium Hotel</h4>
+            <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;">19 Aug – 20 Aug 2026</div>
+            <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">TEL: +84 24 3927 5588</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="hotel-pdf-card" style="page-break-inside: avoid; border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 20px; ">
+        <!-- Header -->
+        <div style="margin-bottom: 10px;">
+          <span style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">DA NANG, VIETNAM</span>
+          <h3 style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">Minh Toan SAFI Ocean Hotel</h3>
+        </div>
+        
+        <!-- Side-by-Side Images -->
+        <div style="margin: 10px 0; font-size: 0; width: 100%;">
+          <div style="width: 38%; display: inline-block; vertical-align: top; margin-right: 2%;">
+            <img src="/assets/hotels/danang/minh-toan-ocean/exterior/3.jpg" alt="Minh Toan SAFI Ocean Hotel" style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+          </div>
+          <div style="width: 60%; display: inline-block; vertical-align: top;">
+            <img src="/assets/hotels/danang/minh-toan-ocean/interior/1.jpg" alt="Minh Toan SAFI Ocean Hotel Room" style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+          </div>
+        </div>
+        
+        <!-- Footer Columns (Introduction & Info/Tel) -->
+        <div style="width: 100%; margin-top: 10px;">
+          <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
+            <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">يطل فندق مينه توان صافي أوشن على شاطئ ماي خي المذهل في دا نانغ، ويتميز بغرف واسعة مطلة على البحر وضيافة راقية على شاطئ البحر.</p>
+          </div>
+          <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
+            <h4 style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">Minh Toan SAFI Ocean Hotel</h4>
+            <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;">20 Aug – 24 Aug 2026</div>
+            <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">TEL: +84 236 3731 888</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="hotel-pdf-card" style="page-break-inside: avoid; border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 20px; ">
+        <!-- Header -->
+        <div style="margin-bottom: 10px;">
+          <span style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">DALAT, VIETNAM</span>
+          <h3 style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">CICILIA Rouge Dalat</h3>
+        </div>
+        
+        <!-- Side-by-Side Images -->
+        <div style="margin: 10px 0; font-size: 0; width: 100%;">
+          <div style="width: 38%; display: inline-block; vertical-align: top; margin-right: 2%;">
+            <img src="/assets/hotels/dalat/cicilia-rouge-dalat/exterior/1.jpg" alt="CICILIA Rouge Dalat" style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+          </div>
+          <div style="width: 60%; display: inline-block; vertical-align: top;">
+            <img src="/assets/hotels/dalat/cicilia-rouge-dalat/interior/2.jpg" alt="CICILIA Rouge Dalat Room" style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+          </div>
+        </div>
+        
+        <!-- Footer Columns (Introduction & Info/Tel) -->
+        <div style="width: 100%; margin-top: 10px;">
+          <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
+            <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">يضفي فندق سيسيليا روج دالات سحرًا عتيقًا من العهد الاستعماري وفخامة راقية على شوارع دالات الضبابية.</p>
+          </div>
+          <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
+            <h4 style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">CICILIA Rouge Dalat</h4>
+            <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;">24 Aug – 27 Aug 2026</div>
+            <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">TEL: +84 263 382 8888</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="hotel-pdf-card" style="page-break-inside: avoid; border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 20px; border-bottom: none; margin-bottom: 0;">
+        <!-- Header -->
+        <div style="margin-bottom: 10px;">
+          <span style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">HO CHI MINH CITY, VIETNAM</span>
+          <h3 style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">Cicilia Saigon Center</h3>
+        </div>
+        
+        <!-- Side-by-Side Images -->
+        <div style="margin: 10px 0; font-size: 0; width: 100%;">
+          <div style="width: 38%; display: inline-block; vertical-align: top; margin-right: 2%;">
+            <img src="/assets/hotels/saigon/cicilia-saigon/interior/2.jpg" alt="Cicilia Saigon Center" style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+          </div>
+          <div style="width: 60%; display: inline-block; vertical-align: top;">
+            <img src="/assets/hotels/saigon/cicilia-saigon/interior/3.jpg" alt="Cicilia Saigon Center Room" style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+          </div>
+        </div>
+        
+        <!-- Footer Columns (Introduction & Info/Tel) -->
+        <div style="width: 100%; margin-top: 10px;">
+          <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
+            <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">يوفر فندق سيسيليا سايغون سنتر أماكن إقامة أنيقة وعصرية في قلب المنطقة 1 بمدينة هو تشي منه.</p>
+          </div>
+          <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
+            <h4 style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">Cicilia Saigon Center</h4>
+            <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;">27 Aug – 30 Aug 2026</div>
+            <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">TEL: +84 28 3823 8888</div>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+    
+    <div style="margin-top: 20px; padding: 10px 14px; background: rgba(183, 137, 75, 0.05); border-radius: 8px; border: 1px dashed var(--gold); font-size: 10px; color: var(--muted); margin-bottom: 24px; page-break-inside: avoid;">
+      <strong>ملاحظات الغرفة والطلبات الخاصة:</strong> غرفة مزدوجة لشخصين (Double/Twin Bed Room for 2 Adults)
+    </div>
+    
+    
+
+    <div class="section-label">Section 6 — أسعار باقة B2B</div>
+    <div class="pricing-block" style="margin-bottom: 0;">
+      <h2>الاستثمار في الرحلة: USD 3,990</h2>
+      <p class="sub">الإجمالي: 2 Adults (شخصين). العملة: USD. الأسعار النهائية تخضع لإعادة التأكيد.</p>
+      <div class="price-cards">
+        
+        <div class="price-card featured">
+          <span>الإقامة في فنادق 4 نجوم وكروز 5 نجوم (شخصين)</span>
+          
+          <small style="display:block;margin-top:3px;font-size:9px;opacity:.7">1995 دولار للشخص الواحد في الغرفة المزدوجة</small>
+          
+          
+          <strong>USD 1,995 / person</strong>
+          <small>للشخص الواحد</small><br>
+          <small>الإجمالي: USD 3,990</small>
+          
+          
+          <div style="margin-top:8px;font-size:8px;letter-spacing:.14em;color:#d8bd85;font-weight:800">✓ الخيار المؤكد الرئيسي</div>
+          
+        </div>
+        
+      </div>
+      
+      <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 11px; color: rgba(255,255,255,0.8); line-height: 1.5; text-align: left;">
+        <strong style="color: var(--gold-2); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.1em; font-size: 9px;">ملاحظة مهمة</strong>
+        <p style="margin: 0;">الأسعار تقديرية وصافية لشركاء B2B وتخضع لإعادة التأكيد عند الحجز.</p>
+      </div>
+      
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE 6 — Inc/Exc & Muslim Care ═══════════════════ -->
+<div class="pdf-page">
+  <div class="page-header">
+    <span class="brand">Vietnam Safar — B2B Travel Proposal</span>
+    <span class="ref">QT-2026-ARAB-21D20N · 2026-08-10</span>
+  </div>
+  <div class="page-inner">
+    <div class="section-label">Section 7 — الخدمات المشمولة والمستثناة từ Bảo B2B</div>
+    <h2 class="section-h2">ما تشمله برنامج رحلتك</h2>
+
+
+    <div class="two-col" style="margin-bottom: 24px;">
+      <div class="panel">
+        <h3>ما يشمله البرنامج</h3>
+        
+        <p style="font-size:10px; color:var(--muted); line-height:1.5; margin-bottom:10px;">لقد تم ترتيب رحلتك بعناية لضمان تجربة سلسة ومريحة طوال الوقت.</p>
+        
+        <ul style="list-style-type:none; padding-left:0;">
+          
+            
+              <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">الاستقبال في المطار، الانتقال بسيارة خاصة، زجاجات مياه الترحيب.</li>
+            
+          
+            
+              <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">جولة سيكلو، تذاكر دخول، مرشد سياحي خاص، سيارة خاصة.</li>
+            
+          
+            
+              <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">رحلة القارب في تام كوك، تذاكر هانغ موا، مرشد خاص، سيارة خاصة.</li>
+            
+          
+            
+              <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">الانتقال بسيارة خاصة، الاقامة في كروز فاخر، رحلات تجديف وقوارب الكاياك.</li>
+            
+          
+            
+              <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">رحلة بحرية صباحية، الانتقال بسيارة خاصة الى هانوي.</li>
+            
+          
+            
+              <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">تذاكر باص النوم الفاخر، الاستقبال والانتقال في سابا.</li>
+            
+          
+            
+              <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">تذاكر تلفريك فانسيبان، رسوم دخول قرية كات كات، مرشد خاص، سيارة خاصة.</li>
+            
+          
+            
+              <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">تذاكر دخول القرى والشلال، مرشد محلي، سيارة خاصة.</li>
+            
+          
+            
+              <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">تذاكر الجسر الزجاجي ورسوم مقهى موانا، سيارة خاصة.</li>
+            
+          
+            
+              <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">تذاكر باص النوم الفاخر، الانتقال الى الفندق.</li>
+            
+          
+            
+              <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">تذكرة الطيران الداخلي، الاستقبال وتوصيل المطار، تذاكر كروز نهر هان.</li>
+            
+          
+            
+              <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">تذاكر تلفريك ودخول با نا هيلز، مرشد سياحي، سيارة خاصة.</li>
+            
+          
+            
+              <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">تذاكر قوارب السلة، رسوم دخول هوي ان، مرشد سياحي، سيارة خاصة.</li>
+            
+          
+            
+              <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">تذاكر تجديف هوا فو ثانه والمعدات، مرشد خاص، سيارة خاصة.</li>
+            
+          
+            
+              <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">تذكرة الطيران الداخلي، سيارة خاصة للانتقال من كام رانه الى دالات.</li>
+            
+          
+            
+              <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">تذاكر الدخول ورسوم التلفريك، مرشد خاص، سيارة خاصة.</li>
+            
+          
+            
+              <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">تذاكر دخول وتجربة الزلاجة، مرشد، سيارة خاصة.</li>
+            
+          
+            
+              <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">الانتقال بسيارة خاصة الى مطار نها ترانغ، تذكرة الطيران الداخلي، استقبال وتوصيل فندق هو شي منه.</li>
+            
+          
+            
+              <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">رسوم انفاق كو تشي، مرشد خاص، سيارة خاصة.</li>
+            
+          
+            
+              <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">رحلة قارب دلتا ميكونغ، رسوم الجولات، غداء، مرشد خاص، سيارة خاصة.</li>
+            
+          
+            
+              <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">توصيل بسيارة خاصة الى مطار تان سون نهات الدولي.</li>
+            
+          
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>الخدمات غير المشمولة</h3>
+        
+        <p style="font-size:10px; color:var(--muted); line-height:1.5; margin-bottom:10px;">للحفاظ على شفافية ووضوح رحلتك، لا تشمل الرحلة الخدمات التالية ما لم يُنص على خلاف ذلك:</p>
+        
+        <ul style="list-style-type:disc; padding-left:15px;">
+          
+          <li style="margin-bottom:5px; line-height:1.4;">رحلات الطيران الدولية</li>
+          
+          <li style="margin-bottom:5px; line-height:1.4;">رسوم التأشيرة ووثائق السفر</li>
+          
+          <li style="margin-bottom:5px; line-height:1.4;">التأمين على السفر</li>
+          
+          <li style="margin-bottom:5px; line-height:1.4;">المصاريف الشخصية</li>
+          
+          <li style="margin-bottom:5px; line-height:1.4;">التجارب الاختيارية غير المحددة في مسار الرحلة</li>
+          
+          <li style="margin-bottom:5px; line-height:1.4;">البقشيش والإكراميات</li>
+          
+          <li style="margin-bottom:5px; line-height:1.4;">أي خدمات أخرى لم يتم ذكرها صراحة ضمن الخدمات المشمولة</li>
+          
+        </ul>
+      </div>
+    </div>
+
+    
+    <div class="section-label">Section 8 — Muslim-Friendly Travel Care</div>
+    <h2 class="section-h2">تنسيق الحلال والصلاة</h2>
+    <div style="margin-top: 10px; padding: 16px; background: rgba(23, 65, 46, 0.03); border-left: 3px solid var(--emerald); border-radius: 8px; font-size: 11px; color: var(--muted); line-height: 1.6;">
+      يمكن لـ Vietnam Safar المساعدة في التخطيط لوجبات الطعام الصديقة للمسلمين عند توفرها، مع ملاحظة عدم تقديم لحم الخنزير، والبدائل من المأكولات البحرية أو النباتية عندما تكون المطاعم المعتمدة للحلال محدودة، وتنسيق محطات مرنة لأوقات الصلاة خلال أيام الجولات السياحية عندما يكون ذلك عملياً.
+    </div>
+    
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE 8 — Travel Specialist ═══════════════════ -->
+<div class="pdf-page">
+  <div class="page-header">
+    <span class="brand">Vietnam Safar — B2B Travel Proposal</span>
+    <span class="ref">QT-2026-ARAB-21D20N · 2026-08-10</span>
+  </div>
+  <div class="page-inner" style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
+    <div class="section-label">مستشارك المتخصص</div>
+    <h2 class="section-h2" style="margin-bottom: 24px;">تعرّف على مصمم رحلتك</h2>
+    
+    <div style="display: flex; gap: 28px; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 28px; align-items: center; box-shadow: 0 4px 16px rgba(17,19,15,0.02);">
+      <div style="width: 140px; height: 140px; border-radius: 50%; background-image: var(--designer-img, url('/assets/dias_team/director.png')); background-size: cover; background-position: center; border: 2px solid var(--gold); flex-shrink: 0; box-shadow: 0 8px 24px rgba(23,65,46,0.15);"></div>
+      <div>
+        <p style="font-size: 12px; line-height: 1.6; color: var(--muted); margin: 0 0 16px; font-style: italic;">"أنا مصمم رحلتك المخصص. لقد اخترت بنفسي كل فندق، وسيلة نقل خاصة، ومرشد محلي في هذا المسار لضمان تجربتك للعمق الحقيقي لفيتنام بكل راحة وخصوصية وبوتيرتك الخاصة. سأشرف شخصيًا على رحلتك خلف الكواليس."</p>
+        <div style="font-size: 11px; color: var(--ink); margin-bottom: 6px;"><strong>التخصص:</strong> مسارات مخصصة، سفر فاخر، تجارب محلية</div>
+        <div style="font-size: 11px; color: var(--ink); margin-bottom: 16px;"><strong>الخبرة:</strong> سنوات من الخبرة في تصميم الرحلات المخصصة</div>
+        <div style="font-family: var(--serif); font-size: 15px; color: var(--emerald); font-weight: 700; letter-spacing: 0.05em;">Anh Son Le</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE 9 — Booking Terms & Finalization ═══════════════════ -->
+<div class="pdf-page">
+  <div class="page-header">
+    <span class="brand">Vietnam Safar — B2B Travel Proposal</span>
+    <span class="ref">QT-2026-ARAB-21D20N · 2026-08-10</span>
+  </div>
+  <div class="page-inner">
+    <div class="section-label">Section 9 — شروط الحجز والدفع</div>
+    <h2 class="section-h2">شروط الحجز</h2>
+    <p class="section-p">الشروط التجارية والودائع وسياسة الإلغاء لهذا الحجز.</p>
+
+    <div style="border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 24px;">
+      <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11px;">
+        <thead>
+          <tr style="background: var(--emerald); color: white;">
+            <th style="padding: 10px 14px; width: 180px;">البند</th>
+            <th style="padding: 10px 14px;">الشرط</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom: 1px solid var(--line); background: white;">
+            <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">الدفعة المقدمة</td>
+            <td style="padding: 10px 14px;">شروط الدفع: دفع 30% من إجمالي المبلغ عند تأكيد الحجز للحصول على تأكيدات الغرف والخدمات.</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--line); background: rgba(183, 137, 75, 0.03);">
+            <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">المبلغ المتبقي</td>
+            <td style="padding: 10px 14px;">يتم سداد المبلغ المتبقي (70%) قبل 30 يومًا من تاريخ بدء الرحلة.</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--line); background: white;">
+            <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">الإلغاء</td>
+            <td style="padding: 10px 14px;">سياسة الإلغاء: إلغاء مجاني حتى 45 يومًا قبل الوصول. يُفرض رسم إلغاء 50% بين 44 و 15 يومًا، و 100% في حال الإلغاء قبل أقل من 15 يومًا.</td>
+          </tr>
+          <tr style="background: rgba(183, 137, 75, 0.03);">
+            <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">التأكيد</td>
+            <td style="padding: 10px 14px;">تخضع جميع الخدمات والأسعار للتوافر عند الدفع وتأكيد الحجز الفعلي.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-label">Section 10 — قائمة التحقق النهائية</div>
+    
+    <div class="cta-block" style="margin-bottom: 10px; padding: 24px; grid-template-columns: 1fr 180px; gap: 14px;">
+      <div>
+        <h2>أكّد التواريخ ثم اضبط مستوى الفخامة.</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; font-size: 10px; margin-top: 14px; text-align: left;">
+          <div>
+            <strong style="color: var(--gold-2); display:block; margin-bottom:4px; text-transform:uppercase;">التفاصيل النهائية المطلوبة</strong>
+            <ul style="padding-left:12px; display:grid; gap:3px; color:rgba(255,255,255,0.85);">
+              <li>المستندات المطلوبة: نسخة ملونة من جواز السفر صالح لمدة 6 أشهر على الأقل وتفاصيل تذاكر الطيران الدولية.</li>
+            </ul>
+          </div>
+          <div>
+            <strong style="color: var(--gold-2); display:block; margin-bottom:4px; text-transform:uppercase;">بعد التأكيد</strong>
+            <ul style="padding-left:12px; display:grid; gap:3px; color:rgba(255,255,255,0.85);">
+              <li>سيتواصل معك منسق الرحلات الخاص بنا لتوفير قسائم الخدمات (Vouchers) وتفاصيل المرشدين المحليين وأرقام الطوارئ 24/7.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="contact-box" style="padding: 12px;">
+        <span class="clabel" style="margin-top:0;">أُعدّ بواسطة</span>
+        <div class="cval" style="font-size:11px;">Vietnam Safar – Discovery Asia Travel Group</div>
+        
+        <span class="clabel">Email</span>
+        <div class="cval" style="font-size:11px; word-break:break-all;">sales@vietnamsafar.vn</div>
+        
+        <span class="clabel">واتساب</span>
+        <div class="cval" style="font-size:11px;">+84 911 538 738</div>
+        <span class="clabel">الموقع الإلكتروني</span>
+        <div class="cval" style="font-size:11px;">www.vietnamsafar.vn</div>
+      </div>
+    </div>
+
+    <div class="pdf-footer" style="padding: 10px 0; font-size: 10px;">
+      اكتشف روعة الطبيعة وسحر الثقافة عبر 21 يومًا من الاسترخاء والمغامرة... — Luxury quotation prepared for 2 Adults (شخصين).<br>
+      <span style="color:var(--gold);font-weight:700;">vietnamsafar.vn</span> &nbsp;·&nbsp;
+      هذا مستند عبارة عن عرض أسعار B2B سري تم إعداده خصيصًا لـ 2 Adults (شخصين).
+    </div>
+  </div>
+</div>
+
+<script id="itinerary-data" type="application/json">
+  [{"activities": ["\u0627\u0644\u0627\u0633\u062a\u0642\u0628\u0627\u0644 \u0641\u064a \u0627\u0644\u0645\u0637\u0627\u0631\u060c \u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0628\u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629\u060c \u0632\u062c\u0627\u062c\u0627\u062a \u0645\u064a\u0627\u0647 \u0627\u0644\u062a\u0631\u062d\u064a\u0628."], "date": "", "dayNumber": 1, "description": ["\u0627\u0644\u0648\u0635\u0648\u0644 \u0625\u0644\u0649 \u0647\u0627\u0646\u0648\u064a. \u0627\u0633\u062a\u0642\u0628\u0627\u0644 \u062d\u0627\u0631 \u0641\u064a \u0645\u0637\u0627\u0631 \u0646\u0648\u064a \u0628\u0627\u064a \u0627\u0644\u062f\u0648\u0644\u064a \u0645\u0646 \u0642\u0628\u0644 \u0633\u0627\u0626\u0642\u0646\u0627 \u0627\u0644\u062e\u0627\u0635 \u0648\u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0625\u0644\u0649 \u0641\u0646\u062f\u0642 Minasi Premium Hotel \u0644\u0644\u0627\u0633\u062a\u0631\u062e\u0627\u0621 \u0648\u0628\u062f\u0627\u064a\u0629 \u0631\u062d\u0644\u062a\u0643 \u0627\u0644\u0645\u0645\u062a\u0639\u0629."], "destinations": ["Hanoi"], "meals": ["\u0639\u0634\u0627\u0621 \u062a\u0631\u062d\u064a\u0628\u064a \u062e\u0627\u0635"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0631\u064a\u062d\u0629"], "overnight": "Hanoi", "title": "\u062e\u0644\u0641 \u0627\u0644\u0623\u0628\u0648\u0627\u0628 \u0627\u0644\u0645\u063a\u0644\u0642\u0629: \u0641\u0635\u0644 Hanoi"}, {"activities": ["\u062c\u0648\u0644\u0629 \u0633\u064a\u0643\u0644\u0648\u060c \u062a\u0630\u0627\u0643\u0631 \u062f\u062e\u0648\u0644\u060c \u0645\u0631\u0634\u062f \u0633\u064a\u0627\u062d\u064a \u062e\u0627\u0635\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 2, "description": ["\u0627\u0628\u062f\u0623 \u064a\u0648\u0645\u0643 \u0628\u062c\u0648\u0644\u0629 \u062b\u0642\u0627\u0641\u064a\u0629 \u0645\u0645\u064a\u0632\u0629 \u0641\u064a \u0647\u0627\u0646\u0648\u064a \u062a\u0634\u0645\u0644 \u0632\u064a\u0627\u0631\u0629 \u0633\u0648\u0642 \u062f\u0648\u0646\u063a \u0633\u0648\u0627\u0646 \u0627\u0644\u0634\u0647\u064a\u0631\u060c \u0648\u062a\u062c\u0631\u0628\u0629 \u0631\u0643\u0648\u0628 \u0627\u0644\u0633\u064a\u0643\u0644\u0648 \u0627\u0644\u062a\u0642\u0644\u064a\u062f\u064a \u0639\u0628\u0631 \u0634\u0648\u0627\u0631\u0639 \u0627\u0644\u0645\u062f\u064a\u0646\u0629 \u0627\u0644\u0642\u062f\u064a\u0645\u0629\u060c \u062a\u0644\u064a\u0647\u0627 \u062a\u062c\u0631\u0628\u0629 \u0645\u0645\u064a\u0632\u0629 \u0644\u062a\u0630\u0648\u0642 \u0642\u0647\u0648\u0629 \u0627\u0644\u0628\u064a\u0636 \u0623\u0648 \u0642\u0647\u0648\u0629 \u0627\u0644\u0642\u0637\u0627\u0631 \u0627\u0644\u0641\u0631\u064a\u062f\u0629."], "destinations": ["Hanoi"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0641\u064a \u0627\u0644\u0641\u0646\u062f\u0642"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u063a\u0627\u0645\u0631\u0629"], "overnight": "Hanoi", "title": "\u0643\u0634\u0641 \u0623\u0633\u0631\u0627\u0631 Hanoi: \u0631\u062d\u0644\u0629 \u0627\u0633\u062a\u0643\u0634\u0627\u0641\u064a\u0629 \u062e\u0627\u0635\u0629"}, {"activities": ["\u0631\u062d\u0644\u0629 \u0627\u0644\u0642\u0627\u0631\u0628 \u0641\u064a \u062a\u0627\u0645 \u0643\u0648\u0643\u060c \u062a\u0630\u0627\u0643\u0631 \u0647\u0627\u0646\u063a \u0645\u0648\u0627\u060c \u0645\u0631\u0634\u062f \u062e\u0627\u0635\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 3, "description": ["\u0631\u062d\u0644\u0629 \u0644\u064a\u0648\u0645 \u0643\u0627\u0645\u0644 \u0644\u0627\u0633\u062a\u0643\u0634\u0627\u0641 \u0646\u064a\u0646\u0647 \u0628\u064a\u0646\u0647 \u0627\u0644\u0633\u0627\u062d\u0631\u0629\u060c \u062d\u064a\u062b \u062a\u0632\u0648\u0631 \u062a\u0627\u0645 \u0643\u0648\u0643 \u0644\u0644\u0627\u0633\u062a\u0645\u062a\u0627\u0639 \u0628\u0631\u062d\u0644\u0629 \u0627\u0644\u0642\u0648\u0627\u0631\u0628 \u0627\u0644\u0646\u0647\u0631\u064a\u0629 \u0627\u0644\u062a\u0642\u0644\u064a\u062f\u064a\u0629 \u0648\u0633\u0637 \u062d\u0642\u0648\u0644 \u0627\u0644\u0623\u0631\u0632 \u0627\u0644\u0634\u0627\u0633\u0639\u0629 \u0648\u0627\u0644\u062c\u0628\u0627\u0644 \u0627\u0644\u062c\u064a\u0631\u064a\u0629\u060c \u062b\u0645 \u0627\u0644\u0635\u0639\u0648\u062f \u0625\u0644\u0649 \u0642\u0645\u0629 \u0647\u0627\u0646\u063a \u0645\u0648\u0627 \u0644\u0625\u0637\u0644\u0627\u0644\u0629 \u0628\u0627\u0646\u0648\u0631\u0627\u0645\u064a\u0629 \u0631\u0627\u0626\u0639\u0629."], "destinations": ["Hanoi"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0648\u063a\u062f\u0627\u0621 \u0645\u062d\u0644\u064a"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0646\u0634\u0637\u0629"], "overnight": "Hanoi", "title": "\u0627\u0644\u062a\u0631\u0627\u062b \u0627\u0644\u062d\u064a \u0644\u0640 Hanoi"}, {"activities": ["\u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0628\u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629\u060c \u0627\u0644\u0625\u0642\u0627\u0645\u0629 \u0641\u064a \u0643\u0631\u0648\u0632 \u0641\u0627\u062e\u0631\u060c \u0631\u062d\u0644\u0627\u062a \u062a\u062c\u062f\u064a\u0641 \u0648\u0642\u0648\u0627\u0631\u0628 \u0627\u0644\u0643\u0627\u064a\u0627\u0643."], "date": "", "dayNumber": 4, "description": ["\u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0635\u0628\u0627\u062d\u0627\u064b \u0645\u0646 \u0647\u0627\u0646\u0648\u064a \u0625\u0644\u0649 \u062e\u0644\u064a\u062c \u0647\u0627 \u0644\u0648\u0646\u063a \u0628\u0648\u0627\u0633\u0637\u0629 \u0633\u064a\u0627\u0631\u062a\u0646\u0627 \u0627\u0644\u062e\u0627\u0635\u0629 \u0627\u0644\u0641\u0627\u062e\u0631\u0629 (\u062d\u0648\u0627\u0644\u064a 3 \u0633\u0627\u0639\u0627\u062a). \u0627\u0644\u0635\u0639\u0648\u062f \u0639\u0644\u0649 \u0645\u062a\u0646 \u0643\u0631\u0648\u0632 La Casta \u0627\u0644\u0641\u0627\u062e\u0631 5 \u0646\u062c\u0648\u0645 \u0644\u0644\u0627\u0633\u062a\u0645\u062a\u0627\u0639 \u0628\u0631\u062d\u0644\u0629 \u0628\u062d\u0631\u064a\u0629 \u0631\u0627\u0626\u0639\u0629 \u0628\u064a\u0646 \u0627\u0644\u062c\u0632\u0631 \u0627\u0644\u062c\u064a\u0631\u064a\u0629 \u0627\u0644\u062e\u0644\u0627\u0628\u0629."], "destinations": ["Halong Bay"], "meals": ["\u0625\u0641\u0637\u0627\u0631\u060c \u063a\u062f\u0627\u0621\u060c \u0648\u0639\u0634\u0627\u0621 \u0639\u0644\u0649 \u0645\u062a\u0646 \u0627\u0644\u0643\u0631\u0648\u0632"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0631\u064a\u062d\u0629"], "overnight": "Halong Bay", "title": "\u0622\u0641\u0627\u0642 \u062d\u0635\u0631\u064a\u0629: \u062f\u0627\u062e\u0644 Halong Bay"}, {"activities": ["\u0631\u062d\u0644\u0629 \u0628\u062d\u0631\u064a\u0629 \u0635\u0628\u0627\u062d\u064a\u0629\u060c \u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0628\u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629 \u0625\u0644\u0649 \u0647\u0627\u0646\u0648\u064a."], "date": "", "dayNumber": 5, "description": ["\u0627\u0628\u062f\u0623 \u0635\u0628\u0627\u062d\u0643 \u0628\u0645\u0645\u0627\u0631\u0633\u0629 \u0631\u064a\u0627\u0636\u0629 \u0627\u0644\u062a\u0627\u064a \u062a\u0634\u064a \u0639\u0644\u0649 \u0645\u062a\u0646 \u0627\u0644\u0643\u0631\u0648\u0632 \u0648\u0627\u0644\u062a\u0645\u062a\u0639 \u0628\u0634\u0631\u0648\u0642 \u0627\u0644\u0634\u0645\u0633 \u0627\u0644\u0633\u0627\u062d\u0631. \u0628\u0639\u062f \u0637\u0639\u0627\u0645 \u0627\u0644\u063a\u062f\u0627\u0621 \u0627\u0644\u0645\u0628\u0643\u0631\u060c \u064a\u062a\u0645 \u0627\u0644\u0646\u0632\u0648\u0644 \u0645\u0646 \u0627\u0644\u0643\u0631\u0648\u0632 \u0648\u0627\u0644\u0639\u0648\u062f\u0629 \u0628\u0627\u0644\u0633\u064a\u0627\u0631\u0629 \u0627\u0644\u062e\u0627\u0635\u0629 \u0625\u0644\u0649 \u0647\u0627\u0646\u0648\u064a \u0644\u0644\u0645\u0628\u064a\u062a \u0641\u064a \u0641\u0646\u062f\u0642 Minasi Premium Hotel."], "destinations": ["Hanoi"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0648\u063a\u062f\u0627\u0621 \u062e\u0641\u064a\u0641 \u0639\u0644\u0649 \u0645\u062a\u0646 \u0627\u0644\u0643\u0631\u0648\u0632"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0631\u064a\u062d\u0629"], "overnight": "Hanoi", "title": "\u062f\u0631\u0648\u0633 \u0627\u062d\u062a\u0631\u0627\u0641\u064a\u0629 \u0641\u064a Hanoi"}, {"activities": ["\u062a\u0630\u0627\u0643\u0631 \u0628\u0627\u0635 \u0627\u0644\u0646\u0648\u0645 \u0627\u0644\u0641\u0627\u062e\u0631\u060c \u0627\u0644\u0627\u0633\u062a\u0642\u0628\u0627\u0644 \u0648\u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0641\u064a \u0633\u0627\u0628\u0627."], "date": "", "dayNumber": 6, "description": ["\u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0645\u0646 \u0647\u0627\u0646\u0648\u064a \u0625\u0644\u0649 \u0633\u0627\u0628\u0627 \u0627\u0644\u062c\u0628\u0644\u064a\u0629 \u0628\u0648\u0627\u0633\u0637\u0629 \u0628\u0627\u0635 \u0627\u0644\u0646\u0648\u0645 \u0627\u0644\u0645\u0631\u064a\u062d \u0648\u0627\u0644\u0645\u062c\u0647\u0632 (\u062d\u0648\u0627\u0644\u064a 6 \u0633\u0627\u0639\u0627\u062a). \u0627\u0644\u0627\u0633\u062a\u0645\u062a\u0627\u0639 \u0628\u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062c\u0628\u0644\u064a \u0627\u0644\u0628\u0627\u0631\u062f \u0648\u0627\u0644\u0645\u0628\u064a\u062a \u0641\u064a \u0641\u0646\u062f\u0642 Bora Hotel \u0627\u0644\u0641\u0627\u062e\u0631 \u0648\u0633\u0637 \u0627\u0644\u0625\u0637\u0644\u0627\u0644\u0627\u062a \u0627\u0644\u062c\u0628\u0644\u064a\u0629 \u0627\u0644\u0631\u0627\u0626\u0639\u0629."], "destinations": ["Sapa"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0641\u064a \u0627\u0644\u0641\u0646\u062f\u0642"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0639\u062a\u062f\u0644\u0629"], "overnight": "Sapa", "title": "\u0645\u062c\u0645\u0648\u0639\u0629 Sapa: \u0625\u0642\u0627\u0645\u0629 \u0645\u0646\u0633\u0642\u0629"}, {"activities": ["\u062a\u0630\u0627\u0643\u0631 \u062a\u0644\u0641\u0631\u064a\u0643 \u0641\u0627\u0646\u0633\u064a\u0628\u0627\u0646\u060c \u0631\u0633\u0648\u0645 \u062f\u062e\u0648\u0644 \u0642\u0631\u064a\u0629 \u0643\u0627\u062a \u0643\u0627\u062a\u060c \u0645\u0631\u0634\u062f \u062e\u0627\u0635\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 7, "description": ["\u0632\u064a\u0627\u0631\u0629 \u0642\u0645\u0629 \u0641\u0627\u0646\u0633\u064a\u0628\u0627\u0646\u060c \u0623\u0639\u0644\u0649 \u0642\u0645\u0629 \u0641\u064a \u0627\u0644\u0647\u0646\u062f \u0627\u0644\u0635\u064a\u0646\u064a\u0629 \u0628\u0648\u0627\u0633\u0637\u0629 \u0639\u0631\u0628\u0627\u062a \u0627\u0644\u062a\u0644\u0641\u0631\u064a\u0643 \u0644\u0644\u0627\u0633\u062a\u0645\u062a\u0627\u0639 \u0628\u0625\u0637\u0644\u0627\u0644\u0629 \u0641\u0648\u0642 \u0627\u0644\u0633\u062d\u0627\u0628\u060c \u062b\u0645 \u0627\u0644\u062a\u0648\u062c\u0647 \u0644\u0627\u0633\u062a\u0643\u0634\u0627\u0641 \u0642\u0631\u064a\u0629 \u0643\u0627\u062a \u0643\u0627\u062a \u0627\u0644\u062a\u0642\u0644\u064a\u062f\u064a\u0629 \u0648\u0627\u0644\u062a\u0639\u0631\u0641 \u0639\u0644\u0649 \u062b\u0642\u0627\u0641\u0629 \u0642\u0628\u0627\u0626\u0644 \u0627\u0644\u0647\u064a\u0645\u0648\u0646\u063a \u0627\u0644\u0645\u062d\u0644\u064a\u0629."], "destinations": ["Sapa"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0648\u063a\u062f\u0627\u0621"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0646\u0634\u0637\u0629"], "overnight": "Sapa", "title": "\u0635\u0648\u0631\u0629 \u0623\u0646\u064a\u0642\u0629 \u0644\u0640 Sapa"}, {"activities": ["\u062a\u0630\u0627\u0643\u0631 \u062f\u062e\u0648\u0644 \u0627\u0644\u0642\u0631\u0649 \u0648\u0627\u0644\u0634\u0644\u0627\u0644\u060c \u0645\u0631\u0634\u062f \u0645\u062d\u0644\u064a\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 8, "description": ["\u0631\u062d\u0644\u0629 \u0645\u0634\u064a \u0647\u0627\u062f\u0626\u0629 \u0639\u0628\u0631 \u0627\u0644\u0642\u0631\u0649 \u0627\u0644\u062c\u0628\u0644\u064a\u0629 \u0627\u0644\u062c\u0645\u064a\u0644\u0629 \u0644\u0627\u0648 \u062a\u0634\u0627\u064a \u0648\u062a\u0627 \u0641\u0627\u0646 \u0644\u0627\u0633\u062a\u0643\u0634\u0627\u0641 \u062d\u0642\u0648\u0644 \u0627\u0644\u0623\u0631\u0632 \u0627\u0644\u0645\u062f\u0631\u062c\u0629 \u0627\u0644\u062e\u0644\u0627\u0628\u0629\u060c \u064a\u0639\u0642\u0628\u0647\u0627 \u0632\u064a\u0627\u0631\u0629 \u0625\u0644\u0649 \u0634\u0644\u0627\u0644 \u0627\u0644\u0641\u0636\u0629 \u0627\u0644\u0631\u0627\u0626\u0639 \u0627\u0644\u0645\u0646\u0633\u0627\u0628 \u0645\u0646 \u0642\u0645\u0645 \u0627\u0644\u062c\u0628\u0627\u0644."], "destinations": ["Sapa"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0648\u063a\u062f\u0627\u0621 \u0645\u062d\u0644\u064a"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0639\u062a\u062f\u0644\u0629"], "overnight": "Sapa", "title": "\u062a\u0641\u0627\u0635\u064a\u0644 Sapa: \u0627\u0644\u062b\u0642\u0627\u0641\u0629 \u0648\u0627\u0644\u062a\u0646\u0627\u0642\u0636"}, {"activities": ["\u062a\u0630\u0627\u0643\u0631 \u0627\u0644\u062c\u0633\u0631 \u0627\u0644\u0632\u062c\u0627\u062c\u064a \u0648\u0631\u0633\u0648\u0645 \u0645\u0642\u0647\u0649 \u0645\u0648\u0627\u0646\u0627\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 9, "description": ["\u062a\u062c\u0631\u0628\u0629 \u0627\u0644\u0645\u063a\u0627\u0645\u0631\u0629 \u0641\u0648\u0642 \u0627\u0644\u062c\u0633\u0631 \u0627\u0644\u0632\u062c\u0627\u062c\u064a \u0627\u0644\u0634\u0627\u0647\u0642 \u0648\u0627\u0644\u0645\u0634\u064a \u0648\u0633\u0637 \u0627\u0644\u0636\u0628\u0627\u0628\u060c \u062b\u0645 \u0627\u0644\u062a\u0648\u062c\u0647 \u0644\u0644\u0627\u0633\u062a\u0631\u062e\u0627\u0621 \u0641\u064a \u0645\u0642\u0647\u0649 \u0645\u0648\u0627\u0646\u0627 \u0627\u0644\u0634\u0647\u064a\u0631 \u0648\u0627\u0644\u062a\u0642\u0627\u0637 \u0623\u062c\u0645\u0644 \u0627\u0644\u0635\u0648\u0631 \u0627\u0644\u062a\u0630\u0643\u0627\u0631\u064a\u0629 \u0623\u0645\u0627\u0645 \u0627\u0644\u0645\u0646\u062d\u0648\u062a\u0627\u062a \u0627\u0644\u0641\u0646\u064a\u0629 \u0627\u0644\u0631\u0627\u0626\u0639\u0629 \u0627\u0644\u0645\u0637\u0644\u0629 \u0639\u0644\u0649 \u0627\u0644\u0648\u0627\u062f\u064a."], "destinations": ["Sapa"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0641\u064a \u0627\u0644\u0641\u0646\u062f\u0642"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u063a\u0627\u0645\u0631\u0629"], "overnight": "Sapa", "title": "\u0631\u062d\u0644\u0629 \u0645\u0633\u062a\u0648\u062d\u0627\u0629 \u0645\u0646 \u0627\u0644\u062a\u0635\u0645\u064a\u0645 \u0639\u0628\u0631 Sapa"}, {"activities": ["\u062a\u0630\u0627\u0643\u0631 \u0628\u0627\u0635 \u0627\u0644\u0646\u0648\u0645 \u0627\u0644\u0641\u0627\u062e\u0631\u060c \u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0625\u0644\u0649 \u0627\u0644\u0641\u0646\u062f\u0642."], "date": "", "dayNumber": 10, "description": ["\u062a\u0648\u062f\u064a\u0639 \u0623\u062c\u0648\u0627\u0621 \u0633\u0627\u0628\u0627 \u0627\u0644\u062c\u0628\u0644\u064a\u0629 \u0627\u0644\u0633\u0627\u062d\u0631\u0629 \u0648\u0627\u0644\u0639\u0648\u062f\u0629 \u0628\u0627\u0644\u0628\u0627\u0635 \u0627\u0644\u0645\u0631\u064a\u062d \u0627\u0644\u0645\u062e\u0635\u0635 \u0644\u0644\u0646\u0648\u0645 \u0625\u0644\u0649 \u0627\u0644\u0639\u0627\u0635\u0645\u0629 \u0647\u0627\u0646\u0648\u064a. \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u0648\u0635\u0648\u0644 \u0641\u064a \u0641\u0646\u062f\u0642 Minasi Premium Hotel \u0648\u0642\u0636\u0627\u0621 \u0628\u0642\u064a\u0629 \u0627\u0644\u064a\u0648\u0645 \u0641\u064a \u0627\u0644\u062a\u0633\u0648\u0642 \u0648\u0627\u0644\u0627\u0633\u062a\u0631\u062e\u0627\u0621 \u0628\u062d\u0631\u064a\u0629."], "destinations": ["Hanoi"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0641\u064a \u0627\u0644\u0641\u0646\u062f\u0642"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0631\u064a\u062d\u0629"], "overnight": "Hanoi", "title": "\u0645\u0644\u0641 Hanoi: \u062c\u062f\u0648\u0644 \u0623\u0639\u0645\u0627\u0644 \u0645\u062e\u0635\u0635"}, {"activities": ["\u062a\u0630\u0643\u0631\u0629 \u0627\u0644\u0637\u064a\u0631\u0627\u0646 \u0627\u0644\u062f\u0627\u062e\u0644\u064a\u060c \u0627\u0644\u0627\u0633\u062a\u0642\u0628\u0627\u0644 \u0648\u062a\u0648\u0635\u064a\u0644 \u0627\u0644\u0645\u0637\u0627\u0631\u060c \u062a\u0630\u0627\u0643\u0631 \u0643\u0631\u0648\u0632 \u0646\u0647\u0631 \u0647\u0627\u0646."], "date": "", "dayNumber": 11, "description": ["\u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0625\u0644\u0649 \u0627\u0644\u0645\u0637\u0627\u0631 \u0644\u0644\u0633\u0641\u0631 \u0628\u0627\u0644\u0637\u0627\u0626\u0631\u0629 \u0627\u0644\u062f\u0627\u062e\u0644\u064a\u0629 \u0625\u0644\u0649 \u0645\u062f\u064a\u0646\u0629 \u062f\u0627 \u0646\u0627\u0646\u063a \u0627\u0644\u0633\u0627\u062d\u0644\u064a\u0629. \u0627\u0633\u062a\u0642\u0628\u0627\u0644 \u0648\u062a\u0648\u0635\u064a\u0644 \u0625\u0644\u0649 \u0627\u0644\u0641\u0646\u062f\u0642\u060c \u0648\u0641\u064a \u0627\u0644\u0645\u0633\u0627\u0621 \u0627\u0644\u062a\u0645\u062a\u0639 \u0628\u0631\u062d\u0644\u0629 \u0628\u062d\u0631\u064a\u0629 \u0631\u0648\u0645\u0627\u0646\u0633\u064a\u0629 \u0644\u0645\u062f\u0629 45 \u062f\u0642\u064a\u0642\u0629 \u0641\u064a \u0646\u0647\u0631 \u0647\u0627\u0646 \u0644\u0645\u0634\u0627\u0647\u062f\u0629 \u062c\u0633\u0631 \u0627\u0644\u062a\u0646\u064a\u0646 \u0648\u0639\u0631\u0648\u0636 \u0627\u0644\u0623\u0646\u0648\u0627\u0631 \u0627\u0644\u0644\u0627\u0645\u0639\u0629."], "destinations": ["Da Nang"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0641\u064a \u0627\u0644\u0641\u0646\u062f\u0642"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0639\u062a\u062f\u0644\u0629"], "overnight": "Da Nang", "title": "\u0644\u0648\u062d\u0627\u062a \u0642\u0635\u064a\u0631\u0629 \u0645\u0646 Da Nang"}, {"activities": ["\u062a\u0630\u0627\u0643\u0631 \u062a\u0644\u0641\u0631\u064a\u0643 \u0648\u062f\u062e\u0648\u0644 \u0628\u0627 \u0646\u0627 \u0647\u064a\u0644\u0632\u060c \u0645\u0631\u0634\u062f \u0633\u064a\u0627\u062d\u064a\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 12, "description": ["\u0642\u0636\u0627\u0621 \u064a\u0648\u0645 \u0643\u0627\u0645\u0644 \u0641\u064a \u0645\u0646\u062a\u062c\u0639 \u0628\u0627 \u0646\u0627 \u0647\u064a\u0644\u0632 \u0627\u0644\u0634\u0647\u064a\u0631. \u0631\u0643\u0648\u0628 \u0623\u0637\u0648\u0644 \u062a\u0644\u0641\u0631\u064a\u0643 \u0641\u064a \u0627\u0644\u0639\u0627\u0644\u0645\u060c \u0648\u0627\u0644\u0645\u0634\u064a \u0641\u0648\u0642 \u0627\u0644\u062c\u0633\u0631 \u0627\u0644\u0630\u0647\u0628\u064a \u0627\u0644\u0623\u064a\u0642\u0648\u0646\u064a \u0627\u0644\u0645\u062d\u0645\u0648\u0644 \u0628\u0648\u0627\u0633\u0637\u0629 \u0627\u0644\u064a\u062f\u064a\u0646 \u0627\u0644\u062d\u062c\u0631\u064a\u062a\u064a\u0646 \u0627\u0644\u0639\u0645\u0644\u0627\u0642\u062a\u064a\u0646\u060c \u0648\u0627\u0633\u062a\u0643\u0634\u0627\u0641 \u0627\u0644\u0623\u0644\u0639\u0627\u0628 \u0627\u0644\u062a\u0631\u0641\u064a\u0647\u064a\u0629 \u0648\u0627\u0644\u062d\u062f\u0627\u0626\u0642 \u0627\u0644\u0641\u0631\u0646\u0633\u064a\u0629."], "destinations": ["Da Nang"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0648\u063a\u062f\u0627\u0621 \u0628\u0648\u0641\u064a\u0647 \u0641\u064a \u0628\u0627 \u0646\u0627 \u0647\u064a\u0644\u0632"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0646\u0634\u0637\u0629"], "overnight": "Da Nang", "title": "Da Nang \u0641\u064a \u0625\u0637\u0627\u0631\u0627\u062a: \u0633\u0631\u062f \u0645\u0631\u0626\u064a"}, {"activities": ["\u062a\u0630\u0627\u0643\u0631 \u0642\u0648\u0627\u0631\u0628 \u0627\u0644\u0633\u0644\u0629\u060c \u0631\u0633\u0648\u0645 \u062f\u062e\u0648\u0644 \u0647\u0648\u064a \u0622\u0646\u060c \u0645\u0631\u0634\u062f \u0633\u064a\u0627\u062d\u064a\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 13, "description": ["\u062c\u0648\u0644\u0629 \u0645\u0645\u064a\u0632\u0629 \u062a\u0634\u0645\u0644 \u0631\u0643\u0648\u0628 \u0642\u0648\u0627\u0631\u0628 \u0627\u0644\u0633\u0644\u0629 \u0627\u0644\u062e\u064a\u0632\u0631\u0627\u0646\u064a\u0629 \u0627\u0644\u062f\u0627\u0626\u0631\u064a\u0629 \u0641\u064a \u063a\u0627\u0628\u0629 \u062c\u0648\u0632 \u0627\u0644\u0647\u0646\u062f \u0627\u0644\u0645\u0627\u0626\u064a\u0629\u060c \u062a\u0644\u064a\u0647\u0627 \u0632\u064a\u0627\u0631\u0629 \u0625\u0644\u0649 \u0628\u0644\u062f\u0629 \u0647\u0648\u064a \u0622\u0646 \u0627\u0644\u0642\u062f\u064a\u0645\u0629 \u0627\u0644\u0645\u062f\u0631\u062c\u0629 \u0636\u0645\u0646 \u0627\u0644\u062a\u0631\u0627\u062b \u0627\u0644\u0639\u0627\u0644\u0645\u064a \u0644\u0644\u064a\u0648\u0646\u0633\u0643\u0648 \u0644\u0644\u0627\u0633\u062a\u0645\u062a\u0627\u0639 \u0628\u0627\u0644\u0641\u0648\u0627\u0646\u064a\u0633 \u0627\u0644\u0645\u0644\u0648\u0646\u0629 \u0644\u064a\u0644\u0627\u064b \u0648\u0627\u0644\u0634\u0648\u0627\u0631\u0639 \u0627\u0644\u062a\u0627\u0631\u064a\u062e\u064a\u0629."], "destinations": ["Da Nang"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0648\u0639\u0634\u0627\u0621 \u0631\u0648\u0645\u0627\u0646\u0633\u064a \u0641\u064a \u0647\u0648\u064a \u0622\u0646"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u063a\u0627\u0645\u0631\u0629"], "overnight": "Da Nang", "title": "\u0623\u0635\u062f\u0627\u0621 Da Nang"}, {"activities": ["\u062a\u0630\u0627\u0643\u0631 \u062a\u062c\u062f\u064a\u0641 \u0647\u0648\u0627 \u0641\u0648 \u062b\u0627\u0646\u0647 \u0648\u0627\u0644\u0645\u0639\u062f\u0627\u062a\u060c \u0645\u0631\u0634\u062f \u062e\u0627\u0635\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 14, "description": ["\u0631\u062d\u0644\u0629 \u0645\u0644\u064a\u0626\u0629 \u0628\u0627\u0644\u062d\u0645\u0627\u0633 \u0648\u0627\u0644\u0645\u063a\u0627\u0645\u0631\u0629 \u0627\u0644\u0645\u0627\u0626\u064a\u0629 \u0641\u064a \u0645\u0646\u0637\u0642\u0629 \u0647\u0648\u0627 \u0641\u0648 \u062b\u0627\u0646\u0647 \u0644\u0644\u0627\u0633\u062a\u0645\u062a\u0627\u0639 \u0628\u062a\u062c\u0631\u0628\u0629 \u0627\u0644\u062a\u062c\u062f\u064a\u0641 \u0627\u0644\u0646\u0647\u0631\u064a \u0627\u0644\u0634\u064a\u0642 \u0648\u0633\u0637 \u0627\u0644\u0637\u0628\u064a\u0639\u0629 \u0627\u0644\u0627\u0633\u062a\u0648\u0627\u0626\u064a\u0629 \u0627\u0644\u0645\u0648\u0631\u0642\u0629."], "destinations": ["Da Nang"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0648\u063a\u062f\u0627\u0621"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0646\u0634\u0637\u0629"], "overnight": "Da Nang", "title": "\u0631\u0648\u062d \u0648\u062c\u0648\u0647\u0631 Da Nang"}, {"activities": ["\u062a\u0630\u0643\u0631\u0629 \u0627\u0644\u0637\u064a\u0631\u0627\u0646 \u0627\u0644\u062f\u0627\u062e\u0644\u064a\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629 \u0644\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0645\u0646 \u0643\u0627\u0645 \u0631\u0627\u0646\u0647 \u0625\u0644\u0649 \u062f\u0627\u0644\u0627\u062a."], "date": "", "dayNumber": 15, "description": ["\u0627\u0644\u0633\u0641\u0631 \u0628\u0627\u0644\u0637\u064a\u0631\u0627\u0646 \u0627\u0644\u062f\u0627\u062e\u0644\u064a \u0645\u0646 \u062f\u0627 \u0646\u0627\u0646\u063a \u0625\u0644\u0649 \u0645\u0637\u0627\u0631 \u0643\u0627\u0645 \u0631\u0627\u0646\u0647 (\u0646\u0647\u0627 \u062a\u0631\u0627\u0646\u063a) \u0648\u0645\u0646 \u062b\u0645 \u0627\u0644\u062a\u0648\u062c\u0647 \u0645\u0628\u0627\u0634\u0631\u0629 \u0628\u0627\u0644\u0633\u064a\u0627\u0631\u0629 \u0625\u0644\u0649 \u0645\u062f\u064a\u0646\u0629 \u062f\u0627\u0644\u0627\u062a \u0627\u0644\u062c\u0628\u0644\u064a\u0629 \u0627\u0644\u0628\u0627\u0631\u062f\u0629 \u0627\u0644\u0645\u0644\u0642\u0628\u0629 \u0628\u0645\u062f\u064a\u0646\u0629 \u0627\u0644\u0636\u0628\u0627\u0628. \u0627\u0644\u0627\u0633\u062a\u0642\u0631\u0627\u0631 \u0641\u064a \u0641\u0646\u062f\u0642 CICILIA Rouge Dalat."], "destinations": ["Dalat"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0641\u064a \u0627\u0644\u0641\u0646\u062f\u0642"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0639\u062a\u062f\u0644\u0629"], "overnight": "Dalat", "title": "\u0627\u0646\u0637\u0628\u0627\u0639\u0627\u062a \u0639\u0646 Dalat: \u0627\u0633\u062a\u0643\u0634\u0627\u0641 \u0645\u062a\u0623\u0646\u064d"}, {"activities": ["\u062a\u0630\u0627\u0643\u0631 \u0627\u0644\u062f\u062e\u0648\u0644 \u0648\u0631\u0633\u0648\u0645 \u0627\u0644\u062a\u0644\u0641\u0631\u064a\u0643\u060c \u0645\u0631\u0634\u062f \u062e\u0627\u0635\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 16, "description": ["\u0627\u0633\u062a\u0643\u0634\u0627\u0641 \u0645\u0639\u0627\u0644\u0645 \u062f\u0627\u0644\u0627\u062a \u0627\u0644\u0645\u0645\u064a\u0632\u0629: \u0632\u064a\u0627\u0631\u0629 \u062c\u0628\u0644 \u0644\u0627\u0646\u063a \u0628\u064a\u0627\u0646\u063a \u0627\u0644\u0634\u0647\u064a\u0631\u060c \u0631\u0643\u0648\u0628 \u0627\u0644\u062a\u0644\u0641\u0631\u064a\u0643 \u0644\u0645\u0634\u0627\u0647\u062f\u0629 \u0627\u0644\u0645\u0646\u0627\u0638\u0631 \u0627\u0644\u0637\u0628\u064a\u0639\u064a\u0629\u060c \u0632\u064a\u0627\u0631\u0629 \u0628\u064a\u062a \u0627\u0644\u0645\u062c\u0646\u0648\u0646 (Crazy House) \u0630\u0648 \u0627\u0644\u062a\u0635\u0645\u064a\u0645 \u0627\u0644\u0645\u0639\u0645\u0627\u0631\u064a \u0627\u0644\u0641\u0631\u064a\u062f\u060c \u0648\u0627\u0644\u062a\u062c\u0648\u0644 \u0641\u064a \u0646\u0641\u0642 \u0627\u0644\u0637\u064a\u0646 \u0627\u0644\u0641\u0646\u064a."], "destinations": ["Dalat"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0648\u063a\u062f\u0627\u0621"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0646\u0634\u0637\u0629"], "overnight": "Dalat", "title": "\u0625\u0639\u0627\u062f\u0629 \u062a\u0639\u0631\u064a\u0641 Dalat: \u0628\u064a\u0646 \u0627\u0644\u0623\u0635\u0627\u0644\u0629 \u0648\u0627\u0644\u062a\u062c\u062f\u064a\u062f"}, {"activities": ["\u062a\u0630\u0627\u0643\u0631 \u062f\u062e\u0648\u0644 \u0648\u062a\u062c\u0631\u0628\u0629 \u0627\u0644\u0632\u0644\u0627\u062c\u0629\u060c \u0645\u0631\u0634\u062f\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 17, "description": ["\u062c\u0648\u0644\u0629 \u0646\u0647\u0627\u0631\u064a\u0629 \u0631\u0627\u0626\u0639\u0629 \u0644\u0632\u064a\u0627\u0631\u0629 Fresh Garden \u0627\u0644\u0645\u0644\u064a\u0626\u0629 \u0628\u0627\u0644\u0632\u0647\u0648\u0631 \u0627\u0644\u0645\u0644\u0648\u0646\u0629\u060c \u0634\u0644\u0627\u0644\u0627\u062a \u062f\u0627\u062a\u0627\u0646\u0644\u0627 \u0645\u0639 \u062a\u062c\u0631\u0628\u0629 \u0632\u0644\u0627\u062c\u0629 \u062c\u0628\u0627\u0644 \u0627\u0644\u0623\u0644\u0628\u060c \u0634\u0644\u0627\u0644 \u0627\u0644\u0641\u064a\u0644 \u0627\u0644\u0636\u062e\u0645\u060c \u0648\u0627\u0644\u062e\u062a\u0627\u0645 \u0645\u0639 \u0627\u0633\u062a\u0631\u0627\u062d\u0629 \u0634\u0631\u0628 \u0627\u0644\u0642\u0647\u0648\u0629 \u0641\u064a \u0645\u0642\u0647\u0649 \u0645\u064a \u0644\u064a\u0646\u0647 \u0627\u0644\u0645\u0637\u0644 \u0639\u0644\u0649 \u0645\u0632\u0627\u0631\u0639 \u0627\u0644\u0628\u0646 \u0627\u0644\u062e\u0636\u0631\u0627\u0621."], "destinations": ["Dalat"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0641\u064a \u0627\u0644\u0641\u0646\u062f\u0642"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u063a\u0627\u0645\u0631\u0629"], "overnight": "Dalat", "title": "\u0645\u0646 \u0627\u0644\u0634\u0648\u0627\u0631\u0639 \u0627\u0644\u0642\u062f\u064a\u0645\u0629 \u0625\u0644\u0649 \u0627\u0644\u0625\u064a\u0642\u0627\u0639\u0627\u062a \u0627\u0644\u062d\u062f\u064a\u062b\u0629: \u0645\u0634\u0647\u062f Dalat"}, {"activities": ["\u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0628\u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629 \u0625\u0644\u0649 \u0645\u0637\u0627\u0631 \u0646\u0647\u0627 \u062a\u0631\u0627\u0646\u063a\u060c \u062a\u0630\u0643\u0631\u0629 \u0627\u0644\u0637\u064a\u0631\u0627\u0646 \u0627\u0644\u062f\u0627\u062e\u0644\u064a\u060c \u0627\u0633\u062a\u0642\u0628\u0627\u0644 \u0648\u062a\u0648\u0635\u064a\u0644 \u0641\u0646\u062f\u0642 \u0647\u0648 \u0634\u064a \u0645\u0646\u0647."], "date": "", "dayNumber": 18, "description": ["\u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0628\u0633\u064a\u0627\u0631\u062a\u0646\u0627 \u0627\u0644\u062e\u0627\u0635\u0629 \u0645\u0646 \u062f\u0627\u0644\u0627\u062a \u0625\u0644\u0649 \u0646\u0647\u0627 \u062a\u0631\u0627\u0646\u063a \u0644\u0644\u0627\u0633\u062a\u0645\u062a\u0627\u0639 \u0628\u0645\u0646\u0627\u0638\u0631 \u0627\u0644\u0645\u0645\u0631\u0627\u062a \u0627\u0644\u062c\u0628\u0644\u064a\u0629\u060c \u0648\u0645\u0646 \u062b\u0645 \u0627\u0644\u0633\u0641\u0631 \u0628\u0627\u0644\u0637\u0627\u0626\u0631\u0629 \u0627\u0644\u062f\u0627\u062e\u0644\u064a\u0629 \u0625\u0644\u0649 \u0645\u062f\u064a\u0646\u0629 \u0647\u0648 \u0634\u064a \u0645\u0646\u0647 \u0627\u0644\u0646\u0627\u0628\u0636\u0629 \u0628\u0627\u0644\u062d\u064a\u0627\u0629. \u0627\u0644\u0627\u0633\u062a\u0642\u0631\u0627\u0631 \u0641\u064a \u0641\u0646\u062f\u0642 Cicilia Saigon Center."], "destinations": ["Ho Chi Minh City"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0641\u064a \u0627\u0644\u0641\u0646\u062f\u0642"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0646\u0634\u0637\u0629"], "overnight": "Ho Chi Minh City", "title": "\u0631\u0648\u062d Ho Chi Minh City: \u0628\u064a\u0646 \u0627\u0644\u0633\u0643\u0648\u0646 \u0648\u0627\u0644\u062c\u0645\u0627\u0644"}, {"activities": ["\u0631\u0633\u0648\u0645 \u0623\u0646\u0641\u0627\u0642 \u0643\u0648 \u062a\u0634\u064a\u060c \u0645\u0631\u0634\u062f \u062e\u0627\u0635\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 19, "description": ["\u0632\u064a\u0627\u0631\u0629 \u0623\u0646\u0641\u0627\u0642 \u0643\u0648 \u062a\u0634\u064a \u0627\u0644\u062a\u0627\u0631\u064a\u062e\u064a\u0629 \u0627\u0644\u0634\u0647\u064a\u0631\u0629 \u0644\u0645\u0639\u0631\u0641\u0629 \u062a\u0627\u0631\u064a\u062e \u0627\u0644\u0645\u0646\u0637\u0642\u0629\u060c \u0648\u0627\u0644\u0639\u0648\u062f\u0629 \u0625\u0644\u0649 \u0648\u0633\u0637 \u0627\u0644\u0645\u062f\u064a\u0646\u0629 \u0644\u0632\u064a\u0627\u0631\u0629 \u0633\u0648\u0642 \u0628\u064a\u0646 \u062b\u0627\u0646\u0647 \u0627\u0644\u0635\u0627\u062e\u0628\u060c \u0645\u0643\u062a\u0628 \u0628\u0631\u064a\u062f \u0627\u0644\u0645\u062f\u064a\u0646\u0629 \u0627\u0644\u0642\u062f\u064a\u0645\u060c \u0648\u062a\u062c\u0631\u0628\u0629 \u0634\u0631\u0628 \u0627\u0644\u0642\u0647\u0648\u0629 \u0641\u064a \u0645\u0642\u0647\u0649 \u0627\u0644\u0634\u0642\u0642 \u0627\u0644\u0633\u0643\u0646\u064a\u0629 \u0627\u0644\u0623\u064a\u0642\u0648\u0646\u064a."], "destinations": ["Ho Chi Minh City"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0648\u063a\u062f\u0627\u0621"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u063a\u0627\u0645\u0631\u0629"], "overnight": "Ho Chi Minh City", "title": "\u062e\u0644\u0641 \u0627\u0644\u0623\u0628\u0648\u0627\u0628 \u0627\u0644\u0645\u063a\u0644\u0642\u0629: \u0641\u0635\u0644 Ho Chi Minh City"}, {"activities": ["\u0631\u062d\u0644\u0629 \u0642\u0627\u0631\u0628 \u062f\u0644\u062a\u0627 \u0645\u064a\u0643\u0648\u0646\u063a\u060c \u0631\u0633\u0648\u0645 \u0627\u0644\u062c\u0648\u0644\u0627\u062a\u060c \u063a\u062f\u0627\u0621\u060c \u0645\u0631\u0634\u062f \u062e\u0627\u0635\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 20, "description": ["\u0631\u062d\u0644\u0629 \u0644\u064a\u0648\u0645 \u0643\u0627\u0645\u0644 \u0644\u0627\u0633\u062a\u0643\u0634\u0627\u0641 \u062f\u0644\u062a\u0627 \u0645\u064a\u0643\u0648\u0646\u063a\u060c \u0631\u0643\u0648\u0628 \u0627\u0644\u0642\u0648\u0627\u0631\u0628 \u0627\u0644\u062e\u0634\u0628\u064a\u0629 \u0627\u0644\u062a\u0642\u0644\u064a\u062f\u064a\u0629 \u0639\u0628\u0631 \u0627\u0644\u0642\u0646\u0648\u0627\u062a \u0627\u0644\u0645\u0627\u0626\u064a\u0629 \u0627\u0644\u0645\u0638\u0644\u0644\u0647 \u0628\u0623\u0634\u062c\u0627\u0631 \u062c\u0648\u0632 \u0627\u0644\u0647\u0646\u062f \u0648\u062a\u0630\u0648\u0642 \u0627\u0644\u0641\u0648\u0627\u0643\u0647 \u0627\u0644\u0627\u0633\u062a\u0648\u0627\u0626\u064a\u0629 \u0627\u0644\u0637\u0627\u0632\u062c\u0629 \u0648\u0627\u0644\u0627\u0633\u062a\u0645\u0627\u0639 \u0625\u0644\u0649 \u0627\u0644\u0645\u0648\u0633\u064a\u0642\u0649 \u0627\u0644\u062a\u0642\u0644\u064a\u062f\u064a\u0629."], "destinations": ["Ho Chi Minh City"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0648\u063a\u062f\u0627\u0621 \u0645\u062d\u0644\u064a \u062d\u0644\u0627\u0644"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0639\u062a\u062f\u0644\u0629"], "overnight": "Ho Chi Minh City", "title": "\u0643\u0634\u0641 \u0623\u0633\u0631\u0627\u0631 Ho Chi Minh City: \u0631\u062d\u0644\u0629 \u0627\u0633\u062a\u0643\u0634\u0627\u0641\u064a\u0629 \u062e\u0627\u0635\u0629"}, {"activities": ["\u062a\u0648\u0635\u064a\u0644 \u0628\u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629 \u0625\u0644\u0649 \u0645\u0637\u0627\u0631 \u062a\u0627\u0646 \u0633\u0648\u0646 \u0646\u0647\u0627\u062a \u0627\u0644\u062f\u0648\u0644\u064a."], "date": "", "dayNumber": 21, "description": ["\u0648\u0642\u062a \u062d\u0631 \u0644\u0644\u0627\u0633\u062a\u0631\u062e\u0627\u0621 \u0623\u0648 \u0627\u0644\u062a\u0633\u0648\u0642 \u0627\u0644\u0623\u062e\u064a\u0631 \u062d\u062a\u0649 \u0645\u0648\u0639\u062f \u0645\u063a\u0627\u062f\u0631\u0629 \u0631\u062d\u0644\u062a\u0643\u060c \u062d\u064a\u062b \u064a\u0642\u0648\u0645 \u0633\u0627\u0626\u0642\u0646\u0627 \u0627\u0644\u062e\u0627\u0635 \u0628\u0646\u0642\u0644\u0643 \u0625\u0644\u0649 \u0645\u0637\u0627\u0631 \u062a\u0627\u0646 \u0633\u0648\u0646 \u0646\u0647\u0627\u062a \u0627\u0644\u062f\u0648\u0644\u064a \u0644\u0644\u0639\u0648\u062f\u0629 \u0625\u0644\u0649 \u062f\u064a\u0627\u0631\u0643 \u0645\u0639 \u0630\u0643\u0631\u064a\u0627\u062a \u0644\u0627 \u062a\u064f\u0646\u0633\u0649 \u0639\u0646 \u0641\u064a\u062a\u0646\u0627\u0645."], "destinations": ["Ho Chi Minh City"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0641\u064a \u0627\u0644\u0641\u0646\u062f\u0642"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0631\u064a\u062d\u0629"], "overnight": "Ho Chi Minh City", "title": "\u0627\u0644\u062a\u0631\u0627\u062b \u0627\u0644\u062d\u064a \u0644\u0640 Ho Chi Minh City"}]
+</script>
+
+<script>
+  window.currentLang = "ar";
+  
+  // Coordinate resolutions and math helpers copied from landing page
+  const DEST_COORDS = {
+    "hanoi": [21.0285, 105.8542],
+    "ha noi": [21.0285, 105.8542],
+    "ninh binh": [20.2539, 105.9750],
+    "ninhbinh": [20.2539, 105.9750],
+    "ha long": [20.9599, 107.0436],
+    "halong": [20.9599, 107.0436],
+    "ha giang": [22.8233, 104.9836],
+    "hagiang": [22.8233, 104.9836],
+    "sapa": [22.3364, 103.8438],
+    "hue": [16.4637, 107.5909],
+    "da nang": [16.0544, 108.2022],
+    "danang": [16.0544, 108.2022],
+    "hoi an": [15.8801, 108.3380],
+    "hoian": [15.8801, 108.3380],
+    "nha trang": [12.2388, 109.1967],
+    "nhatrang": [12.2388, 109.1967],
+    "da lat": [11.9404, 108.4583],
+    "dalat": [11.9404, 108.4583],
+    "ho chi minh city": [10.8231, 106.6297],
+    "saigon": [10.8231, 106.6297],
+    "sai gon": [10.8231, 106.6297],
+    "mekong": [10.2435, 106.3756],
+    "mekong delta": [10.2435, 106.3756],
+    "ben tre": [10.2401, 106.3768],
+    "bentre": [10.2401, 106.3768],
+    "my tho": [10.3592, 106.3653],
+    "mytho": [10.3592, 106.3653],
+    "phu quoc": [10.2899, 103.9840]
+  };
+
+  const SLUG_COORDS = {
+    "ha-noi": [21.0285, 105.8542],
+    "quang-ninh": [20.9599, 107.0436],
+    "lao-cai": [22.3364, 103.8438],
+    "da-nang": [16.0544, 108.2022],
+    "quang-nam": [15.8801, 108.3380],
+    "lam-dong": [11.9404, 108.4583],
+    "ho-chi-minh": [10.8231, 106.6297],
+    "khanh-hoa": [12.2388, 109.1967],
+    "ninh-binh": [20.2539, 105.9750],
+    "thua-thien-hue": [16.4637, 107.5909],
+    "kien-giang": [10.2899, 103.9840],
+    "binh-thuan": [10.9333, 108.1000],
+    "can-tho": [10.0401, 105.7882],
+    "mekong": [10.2435, 106.3756],
+    "ha-giang": [22.8233, 104.9836],
+    "nghe-an": [18.6736, 105.6811],
+    "quang-binh": [17.4833, 106.6000],
+    "hai-phong": [20.8449, 106.6881],
+    "dak-lak": [12.6667, 108.0500],
+    "gia-lai": [13.9833, 108.0000],
+    "kon-tum": [14.3500, 108.0000],
+    "ba-ria-vung-tau": [10.4114, 107.1363],
+    "thanh-hoa": [19.8075, 105.7764],
+    "phu-yen": [13.0881, 109.3025],
+    "binh-dinh": [13.7753, 109.2294],
+    "dien-bien": [21.3833, 103.0167],
+    "son-la": [21.3333, 103.9167],
+    "lai-chau": [22.4000, 103.4500],
+    "yen-bai": [21.7000, 104.8667],
+    "hoa-binh": [20.8167, 105.3333],
+    "lang-son": [21.8500, 106.7500],
+    "dong-nai": [10.9574, 106.8427],
+    "binh-duong": [11.0000, 106.6667],
+    "tien-giang": [10.3592, 106.3653],
+    "dong-thap": [10.4500, 105.6333],
+    "vinh-long": [10.2500, 105.9667],
+    "an-giang": [10.3833, 105.4333],
+    "cao-bang": [22.6667, 106.2500]
+  };
+
+  function resolveSlugLocally(location) {
+    if (!location) return null;
+    const normalized = location.toLowerCase().trim();
+    const keywordMap = {
+      "hà nội": "ha-noi", "ha noi": "ha-noi", "hanoi": "ha-noi", "hanoï": "ha-noi", "هانوي": "ha-noi",
+      "hồ chí minh": "ho-chi-minh", "ho chi minh": "ho-chi-minh", "hcm": "ho-chi-minh", "saigon": "ho-chi-minh", "sài gòn": "ho-chi-minh", "sai gon": "ho-chi-minh", "tphcm": "ho-chi-minh", "مدينة هو تشي منه": "ho-chi-minh", "هو تشي منه": "ho-chi-minh", "سايغون": "ho-chi-minh",
+      "đà nẵng": "da-nang", "da nang": "da-nang", "danang": "da-nang", "دانانغ": "da-nang", "دا نانغ": "da-nang",
+      "quảng nam": "quang-nam", "quang nam": "quang-nam", "hội an": "quang-nam", "hoi an": "quang-nam", "hoian": "quang-nam", "هوي آن": "quang-nam", "هوي ان": "quang-nam",
+      "quảng ninh": "quang-ninh", "quang ninh": "quang-ninh", "hạ long": "quang-ninh", "ha long": "quang-ninh", "halong": "quang-ninh", "vịnh hạ long": "quang-ninh", "vinh ha long": "quang-ninh", "cat ba": "quang-ninh", "cát bà": "quang-ninh", "خليج هاليغ": "quang-ninh", "هالونغ": "quang-ninh", "خليج هالونج": "quang-ninh",
+      "lào cai": "lao-cai", "lao cai": "lao-cai", "laocai": "lao-cai", "sapa": "lao-cai", "sa pa": "lao-cai", "bắc hà": "lao-cai", "bac ha": "lao-cai", "سابا": "lao-cai",
+      "khánh hoà": "khanh-hoa", "khanh hoa": "khanh-hoa", "nha trang": "khanh-hoa", "nhatrang": "khanh-hoa", "نها ترانغ": "khanh-hoa", "نها ترانج": "khanh-hoa",
+      "lâm đồng": "lam-dong", "lam dong": "lam-dong", "đà lạt": "lam-dong", "da lat": "lam-dong", "dalat": "lam-dong", "دالات": "lam-dong",
+      "thừa thiên huế": "thua-thien-hue", "thua thien hue": "thua-thien-hue", "huế": "thua-thien-hue", "hue": "thua-thien-hue", "lăng cô": "thua-thien-hue", "lang co": "thua-thien-hue",
+      "kiên giang": "kien-giang", "kien giang": "kien-giang", "phú quốc": "kien-giang", "phu quoc": "kien-giang", "phuquoc": "kien-giang",
+      "bình thuận": "binh-thuan", "binh thuan": "binh-thuan", "mũi né": "binh-thuan", "mui ne": "binh-thuan", "phan thiết": "binh-thuan", "phan thiet": "binh-thuan",
+      "cần thơ": "can-tho", "can tho": "can-tho", "cantho": "can-tho", "bến ninh kiều": "can-tho", "ben ninh kieu": "can-tho",
+      "mekong": "mekong", "đồng bằng sông cửu long": "mekong", "dong bang song cuu long": "mekong", "miền tây": "mekong", "mien tay": "mekong", "tây nam bộ": "mekong", "tay nam bo": "mekong",
+      "hà giang": "ha-giang", "ha giang": "ha-giang", "đồng văn": "ha-giang", "dong van": "ha-giang", "mèo vạc": "ha-giang", "meo vac": "ha-giang",
+      "ninh bình": "ninh-binh", "ninh binh": "ninh-binh", "tràng an": "ninh-binh", "trang an": "ninh-binh", "tam cốc": "ninh-binh", "tam coc": "ninh-binh", "bích động": "ninh-binh", "bich dong": "ninh-binh",
+      "nghệ an": "nghe-an", "nghe an": "nghe-an", "cửa lò": "nghe-an", "cua lo": "nghe-an",
+      "quảng bình": "quang-binh", "quang binh": "quang-binh", "phong nha": "quang-binh", "ke bang": "quang-binh",
+      "hải phòng": "hai-phong", "hai phong": "hai-phong", "haiphong": "hai-phong",
+      "đắk lắk": "dak-lak", "dak lak": "dak-lak", "daklak": "dak-lak", "buôn ma thuột": "dak-lak", "buon ma thuot": "dak-lak", "bmt": "dak-lak",
+      "gia lai": "gia-lai", "pleiku": "gia-lai",
+      "kon tum": "kon-tum", "kontum": "kon-tum",
+      "bà rịa": "ba-ria-vung-tau", "ba ria": "ba-ria-vung-tau", "vũng tàu": "ba-ria-vung-tau", "vung tau": "ba-ria-vung-tau", "vungtau": "ba-ria-vung-tau",
+      "thanh hoá": "thanh-hoa", "thanh hoa": "thanh-hoa", "sầm sơn": "thanh-hoa", "sam son": "thanh-hoa",
+      "phú yên": "phu-yen", "phu yen": "phu-yen", "tuy hoà": "phu-yen", "tuy hoa": "phu-yen",
+      "bình định": "binh-dinh", "binh dinh": "binh-dinh", "quy nhơn": "binh-dinh", "quy nhon": "binh-dinh", "quynhon": "binh-dinh"
+    };
+    return keywordMap[normalized] || null;
+  }
+
+  function findCoordinates(destText) {
+    if (!destText) return null;
+    const slug = resolveSlugLocally(destText);
+    if (slug && SLUG_COORDS[slug]) {
+      return SLUG_COORDS[slug];
+    }
+    const norm = destText.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    for (const [key, coords] of Object.entries(DEST_COORDS)) {
+      if (norm.includes(key)) return coords;
+    }
+    return null;
+  }
+
+  function getDistance(c1, c2) {
+    const R = 6371;
+    const dLat = (c2[0] - c1[0]) * Math.PI / 180;
+    const dLon = (c2[1] - c1[1]) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(c1[0] * Math.PI / 180) * Math.cos(c2[0] * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  function getBezierPoints(p1, p2, count = 30) {
+    const midLat = (p1[0] + p2[0]) / 2;
+    const midLng = (p1[1] + p2[1]) / 2;
+    const dx = p2[1] - p1[1];
+    const dy = p2[0] - p1[0];
+    const len = Math.sqrt(dx * dx + dy * dy);
+    const scale = len * 0.15;
+    const ctrlLat = midLat - (dx / len) * scale;
+    const ctrlLng = midLng + (dy / len) * scale;
+    const points = [];
+    for (let i = 0; i <= count; i++) {
+      const t = i / count;
+      const lat = (1 - t) * (1 - t) * p1[0] + 2 * (1 - t) * t * ctrlLat + t * t * p2[0];
+      const lng = (1 - t) * (1 - t) * p1[1] + 2 * (1 - t) * t * ctrlLng + t * t * p2[1];
+      points.push([lat, lng]);
+    }
+    return points;
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const map = L.map('map', {
+      zoomControl: false,
+      scrollWheelZoom: false,
+      doubleClickZoom: false,
+      dragging: false,
+      boxZoom: false
+    });
+
+    L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi', {
+      maxZoom: 18,
+      attribution: '&copy; Google Maps'
+    }).addTo(map);
+
+    const dataEl = document.getElementById('itinerary-data');
+    if (dataEl) {
+      const itineraryDays = JSON.parse(dataEl.textContent);
+      
+      const daysData = itineraryDays.map(day => {
+        let dest = "";
+        if (typeof day.overnight === 'string' && day.overnight.trim() !== '') {
+          dest = day.overnight;
+        } else if (Array.isArray(day.destinations) && day.destinations.length > 0) {
+          dest = day.destinations[0];
+        } else if (typeof day.destination === 'string') {
+          dest = day.destination;
+        }
+        return {
+          dayNumber: day.dayNumber,
+          destination: dest
+        };
+      });
+
+      const coordPoints = [];
+      const uniqueDestinations = [];
+
+      daysData.forEach(day => {
+        const city = day.destination;
+        if (!city) return;
+        const coords = findCoordinates(city);
+        if (coords) {
+          const existing = uniqueDestinations.find(d => d.coords[0] === coords[0] && d.coords[1] === coords[1]);
+          if (!existing) {
+            uniqueDestinations.push({ name: city, coords: coords });
+            coordPoints.push(coords);
+          }
+        }
+      });
+
+      // Draw markers
+      uniqueDestinations.forEach((dest, idx) => {
+        const html = `
+          <div class="custom-marker">
+            <div class="marker-pulse"></div>
+            <div class="marker-core">${idx + 1}</div>
+          </div>
+        `;
+        const customIcon = L.divIcon({
+          html: html,
+          className: '',
+          iconSize: [28, 28],
+          iconAnchor: [14, 14]
+        });
+        L.marker(dest.coords, { icon: customIcon }).addTo(map);
+      });
+
+      // Draw polylines
+      for (let i = 0; i < coordPoints.length - 1; i++) {
+        const p1 = coordPoints[i];
+        const p2 = coordPoints[i + 1];
+        const dist = getDistance(p1, p2);
+        const isFlight = dist > 300;
+
+        let pathPoints;
+        if (isFlight) {
+          pathPoints = getBezierPoints(p1, p2);
+        } else {
+          pathPoints = [p1, p2];
+        }
+
+        const lineOptions = {
+          color: isFlight ? '#b7894b' : '#17412e',
+          weight: 3,
+          opacity: 0.8,
+          dashArray: isFlight ? '6, 8' : 'none'
+        };
+        L.polyline(pathPoints, lineOptions).addTo(map);
+      }
+
+      if (coordPoints.length > 0) {
+        map.fitBounds(L.latLngBounds(coordPoints), {
+          padding: [25, 25],
+          maxZoom: 12
+        });
+      }
+    }
+  });
+
+  // Auto-trigger print dialog after a safe delay to let tiles render
+  window.addEventListener('load', function() {
+    setTimeout(function() { window.print(); }, 1200);
+  });
+</script>
+</body>
+</html>

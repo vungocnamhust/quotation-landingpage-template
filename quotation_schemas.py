@@ -143,7 +143,7 @@ class WhyWorks(FrozenModel):
         description="Short premium emotional paragraph highlighting comfort aspects."
     )
     muslimFriendly: str = pydantic_Field(
-        description="Short premium emotional paragraph highlighting Muslim-friendly experience."
+        description="Short premium emotional paragraph highlighting dietary and special care preferences."
     )
     balancedHighlights: str = pydantic_Field(
         description=(
@@ -160,7 +160,7 @@ class WhyWorks(FrozenModel):
         defaults = {
             "privateFlexible": "Fully private tour with flexible pacing to suit your needs.",
             "comfort": "Premium A/C vehicle transport and handpicked hotels.",
-            "muslimFriendly": "Halal-conscious dining options and prayer stop flexibility.",
+            "muslimFriendly": "Dietary requests, meal planning, and specific preferences are carefully coordinated.",
             "balancedHighlights": "Optimized itinerary balancing iconic sites with leisure time.",
         }
         for k, v in defaults.items():

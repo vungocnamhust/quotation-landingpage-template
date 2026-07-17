@@ -2161,7 +2161,7 @@
 
       <div class="itinerary">
         {% for day in itinerary %}
-        <div class="day">
+        <div class="day" data-day-number="{{ day.dayNumber }}">
           <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
             <div class="day-label">{{ "Day" | translate(lang) }} {{ day.dayNumber }}</div>
             <div style="font-size:12px; font-weight:700; color:var(--muted)">{{ day.date }}</div>
@@ -2434,18 +2434,31 @@
     <div class="container">
       <div class="two-col">
         <div class="panel">
-          <h3 data-editable="true">{{ "What is Included" | translate(lang) }}</h3>
-          <ul>
-            {% for inc in inclusions %}
-            <li data-editable="true">{{ inc }}</li>
+          <h3 data-editable="true">{{ "Inclusions" | translate(lang) }}</h3>
+          {% if inclusions_lede %}
+          <p style="font-size:13px; color:var(--muted); line-height:1.5; margin-bottom:12px;">{{ inclusions_lede }}</p>
+          {% endif %}
+          <ul style="list-style-type:none; padding-left:0;">
+            {% for item in inclusions %}
+              {% if item is mapping %}
+                <li style="margin-bottom:12px; line-height:1.5;">
+                  <strong style="color:var(--emerald); display:block; font-size:14px; margin-bottom:2px;">{{ item.title }}</strong>
+                  <span style="font-size:12.5px; color:var(--muted);">{{ item.desc }}</span>
+                </li>
+              {% else %}
+                <li style="margin-bottom:6px; line-height:1.5; list-style-type:disc; margin-left:15px;" data-editable="true">{{ item }}</li>
+              {% endif %}
             {% endfor %}
           </ul>
         </div>
         <div class="panel">
-          <h3 data-editable="true">{{ "What is Excluded" | translate(lang) }}</h3>
-          <ul>
-            {% for exc in exclusions %}
-            <li data-editable="true">{{ exc }}</li>
+          <h3 data-editable="true">{{ exclusions_title | default("Exclusions" | translate(lang)) }}</h3>
+          {% if exclusions_lede %}
+          <p style="font-size:13px; color:var(--muted); line-height:1.5; margin-bottom:12px;">{{ exclusions_lede }}</p>
+          {% endif %}
+          <ul style="list-style-type:disc; padding-left:15px;">
+            {% for item in exclusions %}
+            <li style="margin-bottom:6px; line-height:1.5;" data-editable="true">{{ item }}</li>
             {% endfor %}
           </ul>
         </div>
@@ -3574,14 +3587,14 @@
         if (!location) return null;
         const normalized = location.toLowerCase().trim();
         const keywordMap = {
-          "hà nội": "ha-noi", "ha noi": "ha-noi", "hanoi": "ha-noi", "hanoï": "ha-noi",
-          "hồ chí minh": "ho-chi-minh", "ho chi minh": "ho-chi-minh", "hcm": "ho-chi-minh", "saigon": "ho-chi-minh", "sài gòn": "ho-chi-minh", "sai gon": "ho-chi-minh", "tphcm": "ho-chi-minh",
-          "đà nẵng": "da-nang", "da nang": "da-nang", "danang": "da-nang",
-          "quảng nam": "quang-nam", "quang nam": "quang-nam", "hội an": "quang-nam", "hoi an": "quang-nam", "hoian": "quang-nam",
-          "quảng ninh": "quang-ninh", "quang ninh": "quang-ninh", "hạ long": "quang-ninh", "ha long": "quang-ninh", "halong": "quang-ninh", "vịnh hạ long": "quang-ninh", "vinh ha long": "quang-ninh", "cat ba": "quang-ninh", "cát bà": "quang-ninh",
-          "lào cai": "lao-cai", "lao cai": "lao-cai", "laocai": "lao-cai", "sapa": "lao-cai", "sa pa": "lao-cai", "bắc hà": "lao-cai", "bac ha": "lao-cai",
-          "khánh hoà": "khanh-hoa", "khanh hoa": "khanh-hoa", "nha trang": "khanh-hoa", "nhatrang": "khanh-hoa",
-          "lâm đồng": "lam-dong", "lam dong": "lam-dong", "đà lạt": "lam-dong", "da lat": "lam-dong", "dalat": "lam-dong",
+          "hà nội": "ha-noi", "ha noi": "ha-noi", "hanoi": "ha-noi", "hanoï": "ha-noi", "هانوي": "ha-noi",
+          "hồ chí minh": "ho-chi-minh", "ho chi minh": "ho-chi-minh", "hcm": "ho-chi-minh", "saigon": "ho-chi-minh", "sài gòn": "ho-chi-minh", "sai gon": "ho-chi-minh", "tphcm": "ho-chi-minh", "مدينة هو تشي منه": "ho-chi-minh", "هو تشي منه": "ho-chi-minh", "سايغون": "ho-chi-minh",
+          "đà nẵng": "da-nang", "da nang": "da-nang", "danang": "da-nang", "دانانغ": "da-nang", "دا نانغ": "da-nang",
+          "quảng nam": "quang-nam", "quang nam": "quang-nam", "hội an": "quang-nam", "hoi an": "quang-nam", "hoian": "quang-nam", "هوي آن": "quang-nam", "هوي ان": "quang-nam",
+          "quảng ninh": "quang-ninh", "quang ninh": "quang-ninh", "hạ long": "quang-ninh", "ha long": "quang-ninh", "halong": "quang-ninh", "vịnh hạ long": "quang-ninh", "vinh ha long": "quang-ninh", "cat ba": "quang-ninh", "cát bà": "quang-ninh", "خليج هاليغ": "quang-ninh", "هالونغ": "quang-ninh", "خليج هالونج": "quang-ninh",
+          "lào cai": "lao-cai", "lao cai": "lao-cai", "laocai": "lao-cai", "sapa": "lao-cai", "sa pa": "lao-cai", "bắc hà": "lao-cai", "bac ha": "lao-cai", "سابا": "lao-cai",
+          "khánh hoà": "khanh-hoa", "khanh hoa": "khanh-hoa", "nha trang": "khanh-hoa", "nhatrang": "khanh-hoa", "نها ترانغ": "khanh-hoa", "نها ترانج": "khanh-hoa",
+          "lâm đồng": "lam-dong", "lam dong": "lam-dong", "đà lạt": "lam-dong", "da lat": "lam-dong", "dalat": "lam-dong", "دالات": "lam-dong",
           "thừa thiên huế": "thua-thien-hue", "thua thien hue": "thua-thien-hue", "huế": "thua-thien-hue", "hue": "thua-thien-hue", "lăng cô": "thua-thien-hue", "lang co": "thua-thien-hue",
           "kiên giang": "kien-giang", "kien giang": "kien-giang", "phú quốc": "kien-giang", "phu quoc": "kien-giang", "phuquoc": "kien-giang",
           "bình thuận": "binh-thuan", "binh thuan": "binh-thuan", "mũi né": "binh-thuan", "mui ne": "binh-thuan", "phan thiết": "binh-thuan", "phan thiet": "binh-thuan",
