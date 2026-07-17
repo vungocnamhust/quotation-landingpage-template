@@ -2022,6 +2022,9 @@ async def get_published_file(file_path: str):
                 }
                 gh_url = f"https://api.github.com/repos/{repo}/contents/published/{file_path}"
                 resp = await client.get(gh_url, headers=headers)
+                if resp.status_code == 401:
+                    log.warning("[/published] GITHUB_TOKEN unauthorized (401), trying without token")
+                    resp = await client.get(gh_url)
                 if resp.status_code == 200:
                     log.info("[/published] Fetched %s from GitHub API", file_path)
                     mt, _ = mimetypes.guess_type(file_path)
