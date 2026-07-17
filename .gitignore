@@ -26,7 +26,6 @@ published/*/draft.html
 # Logs
 *.log
 .env
-published
-published/*
+
 
 .DS_Store

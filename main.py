@@ -45,6 +45,109 @@ app.mount("/assets", StaticFiles(directory="assets"), name="assets")
 # Jinja2 templates
 templates = Jinja2Templates(directory="templates")
 
+# ── Luxury Day Title Templates ────────────────────────────────────────────────
+LUXURY_DAY_TEMPLATES = [
+    {
+        "en": "Behind Closed Doors: The {city} Chapter",
+        "vi": "Đằng sau những cánh cửa: Chương {city}",
+        "ar": "خلف الأبواب المغلقة: فصل {city}"
+    },
+    {
+        "en": "{city} Unveiled: A Private Insider Expedition",
+        "vi": "Hé lộ {city}: Hành trình khám phá riêng tư",
+        "ar": "كشف أسرار {city}: رحلة استكشافية خاصة"
+    },
+    {
+        "en": "The Living Heritage of {city}",
+        "vi": "Di sản sống của {city}",
+        "ar": "التراث الحي لـ {city}"
+    },
+    {
+        "en": "Exclusive Perspectives: Inside {city}",
+        "vi": "Góc nhìn độc bản: Bên trong {city}",
+        "ar": "آفاق حصرية: داخل {city}"
+    },
+    {
+        "en": "The Masterclasses of {city}",
+        "vi": "Những lớp học bậc thầy tại {city}",
+        "ar": "دروس احترافية في {city}"
+    },
+    {
+        "en": "The {city} Collection: A Curated Sojourn",
+        "vi": "Bộ sưu tập {city}: Kỳ nghỉ được chọn lọc",
+        "ar": "مجموعة {city}: إقامة منسقة"
+    },
+    {
+        "en": "An Elegant Portrait of {city}",
+        "vi": "Chân dung thanh lịch của {city}",
+        "ar": "صورة أنيقة لـ {city}"
+    },
+    {
+        "en": "The Anatomy of {city}: Culture & Contrast",
+        "vi": "Giải phẫu {city}: Văn hóa và Sự tương phản",
+        "ar": "تفاصيل {city}: الثقافة والتناقض"
+    },
+    {
+        "en": "A Design-Led Journey Through {city}",
+        "vi": "Hành trình nghệ thuật qua {city}",
+        "ar": "رحلة مستوحاة من التصميم عبر {city}"
+    },
+    {
+        "en": "The {city} Dossier: A Tailored Agenda",
+        "vi": "Hồ sơ {city}: Lịch trình thiết kế riêng",
+        "ar": "ملف {city}: جدول أعمال مخصص"
+    },
+    {
+        "en": "Vignettes of {city}",
+        "vi": "Những mảnh ghép ký ức {city}",
+        "ar": "لوحات قصيرة من {city}"
+    },
+    {
+        "en": "{city} in Frames: A Visual Narrative",
+        "vi": "Khung cảnh {city}: Tường thuật thị giác",
+        "ar": "{city} في إطارات: سرد مرئي"
+    },
+    {
+        "en": "Echoes of {city}",
+        "vi": "Âm vang {city}",
+        "ar": "أصداء {city}"
+    },
+    {
+        "en": "The Soul and Substance of {city}",
+        "vi": "Hồn cốt và Bản sắc của {city}",
+        "ar": "روح وجوهر {city}"
+    },
+    {
+        "en": "Impressions of {city}: A Paced Exploration",
+        "vi": "Ấn tượng {city}: Khám phá thư thái",
+        "ar": "انطباعات عن {city}: استكشاف متأنٍ"
+    },
+    {
+        "en": "{city} Redefined: Tradition & Innovation",
+        "vi": "Định nghĩa lại {city}: Truyền thống và Đổi mới",
+        "ar": "إعادة تعريف {city}: بين الأصالة والتجديد"
+    },
+    {
+        "en": "From Ancient Streets to Modern Beats: The {city} Landscape",
+        "vi": "Từ phố cổ đến nhịp điệu hiện đại: Cảnh sắc {city}",
+        "ar": "من الشوارع القديمة إلى الإيقاعات الحديثة: مشهد {city}"
+    },
+    {
+        "en": "The Spirit of {city}: Between Silence and Splendor",
+        "vi": "Tâm hồn {city}: Giữa tĩnh lặng và Huy hoàng",
+        "ar": "روح {city}: بين السكون والجمال"
+    }
+]
+
+def get_luxury_day_title(city: str, day_number: int, lang: str) -> str:
+    if not city:
+        city = "Vietnam"
+    tpl_idx = (day_number - 1) % len(LUXURY_DAY_TEMPLATES)
+    tpl = LUXURY_DAY_TEMPLATES[tpl_idx]
+    lang_key = lang if lang in ("en", "vi", "ar") else "en"
+    raw_tpl = tpl.get(lang_key, tpl["en"])
+    return raw_tpl.format(city=city)
+
 # ── Translation System ────────────────────────────────────────────────────────
 STATIC_DICTIONARY = {
     "Timeline": {
@@ -1115,10 +1218,12 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
     # Build itinerary days matching template expectations
     mapped_itinerary = []
     for d in payload.itinerary:
+        title = get_luxury_day_title(d.destination, d.dayNumber, lang)
+
         mapped_itinerary.append({
             "dayNumber": d.dayNumber,
             "date": "",  # date is not explicitly in itinerary day in the new schema, but can be empty
-            "title": truncate_text(f"Explore {d.destination}", 80),
+            "title": title,
             "description": [truncate_text(d.summary, 350)],
             "overnight": truncate_text(d.destination, 40),
             "meals": [truncate_text(d.dining, 80)] if d.dining else [],
@@ -1293,11 +1398,16 @@ def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, her
     img_4 = _d_img(3)
 
     # Highlight experiences — first 3 itinerary days
-    experiences = [
-        {"num": f"{i+1:02d}", "title": truncate_text(day.title, 80),
-         "desc": truncate_text(day.description[0] if day.description else f"Day {day.dayNumber} of the journey.", 160)}
-        for i, day in enumerate(payload.itinerary[:3])
-    ]
+    experiences = []
+    for i, day in enumerate(payload.itinerary[:3]):
+        title = day.title
+        if not title or title.lower().startswith("explore "):
+            city = day.destinations[0] if (day.destinations and day.destinations[0]) else (day.overnight or "Vietnam")
+            title = get_luxury_day_title(city, day.dayNumber, lang)
+        else:
+            title = truncate_text(title, 80)
+        desc = truncate_text(day.description[0] if day.description else f"Day {day.dayNumber} of the journey.", 160)
+        experiences.append({"num": f"{i+1:02d}", "title": title, "desc": desc})
     while len(experiences) < 3:
         experiences.append({"num": f"{len(experiences)+1:02d}", "title": "Premium Experience",
                             "desc": "A carefully curated moment in this journey."})
@@ -1397,10 +1507,17 @@ def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, her
                 gd_dict["notes"] = truncate_text(gd_dict.get("notes"), 150)
                 day_guides.append(gd_dict)
 
+        title = day.title
+        if not title or title.lower().startswith("explore "):
+            city = day.destinations[0] if (day.destinations and day.destinations[0]) else (day.overnight or "Vietnam")
+            title = get_luxury_day_title(city, day.dayNumber, lang)
+        else:
+            title = truncate_text(title, 80)
+
         days_list.append({
             "dayNumber": day.dayNumber,
             "date": day_date,
-            "title": truncate_text(day.title, 80),
+            "title": title,
             "description": [truncate_text(d, 350) for d in day.description],
             "overnight": truncate_text(day.overnight, 40),
             "meals": [truncate_text(m, 80) for m in (day.meals or [])],
@@ -3343,9 +3460,13 @@ def _build_agent_ctx(
 
     mapped_itinerary = []
     for d in days_list:
+        title = d.get("title", "")
+        if not title or title.lower().startswith("explore "):
+            dest = d.get("overnight") or (d.get("destinations")[0] if d.get("destinations") else "Vietnam")
+            title = get_luxury_day_title(dest, d.get("dayNumber", 1), "en")
         mapped_itinerary.append({
             "dayNumber": d.get("dayNumber", 0),
-            "title": d.get("title", ""),
+            "title": title,
             "date": d.get("date", ""),
             "overnight": d.get("overnight", ""),
             "meals": d.get("meals", []) or [],
