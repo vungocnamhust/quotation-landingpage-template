@@ -1174,12 +1174,38 @@ async def translate_payload_llm(payload_dict: dict, target_lang: str, payload_ty
 
 
 def _load_ctx_data(item_id: str) -> dict | None:
-    """Load the single ctx.json file from memory store or disk."""
+    """Load the single ctx.json file from memory store, disk, or GitHub in production."""
     # First check quotations memory store
     entry = quotations.get(item_id) or itineraries.get(item_id)
     if entry and entry.get("ctx"):
         return entry["ctx"]
         
+    # Fetch from GitHub first if production
+    ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
+    if ENVIRONMENT == "production":
+        repo = os.getenv("GITHUB_REPO")
+        token = os.getenv("GITHUB_TOKEN")
+        if repo and token:
+            import urllib.request
+            try:
+                url = f"https://api.github.com/repos/{repo}/contents/published/{item_id}/ctx.json"
+                req = urllib.request.Request(url, headers={
+                    "Authorization": f"token {token}",
+                    "Accept": "application/vnd.github.v3.raw",
+                    "User-Agent": "quotation-landingpage/1.0"
+                })
+                with urllib.request.urlopen(req, timeout=5) as response:
+                    data = json.loads(response.read().decode("utf-8"))
+                    # Cache in memory
+                    store = itineraries if item_id.startswith("iti_") else quotations
+                    if item_id in store:
+                        store[item_id]["ctx"] = data
+                    else:
+                        store[item_id] = {"ctx": data}
+                    return data
+            except Exception as ex:
+                log.warning("Failed to fetch ctx.json from GitHub for %s: %s", item_id, ex)
+
     path = os.path.join("published", item_id, "ctx.json")
     if os.path.isfile(path):
         try:
