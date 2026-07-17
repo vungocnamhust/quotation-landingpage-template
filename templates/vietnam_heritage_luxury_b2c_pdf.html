@@ -169,6 +169,15 @@
     .qrow:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
     .qrow strong { color: var(--ink); text-align: right; font-size: 11px; }
 
+    .qrow.stacked {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 3px;
+    }
+    .qrow.stacked strong {
+      text-align: left;
+    }
+
     /* Strip bar at bottom of cover */
     .cover-strip {
       background: rgba(23,65,46,.92);
@@ -598,7 +607,7 @@
         <p class="cover-lede">{{ lede }}</p>
       </div>
       <div class="quote-card">
-        <h2>Quotation Snapshot</h2>
+        <h2>Journey Overview</h2>
         <div class="qrow"><span>Prepared for</span><strong>{{ customer_name }}</strong></div>
         <div class="qrow"><span>Overview</span><strong>{{ overview_heading }}</strong></div>
         {% if guests_txt %}
@@ -608,7 +617,7 @@
         <div class="qrow"><span>Travel dates</span><strong>{{ travel_dates }}</strong></div>
         {% endif %}
         {% if route_txt %}
-        <div class="qrow"><span>Route</span><strong>{{ route_txt }}</strong></div>
+        <div class="qrow stacked"><span>Route</span><strong>{{ route_txt }}</strong></div>
         {% endif %}
         <div class="qrow"><span>Ref.</span><strong>{{ quotation_number }}</strong></div>
         <div class="qrow"><span>Contact</span><strong>{{ contact }}</strong></div>
@@ -665,9 +674,7 @@
       </div>
     </div>
 
-    <div class="section-label" style="margin-top:20px;">Section 2 — Journey Overview</div>
-    <h2 class="section-h2">{{ overview_h2 }}</h2>
-    <p style="font-size:13px; color:var(--muted); line-height:1.7;">{{ overview_p }}</p>
+
   </div>
 </div>
 
@@ -678,7 +685,7 @@
     <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
   </div>
   <div class="page-inner">
-    <div class="section-label">Section 3 — Why This Journey Works Well</div>
+    <div class="section-label">Section 2 — {{ ['Behind the Itinerary Curation', 'Why This Journey Inspires', 'The Anatomy of the Experience', 'A Perfectly Paced Journey'] | random }}</div>
     <h2 class="section-h2">Value Propositions</h2>
     <p class="section-p">Core features ensuring comfort and alignment with the guests' expectations.</p>
 
@@ -752,11 +759,11 @@
         </div>
         <div class="day-meta">
           {% if day.overnight %}
-          <div class="price-sub" style="margin-bottom:2px">OVERNIGHT</div>
+          <div class="price-sub" style="margin-bottom:2px">Overnight</div>
           <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">{{ day.overnight }}</div>
           {% endif %}
           {% if day.meals %}
-          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">MEALS</div>
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">Meals</div>
           <div style="font-size:11px">{{ day.meals | join(' · ') }}</div>
           {% endif %}
         </div>
@@ -773,35 +780,46 @@
     <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
   </div>
   <div class="page-inner">
-    <div class="section-label">Section 5 — Selected Hotel Plan</div>
+    <div class="section-label">Section 4 — Selected Hotel Plan</div>
     <h2 class="section-h2">Hotel Arrangement</h2>
     <p class="section-p">Proposed accommodation plan. Similar options can be requested.</p>
 
     {% if hotels %}
-    <div style="border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 16px;">
-      <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11px;">
-        <thead>
-          <tr style="background: var(--emerald); color: white;">
-            <th style="padding: 10px 14px; width: 120px;">Destination</th>
-            <th style="padding: 10px 14px; width: 80px;">Check-In</th>
-            <th style="padding: 10px 14px; width: 80px;">Check-Out</th>
-            <th style="padding: 10px 14px;">Hotel Arrangement</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for item in hotels %}
-          <tr style="border-bottom: 1px solid var(--line); background: {% if loop.index % 2 == 0 %}rgba(183, 137, 75, 0.03){% else %}white{% endif %};">
-            <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">{{ item.destination }}</td>
-            <td style="padding: 10px 14px;">{{ item.checkInDate or 'TBA' }}</td>
-            <td style="padding: 10px 14px;">{{ item.checkOutDate or 'TBA' }}</td>
-            <td style="padding: 10px 14px; font-family: var(--serif); color: var(--ink);">{{ item.hotelArrangement }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+    <div class="hotel-plan-pdf" style="margin-top: 15px;">
+      {% for item in hotels %}
+      <div class="hotel-pdf-card" style="page-break-inside: avoid; border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 20px; {% if loop.last %}border-bottom: none; margin-bottom: 0;{% endif %}">
+        <!-- Header -->
+        <div style="margin-bottom: 10px;">
+          <span style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">{{ item.city_country }}</span>
+          <h3 style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">{{ item.name }}</h3>
+        </div>
+        
+        <!-- Side-by-Side Images -->
+        <div style="margin: 10px 0; font-size: 0; width: 100%;">
+          <div style="width: 38%; display: inline-block; vertical-align: top; margin-right: 2%;">
+            <img src="{{ item.hotel_img }}" alt="{{ item.name }}" style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+          </div>
+          <div style="width: 60%; display: inline-block; vertical-align: top;">
+            <img src="{{ item.room_img }}" alt="{{ item.name }} Room" style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+          </div>
+        </div>
+        
+        <!-- Footer Columns (Introduction & Info/Tel) -->
+        <div style="width: 100%; margin-top: 10px;">
+          <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
+            <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">{{ item.introduction }}</p>
+          </div>
+          <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
+            <h4 style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">{{ item.name }}</h4>
+            <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;">{{ item.date_range }}</div>
+            <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">TEL: {{ item.tel }}</div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
     </div>
     {% if room_notes %}
-    <div style="margin-top: 10px; padding: 10px 14px; background: rgba(183, 137, 75, 0.05); border-radius: 8px; border: 1px dashed var(--gold); font-size: 10px; color: var(--muted); margin-bottom: 24px;">
+    <div style="margin-top: 20px; padding: 10px 14px; background: rgba(183, 137, 75, 0.05); border-radius: 8px; border: 1px dashed var(--gold); font-size: 10px; color: var(--muted); margin-bottom: 24px; page-break-inside: avoid;">
       <strong>Room Notes &amp; Requests:</strong> {{ room_notes }}
     </div>
     {% endif %}
@@ -809,7 +827,7 @@
     <p style="font-size:11px; color:var(--muted); font-style:italic; margin-bottom:24px;">Hotel arrangements will be tailored and detailed here for your specific travel dates.</p>
     {% endif %}
 
-    <div class="section-label">Section 6 — Package Pricing</div>
+    <div class="section-label">Section 5 — Package Pricing</div>
     <div class="pricing-block" style="margin-bottom: 0;">
       <h2>{{ pricing_h2 }}</h2>
       <p class="sub">{{ pricing_p }}</p>
@@ -820,9 +838,15 @@
           {% if opt.optionName %}
           <small style="display:block;margin-top:3px;font-size:9px;opacity:.7">{{ opt.optionName }}</small>
           {% endif %}
+          {% if opt.is_total %}
+          <strong>{{ opt.totalPrice.displayText or ('{:,.0f}'.format(opt.totalPrice.amount) ~ ' ' ~ opt.totalPrice.currency) }}</strong>
+          <small>total package</small><br>
+          <small>Per person: {{ opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~ opt.pricePerPerson.currency) }}</small>
+          {% else %}
           <strong>{{ opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~ opt.pricePerPerson.currency) }}</strong>
           <small>per person</small><br>
           <small>Total: {{ opt.totalPrice.displayText or ('{:,.0f}'.format(opt.totalPrice.amount) ~ ' ' ~ opt.totalPrice.currency) }}</small>
+          {% endif %}
           {% if opt.isConfirmedMainOption %}
           <div style="margin-top:8px;font-size:8px;letter-spacing:.14em;color:#d8bd85;font-weight:800">✓ CONFIRMED</div>
           {% elif opt.isAlternativeOption %}
@@ -831,24 +855,12 @@
         </div>
         {% endfor %}
       </div>
-      <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.1); display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; font-size: 10px; color: rgba(255,255,255,0.7);">
-        <div>
-          <strong style="color: var(--gold-2); display: block; margin-bottom: 2px;">Price Basis</strong>
-          <span>{{ glance_basis }}</span>
-        </div>
-        <div>
-          <strong style="color: var(--gold-2); display: block; margin-bottom: 2px;">Domestic Flights</strong>
-          <span>{{ glance_flights }}</span>
-        </div>
-        <div>
-          <strong style="color: var(--gold-2); display: block; margin-bottom: 2px;">Validity</strong>
-          <span>{{ glance_validity }}</span>
-        </div>
-        <div>
-          <strong style="color: var(--gold-2); display: block; margin-bottom: 2px;">Rate Classification</strong>
-          <span>{{ glance_partner_note }}</span>
-        </div>
+      {% if price_cond_paras and price_cond_paras[0] %}
+      <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 11px; color: rgba(255,255,255,0.8); line-height: 1.5; text-align: left;">
+        <strong style="color: var(--gold-2); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.1em; font-size: 9px;">Important Note</strong>
+        <p style="margin: 0;">{{ price_cond_paras[0] }}</p>
       </div>
+      {% endif %}
     </div>
   </div>
 </div>
@@ -860,7 +872,7 @@
     <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
   </div>
   <div class="page-inner">
-    <div class="section-label">Section 7 — Package Inclusions &amp; Exclusions</div>
+    <div class="section-label">Section 6 — Package Inclusions &amp; Exclusions</div>
     <h2 class="section-h2">What is Included</h2>
     <p class="section-p">Detailed list of inclusions and exclusions for this proposal.</p>
 
@@ -880,7 +892,7 @@
     </div>
 
     {% if show_muslim_care %}
-    <div class="section-label">Section 8 — Muslim-Friendly Travel Care</div>
+    <div class="section-label">Section 7 — Muslim-Friendly Travel Care</div>
     <h2 class="section-h2">Halal &amp; Prayer Coordination</h2>
     <div style="margin-top: 10px; padding: 16px; background: rgba(23, 65, 46, 0.03); border-left: 3px solid var(--emerald); border-radius: 8px; font-size: 11px; color: var(--muted); line-height: 1.6;">
       Vietnam Safar can assist with halal-friendly meal planning where available, no-pork meal notes, seafood or vegetarian alternatives where halal-certified restaurants are limited, and flexible prayer stops during touring days where practical. Halal-certified restaurants are more available in major cities such as Hanoi, Da Nang and Ho Chi Minh City. In mountain, cruise or countryside destinations, suitable seafood, vegetarian or no-pork meals may be recommended.
@@ -889,41 +901,7 @@
   </div>
 </div>
 
-<!-- ═══════════════════ PAGE 7 — Enhancements & Notes ═══════════════════ -->
-<div class="pdf-page">
-  <div class="page-header">
-    <span class="brand">Vietnam Safar — Luxury Travel Proposal</span>
-    <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
-  </div>
-  <div class="page-inner">
-    <div class="section-label">Section 9 — Optional Enhancements</div>
-    <h2 class="section-h2">Personalize Your Proposal</h2>
-    <p class="section-p">Select optional upgrades to enhance the guests' experience.</p>
 
-    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 28px;">
-      {% for item in optional_enhancements %}
-      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
-        <strong style="display:block; font-family:var(--serif); font-size:13px; color:var(--emerald); margin-bottom:4px;">{{ item.title }}</strong>
-        <span style="font-size:9px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--gold);">{{ item.status }}</span>
-      </div>
-      {% endfor %}
-    </div>
-
-    <div class="section-label">Section 10 — Price Conditions &amp; Notes</div>
-    <h2 class="section-h2">Price Conditions</h2>
-    <p class="section-p" style="margin-bottom:12px;">{{ terms_p }}</p>
-
-    <div class="terms-grid">
-      {% for para in price_cond_paras %}
-      <div class="term-card">
-        <div class="label">Note {{ loop.index }}</div>
-        <p>{{ para }}</p>
-      </div>
-      {% endfor %}
-    </div>
-
-  </div>
-</div>
 
 <!-- ═══════════════════ PAGE 8 — Booking Terms & Finalization ═══════════════════ -->
 <div class="pdf-page">
@@ -932,7 +910,7 @@
     <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
   </div>
   <div class="page-inner">
-    <div class="section-label">Section 11 — Booking &amp; Payment Terms</div>
+    <div class="section-label">Section 8 — Booking &amp; Payment Terms</div>
     <h2 class="section-h2">Booking Terms</h2>
     <p class="section-p">Commercial conditions and cancellation policies.</p>
 
@@ -965,7 +943,7 @@
       </table>
     </div>
 
-    <div class="section-label">Section 12 — Finalization Checklist</div>
+    <div class="section-label">Section 9 — Finalization Checklist</div>
     
     <div class="cta-block" style="margin-bottom: 10px; padding: 24px; grid-template-columns: 1fr 180px; gap: 14px;">
       <div>

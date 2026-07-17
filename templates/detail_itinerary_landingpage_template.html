@@ -1,12 +1,17 @@
 {% set symbol = currency ~ ' ' if currency not in ['USD', 'VND'] else ('đ' if currency == 'VND' else '$') %}
 <!DOCTYPE html>
-<html lang="en"
+<html lang="{{ lang or 'en' }}" {% if lang == 'ar' %}dir="rtl"{% endif %}
   style="--hero-img: url('{{ img_0 }}'); {% for dest in destinations %} --img-{{ loop.index }}: url('{{ dest.image_url or '/assets/vietnam-safar-logo.png' }}'); {% endfor %}">
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{{ tour_title }} - Booking Itinerary</title>
+  <!-- Premium Typography Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+  
   <!-- PWA Metadata -->
   <link rel="manifest" href="/manifest.json?id={{ itinerary_id }}&type=itineraries" />
   <meta name="theme-color" content="#17412e" />
@@ -30,8 +35,13 @@
       --line: rgba(183, 137, 75, .28);
       --card: #fffaf1;
       --shadow: 0 30px 80px rgba(17, 19, 15, .16);
-      --serif: Georgia, 'Times New Roman', serif;
-      --sans: Arial, Helvetica, sans-serif;
+      --serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+      --sans: 'Outfit', Arial, Helvetica, sans-serif;
+    }
+
+    html[lang="ar"] {
+      --serif: 'Amiri', Georgia, serif;
+      --sans: 'Cairo', sans-serif;
     }
 
     /* Tweak map tile colors to match the luxury warm tone without fading into the background */
@@ -848,7 +858,65 @@
       border: 1px solid var(--line) !important;
     }
 
-    /* Custom Marker */
+    /* Custom Marker Giọt Nước Dẹt Tràn Viền */
+    .custom-irregular-marker {
+      width: 80px;
+      height: 80px;
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.5));
+    }
+
+    .custom-irregular-marker:hover,
+    .custom-irregular-marker.active {
+      transform: scale(1.15) translateY(-4px);
+      z-index: 1000 !important;
+    }
+
+    .marker-svg-container {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .marker-path {
+      transition: filter 0.3s ease;
+    }
+
+    .custom-irregular-marker:hover .marker-path,
+    .custom-irregular-marker.active .marker-path {
+      filter: brightness(1.08);
+    }
+
+    /* Sóng phát sáng đồng dạng phía sau */
+    .marker-path-radar {
+      fill: none;
+      stroke: var(--gold);
+      stroke-width: 2px;
+      transform-origin: 50px 50px;
+      opacity: 0;
+      pointer-events: none;
+      animation: svgRadarPulse 2.8s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
+    }
+
+    @keyframes svgRadarPulse {
+      0% {
+        transform: scale(0.96);
+        opacity: 0.85;
+        stroke-width: 3px;
+      }
+      100% {
+        transform: scale(1.35);
+        opacity: 0;
+        stroke-width: 0.5px;
+      }
+    }
+
+    /* Custom Marker (Classic Mode) */
     .custom-marker {
       position: relative;
       width: 28px;
@@ -899,12 +967,34 @@
         transform: scale(0.5);
         opacity: 1;
       }
-
       80%,
       100% {
         transform: scale(1.4);
         opacity: 0;
       }
+    }
+
+    /* Map Mode Toggle Styles */
+    .map-mode-toggle .mode-btn {
+      border: none;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.6);
+      padding: 6px 14px;
+      border-radius: 16px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: inherit;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      outline: none;
+    }
+
+    .map-mode-toggle .mode-btn.active {
+      background: var(--gold);
+      color: black !important;
+      box-shadow: 0 2px 8px rgba(183, 137, 75, 0.4);
     }
 
     /* Sidebar Scrollbar */
@@ -1481,6 +1571,305 @@
       --serif: 'Playfair Display', Georgia, serif;
       --sans: 'Outfit', Arial, sans-serif;
     }
+
+    html[lang="ar"] {
+      --serif: 'Amiri', Georgia, serif;
+      --sans: 'Cairo', sans-serif;
+    }
+
+    /* Luxury Loading Overlay */
+    #luxury-loading-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(10, 10, 10, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    #luxury-loading-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #luxury-loading-overlay .loading-card {
+      width: 340px;
+      padding: 40px 30px;
+      border-radius: 24px;
+      background: rgba(20, 20, 20, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 24px 60px rgba(0, 0, 0, 0.6);
+      text-align: center;
+      transform: scale(0.95);
+      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    #luxury-loading-overlay.active .loading-card {
+      transform: scale(1);
+    }
+
+    #luxury-loading-overlay .luxury-spinner {
+      position: relative;
+      width: 60px;
+      height: 60px;
+      margin: 0 auto 28px;
+    }
+
+    #luxury-loading-overlay .luxury-spinner .ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2px solid rgba(212, 175, 55, 0.1);
+    }
+
+    #luxury-loading-overlay .luxury-spinner .active-glow {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      border-top-color: #d4af37;
+      border-right-color: rgba(212, 175, 55, 0.3);
+      animation: spin-glow 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+    }
+
+    @keyframes spin-glow {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    #luxury-loading-overlay h3 {
+      font-family: 'Playfair Display', 'Didot', 'Georgia', serif;
+      color: #f7f7f7;
+      font-size: 1.25rem;
+      letter-spacing: 0.05em;
+      margin: 0 0 8px;
+      font-weight: 400;
+    }
+
+    #luxury-loading-overlay p {
+      color: #a0a0a0;
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin: 0 0 32px;
+    }
+
+    #luxury-loading-overlay .btn-cancel {
+      display: inline-block;
+      padding: 10px 24px;
+      border-radius: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: transparent;
+      color: #e0e0e0;
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.15em;
+      cursor: pointer;
+      transition: all 0.3s;
+      outline: none;
+    }
+
+    #luxury-loading-overlay .btn-cancel:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    #luxury-loading-overlay .btn-cancel:active {
+      transform: scale(0.96);
+    }
+
+    /* ── Language Switcher Glassmorphic UI ─────────────────────────────────── */
+    .lang-switcher {
+      position: relative;
+      display: inline-block;
+    }
+
+    .lang-switcher-btn {
+      background: rgba(255, 255, 255, 0.45);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid var(--line);
+      color: var(--emerald);
+      padding: 9px 16px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-radius: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.3s ease;
+      font-family: var(--sans);
+    }
+
+    .lang-switcher-btn:hover {
+      background: rgba(255, 255, 255, 0.75);
+      border-color: var(--gold);
+      transform: translateY(-1px);
+    }
+
+    .lang-caret {
+      font-size: 8px;
+      transition: transform 0.3s ease;
+    }
+
+    .lang-switcher.active .lang-caret {
+      transform: rotate(180deg);
+    }
+
+    .lang-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      background: rgba(255, 250, 241, 0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(17, 19, 15, 0.1);
+      min-width: 140px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 100;
+      overflow: hidden;
+      padding: 6px 0;
+    }
+
+    .lang-switcher.active .lang-dropdown {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .lang-option {
+      padding: 10px 16px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--emerald);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: left;
+      font-family: var(--sans);
+    }
+
+    .lang-option:hover {
+      background: rgba(183, 137, 75, 0.12);
+      color: var(--gold);
+      padding-left: 20px;
+    }
+
+    html[dir="rtl"] .lang-dropdown {
+      right: auto;
+      left: 0;
+    }
+
+    html[dir="rtl"] .lang-option {
+      text-align: right;
+    }
+
+    html[dir="rtl"] .lang-option:hover {
+      padding-left: 16px;
+      padding-right: 20px;
+    }
+
+    /* ── Inline Translation Action Elements ────────────────────────────────── */
+    .luxury-editable-wrapper {
+      position: relative;
+      transition: box-shadow 0.3s ease, border-color 0.3s ease;
+      border-radius: 4px;
+    }
+
+    .luxury-editable-wrapper:hover {
+      outline: 1px dashed var(--gold);
+    }
+
+    .btn-inline-translate {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      background: rgba(23, 65, 46, 0.9);
+      border: 1px solid var(--gold);
+      color: var(--gold-2);
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 10px;
+      font-weight: bold;
+      z-index: 10;
+      opacity: 0;
+      transition: opacity 0.3s ease, transform 0.2s ease;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    .luxury-editable-wrapper:hover .btn-inline-translate {
+      opacity: 1;
+    }
+
+    .btn-inline-translate:hover {
+      transform: scale(1.1);
+      background: var(--gold);
+      color: #1c160d;
+    }
+
+    html[dir="rtl"] .btn-inline-translate {
+      right: auto;
+      left: 2px;
+    }
+
+    /* ── RTL Styling Enhancements ─────────────────────────────────────────── */
+    html[dir="rtl"] .hero-content {
+      grid-template-columns: .95fr 1.05fr;
+    }
+    
+    html[dir="rtl"] .timeline-step::before {
+      right: auto;
+      left: 0;
+    }
+    
+    html[dir="rtl"] .timeline-step::after {
+      right: auto;
+      left: -6px;
+    }
+
+    html[dir="rtl"] .timeline-step-content {
+      margin-left: 0;
+      margin-right: 48px;
+      text-align: right;
+    }
+    
+    html[dir="rtl"] .designer-signature {
+      text-align: left;
+    }
+    
+    html[dir="rtl"] .designer-quote-section {
+      text-align: left;
+    }
+    
+    html[dir="rtl"] .pricing-breakdown {
+      direction: rtl;
+    }
+    
+    html[dir="rtl"] .policy-grid {
+      direction: rtl;
+    }
   </style>
 </head>
 
@@ -1493,20 +1882,37 @@
           <span>Vietnam Safar</span>
         </a>
         <div class="nav-links">
-          <a href="#overview">Overview</a>
-          <a href="#services-overview">Bookings</a>
-          <a href="#route-map">Route Map</a>
-          <a href="#itinerary">Timeline</a>
-          <a href="#inclusions">Inclusions</a>
+          <a href="#overview">{{ "Overview" | translate(lang) }}</a>
+          <a href="#services-overview">{{ "Bookings" | translate(lang) }}</a>
+          <a href="#route-map">{{ "Route Map" | translate(lang) }}</a>
+          <a href="#itinerary">{{ "Timeline" | translate(lang) }}</a>
+          <a href="#inclusions">{{ "Inclusions" | translate(lang) }}</a>
         </div>
         <div class="nav-actions">
+          <div class="lang-switcher">
+            <button class="lang-switcher-btn" onclick="toggleLangDropdown(event)">
+              <span>🌐</span>
+              <span>
+                {% if lang == 'ar' %}العربية
+                {% elif lang == 'vi' %}Tiếng Việt
+                {% else %}English
+                {% endif %}
+              </span>
+              <span class="lang-caret">▼</span>
+            </button>
+            <div class="lang-dropdown">
+              <div class="lang-option" onclick="switchLanguage('en')">English</div>
+              <div class="lang-option" onclick="switchLanguage('ar')">العربية</div>
+              <div class="lang-option" onclick="switchLanguage('vi')">Tiếng Việt</div>
+            </div>
+          </div>
           <button id="nav-notification-btn" title="Enable Notifications">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
               <path
                 d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z" />
             </svg>
           </button>
-          <button class="btn dark" onclick="window.print()">🖨️ PDF Version</button>
+          <button class="btn dark" onclick="window.print()">🖨️ {{ "PDF Version" | translate(lang) }}</button>
         </div>
       </div>
     </div>
@@ -1594,13 +2000,12 @@
     <div class="container">
       <div class="section-head">
         <h2 data-editable="true">{{ overview_heading }}</h2>
-        <p data-editable="true">A refined booking itinerary mapping confirmed reservations and daily schedule detail.
-        </p>
+        <p data-editable="true">{{ "A refined booking itinerary mapping confirmed reservations and daily schedule detail." | translate(lang) }}</p>
       </div>
 
       <div class="two-col">
         <div class="panel">
-          <h3 data-editable="true">Welcome to Vietnam</h3>
+          <h3 data-editable="true">{{ "Welcome to Vietnam" | translate(lang) }}</h3>
           <div class="overview-body">
             {% for para in overview_paras %}
             <p data-editable="true">{{ para }}</p>
@@ -1609,9 +2014,8 @@
         </div>
 
         <div class="panel">
-          <h3 data-editable="true">Key Program Elements</h3>
-          <p data-editable="true">Every service on this program has been checked and verified for premium quality and
-            comfort.</p>
+          <h3 data-editable="true">{{ "Key Program Elements" | translate(lang) }}</h3>
+          <p data-editable="true">{{ "Every service on this program has been checked and verified for premium quality and comfort." | translate(lang) }}</p>
           <ul style="list-style-type: none; padding-left: 0;">
             {% for exp in experiences %}
             <li style="margin-bottom: 14px;">
@@ -1632,23 +2036,23 @@
   <section id="services-overview">
     <div class="container">
       <div class="section-head">
-        <h2 data-editable="true">BOOKED SERVICES SUMMARY</h2>
-        <p data-editable="true">A quick overview of all confirmed reservations for your custom travel program.</p>
+        <h2 data-editable="true">{{ "BOOKED SERVICES SUMMARY" | translate(lang) }}</h2>
+        <p data-editable="true">{{ "A quick overview of all confirmed reservations for your custom travel program." | translate(lang) }}</p>
       </div>
 
       <div class="overview-grid">
         {% if hotels %}
         <div class="overview-panel">
-          <h3 class="panel-title">🏨 Confirmed Stays</h3>
+          <h3 class="panel-title">{{ "🏨 Confirmed Stays" | translate(lang) }}</h3>
           <div class="panel-list">
             {% for hotel in hotels %}
             <div class="panel-item">
               <div class="panel-item-meta">
                 <span class="star-rating">{% for i in range(hotel.star or 5) %}★{% endfor %}</span>
-                <strong>{{ hotel.nights }} Nights</strong>
+                <strong>{{ hotel.nights }} {{ "Nights" | translate(lang) }}</strong>
               </div>
               <h4 data-editable="true">{{ hotel.name }}</h4>
-              <p class="panel-item-sub">{{ hotel.roomType }} ({{ hotel.checkInDate }} to {{ hotel.checkOutDate }})</p>
+              <p class="panel-item-sub">{{ hotel.roomType }} ({{ hotel.checkInDate }} {{ "to" | translate(lang) }} {{ hotel.checkOutDate }})</p>
             </div>
             {% endfor %}
           </div>
@@ -1657,7 +2061,7 @@
 
         {% if flights %}
         <div class="overview-panel">
-          <h3 class="panel-title">✈️ Flight Details</h3>
+          <h3 class="panel-title">{{ "✈️ Flight Details" | translate(lang) }}</h3>
           <div class="panel-list">
             {% for fl in flights %}
             <div class="panel-item">
@@ -1685,7 +2089,7 @@
         <div class="image-tile large" style="background-image: var(--img-1)">
           <div class="image-caption">
             <small>{{ (destinations[0].slug | default("Highlight") | replace("-", " ") | title) if destinations and
-              destinations|length > 0 else "Highlight" }}</small>
+              destinations|length > 0 else ("Highlight" | translate(lang)) }}</small>
             <strong>{{ (destinations[0].name | default("Vietnam Highlight")) if destinations and destinations|length > 0
               else "Vietnam Highlight" }}</strong>
           </div>
@@ -1693,7 +2097,7 @@
         <div class="image-tile" style="background-image: var(--img-2)">
           <div class="image-caption">
             <small>{{ (destinations[1].slug | default("Destination") | replace("-", " ") | title) if destinations and
-              destinations|length > 1 else "Destination" }}</small>
+              destinations|length > 1 else ("Destination" | translate(lang)) }}</small>
             <strong>{{ (destinations[1].name | default("Beautiful Stop")) if destinations and destinations|length > 1
               else "Beautiful Stop" }}</strong>
           </div>
@@ -1701,7 +2105,7 @@
         <div class="image-tile" style="background-image: var(--img-3)">
           <div class="image-caption">
             <small>{{ (destinations[2].slug | default("Experience") | replace("-", " ") | title) if destinations and
-              destinations|length > 2 else "Experience" }}</small>
+              destinations|length > 2 else ("Experience" | translate(lang)) }}</small>
             <strong>{{ (destinations[2].name | default("Local Culture")) if destinations and destinations|length > 2
               else "Local Culture" }}</strong>
           </div>
@@ -1709,7 +2113,7 @@
         <div class="image-tile" style="background-image: var(--img-4)">
           <div class="image-caption">
             <small>{{ (destinations[3].slug | default("Journey") | replace("-", " ") | title) if destinations and
-              destinations|length > 3 else "Journey" }}</small>
+              destinations|length > 3 else ("Journey" | translate(lang)) }}</small>
             <strong>{{ (destinations[3].name | default("Scenic Route")) if destinations and destinations|length > 3 else
               "Scenic Route" }}</strong>
           </div>
@@ -1722,16 +2126,22 @@
   <section id="route-map" class="no-print" style="padding: 72px 0;">
     <div class="container">
       <div class="section-head">
-        <h2>Your Journey Visualized</h2>
-        <p>An interactive map showing your curated path through Vietnam's iconic landmarks and luxury stopovers. Click
-          on a destination in the list or the map to explore highlights.</p>
+        <h2>{{ "Your Journey, Mapped" | translate(lang) }}</h2>
+        <p>{{ "An interactive map showing your curated path through Vietnam's iconic landmarks and luxury stopovers. Click on a destination in the list or the map to explore highlights." | translate(lang) }}</p>
       </div>
       <div class="map-layout">
-        <div id="map" class="map-container">
-          <div
-            style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--ivory-2); color: var(--muted); font-size: 14px;">
-            <span style="font-size: 24px; margin-bottom: 8px;">🗺️</span>
-            <span>Loading Interactive Route Map...</span>
+        <div style="position: relative; height: 100%; z-index: 1;">
+          <div id="map" class="map-container">
+            <div
+              style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--ivory-2); color: var(--muted); font-size: 14px;">
+              <span style="font-size: 24px; margin-bottom: 8px;">🗺️</span>
+              <span>{{ "Loading Interactive Route Map..." | translate(lang) }}</span>
+            </div>
+          </div>
+          <!-- Map Mode Switcher -->
+          <div class="map-mode-toggle no-print" style="position: absolute; top: 16px; right: 16px; z-index: 1000; display: flex; gap: 4px; background: rgba(17, 19, 15, 0.75); padding: 4px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
+            <button id="toggle-mode-classic" class="mode-btn active" onclick="switchMapMode('classic')">Classic</button>
+            <button id="toggle-mode-image" class="mode-btn" onclick="switchMapMode('image')">Image</button>
           </div>
         </div>
         <div class="map-sidebar" id="map-sidebar">
@@ -1745,21 +2155,21 @@
   <section id="itinerary">
     <div class="container">
       <div class="section-head">
-        <h2 data-editable="true">DAILY SCHEDULE DETAIL</h2>
-        <p data-editable="true">Your customized itinerary along with the associated confirmed travel services.</p>
+        <h2 data-editable="true">{{ "DAILY SCHEDULE DETAIL" | translate(lang) }}</h2>
+        <p data-editable="true">{{ "Your customized itinerary along with the associated confirmed travel services." | translate(lang) }}</p>
       </div>
 
       <div class="itinerary">
         {% for day in itinerary %}
         <div class="day">
           <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
-            <div class="day-label">Day {{ day.dayNumber }}</div>
+            <div class="day-label">{{ "Day" | translate(lang) }} {{ day.dayNumber }}</div>
             <div style="font-size:12px; font-weight:700; color:var(--muted)">{{ day.date }}</div>
           </div>
 
           <div style="width: 100%;">
             <span class="num">
-              {% if day.meals %} Meals: {{ day.meals | join(", ") }} {% else %} Overnight: {{ day.overnight or "TBD" }}
+              {% if day.meals %} {{ "Meals:" | translate(lang) }} {{ day.meals | join(", ") }} {% else %} {{ "Overnight:" | translate(lang) }} {{ day.overnight or "TBD" }}
               {% endif %}
             </span>
             <h3 data-editable="true">{{ day.title }}</h3>
@@ -1773,7 +2183,7 @@
             <!-- Match Booked Hotels staying tonight -->
             {% if day.booked_hotels %}
             <div class="booked-services-group">
-              <div class="service-group-title">🏨 Accommodation Stay</div>
+              <div class="service-group-title">{{ "🏨 Accommodation Stay" | translate(lang) }}</div>
               {% for hotel in day.booked_hotels %}
               <div class="service-card hotel-card" data-type="hotel" data-index="{{ hotel._index }}"
                 data-price-per-night="{{ hotel.pricePerNightUsd or 0 }}" data-nights="{{ hotel.nights or 0 }}"
@@ -1791,18 +2201,18 @@
                     <span>📍 {{ hotel.destination }}</span>
                     <span class="price-formula"
                       style="color:var(--emerald);font-weight:600;cursor:pointer;border-bottom:1px dashed var(--emerald)">
-                      💵 <span class="rooms-val">1</span> Rm × <span class="nights-val">{{ hotel.nights or 0 }}</span>
-                      Nts × {{ symbol }}<span class="price-val">{{ '{:,.0f}'.format(hotel.pricePerNightUsd or 0)
+                      💵 <span class="rooms-val">1</span> {{ "Rm" | translate(lang) }} × <span class="nights-val">{{ hotel.nights or 0 }}</span>
+                      {{ "Nts" | translate(lang) }} × {{ symbol }}<span class="price-val">{{ '{:,.0f}'.format(hotel.pricePerNightUsd or 0)
                         }}</span> = {{ symbol }}<span class="total-val">{{ '{:,.0f}'.format((hotel.pricePerNightUsd or
                         0) * (hotel.nights or 0)) }}</span>
                     </span>
                   </div>
                   <div class="service-dates">
-                    <span>Check-in: <strong>{{ hotel.checkInDate }}</strong></span>
-                    <span>Check-out: <strong>{{ hotel.checkOutDate }}</strong> ({{ hotel.nights }} Nights)</span>
+                    <span>{{ "Check-in:" | translate(lang) }} <strong>{{ hotel.checkInDate }}</strong></span>
+                    <span>{{ "Check-out:" | translate(lang) }} <strong>{{ hotel.checkOutDate }}</strong> ({{ hotel.nights }} {{ "Nights" | translate(lang) }})</span>
                   </div>
                   {% if hotel.roomType %}
-                  <div class="service-subtext">Room: <strong data-editable="true">{{ hotel.roomType }}</strong></div>
+                  <div class="service-subtext">{{ "Room:" | translate(lang) }} <strong data-editable="true">{{ hotel.roomType }}</strong></div>
                   {% endif %}
                   {% if hotel.notes %}
                   <p class="service-notes" data-editable="true">{{ hotel.notes }}</p>
@@ -1816,7 +2226,7 @@
             <!-- Match Booked Activities on this day -->
             {% if day.booked_activities %}
             <div class="booked-services-group">
-              <div class="service-group-title">🛶 Excursions & Activities</div>
+              <div class="service-group-title">{{ "🛶 Excursions & Activities" | translate(lang) }}</div>
               {% for act in day.booked_activities %}
               <div class="service-card activity-card" data-type="activity" data-index="{{ act._index }}"
                 data-price-adult="{{ act.pricePerAdultUsd or 0 }}" data-price-child="{{ act.pricePerChildUsd or 0 }}"
@@ -1832,23 +2242,23 @@
                   <div class="service-meta">
                     <span>📍 {{ act.area }}</span>
                     {% if act.durationHours %}
-                    <span>⏱️ {{ act.durationHours }} Hours</span>
+                    <span>⏱️ {{ act.durationHours }} {{ "Hours" | translate(lang) }}</span>
                     {% endif %}
                     {% if act.privateGroup %}
-                    <span class="badge-private">👥 Private Group</span>
+                    <span class="badge-private">{{ "👥 Private Group" | translate(lang) }}</span>
                     {% endif %}
                     <span class="price-formula"
                       style="color:var(--emerald);font-weight:600;cursor:pointer;border-bottom:1px dashed var(--emerald)">
-                      💵 (<span class="adults-val">{{ guests_adults or 0 }}</span> Ad × {{ symbol }}<span
+                      💵 (<span class="adults-val">{{ guests_adults or 0 }}</span> {{ "Ad" | translate(lang) }} × {{ symbol }}<span
                         class="price-adult-val">{{ '{:,.0f}'.format(act.pricePerAdultUsd or 0) }}</span>) + (<span
-                        class="children-val">{{ guests_children or 0 }}</span> Ch × {{ symbol }}<span
+                        class="children-val">{{ guests_children or 0 }}</span> {{ "Ch" | translate(lang) }} × {{ symbol }}<span
                         class="price-child-val">{{ '{:,.0f}'.format(act.pricePerChildUsd or 0) }}</span>) = {{ symbol
                       }}<span class="total-val">{{ '{:,.0f}'.format((act.pricePerAdultUsd or 0) * (guests_adults or 0) +
                         (act.pricePerChildUsd or 0) * (guests_children or 0)) }}</span>
                     </span>
                   </div>
                   {% if act.operator %}
-                  <div class="service-subtext">Operator: <strong data-editable="true">{{ act.operator }}</strong></div>
+                  <div class="service-subtext">{{ "Operator:" | translate(lang) }} <strong data-editable="true">{{ act.operator }}</strong></div>
                   {% endif %}
                   {% if act.notes %}
                   <p class="service-notes" data-editable="true">{{ act.notes }}</p>
@@ -1862,7 +2272,7 @@
             <!-- Match Booked Transfers on this day -->
             {% if day.booked_transfers %}
             <div class="booked-services-group">
-              <div class="service-group-title">🚗 Transfers & Transportation</div>
+              <div class="service-group-title">{{ "🚗 Transfers & Transportation" | translate(lang) }}</div>
               {% for tx in day.booked_transfers %}
               <div class="service-card transfer-card" data-type="transfer" data-index="{{ tx._index }}"
                 data-base-cost="{{ tx.priceUsd or 0 }}" data-tolls="0" data-overnight="0" data-surcharges="0"
@@ -1873,15 +2283,15 @@
                     <span class="service-status {{ tx.status.lower() }}">{{ tx.status }}</span>
                   </div>
                   <div class="service-meta">
-                    <span>Route: <strong>{{ tx.fromLocation }}</strong> ➔ <strong>{{ tx.toLocation }}</strong></span>
-                    <span>Vehicle: <strong data-editable="true">{{ tx.vehicleRequirement }}</strong></span>
+                    <span>{{ "Route:" | translate(lang) }} <strong>{{ tx.fromLocation }}</strong> ➔ <strong>{{ tx.toLocation }}</strong></span>
+                    <span>{{ "Vehicle:" | translate(lang) }} <strong data-editable="true">{{ tx.vehicleRequirement }}</strong></span>
                     {% if tx.seats %}
-                    <span>({{ tx.seats }} Seats)</span>
+                    <span>({{ tx.seats }} {{ "Seats" | translate(lang) }})</span>
                     {% endif %}
                     <span class="price-formula"
                       style="color:var(--emerald);font-weight:600;cursor:pointer;border-bottom:1px dashed var(--emerald)">
                       💵 Base: {{ symbol }}<span class="base-val">{{ '{:,.0f}'.format(tx.priceUsd or 0) }}</span> +
-                      Fees: {{ symbol }}<span class="fees-val">0</span> = {{ symbol }}<span class="total-val">{{
+                      {{ "Fees:" | translate(lang) }} {{ symbol }}<span class="fees-val">0</span> = {{ symbol }}<span class="total-val">{{
                         '{:,.0f}'.format(tx.priceUsd or 0) }}</span>
                     </span>
                   </div>
@@ -1897,7 +2307,7 @@
             <!-- Match Booked Flights on this day -->
             {% if day.booked_flights %}
             <div class="booked-services-group">
-              <div class="service-group-title">✈️ Flights</div>
+              <div class="service-group-title">{{ "✈️ Flights" | translate(lang) }}</div>
               {% for fl in day.booked_flights %}
               <div class="service-card flight-card" data-type="flight" data-index="{{ fl._index }}"
                 data-price-ticket="{{ fl.priceUsd or 0 }}"
@@ -1908,13 +2318,13 @@
                     <span class="service-status {{ fl.status.lower() }}">{{ fl.status }}</span>
                   </div>
                   <div class="service-meta">
-                    <span>From: <strong data-editable="true">{{ fl.fromCity }}</strong> ({{ fl.departureTime or 'TBD'
+                    <span>{{ "From:" | translate(lang) }} <strong data-editable="true">{{ fl.fromCity }}</strong> ({{ fl.departureTime or 'TBD'
                       }})</span>
-                    <span>To: <strong data-editable="true">{{ fl.toCity }}</strong> ({{ fl.arrivalTime or 'TBD'
+                    <span>{{ "To:" | translate(lang) }} <strong data-editable="true">{{ fl.toCity }}</strong> ({{ fl.arrivalTime or 'TBD'
                       }})</span>
                     <span class="price-formula"
                       style="color:var(--emerald);font-weight:600;cursor:pointer;border-bottom:1px dashed var(--emerald)">
-                      💵 <span class="passengers-val">{{ (guests_adults or 0) + (guests_children or 0) }}</span> Pax ×
+                      💵 <span class="passengers-val">{{ (guests_adults or 0) + (guests_children or 0) }}</span> {{ "Pax" | translate(lang) }} ×
                       {{ symbol }}<span class="price-ticket-val">{{ '{:,.0f}'.format(fl.priceUsd or 0) }}</span> = {{
                       symbol }}<span class="total-val">{{ '{:,.0f}'.format((fl.priceUsd or 0) * ((guests_adults or 0) +
                         (guests_children or 0))) }}</span>
@@ -1932,22 +2342,22 @@
             <!-- Match Booked Guides on this day -->
             {% if day.booked_guides %}
             <div class="booked-services-group">
-              <div class="service-group-title">🗣️ Local Guide Services</div>
+              <div class="service-group-title">{{ "🗣️ Local Guide Services" | translate(lang) }}</div>
               {% for gd in day.booked_guides %}
               <div class="service-card guide-card" data-type="guide" data-index="{{ gd._index }}"
                 data-price-day="{{ gd.pricePerDayUsd or 0 }}" data-days="{{ gd.days or 0 }}">
                 <div class="service-details">
                   <div class="service-header">
-                    <h4 data-editable="true">Guide: {{ gd.guideName or gd.language ~ ' Speaking Guide' }}</h4>
+                    <h4 data-editable="true">Guide: {{ gd.guideName or (gd.language ~ ' ' ~ ('Speaking Guide' | translate(lang))) }}</h4>
                     <span class="service-status {{ gd.status.lower() }}">{{ gd.status }}</span>
                   </div>
                   <div class="service-meta">
-                    <span>Language: <strong>{{ gd.language }}</strong></span>
-                    <span>Destination: <strong>{{ gd.destination }}</strong></span>
-                    <span>Active duration: <strong>{{ gd.days }} Days</strong></span>
+                    <span>{{ "Language:" | translate(lang) }} <strong>{{ gd.language }}</strong></span>
+                    <span>{{ "Destination:" | translate(lang) }} <strong>{{ gd.destination }}</strong></span>
+                    <span>{{ "Active duration:" | translate(lang) }} <strong>{{ gd.days }} {{ "Days" | translate(lang) }}</strong></span>
                     <span class="price-formula"
                       style="color:var(--emerald);font-weight:600;cursor:pointer;border-bottom:1px dashed var(--emerald)">
-                      💵 <span class="days-val">{{ gd.days or 0 }}</span> Days × {{ symbol }}<span
+                      💵 <span class="days-val">{{ gd.days or 0 }}</span> {{ "Days" | translate(lang) }} × {{ symbol }}<span
                         class="price-day-val">{{ '{:,.0f}'.format(gd.pricePerDayUsd or 0) }}</span> = {{ symbol }}<span
                         class="total-val">{{ '{:,.0f}'.format((gd.pricePerDayUsd or 0) * (gd.days or 0)) }}</span>
                     </span>
@@ -1964,7 +2374,7 @@
           </div>
 
           <div class="day-meta">
-            <div>{{ day.overnight or "Leisure Day" }}</div>
+            <div>{{ day.overnight or ("Leisure Day" | translate(lang)) }}</div>
             {% if day.meals %}
             <div class="subtle" style="margin-top: 6px;">☕ {{ day.meals | join(" | ") }}</div>
             {% endif %}
@@ -1990,13 +2400,23 @@
             <small style="color:rgba(255,255,255,.55);font-size:11px;display:block;margin-top:4px">{{ opt.optionName
               }}</small>
             {% endif %}
+            {% if opt.is_total %}
+            <strong data-editable="true" style="font-size:28px" class="price-per-person-display">{{
+              opt.totalPrice.displayText or ('{:,.0f}'.format(opt.totalPrice.amount) ~ ' ' ~
+              opt.totalPrice.currency) }}</strong>
+            <small>{{ "total package" | translate(lang) }}</small><br>
+            <span style="font-size:13px;opacity:.8">{{ "Per person:" | translate(lang) }} <span class="total-price-display">{{
+                opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~ opt.pricePerPerson.currency)
+                }}</span></span>
+            {% else %}
             <strong data-editable="true" style="font-size:28px" class="price-per-person-display">{{
               opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~
               opt.pricePerPerson.currency) }}</strong>
-            <small>per person</small><br>
-            <span style="font-size:13px;opacity:.8">Total: <span class="total-price-display">{{
+            <small>{{ "per person" | translate(lang) }}</small><br>
+            <span style="font-size:13px;opacity:.8">{{ "Total:" | translate(lang) }} <span class="total-price-display">{{
                 opt.totalPrice.displayText or ('{:,.0f}'.format(opt.totalPrice.amount) ~ ' ' ~ opt.totalPrice.currency)
                 }}</span></span>
+            {% endif %}
             {% if opt.isConfirmedMainOption %}
             <div style="margin-top:12px;font-size:10px;letter-spacing:.14em;color:#d8bd85;font-weight:800">✓ CONFIRMED
               MAIN OPTION</div>
@@ -2014,7 +2434,7 @@
     <div class="container">
       <div class="two-col">
         <div class="panel">
-          <h3 data-editable="true">What is Included</h3>
+          <h3 data-editable="true">{{ "What is Included" | translate(lang) }}</h3>
           <ul>
             {% for inc in inclusions %}
             <li data-editable="true">{{ inc }}</li>
@@ -2022,7 +2442,7 @@
           </ul>
         </div>
         <div class="panel">
-          <h3 data-editable="true">What is Excluded</h3>
+          <h3 data-editable="true">{{ "What is Excluded" | translate(lang) }}</h3>
           <ul>
             {% for exc in exclusions %}
             <li data-editable="true">{{ exc }}</li>
@@ -2038,7 +2458,7 @@
   <section id="notes" style="padding-top:0">
     <div class="container">
       <div class="panel">
-        <h3 data-editable="true">Important Notes & Arrangements</h3>
+        <h3 data-editable="true">{{ "Important Notes & Arrangements" | translate(lang) }}</h3>
         <ul>
           {% for note in notes %}
           <li data-editable="true">{{ note }}</li>
@@ -2054,19 +2474,18 @@
     <div class="container">
       <div class="cta">
         <div>
-          <h2 data-editable="true">Confirm and Prepare for Takeoff</h2>
-          <p data-editable="true">Your booking is fully secured. Please review the details above and let your concierge
-            know if any local timing needs adjusting before arrival.</p>
+          <h2 data-editable="true">{{ "Confirm and Prepare for Takeoff" | translate(lang) }}</h2>
+          <p data-editable="true">{{ "Your booking is fully secured. Please review the details above and let your concierge know if any local timing needs adjusting before arrival." | translate(lang) }}</p>
         </div>
 
         <div class="contact">
-          <label>Vietnam Concierge 24/7</label>
+          <label>{{ "Vietnam Concierge 24/7" | translate(lang) }}</label>
           <div data-editable="true">{{ contact }}</div>
 
-          <label>Email Support</label>
+          <label>{{ "Email Support" | translate(lang) }}</label>
           <div data-editable="true"><a href="mailto:{{ seller_email }}">{{ seller_email }}</a></div>
 
-          <label>Website</label>
+          <label>{{ "Website" | translate(lang) }}</label>
           <div data-editable="true"><a href="https://{{ contact_web }}" target="_blank">{{ contact_web }}</a></div>
         </div>
       </div>
@@ -2363,14 +2782,184 @@
   </div>
 
   <!-- ── Scripts ── -->
+  <!-- Luxury Loading Overlay -->
+  <div id="luxury-loading-overlay" class="no-print">
+    <div class="loading-card">
+      <div class="luxury-spinner">
+        <div class="ring"></div>
+        <div class="active-glow"></div>
+      </div>
+      <h3>Translating Journey...</h3>
+      <p>Crafting a bespoke luxury narrative in <span id="loading-lang-name">English</span></p>
+      <button class="btn-cancel" onclick="cancelTranslation()">CANCEL</button>
+    </div>
+  </div>
+
+  <script id="translation-status" type="application/json">
+    {{ translation_status | tojson | safe }}
+  </script>
+
   <script class="no-print">
     const ITINERARY_ID = "{{ itinerary_id }}";
     const CURRENCY_SYMBOL = "{{ 'đ' if currency == 'VND' else ('$' if currency == 'USD' else currency ~ ' ') }}";
+    const CURRENT_LANG = "{{ lang or 'en' }}";
 
+    // Sync language dropdown with URL parameters
+    (function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlLang = urlParams.get('lang') || urlParams.get('language');
+      if (urlLang && urlLang !== CURRENT_LANG) {
+        document.addEventListener('DOMContentLoaded', () => {
+          const activeLangText = document.querySelector('.lang-switcher-btn span:nth-child(2)');
+          if (activeLangText) {
+            if (urlLang === 'ar') activeLangText.innerText = 'العربية';
+            else if (urlLang === 'vi') activeLangText.innerText = 'Tiếng Việt';
+            else if (urlLang === 'en') activeLangText.innerText = 'English';
+          }
+        });
+      }
+    })();
+
+    let activeTranslationController = null;
+
+    function switchLanguage(newLang) {
+      if (newLang === CURRENT_LANG) return;
+      
+      const url = new URL(window.location.href);
+      url.searchParams.set('lang', newLang);
+
+      // Check if language already translated
+      let status = null;
+      try {
+        status = JSON.parse(document.getElementById('translation-status').textContent);
+      } catch (e) {
+        console.error("Failed to parse translation status:", e);
+      }
+
+      if (status && status.available_langs && status.available_langs.includes(newLang)) {
+        window.location.href = url.toString();
+        return;
+      }
+      
+      // Show luxury loading overlay
+      const overlay = document.getElementById('luxury-loading-overlay');
+      const langSpan = document.getElementById('loading-lang-name');
+      if (overlay) {
+        const langNames = { 'en': 'English', 'ar': 'Arabic (العربية)', 'vi': 'Tiếng Việt' };
+        if (langSpan) langSpan.innerText = langNames[newLang] || newLang.toUpperCase();
+        overlay.classList.add('active');
+      }
+      
+      if (activeTranslationController) {
+        activeTranslationController.abort();
+      }
+      activeTranslationController = new AbortController();
+      
+      const apiEndpoint = `/api/v1/itineraries/${ITINERARY_ID}/translate?lang=${newLang}`;
+      
+      fetch(apiEndpoint, {
+        method: 'POST',
+        signal: activeTranslationController.signal
+      })
+      .then(res => {
+        if (!res.ok) throw new Error('Translation failed');
+        return res.json();
+      })
+      .then(data => {
+        window.location.href = url.toString();
+      })
+      .catch(err => {
+        if (err.name === 'AbortError') {
+          console.log('Translation aborted by user');
+          return;
+        }
+        console.error(err);
+        alert('Translation took too long or encountered an error. Redirecting anyway...');
+        window.location.href = url.toString();
+      });
+    }
+
+    function cancelTranslation() {
+      if (activeTranslationController) {
+        activeTranslationController.abort();
+        activeTranslationController = null;
+      }
+      const overlay = document.getElementById('luxury-loading-overlay');
+      if (overlay) {
+        overlay.classList.remove('active');
+      }
+    }
+
+    function toggleLangDropdown(event) {
+      event.stopPropagation();
+      const switcher = document.querySelector('.lang-switcher');
+      switcher.classList.toggle('active');
+    }
+
+    document.addEventListener('click', () => {
+      const switcher = document.querySelector('.lang-switcher');
+      if (switcher) {
+        switcher.classList.remove('active');
+      }
+    });
+
+    async function translateBlock(element) {
+      const sourceText = element.innerText.trim();
+      if (!sourceText) return;
+      
+      const btn = element.parentNode.querySelector('.btn-inline-translate');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerText = '⏳';
+      }
+      
+      try {
+        const res = await fetch('/api/v1/translate-block', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: sourceText,
+            target_lang: CURRENT_LANG
+          })
+        });
+        const data = await res.json();
+        if (data.translated_text) {
+          element.innerText = data.translated_text;
+        } else {
+          alert('Translation failed: ' + (data.detail || 'Unknown error'));
+        }
+      } catch (e) {
+        alert('Error: ' + e.message);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerText = 'A⇄文';
+        }
+      }
+    }
 
     // Setup editable attributes
     document.querySelectorAll('[data-editable]').forEach(el => {
       el.contentEditable = 'true';
+      
+      // Wrap it and add translate button if lang is not English
+      if (CURRENT_LANG !== 'en') {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'luxury-editable-wrapper';
+        el.parentNode.insertBefore(wrapper, el);
+        wrapper.appendChild(el);
+        
+        const btn = document.createElement('button');
+        btn.className = 'btn-inline-translate no-print';
+        btn.type = 'button';
+        btn.innerText = 'A⇄文';
+        btn.title = 'Translate this block';
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          translateBlock(el);
+        };
+        wrapper.appendChild(btn);
+      }
     });
 
     // Custom background image change logic
@@ -2714,7 +3303,7 @@
 
       const pricingHeading = document.querySelector('#quotation h2');
       if (pricingHeading) {
-        pricingHeading.textContent = `B2B Net Price: ${CURRENCY_SYMBOL}${formatNumber(grandTotal)} total`;
+        pricingHeading.textContent = `Your Journey Investment: ${CURRENCY_SYMBOL}${formatNumber(grandTotal)}`;
       }
     }
 
@@ -2734,10 +3323,44 @@
       document.querySelectorAll('.block-delete-btn').forEach(el => el.remove());
       document.querySelectorAll('.removable-block').forEach(el => el.classList.remove('removable-block'));
 
+      // Clean up translation elements for saving
+      const transBtns = Array.from(document.querySelectorAll('.btn-inline-translate'));
+      transBtns.forEach(el => el.remove());
+      
+      const wrappers = Array.from(document.querySelectorAll('.luxury-editable-wrapper'));
+      wrappers.forEach(el => {
+        const parent = el.parentNode;
+        while (el.firstChild) {
+          parent.insertBefore(el.firstChild, el);
+        }
+        parent.removeChild(el);
+      });
+
       const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
 
+      // Restore DOM state for editing
       bar.style.display = '';
-      document.querySelectorAll('[data-editable]').forEach(el => { el.contentEditable = 'true'; });
+      document.querySelectorAll('[data-editable]').forEach(el => { 
+        el.contentEditable = 'true'; 
+        // Re-wrap and add translate button
+        if (CURRENT_LANG !== 'en') {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'luxury-editable-wrapper';
+          el.parentNode.insertBefore(wrapper, el);
+          wrapper.appendChild(el);
+          
+          const btnTranslate = document.createElement('button');
+          btnTranslate.className = 'btn-inline-translate no-print';
+          btnTranslate.type = 'button';
+          btnTranslate.innerText = 'A⇄文';
+          btnTranslate.title = 'Translate this block';
+          btnTranslate.onclick = (e) => {
+            e.stopPropagation();
+            translateBlock(el);
+          };
+          wrapper.appendChild(btnTranslate);
+        }
+      });
       initImageChangers();
       initRemovableBlocks();
 
@@ -2746,7 +3369,7 @@
       status.textContent = 'Committing changes...';
 
       try {
-        const res = await fetch(`/itineraries/${ITINERARY_ID}/publish`, {
+        const res = await fetch(`/itineraries/${ITINERARY_ID}/publish?lang=${CURRENT_LANG}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ html })
@@ -2785,10 +3408,44 @@
       document.querySelectorAll('.block-delete-btn').forEach(el => el.remove());
       document.querySelectorAll('.removable-block').forEach(el => el.classList.remove('removable-block'));
 
+      // Clean up translation elements for saving
+      const transBtns = Array.from(document.querySelectorAll('.btn-inline-translate'));
+      transBtns.forEach(el => el.remove());
+      
+      const wrappers = Array.from(document.querySelectorAll('.luxury-editable-wrapper'));
+      wrappers.forEach(el => {
+        const parent = el.parentNode;
+        while (el.firstChild) {
+          parent.insertBefore(el.firstChild, el);
+        }
+        parent.removeChild(el);
+      });
+
       const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
 
+      // Restore DOM state for editing
       bar.style.display = '';
-      document.querySelectorAll('[data-editable]').forEach(el => { el.contentEditable = 'true'; });
+      document.querySelectorAll('[data-editable]').forEach(el => { 
+        el.contentEditable = 'true'; 
+        // Re-wrap and add translate button
+        if (CURRENT_LANG !== 'en') {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'luxury-editable-wrapper';
+          el.parentNode.insertBefore(wrapper, el);
+          wrapper.appendChild(el);
+          
+          const btnTranslate = document.createElement('button');
+          btnTranslate.className = 'btn-inline-translate no-print';
+          btnTranslate.type = 'button';
+          btnTranslate.innerText = 'A⇄文';
+          btnTranslate.title = 'Translate this block';
+          btnTranslate.onclick = (e) => {
+            e.stopPropagation();
+            translateBlock(el);
+          };
+          wrapper.appendChild(btnTranslate);
+        }
+      });
       initImageChangers();
       initRemovableBlocks();
 
@@ -2798,7 +3455,7 @@
       status.textContent = 'Submitting approval...';
 
       try {
-        const res = await fetch(`/itineraries/${ITINERARY_ID}/approve`, {
+        const res = await fetch(`/itineraries/${ITINERARY_ID}/approve?lang=${CURRENT_LANG}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ html, token })
@@ -2818,6 +3475,15 @@
       }
       btn.disabled = false;
       publishBtn.disabled = false;
+    }
+  </script>
+
+  <script id="destination-images" type="application/json">
+    {
+      {% for dest in destinations %}
+        "{{ dest.slug }}": "{{ dest.image_url or (dest.images[0] if dest.images else '/assets/vietnam-safar-logo.png') }}"
+        {% if not loop.last %},{% endif %}
+      {% endfor %}
     }
   </script>
 
@@ -2901,6 +3567,64 @@
       if (!dataEl) return;
       const rawDays = JSON.parse(dataEl.textContent);
 
+      const destImagesEl = document.getElementById('destination-images');
+      const destImages = destImagesEl ? JSON.parse(destImagesEl.textContent) : {};
+
+      function resolveSlugLocally(location) {
+        if (!location) return null;
+        const normalized = location.toLowerCase().trim();
+        const keywordMap = {
+          "hà nội": "ha-noi", "ha noi": "ha-noi", "hanoi": "ha-noi", "hanoï": "ha-noi",
+          "hồ chí minh": "ho-chi-minh", "ho chi minh": "ho-chi-minh", "hcm": "ho-chi-minh", "saigon": "ho-chi-minh", "sài gòn": "ho-chi-minh", "sai gon": "ho-chi-minh", "tphcm": "ho-chi-minh",
+          "đà nẵng": "da-nang", "da nang": "da-nang", "danang": "da-nang",
+          "quảng nam": "quang-nam", "quang nam": "quang-nam", "hội an": "quang-nam", "hoi an": "quang-nam", "hoian": "quang-nam",
+          "quảng ninh": "quang-ninh", "quang ninh": "quang-ninh", "hạ long": "quang-ninh", "ha long": "quang-ninh", "halong": "quang-ninh", "vịnh hạ long": "quang-ninh", "vinh ha long": "quang-ninh", "cat ba": "quang-ninh", "cát bà": "quang-ninh",
+          "lào cai": "lao-cai", "lao cai": "lao-cai", "laocai": "lao-cai", "sapa": "lao-cai", "sa pa": "lao-cai", "bắc hà": "lao-cai", "bac ha": "lao-cai",
+          "khánh hoà": "khanh-hoa", "khanh hoa": "khanh-hoa", "nha trang": "khanh-hoa", "nhatrang": "khanh-hoa",
+          "lâm đồng": "lam-dong", "lam dong": "lam-dong", "đà lạt": "lam-dong", "da lat": "lam-dong", "dalat": "lam-dong",
+          "thừa thiên huế": "thua-thien-hue", "thua thien hue": "thua-thien-hue", "huế": "thua-thien-hue", "hue": "thua-thien-hue", "lăng cô": "thua-thien-hue", "lang co": "thua-thien-hue",
+          "kiên giang": "kien-giang", "kien giang": "kien-giang", "phú quốc": "kien-giang", "phu quoc": "kien-giang", "phuquoc": "kien-giang",
+          "bình thuận": "binh-thuan", "binh thuan": "binh-thuan", "mũi né": "binh-thuan", "mui ne": "binh-thuan", "phan thiết": "binh-thuan", "phan thiet": "binh-thuan",
+          "cần thơ": "can-tho", "can tho": "can-tho", "cantho": "can-tho", "bến ninh kiều": "can-tho", "ben ninh kieu": "can-tho",
+          "mekong": "mekong", "đồng bằng sông cửu long": "mekong", "dong bang song cuu long": "mekong", "miền tây": "mekong", "mien tay": "mekong", "tây nam bộ": "mekong", "tay nam bo": "mekong",
+          "hà giang": "ha-giang", "ha giang": "ha-giang", "đồng văn": "ha-giang", "dong van": "ha-giang", "mèo vạc": "ha-giang", "meo vac": "ha-giang",
+          "ninh bình": "ninh-binh", "ninh binh": "ninh-binh", "tràng an": "ninh-binh", "trang an": "ninh-binh", "tam cốc": "ninh-binh", "tam coc": "ninh-binh", "bích động": "ninh-binh", "bich dong": "ninh-binh",
+          "nghệ an": "nghe-an", "nghe an": "nghe-an", "cửa lò": "nghe-an", "cua lo": "nghe-an",
+          "quảng bình": "quang-binh", "quang binh": "quang-binh", "phong nha": "quang-binh", "ke bang": "quang-binh",
+          "hải phòng": "hai-phong", "hai phong": "hai-phong", "haiphong": "hai-phong",
+          "đắk lắk": "dak-lak", "dak lak": "dak-lak", "daklak": "dak-lak", "buôn ma thuột": "dak-lak", "buon ma thuot": "dak-lak", "bmt": "dak-lak",
+          "gia lai": "gia-lai", "pleiku": "gia-lai",
+          "kon tum": "kon-tum", "kontum": "kon-tum",
+          "bà rịa": "ba-ria-vung-tau", "ba ria": "ba-ria-vung-tau", "vũng tàu": "ba-ria-vung-tau", "vung tau": "ba-ria-vung-tau", "vungtau": "ba-ria-vung-tau",
+          "thanh hoá": "thanh-hoa", "thanh hoa": "thanh-hoa", "sầm sơn": "thanh-hoa", "sam son": "thanh-hoa",
+          "phú yên": "phu-yen", "phu yen": "phu-yen", "tuy hoà": "phu-yen", "tuy hoa": "phu-yen",
+          "bình định": "binh-dinh", "binh dinh": "binh-dinh", "quy nhơn": "binh-dinh", "quy nhon": "binh-dinh", "quynhon": "binh-dinh",
+          "điện biên": "dien-bien", "dien bien": "dien-bien", "điện biên phủ": "dien-bien",
+          "sơn la": "son-la", "son la": "son-la", "mộc châu": "son-la", "moc chau": "son-la",
+          "lai châu": "lai-chau", "lai java": "lai-chau",
+          "yên bái": "yen-bai", "yen bai": "yen-bai", "mù cang chải": "yen-bai", "mu cang chai": "yen-bai",
+          "hoà bình": "hoa-binh", "hoa binh": "hoa-binh",
+          "lạng sơn": "lang-son", "lang son": "lang-son",
+          "đồng nai": "dong-nai", "dong nai": "dong-nai",
+          "bình dương": "binh-duong", "binh duong": "binh-duong",
+          "tiền giang": "tien-giang", "tien giang": "tien-giang", "mỹ tho": "tien-giang", "my tho": "tien-giang",
+          "đồng tháp": "dong-thap", "dong thap": "dong-thap", "sa đéc": "dong-thap", "sa dec": "dong-thap",
+          "vĩnh long": "vinh-long", "vinh long": "vinh-long",
+          "an giang": "an-giang", "châu đốc": "an-giang", "chau doc": "an-giang", "long xuyên": "an-giang", "long xuyen": "an-giang",
+          "cao bằng": "cao-bang", "cao bang": "cao-bang", "bản giốc": "cao-bang", "ban gioc": "cao-bang"
+        };
+        if (keywordMap[normalized]) return keywordMap[normalized];
+        let bestMatch = null;
+        let bestLen = 0;
+        for (const [keyword, slug] of Object.entries(keywordMap)) {
+          if (normalized.includes(keyword) && keyword.length > bestLen) {
+            bestMatch = slug;
+            bestLen = keyword.length;
+          }
+        }
+        return bestMatch;
+      }
+
       const daysData = rawDays.map(day => {
         let dest = "";
         if (Array.isArray(day.destinations) && day.destinations.length > 0) {
@@ -2938,9 +3662,15 @@
 
         const last = mapDestinations[mapDestinations.length - 1];
         if (!last || last.coords[0] !== coords[0] || last.coords[1] !== coords[1]) {
+          const destName = day.destination.split(/->|-|\|/)[0].trim();
+          const slug = resolveSlugLocally(destName);
+          const imgUrl = (slug && destImages[slug]) ? destImages[slug] : '/assets/vietnam-safar-logo.png';
+
           mapDestinations.push({
-            name: day.destination.split(/->|-|\|/)[0].trim(),
+            id: `dest-${mapDestinations.length}`,
+            name: destName,
             coords: coords,
+            img: imgUrl,
             days: [day.dayNumber],
             titles: [day.title]
           });
@@ -2975,54 +3705,112 @@
       const markers = [];
       const polylines = [];
 
-      mapDestinations.forEach((dest, idx) => {
-        const dayRangeStr = dest.days.length > 1
-          ? `Days ${dest.days[0]}-${dest.days[dest.days.length - 1]}`
-          : `Day ${dest.days[0]}`;
+      const shapePath = "M30,22 L70,22 C84,22 93,32 91,50 C89,68 82,78 68,78 L32,78 C18,78 9,68 9,50 C9,32 16,22 30,22 Z";
+      let mapMode = 'classic'; // Default mode is classic
 
-        const html = `
-          <div class="custom-marker" id="marker-wrapper-${idx}">
-            <div class="marker-pulse"></div>
-            <div class="marker-core">${idx + 1}</div>
-          </div>
-        `;
+      function drawMarkers() {
+        // Clear existing markers
+        markers.forEach(m => map.removeLayer(m));
+        markers.length = 0;
 
-        const customIcon = L.divIcon({
-          html: html,
-          className: '',
-          iconSize: [28, 28],
-          iconAnchor: [14, 14]
+        mapDestinations.forEach((dest, idx) => {
+          const dayRangeStr = dest.days.length > 1
+            ? `Days ${dest.days[0]}-${dest.days[dest.days.length - 1]}`
+            : `Day ${dest.days[0]}`;
+
+          let html = '';
+          let iconSize = [];
+          let iconAnchor = [];
+          let popupOffset = [];
+
+          if (mapMode === 'image') {
+            const patternId = `img-pattern-${dest.id}-${idx}`;
+            html = `
+              <div class="custom-irregular-marker" id="marker-wrapper-${idx}">
+                <svg viewBox="0 0 100 100" class="marker-svg-container" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <pattern id="${patternId}" x="0" y="0" width="1" height="1" patternContentUnits="objectBoundingBox">
+                      <image href="${dest.img}" x="0" y="0" width="1" height="1" preserveAspectRatio="xMidYMid slice" />
+                    </pattern>
+                  </defs>
+                  <path d="${shapePath}" class="marker-path-radar" />
+                  <path d="${shapePath}" fill="url(#${patternId})" class="marker-path" />
+                </svg>
+              </div>
+            `;
+            iconSize = [80, 80];
+            iconAnchor = [40, 40];
+            popupOffset = [0, -25];
+          } else {
+            html = `
+              <div class="custom-marker" id="marker-wrapper-${idx}">
+                <div class="marker-pulse"></div>
+                <div class="marker-core">${idx + 1}</div>
+              </div>
+            `;
+            iconSize = [28, 28];
+            iconAnchor = [14, 14];
+            popupOffset = [0, -10];
+          }
+
+          const customIcon = L.divIcon({
+            html: html,
+            className: '',
+            iconSize: iconSize,
+            iconAnchor: iconAnchor
+          });
+
+          const popupContent = `
+            <div class="map-popup">
+              <h4>${dest.name}</h4>
+              <strong style="color:var(--gold); font-size: 11px;">${dayRangeStr.toUpperCase()}</strong>
+              <p style="margin: 6px 0 0; font-size:12px; color:var(--muted);">${dest.titles[0]}</p>
+            </div>
+          `;
+
+          const marker = L.marker(dest.coords, { icon: customIcon })
+            .addTo(map)
+            .bindPopup(popupContent, { offset: popupOffset });
+
+          markers.push(marker);
+
+          // Setup card reference if not built yet
+          if (!dest.cardEl) {
+            const card = document.createElement('div');
+            card.className = `sidebar-card ${idx === 0 ? 'active' : ''}`;
+            card.innerHTML = `
+              <span class="days-badge">${dayRangeStr}</span>
+              <h4>${idx + 1}. ${dest.name}</h4>
+              <p>${dest.titles[0]}</p>
+            `;
+
+            card.addEventListener('click', () => {
+              selectDestination(idx);
+            });
+
+            sidebarContainer.appendChild(card);
+            dest.cardEl = card;
+          }
         });
+      }
 
-        const popupContent = `
-          <div class="map-popup">
-            <h4>${dest.name}</h4>
-            <strong style="color:var(--gold); font-size: 11px;">${dayRangeStr.toUpperCase()}</strong>
-            <p style="margin: 6px 0 0; font-size:12px; color:var(--muted);">${dest.titles[0]}</p>
-          </div>
-        `;
+      // Expose switchMapMode globally
+      window.switchMapMode = function(mode) {
+        if (mode === mapMode) return;
+        mapMode = mode;
 
-        const marker = L.marker(dest.coords, { icon: customIcon })
-          .addTo(map)
-          .bindPopup(popupContent, { offset: [0, -10] });
+        document.querySelectorAll('.map-mode-toggle .mode-btn').forEach(btn => btn.classList.remove('active'));
+        if (mode === 'classic') {
+          document.getElementById('toggle-mode-classic').classList.add('active');
+        } else {
+          document.getElementById('toggle-mode-image').classList.add('active');
+        }
 
-        markers.push(marker);
+        drawMarkers();
+      };
 
-        const card = document.createElement('div');
-        card.className = `sidebar-card ${idx === 0 ? 'active' : ''}`;
-        card.innerHTML = `
-          <span class="days-badge">${dayRangeStr}</span>
-          <h4>${idx + 1}. ${dest.name}</h4>
-          <p>${dest.titles[0]}</p>
-        `;
-
-        card.addEventListener('click', () => {
-          selectDestination(idx);
-        });
-
-        sidebarContainer.appendChild(card);
-        dest.cardEl = card;
-      });
+      // Initial draw
+      drawMarkers();
 
       for (let i = 0; i < coordPoints.length - 1; i++) {
         const p1 = coordPoints[i];
@@ -3063,7 +3851,7 @@
         dest.cardEl.classList.add('active');
         dest.cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-        document.querySelectorAll('.custom-marker').forEach(m => m.classList.remove('active'));
+        document.querySelectorAll('.custom-marker, .custom-irregular-marker').forEach(m => m.classList.remove('active'));
         const activeMarkerEl = document.getElementById(`marker-wrapper-${index}`);
         if (activeMarkerEl) {
           activeMarkerEl.classList.add('active');

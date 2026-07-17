@@ -45,6 +45,503 @@ app.mount("/assets", StaticFiles(directory="assets"), name="assets")
 # Jinja2 templates
 templates = Jinja2Templates(directory="templates")
 
+# ── Translation System ────────────────────────────────────────────────────────
+STATIC_DICTIONARY = {
+    "Timeline": {
+        "vi": "Lịch Trình Chi Tiết",
+        "ar": "الجدول الزمني"
+    },
+    "Vietnam Safar — B2B Travel Proposal": {
+        "vi": "Vietnam Safar — Đề Xuất Hành Trình B2B",
+        "ar": "فيتنام سافار — مقترح السفر B2B"
+    },
+    "Journey Specifications": {
+        "vi": "Thông Số Hành Trình",
+        "ar": "مواصفات الرحلة"
+    },
+    "Core parameters of this B2B travel proposal.": {
+        "vi": "Các thông số cơ bản của đề xuất hành trình B2B này.",
+        "ar": "المعايير الأساسية لمقترح السفر B2B هذا."
+    },
+    "Market & Nationality": {
+        "vi": "Thị Trường & Quốc Tịch",
+        "ar": "السوق والجنسية"
+    },
+    "Guest Profile": {
+        "vi": "Thông Chi Tiết Thượng Khách",
+        "ar": "ملف الضيوف"
+    },
+    "Hotel Standard": {
+        "vi": "Tiêu Chuẩn Khách Sạn",
+        "ar": "فئة Phân Hạng Khách Sạn"
+    },
+    "Meal Preference": {
+        "vi": "Tùy Chọn Bữa Ăn",
+        "ar": "تفضيلات الوجبات"
+    },
+    "Tour Type": {
+        "vi": "Loại Hình Trải Nghiệm",
+        "ar": "نوع الجولة"
+    },
+    "Route Sequence": {
+        "vi": "Tuyến Đường Hành Trình",
+        "ar": "تسلسل المسار"
+    },
+    "Section 1 — Journey at a Glance": {
+        "vi": "Phần 1 — Khái Quát Hành Trình",
+        "ar": "القسم 1 — لمحة سريعة عن الرحلة"
+    },
+    "Section 2 — Journey Overview": {
+        "vi": "Phần 2 — Tổng Quan Kỳ Nghỉ",
+        "ar": "القسم 2 — نظرة عامة على الرحلة"
+    },
+    "Section 3 — Your Journey, Mapped": {
+        "vi": "Phần 3 — Hành Trình Trên Bản Đồ",
+        "ar": "القسم 3 — مسار رحلتك على الخريطة"
+    },
+    "Section 6 — Selected Hotel Plan": {
+        "vi": "Phần 6 — Kế Hoạch Khách Sạn",
+        "ar": "القسم 6 — خطة الفنادق المختارة"
+    },
+    "Service Program": {
+        "vi": "Chương Trình Trải Nghiệm",
+        "ar": "برنامج الخدمة"
+    },
+    "B2B Package Pricing": {
+        "vi": "Giá Trực Tiếp B2B",
+        "ar": "أسعار باقة B2B"
+    },
+    "Package Inclusions & Exclusions": {
+        "vi": "Danh Mục Dịch Vụ Bao Gồm & Loại Trừ",
+        "ar": "الخدمات المشمولة والمستثناة từ Bảo B2B"
+    },
+    "Destination Gallery": {
+        "vi": "Bộ Sưu Tập Hình Ảnh",
+        "ar": "معرض الصور"
+    },
+    "Booking Terms": {
+        "vi": "Điều Khoản Đặt Chỗ",
+        "ar": "شروط الحجز"
+    },
+    "Finalization Checklist": {
+        "vi": "Thông Tin Xác Nhận",
+        "ar": "قائمة التحقق النهائية"
+    },
+    "Best for": {
+        "vi": "Thành Viên",
+        "ar": "مناسب لـ"
+    },
+    "Travel pace": {
+        "vi": "Nhịp Độ",
+        "ar": "وتيرة السفر"
+    },
+    "Service": {
+        "vi": "Dịch Vụ",
+        "ar": "الخدمة"
+    },
+    "B2B Partners": {
+        "vi": "Đối Tác B2B",
+        "ar": "شركاء B2B"
+    },
+    "Relaxed": {
+        "vi": "Thư Thái",
+        "ar": "مريح"
+    },
+    "Private": {
+        "vi": "Riêng Tư",
+        "ar": "خاص"
+    },
+    "Private Services": {
+        "vi": "Dịch Vụ Riêng Tư",
+        "ar": "خدمات خاصة"
+    },
+    "What is Included": {
+        "vi": "Dịch Vụ Bao Gồm",
+        "ar": "ما يشمله البرنامج"
+    },
+    "Detailed list of inclusions and exclusions for this proposal.": {
+        "vi": "Danh sách chi tiết các dịch vụ bao gồm và không bao gồm của đề xuất này.",
+        "ar": "قائمة مفصلة بالخدمات المشمولة والمستثناة من هذا المقترح."
+    },
+    "Halal & Prayer Coordination": {
+        "vi": "Điều Phối Halal & Giờ Cầu Nguyện",
+        "ar": "تنسيق الحلال والصلاة"
+    },
+    "This document is a confidential B2B quotation prepared exclusively for": {
+        "vi": "Tài liệu này là báo giá B2B bảo mật được chuẩn bị riêng cho",
+        "ar": "هذا مستند عبارة عن عرض أسعار B2B سري تم إعداده خصيصًا لـ"
+    },
+    "Confidential B2B": {
+        "vi": "Báo Giá B2B Bảo Mật",
+        "ar": "عرض أسعار B2B سري"
+    },
+    "Confidential B2B Proposal": {
+        "vi": "Đề Xuất Báo Giá B2B Bảo Mật",
+        "ar": "مقترح B2B سري"
+    },
+    "Vietnam Safar can assist with halal-friendly meal planning where available, no-pork meal notes, seafood or vegetarian alternatives where halal-certified restaurants are limited, and flexible prayer stops during touring days where practical. Halal-certified restaurants are more available in major cities such as Hanoi, Da Nang and Ho Chi Minh City. In mountain, cruise or countryside destinations, suitable seafood, vegetarian or no-pork meals may be recommended.": {
+        "vi": "Vietnam Safar có thể hỗ trợ lên kế hoạch cho các bữa ăn thân thiện với người Hồi giáo khi có sẵn, lưu ý không thịt lợn, các giải pháp thay thế bằng hải sản hoặc đồ chay tại những nơi hạn chế nhà hàng chứng nhận Halal, và các điểm dừng cầu nguyện linh hoạt trong những ngày tham quan khi thực tế cho phép. Các nhà hàng được chứng nhận Halal có sẵn nhiều hơn ở các thành phố lớn như Hà Nội, Đà Nẵng và Thành phố Hồ Chí Minh. Tại các điểm đến vùng núi, du thuyền hoặc vùng nông thôn, các bữa ăn hải sản, đồ chay hoặc không thịt lợn phù hợp có thể được khuyên dùng.",
+        "ar": "يمكن لـ Vietnam Safar المساعدة في التخطيط لوجبات الطعام الصديقة للمسلمين عند توفرها، مع ملاحظة عدم تقديم لحم الخنزير، والبدائل من المأكولات البحرية أو النباتية عندما تكون المطاعم المعتمدة للحلال محدودة، وتنسيق محطات مرنة لأوقات الصلاة خلال أيام الجولات السياحية عندما يكون ذلك عملياً."
+    },
+    "Hotel arrangements will be tailored and detailed here for your specific travel dates.": {
+        "vi": "Kế hoạch khách sạn sẽ được tùy chỉnh và chi tiết tại đây dựa trên ngày đi cụ thể của bạn.",
+        "ar": "سيتم تصميم تفاصيل خطة الفنادق وتخصيصها هنا بناءً على تواريخ سفرك المحددة."
+    },
+    "Balanced Highlights": {
+        "vi": "Điểm Nhấn Cân Bằng",
+        "ar": "أبرز الفعاليات المتوازنة"
+    },
+    "Selected Hotel Plan": {
+        "ar": "خطة الفنادق المختارة",
+        "vi": "Kế Hoạch Khách Sạn"
+    },
+    "Proposed hotels and luxury cruises selected for your journey. Subject to availability at confirmation.": {
+        "ar": "الفنادق والرحلات البحرية الفاخرة المختارة لرحلتك. تخضع للتوافر عند التأكيد.",
+        "vi": "Các khách sạn và du thuyền sang trọng được tuyển chọn cho hành trình của bạn."
+    },
+    "Room Notes & Special Requests": {
+        "ar": "ملاحظات الغرفة والطلبات الخاصة",
+        "vi": "Ghi Chú Phòng & Yêu Cầu Đặc Biệt"
+    },
+    "What Your Journey Includes": {
+        "ar": "ما يشمله برنامج رحلتك",
+        "vi": "Những Gì Hành Trình Bao Gồm"
+    },
+    "Inclusions": {
+        "ar": "ما يشمله البرنامج",
+        "vi": "Dịch Vụ Bao Gồm"
+    },
+    "Exclusions": {
+        "ar": "ما لا يشمله البرنامج",
+        "vi": "Dịch Vụ Không Bao Gồm"
+    },
+    "Muslim-Friendly Travel Care": {
+        "ar": "الرعاية الصديقة للمسلمين",
+        "vi": "Dịch Vụ Thân Thiện Với Người Hồi Giáo"
+    },
+    "Booking & Payment Terms": {
+        "ar": "شروط الحجز والدفع",
+        "vi": "Điều Khoản Đặt Chỗ & Thanh Toán"
+    },
+    "Commercial conditions, deposits, and cancellation policy for this booking.": {
+        "ar": "الشروط التجارية والودائع وسياسة الإلغاء لهذا الحجز.",
+        "vi": "Điều kiện thương mại, đặt cọc và chính sách hủy cho đặt chỗ này."
+    },
+    "Term": { "ar": "البند", "vi": "Điều Khoản" },
+    "Condition": { "ar": "الشرط", "vi": "Điều Kiện" },
+    "Deposit": { "ar": "الدفعة المقدمة", "vi": "Đặt Cọc" },
+    "Balance": { "ar": "المبلغ المتبقي", "vi": "Số Dư" },
+    "Cancellation": { "ar": "الإلغاء", "vi": "Hủy Bỏ" },
+    "Confirmation": { "ar": "التأكيد", "vi": "Xác Nhận" },
+    "Meet Your Travel Specialist": {
+        "ar": "تعرّف على مصمم رحلتك",
+        "vi": "Gặp Gỡ Chuyên Gia Thiết Kế Hành Trình"
+    },
+    "Your Dedicated Specialist": {
+        "ar": "مستشارك المتخصص",
+        "vi": "Chuyên Viên Riêng Của Bạn"
+    },
+    "Expertise:": { "ar": "التخصص:", "vi": "Chuyên Môn:" },
+    "Experience:": { "ar": "الخبرة:", "vi": "Kinh Nghiệm:" },
+    "Your Travel Specialist": { "ar": "مصمم رحلتك", "vi": "Chuyên Gia Hành Trình" },
+    "Next step": { "ar": "الخطوة التالية", "vi": "Bước Tiếp Theo" },
+    "Confirm dates, then refine the luxury layer.": {
+        "ar": "أكّد التواريخ ثم اضبط مستوى الفخامة.",
+        "vi": "Xác nhận ngày, sau đó tinh chỉnh lớp dịch vụ sang trọng."
+    },
+    "Final Details Required": { "ar": "التفاصيل النهائية المطلوبة", "vi": "Thông Tin Cần Thiết" },
+    "After Confirmation": { "ar": "بعد التأكيد", "vi": "Sau Khi Xác Nhận" },
+    "Website": { "ar": "الموقع الإلكتروني", "vi": "Website" },
+    "WhatsApp": { "ar": "واتساب", "vi": "WhatsApp" },
+    "Prepared by": { "ar": "أُعدّ بواسطة", "vi": "Được Chuẩn Bị Bởi" },
+    "Request final confirmation": { "ar": "طلب التأكيد النهائي", "vi": "Yêu Cầu Xác Nhận Cuối" },
+    "per person": { "ar": "للشخص الواحد", "vi": "mỗi người" },
+    "Total:": { "ar": "الإجمالي:", "vi": "Tổng:" },
+    "Important Note": { "ar": "ملاحظة مهمة", "vi": "Lưu Ý Quan Trọng" },
+    "✓ CONFIRMED MAIN OPTION": { "ar": "✓ الخيار المؤكد الرئيسي", "vi": "✓ LỰA CHỌN ĐÃ XÁC NHẬN" },
+    "Highlights:": { "ar": "أبرز الفعاليات:", "vi": "Điểm Nổi Bật:" },
+    "Notes:": { "ar": "ملاحظات:", "vi": "Ghi Chú:" },
+    "Overnight": { "ar": "المبيت", "vi": "Qua Đêm" },
+    "Meals": { "ar": "الوجبات", "vi": "Bữa Ăn" }
+}
+
+def translate_filter(text: str, lang: str = "en") -> str:
+    if not text:
+        return ""
+    if not lang or lang == "en":
+        return text
+    clean_text = text.strip()
+    return STATIC_DICTIONARY.get(clean_text, {}).get(lang, text)
+
+templates.env.filters["translate"] = translate_filter
+
+async def translate_payload_llm(payload_dict: dict, target_lang: str, payload_type: str = "quotation") -> dict:
+    """
+    Translates all translatable string values in a payload dictionary to target_lang
+    using a single batch LLM request with high-end luxury copywriting tone.
+    """
+    import copy
+    import json
+    import re
+    from pydantic_ai import Agent
+    import llm_client
+
+    def is_translatable(key: str, val: str) -> bool:
+        if not isinstance(val, str):
+            return False
+        val_clean = val.strip()
+        if len(val_clean) <= 2:
+            return False
+        if re.match(r"^\d{4}-\d{2}-\d{2}$", val_clean):
+            return False
+        if val_clean.startswith("QT-") or val_clean.startswith("VS-"):
+            return False
+        # Ignore strictly technical or numeric keys
+        ignored_keys = {"currency", "priceType", "status", "startDate", "endDate", "checkInDate", "checkOutDate"}
+        if key in ignored_keys:
+            return False
+        return True
+
+    def _extract(data: any, path: str = "") -> list[tuple[str, str]]:
+        extracted = []
+        if isinstance(data, dict):
+            for k, v in data.items():
+                current_path = f"{path}.{k}" if path else k
+                if isinstance(v, str) and is_translatable(k, v):
+                    extracted.append((current_path, v))
+                elif isinstance(v, (dict, list)):
+                    extracted.extend(_extract(v, current_path))
+        elif isinstance(data, list):
+            for i, item in enumerate(data):
+                current_path = f"{path}[{i}]"
+                if isinstance(item, str) and is_translatable("", item):
+                    extracted.append((current_path, item))
+                elif isinstance(item, (dict, list)):
+                    extracted.extend(_extract(item, current_path))
+        return extracted
+
+    def _inject(data: any, trans_map: dict[str, str], path: str = ""):
+        if isinstance(data, dict):
+            for k, v in data.items():
+                current_path = f"{path}.{k}" if path else k
+                if isinstance(v, str) and current_path in trans_map:
+                    data[k] = trans_map[current_path]
+                elif isinstance(v, (dict, list)):
+                    _inject(v, trans_map, current_path)
+        elif isinstance(data, list):
+            for i, item in enumerate(data):
+                current_path = f"{path}[{i}]"
+                if isinstance(item, str) and current_path in trans_map:
+                    data[i] = trans_map[current_path]
+                elif isinstance(item, (dict, list)):
+                    _inject(item, trans_map, current_path)
+
+    # Clone the dictionary to avoid side effects
+    working_dict = copy.deepcopy(payload_dict)
+    pairs = _extract(working_dict)
+    if not pairs:
+        return working_dict
+
+    # Prepare batch prompt
+    flat_texts = [p[1] for p in pairs]
+    
+    # Extract some context if available
+    tour_title = ""
+    if "landingpageContent" in payload_dict:
+        tour_title = payload_dict["landingpageContent"].get("heroSection", {}).get("subtitle", "")
+    elif "title" in payload_dict:
+        tour_title = payload_dict.get("title", "")
+
+    guest_profile = payload_dict.get("journeyGlance", {}).get("guestProfile", "") or payload_dict.get("preparedFor", "")
+
+    target_lang_name = {
+        "en": "English",
+        "vi": "Vietnamese (Tiếng Việt)",
+        "ar": "Arabic (العربية)"
+    }.get(target_lang, target_lang.upper())
+
+    # Build prompt
+    prompt = (
+        f"Translate the following list of luxury travel text strings into {target_lang_name}.\n\n"
+        f"CONTEXT OF THE TOUR:\n"
+        f"- Tour Title: {tour_title}\n"
+        f"- Travelers: {guest_profile}\n\n"
+        f"INPUT TEXTS TO TRANSLATE:\n"
+        + json.dumps(flat_texts, ensure_ascii=False, indent=2)
+    )
+
+    system_prompt = (
+        "You are an expert multilingual Luxury Travel Copywriter.\n"
+        f"Your task is to translate the given list of travel text strings into {target_lang_name}.\n\n"
+        "RULES FOR PREMIUM & LUXURY TRANSLATION:\n"
+        "1. Tone and vocabulary:\n"
+        "   - English ('en'): Evoke bespoke elegance, exclusive privileges, and poetic serenity (e.g., 'Serene sanctuary', 'Heritage journey', 'Curated experiences').\n"
+        "   - Vietnamese ('vi'): Use elegant, respectful, and sophisticated Sino-Vietnamese phrasing (e.g., 'Thượng khách', 'Kiệt tác trú ẩn', 'Hành trình di sản', 'Điểm hẹn yên bình').\n"
+        "   - Arabic ('ar'): Use Royal Modern Standard Arabic (Fusha) with respectful honorifics (e.g., 'الضيوف الكرام', 'رحلة منسقة خصيصاً', 'ملاذات هادئة'). Ensure proper Right-to-Left layout flow.\n"
+        "2. Format requirements:\n"
+        "   - You MUST return a valid JSON array of strings containing the translations in the EXACT SAME order and quantity.\n"
+        "   - Do NOT omit any strings. Do NOT combine strings.\n"
+        "   - Output ONLY the raw JSON list of strings. Do NOT wrap it in markdown block fences like ```json. Do NOT include any chat preamble, comments, or explanations."
+    )
+
+    try:
+        agent = Agent(
+            model=llm_client.get_model(),
+            system_prompt=system_prompt
+        )
+        res = await agent.run(prompt)
+        res_text = res.output.strip()
+        
+        # Strip potential markdown fences if agent returned them despite instructions
+        if res_text.startswith("```"):
+            lines = res_text.splitlines()
+            if lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines[-1].startswith("```"):
+                lines = lines[:-1]
+            res_text = "\n".join(lines).strip()
+
+        translated_list = json.loads(res_text)
+        
+        if not isinstance(translated_list, list) or len(translated_list) != len(flat_texts):
+            log.warning("[translate_payload_llm] LLM returned invalid array size: expected %d, got %s", len(flat_texts), type(translated_list))
+            return payload_dict
+
+        # Build injection map
+        trans_map = {}
+        for (path, _), trans in zip(pairs, translated_list):
+            trans_map[path] = trans
+
+        _inject(working_dict, trans_map)
+        return working_dict
+
+    except Exception as exc:
+        log.exception("[translate_payload_llm] Batch translation failed to %s: %s", target_lang, exc)
+        return payload_dict
+
+
+def _load_ctx_data(item_id: str) -> dict | None:
+    """Load the single ctx.json file from memory store or disk."""
+    # First check quotations memory store
+    entry = quotations.get(item_id) or itineraries.get(item_id)
+    if entry and entry.get("ctx"):
+        return entry["ctx"]
+        
+    path = os.path.join("published", item_id, "ctx.json")
+    if os.path.isfile(path):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            log.warning("Failed to parse ctx.json for %s: %s", item_id, e)
+    return None
+
+def _load_translation_status(item_id: str, default_lang: str = "en") -> dict:
+    """Reads translation status from ctx.json."""
+    ctx_data = _load_ctx_data(item_id)
+    if ctx_data and "translation_status" in ctx_data:
+        return ctx_data["translation_status"]
+    # Fallback to checking disk structure (in case migrated from older builds)
+    path = os.path.join("published", item_id, "translation_status.json")
+    if os.path.isfile(path):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {
+        "baseline_lang": default_lang,
+        "available_langs": [default_lang]
+    }
+
+async def _save_translation_status(item_id: str, status: dict):
+    # This is a legacy helper. In the single-JSON design, we save status directly in ctx.json.
+    # We still keep this helper for backward compatibility and saving legacy translation_status.json if needed.
+    path = os.path.join("published", item_id, "translation_status.json")
+    content = json.dumps(status, ensure_ascii=False, indent=2)
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(content)
+    except Exception:
+        pass
+
+async def _translate_item_on_demand(item_id: str, target_lang: str, is_itinerary: bool = False) -> bool:
+    """
+    Translates the baseline payload to target_lang on-demand.
+    Updates translations dictionary inside the single ctx.json file.
+    No HTML/PDF suffix files are written to disk.
+    """
+    if target_lang not in ("en", "vi", "ar"):
+        return False
+        
+    ctx_data = _load_ctx_data(item_id)
+    if not ctx_data:
+        log.warning("[translation] ctx.json not found for %s", item_id)
+        return False
+        
+    available_langs = ctx_data.get("available_langs", [])
+    if target_lang in available_langs:
+        return True
+        
+    baseline_payload_dict = ctx_data.get("baseline_payload")
+    baseline_lang = ctx_data.get("baseline_lang", "en")
+    
+    if not baseline_payload_dict:
+        log.warning("[translation] baseline_payload not found in ctx.json for %s", item_id)
+        return False
+        
+    try:
+        log.info("[translation] Translating %s from %s to %s via LLM...", item_id, baseline_lang, target_lang)
+        translated_dict = await translate_payload_llm(baseline_payload_dict, target_lang)
+        
+        # Validate translated dict
+        if is_itinerary:
+            DetailItineraryPayload.model_validate(translated_dict)
+        else:
+            TourQuotationPayload.model_validate(translated_dict)
+            
+        # Update translations in ctx_data
+        translations = ctx_data.get("translations", {})
+        translations[target_lang] = translated_dict
+        ctx_data["translations"] = translations
+        
+        # Update available_langs
+        if target_lang not in available_langs:
+            available_langs.append(target_lang)
+        ctx_data["available_langs"] = available_langs
+        ctx_data["translation_status"] = {
+            "baseline_lang": baseline_lang,
+            "available_langs": available_langs
+        }
+        
+        # Write updated ctx.json to disk
+        quo_dir = os.path.join("published", item_id)
+        os.makedirs(quo_dir, exist_ok=True)
+        ctx_path = os.path.join(quo_dir, "ctx.json")
+        with open(ctx_path, "w", encoding="utf-8") as f:
+            json.dump(ctx_data, f, ensure_ascii=False, default=str)
+            
+        # Update RAM stores if present
+        store = itineraries if is_itinerary else quotations
+        if item_id in store:
+            store[item_id]["ctx"] = ctx_data
+            
+        ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
+        if ENVIRONMENT == "production":
+            await publish_file_to_github(
+                file_path=f"published/{item_id}/ctx.json",
+                html_content=json.dumps(ctx_data, ensure_ascii=False, default=str),
+                commit_message=f"Update translations in ctx.json for {item_id}"
+            )
+            
+        log.info("[translation] Successfully translated %s to %s and saved to ctx.json", item_id, target_lang)
+        return True
+    except Exception as e:
+        log.exception("[translation] Failed to translate %s on-demand: %s", item_id, e)
+        return False
+
+
 # ── In-memory quotation store ─────────────────────────────────────────────────
 # { quotation_id: { "payload": dict, "html": str, "status": str,
 #                   "published_url": str|None, "version": int } }
@@ -363,7 +860,7 @@ def truncate_text(text: Optional[str], max_chars: int) -> str:
 
 # ── Context builder (pure fn — no I/O) ───────────────────────────────────────
 
-def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, destinations: list[dict]):
+def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, destinations: list[dict], lang: str = "en", template_name: str = "vietnam_heritage_luxury.html"):
     """Build template context. Shared by /quotations (landingpage) and /quotations/{id}/pdf."""
     default_img = "/assets/vietnam-safar-logo.png"
     
@@ -585,12 +1082,13 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
     hotel_room_notes = ""
     if payload.hotelPlan:
         for item in payload.hotelPlan.hotels:
-            h_dict = item.model_dump(mode="json")
-            h_dict["name"] = truncate_text(h_dict.get("name"), 80)
-            h_dict["roomType"] = truncate_text(h_dict.get("roomType"), 80)
-            h_dict["destination"] = truncate_text(h_dict.get("destination"), 60)
-            h_dict["notes"] = truncate_text(h_dict.get("notes"), 150)
-            hotel_plan_items.append(h_dict)
+            details = get_luxury_hotel_details(
+                item.hotelArrangement, 
+                item.destination, 
+                item.checkInDate, 
+                item.checkOutDate
+            )
+            hotel_plan_items.append(details)
         hotel_room_notes = truncate_text(payload.hotelPlan.roomNotes or "", 200)
 
     # Optional Enhancements defaults/fallbacks
@@ -732,6 +1230,9 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         "term_confirmation": term_confirmation,
         "final_req": final_req,
         "final_after": final_after,
+        "lang": lang,
+        "template_name": template_name,
+        "translation_status": _load_translation_status(quotation_id, default_lang=lang),
     }
 
 
@@ -759,7 +1260,7 @@ def _load_itinerary_ctx(itinerary_id: str) -> dict | None:
     return None
 
 
-def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, hero_image_url: str, destinations: list[dict]):
+def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, hero_image_url: str, destinations: list[dict], lang: str = "en", template_name: str = "detail_itinerary_landingpage_template.html"):
     """Build rendering context for the detailed itinerary landing page."""
     default_img = "/assets/vietnam-safar-logo.png"
     seller = payload.seller
@@ -1020,6 +1521,9 @@ def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, her
         "pricing_p":      f"Grand total for {guests_txt}. Currency: {currency}." if total_price else "",
         # Footer
         "footer_text":      f"{tour_title} — Detailed booking itinerary prepared for {prepared_for}.",
+        "lang":             lang,
+        "template_name":    template_name,
+        "translation_status": _load_translation_status(itinerary_id, default_lang=lang),
     }
 
 
@@ -1038,6 +1542,9 @@ async def create_quotation_b2c(request: Request):
     # Unwrap ChatGPT Action wrapper if present
     data = body.get("params", body)
     log.debug("[/quotations/b2c] Data keys after unwrap: %s", list(data.keys()))
+    lang = data.get("language") or data.get("lang") or request.query_params.get("lang") or request.query_params.get("language") or "en"
+    if lang not in ("en", "vi", "ar"):
+        lang = "en"
 
     try:
         payload = TourQuotationPayload.model_validate(data)
@@ -1083,7 +1590,12 @@ async def create_quotation_b2c(request: Request):
 
     log.debug("[/quotations/b2c] Hero image resolved: %s", hero_image_url)
 
-    ctx = _build_ctx(quotation_id, payload, hero_image_url, destinations)
+    ctx = _build_ctx(quotation_id, payload, hero_image_url, destinations, lang=lang, template_name="vietnam_heritage_luxury_b2c.html")
+    ctx["baseline_payload"] = payload.model_dump(mode="json")
+    ctx["baseline_lang"] = lang
+    ctx["translations"] = {}
+    ctx["available_langs"] = [lang]
+    ctx["translation_status"] = {"baseline_lang": lang, "available_langs": [lang]}
 
     # ── Render landing page HTML ───────────────────────────────────────────────
     loop = asyncio.get_event_loop()
@@ -1107,9 +1619,8 @@ async def create_quotation_b2c(request: Request):
         "version":       0,
     }
 
-    # ── Publish v1.html + pdf.html to GitHub (production flow) ──────────────
-    published_url: str | None = None
-    pdf_static_url: str | None = None
+    # ── Publish to GitHub or save locally with language suffix ──────────────
+    sfx = f"_{lang}" if lang != "en" else ""
     ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
 
     if ENVIRONMENT == "production":
@@ -1120,24 +1631,37 @@ async def create_quotation_b2c(request: Request):
                 detail="Server misconfiguration: GITHUB_TOKEN / GITHUB_REPO env vars are missing.",
             )
         try:
-            # Publish landing page and PDF in parallel
-            published_url, pdf_static_url = await asyncio.gather(
-                publish_to_github(
-                    quotation_id=quotation_id,
+            # Publish landing page, PDF, ctx, and payload in parallel
+            await asyncio.gather(
+                publish_file_to_github(
+                    file_path=f"published/{quotation_id}/v1{sfx}.html",
                     html_content=rendered_html,
-                    version=1,
+                    commit_message=f"Publish B2C quotation {quotation_id} v1{sfx}.html",
                 ),
                 publish_file_to_github(
-                    file_path=f"published/{quotation_id}/pdf.html",
+                    file_path=f"published/{quotation_id}/pdf{sfx}.html",
                     html_content=rendered_pdf,
-                    commit_message=f"Publish PDF view for quotation {quotation_id}",
+                    commit_message=f"Publish B2C PDF view for quotation {quotation_id} pdf{sfx}.html",
+                ),
+                publish_file_to_github(
+                    file_path=f"published/{quotation_id}/ctx.json",
+                    html_content=json.dumps(ctx, ensure_ascii=False, default=str),
+                    commit_message=f"Publish B2C Context for {quotation_id}",
+                ),
+                publish_file_to_github(
+                    file_path=f"published/{quotation_id}/payload.json",
+                    html_content=json.dumps(payload.model_dump(mode="json"), ensure_ascii=False),
+                    commit_message=f"Publish B2C Payload for {quotation_id}",
                 ),
             )
+            # Initialize and save translation status
+            await _save_translation_status(quotation_id, {"baseline_lang": lang, "available_langs": [lang]})
+            
             quotations[quotation_id]["status"]        = "published"
-            quotations[quotation_id]["published_url"] = published_url
-            quotations[quotation_id]["pdf_url"]       = pdf_static_url
+            quotations[quotation_id]["published_url"] = f"{PUBLIC_BASE_URL}/quotations/{quotation_id}"
+            quotations[quotation_id]["pdf_url"]       = f"{PUBLIC_BASE_URL}/quotations/{quotation_id}/pdf"
             quotations[quotation_id]["version"]       = 1
-            log.info("[/quotations/b2c] ✓ v1 + pdf.html committed to GitHub → %s", published_url)
+            log.info("[/quotations/b2c] ✓ v1{sfx} + pdf{sfx} committed to GitHub.")
         except Exception as exc:
             log.exception("[/quotations/b2c] GitHub publish FAILED for %s: %s", quotation_id, exc)
             raise HTTPException(
@@ -1149,15 +1673,19 @@ async def create_quotation_b2c(request: Request):
         # ── Localhost only: persist to disk ────────────────────────────────────
         quo_dir = os.path.join("published", quotation_id)
         os.makedirs(quo_dir, exist_ok=True)
-        with open(os.path.join(quo_dir, "v1.html"),  "w", encoding="utf-8") as _f:
+        with open(os.path.join(quo_dir, f"v1{sfx}.html"),  "w", encoding="utf-8") as _f:
             _f.write(rendered_html)
-        with open(os.path.join(quo_dir, "pdf.html"), "w", encoding="utf-8") as _f:
+        with open(os.path.join(quo_dir, f"pdf{sfx}.html"), "w", encoding="utf-8") as _f:
             _f.write(rendered_pdf)
         with open(os.path.join(quo_dir, "ctx.json"), "w", encoding="utf-8") as _f:
             json.dump(ctx, _f, ensure_ascii=False, default=str)
+        with open(os.path.join(quo_dir, "payload.json"), "w", encoding="utf-8") as _f:
+            json.dump(payload.model_dump(mode="json"), _f, ensure_ascii=False)
+        await _save_translation_status(quotation_id, {"baseline_lang": lang, "available_langs": [lang]})
+        
         quotations[quotation_id]["status"]  = "published"
         quotations[quotation_id]["version"] = 1
-        log.info("[/quotations/b2c] Localhost: v1.html + pdf.html + ctx.json written to disk.")
+        log.info("[/quotations/b2c] Localhost: v1{sfx}.html + pdf{sfx}.html + ctx.json written to disk.")
 
     log.info("[/quotations/b2c] ✓ id=%s  preparedFor=%s  days=%d",
              quotation_id, payload.journeyGlance.guestProfile, len(payload.itinerary))
@@ -1185,6 +1713,9 @@ async def create_quotation(request: Request):
     # Unwrap ChatGPT Action wrapper if present
     data = body.get("params", body)
     log.debug("[/quotations] Data keys after unwrap: %s", list(data.keys()))
+    lang = data.get("language") or data.get("lang") or request.query_params.get("lang") or request.query_params.get("language") or "en"
+    if lang not in ("en", "vi", "ar"):
+        lang = "en"
 
     try:
         payload = TourQuotationPayload.model_validate(data)
@@ -1230,7 +1761,12 @@ async def create_quotation(request: Request):
 
     log.debug("[/quotations] Hero image resolved: %s", hero_image_url)
 
-    ctx = _build_ctx(quotation_id, payload, hero_image_url, destinations)
+    ctx = _build_ctx(quotation_id, payload, hero_image_url, destinations, lang=lang, template_name="vietnam_heritage_luxury.html")
+    ctx["baseline_payload"] = payload.model_dump(mode="json")
+    ctx["baseline_lang"] = lang
+    ctx["translations"] = {}
+    ctx["available_langs"] = [lang]
+    ctx["translation_status"] = {"baseline_lang": lang, "available_langs": [lang]}
 
     # ── Render landing page HTML ───────────────────────────────────────────────
     loop = asyncio.get_event_loop()
@@ -1254,11 +1790,8 @@ async def create_quotation(request: Request):
         "version":       0,
     }
 
-    # ── Publish v1.html + pdf.html to GitHub (production flow) ──────────────
-    # On Vercel, filesystem is READ-ONLY — all persistence must go through GitHub.
-    # NEVER fall back to disk writes on production; raise 502 if GitHub fails.
-    published_url: str | None = None
-    pdf_static_url: str | None = None
+    # ── Publish to GitHub or save locally with language suffix ──────────────
+    sfx = f"_{lang}" if lang != "en" else ""
     ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
 
     if ENVIRONMENT == "production":
@@ -1270,45 +1803,61 @@ async def create_quotation(request: Request):
                 detail="Server misconfiguration: GITHUB_TOKEN / GITHUB_REPO env vars are missing.",
             )
         try:
-            # Publish landing page and PDF in parallel
-            published_url, pdf_static_url = await asyncio.gather(
-                publish_to_github(
-                    quotation_id=quotation_id,
+            # Publish landing page, PDF, ctx, and payload in parallel
+            await asyncio.gather(
+                publish_file_to_github(
+                    file_path=f"published/{quotation_id}/v1{sfx}.html",
                     html_content=rendered_html,
-                    version=1,
+                    commit_message=f"Publish B2B quotation {quotation_id} v1{sfx}.html",
                 ),
                 publish_file_to_github(
-                    file_path=f"published/{quotation_id}/pdf.html",
+                    file_path=f"published/{quotation_id}/pdf{sfx}.html",
                     html_content=rendered_pdf,
-                    commit_message=f"Publish PDF view for quotation {quotation_id}",
+                    commit_message=f"Publish B2B PDF view for quotation {quotation_id} pdf{sfx}.html",
+                ),
+                publish_file_to_github(
+                    file_path=f"published/{quotation_id}/ctx.json",
+                    html_content=json.dumps(ctx, ensure_ascii=False, default=str),
+                    commit_message=f"Publish B2B Context for {quotation_id}",
+                ),
+                publish_file_to_github(
+                    file_path=f"published/{quotation_id}/payload.json",
+                    html_content=json.dumps(payload.model_dump(mode="json"), ensure_ascii=False),
+                    commit_message=f"Publish B2B Payload for {quotation_id}",
                 ),
             )
+            # Initialize and save translation status
+            await _save_translation_status(quotation_id, {"baseline_lang": lang, "available_langs": [lang]})
+            
             quotations[quotation_id]["status"]        = "published"
-            quotations[quotation_id]["published_url"] = published_url
-            quotations[quotation_id]["pdf_url"]       = pdf_static_url
+            quotations[quotation_id]["published_url"] = f"{PUBLIC_BASE_URL}/quotations/{quotation_id}"
+            quotations[quotation_id]["pdf_url"]       = f"{PUBLIC_BASE_URL}/quotations/{quotation_id}/pdf"
             quotations[quotation_id]["version"]       = 1
-            log.info("[/quotations] ✓ v1 + pdf.html committed to GitHub → %s", published_url)
+            log.info("[/quotations] ✓ v1{sfx} + pdf{sfx} committed to GitHub.")
         except Exception as exc:
             log.exception("[/quotations] GitHub publish FAILED for %s: %s", quotation_id, exc)
-            # On Vercel, disk is read-only — we MUST NOT attempt a filesystem fallback.
             raise HTTPException(
                 status_code=502,
-                detail=f"GitHub publish failed: {exc}. Check GITHUB_TOKEN permissions and GITHUB_REPO value.",
+                detail=f"GitHub publish failed: {exc}. Check GITHUB_TOKEN permissions.",
             )
 
     else:
         # ── Localhost only: persist to disk ────────────────────────────────────
         quo_dir = os.path.join("published", quotation_id)
         os.makedirs(quo_dir, exist_ok=True)
-        with open(os.path.join(quo_dir, "v1.html"),  "w", encoding="utf-8") as _f:
+        with open(os.path.join(quo_dir, f"v1{sfx}.html"),  "w", encoding="utf-8") as _f:
             _f.write(rendered_html)
-        with open(os.path.join(quo_dir, "pdf.html"), "w", encoding="utf-8") as _f:
+        with open(os.path.join(quo_dir, f"pdf{sfx}.html"), "w", encoding="utf-8") as _f:
             _f.write(rendered_pdf)
         with open(os.path.join(quo_dir, "ctx.json"), "w", encoding="utf-8") as _f:
             json.dump(ctx, _f, ensure_ascii=False, default=str)
+        with open(os.path.join(quo_dir, "payload.json"), "w", encoding="utf-8") as _f:
+            json.dump(payload.model_dump(mode="json"), _f, ensure_ascii=False)
+        await _save_translation_status(quotation_id, {"baseline_lang": lang, "available_langs": [lang]})
+        
         quotations[quotation_id]["status"]  = "published"
         quotations[quotation_id]["version"] = 1
-        log.info("[/quotations] Localhost: v1.html + pdf.html + ctx.json written to disk.")
+        log.info("[/quotations] Localhost: v1{sfx}.html + pdf{sfx}.html + ctx.json written to disk.")
 
     log.info("[/quotations] ✓ id=%s  preparedFor=%s  days=%d  route=%s",
              quotation_id, payload.journeyGlance.guestProfile,
@@ -1370,73 +1919,172 @@ async def get_published_file(file_path: str):
 # IMPORTANT: must be registered BEFORE the {quotation_id} catch-all route.
 
 @app.get("/quotations/{quotation_id}/pdf", response_class=HTMLResponse)
-async def get_quotation_pdf(quotation_id: str):
+async def get_quotation_pdf(quotation_id: str, request: Request):
     """
-    On production (GitHub token set): redirect to the static pdf.html committed to GitHub/Vercel CDN.
-    On localhost (no token): dynamically render from ctx.json on disk.
-    Auto-triggers the browser print dialog so the user just hits Cmd+P → Save as PDF.
+    Dynamically renders PDF HTML for a quotation in target language.
+    Auto-triggers the browser print dialog.
     """
-    from fastapi.responses import RedirectResponse
-
-    # 1. In-memory store: check if we already have a static pdf URL (same instance)
-    entry = quotations.get(quotation_id)
-    if entry and entry.get("pdf_url"):
-        return RedirectResponse(url=entry["pdf_url"], status_code=302)
+    lang = request.query_params.get("lang") or request.query_params.get("language")
+    if lang not in ("en", "vi", "ar"):
+        lang = None
         
-    if entry and entry.get("pdf_html"):
-        return HTMLResponse(content=entry["pdf_html"])
+    ctx_data = _load_ctx_data(quotation_id)
+    if not ctx_data:
+        raise HTTPException(status_code=404, detail=f"PDF for quotation '{quotation_id}' not found.")
+        
+    baseline_lang = ctx_data.get("baseline_lang", "en")
+    target_lang = lang or baseline_lang
+    
+    # Trigger lazy translation if not available
+    if target_lang != baseline_lang:
+        available_langs = ctx_data.get("available_langs", [])
+        if target_lang not in available_langs:
+            success = await _translate_item_on_demand(quotation_id, target_lang, is_itinerary=False)
+            if success:
+                ctx_data = _load_ctx_data(quotation_id) or ctx_data
+                
+    # Extract appropriate payload dict
+    if target_lang == baseline_lang:
+        payload_dict = ctx_data.get("baseline_payload")
+    else:
+        payload_dict = ctx_data.get("translations", {}).get(target_lang)
+        
+    if not payload_dict:
+        payload_dict = ctx_data.get("baseline_payload")
+        target_lang = baseline_lang
+        
+    try:
+        payload_obj = TourQuotationPayload.model_validate(payload_dict)
+        base_tmpl = ctx_data.get("template_name", "vietnam_heritage_luxury.html")
+        tmpl_name = base_tmpl.replace(".html", "_pdf.html")
+        tmpl = templates.get_template(tmpl_name)
+        
+        hero_image_url = ctx_data.get("img_0", "/assets/vietnam-safar-logo.png")
+        destinations = ctx_data.get("destinations", [])
+        translations = ctx_data.get("translations", {})
+        
+        lang_ctx = _build_ctx(
+            quotation_id=quotation_id,
+            payload=payload_obj,
+            hero_image_url=hero_image_url,
+            destinations=destinations,
+            lang=target_lang,
+            template_name=base_tmpl
+        )
+        lang_ctx["translations"] = translations
+        lang_ctx["baseline_lang"] = baseline_lang
+        lang_ctx["translation_status"] = ctx_data.get("translation_status", {"baseline_lang": baseline_lang, "available_langs": [baseline_lang]})
+        
+        rendered_html = tmpl.render(**lang_ctx)
+        return HTMLResponse(content=rendered_html)
+    except Exception as err:
+        log.exception("[/quotations] Dynamic PDF render failed for %s: %s", quotation_id, err)
+        raise HTTPException(status_code=500, detail=f"PDF render error: {err}")
 
-    # 2. Production: static pdf.html is on Vercel CDN — redirect there
-    ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
-    if ENVIRONMENT == "production":
-        static_pdf_url = f"{PUBLIC_BASE_URL}/published/{quotation_id}/pdf.html"
-        return RedirectResponse(url=static_pdf_url, status_code=302)
 
-    # 3. Local disk fallback (if server restarted but files exist)
-    path = os.path.join("published", quotation_id, "pdf.html")
-    if os.path.isfile(path):
-        with open(path, "r", encoding="utf-8") as f:
-            return HTMLResponse(content=f.read())
-            
-    raise HTTPException(status_code=404, detail=f"PDF for quotation '{quotation_id}' not found.")
+@app.post("/api/v1/quotations/{quotation_id}/translate")
+async def translate_quotation_endpoint(quotation_id: str, lang: str):
+    """Triggers on-demand translation for a quotation."""
+    if lang not in ("en", "vi", "ar"):
+        raise HTTPException(status_code=400, detail="Unsupported language")
+    success = await _translate_item_on_demand(quotation_id, lang, is_itinerary=False)
+    if not success:
+        raise HTTPException(status_code=500, detail="Translation failed")
+    status = _load_translation_status(quotation_id)
+    return status
+
+@app.post("/api/v1/itineraries/{itinerary_id}/translate")
+async def translate_itinerary_endpoint(itinerary_id: str, lang: str):
+    """Triggers on-demand translation for an itinerary."""
+    if lang not in ("en", "vi", "ar"):
+        raise HTTPException(status_code=400, detail="Unsupported language")
+    success = await _translate_item_on_demand(itinerary_id, lang, is_itinerary=True)
+    if not success:
+        raise HTTPException(status_code=500, detail="Translation failed")
+    status = _load_translation_status(itinerary_id)
+    return status
+
+@app.get("/api/v1/quotations/{quotation_id}/translation-status")
+async def get_quotation_translation_status(quotation_id: str):
+    """Returns the translation status of a quotation."""
+    status = _load_translation_status(quotation_id)
+    return status
+
+@app.get("/api/v1/itineraries/{itinerary_id}/translation-status")
+async def get_itinerary_translation_status(itinerary_id: str):
+    """Returns the translation status of an itinerary."""
+    status = _load_translation_status(itinerary_id)
+    return status
 
 
 @app.get("/quotations/{quotation_id}", response_class=HTMLResponse)
-async def get_quotation(quotation_id: str):
+async def get_quotation(quotation_id: str, request: Request):
     """
     Stable permalink for a quotation.
-    Serves from memory (instant), then disk (deployed), then GitHub (if Vercel is still building).
+    Loads Single JSON context (ctx.json), extracts language-specific payload,
+    builds the localized context, and renders dynamically.
     """
-    # 1. In-memory fast path (same serverless instance)
-    entry = quotations.get(quotation_id)
-    if entry and entry.get("html"):
-        return HTMLResponse(content=entry["html"])
-
-    # 2. Local disk fallback (if Vercel has finished building this commit)
-    for version in range(10, 0, -1):
-        path = os.path.join("published", quotation_id, f"v{version}.html")
-        if os.path.isfile(path):
-            with open(path, "r", encoding="utf-8") as f:
-                return HTMLResponse(content=f.read())
-
-    # 3. GitHub fallback (if Vercel is STILL building and memory was wiped via cold start)
-    ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
-    if ENVIRONMENT == "production":
-        import httpx
-        repo = os.getenv("GITHUB_REPO")
-        token = os.getenv("GITHUB_TOKEN")
-        if repo and token:
-            # Check v10 down to v1
-            async with httpx.AsyncClient(timeout=10) as client:
-                headers = {"Authorization": f"token {token}", "Accept": "application/vnd.github.v3.raw"}
-                for version in range(10, 0, -1):
-                    gh_url = f"https://api.github.com/repos/{repo}/contents/published/{quotation_id}/v{version}.html"
-                    resp = await client.get(gh_url, headers=headers)
-                    if resp.status_code == 200:
-                        log.info("[/quotations] Fetched %s directly from GitHub API.", quotation_id)
-                        return HTMLResponse(content=resp.text)
-
-    raise HTTPException(status_code=404, detail=f"Quotation '{quotation_id}' not found. It may still be deploying, please refresh in 30 seconds.")
+    lang = request.query_params.get("lang") or request.query_params.get("language")
+    if lang not in ("en", "vi", "ar"):
+        lang = None # fallback to baseline
+        
+    ctx_data = _load_ctx_data(quotation_id)
+    if not ctx_data:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Quotation '{quotation_id}' not found. It may still be deploying, please refresh in 30 seconds."
+        )
+        
+    baseline_lang = ctx_data.get("baseline_lang", "en")
+    target_lang = lang or baseline_lang
+    
+    # Trigger lazy translation if not available
+    if target_lang != baseline_lang:
+        available_langs = ctx_data.get("available_langs", [])
+        if target_lang not in available_langs:
+            success = await _translate_item_on_demand(quotation_id, target_lang, is_itinerary=False)
+            if success:
+                ctx_data = _load_ctx_data(quotation_id) or ctx_data
+                
+    # Extract appropriate payload dict
+    if target_lang == baseline_lang:
+        payload_dict = ctx_data.get("baseline_payload")
+    else:
+        payload_dict = ctx_data.get("translations", {}).get(target_lang)
+        
+    # Fallback to general context if payload extraction failed
+    if not payload_dict:
+        log.warning("[get_quotation] Localized payload for %s not found, using baseline", target_lang)
+        payload_dict = ctx_data.get("baseline_payload")
+        target_lang = baseline_lang
+        
+    try:
+        payload_obj = TourQuotationPayload.model_validate(payload_dict)
+        tmpl_name = ctx_data.get("template_name", "vietnam_heritage_luxury.html")
+        tmpl = templates.get_template(tmpl_name)
+        
+        # Build clean context for target lang
+        hero_image_url = ctx_data.get("img_0", "/assets/vietnam-safar-logo.png")
+        destinations = ctx_data.get("destinations", [])
+        translations = ctx_data.get("translations", {})
+        
+        lang_ctx = _build_ctx(
+            quotation_id=quotation_id,
+            payload=payload_obj,
+            hero_image_url=hero_image_url,
+            destinations=destinations,
+            lang=target_lang,
+            template_name=tmpl_name
+        )
+        lang_ctx["translations"] = translations
+        lang_ctx["baseline_lang"] = baseline_lang
+        lang_ctx["translation_status"] = ctx_data.get("translation_status", {"baseline_lang": baseline_lang, "available_langs": [baseline_lang]})
+        
+        rendered_html = tmpl.render(**lang_ctx)
+        return HTMLResponse(content=rendered_html)
+    except Exception as err:
+        log.exception("[/quotations] Dynamic HTML render failed for %s: %s", quotation_id, err)
+        raise HTTPException(status_code=500, detail=f"Render error: {err}")
 
 
 
@@ -1510,6 +2158,9 @@ async def create_itinerary(request: Request):
     # Unwrap ChatGPT Action wrapper if present
     data = body.get("params", body)
     log.debug("[/itineraries] Data keys after unwrap: %s", list(data.keys()))
+    lang = data.get("language") or data.get("lang") or request.query_params.get("lang") or request.query_params.get("language") or "en"
+    if lang not in ("en", "vi", "ar"):
+        lang = "en"
 
     try:
         payload = DetailItineraryPayload.model_validate(data)
@@ -1612,7 +2263,12 @@ async def create_itinerary(request: Request):
         for act, slug in zip(activities_without_img, activity_slugs):
             act.imageUrl = get_random_image_for_province(slug)
 
-    ctx = _build_itinerary_ctx(itinerary_id, payload, hero_image_url, destinations)
+    ctx = _build_itinerary_ctx(itinerary_id, payload, hero_image_url, destinations, lang=lang, template_name="detail_itinerary_landingpage_template.html")
+    ctx["baseline_payload"] = payload.model_dump(mode="json")
+    ctx["baseline_lang"] = lang
+    ctx["translations"] = {}
+    ctx["available_langs"] = [lang]
+    ctx["translation_status"] = {"baseline_lang": lang, "available_langs": [lang]}
 
     # Render landing page HTML and PDF
     loop = asyncio.get_event_loop()
@@ -1636,8 +2292,7 @@ async def create_itinerary(request: Request):
         "version":       0,
     }
 
-    published_url: str | None = None
-    pdf_static_url: str | None = None
+    sfx = f"_{lang}" if lang != "en" else ""
     ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
 
     if ENVIRONMENT == "production":
@@ -1649,23 +2304,36 @@ async def create_itinerary(request: Request):
             )
         try:
             # Commit to GitHub
-            published_url, pdf_static_url = await asyncio.gather(
-                publish_to_github(
-                    quotation_id=itinerary_id,  # will publish to published/{itinerary_id}
+            await asyncio.gather(
+                publish_file_to_github(
+                    file_path=f"published/{itinerary_id}/v1{sfx}.html",
                     html_content=rendered_html,
-                    version=1,
+                    commit_message=f"Publish itinerary {itinerary_id} v1{sfx}.html",
                 ),
                 publish_file_to_github(
-                    file_path=f"published/{itinerary_id}/pdf.html",
+                    file_path=f"published/{itinerary_id}/pdf{sfx}.html",
                     html_content=rendered_pdf,
-                    commit_message=f"Publish PDF view for itinerary {itinerary_id}",
+                    commit_message=f"Publish PDF view for itinerary {itinerary_id} pdf{sfx}.html",
+                ),
+                publish_file_to_github(
+                    file_path=f"published/{itinerary_id}/ctx.json",
+                    html_content=json.dumps(ctx, ensure_ascii=False, default=str),
+                    commit_message=f"Publish itinerary context for {itinerary_id}",
+                ),
+                publish_file_to_github(
+                    file_path=f"published/{itinerary_id}/payload.json",
+                    html_content=json.dumps(payload.model_dump(mode="json"), ensure_ascii=False),
+                    commit_message=f"Publish itinerary payload for {itinerary_id}",
                 ),
             )
+            # Initialize and save translation status
+            await _save_translation_status(itinerary_id, {"baseline_lang": lang, "available_langs": [lang]})
+            
             itineraries[itinerary_id]["status"]        = "published"
-            itineraries[itinerary_id]["published_url"] = published_url
-            itineraries[itinerary_id]["pdf_url"]       = pdf_static_url
+            itineraries[itinerary_id]["published_url"] = f"{PUBLIC_BASE_URL}/itineraries/{itinerary_id}"
+            itineraries[itinerary_id]["pdf_url"]       = f"{PUBLIC_BASE_URL}/itineraries/{itinerary_id}/pdf"
             itineraries[itinerary_id]["version"]       = 1
-            log.info("[/itineraries] ✓ v1 + pdf.html committed to GitHub → %s", published_url)
+            log.info("[/itineraries] ✓ v1{sfx} + pdf{sfx} committed to GitHub.")
         except Exception as exc:
             log.exception("[/itineraries] GitHub publish FAILED for %s: %s", itinerary_id, exc)
             raise HTTPException(
@@ -1676,15 +2344,19 @@ async def create_itinerary(request: Request):
         # Localhost: write to disk
         iti_dir = os.path.join("published", itinerary_id)
         os.makedirs(iti_dir, exist_ok=True)
-        with open(os.path.join(iti_dir, "v1.html"),  "w", encoding="utf-8") as _f:
+        with open(os.path.join(iti_dir, f"v1{sfx}.html"),  "w", encoding="utf-8") as _f:
             _f.write(rendered_html)
-        with open(os.path.join(iti_dir, "pdf.html"), "w", encoding="utf-8") as _f:
+        with open(os.path.join(iti_dir, f"pdf{sfx}.html"), "w", encoding="utf-8") as _f:
             _f.write(rendered_pdf)
         with open(os.path.join(iti_dir, "ctx.json"), "w", encoding="utf-8") as _f:
             json.dump(ctx, _f, ensure_ascii=False, default=str)
+        with open(os.path.join(iti_dir, "payload.json"), "w", encoding="utf-8") as _f:
+            json.dump(payload.model_dump(mode="json"), _f, ensure_ascii=False)
+        await _save_translation_status(itinerary_id, {"baseline_lang": lang, "available_langs": [lang]})
+        
         itineraries[itinerary_id]["status"]  = "published"
         itineraries[itinerary_id]["version"] = 1
-        log.info("[/itineraries] Localhost: v1.html + pdf.html + ctx.json written to disk.")
+        log.info("[/itineraries] Localhost: v1{sfx}.html + pdf{sfx}.html + ctx.json written to disk.")
 
     log.info("[/itineraries] ✓ id=%s  preparedFor=%s  days=%d",
              itinerary_id, payload.preparedFor, payload.duration.days)
@@ -1701,64 +2373,137 @@ async def create_itinerary(request: Request):
 
 
 @app.get("/itineraries/{itinerary_id}", response_class=HTMLResponse)
-async def get_itinerary(itinerary_id: str):
+async def get_itinerary(itinerary_id: str, request: Request):
     """
-    Stable permalink for an itinerary. Serves from memory, disk, then GitHub.
+    Stable permalink for an itinerary.
+    Loads Single JSON context (ctx.json), extracts language-specific payload,
+    builds the localized context, and renders dynamically.
     """
-    # 1. In-memory fast path
-    entry = itineraries.get(itinerary_id)
-    if entry and entry.get("html"):
-        return HTMLResponse(content=entry["html"])
-
-    # 2. Local disk fallback
-    for version in range(10, 0, -1):
-        path = os.path.join("published", itinerary_id, f"v{version}.html")
-        if os.path.isfile(path):
-            with open(path, "r", encoding="utf-8") as f:
-                return HTMLResponse(content=f.read())
-
-    # 3. GitHub fallback
-    ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
-    if ENVIRONMENT == "production":
-        import httpx
-        repo = os.getenv("GITHUB_REPO")
-        token = os.getenv("GITHUB_TOKEN")
-        if repo and token:
-            async with httpx.AsyncClient(timeout=10) as client:
-                headers = {"Authorization": f"token {token}", "Accept": "application/vnd.github.v3.raw"}
-                for version in range(10, 0, -1):
-                    gh_url = f"https://api.github.com/repos/{repo}/contents/published/{itinerary_id}/v{version}.html"
-                    resp = await client.get(gh_url, headers=headers)
-                    if resp.status_code == 200:
-                        log.info("[/itineraries] Fetched %s directly from GitHub API.", itinerary_id)
-                        return HTMLResponse(content=resp.text)
-
-    raise HTTPException(status_code=404, detail=f"Itinerary '{itinerary_id}' not found. It may still be deploying.")
+    lang = request.query_params.get("lang") or request.query_params.get("language")
+    if lang not in ("en", "vi", "ar"):
+        lang = None # fallback to baseline
+        
+    ctx_data = _load_ctx_data(itinerary_id)
+    if not ctx_data:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Itinerary '{itinerary_id}' not found. It may still be deploying, please refresh in 30 seconds."
+        )
+        
+    baseline_lang = ctx_data.get("baseline_lang", "en")
+    target_lang = lang or baseline_lang
+    
+    # Trigger lazy translation if not available
+    if target_lang != baseline_lang:
+        available_langs = ctx_data.get("available_langs", [])
+        if target_lang not in available_langs:
+            success = await _translate_item_on_demand(itinerary_id, target_lang, is_itinerary=True)
+            if success:
+                ctx_data = _load_ctx_data(itinerary_id) or ctx_data
+                
+    # Extract appropriate payload dict
+    if target_lang == baseline_lang:
+        payload_dict = ctx_data.get("baseline_payload")
+    else:
+        payload_dict = ctx_data.get("translations", {}).get(target_lang)
+        
+    # Fallback to general context if payload extraction failed
+    if not payload_dict:
+        log.warning("[get_itinerary] Localized payload for %s not found, using baseline", target_lang)
+        payload_dict = ctx_data.get("baseline_payload")
+        target_lang = baseline_lang
+        
+    try:
+        payload_obj = DetailItineraryPayload.model_validate(payload_dict)
+        tmpl_name = ctx_data.get("template_name", "detail_itinerary_landingpage_template.html")
+        tmpl = templates.get_template(tmpl_name)
+        
+        # Build clean context for target lang
+        hero_image_url = ctx_data.get("img_0", "/assets/vietnam-safar-logo.png")
+        destinations = ctx_data.get("destinations", [])
+        translations = ctx_data.get("translations", {})
+        
+        lang_ctx = _build_itinerary_ctx(
+            itinerary_id=itinerary_id,
+            payload=payload_obj,
+            hero_image_url=hero_image_url,
+            destinations=destinations,
+            lang=target_lang,
+            template_name=tmpl_name
+        )
+        lang_ctx["translations"] = translations
+        lang_ctx["baseline_lang"] = baseline_lang
+        lang_ctx["translation_status"] = ctx_data.get("translation_status", {"baseline_lang": baseline_lang, "available_langs": [baseline_lang]})
+        
+        rendered_html = tmpl.render(**lang_ctx)
+        return HTMLResponse(content=rendered_html)
+    except Exception as err:
+        log.exception("[/itineraries] Dynamic HTML render failed for %s: %s", itinerary_id, err)
+        raise HTTPException(status_code=500, detail=f"Render error: {err}")
 
 
 @app.get("/itineraries/{itinerary_id}/pdf", response_class=HTMLResponse)
-async def get_itinerary_pdf(itinerary_id: str):
-    """ Serves A4 PDF view for itinerary. """
-    from fastapi.responses import RedirectResponse
-
-    entry = itineraries.get(itinerary_id)
-    if entry and entry.get("pdf_url"):
-        return RedirectResponse(url=entry["pdf_url"], status_code=302)
+async def get_itinerary_pdf(itinerary_id: str, request: Request):
+    """
+    Dynamically renders PDF HTML for an itinerary in target language.
+    Auto-triggers the browser print dialog.
+    """
+    lang = request.query_params.get("lang") or request.query_params.get("language")
+    if lang not in ("en", "vi", "ar"):
+        lang = None
         
-    if entry and entry.get("pdf_html"):
-        return HTMLResponse(content=entry["pdf_html"])
-
-    ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
-    if ENVIRONMENT == "production":
-        static_pdf_url = f"{PUBLIC_BASE_URL}/published/{itinerary_id}/pdf.html"
-        return RedirectResponse(url=static_pdf_url, status_code=302)
-
-    path = os.path.join("published", itinerary_id, "pdf.html")
-    if os.path.isfile(path):
-        with open(path, "r", encoding="utf-8") as f:
-            return HTMLResponse(content=f.read())
-
-    raise HTTPException(status_code=404, detail=f"PDF for itinerary '{itinerary_id}' not found.")
+    ctx_data = _load_ctx_data(itinerary_id)
+    if not ctx_data:
+        raise HTTPException(status_code=404, detail=f"PDF for itinerary '{itinerary_id}' not found.")
+        
+    baseline_lang = ctx_data.get("baseline_lang", "en")
+    target_lang = lang or baseline_lang
+    
+    # Trigger lazy translation if not available
+    if target_lang != baseline_lang:
+        available_langs = ctx_data.get("available_langs", [])
+        if target_lang not in available_langs:
+            success = await _translate_item_on_demand(itinerary_id, target_lang, is_itinerary=True)
+            if success:
+                ctx_data = _load_ctx_data(itinerary_id) or ctx_data
+                
+    # Extract appropriate payload dict
+    if target_lang == baseline_lang:
+        payload_dict = ctx_data.get("baseline_payload")
+    else:
+        payload_dict = ctx_data.get("translations", {}).get(target_lang)
+        
+    if not payload_dict:
+        payload_dict = ctx_data.get("baseline_payload")
+        target_lang = baseline_lang
+        
+    try:
+        payload_obj = DetailItineraryPayload.model_validate(payload_dict)
+        base_tmpl = ctx_data.get("template_name", "detail_itinerary_landingpage_template.html")
+        tmpl_name = base_tmpl.replace(".html", "_pdf.html")
+        tmpl = templates.get_template(tmpl_name)
+        
+        hero_image_url = ctx_data.get("img_0", "/assets/vietnam-safar-logo.png")
+        destinations = ctx_data.get("destinations", [])
+        translations = ctx_data.get("translations", {})
+        
+        lang_ctx = _build_itinerary_ctx(
+            itinerary_id=itinerary_id,
+            payload=payload_obj,
+            hero_image_url=hero_image_url,
+            destinations=destinations,
+            lang=target_lang,
+            template_name=base_tmpl
+        )
+        lang_ctx["translations"] = translations
+        lang_ctx["baseline_lang"] = baseline_lang
+        lang_ctx["translation_status"] = ctx_data.get("translation_status", {"baseline_lang": baseline_lang, "available_langs": [baseline_lang]})
+        
+        rendered_html = tmpl.render(**lang_ctx)
+        return HTMLResponse(content=rendered_html)
+    except Exception as err:
+        log.exception("[/itineraries] Dynamic PDF render failed for %s: %s", itinerary_id, err)
+        raise HTTPException(status_code=500, detail=f"PDF render error: {err}")
 
 
 @app.post("/itineraries/{itinerary_id}/publish")
@@ -2855,3 +3600,263 @@ async def create_landing_page_agent(request: Request):
         "status": "published",
         "version": 1,
     }
+
+
+def format_hotel_dates(checkin: str, checkout: str) -> str:
+    try:
+        from datetime import datetime
+        ci = datetime.strptime(checkin, "%Y-%m-%d")
+        co = datetime.strptime(checkout, "%Y-%m-%d")
+        return f"{ci.strftime('%d %b')} – {co.strftime('%d %b %Y')}"
+    except Exception:
+        return f"{checkin} – {checkout}"
+
+
+# ── Dynamic hotel details fuzzy resolver (Fusion Search + info.json) ──────────
+HOTEL_STOP_WORDS = {
+    'hotel', 'resort', 'cruise', 'spa', 'villas', 'luxury', 'premium', 
+    'boutique', 'stay', 'suites', 'center', 'ocean', 'safi', 'premium',
+    'classic', 'legend', 'metropole', 'retreat', 'lodge', 'palace'
+}
+
+def tokenize_hotel_name(text: str) -> set:
+    import re
+    if not text:
+        return set()
+    clean = re.sub(r'[^a-zA-Z0-9\s-]', '', text).lower()
+    tokens = set(re.split(r'[\s-]', clean))
+    return {t for t in tokens if t and t not in HOTEL_STOP_WORDS}
+
+def char_similarity(str1: str, str2: str) -> float:
+    import difflib
+    return difflib.SequenceMatcher(None, str1.lower(), str2.lower()).ratio()
+
+def calculate_match_score(hotel_name: str, city_name: str, city_dir: str, hotel_dir: str) -> float:
+    score = 0.0
+    norm_city_input = city_name.lower().replace(" ", "").replace("-", "")
+    norm_city_dir = city_dir.lower().replace(" ", "").replace("-", "")
+    
+    city_aliases = {
+        "saigon": {"saigon", "hochiminh", "hochiminhcity", "hcmc"},
+        "hanoi": {"hanoi"},
+        "halong": {"halong", "halongbay", "quangninh"},
+        "dalat": {"dalat", "lamdong"},
+        "danang": {"danang"},
+        "sapa": {"sapa", "laocai"}
+    }
+    
+    city_matched = False
+    if norm_city_input == norm_city_dir:
+        city_matched = True
+    else:
+        for key, aliases in city_aliases.items():
+            if norm_city_input in aliases and norm_city_dir in aliases:
+                city_matched = True
+                break
+                
+    if city_matched:
+        score += 2.0
+        
+    input_tokens = tokenize_hotel_name(hotel_name)
+    dir_tokens = tokenize_hotel_name(hotel_dir)
+    
+    matched_tokens = set()
+    for it in input_tokens:
+        for dt in dir_tokens:
+            if it == dt or char_similarity(it, dt) >= 0.8:
+                matched_tokens.add(it)
+                break
+                
+    if input_tokens and dir_tokens:
+        jaccard = len(matched_tokens) / len(input_tokens.union(dir_tokens))
+        score += jaccard * 3.0
+        
+        for dt in dir_tokens:
+            for it in input_tokens:
+                if dt in it or it in dt:
+                    score += 0.5
+                    break
+    else:
+        sim = char_similarity(hotel_name, hotel_dir)
+        score += sim * 2.0
+            
+    return score
+
+def resolve_hotel_details(hotel_name: str, city_name: str, base_dir: str = "assets/hotels") -> dict | None:
+    if not os.path.exists(base_dir):
+        return None
+        
+    best_score = -1.0
+    best_match = None
+    
+    for city_dir in os.listdir(base_dir):
+        city_path = os.path.join(base_dir, city_dir)
+        if not os.path.isdir(city_path):
+            continue
+            
+        for hotel_dir in os.listdir(city_path):
+            hotel_path = os.path.join(city_path, hotel_dir)
+            if not os.path.isdir(hotel_path):
+                continue
+                
+            score = calculate_match_score(hotel_name, city_name, city_dir, hotel_dir)
+            if score > best_score:
+                best_score = score
+                best_match = (city_dir, hotel_dir, hotel_path)
+                
+    city_matched_bool = False
+    if best_match:
+        norm_input = city_name.lower().replace(" ", "").replace("-", "")
+        norm_dir = best_match[0].lower().replace(" ", "").replace("-", "")
+        city_matched_bool = (norm_input == norm_dir)
+        
+    threshold = 2.2 if city_matched_bool else 1.5
+    
+    # Token matching check (protection against same-city false matches)
+    input_tokens = tokenize_hotel_name(hotel_name)
+    dir_tokens = tokenize_hotel_name(best_match[1]) if best_match else set()
+    matched_tokens = set()
+    for it in input_tokens:
+        for dt in dir_tokens:
+            if it == dt or char_similarity(it, dt) >= 0.8:
+                matched_tokens.add(it)
+                break
+    has_token_match = len(matched_tokens) > 0
+    
+    if best_match and best_score >= threshold and has_token_match:
+        city_dir, hotel_dir, matched_path = best_match
+        
+        name = hotel_name.split("(")[0].strip() if hotel_name else "Luxury Hotel"
+        tel = "+84 28 3933 3226"
+        intro = f"{name} offers refined luxury accommodations, personalized service, and modern comforts."
+        
+        info_path = os.path.join(matched_path, "info.json")
+        if os.path.exists(info_path):
+            try:
+                with open(info_path, "r", encoding="utf-8") as f:
+                    info = json.load(f)
+                    name = info.get("name", name)
+                    tel = info.get("tel", tel)
+                    intro = info.get("introduction", intro)
+            except Exception:
+                pass
+                
+        ext_dir = os.path.join(matched_path, "exterior")
+        ext_imgs = []
+        if os.path.exists(ext_dir) and os.path.isdir(ext_dir):
+            ext_imgs = sorted([f for f in os.listdir(ext_dir) if f.lower().endswith(('.jpg', '.jpeg', '.png', '.webp'))])
+            
+        int_dir = os.path.join(matched_path, "interior")
+        int_imgs = []
+        if os.path.exists(int_dir) and os.path.isdir(int_dir):
+            int_imgs = sorted([f for f in os.listdir(int_dir) if f.lower().endswith(('.jpg', '.jpeg', '.png', '.webp'))])
+            
+        root_imgs = sorted([f for f in os.listdir(matched_path) if f.lower().endswith(('.jpg', '.jpeg', '.png', '.webp'))])
+        
+        # Resolve exterior image
+        if ext_imgs:
+            ext_img = f"/assets/hotels/{city_dir}/{hotel_dir}/exterior/{ext_imgs[0]}"
+        elif int_imgs:
+            ext_img = f"/assets/hotels/{city_dir}/{hotel_dir}/interior/{int_imgs[0]}"
+        elif root_imgs:
+            ext_img = f"/assets/hotels/{city_dir}/{hotel_dir}/{root_imgs[0]}"
+        else:
+            ext_img = ""
+
+        # Resolve interior image
+        if int_imgs:
+            idx = 1 if len(int_imgs) > 1 else 0
+            int_img = f"/assets/hotels/{city_dir}/{hotel_dir}/interior/{int_imgs[idx]}"
+        elif ext_imgs:
+            idx = 1 if len(ext_imgs) > 1 else 0
+            int_img = f"/assets/hotels/{city_dir}/{hotel_dir}/exterior/{ext_imgs[idx]}"
+        elif root_imgs:
+            idx = 1 if len(root_imgs) > 1 else 0
+            int_img = f"/assets/hotels/{city_dir}/{hotel_dir}/{root_imgs[idx]}"
+        else:
+            int_img = ""
+            
+        return {
+            "name": name,
+            "tel": tel,
+            "introduction": intro,
+            "hotel_img": ext_img,
+            "room_img": int_img
+        }
+        
+    return None
+
+
+def get_luxury_hotel_details(hotel_name_or_arr: str, destination: str, checkin: str, checkout: str) -> dict:
+    name_lower = hotel_name_or_arr.lower() if hotel_name_or_arr else ""
+    date_range = format_hotel_dates(checkin, checkout)
+    city_country = f"{destination.upper()}, VIETNAM" if destination else "VIETNAM"
+    
+    # Parse name, room type, and notes from hotelArrangement
+    raw_name = hotel_name_or_arr
+    room_type = ""
+    notes = ""
+    
+    if hotel_name_or_arr:
+        parts = [p.strip() for p in hotel_name_or_arr.split(" - ") if p.strip()]
+        if len(parts) > 0:
+            raw_name = parts[0]
+        if len(parts) > 1:
+            room_type = parts[1]
+        if len(parts) > 2:
+            notes = " - ".join(parts[2:])
+            
+    name = raw_name.split("(")[0].strip() if raw_name else "Luxury Hotel"
+    tel = "+84 28 3933 3226"
+    intro = f"{name} offers refined luxury accommodations, personalized service, and modern comforts."
+    hotel_img = ""
+    room_img = ""
+    
+    # 1. Try resolving dynamically from the local database (Fusion Search + info.json)
+    resolved = resolve_hotel_details(raw_name, destination)
+    if resolved:
+        name = resolved["name"]
+        tel = resolved["tel"]
+        intro = resolved["introduction"]
+        hotel_img = resolved["hotel_img"]
+        room_img = resolved["room_img"]
+    else:
+        # 2. Legacy static overrides (No destination fallback here, only name-based override)
+        if "metropole" in name_lower:
+            name = "Sofitel Legend Metropole Hanoi"
+            tel = "+84 24 3826 6919"
+            intro = "A historic landmark since 1901, the Sofitel Legend Metropole Hanoi features French colonial grandeur blended with contemporary luxury. Located in the heart of Hanoi, it has welcomed playwrights, ambassadors, and heads of state. The hotel offers guestrooms adorned with rich wood, classic elegance, and refined Vietnamese touches. Indulge in culinary excellence at Le Beaulieu or relax at the heritage-rich Bamboo Bar by the garden pool, experiencing timeless colonial prestige."
+            hotel_img = "/assets/hotels/metropole_facade.jpg"
+            room_img = "/assets/hotels/metropole_room.jpg"
+        elif "orchid" in name_lower:
+            name = "Orchid Classic Cruise"
+            tel = "+84 96 123 4567"
+            intro = "Cruising the pristine waters of Lan Ha Bay and Halong Bay, Orchid Classic Cruise offers an intimate boutique experience with charter-level luxury. Featuring elegant Indochine architecture combined with modern wooden furnishings, the cruise hosts spacious suites, each featuring a private ocean-view balcony and a walk-in shower. Guests can relax in the outdoor jacuzzi, enjoy sunset cocktails on the sundeck, and savor fine dining showcasing local seafood delicacies."
+            hotel_img = "/assets/hotels/orchid_cruise.jpg"
+            room_img = "/assets/hotels/orchid_room.jpg"
+        elif "four seasons" in name_lower or "nam hai" in name_lower:
+            name = "Four Seasons Resort The Nam Hai"
+            tel = "+84 235 394 0000"
+            intro = "An oasis of luxury along a pristine portal of Hoi An's coastline, Four Seasons Resort The Nam Hai offers a sleek, design-led sanctuary. Inspired by traditional wind-and-water principles, the villas are designed with high ceilings, central platforms, and private terrace views. Guests can lounge by three infinity pools, experience holistic therapies at the floating spa pavilions, and relish exceptional Vietnamese culinary artistry under the shade of mature coconut palms."
+            hotel_img = "/assets/hotels/nam_hai_facade.jpg"
+            room_img = "/assets/hotels/nam_hai_room.jpg"
+        elif "ylang" in name_lower:
+            name = "Heritage Line Ylang"
+            tel = "+84 28 3933 3226"
+            intro = "Cruising Lan Ha Bay, part of Vietnam's famous Halong Bay, Ylang has a length of 57 meters, a draft of 1.9 meters and a cruise speed of around 10 nautical knots. Launched in 2019, the vessel is a mix of Indochinese-Vietnamese design, comprised of 10 suites divided into two room categories, both of which feature private balconies, separate lounge areas, walk-in showers and separate bathtubs, large sliding doors, air conditioning and beautiful wood panels. Facilities include the reception-lobby area, a boutique, spa and sauna areas, a wellness studio, a library lounge, a restaurant and bar, as well as a terrace deck with a pool."
+            hotel_img = "/assets/hotels/orchid_cruise.jpg"
+            room_img = "/assets/hotels/orchid_room.jpg"
+
+    return {
+        "city_country": city_country,
+        "name": name,
+        "introduction": intro,
+        "hotel_img": hotel_img,
+        "room_img": room_img,
+        "date_range": date_range,
+        "tel": tel,
+        "destination": destination,
+        "checkInDate": checkin,
+        "checkOutDate": checkout
+    }
+

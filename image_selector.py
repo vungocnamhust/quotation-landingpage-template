@@ -1,11 +1,12 @@
 from dotenv import load_dotenv
 import os
 import random
-from openai import AsyncOpenAI
+from pydantic import BaseModel, Field
+from pydantic_ai import Agent
+import llm_client
 
-# Initialize OpenAI client (make sure OPENAI_API_KEY is set in your environment variables)
 load_dotenv()
-client = AsyncOpenAI(timeout=10.0)
+model = llm_client.get_model()
 
 PROVINCES = [
     "an-giang", "ba-ria-vung-tau", "bac-lieu", "bac-kan", "bac-giang", "bac-ninh", "ben-tre", 
@@ -208,44 +209,53 @@ def resolve_slug_from_known(location: str, known_slugs: dict[str, str]) -> str |
     return best_match
 
 
+# PydanticAI Agents definition
+slug_agent = Agent(
+    model=model,
+    output_type=str,
+    system_prompt=(
+        "Bạn là một chuyên gia về địa lý du lịch Việt Nam. Nhiệm vụ của bạn là đọc đoạn văn bản cung cấp và tìm ra địa danh du lịch nổi bật nhất được nhắc đến. "
+        "Sau đó, ánh xạ địa danh đó sang TÊN SLUG của 1 trong 63 tỉnh/thành phố của Việt Nam.\n"
+        "Đặc biệt nếu nhắc đến các tỉnh miền Tây (Mekong Delta), hãy ưu tiên trả về 'mekong'.\n"
+        "Nếu đoạn văn chứa nhiều địa điểm (ví dụ: Hà Nội, Sapa, Đà Nẵng), hãy TỰ ĐỘNG CHỌN NGẪU NHIÊN 1 địa điểm trong số đó để ánh xạ sang slug.\n"
+        f"Danh sách các slug hợp lệ: {', '.join(PROVINCES)}\n"
+        "Hãy trả về CHỈ ĐÚNG 1 SLUG từ danh sách trên mà không kèm bất kỳ lời giải thích, dấu câu hay nội dung nào khác. Nếu hoàn toàn không có địa danh nào, hãy trả về 'unknown'."
+    )
+)
+
+class Destination(BaseModel):
+    name: str = Field(description="Tên hiển thị ngắn gọn, ví dụ: 'Hà Nội', 'Vịnh Hạ Long', 'Sapa', 'Hội An'")
+    slug: str = Field(description="Mã slug tương ứng thuộc danh sách 63 tỉnh/thành")
+
+class DestinationList(BaseModel):
+    destinations: list[Destination] = Field(description="Danh sách các địa điểm/tỉnh thành trích xuất được")
+
+destinations_agent = Agent(
+    model=model,
+    output_type=DestinationList,
+    system_prompt=(
+        "Bạn là chuyên gia du lịch Việt Nam. Hãy đọc đoạn văn bản sau và trích xuất ra các địa điểm/tỉnh thành nổi bật nhất xuất hiện trong văn bản.\n"
+        "Với mỗi địa điểm, hãy cung cấp tên hiển thị (name) và mã slug tương ứng thuộc danh sách 63 tỉnh/thành.\n"
+        f"Danh sách slug hợp lệ: {', '.join(PROVINCES)}\n"
+        "Lưu ý:\n"
+        "- Tên hiển thị (name) nên ngắn gọn, ví dụ 'Hà Nội', 'Vịnh Hạ Long', 'Sapa', 'Hội An'.\n"
+        "- Slug (slug) PHẢI nằm trong danh sách slug trên (Ví dụ Sapa -> lao-cai, Hạ Long -> quang-ninh)."
+    )
+)
+
 async def get_province_slug_for_location(location: str) -> str | None:
     """
-    Sử dụng LLM (OpenAI) để ánh xạ một địa danh hoặc địa điểm bất kỳ sang slug của tỉnh thành tương ứng.
+    Sử dụng LLM (DeepSeek-Flash qua PydanticAI) để ánh xạ một địa danh hoặc địa điểm bất kỳ sang slug của tỉnh thành tương ứng.
     Ví dụ: "Sapa" -> "lao-cai", "Hội An" -> "quang-nam", "Bến Ninh Kiều" -> "can-tho".
-
-    Chú ý: Ưu tiên dùng `resolve_slug_locally()` và `resolve_slug_from_known()` trước khi gọi hàm này
-    để tránh tốn token không cần thiết.
     """
     if not location:
         return None
-
-    prompt = f"""
-Bạn là một chuyên gia về địa lý du lịch Việt Nam. Nhiệm vụ của bạn là đọc đoạn văn bản cung cấp và tìm ra địa danh du lịch nổi bật nhất được nhắc đến. Sau đó, ánh xạ địa danh đó sang TÊN SLUG của 1 trong 63 tỉnh/thành phố của Việt Nam.
-
-Đặc biệt nếu nhắc đến các tỉnh miền Tây (Mekong Delta), hãy ưu tiên trả về "mekong".
-Nếu đoạn văn chứa nhiều địa điểm (ví dụ: Hà Nội, Sapa, Đà Nẵng), hãy TỰ ĐỘNG CHỌN NGẪU NHIÊN 1 địa điểm trong số đó để ánh xạ sang slug.
-
-Danh sách các slug hợp lệ:
-{', '.join(PROVINCES)}
-
-Đoạn văn bản đầu vào: "{location}"
-
-Hãy trả về CHỈ ĐÚNG 1 SLUG từ danh sách trên mà không kèm bất kỳ lời giải thích, dấu câu hay nội dung nào khác. Nếu hoàn toàn không có địa danh nào, hãy trả về "unknown".
-    """
-    
     try:
-        response = await client.chat.completions.create(
-            model="gpt-4o-mini", # Dùng model nhỏ để tốc độ phản hồi nhanh và rẻ
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0,
-            max_tokens=10,
-        )
-        slug = response.choices[0].message.content.strip().lower()  # type: ignore
-        
+        res = await slug_agent.run(f"Đoạn văn bản đầu vào: '{location}'")
+        slug = res.data.strip().lower()
         if slug in PROVINCES:
             return slug
-        else:
-            return None
+        return None
     except Exception as e:
         print(f"[Error] Mapping location failed: {e}")
         return None
@@ -253,37 +263,18 @@ Hãy trả về CHỈ ĐÚNG 1 SLUG từ danh sách trên mà không kèm bất 
 async def extract_and_map_destinations(text: str, max_items: int | None = None) -> list[dict[str, str]]:
     """
     Đọc toàn bộ văn bản (tour info), trích xuất ra danh sách các điểm đến cụ thể
-    và ánh xạ chính xác mỗi điểm đến với slug của tỉnh tương ứng.
-    Trả về list: [{"name": "Hà Nội", "slug": "ha-noi"}, ...]
+    và ánh xạ chính xác mỗi điểm đến với slug của tỉnh tương ứng bằng PydanticAI.
     """
-    limit_text = f"trích xuất ra {max_items} địa điểm/tỉnh thành" if max_items else "trích xuất ra TẤT CẢ địa điểm/tỉnh thành"
-    prompt = f"""
-Bạn là chuyên gia du lịch Việt Nam. Hãy đọc đoạn văn bản sau và {limit_text} NỔI BẬT NHẤT xuất hiện trong văn bản.
-Với mỗi địa điểm, hãy cung cấp tên hiển thị (name) và mã slug tương ứng thuộc danh sách 63 tỉnh/thành.
-
-Danh sách slug hợp lệ:
-{', '.join(PROVINCES)}
-
-Lưu ý:
-- Tên hiển thị (name) nên ngắn gọn, ví dụ "Hà Nội", "Vịnh Hạ Long", "Sapa", "Hội An".
-- Slug (slug) PHẢI nằm trong danh sách slug trên. (Ví dụ Sapa -> lao-cai, Hạ Long -> quang-ninh).
-
-Văn bản:
-"{text}"
-
-Hãy trả về ĐÚNG MỘT object JSON có chứa 1 key là "destinations". Key này trỏ tới một array, mỗi element là một object có 2 key "name" và "slug".
-"""
+    if not text:
+        return []
+    limit_text = f"trích xuất tối đa {max_items} địa điểm" if max_items else "trích xuất TẤT CẢ địa điểm"
     try:
-        response = await client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0,
-            response_format={"type": "json_object"}
-        )
-        import json
-        content = response.choices[0].message.content
-        data = json.loads(content)  # type: ignore
-        return data.get("destinations", [])
+        res = await destinations_agent.run(f"Đọc văn bản và {limit_text}:\n'{text}'")
+        dest_list: DestinationList = res.data
+        result = [{"name": d.name, "slug": d.slug} for d in dest_list.destinations if d.slug in PROVINCES]
+        if max_items:
+            result = result[:max_items]
+        return result
     except Exception as e:
         print(f"[Error] Extract destinations failed: {e}")
         return []
@@ -324,3 +315,27 @@ async def select_landing_image(location: str) -> str:
     province_slug = await get_province_slug_for_location(location)
     image_url = get_random_image_for_province(province_slug)
     return image_url
+
+def get_all_images_for_province(province_slug: str | None, assets_dir: str = "assets") -> list[str]:
+    """
+    Nhận vào slug của tỉnh, tìm trong thư mục tương ứng và trả về danh sách tất cả ảnh.
+    Nếu không tìm thấy hoặc lỗi, sẽ fallback về logo mặc định.
+    """
+    default_image = "/assets/vietnam-safar-logo.png"
+    
+    if not province_slug:
+        return [default_image]
+        
+    folder_path = os.path.join(assets_dir, province_slug)
+    
+    if os.path.isdir(folder_path):
+        valid_extensions = {".jpg", ".jpeg", ".png", ".webp"}
+        files = sorted([
+            f for f in os.listdir(folder_path) 
+            if os.path.isfile(os.path.join(folder_path, f)) and os.path.splitext(f)[1].lower() in valid_extensions
+        ])
+        
+        if files:
+            return [f"/{assets_dir}/{province_slug}/{f}" for f in files]
+            
+    return [default_image]

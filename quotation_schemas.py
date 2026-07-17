@@ -350,6 +350,12 @@ class TourQuotationPayload(FrozenModel):
     candidateBlocks: List[CandidateBlock] = pydantic_Field(
         description="Guidance for grouped supplier/service lookup, one per logical service group."
     )
+    inclusions: Optional[List[str]] = pydantic_Field(
+        default=None, description="Optional list of inclusions."
+    )
+    exclusions: Optional[List[str]] = pydantic_Field(
+        default=None, description="Optional list of exclusions."
+    )
     # Extra field allowed for API validation
     quotationNumber: Optional[str] = pydantic_Field(
         default=None, description="Optional quotation reference code."

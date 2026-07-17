@@ -1,0 +1,15 @@
+.venv
+venv
+__pycache__
+*.pyc
+.git
+.gitignore
+.env
+published/*
+_published/*
+_Drafts
+_DRAFT
+*.log
+.idea
+.vscode
+.DS_Store

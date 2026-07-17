@@ -267,6 +267,21 @@
       text-align: right
     }
 
+    .quote-row.stacked {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+
+    .quote-row.stacked strong {
+      text-align: left;
+    }
+
+    .carousel-dot.active {
+      background: white !important;
+      transform: scale(1.3);
+    }
+
     .luxury-strip {
       position: relative;
       z-index: 3;
@@ -353,18 +368,11 @@
       border-radius: 34px;
       overflow: hidden;
       box-shadow: var(--shadow);
-      background: center/cover no-repeat
+      background: #efe4d1;
     }
 
     .image-tile.large {
       grid-row: span 2
-    }
-
-    .image-tile:before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(180deg, transparent 34%, rgba(17, 19, 15, .72))
     }
 
     .image-caption {
@@ -891,7 +899,73 @@
       border: 1px solid var(--line) !important;
     }
 
-    /* Custom Marker */
+    /* Custom Marker Giọt Nước Dẹt Tràn Viền */
+    .custom-irregular-marker {
+      width: 80px;
+      height: 80px;
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      display: flex;
+      justify-content:     /* Custom Marker Giọt Nước Dẹt Tràn Viền */
+    .custom-irregular-marker {
+      width: 80px;
+      height: 80px;
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.5));
+    }
+
+    .custom-irregular-marker:hover,
+    .custom-irregular-marker.active {
+      transform: scale(1.15) translateY(-4px);
+      z-index: 1000 !important;
+    }
+
+    .marker-svg-container {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .marker-path {
+      transition: filter 0.3s ease;
+    }
+
+    .custom-irregular-marker:hover .marker-path,
+    .custom-irregular-marker.active .marker-path {
+      filter: brightness(1.08);
+    }
+
+    /* Sóng phát sáng đồng dạng phía sau */
+    .marker-path-radar {
+      fill: none;
+      stroke: var(--gold);
+      stroke-width: 2px;
+      transform-origin: 50px 50px;
+      opacity: 0;
+      pointer-events: none;
+      animation: svgRadarPulse 2.8s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
+    }
+
+    @keyframes svgRadarPulse {
+      0% {
+        transform: scale(0.96);
+        opacity: 0.85;
+        stroke-width: 3px;
+      }
+      100% {
+        transform: scale(1.35);
+        opacity: 0;
+        stroke-width: 0.5px;
+      }
+    }
+
+    /* Custom Marker (Classic Mode) */
     .custom-marker {
       position: relative;
       width: 28px;
@@ -942,11 +1016,39 @@
         transform: scale(0.5);
         opacity: 1;
       }
-
       80%,
       100% {
         transform: scale(1.4);
         opacity: 0;
+      }
+    }
+
+    /* Map Mode Toggle Styles */
+    .map-mode-toggle .mode-btn {
+      border: none;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.6);
+      padding: 6px 14px;
+      border-radius: 16px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: inherit;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      outline: none;
+    }
+
+    .map-mode-toggle .mode-btn.active {
+      background: var(--gold);
+      color: black !important;
+      box-shadow: 0 2px 8px rgba(183, 137, 75, 0.4);
+    }}
+      100% {
+        transform: scale(1.35);
+        opacity: 0;
+        stroke-width: 0.5px;
       }
     }
 
@@ -1396,22 +1498,10 @@
       width: 200px;
       height: 200px;
       border-radius: 50%;
-      background: linear-gradient(135deg, var(--emerald), var(--emerald-2));
-      color: var(--gold-2);
-      font-family: var(--serif);
-      font-size: 54px;
-      font-weight: 500;
-      display: grid;
-      place-items: center;
+      background: var(--designer-img, url('https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400&h=400')) center/cover no-repeat;
       box-shadow: 0 16px 40px rgba(23, 65, 46, 0.2);
       border: 3px solid var(--gold);
       overflow: hidden;
-    }
-
-    .designer-avatar-large img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
     }
 
     .designer-info span {
@@ -1690,7 +1780,7 @@
       <a class="brand" href="#top"><img src="/assets/vietnam-safar-logo.png" alt="Vietnam Safar logo" /> Vietnam
         Safar</a>
       <div class="nav-links">
-        <a href="#overview">Overview</a><a href="#route-map">Route Map</a><a href="#journey">Journey</a><a
+        <a href="#route-map">Route Map</a><a href="#journey">Journey</a><a
           href="#itinerary">Itinerary</a><a href="#quotation">Quotation</a><a href="#terms">Terms</a>
       </div>
       <div class="nav-actions">
@@ -1700,9 +1790,7 @@
               d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z" />
           </svg>
         </button>
-        <a class="btn dark" href="/quotations/{{ quotation_id }}/pdf" target="_blank" id="btn-pdf-view">📄 PDF
-          Preview</a>
-        <button class="btn dark" onclick="window.print()" style="background:rgba(23,65,46,.6)">🖨️ Print</button>
+        <a class="btn dark" href="/quotations/{{ quotation_id }}/pdf" target="_blank" id="btn-pdf-view">📄 PDF Preview</a>
       </div>
     </div>
   </nav>
@@ -1737,7 +1825,7 @@
           </div>
         </div>
         <aside class="quote-card">
-          <h2>Quotation Snapshot</h2>
+          <h2>Journey Overview</h2>
           <div class="quote-list">
             <div class="quote-row"><span>Prepared for</span><strong data-editable="customer_name">{{ customer_name
                 }}</strong></div>
@@ -1749,10 +1837,10 @@
             <div class="quote-row"><span>Travel dates</span><strong>{{ travel_dates }}</strong></div>
             {% endif %}
             {% if route_txt %}
-            <div class="quote-row"><span>Route</span><strong>{{ route_txt }}</strong></div>
+            <div class="quote-row stacked"><span>Route</span><strong>{{ route_txt }}</strong></div>
             {% endif %}
             {% if travel_style %}
-            <div class="quote-row"><span>Style</span><strong>{{ travel_style }}</strong></div>
+            <div class="quote-row stacked"><span>Style</span><strong>{{ travel_style }}</strong></div>
             {% endif %}
             <div class="quote-row"><span>Ref.</span><strong data-editable="quotation_number">{{ quotation_number
                 }}</strong></div>
@@ -1762,54 +1850,30 @@
       </div>
     </header>
 
-    <section class="luxury-strip">
-      <div class="container strip-grid">
-        <div class="strip-card"><span>Duration</span><strong data-editable="glance_duration">{{ duration_label
-            }}</strong></div>
-        <div class="strip-card"><span>Market &amp; Nationality</span><strong data-editable="glance_market">{{
-            glance_market }}</strong></div>
-        <div class="strip-card"><span>Guest Profile</span><strong data-editable="glance_profile">{{ glance_profile
-            }}</strong></div>
-        <div class="strip-card"><span>Hotel Standard</span><strong data-editable="glance_standard">{{ glance_standard
-            }}</strong></div>
-        <div class="strip-card"><span>Meal Preference</span><strong data-editable="glance_meals">{{ glance_meals
-            }}</strong></div>
-        <div class="strip-card"><span>Route Sequence</span><strong data-editable="route_txt"
-            style="font-size: 15px; font-weight: 500; font-family: var(--serif); line-height: 1.3; margin-top: 6px;">{{
-            route_txt }}</strong></div>
-        <div class="strip-card"><span>Tour Type</span><strong data-editable="glance_tour_type">Private with Local
-            Support</strong></div>
-        <div class="strip-card"><span>Pricing Ref / Code</span><strong data-editable="glance_tour_code"
-            style="font-size: 16px;">{{ glance_price_type }} ({{ glance_tour_code }})</strong></div>
-      </div>
-    </section>
 
-    <section id="overview">
-      <div class="container">
-        <div class="section-head" style="align-items: start;">
-          <h2 data-editable="overview_h2">{{ overview_h2 }}</h2>
-          <div class="overview-body" style="display: grid; gap: 14px;">
-            {% for para in overview_paras %}
-            <p data-editable="overview_p_{{ loop.index }}" style="margin: 0; font-size: 15px; line-height: 1.6; color: var(--muted);">{{ para }}</p>
-            {% endfor %}
-          </div>
-        </div>
-      </div>
-    </section>
+
+
 
     <section id="route-map" class="no-print" style="padding: 72px 0;">
       <div class="container">
         <div class="section-head">
-          <h2>Your Journey Visualized</h2>
+          <h2>Your Journey, Mapped</h2>
           <p>An interactive map showing your curated path through Vietnam's iconic landmarks and luxury stopovers. Click
             on a destination in the list or the map to explore highlights.</p>
         </div>
         <div class="map-layout">
-          <div id="map" class="map-container">
-            <div
-              style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--ivory-2); color: var(--muted); font-size: 14px;">
-              <span style="font-size: 24px; margin-bottom: 8px;">🗺️</span>
-              <span>Loading Interactive Route Map...</span>
+          <div style="position: relative; height: 100%; z-index: 1;">
+            <div id="map" class="map-container">
+              <div
+                style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--ivory-2); color: var(--muted); font-size: 14px;">
+                <span style="font-size: 24px; margin-bottom: 8px;">🗺️</span>
+                <span>Loading Interactive Route Map...</span>
+              </div>
+            </div>
+            <!-- Map Mode Switcher -->
+            <div class="map-mode-toggle no-print" style="position: absolute; top: 16px; right: 16px; z-index: 1000; display: flex; gap: 4px; background: rgba(17, 19, 15, 0.75); padding: 4px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
+              <button id="toggle-mode-classic" class="mode-btn active" onclick="switchMapMode('classic')">Classic</button>
+              <button id="toggle-mode-image" class="mode-btn" onclick="switchMapMode('image')">Image</button>
             </div>
           </div>
           <div class="map-sidebar" id="map-sidebar">
@@ -1825,7 +1889,7 @@
         <div class="section-head" style="grid-template-columns: 1fr;">
           <h2
             style="color: var(--gold-2); font-family: var(--serif); font-size: clamp(32px, 4vw, 54px); margin: 0 0 10px;">
-            Why This Journey Works Well for the Guests</h2>
+            {{ ['Behind the Itinerary Curation', 'Why This Journey Inspires', 'The Anatomy of the Experience', 'A Perfectly Paced Journey'] | random }}</h2>
           <p style="color: rgba(255, 255, 255, 0.72); margin: 0;">Tailored care, balanced pacing, and seamless logistics
             designed specifically for your group.</p>
         </div>
@@ -1866,16 +1930,39 @@
     <section id="journey">
       <div class="container">
         <div class="section-head">
-          <h2 data-editable="journey_h2">{{ journey_h2 }}</h2>
+          <h2 data-editable="journey_h2">{{ ['The cities in frames', 'Through Local Eyes', 'The city collection'] | random }}</h2>
           <p data-editable="journey_p">{{ journey_p }}</p>
         </div>
         <div class="gallery">
           {% for dest in destinations %}
-          <div class="image-tile {% if loop.index == 1 %}large{% endif %}"
-            style="background-image: var(--img-{{ loop.index }})">
-            <div class="image-caption">
-              <small data-editable="gal{{ loop.index }}_label">{% if loop.index == 1 %}Highlight{% else %}Destination{%
-                endif %}</small>
+          <div class="image-tile {% if loop.index == 1 %}large{% endif %}">
+            <div class="carousel-inner" style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
+              {% if dest.images %}
+                {% for img in dest.images %}
+                <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('{{ img }}') center/cover no-repeat;"></div>
+                {% endfor %}
+              {% else %}
+                <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('{{ dest.image_url or '/assets/vietnam-safar-logo.png' }}') center/cover no-repeat;"></div>
+              {% endif %}
+            </div>
+            
+            <!-- Gradient Overlay -->
+            <div style="position: absolute; inset: 0; background: linear-gradient(180deg, transparent 34%, rgba(17,19,15,0.72)); pointer-events: none; z-index: 2;"></div>
+
+            <!-- Controls (only show if there is more than 1 image) -->
+            {% if dest.images and dest.images|length > 1 %}
+            <button class="carousel-control prev no-print" aria-label="Previous image" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); background: rgba(17,19,15,0.4); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 18px; line-height: 1; transition: background 0.2s, opacity 0.2s; backdrop-filter: blur(4px); padding-bottom: 2px;">‹</button>
+            <button class="carousel-control next no-print" aria-label="Next image" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); background: rgba(17,19,15,0.4); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 18px; line-height: 1; transition: background 0.2s, opacity 0.2s; backdrop-filter: blur(4px); padding-bottom: 2px;">›</button>
+            
+            <div class="carousel-dots no-print" style="position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3;">
+              {% for img in dest.images %}
+              <button class="carousel-dot {% if loop.first %}active{% endif %}" aria-label="Go to slide {{ loop.index }}" style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+              {% endfor %}
+            </div>
+            {% endif %}
+            
+            <div class="image-caption" style="z-index: 3;">
+              <small data-editable="gal{{ loop.index }}_label">{% if loop.index == 1 %}Highlight{% else %}Destination{% endif %}</small>
               <strong data-editable="gal{{ loop.index }}_title">{{ dest.name }}</strong>
             </div>
           </div>
@@ -1883,6 +1970,53 @@
         </div>
       </div>
     </section>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll('.image-tile').forEach(tile => {
+          const inner = tile.querySelector('.carousel-inner');
+          if (!inner) return;
+          const slides = tile.querySelectorAll('.carousel-slide');
+          if (slides.length <= 1) return;
+          
+          let currentIndex = 0;
+          
+          const updateCarousel = () => {
+            inner.style.transform = `translateX(-${currentIndex * 100}%)`;
+            tile.querySelectorAll('.carousel-dot').forEach((dot, idx) => {
+              dot.classList.toggle('active', idx === currentIndex);
+            });
+          };
+          
+          const prevBtn = tile.querySelector('.carousel-control.prev');
+          const nextBtn = tile.querySelector('.carousel-control.next');
+          
+          if (prevBtn) {
+            prevBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              currentIndex = (currentIndex - 1 + slides.length) % slides.length;
+              updateCarousel();
+            });
+          }
+          
+          if (nextBtn) {
+            nextBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              currentIndex = (currentIndex + 1) % slides.length;
+              updateCarousel();
+            });
+          }
+          
+          tile.querySelectorAll('.carousel-dot').forEach((dot, idx) => {
+            dot.addEventListener('click', (e) => {
+              e.stopPropagation();
+              currentIndex = idx;
+              updateCarousel();
+            });
+          });
+        });
+      });
+    </script>
 
     <section id="itinerary">
       <div class="container">
@@ -1921,11 +2055,11 @@
             </div>
             <div class="day-meta">
               {% if day.overnight %}
-              <span style="font-size:11px;letter-spacing:.12em">OVERNIGHT</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
               <span style="font-size:15px;font-family:Georgia,serif">{{ day.overnight }}</span><br><br>
               {% endif %}
               {% if day.meals %}
-              <span style="font-size:11px;letter-spacing:.12em">MEALS</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Meals</span><br>
               <span style="font-size:13px">{{ day.meals | join(' · ') }}</span>
               {% endif %}
             </div>
@@ -1937,6 +2071,25 @@
 
     <section id="hotels"
       style="background: var(--card); border: 1px solid var(--line); border-radius: 40px; padding: 54px; margin: 40px 0; box-shadow: 0 18px 45px rgba(17,19,15,0.04);">
+      <style>
+        @media (max-width: 768px) {
+          .hotel-images-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .hotel-image-wrapper {
+            height: 220px !important;
+          }
+          .hotel-footer-layout {
+            flex-direction: column;
+            gap: 20px !important;
+          }
+          .hotel-info {
+            width: 100% !important;
+            align-items: flex-start !important;
+            text-align: left !important;
+          }
+        }
+      </style>
       <div class="container">
         <div class="section-head" style="grid-template-columns: 1fr;">
           <h2
@@ -1947,38 +2100,46 @@
         </div>
 
         {% if hotels %}
-        <div style="overflow-x: auto; margin-top: 32px; border-radius: 18px; border: 1px solid var(--line);">
-          <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
-            <thead>
-              <tr style="background: var(--emerald); color: white;">
-                <th style="padding: 16px 20px;">Destination</th>
-                <th style="padding: 16px 20px;">Check-In</th>
-                <th style="padding: 16px 20px;">Check-Out</th>
-                <th style="padding: 16px 20px;">Hotel Arrangement</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for item in hotels %}
-              <tr
-                style="border-bottom: 1px solid var(--line); background: {% if loop.index % 2 == 0 %}rgba(183, 137, 75, 0.03){% else %}white{% endif %};">
-                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">{{ item.destination }}</td>
-                <td style="padding: 16px 20px;">{{ item.checkInDate or 'TBA' }}</td>
-                <td style="padding: 16px 20px;">{{ item.checkOutDate or 'TBA' }}</td>
-                <td style="padding: 16px 20px; font-family: var(--serif); font-size: 15px; color: var(--ink);">{{
-                  item.hotelArrangement }}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+        <div class="hotel-plan-container" style="display: flex; flex-direction: column; gap: 48px; margin-top: 40px;">
+          {% for item in hotels %}
+          <div class="hotel-card" style="border-bottom: 1px solid var(--line); padding-bottom: 40px; {% if loop.last %}border-bottom: none; padding-bottom: 0;{% endif %}">
+            <!-- Header (City / Country & Hotel Name) -->
+            <div class="hotel-header" style="margin-bottom: 20px;">
+              <span class="hotel-city" style="display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--muted); text-transform: uppercase; margin-bottom: 4px;" data-editable="hotel_city_{{ loop.index }}">{{ item.city_country }}</span>
+              <h3 class="hotel-name" style="font-family: var(--serif); font-size: 26px; font-weight: 700; color: var(--ink); margin: 0; letter-spacing: 0.02em;" data-editable="hotel_name_{{ loop.index }}">{{ item.name }}</h3>
+            </div>
+            
+            <!-- Side-by-Side Images -->
+            <div class="hotel-images-grid" style="display: grid; grid-template-columns: 1fr 1.6fr; gap: 16px; margin: 20px 0;">
+              <div class="hotel-image-wrapper" style="height: 280px; border-radius: 4px; overflow: hidden; position: relative;">
+                <img src="{{ item.hotel_img }}" alt="{{ item.name }}" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+              </div>
+              <div class="hotel-image-wrapper" style="height: 280px; border-radius: 4px; overflow: hidden; position: relative;">
+                <img src="{{ item.room_img }}" alt="{{ item.name }} Room" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+              </div>
+            </div>
+            
+            <!-- Footer Columns (Introduction & Info/Tel) -->
+            <div class="hotel-footer-layout" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 40px; margin-top: 20px; flex-wrap: wrap;">
+              <div class="hotel-intro" style="flex: 1; min-width: 280px;">
+                <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_{{ loop.index }}">{{ item.introduction }}</p>
+              </div>
+              <div class="hotel-info" style="width: 280px; display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-end; text-align: right;">
+                <h4 style="font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--emerald); margin: 0; letter-spacing: 0.04em; text-transform: uppercase;" data-editable="hotel_info_name_{{ loop.index }}">{{ item.name }}</h4>
+                <span style="font-size: 14px; font-weight: 500; color: var(--ink); margin-top: 8px;" data-editable="hotel_date_{{ loop.index }}">{{ item.date_range }}</span>
+                <span style="font-size: 12px; color: var(--muted); margin-top: 6px; letter-spacing: 0.05em;" data-editable="hotel_tel_{{ loop.index }}">TEL: {{ item.tel }}</span>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
         </div>
         {% else %}
-        <p style="color: var(--muted); font-style: italic; margin-top: 20px;">Hotel arrangements will be tailored and
-          detailed here for your specific travel dates.</p>
+        <p style="color: var(--muted); font-style: italic; margin-top: 20px;">Hotel arrangements will be tailored and detailed here for your specific travel dates.</p>
         {% endif %}
 
         {% if room_notes %}
         <div
-          style="margin-top: 20px; padding: 18px; background: rgba(183, 137, 75, 0.06); border-radius: 14px; border: 1px dashed var(--gold);">
+          style="margin-top: 32px; padding: 18px; background: rgba(183, 137, 75, 0.06); border-radius: 14px; border: 1px dashed var(--gold);">
           <strong
             style="color: var(--gold); text-transform: uppercase; font-size: 11px; letter-spacing: 0.12em; display: block; margin-bottom: 6px;">Room
             Notes &amp; Special Requests</strong>
@@ -1988,126 +2149,7 @@
       </div>
     </section>
 
-    <section id="testimonials" class="no-print" style="background: var(--ivory); padding: 72px 0;">
-      <div class="container">
-        <div class="section-head" style="margin-bottom: 44px; grid-template-columns: 1fr;">
-          <h2>Loved by Discerning Travelers</h2>
-          <p style="margin-top: 8px;">Read stories from families and luxury travelers who explored Vietnam on our
-            slow-nature private paths.</p>
-        </div>
-        <div class="testimonials-grid">
-          <div class="testimonial-card">
-            <div class="stars">★★★★★</div>
-            <h3>"Unforgettable Family Holiday"</h3>
-            <p>"The slow pace was perfect for my parents and children. Metropole Hanoi was splendid, and our private
-              guide made us feel completely safe and welcome at every stop. The halal-friendly food arrangements were
-              flawless."</p>
-            <div class="client-meta">
-              <div class="client-avatar">
-                <img
-                  src="https://images.unsplash.com/photo-1589156280159-27698a70f29e?auto=format&fit=crop&q=80&w=150&h=150"
-                  alt="Fatima Al-Thani">
-              </div>
-              <div>
-                <strong>Fatima Al-Thani</strong>
-                <span>Family Journey (Qatar)</span>
-              </div>
-            </div>
-          </div>
-          <div class="testimonial-card">
-            <div class="stars">★★★★★</div>
-            <h3>"Exceptional Luxury & Service"</h3>
-            <p>"Vietnam Safar designed a masterpiece. The overnight cruise in Ha Long Bay felt like a private haven, and
-              the luxury transport between Sapa and Hanoi was incredibly comfortable. Highly recommend to anyone seeking
-              pure luxury."</p>
-            <div class="client-meta">
-              <div class="client-avatar">
-                <img
-                  src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150&h=150"
-                  alt="James Miller">
-              </div>
-              <div>
-                <strong>James Miller</strong>
-                <span>Bespoke Tour (Australia)</span>
-              </div>
-            </div>
-          </div>
-          <div class="testimonial-card">
-            <div class="stars">★★★★★</div>
-            <h3>"Flawless and Relaxed Pacing"</h3>
-            <p>"Every single transfer was prompt. The VIP Ford Transit was spacious and spotless. The itinerary gave us
-              enough time to relax by the beach and explore local culture. Truly zero friction."</p>
-            <div class="client-meta">
-              <div class="client-avatar">
-                <img
-                  src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150&h=150"
-                  alt="Sarah Richardson">
-              </div>
-              <div>
-                <strong>Sarah Richardson</strong>
-                <span>Slow Nature Tour (UK)</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
 
-    <section id="faq" class="no-print"
-      style="background: var(--ivory-2); padding: 72px 0; border-radius: 40px; margin: 40px 0;">
-      <div class="container" style="max-width: 800px;">
-        <div class="section-head" style="grid-template-columns: 1fr; text-align: center; margin-bottom: 44px;">
-          <h2>Frequently Asked Questions</h2>
-          <p style="margin-top: 8px;">Answers to common concerns regarding private pacing, transparent pricing, and
-            travel support.</p>
-        </div>
-        <div class="faq-list">
-          <div class="faq-item">
-            <button class="faq-toggle">
-              <span>What happens if my domestic flight is delayed?</span>
-              <span class="faq-icon">+</span>
-            </button>
-            <div class="faq-content">
-              <p>Our dedicated local concierge monitors your flights in real-time. If there is a delay, we automatically
-                reschedule your private driver and guide so that your transition remains entirely seamless without extra
-                costs.</p>
-            </div>
-          </div>
-          <div class="faq-item">
-            <button class="faq-toggle">
-              <span>Are these rates fully transparent?</span>
-              <span class="faq-icon">+</span>
-            </button>
-            <div class="faq-content">
-              <p>Yes, all prices are 100% transparent. There are no hidden fees, local taxes, or surprise surcharges
-                added later. The price shown is exactly what you pay for the listed services.</p>
-            </div>
-          </div>
-          <div class="faq-item">
-            <button class="faq-toggle">
-              <span>What standards can I expect from the private transport?</span>
-              <span class="faq-icon">+</span>
-            </button>
-            <div class="faq-content">
-              <p>We use only luxury late-model vehicles. For families of 4-8, we deploy VIP 16-seat Ford Transit D-Car
-                limousines equipped with plush reclining leather seats, individual USB ports, air conditioning, and
-                complimentary cold water.</p>
-            </div>
-          </div>
-          <div class="faq-item">
-            <button class="faq-toggle">
-              <span>How flexible is the daily itinerary?</span>
-              <span class="faq-icon">+</span>
-            </button>
-            <div class="faq-content">
-              <p>Because your vehicle and English-speaking guide are 100% private, you have full control over the pace.
-                If you wish to spend more time at a particular temple or start the day later, simply coordinate with
-                your guide.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
 
     <section id="quotation">
       <div class="container">
@@ -2122,12 +2164,21 @@
               <small style="color:rgba(255,255,255,.55);font-size:11px;display:block;margin-top:4px">{{ opt.optionName
                 }}</small>
               {% endif %}
+              {% if opt.is_total %}
+              <strong data-editable="price_pax_{{ loop.index }}" style="font-size:28px">{{
+                opt.totalPrice.displayText or ('{:,.0f}'.format(opt.totalPrice.amount) ~ ' ' ~
+                opt.totalPrice.currency) }}</strong>
+              <small>total package</small><br>
+              <span style="font-size:13px;opacity:.8">Per person: {{ opt.pricePerPerson.displayText or
+                ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~ opt.pricePerPerson.currency) }}</span>
+              {% else %}
               <strong data-editable="price_pax_{{ loop.index }}" style="font-size:28px">{{
                 opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~
                 opt.pricePerPerson.currency) }}</strong>
               <small>per person</small><br>
               <span style="font-size:13px;opacity:.8">Total: {{ opt.totalPrice.displayText or
                 ('{:,.0f}'.format(opt.totalPrice.amount) ~ ' ' ~ opt.totalPrice.currency) }}</span>
+              {% endif %}
               {% if opt.isConfirmedMainOption %}
               <div style="margin-top:12px;font-size:10px;letter-spacing:.14em;color:#d8bd85;font-weight:800">✓ CONFIRMED
                 MAIN OPTION</div>
@@ -2139,57 +2190,39 @@
             </div>
             {% endfor %}
           </div>
-          <div
-            style="margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1); display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 18px; font-size: 13px; color: rgba(255,255,255,0.7); text-align: left;">
-            <div>
-              <strong
-                style="color: var(--gold-2); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.1em;">Price
-                Basis</strong>
-              <span data-editable="glance_basis">{{ glance_basis }}</span>
-            </div>
-            <div>
-              <strong
-                style="color: var(--gold-2); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.1em;">Domestic
-                Flights</strong>
-              <span data-editable="glance_flights">{{ glance_flights }}</span>
-            </div>
-            <div>
-              <strong
-                style="color: var(--gold-2); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.1em;">Validity</strong>
-              <span data-editable="glance_validity">{{ glance_validity }}</span>
-            </div>
-            <div>
-              <strong
-                style="color: var(--gold-2); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.1em;">Rate
-                Classification</strong>
-              <span data-editable="glance_partner_note">{{ glance_partner_note }}</span>
-            </div>
+          {% if price_cond_paras and price_cond_paras[0] %}
+          <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 14px; color: rgba(255,255,255,0.8); line-height: 1.6; text-align: left;">
+            <strong style="color: var(--gold-2); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.15em; font-size: 11px; font-weight: 700;">Important Note</strong>
+            <p style="margin: 0;" data-editable="price_cond_first">{{ price_cond_paras[0] }}</p>
           </div>
-          {% if payment_terms %}
-          <p class="subtle" style="margin-top:20px" data-editable="payment_terms">{{ payment_terms }}</p>
           {% endif %}
         </div>
       </div>
     </section>
 
     <section>
-      <div class="container two-col">
-        <article class="panel">
-          <h3>Inclusions</h3>
-          <ul id="inclusions-list">
-            {% for line in inclusions %}
-            <li data-editable="inc_{{ loop.index }}">{{ line }}</li>
-            {% endfor %}
-          </ul>
-        </article>
-        <article class="panel">
-          <h3>Exclusions</h3>
-          <ul id="exclusions-list">
-            {% for line in exclusions %}
-            <li data-editable="exc_{{ loop.index }}">{{ line }}</li>
-            {% endfor %}
-          </ul>
-        </article>
+      <div class="container">
+        <div class="section-head" style="grid-template-columns: 1fr; margin-bottom: 32px;">
+          <h2 data-editable="inc_exc_h2">What Your Journey Includes</h2>
+        </div>
+        <div class="two-col">
+          <article class="panel">
+            <h3>Inclusions</h3>
+            <ul id="inclusions-list">
+              {% for line in inclusions %}
+              <li data-editable="inc_{{ loop.index }}">{{ line }}</li>
+              {% endfor %}
+            </ul>
+          </article>
+          <article class="panel">
+            <h3>Exclusions</h3>
+            <ul id="exclusions-list">
+              {% for line in exclusions %}
+              <li data-editable="exc_{{ loop.index }}">{{ line }}</li>
+              {% endfor %}
+            </ul>
+          </article>
+        </div>
       </div>
     </section>
 
@@ -2219,50 +2252,7 @@
     </section>
     {% endif %}
 
-    <section id="enhancements" style="padding: 72px 0;">
-      <div class="container">
-        <div class="section-head" style="grid-template-columns: 1fr;">
-          <h2
-            style="font-family: var(--serif); font-size: clamp(32px, 4vw, 48px); color: var(--emerald); margin: 0 0 10px;">
-            Optional Enhancements</h2>
-          <p style="color: var(--muted); margin: 0;">Select optional upgrades to personalize your B2B proposal for the
-            guests.</p>
-        </div>
-        <div
-          style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 18px; margin-top: 32px;">
-          {% for item in optional_enhancements %}
-          <div
-            style="background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px rgba(17,19,15,0.03); transition: transform 0.2s ease, box-shadow 0.2s ease;"
-            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 15px 35px rgba(17,19,15,0.06)';"
-            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px rgba(17,19,15,0.03)';">
-            <h4 style="margin: 0; font-family: var(--serif); font-size: 18px; color: var(--emerald);">{{ item.title }}
-            </h4>
-            <div
-              style="margin-top: 12px; display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); border: 1px solid var(--line); padding: 4px 10px; border-radius: 99px;">
-              {{ item.status }}
-            </div>
-          </div>
-          {% endfor %}
-        </div>
-      </div>
-    </section>
 
-    <section id="terms">
-      <div class="container">
-        <div class="section-head">
-          <h2>Price Conditions &amp; Notes</h2>
-          <p>The following conditions apply to this B2B quotation.</p>
-        </div>
-        <div class="experience-grid">
-          {% for para in price_cond_paras %}
-          <article class="experience">
-            <span class="num">NOTE {{ loop.index }}</span>
-            <p data-editable="price_cond_{{ loop.index }}">{{ para }}</p>
-          </article>
-          {% endfor %}
-        </div>
-      </div>
-    </section>
 
     <section id="payment-terms"
       style="background: var(--card); border: 1px solid var(--line); border-radius: 40px; padding: 54px; margin: 40px 0; box-shadow: 0 18px 45px rgba(17,19,15,0.04);">
@@ -2309,25 +2299,19 @@
       style="background: var(--ivory-2); padding: 72px 0; border-radius: 40px; margin: 40px 0;">
       <div class="container designer-container">
         <div class="designer-card">
-          <div class="designer-img-container">
-            <div class="designer-avatar-large">
-              <img
-                src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400&h=400"
-                alt="Kim Quy - Luxury Travel Designer">
+          <div class="designer-img-container" id="designer-avatar-container">
+            <div class="designer-avatar-large" style="background-image: var(--designer-img, url('https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400&h=400')); background-size: cover; background-position: center;">
             </div>
           </div>
           <div class="designer-info">
-            <span>Your Dedicated Specialist</span>
-            <h2>Meet Kim Quy</h2>
-            <p class="designer-quote">"I am Kim Quy, your dedicated travel designer. I handpicked every hotel, private
-              transfer, and local guide on this itinerary to ensure your family experiences the true depth of Vietnam in
-              comfort, privacy, and at your own slow pace. I will personally oversee your journey from behind the
-              scenes."</p>
+            <span data-editable="designer_kicker">Your Dedicated Specialist</span>
+            <h2 data-editable="designer_title">Meet Your Travel Specialist</h2>
+            <p class="designer-quote" data-editable="designer_quote">"I am your dedicated travel specialist. I handpicked every hotel, private transfer, and local guide on this itinerary to ensure you experience the true depth of Vietnam in comfort, privacy, and at your own pace. I will personally oversee your journey from behind the scenes."</p>
             <div class="designer-details">
-              <div><strong>Expertise:</strong> Family & Multigenerational Travel, Heritage Paths</div>
-              <div><strong>Experience:</strong> 8+ years designing bespoke luxury journeys</div>
+              <div><strong>Expertise:</strong> <span data-editable="designer_expertise">Custom Itineraries, Luxury Travel, Local Experiences</span></div>
+              <div><strong>Experience:</strong> <span data-editable="designer_experience">5+ years designing bespoke journeys</span></div>
             </div>
-            <div class="designer-signature">Kim Quy</div>
+            <div class="designer-signature" data-editable="designer_signature">Your Travel Specialist</div>
           </div>
         </div>
       </div>
@@ -2379,70 +2363,7 @@
       </div>
     </section>
 
-    <!-- PWA Install Section -->
-    <section id="pwa-install-section" class="no-print"
-      style="padding: 72px 0; background: var(--ivory-2); border-top: 1px solid var(--line);">
-      <div class="container"
-        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; align-items: center; justify-items: center;">
-        <div>
-          <span class="kicker">Vietnam Safar App</span>
-          <h2
-            style="font-family: var(--serif); font-size: clamp(32px, 4vw, 44px); color: var(--emerald); margin: 12px 0 16px;">
-            Tải Ứng Dụng Hành Trình</h2>
-          <p style="color: var(--muted); font-size: 15px; line-height: 1.7; margin-bottom: 24px;">
-            Cài đặt ứng dụng trực tiếp trên điện thoại hoặc máy tính của bạn để cập nhật lịch trình nhanh chóng, xem bản
-            đồ du lịch và liên hệ với chuyên viên thiết kế tour ngay cả khi không có mạng Internet.
-          </p>
-          <div style="display: flex; flex-wrap: wrap; gap: 14px;">
-            <button id="btn-pwa-install-hero" class="btn gold">Cài Đặt Ứng Dụng</button>
-            <div
-              style="display: inline-flex; align-items: center; gap: 10px; opacity: 0.6; font-size: 12px; font-weight: 700; color: var(--muted);">
-              <span>✓ Hỗ trợ ngoại tuyến</span>
-              <span>•</span>
-              <span>✓ Thông báo đẩy</span>
-            </div>
-          </div>
-        </div>
-        <div style="position: relative; text-align: center;">
-          <div
-            style="width: 250px; height: 500px; background: #000; border-radius: 40px; border: 8px solid #333; margin: 0 auto; box-shadow: var(--shadow); overflow: hidden; position: relative;">
-            <div
-              style="position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 110px; height: 18px; background: #000; border-bottom-left-radius: 12px; z-index: 5;">
-            </div>
-            <div
-              style="height: 100%; background: var(--ivory); padding: 20px; text-align: left; display: flex; flex-direction: column; justify-content: space-between;">
-              <div
-                style="display: flex; justify-content: space-between; align-items: center; font-size: 10px; font-weight: bold; color: var(--emerald);">
-                <span>12:30</span>
-                <span style="font-size: 12px;">📶 🔋</span>
-              </div>
-              <div style="margin-top: 15px; flex-grow: 1;">
-                <img src="/assets/vietnam-safar-logo.png"
-                  style="width: 36px; height: 36px; border-radius: 50%; display: block;" />
-                <h4 style="font-family: var(--serif); color: var(--emerald); margin: 10px 0 5px; font-size: 16px;">
-                  Vietnam Safar</h4>
-                <p style="font-size: 11px; color: var(--muted); margin: 0 0 15px;">Hành trình của bạn đã sẵn sàng</p>
 
-                <div
-                  style="background: white; border: 1px solid var(--line); border-radius: 12px; padding: 10px; font-size: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 8px;">
-                  <strong style="color: var(--gold); display: block; margin-bottom: 2px;">NGÀY 1 • HÀ NỘI</strong>
-                  Xin chào Hà Nội. Nhận phòng và thưởng thức bữa tối.
-                </div>
-                <div
-                  style="background: white; border: 1px solid var(--line); border-radius: 12px; padding: 10px; font-size: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
-                  <strong style="color: var(--gold); display: block; margin-bottom: 2px;">NGÀY 2 • VỊNH HẠ LONG</strong>
-                  Di chuyển đến vịnh Hạ Long và lên du thuyền.
-                </div>
-              </div>
-              <div
-                style="background: var(--emerald); color: white; text-align: center; border-radius: 99px; padding: 8px; font-size: 11px; font-weight: bold;">
-                Mở Bản Đồ
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
   </main>
 
   <footer class="footer">
@@ -2468,7 +2389,7 @@
       el.spellcheck = false;
     });
 
-    let currentCssVar = '';
+    let currentImageTarget = null;
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = 'image/*';
@@ -2497,15 +2418,20 @@
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
           const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-          document.documentElement.style.setProperty(currentCssVar, `url('${dataUrl}')`);
+          
+          if (typeof currentImageTarget === 'string') {
+            document.documentElement.style.setProperty(currentImageTarget, `url('${dataUrl}')`);
+          } else if (currentImageTarget instanceof HTMLImageElement) {
+            currentImageTarget.src = dataUrl;
+          }
         }
         img.src = evt.target.result;
       }
       reader.readAsDataURL(file);
     });
 
-    function addImageChanger(selector, cssVar) {
-      const el = document.querySelector(selector);
+    function addImageChanger(selectorOrElement, target) {
+      const el = typeof selectorOrElement === 'string' ? document.querySelector(selectorOrElement) : selectorOrElement;
       if (!el) return;
       if (el.querySelector('.img-change-btn')) return; // already exists
       const btn = document.createElement('div');
@@ -2516,7 +2442,7 @@
       btn.onmouseout = () => btn.style.opacity = '0.3';
       btn.onclick = (e) => {
         e.stopPropagation();
-        currentCssVar = cssVar;
+        currentImageTarget = target;
         fileInput.click();
       };
       if (getComputedStyle(el).position === 'static') el.style.position = 'relative';
@@ -2525,9 +2451,18 @@
 
     function initImageChangers() {
       addImageChanger('.hero', '--hero-img');
+      addImageChanger('#designer-avatar-container', '--designer-img');
       const tiles = document.querySelectorAll('.gallery .image-tile');
       tiles.forEach((tile, index) => {
         addImageChanger(`.gallery .image-tile:nth-child(${index + 1})`, `--img-${index + 1}`);
+      });
+      // Add image changers to all hotel images
+      const hotelImgWrappers = document.querySelectorAll('.hotel-images-grid .hotel-image-wrapper');
+      hotelImgWrappers.forEach((wrapper) => {
+        const img = wrapper.querySelector('img');
+        if (img) {
+          addImageChanger(wrapper, img);
+        }
       });
     }
 
@@ -2624,6 +2559,15 @@
     }
   </script>
 
+  <script id="destination-images" type="application/json">
+    {
+      {% for dest in destinations %}
+        "{{ dest.slug }}": "{{ dest.image_url or (dest.images[0] if dest.images else '/assets/vietnam-safar-logo.png') }}"
+        {% if not loop.last %},{% endif %}
+      {% endfor %}
+    }
+  </script>
+
   <script id="itinerary-data" type="application/json">
     {{ itinerary | tojson | safe }}
   </script>
@@ -2704,6 +2648,64 @@
       if (!dataEl) return;
       const rawDays = JSON.parse(dataEl.textContent);
 
+      const destImagesEl = document.getElementById('destination-images');
+      const destImages = destImagesEl ? JSON.parse(destImagesEl.textContent) : {};
+
+      function resolveSlugLocally(location) {
+        if (!location) return null;
+        const normalized = location.toLowerCase().trim();
+        const keywordMap = {
+          "hà nội": "ha-noi", "ha noi": "ha-noi", "hanoi": "ha-noi", "hanoï": "ha-noi",
+          "hồ chí minh": "ho-chi-minh", "ho chi minh": "ho-chi-minh", "hcm": "ho-chi-minh", "saigon": "ho-chi-minh", "sài gòn": "ho-chi-minh", "sai gon": "ho-chi-minh", "tphcm": "ho-chi-minh",
+          "đà nẵng": "da-nang", "da nang": "da-nang", "danang": "da-nang",
+          "quảng nam": "quang-nam", "quang nam": "quang-nam", "hội an": "quang-nam", "hoi an": "quang-nam", "hoian": "quang-nam",
+          "quảng ninh": "quang-ninh", "quang ninh": "quang-ninh", "hạ long": "quang-ninh", "ha long": "quang-ninh", "halong": "quang-ninh", "vịnh hạ long": "quang-ninh", "vinh ha long": "quang-ninh", "cat ba": "quang-ninh", "cát bà": "quang-ninh",
+          "lào cai": "lao-cai", "lao cai": "lao-cai", "laocai": "lao-cai", "sapa": "lao-cai", "sa pa": "lao-cai", "bắc hà": "lao-cai", "bac ha": "lao-cai",
+          "khánh hoà": "khanh-hoa", "khanh hoa": "khanh-hoa", "nha trang": "khanh-hoa", "nhatrang": "khanh-hoa",
+          "lâm đồng": "lam-dong", "lam dong": "lam-dong", "đà lạt": "lam-dong", "da lat": "lam-dong", "dalat": "lam-dong",
+          "thừa thiên huế": "thua-thien-hue", "thua thien hue": "thua-thien-hue", "huế": "thua-thien-hue", "hue": "thua-thien-hue", "lăng cô": "thua-thien-hue", "lang co": "thua-thien-hue",
+          "kiên giang": "kien-giang", "kien giang": "kien-giang", "phú quốc": "kien-giang", "phu quoc": "kien-giang", "phuquoc": "kien-giang",
+          "bình thuận": "binh-thuan", "binh thuan": "binh-thuan", "mũi né": "binh-thuan", "mui ne": "binh-thuan", "phan thiết": "binh-thuan", "phan thiet": "binh-thuan",
+          "cần thơ": "can-tho", "can tho": "can-tho", "cantho": "can-tho", "bến ninh kiều": "can-tho", "ben ninh kieu": "can-tho",
+          "mekong": "mekong", "đồng bằng sông cửu long": "mekong", "dong bang song cuu long": "mekong", "miền tây": "mekong", "mien tay": "mekong", "tây nam bộ": "mekong", "tay nam bo": "mekong",
+          "hà giang": "ha-giang", "ha giang": "ha-giang", "đồng văn": "ha-giang", "dong van": "ha-giang", "mèo vạc": "ha-giang", "meo vac": "ha-giang",
+          "ninh bình": "ninh-binh", "ninh binh": "ninh-binh", "tràng an": "ninh-binh", "trang an": "ninh-binh", "tam cốc": "ninh-binh", "tam coc": "ninh-binh", "bích động": "ninh-binh", "bich dong": "ninh-binh",
+          "nghệ an": "nghe-an", "nghe an": "nghe-an", "cửa lò": "nghe-an", "cua lo": "nghe-an",
+          "quảng bình": "quang-binh", "quang binh": "quang-binh", "phong nha": "quang-binh", "ke bang": "quang-binh",
+          "hải phòng": "hai-phong", "hai phong": "hai-phong", "haiphong": "hai-phong",
+          "đắk lắk": "dak-lak", "dak lak": "dak-lak", "daklak": "dak-lak", "buôn ma thuột": "dak-lak", "buon ma thuot": "dak-lak", "bmt": "dak-lak",
+          "gia lai": "gia-lai", "pleiku": "gia-lai",
+          "kon tum": "kon-tum", "kontum": "kon-tum",
+          "bà rịa": "ba-ria-vung-tau", "ba ria": "ba-ria-vung-tau", "vũng tàu": "ba-ria-vung-tau", "vung tau": "ba-ria-vung-tau", "vungtau": "ba-ria-vung-tau",
+          "thanh hoá": "thanh-hoa", "thanh hoa": "thanh-hoa", "sầm sơn": "thanh-hoa", "sam son": "thanh-hoa",
+          "phú yên": "phu-yen", "phu yen": "phu-yen", "tuy hoà": "phu-yen", "tuy hoa": "phu-yen",
+          "bình định": "binh-dinh", "binh dinh": "binh-dinh", "quy nhơn": "binh-dinh", "quy nhon": "binh-dinh", "quynhon": "binh-dinh",
+          "điện biên": "dien-bien", "dien bien": "dien-bien", "điện biên phủ": "dien-bien",
+          "sơn la": "son-la", "son la": "son-la", "mộc châu": "son-la", "moc chau": "son-la",
+          "lai châu": "lai-chau", "lai java": "lai-chau",
+          "yên bái": "yen-bai", "yen bai": "yen-bai", "mù cang chải": "yen-bai", "mu cang chai": "yen-bai",
+          "hoà bình": "hoa-binh", "hoa binh": "hoa-binh",
+          "lạng sơn": "lang-son", "lang son": "lang-son",
+          "đồng nai": "dong-nai", "dong nai": "dong-nai",
+          "bình dương": "binh-duong", "binh duong": "binh-duong",
+          "tiền giang": "tien-giang", "tien giang": "tien-giang", "mỹ tho": "tien-giang", "my tho": "tien-giang",
+          "đồng tháp": "dong-thap", "dong thap": "dong-thap", "sa đéc": "dong-thap", "sa dec": "dong-thap",
+          "vĩnh long": "vinh-long", "vinh long": "vinh-long",
+          "an giang": "an-giang", "châu đốc": "an-giang", "chau doc": "an-giang", "long xuyên": "an-giang", "long xuyen": "an-giang",
+          "cao bằng": "cao-bang", "cao bang": "cao-bang", "bản giốc": "cao-bang", "ban gioc": "cao-bang"
+        };
+        if (keywordMap[normalized]) return keywordMap[normalized];
+        let bestMatch = null;
+        let bestLen = 0;
+        for (const [keyword, slug] of Object.entries(keywordMap)) {
+          if (normalized.includes(keyword) && keyword.length > bestLen) {
+            bestMatch = slug;
+            bestLen = keyword.length;
+          }
+        }
+        return bestMatch;
+      }
+
       const daysData = rawDays.map(day => {
         let dest = "";
         if (Array.isArray(day.destinations) && day.destinations.length > 0) {
@@ -2741,9 +2743,15 @@
 
         const last = mapDestinations[mapDestinations.length - 1];
         if (!last || last.coords[0] !== coords[0] || last.coords[1] !== coords[1]) {
+          const destName = day.destination.split(/->|-|\|/)[0].trim();
+          const slug = resolveSlugLocally(destName);
+          const imgUrl = (slug && destImages[slug]) ? destImages[slug] : '/assets/vietnam-safar-logo.png';
+
           mapDestinations.push({
-            name: day.destination.split(/->|-|\|/)[0].trim(),
+            id: `dest-${mapDestinations.length}`,
+            name: destName,
             coords: coords,
+            img: imgUrl,
             days: [day.dayNumber],
             titles: [day.title]
           });
@@ -2778,54 +2786,112 @@
       const markers = [];
       const polylines = [];
 
-      mapDestinations.forEach((dest, idx) => {
-        const dayRangeStr = dest.days.length > 1
-          ? `Days ${dest.days[0]}-${dest.days[dest.days.length - 1]}`
-          : `Day ${dest.days[0]}`;
+      const shapePath = "M30,22 L70,22 C84,22 93,32 91,50 C89,68 82,78 68,78 L32,78 C18,78 9,68 9,50 C9,32 16,22 30,22 Z";
+      let mapMode = 'classic'; // Default mode is classic
 
-        const html = `
-          <div class="custom-marker" id="marker-wrapper-${idx}">
-            <div class="marker-pulse"></div>
-            <div class="marker-core">${idx + 1}</div>
-          </div>
-        `;
+      function drawMarkers() {
+        // Clear existing markers
+        markers.forEach(m => map.removeLayer(m));
+        markers.length = 0;
 
-        const customIcon = L.divIcon({
-          html: html,
-          className: '',
-          iconSize: [28, 28],
-          iconAnchor: [14, 14]
+        mapDestinations.forEach((dest, idx) => {
+          const dayRangeStr = dest.days.length > 1
+            ? `Days ${dest.days[0]}-${dest.days[dest.days.length - 1]}`
+            : `Day ${dest.days[0]}`;
+
+          let html = '';
+          let iconSize = [];
+          let iconAnchor = [];
+          let popupOffset = [];
+
+          if (mapMode === 'image') {
+            const patternId = `img-pattern-${dest.id}-${idx}`;
+            html = `
+              <div class="custom-irregular-marker" id="marker-wrapper-${idx}">
+                <svg viewBox="0 0 100 100" class="marker-svg-container" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <pattern id="${patternId}" x="0" y="0" width="1" height="1" patternContentUnits="objectBoundingBox">
+                      <image href="${dest.img}" x="0" y="0" width="1" height="1" preserveAspectRatio="xMidYMid slice" />
+                    </pattern>
+                  </defs>
+                  <path d="${shapePath}" class="marker-path-radar" />
+                  <path d="${shapePath}" fill="url(#${patternId})" class="marker-path" />
+                </svg>
+              </div>
+            `;
+            iconSize = [80, 80];
+            iconAnchor = [40, 40];
+            popupOffset = [0, -25];
+          } else {
+            html = `
+              <div class="custom-marker" id="marker-wrapper-${idx}">
+                <div class="marker-pulse"></div>
+                <div class="marker-core">${idx + 1}</div>
+              </div>
+            `;
+            iconSize = [28, 28];
+            iconAnchor = [14, 14];
+            popupOffset = [0, -10];
+          }
+
+          const customIcon = L.divIcon({
+            html: html,
+            className: '',
+            iconSize: iconSize,
+            iconAnchor: iconAnchor
+          });
+
+          const popupContent = `
+            <div class="map-popup">
+              <h4>${dest.name}</h4>
+              <strong style="color:var(--gold); font-size: 11px;">${dayRangeStr.toUpperCase()}</strong>
+              <p style="margin: 6px 0 0; font-size:12px; color:var(--muted);">${dest.titles[0]}</p>
+            </div>
+          `;
+
+          const marker = L.marker(dest.coords, { icon: customIcon })
+            .addTo(map)
+            .bindPopup(popupContent, { offset: popupOffset });
+
+          markers.push(marker);
+
+          // Setup card reference if not built yet
+          if (!dest.cardEl) {
+            const card = document.createElement('div');
+            card.className = `sidebar-card ${idx === 0 ? 'active' : ''}`;
+            card.innerHTML = `
+              <span class="days-badge">${dayRangeStr}</span>
+              <h4>${idx + 1}. ${dest.name}</h4>
+              <p>${dest.titles[0]}</p>
+            `;
+
+            card.addEventListener('click', () => {
+              selectDestination(idx);
+            });
+
+            sidebarContainer.appendChild(card);
+            dest.cardEl = card;
+          }
         });
+      }
 
-        const popupContent = `
-          <div class="map-popup">
-            <h4>${dest.name}</h4>
-            <strong style="color:var(--gold); font-size: 11px;">${dayRangeStr.toUpperCase()}</strong>
-            <p style="margin: 6px 0 0; font-size:12px; color:var(--muted);">${dest.titles[0]}</p>
-          </div>
-        `;
+      // Expose switchMapMode globally
+      window.switchMapMode = function(mode) {
+        if (mode === mapMode) return;
+        mapMode = mode;
 
-        const marker = L.marker(dest.coords, { icon: customIcon })
-          .addTo(map)
-          .bindPopup(popupContent, { offset: [0, -10] });
+        document.querySelectorAll('.map-mode-toggle .mode-btn').forEach(btn => btn.classList.remove('active'));
+        if (mode === 'classic') {
+          document.getElementById('toggle-mode-classic').classList.add('active');
+        } else {
+          document.getElementById('toggle-mode-image').classList.add('active');
+        }
 
-        markers.push(marker);
+        drawMarkers();
+      };
 
-        const card = document.createElement('div');
-        card.className = `sidebar-card ${idx === 0 ? 'active' : ''}`;
-        card.innerHTML = `
-          <span class="days-badge">${dayRangeStr}</span>
-          <h4>${idx + 1}. ${dest.name}</h4>
-          <p>${dest.titles[0]}</p>
-        `;
-
-        card.addEventListener('click', () => {
-          selectDestination(idx);
-        });
-
-        sidebarContainer.appendChild(card);
-        dest.cardEl = card;
-      });
+      // Initial draw
+      drawMarkers();
 
       for (let i = 0; i < coordPoints.length - 1; i++) {
         const p1 = coordPoints[i];
@@ -2866,7 +2932,7 @@
         dest.cardEl.classList.add('active');
         dest.cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-        document.querySelectorAll('.custom-marker').forEach(m => m.classList.remove('active'));
+        document.querySelectorAll('.custom-marker, .custom-irregular-marker').forEach(m => m.classList.remove('active'));
         const activeMarkerEl = document.getElementById(`marker-wrapper-${index}`);
         if (activeMarkerEl) {
           activeMarkerEl.classList.add('active');
