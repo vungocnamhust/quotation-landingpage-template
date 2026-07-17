@@ -1,0 +1,905 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>A refined city-and-heritage journey designed for smooth transitions,... — Booking Itinerary</title>
+  <style>
+    :root {
+      --ivory: #f8f3e9;
+      --ink: #11130f;
+      --muted: #706a5d;
+      --emerald: #17412e;
+      --emerald-2: #0e2f22;
+      --gold: #b7894b;
+      --gold-2: #d8bd85;
+      --line: rgba(183,137,75,.28);
+      --card: #fffaf1;
+      --charcoal: #171915;
+      --serif: Georgia, 'Times New Roman', serif;
+      --sans: Arial, Helvetica, sans-serif;
+    }
+
+    @page { size: A4 portrait; margin: 0; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.6;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* Screen-only viewer styles */
+    @media screen {
+      body {
+        background: #525659; /* PDF viewer gray */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 40px 0;
+        gap: 20px;
+      }
+    }
+
+    @media print {
+      body { 
+        background-color: var(--ivory) !important; 
+        padding: 0; 
+        display: block; 
+      }
+      .pdf-page {
+        width: auto !important;
+        min-height: auto !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+      }
+      .cover {
+        height: 100vh !important;
+      }
+    }
+
+    /* ── Page wrapper ── */
+    .pdf-page {
+      width: 794px;
+      min-height: 1123px;
+      background: var(--ivory);
+      page-break-after: always;
+      position: relative;
+    }
+    .pdf-page:last-of-type { page-break-after: auto; }
+
+    @media screen {
+      .pdf-page {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+      }
+    }
+
+    /* ── Page watermark (fixed = repeats on every print page) ── */
+    .watermark {
+      position: fixed;
+      bottom: 10px;
+      right: 20px;
+      font-size: 9px;
+      color: rgba(0,0,0,.22);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      font-family: var(--sans);
+    }
+
+    /* ═══════════════════════════════════════════
+       PAGE 1 — Cover
+    ═══════════════════════════════════════════ */
+    .cover {
+      width: 794px;
+      height: 1123px;
+      background: linear-gradient(160deg, rgba(17,19,15,.88) 0%, rgba(17,19,15,.55) 55%, rgba(17,19,15,.18) 100%),
+                  center/cover no-repeat;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 0;
+    }
+
+    .cover-body {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 24px;
+      align-items: end;
+      padding: 48px 48px 54px;
+    }
+
+    .cover-kicker {
+      color: var(--gold-2);
+      font-size: 10px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .cover h1 {
+      font-family: var(--serif);
+      font-size: 42px;
+      line-height: 1.15;
+      font-weight: 500;
+      letter-spacing: -.02em;
+      margin-bottom: 16px;
+      max-width: 420px;
+    }
+
+    .cover-lede {
+      font-size: 14px;
+      color: rgba(255,255,255,.76);
+      max-width: 380px;
+      line-height: 1.6;
+    }
+
+    /* Snapshot card on cover */
+    .quote-card {
+      background: rgba(255,250,241,.93);
+      color: var(--ink);
+      border-radius: 24px;
+      padding: 22px 24px;
+      border: 1px solid rgba(255,255,255,.6);
+    }
+
+    .quote-card h2 {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 14px;
+      color: var(--emerald);
+    }
+
+    .qrow {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(17,19,15,.1);
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .qrow:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .qrow strong { color: var(--ink); text-align: right; font-size: 11px; }
+
+    /* Strip bar at bottom of cover */
+    .cover-strip {
+      background: rgba(23,65,46,.92);
+      display: grid;
+      grid-template-columns: repeat(4,1fr);
+      padding: 16px 48px;
+    }
+
+    .strip-item { text-align: center; }
+    .strip-item span {
+      display: block;
+      color: var(--gold-2);
+      font-size: 8px;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .strip-item strong {
+      font-family: var(--serif);
+      font-size: 20px;
+      font-weight: 500;
+      color: white;
+      display: block;
+      margin-top: 3px;
+    }
+
+    /* ── Shared page header ── */
+    .page-header {
+      background: var(--emerald);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 48px;
+    }
+
+    .page-header .brand {
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .page-header .ref {
+      color: var(--gold-2);
+      font-size: 9px;
+      letter-spacing: .1em;
+    }
+
+    .page-inner { padding: 44px 48px; }
+
+    .section-label {
+      color: var(--gold);
+      font-size: 9px;
+      letter-spacing: .24em;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .section-h2 {
+      font-family: var(--serif);
+      font-size: 36px;
+      line-height: .98;
+      letter-spacing: -.04em;
+      font-weight: 500;
+      color: var(--emerald);
+      margin-bottom: 8px;
+    }
+
+    .section-p {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 24px;
+    }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 20px;
+      break-inside: avoid;
+    }
+
+    .panel h3 {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--emerald);
+      margin-bottom: 10px;
+    }
+
+    .panel p { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+
+    .panel ul {
+      padding-left: 18px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .panel ul li { font-size: 12px; color: var(--muted); }
+
+    /* ── Bookings summary styles ── */
+    .overview-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .overview-panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(17, 19, 15, .03);
+    }
+
+    .panel-title {
+      font-family: var(--serif);
+      font-size: 18px;
+      color: var(--emerald);
+      margin-bottom: 14px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .panel-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .panel-item {
+      padding-bottom: 10px;
+      border-bottom: 1px dashed rgba(183, 137, 75, .2);
+    }
+
+    .panel-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .panel-item-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--gold);
+      font-weight: 700;
+      margin-bottom: 2px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .panel-item h4 {
+      font-size: 13px;
+      font-weight: 700;
+      margin: 0;
+      color: var(--ink);
+    }
+
+    .panel-item-sub {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    /* ── Daily Schedule cards ── */
+    .itinerary { display: grid; gap: 10px; }
+
+    .day-card {
+      display: grid;
+      grid-template-columns: 56px 1fr 130px;
+      gap: 16px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      align-items: start;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .day-num {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--emerald);
+      color: white;
+      display: grid;
+      place-items: center;
+      font-family: var(--serif);
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .day-card h3 {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--emerald);
+      margin: 2px 0 5px;
+      line-height: 1.1;
+    }
+
+    .day-badge {
+      font-size: 8px;
+      color: var(--gold);
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .day-card p { font-size: 11px; color: var(--muted); }
+
+    .day-meta {
+      text-align: right;
+      padding-top: 6px;
+      font-size: 11px;
+    }
+
+    .day-meta .overnight-label {
+      font-size: 8px;
+      color: var(--gold);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 2px;
+    }
+
+    .day-meta .overnight-val {
+      font-family: var(--serif);
+      font-size: 13px;
+      color: var(--emerald);
+    }
+
+    /* ── Booked Services Cards on Day Cards ── */
+    .booked-services-group {
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--line);
+    }
+
+    .service-group-title {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      font-weight: 700;
+      color: var(--gold);
+      margin-bottom: 8px;
+    }
+
+    .service-card {
+      display: flex;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.5);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px;
+      margin-bottom: 8px;
+      box-shadow: 0 2px 8px rgba(17, 19, 15, 0.01);
+    }
+
+    .service-card:last-child {
+      margin-bottom: 0;
+    }
+
+    .service-img {
+      width: 80px;
+      height: 60px;
+      border-radius: 8px;
+      background-position: center;
+      background-size: cover;
+      background-repeat: no-repeat;
+      flex-shrink: 0;
+    }
+
+    .service-details {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .service-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .service-header h4 {
+      font-family: var(--serif);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--emerald);
+    }
+
+    .service-status {
+      font-size: 7px;
+      text-transform: uppercase;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(23, 65, 46, 0.2);
+      background: rgba(23, 65, 46, 0.05);
+      color: var(--emerald);
+    }
+
+    .service-meta {
+      display: flex;
+      gap: 10px;
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .service-dates {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .service-notes {
+      font-size: 10px;
+      font-style: italic;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .cta-block {
+      background: linear-gradient(135deg, var(--emerald-2), #11130f 64%, #332711);
+      color: white;
+      border-radius: 24px;
+      padding: 32px;
+      display: grid;
+      grid-template-columns: 1fr 220px;
+      gap: 28px;
+      align-items: center;
+      break-inside: avoid;
+      margin-bottom: 20px;
+    }
+
+    .cta-block h2 {
+      font-family: var(--serif);
+      font-size: 32px;
+      font-weight: 500;
+      letter-spacing: -.04em;
+      line-height: .96;
+      margin-bottom: 10px;
+    }
+
+    .cta-block p { color: rgba(255,255,255,.72); font-size: 13px; }
+
+    .contact-box {
+      background: rgba(255,255,255,.09);
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .contact-box .clabel {
+      display: block;
+      color: var(--gold-2);
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: .16em;
+      font-weight: 800;
+      margin-top: 12px;
+    }
+
+    .contact-box .clabel:first-child { margin-top: 0; }
+    .contact-box .cval { font-weight: 700; font-size: 13px; margin-top: 2px; }
+
+    .pdf-footer {
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+      padding: 16px 0 20px;
+      border-top: 1px solid var(--line);
+      margin-top: 8px;
+    }
+
+    .no-print { display: none !important; }
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,400;0,600;0,800;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --serif: 'Playfair Display', Georgia, serif;
+      --sans: 'Outfit', Arial, sans-serif;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="watermark">Vietnam Safar · VN-JP-TK-5D4N-4AD-2026 · Booking Itinerary</div>
+
+  <!-- ═══════════════════ PAGE 1 — Cover ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="cover" style="background-image: linear-gradient(160deg,rgba(17,19,15,.88),rgba(17,19,15,.55) 55%,rgba(17,19,15,.18)), url('/assets/vietnam-safar-logo.png');">
+      <div class="cover-body">
+        <div>
+          <div style="font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-2);margin-bottom:10px;font-weight:700;">Confidential Booking Document</div>
+          <div class="cover-kicker">Confirmed Booking Itinerary • 5D4N • 2026-09-20 to 2026-09-30</div>
+          <h1>A refined city-and-heritage journey designed for smooth transitions,...</h1>
+          <p class="cover-lede">Field mapping: route = Tokyo - Kyoto, duration = 5 days / 4 nights, guests = 4 adults, market = VN, hotel standard = 4-star, budget target = VND 120,000,000. Assumptions used: the provided endDate matches the startDate, so the 5-day programme is treated as 2026-12-10 to 2026-12-14; exact hotel names, supplier confirmation, flight timings, and intercity transport mode remain to be confirmed. This draft follows the premium B2B style reflected in the uploaded partner materials: private services,...</p>
+        </div>
+        <div class="quote-card">
+          <h2>Booking Snapshot</h2>
+          <div class="qrow"><span>Prepared for</span><strong>4 adults travelling as a private FIT / small private group</strong></div>
+          <div class="qrow"><span>Travel dates</span><strong>2026-09-20 to 2026-09-30</strong></div>
+          <div class="qrow"><span>Guests</span><strong>4 Adults + 0 Children</strong></div>
+          <div class="qrow"><span>Travel style</span><strong>4-star</strong></div>
+          <div class="qrow"><span>Route</span><strong>Tokyo – Tokyo to Kyoto – Kyoto – Kyoto / Departure</strong></div>
+          <div class="qrow"><span>Booking Ref</span><strong>VN-JP-TK-5D4N-4AD-2026</strong></div>
+        </div>
+      </div>
+      <div class="cover-strip">
+        <div class="strip-item"><span>Duration</span><strong>5D4N</strong></div>
+        <div class="strip-item"><span>Best for</span><strong>VN</strong></div>
+        <div class="strip-item"><span>Travel pace</span><strong>Relaxed</strong></div>
+        <div class="strip-item"><span>Service</span><strong>Private</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ PAGE 2 — Overview & Bookings Summary ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="page-header">
+      <span class="brand">Vietnam Safar — Booking Itinerary</span>
+      <span class="ref">VN-JP-TK-5D4N-4AD-2026</span>
+    </div>
+    <div class="page-inner">
+      <div class="section-label">Section 1 — Overview</div>
+      <h2 class="section-h2">TRIP CONFIRMATION</h2>
+      <p class="section-p"> — A refined city-and-heritage journey designed for smooth transitions,...</p>
+      
+      <div style="font-size:12px; color:var(--muted); margin-bottom: 24px; line-height: 1.7;">
+        
+        <p style="margin-bottom: 10px;">Field mapping: route = Tokyo - Kyoto, duration = 5 days / 4 nights, guests = 4 adults, market = VN, hotel standard = 4-star, budget target = VND 120,000,000. Assumptions used: the provided endDate matches the startDate, so the 5-day programme is treated as 2026-12-10 to 2026-12-14; exact hotel names, supplier confirmation, flight timings, and intercity transport mode remain to be confirmed. This draft follows the premium B2B style reflected in the uploaded partner materials: private services,...</p>
+        
+      </div>
+
+      
+    </div>
+  </div>
+
+  <!-- ═══════════════════ PAGES 3+ — Daily Itinerary timeline ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="page-header">
+      <span class="brand">Vietnam Safar — Booking Itinerary</span>
+      <span class="ref">VN-JP-TK-5D4N-4AD-2026</span>
+    </div>
+    <div class="page-inner">
+      <div class="section-label">Section 3 — Daily Schedule & Services</div>
+      <h2 class="section-h2">Day-by-Day Program</h2>
+      <p class="section-p">Detailed program listing confirmed daily tours and transfers.</p>
+
+      <div class="itinerary">
+        
+        <div class="day-card">
+          <div class="day-num">1</div>
+          <div>
+            <div class="day-badge">DAY 1 · 2026-09-20</div>
+            <h3></h3>
+            
+            <p style="margin-bottom: 6px;">Arrival in Japan and a graceful beginning in Tokyo, where the programme opens with a calm handover into the city’s contemporary rhythm. The first evening is designed to be light, polished, and comfortable, allowing the guests to settle in without rush.</p>
+            
+
+            <!-- Hotels -->
+            
+
+            <!-- Activities -->
+            
+
+            <!-- Transfers -->
+            
+
+            <!-- Flights -->
+            
+
+            <!-- Guides -->
+            
+          </div>
+          <div class="day-meta">
+            <div class="overnight-label">OVERNIGHT</div>
+            <div class="overnight-val">Tokyo</div>
+            
+          </div>
+        </div>
+        
+        <div class="day-card">
+          <div class="day-num">2</div>
+          <div>
+            <div class="day-badge">DAY 2 · 2026-09-21</div>
+            <h3></h3>
+            
+            <p style="margin-bottom: 6px;">A refined Tokyo discovery day that captures the city’s modern elegance, curated sightseeing energy, and premium urban atmosphere. The day is best positioned as an immersive yet well-paced introduction to the capital.</p>
+            
+
+            <!-- Hotels -->
+            
+
+            <!-- Activities -->
+            
+
+            <!-- Transfers -->
+            
+
+            <!-- Flights -->
+            
+
+            <!-- Guides -->
+            
+          </div>
+          <div class="day-meta">
+            <div class="overnight-label">OVERNIGHT</div>
+            <div class="overnight-val">Tokyo</div>
+            
+          </div>
+        </div>
+        
+        <div class="day-card">
+          <div class="day-num">3</div>
+          <div>
+            <div class="day-badge">DAY 3 · 2026-09-22</div>
+            <h3></h3>
+            
+            <p style="margin-bottom: 6px;">The programme transitions from Tokyo’s metropolitan pulse to Kyoto’s quieter heritage landscape. This is the signature movement day of the journey, ideally arranged through a premium intercity transfer solution such as Shinkansen or an equivalent confirmed arrangement.</p>
+            
+
+            <!-- Hotels -->
+            
+
+            <!-- Activities -->
+            
+
+            <!-- Transfers -->
+            
+
+            <!-- Flights -->
+            
+
+            <!-- Guides -->
+            
+          </div>
+          <div class="day-meta">
+            <div class="overnight-label">OVERNIGHT</div>
+            <div class="overnight-val">Tokyo to Kyoto</div>
+            
+          </div>
+        </div>
+        
+        <div class="day-card">
+          <div class="day-num">4</div>
+          <div>
+            <div class="day-badge">DAY 4 · 2026-09-23</div>
+            <h3></h3>
+            
+            <p style="margin-bottom: 6px;">Kyoto unfolds in a more intimate, cultural tone, offering a graceful counterpoint to Tokyo. This day is ideal for temple-lined streets, heritage ambience, and a premium sightseeing rhythm that feels immersive but never hurried.</p>
+            
+
+            <!-- Hotels -->
+            
+
+            <!-- Activities -->
+            
+
+            <!-- Transfers -->
+            
+
+            <!-- Flights -->
+            
+
+            <!-- Guides -->
+            
+          </div>
+          <div class="day-meta">
+            <div class="overnight-label">OVERNIGHT</div>
+            <div class="overnight-val">Kyoto</div>
+            
+          </div>
+        </div>
+        
+        <div class="day-card">
+          <div class="day-num">5</div>
+          <div>
+            <div class="day-badge">DAY 5 · 2026-09-24</div>
+            <h3></h3>
+            
+            <p style="margin-bottom: 6px;">A measured final day with departure handling and the option to arrange an onward transfer or airport connection as needed. The programme closes in a calm, efficient manner that preserves the premium feel right through to the end.</p>
+            
+
+            <!-- Hotels -->
+            
+
+            <!-- Activities -->
+            
+
+            <!-- Transfers -->
+            
+
+            <!-- Flights -->
+            
+
+            <!-- Guides -->
+            
+          </div>
+          <div class="day-meta">
+            <div class="overnight-label">OVERNIGHT</div>
+            <div class="overnight-val">Kyoto / Departure</div>
+            
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Pricing Section ── -->
+  
+  <div class="pdf-page">
+    <div class="page-header">
+      <span class="brand">Vietnam Safar — Booking Itinerary</span>
+      <span class="ref">VN-JP-TK-5D4N-4AD-2026</span>
+    </div>
+    <div class="page-inner">
+      <div class="section-label">Section 4 — Pricing Snapshot</div>
+      <h2 class="section-h2">Indicative Budget-Aligned Quotation – Subject to Reconfirmation</h2>
+      <p class="section-p">Confirmed package prices and selections.</p>
+
+      <div class="pricing-block">
+        <h2>B2B Net Price: VND 120,000,000</h2>
+        <p class="sub">Grand total for 4 Adults + 0 Children. Currency: VND.</p>
+        <div class="price-cards">
+          
+          <div class="price-card featured">
+            <span>4-star</span>
+            
+            <small style="color:rgba(255,255,255,.55);font-size:9px;display:block;margin-top:4px">Private 4-Star Programme for 4 Adults</small>
+            
+            <strong>VND 30,000,000 / person</strong>
+            <small>per person</small><br>
+            <span style="font-size:11px;opacity:.8">Total: VND 120,000,000</span>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+  
+
+  <!-- ═══════════════════ LAST PAGE — Inclusions/Exclusions & Concierge ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="page-header">
+      <span class="brand">Vietnam Safar — Booking Itinerary</span>
+      <span class="ref">VN-JP-TK-5D4N-4AD-2026</span>
+    </div>
+    <div class="page-inner">
+      <div class="section-label">Section 4 — Terms & Contacts</div>
+      <h2 class="section-h2">Inclusions & Policies</h2>
+      <p class="section-p">Detailed details of inclusions, exclusions, and contact support.</p>
+
+      <div class="two-col" style="margin-bottom: 24px;">
+        <div class="panel">
+          <h3>Inclusions</h3>
+          <ul>
+            
+            <li>Private airport pick-up and drop-off</li>
+            
+            <li>Private air-conditioned transportation throughout</li>
+            
+            <li>Accommodation with daily breakfast</li>
+            
+            <li>Meals as mentioned in the program</li>
+            
+            <li>All sightseeing entrance fees as mentioned</li>
+            
+            <li>English-speaking local guide</li>
+            
+          </ul>
+        </div>
+        <div class="panel">
+          <h3>Exclusions</h3>
+          <ul>
+            
+            <li>International flights</li>
+            
+            <li>Vietnam visa and visa processing fees</li>
+            
+            <li>Travel insurance</li>
+            
+            <li>Personal expenses, laundry, beverages and tips</li>
+            
+            <li>Optional activities not mentioned in the program</li>
+            
+          </ul>
+        </div>
+      </div>
+
+      
+
+      <div class="cta-block">
+        <div>
+          <h2>Secured Booking</h2>
+          <p>This itinerary reflects confirmed bookings. If any local timing needs adjusting, please let your travel coordinator know prior to departure.</p>
+        </div>
+        <div class="contact-box">
+          <span class="clabel">Vietnam Hotline 24/7</span>
+          <span class="cval">+84 911 538 738</span>
+
+          <span class="clabel">Email Support</span>
+          <span class="cval">sales@vietnamsafar.vn</span>
+
+          <span class="clabel">Website</span>
+          <span class="cval">www.vietnamsafar.vn</span>
+        </div>
+      </div>
+
+      <div class="pdf-footer">
+        A refined city-and-heritage journey designed for smooth transitions,... — Detailed booking itinerary prepared for 4 adults travelling as a private FIT / small private group.
+      </div>
+    </div>
+  </div>
+
+  <script class="no-print">
+    window.onload = function() {
+      window.print();
+    }
+  </script>
+</body>
+</html>

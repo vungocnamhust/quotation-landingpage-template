@@ -1,0 +1,3113 @@
+<!DOCTYPE html>
+<html lang="en" style="--hero-img: url('/assets/quang-ninh/halong.jpg');  --img-1: url('/assets/ha-noi/duongtau.jpg');  --img-2: url('/assets/quang-ninh/halong.jpg');  --img-3: url('/assets/thua-thien-hue/hue1.jpg');  --img-4: url('/assets/quang-nam/hoian1.jpg');  --img-5: url('/assets/ho-chi-minh/hightower.jpg');  --img-6: url('/assets/mekong/mekong-delta.jpg'); " __gcrremoteframetoken="a08fa113089454da0d8eb3fa3415c33a"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>From Hanoi's ancient streets to the Mekong's emerald delta, a private... - Luxury Quotation</title>
+  <!-- PWA Metadata -->
+  <link rel="manifest" href="/manifest.json?id=quo_516e0370881c&amp;type=quotations">
+  <meta name="theme-color" content="#17412e">
+  <link rel="apple-touch-icon" href="/assets/vietnam-safar-logo.png">
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <style>
+    :root {
+      --ivory: #f8f3e9;
+      --ivory-2: #efe4d1;
+      --ink: #11130f;
+      --charcoal: #171915;
+      --muted: #706a5d;
+      --emerald: #17412e;
+      --emerald-2: #0e2f22;
+      --gold: #b7894b;
+      --gold-2: #d8bd85;
+      --line: rgba(183, 137, 75, .28);
+      --card: #fffaf1;
+      --shadow: 0 30px 80px rgba(17, 19, 15, .16);
+      --serif: Georgia, 'Times New Roman', serif;
+      --sans: Arial, Helvetica, sans-serif;
+    }
+
+    /* Tweak map tile colors to match the luxury warm tone without fading into the background */
+    .leaflet-tile {
+      filter: sepia(0.7) hue-rotate(-10deg) saturate(0.4) contrast(1.05) brightness(0.98);
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    /* Enforce word wrapping globally to prevent text layout overflow */
+    body,
+    p,
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    li,
+    span,
+    strong,
+    div,
+    td,
+    th {
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+      word-break: break-word;
+    }
+
+    html {
+      scroll-behavior: smooth
+    }
+
+    body {
+      margin: 0;
+      background: var(--ivory);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.65;
+      overflow-wrap: break-word;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit
+    }
+
+    .container {
+      width: min(1180px, 92%);
+      margin: 0 auto
+    }
+
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(248, 243, 233, .86);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--line)
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 0
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-size: 12px;
+      color: var(--emerald)
+    }
+
+    .brand img {
+      width: 44px;
+      height: 44px;
+      object-fit: contain;
+      border-radius: 50%;
+      background: white
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 26px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: #4e4a41
+    }
+
+    .nav-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      border: none;
+      border-radius: 999px;
+      padding: 13px 19px;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      font-size: 11px;
+      cursor: pointer;
+      transition: .2s ease
+    }
+
+    .btn.gold {
+      background: linear-gradient(135deg, var(--gold), var(--gold-2));
+      color: #1c160d;
+      box-shadow: 0 16px 36px rgba(183, 137, 75, .28)
+    }
+
+    .btn.dark {
+      background: var(--emerald);
+      color: white
+    }
+
+    .btn.outline {
+      background: rgba(255, 255, 255, .08);
+      border: 1px solid rgba(255, 255, 255, .35);
+      color: white
+    }
+
+    .btn:hover {
+      transform: translateY(-2px)
+    }
+
+    .hero {
+      position: relative;
+      min-height: 820px;
+      background: linear-gradient(90deg, rgba(17, 19, 15, .92), rgba(17, 19, 15, .62), rgba(17, 19, 15, .18)), var(--hero-img) center/cover no-repeat;
+      color: white;
+      overflow: hidden
+    }
+
+    .hero:after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0 0;
+      height: 210px;
+      background: linear-gradient(180deg, transparent, var(--ivory))
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      padding: 112px 0 128px;
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 54px;
+      align-items: end
+    }
+
+    .kicker {
+      color: var(--gold-2);
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 22px
+    }
+
+    .hero h1 {
+      font-family: var(--serif);
+      font-size: clamp(32px, 4.5vw, 56px);
+      line-height: 1.15;
+      font-weight: 500;
+      letter-spacing: -.02em;
+      margin: 0 0 24px;
+      max-width: 850px
+    }
+
+    .hero-lede {
+      font-size: 20px;
+      max-width: 65ch;
+      color: rgba(255, 255, 255, .82);
+      margin: 0 0 30px
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px
+    }
+
+    .quote-card {
+      background: rgba(255, 250, 241, .92);
+      color: var(--ink);
+      border: 1px solid rgba(255, 255, 255, .7);
+      border-radius: 34px;
+      padding: 28px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px)
+    }
+
+    .quote-card h2 {
+      font-family: var(--serif);
+      font-size: 30px;
+      line-height: 1;
+      margin: 0 0 18px
+    }
+
+    .quote-list {
+      display: grid;
+      gap: 12px
+    }
+
+    .quote-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      padding-bottom: 11px;
+      border-bottom: 1px solid rgba(17, 19, 15, .1);
+      font-size: 14px;
+      color: var(--muted)
+    }
+
+    .quote-row strong {
+      color: var(--ink);
+      text-align: right
+    }
+
+    .luxury-strip {
+      position: relative;
+      z-index: 3;
+      margin-top: -76px
+    }
+
+    .strip-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px
+    }
+
+    .strip-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 26px;
+      padding: 22px;
+      box-shadow: 0 14px 45px rgba(17, 19, 15, .08);
+      min-width: 0;
+      /* Ensure overflow works on grid items */
+    }
+
+    .strip-card span {
+      display: block;
+      color: var(--gold);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .18em;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .strip-card strong {
+      display: block;
+      font-family: var(--serif);
+      font-size: clamp(18px, 1.8vw, 26px);
+      font-weight: 500;
+      color: var(--emerald);
+      margin-top: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    section {
+      padding: 72px 0
+    }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: 1fr .78fr;
+      gap: 42px;
+      align-items: end;
+      margin-bottom: 34px
+    }
+
+    .section-head h2 {
+      font-family: var(--serif);
+      font-size: clamp(32px, 4vw + 0.5rem, 64px);
+      line-height: .98;
+      letter-spacing: -.055em;
+      font-weight: 500;
+      margin: 0
+    }
+
+    .section-head p {
+      color: var(--muted);
+      font-size: 17px;
+      margin: 0;
+      max-width: 70ch;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr .8fr;
+      grid-auto-rows: 310px;
+      gap: 16px
+    }
+
+    .image-tile {
+      position: relative;
+      border-radius: 34px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      background: center/cover no-repeat
+    }
+
+    .image-tile.large {
+      grid-row: span 2
+    }
+
+    .image-tile:before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 34%, rgba(17, 19, 15, .72))
+    }
+
+    .image-caption {
+      position: absolute;
+      left: 24px;
+      right: 24px;
+      bottom: 22px;
+      color: white
+    }
+
+    .image-caption small {
+      display: block;
+      color: var(--gold-2);
+      text-transform: uppercase;
+      letter-spacing: .18em;
+      font-weight: 700
+    }
+
+    .image-caption strong {
+      font-family: var(--serif);
+      font-size: 27px;
+      font-weight: 500
+    }
+
+    .experience-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px
+    }
+
+    .experience {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 30px;
+      padding: 28px;
+      box-shadow: 0 18px 45px rgba(17, 19, 15, .06)
+    }
+
+    .num {
+      color: var(--gold);
+      font-weight: 800;
+      letter-spacing: .18em;
+      font-size: 12px
+    }
+
+    .experience h3,
+    .day h3,
+    .panel h3 {
+      font-family: var(--serif);
+      font-size: 27px;
+      line-height: 1.08;
+      font-weight: 500;
+      margin: 12px 0 10px;
+      color: var(--emerald)
+    }
+
+    .experience p,
+    .day p,
+    .panel p,
+    .panel li {
+      color: var(--muted);
+      font-size: 15px;
+      max-width: 75ch;
+      display: -webkit-box;
+      -webkit-line-clamp: 6;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .itinerary {
+      display: grid;
+      gap: 16px
+    }
+
+    .day {
+      display: grid;
+      grid-template-columns: 132px 1fr 170px;
+      gap: 24px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 30px;
+      padding: 24px;
+      align-items: start;
+      box-shadow: 0 18px 45px rgba(17, 19, 15, .05);
+      break-inside: avoid
+    }
+
+    .day-label {
+      height: 70px;
+      width: 70px;
+      border-radius: 50%;
+      background: var(--emerald);
+      color: white;
+      display: grid;
+      place-items: center;
+      font-family: var(--serif);
+      font-size: 24px
+    }
+
+    .day-meta {
+      font-size: 13px;
+      color: var(--gold);
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      text-align: right;
+      padding-top: 14px
+    }
+
+    .pricing {
+      background: var(--charcoal);
+      color: white;
+      border-radius: 42px;
+      padding: 46px;
+      box-shadow: var(--shadow);
+      break-inside: avoid
+    }
+
+    .pricing h2 {
+      font-family: var(--serif);
+      font-size: clamp(32px, 4vw + 0.5rem, 58px);
+      font-weight: 500;
+      letter-spacing: -.055em;
+      margin: 0 0 12px
+    }
+
+    .pricing p {
+      color: rgba(255, 255, 255, .72);
+      margin: 0 0 28px
+    }
+
+    .price-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px
+    }
+
+    .price-card {
+      background: rgba(255, 255, 255, .08);
+      border: 1px solid rgba(216, 189, 133, .38);
+      border-radius: 28px;
+      padding: 24px
+    }
+
+    .price-card.featured {
+      background: linear-gradient(180deg, rgba(183, 137, 75, .24), rgba(255, 255, 255, .08));
+      border-color: var(--gold-2)
+    }
+
+    .price-card span {
+      color: var(--gold-2);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .16em;
+      font-size: 11px
+    }
+
+    .price-card strong {
+      display: block;
+      font-family: var(--serif);
+      font-size: 40px;
+      font-weight: 500;
+      margin: 10px 0 0
+    }
+
+    .price-card small {
+      color: rgba(255, 255, 255, .7)
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 32px;
+      padding: 30px;
+      box-shadow: 0 18px 45px rgba(17, 19, 15, .05);
+      break-inside: avoid
+    }
+
+    .panel ul {
+      margin: 14px 0 0;
+      padding-left: 20px;
+      display: grid;
+      gap: 9px
+    }
+
+    .cta {
+      background: linear-gradient(135deg, var(--emerald-2), #11130f 64%, #332711);
+      color: white;
+      border-radius: 44px;
+      padding: 54px;
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 44px;
+      align-items: center;
+      box-shadow: var(--shadow);
+      break-inside: avoid
+    }
+
+    .cta h2 {
+      font-family: var(--serif);
+      font-size: clamp(36px, 4vw + 1rem, 68px);
+      font-weight: 500;
+      letter-spacing: -.06em;
+      line-height: .96;
+      margin: 0 0 18px
+    }
+
+    .cta p {
+      color: rgba(255, 255, 255, .76);
+      font-size: 17px
+    }
+
+    .contact {
+      background: rgba(255, 255, 255, .08);
+      border: 1px solid rgba(255, 255, 255, .22);
+      border-radius: 28px;
+      padding: 26px
+    }
+
+    .contact label {
+      display: block;
+      color: var(--gold-2);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .16em;
+      font-weight: 800;
+      margin-top: 16px
+    }
+
+    .contact label:first-child {
+      margin-top: 0
+    }
+
+    .contact div {
+      font-weight: 800;
+      font-size: 18px;
+      margin-top: 4px
+    }
+
+    .footer {
+      padding: 42px 0 54px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px
+    }
+
+    .subtle {
+      color: var(--muted);
+      font-size: 13px
+    }
+
+    .no-screen {
+      display: none
+    }
+
+    @media(max-width: 1440px) {
+      .container {
+        width: min(1180px, 95%);
+      }
+
+      .hero-content {
+        gap: 36px;
+      }
+
+      .day {
+        grid-template-columns: 110px 1fr 140px;
+        gap: 16px;
+        padding: 20px;
+      }
+
+      .day-label {
+        height: 60px;
+        width: 60px;
+        font-size: 20px;
+      }
+
+      .strip-grid {
+        gap: 10px;
+      }
+
+      .strip-card {
+        padding: 16px;
+      }
+    }
+
+    @media(max-width:980px) {
+      .nav-links {
+        display: none
+      }
+
+      .hero-content,
+      .section-head,
+      .cta,
+      .two-col {
+        grid-template-columns: 1fr
+      }
+
+      .strip-grid,
+      .experience-grid,
+      .price-grid {
+        grid-template-columns: 1fr 1fr
+      }
+
+      .gallery {
+        grid-template-columns: 1fr;
+        grid-auto-rows: 280px
+      }
+
+      .image-tile.large {
+        grid-row: auto
+      }
+
+      .day {
+        grid-template-columns: 1fr
+      }
+
+      .day-meta {
+        text-align: left;
+        padding-top: 0
+      }
+
+      .hero {
+        min-height: auto
+      }
+
+      .hero-content {
+        padding: 86px 0 130px
+      }
+    }
+
+    @media(max-width:620px) {
+      .nav-actions {
+        display: none
+      }
+
+      .strip-grid,
+      .experience-grid,
+      .price-grid {
+        grid-template-columns: 1fr
+      }
+
+      .hero h1 {
+        font-size: clamp(24px, 7vw, 36px);
+        line-height: 1.2;
+      }
+
+      .pricing,
+      .cta {
+        padding: 28px;
+        border-radius: 30px
+      }
+    }
+
+    @media print {
+      .no-print {
+        display: none !important
+      }
+
+      .no-screen {
+        display: block
+      }
+
+      html,
+      body {
+        background: var(--ivory) !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact
+      }
+
+      .nav {
+        position: relative
+      }
+
+      .hero {
+        min-height: 720px
+      }
+
+      .hero-content {
+        padding: 72px 0 100px
+      }
+
+      section {
+        padding: 44px 0;
+        page-break-before: always;
+        break-before: page;
+      }
+      main > section:first-of-type {
+        page-break-before: auto;
+        break-before: auto;
+      }
+
+      .container {
+        width: 92%
+      }
+
+      .day,
+      .panel,
+      .pricing,
+      .cta,
+      .strip-card,
+      .experience,
+      .image-tile {
+        break-inside: avoid
+      }
+
+      .gallery {
+        grid-auto-rows: 260px
+      }
+
+      .footer {
+        page-break-after: auto
+      }
+
+      @page {
+        size: A4;
+        margin: 0
+      }
+    }
+
+    /* ── Journey Map styles ─────────────────────────────────────────── */
+    .map-layout {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 24px;
+      margin-top: 32px;
+      height: 520px;
+    }
+
+    .map-container {
+      border-radius: 34px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--line);
+      height: 100%;
+      position: relative;
+      z-index: 1;
+    }
+
+    .map-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+      padding: 6px 8px 6px 6px;
+      height: 100%;
+    }
+
+    .sidebar-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 16px 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(17, 19, 15, 0.02);
+    }
+
+    .sidebar-card:hover,
+    .sidebar-card.active {
+      transform: translateY(-2px);
+      border-color: var(--gold);
+      background: #fffefb;
+      box-shadow: 0 10px 25px rgba(183, 137, 75, 0.08);
+    }
+
+    .sidebar-card span.days-badge {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--gold);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      display: inline-block;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-card h4 {
+      font-family: var(--serif);
+      font-size: 18px;
+      color: var(--emerald);
+      margin: 0 0 6px 0;
+    }
+
+    .sidebar-card p {
+      font-size: 13px;
+      color: var(--muted);
+      margin: 0;
+      line-height: 1.4;
+    }
+
+    /* Leaflet integration styling overrides */
+    .leaflet-container {
+      background: var(--ivory) !important;
+      font-family: var(--sans) !important;
+    }
+
+    .leaflet-tile-container {
+      filter: sepia(0.2) hue-rotate(4deg) saturate(0.9) contrast(1) brightness(1);
+    }
+
+    .leaflet-popup-content-wrapper {
+      background: var(--card) !important;
+      border: 1px solid var(--line) !important;
+      border-radius: 16px !important;
+      box-shadow: var(--shadow) !important;
+    }
+
+    .leaflet-popup-content {
+      font-family: var(--sans);
+      color: var(--ink);
+      font-size: 13px;
+      line-height: 1.5;
+      margin: 12px 16px !important;
+    }
+
+    .leaflet-popup-content h4 {
+      font-family: var(--serif);
+      font-size: 15px;
+      color: var(--emerald);
+      margin: 0 0 4px 0;
+    }
+
+    .leaflet-popup-tip {
+      background: var(--card) !important;
+      border: 1px solid var(--line) !important;
+    }
+
+    /* Custom Marker */
+    .custom-marker {
+      position: relative;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .marker-core {
+      width: 24px;
+      height: 24px;
+      background: var(--emerald);
+      border: 2px solid var(--gold-2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 800;
+      font-size: 11px;
+      box-shadow: 0 4px 12px rgba(17, 19, 15, 0.2);
+      transition: all 0.3s ease;
+      z-index: 2;
+    }
+
+    .custom-marker:hover .marker-core,
+    .custom-marker.active .marker-core {
+      background: var(--gold);
+      border-color: var(--ivory);
+      transform: scale(1.15);
+      box-shadow: 0 6px 16px rgba(183, 137, 75, 0.4);
+    }
+
+    .marker-pulse {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      background: rgba(183, 137, 75, 0.25);
+      border-radius: 50%;
+      animation: pulse-ring 2.2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    @keyframes pulse-ring {
+      0% {
+        transform: scale(0.5);
+        opacity: 1;
+      }
+
+      80%,
+      100% {
+        transform: scale(1.4);
+        opacity: 0;
+      }
+    }
+
+    /* Sidebar Scrollbar */
+    .map-sidebar::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .map-sidebar::-webkit-scrollbar-track {
+      background: rgba(183, 137, 75, 0.05);
+    }
+
+    .map-sidebar::-webkit-scrollbar-thumb {
+      background: var(--line);
+      border-radius: 2px;
+    }
+
+    @media(max-width:980px) {
+      .map-layout {
+        grid-template-columns: 1fr;
+        height: 750px;
+      }
+
+      .map-container {
+        height: 400px;
+      }
+
+      .map-sidebar {
+        height: 320px;
+      }
+    }
+
+    /* ── Inline editing ─────────────────────────────────────────── */
+    [data-editable] {
+      outline: none;
+      border-radius: 4px;
+      transition: background .15s, box-shadow .15s
+    }
+
+    [data-editable]:hover {
+      background: rgba(183, 137, 75, .09);
+      cursor: text
+    }
+
+    [data-editable]:focus {
+      background: rgba(183, 137, 75, .14);
+      box-shadow: 0 0 0 2px rgba(183, 137, 75, .45)
+    }
+
+    /* ── Publish Bar ────────────────────────────────────────────── */
+    #publish-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 9999;
+      background: rgba(23, 65, 46, .96);
+      backdrop-filter: blur(18px);
+      border-top: 1px solid rgba(183, 137, 75, .35);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 32px;
+      gap: 16px
+    }
+
+    @media(max-width: 768px) {
+      body {
+        padding-bottom: 110px !important;
+      }
+
+      #publish-bar {
+        flex-wrap: wrap;
+        padding: 12px 16px;
+        gap: 8px;
+        justify-content: center;
+      }
+
+      #publish-bar .pb-left {
+        width: 100%;
+        justify-content: center;
+      }
+
+      #publish-status {
+        width: 100%;
+        order: 3;
+        margin: 2px 0;
+        text-align: center;
+      }
+
+      #btn-publish {
+        flex: 1;
+        min-width: 120px;
+        justify-content: center;
+        font-size: 11px !important;
+        padding: 10px 14px !important;
+        text-align: center;
+        display: inline-flex;
+        align-items: center;
+      }
+    }
+
+    #publish-bar .pb-left {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    #publish-bar .pb-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #f59e0b;
+      animation: pulse 2s infinite;
+      flex-shrink: 0
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .4
+      }
+    }
+
+    #publish-bar .pb-label {
+      color: rgba(255, 255, 255, .8);
+      font-size: 13px
+    }
+
+    #publish-bar .pb-label strong {
+      color: #d8bd85
+    }
+
+    #publish-status {
+      font-size: 13px;
+      color: rgba(255, 255, 255, .6);
+      flex: 1;
+      text-align: center
+    }
+
+    #btn-publish {
+      background: linear-gradient(135deg, #b7894b, #d8bd85);
+      color: #1c160d;
+      border: none;
+      border-radius: 999px;
+      padding: 11px 28px;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: .2s ease;
+      white-space: nowrap
+    }
+
+    #btn-publish:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(183, 137, 75, .4)
+    }
+
+    #btn-publish:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+      transform: none
+    }
+
+    body {
+      padding-bottom: 72px
+    }
+
+    /* ── PWA Notification Widget ── */
+    .notification-prompt-card {
+      position: fixed;
+      bottom: 88px;
+      right: 24px;
+      width: 340px;
+      background: rgba(255, 250, 241, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(183, 137, 75, 0.3);
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+
+    .notification-prompt-card.show {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .notification-prompt-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .notification-prompt-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--serif);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--emerald);
+    }
+
+    .notification-prompt-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 18px;
+      padding: 4px;
+      line-height: 1;
+      transition: color 0.2s;
+    }
+
+    .notification-prompt-close:hover {
+      color: var(--ink);
+    }
+
+    .notification-prompt-body {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .notification-prompt-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .notification-btn-allow {
+      flex: 1;
+      background: linear-gradient(135deg, var(--gold), var(--gold-2));
+      color: #1c160d;
+      border: none;
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .notification-btn-allow:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(183, 137, 75, 0.3);
+    }
+
+    .notification-btn-later {
+      background: rgba(17, 19, 15, 0.05);
+      color: var(--ink);
+      border: 1px solid rgba(17, 19, 15, 0.1);
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .notification-btn-later:hover {
+      background: rgba(17, 19, 15, 0.1);
+    }
+
+    .notification-success-card {
+      position: fixed;
+      bottom: 88px;
+      right: 24px;
+      background: rgba(23, 65, 46, 0.9);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--gold-2);
+      border-radius: 20px;
+      padding: 16px 20px;
+      box-shadow: var(--shadow);
+      z-index: 10001;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: white;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+
+    .notification-success-card.show {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .notification-success-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 50%;
+      color: var(--gold-2);
+      font-weight: bold;
+    }
+
+    .notification-success-text h4 {
+      margin: 0;
+      font-family: var(--serif);
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .notification-success-text p {
+      margin: 2px 0 0;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.75);
+    }
+
+    #nav-notification-btn {
+      color: var(--muted);
+      border: 1px solid var(--line);
+      background: transparent;
+      padding: 10px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    #nav-notification-btn:hover {
+      background: rgba(183, 137, 75, 0.1);
+      transform: scale(1.05);
+    }
+
+    #nav-notification-btn svg {
+      vertical-align: middle;
+    }
+
+    /* ── Removable Blocks ─────────────────────────────────────────── */
+    .removable-block {
+      position: relative;
+    }
+    .removable-block:hover {
+      outline: 2px dashed rgba(225, 29, 72, 0.5) !important;
+      outline-offset: -2px;
+    }
+    .block-delete-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #e11d48;
+      color: white;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      cursor: pointer;
+      z-index: 99;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 10px rgba(225, 29, 72, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .removable-block:hover > .block-delete-btn {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .block-delete-btn:hover {
+      background: #be123c;
+      transform: scale(1.1);
+    }
+    /* Special handling for table rows */
+    tr.removable-block:hover {
+      outline: none !important;
+      background: rgba(225, 29, 72, 0.05) !important;
+    }
+    tr.removable-block .block-delete-btn {
+      top: 50%;
+      right: 4px;
+      transform: translateY(-50%);
+    }
+    tr.removable-block:hover > td:last-child {
+      position: relative;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="nav no-print">
+    <div class="container nav-inner">
+      <a class="brand" href="#top"><img src="/assets/vietnam-safar-logo.png" alt="Vietnam Safar logo"> Vietnam
+        Safar</a>
+      <div class="nav-links">
+        <a href="#overview">Overview</a><a href="#journey">Journey</a><a href="#route-map">Route Map</a><a href="#itinerary">Itinerary</a><a href="#quotation">Quotation</a><a href="#terms">Terms</a>
+      </div>
+      <div class="nav-actions">
+        <button id="nav-notification-btn" title="Enable Notifications" style="display: none;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"></path>
+          </svg>
+        </button>
+        <a class="btn dark" href="/quotations/quo_516e0370881c/pdf" target="_blank" id="btn-pdf-view">📄 PDF
+          Preview</a>
+        <button class="btn dark" onclick="window.print()" style="background:rgba(23,65,46,.6)">🖨️ Print</button>
+      </div>
+    </div>
+  </nav>
+
+  <main id="top">
+    <header class="hero">
+      <div class="container hero-content">
+        <div>
+          <div class="kicker" data-editable="kicker" spellcheck="false">Private Luxury Quotation ‒ 11D10N ‒ 2026-10-12 – 2026-10-22</div>
+          <h1 data-editable="tour_title" spellcheck="false">From Hanoi's ancient streets to the Mekong's emerald delta, a private...</h1>
+          <p class="hero-lede" data-editable="lede" spellcheck="false">A journey through Vietnam's soulful landscapes and storied past — from the misty lakes of Hanoi and the emerald stillness of Ha Long Bay to Hue's imperial echoes, Hoi An's lantern-lit charm, the vibrant energy of Saigon, and the timeless waterways of the Mekong. Eleven days crafted for a family of eight seeking depth, beauty, and the warm hospitality that makes every corner of Vietnam feel like home.</p>
+          <div class="hero-actions no-print">
+            <a class="btn gold" href="#quotation">View Luxury Rates</a>
+            <a class="btn outline" href="#itinerary">Explore the Journey</a>
+          </div>
+        </div>
+        <aside class="quote-card">
+          <h2>Quotation Snapshot</h2>
+          <div class="quote-list">
+            <div class="quote-row"><span>Prepared for</span><strong data-editable="customer_name" spellcheck="false">Family group of 8 adults — includes 2 strict vegetarians, 1...</strong></div>
+            <div class="quote-row"><span>Overview</span><strong data-editable="overview_heading" spellcheck="false">PROGRAM OVERVIEW</strong></div>
+            
+            <div class="quote-row"><span>Guests</span><strong>Family group of 8 adults — includes 2 strict vegetarians, 1 severe peanut allergy, 1 pax aged 68...</strong></div>
+            
+            
+            <div class="quote-row"><span>Travel dates</span><strong>2026-10-12 – 2026-10-22</strong></div>
+            
+            
+            <div class="quote-row"><span>Route</span><strong>Hanoi – Ha Long Bay – Halong Bay → Hanoi – Hanoi → Hue (Train) – Hue → Hoi An – Hoi An – Hoi An → Ho Chi Minh City – Mekong Delta – Ho Chi Minh City — Departure</strong></div>
+            
+            
+            <div class="quote-row"><span>Style</span><strong>This programme blends cultural depth with relaxation. Special birthday dinner arranged on Day 7....</strong></div>
+            
+            <div class="quote-row"><span>Ref.</span><strong data-editable="quotation_number" spellcheck="false">quo_516e0370881c</strong></div>
+            <div class="quote-row"><span>Contact</span><strong data-editable="contact" spellcheck="false">+84 911 538 738</strong></div>
+          </div>
+        </aside>
+      </div>
+    </header>
+
+    <section class="luxury-strip">
+      <div class="container strip-grid">
+        <div class="strip-card"><span>Duration</span><strong data-editable="glance_duration" spellcheck="false">11D10N</strong></div>
+        <div class="strip-card"><span>Market &amp; Nationality</span><strong data-editable="glance_market" spellcheck="false">Western (UK)</strong></div>
+        <div class="strip-card"><span>Guest Profile</span><strong data-editable="glance_profile" spellcheck="false">Family group of 8 adults — includes 2 strict vegetarians, 1 severe peanut allergy, 1 pax aged 68...</strong></div>
+        <div class="strip-card"><span>Hotel Standard</span><strong data-editable="glance_standard" spellcheck="false">4-star boutique with local character</strong></div>
+        <div class="strip-card"><span>Meal Preference</span><strong data-editable="glance_meals" spellcheck="false">Vegetarian options available, peanut-free, halal-friendly upon request</strong></div>
+        <div class="strip-card"><span>Route Sequence</span><strong data-editable="route_txt" style="font-size: 15px; font-weight: 500; font-family: var(--serif); line-height: 1.3; margin-top: 6px;" spellcheck="false">Hanoi – Ha Long Bay – Halong Bay → Hanoi – Hanoi → Hue (Train) – Hue → Hoi An – Hoi An – Hoi An → Ho Chi Minh City – Mekong Delta – Ho Chi Minh City — Departure</strong></div>
+        <div class="strip-card"><span>Tour Type</span><strong data-editable="glance_tour_type" spellcheck="false">Private with Local
+            Support</strong></div>
+        <div class="strip-card"><span>Pricing Ref / Code</span><strong data-editable="glance_tour_code" style="font-size: 16px;" spellcheck="false">Indicative (KQ-VN-11D-SARAH-0626)</strong></div>
+      </div>
+    </section>
+
+    <section id="overview" class="">
+      <div class="container">
+        <div class="section-head" style="align-items: start;">
+          <h2 data-editable="overview_h2" spellcheck="false">Prepared for: Family group of 8 adults — includes 2 strict vegetarians, 1... — From Hanoi's ancient streets to the Mekong's emerald delta, a private...</h2>
+          <div class="overview-body" style="display: grid; gap: 14px;">
+            
+            <p data-editable="overview_p_1" style="margin: 0; font-size: 15px; line-height: 1.6; color: var(--muted);" spellcheck="false">A journey through Vietnam's soulful landscapes and storied past — from the misty lakes of Hanoi and the emerald stillness of Ha Long Bay to Hue's imperial echoes, Hoi An's lantern-lit charm, the vibrant energy of Saigon, and the timeless waterways of the Mekong. Eleven days crafted for a family of eight seeking depth, beauty, and the warm hospitality that makes every corner of Vietnam feel like home.</p>
+            
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="why-works" style="background: var(--emerald-2); color: white; padding: 72px 0; border-radius: 40px; margin: 40px 0; box-shadow: var(--shadow);" class="">
+      <div class="container">
+        <div class="section-head" style="grid-template-columns: 1fr;">
+          <h2 style="color: var(--gold-2); font-family: var(--serif); font-size: clamp(32px, 4vw, 54px); margin: 0 0 10px;">
+            Why This Journey Works Well for the Guests</h2>
+          <p style="color: rgba(255, 255, 255, 0.72); margin: 0;">Tailored care, balanced pacing, and seamless logistics
+            designed specifically for your group.</p>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 18px; margin-top: 32px;">
+          <article class="experience" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(216, 189, 133, 0.25); color: white;">
+            <span class="num" style="color: var(--gold-2);">01</span>
+            <h3 style="color: white; font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">Private &amp;
+              Flexible</h3>
+            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_private" spellcheck="false">Your own private guide and vehicle for the entire journey — no group joins, no fixed schedules. Pause for photos, linger at a market, or take an unscheduled rest. The itinerary bends to your rhythm.</p>
+          </article>
+          <article class="experience" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(216, 189, 133, 0.25); color: white;">
+            <span class="num" style="color: var(--gold-2);">02</span>
+            <h3 style="color: white; font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">Comfort &amp;
+              Pacing</h3>
+            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_comfort" spellcheck="false">Carefully selected 4-star boutique hotels with authentic character. A 5-star Ha Long Bay cruise. A luxury sleeper train with private cabins. Every overnight is a place you look forward to returning to.</p>
+          </article>
+          <article class="experience" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(216, 189, 133, 0.25); color: white;">
+            <span class="num" style="color: var(--gold-2);">03</span>
+            <h3 style="color: white; font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">Muslim-Friendly
+              Care</h3>
+            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_muslim" spellcheck="false">Halal meat options are available at all planned restaurants. Vegetarian and peanut-free meals are confirmed. Your guide is experienced with dietary needs and will verify every dish.</p>
+          </article>
+          <article class="experience" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(216, 189, 133, 0.25); color: white;">
+            <span class="num" style="color: var(--gold-2);">04</span>
+            <h3 style="color: white; font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">Balanced
+              Highlights</h3>
+            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_balanced" spellcheck="false">Six UNESCO sites, a birthday lantern-lit dinner, a morning on the Mekong, a day of pure leisure for tailoring or beach. History and heart, pacing and passion — perfectly balanced.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="journey" class="">
+      <div class="container">
+        <div class="section-head">
+          <h2 data-editable="journey_h2" spellcheck="false">Destination imagery woven into the quotation.</h2>
+          <p data-editable="journey_p" spellcheck="false">Cinematic destination panels crafted for a premium travel proposal.</p>
+        </div>
+        <div class="gallery">
+          
+          <div class="image-tile large" style="background-image: var(--img-1)">
+            <div class="image-caption">
+              <small data-editable="gal1_label" spellcheck="false">Highlight</small>
+              <strong data-editable="gal1_title" spellcheck="false">Hà Nội</strong>
+            </div>
+          </div>
+          
+          <div class="image-tile" style="background-image: var(--img-2)">
+            <div class="image-caption">
+              <small data-editable="gal2_label" spellcheck="false">Destination</small>
+              <strong data-editable="gal2_title" spellcheck="false">Vịnh Hạ Long</strong>
+            </div>
+          </div>
+          
+          <div class="image-tile" style="background-image: var(--img-3)">
+            <div class="image-caption">
+              <small data-editable="gal3_label" spellcheck="false">Destination</small>
+              <strong data-editable="gal3_title" spellcheck="false">Huế</strong>
+            </div>
+          </div>
+          
+          <div class="image-tile" style="background-image: var(--img-4)">
+            <div class="image-caption">
+              <small data-editable="gal4_label" spellcheck="false">Destination</small>
+              <strong data-editable="gal4_title" spellcheck="false">Hội An</strong>
+            </div>
+          </div>
+          
+          <div class="image-tile" style="background-image: var(--img-5)">
+            <div class="image-caption">
+              <small data-editable="gal5_label" spellcheck="false">Destination</small>
+              <strong data-editable="gal5_title" spellcheck="false">Thành phố Hồ Chí Minh</strong>
+            </div>
+          </div>
+          
+          <div class="image-tile" style="background-image: var(--img-6)">
+            <div class="image-caption">
+              <small data-editable="gal6_label" spellcheck="false">Destination</small>
+              <strong data-editable="gal6_title" spellcheck="false">Đồng bằng sông Cửu Long</strong>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+    </section>
+
+    <section id="itinerary" class="">
+      <div class="container">
+        <div class="section-head">
+          <h2 data-editable="itinerary_h2" spellcheck="false">Day-by-Day Journey Program</h2>
+          <p data-editable="itinerary_p" spellcheck="false">Your private 11D10N journey — 11 days, carefully crafted.</p>
+        </div>
+        <div class="itinerary">
+          
+          <article class="day">
+            <div class="day-label">1</div>
+            <div>
+              <span class="num" data-editable="day_num_1" spellcheck="false">DAY 1</span>
+              <h3 data-editable="day_title_1" spellcheck="false">Explore Hanoi</h3>
+              
+              <p data-editable="day_desc_1_0" spellcheck="false">Your story begins in Hanoi, the thousand-year-old capital where French colonial grace meets Vietnamese soul. After a private airport welcome, ease into the seductive rhythm of the Old Quarter — a labyrinth of narrow streets where each lane hums with its own trade and story.</p>
+              
+              
+              <p style="font-size:13px;color:#706a5d;margin-top:8px">
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Private airport transfer (HAN). Afternoon at leisure or guided Old Quarter orientation walk. Welcome dinner at a...
+              </p>
+              
+              
+              <div style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;">Sense of Pace: Gentle arrival — designed for jet-lag recovery. No fixed...</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <div class="day-meta">
+              
+              <span style="font-size:11px;letter-spacing:.12em">OVERNIGHT</span><br>
+              <span style="font-size:15px;font-family:Georgia,serif">Hanoi</span><br><br>
+              
+              
+              <span style="font-size:11px;letter-spacing:.12em">MEALS</span><br>
+              <span style="font-size:13px">Welcome dinner included. Vegetarian and peanut-free options confirmed.</span>
+              
+            </div>
+          </article>
+          
+          <article class="day">
+            <div class="day-label">2</div>
+            <div>
+              <span class="num" data-editable="day_num_2" spellcheck="false">DAY 2</span>
+              <h3 data-editable="day_title_2" spellcheck="false">Explore Hanoi</h3>
+              
+              <p data-editable="day_desc_1_0" spellcheck="false">A day to fall deeper in love with Hanoi. Visit the Temple of Literature — Vietnam's first university, serene and ancient. Then glide by cyclo through the Old Quarter's chaotic ballet of motorbikes and street vendors. Evening unveils Hanoi's street food soul with a private, diet-adapted tasting walk.</p>
+              
+              
+              <p style="font-size:13px;color:#706a5d;margin-top:8px">
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Temple of Literature guided tour. Cyclo ride through the Old Quarter. Private street food walking tour (vegetarian...
+              </p>
+              
+              
+              <div style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;">Sense of Pace: Moderate — morning cultural, afternoon cyclo, evening food walk....</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <div class="day-meta">
+              
+              <span style="font-size:11px;letter-spacing:.12em">OVERNIGHT</span><br>
+              <span style="font-size:15px;font-family:Georgia,serif">Hanoi</span><br><br>
+              
+              
+              <span style="font-size:11px;letter-spacing:.12em">MEALS</span><br>
+              <span style="font-size:13px">Breakfast at hotel. Lunch at leisure. Street food tasting walk for dinner.</span>
+              
+            </div>
+          </article>
+          
+          <article class="day">
+            <div class="day-label">3</div>
+            <div>
+              <span class="num" data-editable="day_num_3" spellcheck="false">DAY 3</span>
+              <h3 data-editable="day_title_3" spellcheck="false">Explore Ha Long Bay</h3>
+              
+              <p data-editable="day_desc_1_0" spellcheck="false">A scenic drive through the Red River Delta leads to one of the world's most extraordinary seascapes. Board a 5-star cruise and sail into the emerald stillness of Ha Long Bay, where limestone pillars rise like dragons from jade waters. Kayak into hidden lagoons, explore a sea cave, and dine under a canopy of stars.</p>
+              
+              
+              <p style="font-size:13px;color:#706a5d;margin-top:8px">
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Private transfer Hanoi-Halong (3.5h). 5-star cruise embarkation. Kayaking, cave visit, sunset cooking demonstration....
+              </p>
+              
+              
+              <div style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;">Sense of Pace: Leisurely drive, afternoon cruise activities, evening at leisure...</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <div class="day-meta">
+              
+              <span style="font-size:11px;letter-spacing:.12em">OVERNIGHT</span><br>
+              <span style="font-size:15px;font-family:Georgia,serif">Ha Long Bay</span><br><br>
+              
+              
+              <span style="font-size:11px;letter-spacing:.12em">MEALS</span><br>
+              <span style="font-size:13px">Brunch on board pre-sailing. Dinner on board (vegetarian and peanut-free...</span>
+              
+            </div>
+          </article>
+          
+          <article class="day">
+            <div class="day-label">4</div>
+            <div>
+              <span class="num" data-editable="day_num_4" spellcheck="false">DAY 4</span>
+              <h3 data-editable="day_title_4" spellcheck="false">Explore Halong Bay → Hanoi</h3>
+              
+              <p data-editable="day_desc_1_0" spellcheck="false">Wake to Tai Chi on the sundeck as the sun rises over the karsts. A final brunch as the boat glides back to port. Return to Hanoi for a free afternoon — perhaps browse the weekend flower market or relax at the hotel spa.</p>
+              
+              
+              <p style="font-size:13px;color:#706a5d;margin-top:8px">
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Tai Chi session at dawn. Brunch on board. Private transfer Halong-Hanoi. Free afternoon in Hanoi.
+              </p>
+              
+              
+              <div style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;">Sense of Pace: Leisurely morning on cruise, relaxed drive back, free...</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <div class="day-meta">
+              
+              <span style="font-size:11px;letter-spacing:.12em">OVERNIGHT</span><br>
+              <span style="font-size:15px;font-family:Georgia,serif">Halong Bay → Hanoi</span><br><br>
+              
+              
+              <span style="font-size:11px;letter-spacing:.12em">MEALS</span><br>
+              <span style="font-size:13px">Brunch on board. Dinner at leisure (recommendations from guide).</span>
+              
+            </div>
+          </article>
+          
+          <article class="day">
+            <div class="day-label">5</div>
+            <div>
+              <span class="num" data-editable="day_num_5" spellcheck="false">DAY 5</span>
+              <h3 data-editable="day_title_5" spellcheck="false">Explore Hanoi → Hue (Train)</h3>
+              
+              <p data-editable="day_desc_1_0" spellcheck="false">A free morning to revisit a favourite corner of Hanoi or discover something new. As dusk falls, board a luxury sleeper train bound for Hue. Private cabins with soft beds and attentive service transform the rails into a rolling sanctuary.</p>
+              
+              
+              <p style="font-size:13px;color:#706a5d;margin-top:8px">
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Free day Hanoi. Evening transfer to Hanoi station. Luxury sleeper train Hanoi-Hue (private cabin, 4 cabins booked).
+              </p>
+              
+              
+              <div style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;">Sense of Pace: Free day followed by evening train journey. Relaxed transition...</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <div class="day-meta">
+              
+              <span style="font-size:11px;letter-spacing:.12em">OVERNIGHT</span><br>
+              <span style="font-size:15px;font-family:Georgia,serif">Hanoi → Hue (Train)</span><br><br>
+              
+              
+              <span style="font-size:11px;letter-spacing:.12em">MEALS</span><br>
+              <span style="font-size:13px">Breakfast at hotel. Lunch and dinner at leisure. Light refreshments on train.</span>
+              
+            </div>
+          </article>
+          
+          <article class="day">
+            <div class="day-label">6</div>
+            <div>
+              <span class="num" data-editable="day_num_6" spellcheck="false">DAY 6</span>
+              <h3 data-editable="day_title_6" spellcheck="false">Explore Hue → Hoi An</h3>
+              
+              <p data-editable="day_desc_1_0" spellcheck="false">Arrive in Hue, the ancient imperial capital, as the morning light touches the Perfume River. A scenic drive over Hai Van Pass — one of the world's most beautiful coastal roads — delivers you to Hoi An in time to watch the lanterns float across the river.</p>
+              
+              
+              <p style="font-size:13px;color:#706a5d;margin-top:8px">
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Arrival Hue station. Scenic drive Hai Van Pass. Check-in Hoi An. Evening at leisure in Ancient Town.
+              </p>
+              
+              
+              <div style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;">Sense of Pace: Moderate — train arrival, then 3h scenic drive with photo stops....</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <div class="day-meta">
+              
+              <span style="font-size:11px;letter-spacing:.12em">OVERNIGHT</span><br>
+              <span style="font-size:15px;font-family:Georgia,serif">Hue → Hoi An</span><br><br>
+              
+              
+              <span style="font-size:11px;letter-spacing:.12em">MEALS</span><br>
+              <span style="font-size:13px">Breakfast on train. Lunch en route. Dinner at leisure in Hoi An.</span>
+              
+            </div>
+          </article>
+          
+          <article class="day">
+            <div class="day-label">7</div>
+            <div>
+              <span class="num" data-editable="day_num_7" spellcheck="false">DAY 7</span>
+              <h3 data-editable="day_title_7" spellcheck="false">Explore Hoi An</h3>
+              
+              <p data-editable="day_desc_1_0" spellcheck="false">Hoi An unveils its magic — a living museum of yellow-walled merchant houses and tailor shops. Walk the Ancient Town's timeless lanes, shape your own silk lantern in a workshop, then gather for a birthday dinner that will be remembered long after the candles are blown out.</p>
+              
+              
+              <p style="font-size:13px;color:#706a5d;margin-top:8px">
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Walking tour of Hoi An Ancient Town. Lantern-making workshop. Special birthday dinner with cake (Sarah's 40th birthday).
+              </p>
+              
+              
+              <div style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;">Sense of Pace: Moderate morning walking tour. Creative afternoon workshop....</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <div class="day-meta">
+              
+              <span style="font-size:11px;letter-spacing:.12em">OVERNIGHT</span><br>
+              <span style="font-size:15px;font-family:Georgia,serif">Hoi An</span><br><br>
+              
+              
+              <span style="font-size:11px;letter-spacing:.12em">MEALS</span><br>
+              <span style="font-size:13px">Breakfast at hotel. Lunch at leisure. Birthday dinner (special menu with...</span>
+              
+            </div>
+          </article>
+          
+          <article class="day">
+            <div class="day-label">8</div>
+            <div>
+              <span class="num" data-editable="day_num_8" spellcheck="false">DAY 8</span>
+              <h3 data-editable="day_title_8" spellcheck="false">Explore Hoi An</h3>
+              
+              <p data-editable="day_desc_1_0" spellcheck="false">A day entirely your own. Commission tailor-made clothing (Hoi An is famed for 24-hour tailoring), cycle to An Bang Beach for a swim, or simply lose yourself in the ancient alleyways with no agenda. This is your pause in the journey.</p>
+              
+              
+              <p style="font-size:13px;color:#706a5d;margin-top:8px">
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Full day at leisure. Guide available on request for optional excursions.
+              </p>
+              
+              
+              <div style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;">Sense of Pace: Free unstructured day. Rest, explore, or shop as you wish.</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <div class="day-meta">
+              
+              <span style="font-size:11px;letter-spacing:.12em">OVERNIGHT</span><br>
+              <span style="font-size:15px;font-family:Georgia,serif">Hoi An</span><br><br>
+              
+              
+              <span style="font-size:11px;letter-spacing:.12em">MEALS</span><br>
+              <span style="font-size:13px">Breakfast at hotel. Lunch and dinner at leisure (guide recommendations...</span>
+              
+            </div>
+          </article>
+          
+          <article class="day">
+            <div class="day-label">9</div>
+            <div>
+              <span class="num" data-editable="day_num_9" spellcheck="false">DAY 9</span>
+              <h3 data-editable="day_title_9" spellcheck="false">Explore Hoi An → Ho Chi Minh City</h3>
+              
+              <p data-editable="day_desc_1_0" spellcheck="false">A leisurely morning before flying south to Ho Chi Minh City — a metropolis where skyscrapers rise beside French colonial landmarks and the streets thrum with an electric energy. Settle into your hotel in the heart of District 1.</p>
+              
+              
+              <p style="font-size:13px;color:#706a5d;margin-top:8px">
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Leisure morning Hoi An. Private transfer to Da Nang airport. Flight to HCMC (guests book separately). Private airport...
+              </p>
+              
+              
+              <div style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;">Sense of Pace: Leisurely transfer day. Short flight.</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <div class="day-meta">
+              
+              <span style="font-size:11px;letter-spacing:.12em">OVERNIGHT</span><br>
+              <span style="font-size:15px;font-family:Georgia,serif">Hoi An → Ho Chi Minh City</span><br><br>
+              
+              
+              <span style="font-size:11px;letter-spacing:.12em">MEALS</span><br>
+              <span style="font-size:13px">Breakfast at hotel. Lunch at leisure. Dinner at leisure (guide recommendations...</span>
+              
+            </div>
+          </article>
+          
+          <article class="day">
+            <div class="day-label">10</div>
+            <div>
+              <span class="num" data-editable="day_num_10" spellcheck="false">DAY 10</span>
+              <h3 data-editable="day_title_10" spellcheck="false">Explore Mekong Delta</h3>
+              
+              <p data-editable="day_desc_1_0" spellcheck="false">Escape the city to the watery world of the Mekong Delta. Glide through coconut-shaded canals on a rowing boat, taste exotic tropical fruits at a family orchard, and enjoy a rustic lunch on an island. The delta moves at its own pace — timeless and serene.</p>
+              
+              
+              <p style="font-size:13px;color:#706a5d;margin-top:8px">
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Private full-day Mekong Delta tour. Rowing boat through canals. Fruit tasting at local orchard. Lunch at riverside...
+              </p>
+              
+              
+              <div style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;">Sense of Pace: Moderate day trip. Easy walking, boat rides, seated tasting....</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <div class="day-meta">
+              
+              <span style="font-size:11px;letter-spacing:.12em">OVERNIGHT</span><br>
+              <span style="font-size:15px;font-family:Georgia,serif">Mekong Delta</span><br><br>
+              
+              
+              <span style="font-size:11px;letter-spacing:.12em">MEALS</span><br>
+              <span style="font-size:13px">Breakfast at hotel. Lunch at Mekong island restaurant (vegetarian and...</span>
+              
+            </div>
+          </article>
+          
+          <article class="day">
+            <div class="day-label">11</div>
+            <div>
+              <span class="num" data-editable="day_num_11" spellcheck="false">DAY 11</span>
+              <h3 data-editable="day_title_11" spellcheck="false">Explore Ho Chi Minh City — Departure</h3>
+              
+              <p data-editable="day_desc_1_0" spellcheck="false">A final adventure before departure — the Cu Chi Tunnels, explored at a gentle pace with a guide who brings this underground city's history to life. Then a private transfer to Tan Son Nhat Airport, carrying home not just souvenirs but a thousand memories.</p>
+              
+              
+              <p style="font-size:13px;color:#706a5d;margin-top:8px">
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Half-day Cu Chi Tunnels tour (gentle route, no crawling). Private airport transfer to SGN.
+              </p>
+              
+              
+              <div style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;">Sense of Pace: Morning gentle tour. Afternoon airport transfer.</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <div class="day-meta">
+              
+              <span style="font-size:11px;letter-spacing:.12em">OVERNIGHT</span><br>
+              <span style="font-size:15px;font-family:Georgia,serif">Ho Chi Minh City — Departure</span><br><br>
+              
+              
+              <span style="font-size:11px;letter-spacing:.12em">MEALS</span><br>
+              <span style="font-size:13px">Breakfast at hotel.</span>
+              
+            </div>
+          </article>
+          
+        </div>
+      </div>
+    </section>
+
+    
+<section id="route-map" style="padding: 72px 0;" class="">
+      <div class="container">
+        <div class="section-head">
+          <h2>Your Journey Visualized</h2>
+          <p>An interactive map showing your curated path through Vietnam's iconic landmarks and luxury stopovers. Click
+            on a destination in the list or the map to explore highlights.</p>
+        </div>
+        <div class="map-layout">
+          <div id="map" class="map-container leaflet-container leaflet-touch leaflet-retina leaflet-safari leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom" tabindex="0">
+            <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--ivory-2); color: var(--muted); font-size: 14px;">
+              <span style="font-size: 24px; margin-bottom: 8px;">🗺️</span>
+              <span>Loading Interactive Route Map...</span>
+            </div>
+          <div class="leaflet-pane leaflet-map-pane" style="transform: translate3d(0px, 0px, 0px);"><div class="leaflet-pane leaflet-tile-pane"><div class="leaflet-layer " style="z-index: 1; opacity: 1;"><div class="leaflet-tile-container leaflet-zoom-animated" style="z-index: 18; transform: translate3d(0px, 0px, 0px) scale(1);"><img alt="" src="https://mt1.google.com/vt/lyrs=m&amp;x=25&amp;y=14&amp;z=5&amp;hl=vi" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(70px, 49px, 0px); opacity: 1;"><img alt="" src="https://mt1.google.com/vt/lyrs=m&amp;x=25&amp;y=13&amp;z=5&amp;hl=vi" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(70px, -207px, 0px); opacity: 1;"><img alt="" src="https://mt1.google.com/vt/lyrs=m&amp;x=24&amp;y=14&amp;z=5&amp;hl=vi" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(-186px, 49px, 0px); opacity: 1;"><img alt="" src="https://mt1.google.com/vt/lyrs=m&amp;x=26&amp;y=14&amp;z=5&amp;hl=vi" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(326px, 49px, 0px); opacity: 1;"><img alt="" src="https://mt1.google.com/vt/lyrs=m&amp;x=25&amp;y=15&amp;z=5&amp;hl=vi" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(70px, 305px, 0px); opacity: 1;"><img alt="" src="https://mt1.google.com/vt/lyrs=m&amp;x=24&amp;y=13&amp;z=5&amp;hl=vi" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(-186px, -207px, 0px); opacity: 1;"><img alt="" src="https://mt1.google.com/vt/lyrs=m&amp;x=26&amp;y=13&amp;z=5&amp;hl=vi" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(326px, -207px, 0px); opacity: 1;"><img alt="" src="https://mt1.google.com/vt/lyrs=m&amp;x=24&amp;y=15&amp;z=5&amp;hl=vi" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(-186px, 305px, 0px); opacity: 1;"><img alt="" src="https://mt1.google.com/vt/lyrs=m&amp;x=26&amp;y=15&amp;z=5&amp;hl=vi" class="leaflet-tile leaflet-tile-loaded" style="width: 256px; height: 256px; transform: translate3d(326px, 305px, 0px); opacity: 1;"></div></div></div><div class="leaflet-pane leaflet-overlay-pane"><svg pointer-events="none" class="leaflet-zoom-animated" width="488" height="478" viewBox="-41 -40 488 478" style="transform: translate3d(-41px, -40px, 0px);"><g><path class="leaflet-interactive" stroke="var(--emerald)" stroke-opacity="0.8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" fill="none" d="M175 71L202 73"></path><path class="leaflet-interactive" stroke="var(--emerald)" stroke-opacity="0.8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" fill="none" d="M202 73L175 71"></path><path class="leaflet-interactive" stroke="var(--gold)" stroke-opacity="0.8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6, 8" fill="none" d="M175 71L176 88L185 126L199 158L214 181"></path><path class="leaflet-interactive" stroke="var(--emerald)" stroke-opacity="0.8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" fill="none" d="M214 181L231 195"></path><path class="leaflet-interactive" stroke="var(--gold)" stroke-opacity="0.8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6, 8" fill="none" d="M231 195L214 224L203 251L195 284L192 313"></path><path class="leaflet-interactive" stroke="var(--emerald)" stroke-opacity="0.8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" fill="none" d="M192 313L187 327"></path><path class="leaflet-interactive" stroke="var(--emerald)" stroke-opacity="0.8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" fill="none" d="M187 327L192 313"></path></g></svg></div><div class="leaflet-pane leaflet-shadow-pane"></div><div class="leaflet-pane leaflet-marker-pane"><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -14px; width: 28px; height: 28px; transform: translate3d(175px, 71px, 0px); z-index: 71;">
+          <div class="custom-marker" id="marker-wrapper-0">
+            <div class="marker-pulse"></div>
+            <div class="marker-core">1</div>
+          </div>
+        </div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -14px; width: 28px; height: 28px; transform: translate3d(202px, 73px, 0px); z-index: 73;">
+          <div class="custom-marker" id="marker-wrapper-1">
+            <div class="marker-pulse"></div>
+            <div class="marker-core">2</div>
+          </div>
+        </div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -14px; width: 28px; height: 28px; transform: translate3d(175px, 71px, 0px); z-index: 71;">
+          <div class="custom-marker" id="marker-wrapper-2">
+            <div class="marker-pulse"></div>
+            <div class="marker-core">3</div>
+          </div>
+        </div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -14px; width: 28px; height: 28px; transform: translate3d(214px, 181px, 0px); z-index: 181;">
+          <div class="custom-marker" id="marker-wrapper-3">
+            <div class="marker-pulse"></div>
+            <div class="marker-core">4</div>
+          </div>
+        </div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -14px; width: 28px; height: 28px; transform: translate3d(231px, 195px, 0px); z-index: 195;">
+          <div class="custom-marker" id="marker-wrapper-4">
+            <div class="marker-pulse"></div>
+            <div class="marker-core">5</div>
+          </div>
+        </div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -14px; width: 28px; height: 28px; transform: translate3d(192px, 313px, 0px); z-index: 313;">
+          <div class="custom-marker" id="marker-wrapper-5">
+            <div class="marker-pulse"></div>
+            <div class="marker-core">6</div>
+          </div>
+        </div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -14px; width: 28px; height: 28px; transform: translate3d(187px, 327px, 0px); z-index: 327;">
+          <div class="custom-marker" id="marker-wrapper-6">
+            <div class="marker-pulse"></div>
+            <div class="marker-core">7</div>
+          </div>
+        </div><div class="leaflet-marker-icon leaflet-zoom-animated leaflet-interactive" tabindex="0" role="button" style="margin-left: -14px; margin-top: -14px; width: 28px; height: 28px; transform: translate3d(192px, 313px, 0px); z-index: 313;">
+          <div class="custom-marker" id="marker-wrapper-7">
+            <div class="marker-pulse"></div>
+            <div class="marker-core">8</div>
+          </div>
+        </div></div><div class="leaflet-pane leaflet-tooltip-pane"></div><div class="leaflet-pane leaflet-popup-pane"></div><div class="leaflet-proxy leaflet-zoom-animated" style="transform: translate3d(6533.031253px, 3734.008594px, 0px) scale(16);"></div></div><div class="leaflet-control-container"><div class="leaflet-top leaflet-left"><div class="leaflet-control-zoom leaflet-bar leaflet-control"><a class="leaflet-control-zoom-in" href="#" title="Zoom in" role="button" aria-label="Zoom in" aria-disabled="false"><span aria-hidden="true">+</span></a><a class="leaflet-control-zoom-out" href="#" title="Zoom out" role="button" aria-label="Zoom out" aria-disabled="false"><span aria-hidden="true">−</span></a></div></div><div class="leaflet-top leaflet-right"></div><div class="leaflet-bottom leaflet-left"></div><div class="leaflet-bottom leaflet-right"><div class="leaflet-control-attribution leaflet-control"><a href="https://leafletjs.com" title="A JavaScript library for interactive maps"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" class="leaflet-attribution-flag"><path fill="#4C7BE1" d="M0 0h12v4H0z"></path><path fill="#FFD500" d="M0 4h12v3H0z"></path><path fill="#E0BC00" d="M0 7h12v1H0z"></path></svg> Leaflet</a> <span aria-hidden="true">|</span> © Bản đồ chủ quyền Việt Nam | Dữ liệu bản đồ © Google</div></div></div></div>
+          <div class="map-sidebar" id="map-sidebar"><div class="sidebar-card active">
+          <span class="days-badge">Days 1-2</span>
+          <h4>1. Hanoi</h4>
+          <p>Explore Hanoi</p>
+        </div><div class="sidebar-card ">
+          <span class="days-badge">Day 3</span>
+          <h4>2. Ha Long Bay</h4>
+          <p>Explore Ha Long Bay</p>
+        </div><div class="sidebar-card ">
+          <span class="days-badge">Days 4-5</span>
+          <h4>3. Halong Bay → Hanoi</h4>
+          <p>Explore Halong Bay → Hanoi</p>
+        </div><div class="sidebar-card ">
+          <span class="days-badge">Day 6</span>
+          <h4>4. Hue → Hoi An</h4>
+          <p>Explore Hue → Hoi An</p>
+        </div><div class="sidebar-card ">
+          <span class="days-badge">Days 7-8</span>
+          <h4>5. Hoi An</h4>
+          <p>Explore Hoi An</p>
+        </div><div class="sidebar-card ">
+          <span class="days-badge">Day 9</span>
+          <h4>6. Hoi An → Ho Chi Minh City</h4>
+          <p>Explore Hoi An → Ho Chi Minh City</p>
+        </div><div class="sidebar-card ">
+          <span class="days-badge">Day 10</span>
+          <h4>7. Mekong Delta</h4>
+          <p>Explore Mekong Delta</p>
+        </div><div class="sidebar-card ">
+          <span class="days-badge">Day 11</span>
+          <h4>8. Ho Chi Minh City — Departure</h4>
+          <p>Explore Ho Chi Minh City — Departure</p>
+        </div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="hotels" style="background: var(--card); border: 1px solid var(--line); border-radius: 40px; padding: 54px; margin: 40px 0; box-shadow: 0 18px 45px rgba(17,19,15,0.04);" class="">
+      <div class="container">
+        <div class="section-head" style="grid-template-columns: 1fr;">
+          <h2 style="font-family: var(--serif); font-size: clamp(32px, 4vw, 48px); color: var(--emerald); margin: 0 0 10px;">
+            Selected Hotel Plan</h2>
+          <p style="color: var(--muted); margin: 0;">Proposed hotels and luxury cruises selected for your journey.
+            Subject to availability at confirmation.</p>
+        </div>
+
+        
+        <div style="overflow-x: auto; margin-top: 32px; border-radius: 18px; border: 1px solid var(--line);">
+          <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
+            <thead>
+              <tr style="background: var(--emerald); color: white;">
+                <th style="padding: 16px 20px;">Destination</th>
+                <th style="padding: 16px 20px;">Check-In</th>
+                <th style="padding: 16px 20px;">Check-Out</th>
+                <th style="padding: 16px 20px;">Hotel Arrangement</th>
+              </tr>
+            </thead>
+            <tbody>
+              
+              <tr style="border-bottom: 1px solid var(--line); background: white;" class="">
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">Hanoi</td>
+                <td style="padding: 16px 20px;">2026-10-12</td>
+                <td style="padding: 16px 20px;">2026-10-13</td>
+                <td style="padding: 16px 20px; font-family: var(--serif); font-size: 15px; color: var(--ink); position: relative;">La Casa Hotel / similar 4-star boutique — 4 deluxe rooms (deluxe/twin)</td>
+              </tr>
+              
+              <tr style="border-bottom: 1px solid var(--line); background: rgba(183, 137, 75, 0.03);" class="">
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">Hanoi</td>
+                <td style="padding: 16px 20px;">2026-10-13</td>
+                <td style="padding: 16px 20px;">2026-10-14</td>
+                <td style="padding: 16px 20px; font-family: var(--serif); font-size: 15px; color: var(--ink); position: relative;">La Casa Hotel / similar 4-star boutique — 4 deluxe rooms</td>
+              </tr>
+              
+              <tr style="border-bottom: 1px solid var(--line); background: white;" class="">
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">Ha Long Bay</td>
+                <td style="padding: 16px 20px;">2026-10-14</td>
+                <td style="padding: 16px 20px;">2026-10-15</td>
+                <td style="padding: 16px 20px; font-family: var(--serif); font-size: 15px; color: var(--ink); position: relative;">Scarlet Pearl Cruise 5-star — 4 balcony cabins</td>
+              </tr>
+              
+              <tr style="border-bottom: 1px solid var(--line); background: rgba(183, 137, 75, 0.03);" class="">
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">Hanoi</td>
+                <td style="padding: 16px 20px;">2026-10-15</td>
+                <td style="padding: 16px 20px;">2026-10-16</td>
+                <td style="padding: 16px 20px; font-family: var(--serif); font-size: 15px; color: var(--ink); position: relative;">La Casa Hotel / similar 4-star boutique — 4 deluxe rooms</td>
+              </tr>
+              
+              <tr style="border-bottom: 1px solid var(--line); background: white;" class="">
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">Train (Hanoi-Hue)</td>
+                <td style="padding: 16px 20px;">2026-10-16</td>
+                <td style="padding: 16px 20px;">2026-10-17</td>
+                <td style="padding: 16px 20px; font-family: var(--serif); font-size: 15px; color: var(--ink); position: relative;">Luxury sleeper train — 4 private cabins (4-berth)</td>
+              </tr>
+              
+              <tr style="border-bottom: 1px solid var(--line); background: rgba(183, 137, 75, 0.03);" class="">
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">Hoi An</td>
+                <td style="padding: 16px 20px;">2026-10-17</td>
+                <td style="padding: 16px 20px;">2026-10-18</td>
+                <td style="padding: 16px 20px; font-family: var(--serif); font-size: 15px; color: var(--ink); position: relative;">Son Hoi An Boutique / similar — 4 deluxe balcony rooms</td>
+              </tr>
+              
+              <tr style="border-bottom: 1px solid var(--line); background: white;" class="">
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">Hoi An</td>
+                <td style="padding: 16px 20px;">2026-10-18</td>
+                <td style="padding: 16px 20px;">2026-10-19</td>
+                <td style="padding: 16px 20px; font-family: var(--serif); font-size: 15px; color: var(--ink); position: relative;">Son Hoi An Boutique / similar — 4 deluxe balcony rooms</td>
+              </tr>
+              
+              <tr style="border-bottom: 1px solid var(--line); background: rgba(183, 137, 75, 0.03);" class="">
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">Hoi An</td>
+                <td style="padding: 16px 20px;">2026-10-19</td>
+                <td style="padding: 16px 20px;">2026-10-20</td>
+                <td style="padding: 16px 20px; font-family: var(--serif); font-size: 15px; color: var(--ink); position: relative;">Son Hoi An Boutique / similar — 4 deluxe balcony rooms</td>
+              </tr>
+              
+              <tr style="border-bottom: 1px solid var(--line); background: white;" class="">
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">Ho Chi Minh City</td>
+                <td style="padding: 16px 20px;">2026-10-20</td>
+                <td style="padding: 16px 20px;">2026-10-21</td>
+                <td style="padding: 16px 20px; font-family: var(--serif); font-size: 15px; color: var(--ink); position: relative;">Alagon City Hotel &amp; Spa / similar 4-star — 4 executive rooms</td>
+              </tr>
+              
+              <tr style="border-bottom: 1px solid var(--line); background: rgba(183, 137, 75, 0.03);" class="">
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">Ho Chi Minh City</td>
+                <td style="padding: 16px 20px;">2026-10-21</td>
+                <td style="padding: 16px 20px;">2026-10-22</td>
+                <td style="padding: 16px 20px; font-family: var(--serif); font-size: 15px; color: var(--ink); position: relative;">Alagon City Hotel &amp; Spa / similar 4-star — 4 executive rooms</td>
+              </tr>
+              
+            </tbody>
+          </table>
+        </div>
+        
+
+        
+        <div style="margin-top: 20px; padding: 18px; background: rgba(183, 137, 75, 0.06); border-radius: 14px; border: 1px dashed var(--gold);">
+          <strong style="color: var(--gold); text-transform: uppercase; font-size: 11px; letter-spacing: 0.12em; display: block; margin-bottom: 6px;">Room
+            Notes &amp; Special Requests</strong>
+          <div data-editable="room_notes" style="font-size: 14px; color: var(--muted);" spellcheck="false">4 double/twin rooms throughout. 2 guests per room. Standard rooming applies. Vegetarian and peanut allergy noted for dining venues.</div>
+        </div>
+        
+      </div>
+    </section>
+
+    
+<section id="testimonials" style="background: var(--ivory); padding: 72px 0;" class="">
+      <div class="container">
+        <div class="section-head" style="margin-bottom: 44px; grid-template-columns: 1fr;">
+          <h2>Loved by Discerning Travelers</h2>
+          <p style="margin-top: 8px;">Read stories from families and luxury travelers who explored Vietnam on our
+            slow-nature private paths.</p>
+        </div>
+        <div class="testimonials-grid">
+          <div class="testimonial-card">
+            <div class="stars">★★★★★</div>
+            <h3>"Unforgettable Family Holiday"</h3>
+            <p>"The slow pace was perfect for my parents and children. Metropole Hanoi was splendid, and our private
+              guide made us feel completely safe and welcome at every stop. The halal-friendly food arrangements were
+              flawless."</p>
+            <div class="client-meta">
+              <div class="client-avatar">
+                <img src="https://images.unsplash.com/photo-1589156280159-27698a70f29e?auto=format&amp;fit=crop&amp;q=80&amp;w=150&amp;h=150" alt="Fatima Al-Thani">
+              </div>
+              <div>
+                <strong>Fatima Al-Thani</strong>
+                <span>Family Journey (Qatar)</span>
+              </div>
+            </div>
+          </div>
+          <div class="testimonial-card">
+            <div class="stars">★★★★★</div>
+            <h3>"Exceptional Luxury &amp; Service"</h3>
+            <p>"Vietnam Safar designed a masterpiece. The overnight cruise in Ha Long Bay felt like a private haven, and
+              the luxury transport between Sapa and Hanoi was incredibly comfortable. Highly recommend to anyone seeking
+              pure luxury."</p>
+            <div class="client-meta">
+              <div class="client-avatar">
+                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&amp;fit=crop&amp;q=80&amp;w=150&amp;h=150" alt="James Miller">
+              </div>
+              <div>
+                <strong>James Miller</strong>
+                <span>Bespoke Tour (Australia)</span>
+              </div>
+            </div>
+          </div>
+          <div class="testimonial-card">
+            <div class="stars">★★★★★</div>
+            <h3>"Flawless and Relaxed Pacing"</h3>
+            <p>"Every single transfer was prompt. The VIP Ford Transit was spacious and spotless. The itinerary gave us
+              enough time to relax by the beach and explore local culture. Truly zero friction."</p>
+            <div class="client-meta">
+              <div class="client-avatar">
+                <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&amp;fit=crop&amp;q=80&amp;w=150&amp;h=150" alt="Sarah Richardson">
+              </div>
+              <div>
+                <strong>Sarah Richardson</strong>
+                <span>Slow Nature Tour (UK)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+<section id="faq" style="background: var(--ivory-2); padding: 72px 0; border-radius: 40px; margin: 40px 0;" class="">
+      <div class="container" style="max-width: 800px;">
+        <div class="section-head" style="grid-template-columns: 1fr; text-align: center; margin-bottom: 44px;">
+          <h2>Frequently Asked Questions</h2>
+          <p style="margin-top: 8px;">Answers to common concerns regarding private pacing, transparent pricing, and
+            travel support.</p>
+        </div>
+        <div class="faq-list">
+          <div class="faq-item">
+            <button class="faq-toggle">
+              <span>What happens if my domestic flight is delayed?</span>
+              <span class="faq-icon">+</span>
+            </button>
+            <div class="faq-content">
+              <p>Our dedicated local concierge monitors your flights in real-time. If there is a delay, we automatically
+                reschedule your private driver and guide so that your transition remains entirely seamless without extra
+                costs.</p>
+            </div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-toggle">
+              <span>Are these rates fully transparent?</span>
+              <span class="faq-icon">+</span>
+            </button>
+            <div class="faq-content">
+              <p>Yes, all prices are 100% transparent. There are no hidden fees, local taxes, or surprise surcharges
+                added later. The price shown is exactly what you pay for the listed services.</p>
+            </div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-toggle">
+              <span>What standards can I expect from the private transport?</span>
+              <span class="faq-icon">+</span>
+            </button>
+            <div class="faq-content">
+              <p>We use only luxury late-model vehicles. For families of 4-8, we deploy VIP 16-seat Ford Transit D-Car
+                limousines equipped with plush reclining leather seats, individual USB ports, air conditioning, and
+                complimentary cold water.</p>
+            </div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-toggle">
+              <span>How flexible is the daily itinerary?</span>
+              <span class="faq-icon">+</span>
+            </button>
+            <div class="faq-content">
+              <p>Because your vehicle and English-speaking guide are 100% private, you have full control over the pace.
+                If you wish to spend more time at a particular temple or start the day later, simply coordinate with
+                your guide.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+<section id="quotation" class="">
+      <div class="container">
+        <div class="pricing">
+          <h2 data-editable="pricing_h2" spellcheck="false">B2B Net Price: USD 6,331</h2>
+          <p data-editable="pricing_p" spellcheck="false">Grand total for Family group of 8 adults — includes 2 strict vegetarians, 1 severe peanut allergy, 1 pax aged 68.... Currency: USD. Final rates subject to reconfirmation.</p>
+          <div class="price-grid">
+            
+            <div class="price-card featured">
+              <span>Twin/Double Share (land only)</span>
+              
+              <small style="color:rgba(255,255,255,.55);font-size:11px;display:block;margin-top:4px">Includes hotels, cruise, train, guide, transport, activities, birthday dinner</small>
+              
+              <strong data-editable="price_pax_1" style="font-size:28px" spellcheck="false">USD 791 / person</strong>
+              <small>per person</small><br>
+              <span style="font-size:13px;opacity:.8">Total: USD 1,582</span>
+              
+              <div style="margin-top:12px;font-size:10px;letter-spacing:.14em;color:#d8bd85;font-weight:800">✓ CONFIRMED
+                MAIN OPTION</div>
+              
+            </div>
+            
+            <div class="price-card featured">
+              <span>Domestic Flights (HAN-DAD + DAD-SGN, 20kg checked)</span>
+              
+              <small style="color:rgba(255,255,255,.55);font-size:11px;display:block;margin-top:4px">Estimated — guest to book separately or we can arrange</small>
+              
+              <strong data-editable="price_pax_2" style="font-size:28px" spellcheck="false">USD 160 / person</strong>
+              <small>per person</small><br>
+              <span style="font-size:13px;opacity:.8">Total: USD 320</span>
+              
+              <div style="margin-top:12px;font-size:10px;letter-spacing:.14em;color:#d8bd85;font-weight:800">✓ CONFIRMED
+                MAIN OPTION</div>
+              
+            </div>
+            
+            <div class="price-card featured">
+              <span>Total Land + Flights per person</span>
+              
+              <small style="color:rgba(255,255,255,.55);font-size:11px;display:block;margin-top:4px">Well within the $1,800-$2,200 budget range</small>
+              
+              <strong data-editable="price_pax_3" style="font-size:28px" spellcheck="false">USD 951 / person</strong>
+              <small>per person</small><br>
+              <span style="font-size:13px;opacity:.8">Total: USD 1,902</span>
+              
+              <div style="margin-top:12px;font-size:10px;letter-spacing:.14em;color:#d8bd85;font-weight:800">✓ CONFIRMED
+                MAIN OPTION</div>
+              
+            </div>
+            
+          </div>
+          <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1); display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 18px; font-size: 13px; color: rgba(255,255,255,0.7); text-align: left;">
+            <div>
+              <strong style="color: var(--gold-2); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.1em;">Price
+                Basis</strong>
+              <span data-editable="glance_basis" spellcheck="false">Twin/Double Sharing basis — 4 double/twin rooms</span>
+            </div>
+            <div>
+              <strong style="color: var(--gold-2); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.1em;">Domestic
+                Flights</strong>
+              <span data-editable="glance_flights" spellcheck="false">Excluded — guests to book separately (HAN-DAD, DAD-SGN estimated ~$160/pax)</span>
+            </div>
+            <div>
+              <strong style="color: var(--gold-2); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.1em;">Validity</strong>
+              <span data-editable="glance_validity" spellcheck="false">Prices indicative and subject to reconfirmation at time of...</span>
+            </div>
+            <div>
+              <strong style="color: var(--gold-2); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.1em;">Rate
+                Classification</strong>
+              <span data-editable="glance_partner_note" spellcheck="false">This programme blends cultural depth with relaxation. Special birthday dinner arranged on Day 7....</span>
+            </div>
+          </div>
+          
+          <p class="subtle" style="margin-top:20px" data-editable="payment_terms" spellcheck="false">Refer to Booking &amp; Payment terms below.</p>
+          
+        </div>
+      </div>
+    </section>
+
+    <section class="">
+      <div class="container two-col">
+        <article class="panel">
+          <h3>Inclusions</h3>
+          <ul id="inclusions-list">
+            
+            <li data-editable="inc_1" spellcheck="false" class="">Private airport transfer (HAN). Afternoon at leisure or guided Old Quarter orientation walk. Welcome dinner at a...</li>
+            
+            <li data-editable="inc_2" spellcheck="false" class="">Temple of Literature guided tour. Cyclo ride through the Old Quarter. Private street food walking tour (vegetarian...</li>
+            
+            <li data-editable="inc_3" spellcheck="false" class="">Private transfer Hanoi-Halong (3.5h). 5-star cruise embarkation. Kayaking, cave visit, sunset cooking demonstration....</li>
+            
+            <li data-editable="inc_4" spellcheck="false" class="">Tai Chi session at dawn. Brunch on board. Private transfer Halong-Hanoi. Free afternoon in Hanoi.</li>
+            
+            <li data-editable="inc_5" spellcheck="false" class="">Free day Hanoi. Evening transfer to Hanoi station. Luxury sleeper train Hanoi-Hue (private cabin, 4 cabins booked).</li>
+            
+            <li data-editable="inc_6" spellcheck="false" class="">Arrival Hue station. Scenic drive Hai Van Pass. Check-in Hoi An. Evening at leisure in Ancient Town.</li>
+            
+            <li data-editable="inc_7" spellcheck="false" class="">Walking tour of Hoi An Ancient Town. Lantern-making workshop. Special birthday dinner with cake (Sarah's 40th birthday).</li>
+            
+            <li data-editable="inc_8" spellcheck="false" class="">Full day at leisure. Guide available on request for optional excursions.</li>
+            
+            <li data-editable="inc_9" spellcheck="false" class="">Leisure morning Hoi An. Private transfer to Da Nang airport. Flight to HCMC (guests book separately). Private airport...</li>
+            
+            <li data-editable="inc_10" spellcheck="false" class="">Private full-day Mekong Delta tour. Rowing boat through canals. Fruit tasting at local orchard. Lunch at riverside...</li>
+            
+            <li data-editable="inc_11" spellcheck="false" class="">Half-day Cu Chi Tunnels tour (gentle route, no crawling). Private airport transfer to SGN.</li>
+            
+          </ul>
+        </article>
+        <article class="panel">
+          <h3>Exclusions</h3>
+          <ul id="exclusions-list">
+            
+            <li data-editable="exc_1" spellcheck="false" class="">International flights</li>
+            
+            <li data-editable="exc_2" spellcheck="false" class="">Vietnam visa and visa processing fees</li>
+            
+            <li data-editable="exc_3" spellcheck="false" class="">Travel insurance</li>
+            
+            <li data-editable="exc_4" spellcheck="false" class="">Personal expenses, laundry, beverages and tips</li>
+            
+            <li data-editable="exc_5" spellcheck="false" class="">Optional activities not mentioned in the program</li>
+            
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    
+    <section id="muslim-care" style="background: var(--card); border: 1px solid var(--line); border-radius: 40px; padding: 54px; margin: 40px 0; box-shadow: 0 18px 45px rgba(17,19,15,0.04);" class="">
+      <div class="container">
+        <div class="section-head" style="grid-template-columns: 1fr;">
+          <h2 style="font-family: var(--serif); font-size: clamp(32px, 4vw, 48px); color: var(--emerald); margin: 0 0 10px;">
+            Muslim-Friendly Travel Care</h2>
+          <p style="color: var(--muted); margin: 0;">Carefully coordinated services ensuring comfort, halal-friendly
+            meals, and prayer mindfulness.</p>
+        </div>
+        <div style="margin-top: 24px; padding: 24px; background: rgba(23, 65, 46, 0.03); border-left: 4px solid var(--emerald); border-radius: 8px;">
+          <p style="margin: 0; font-size: 15px; color: var(--muted); line-height: 1.7;" data-editable="muslim_care_text" spellcheck="false">
+            Vietnam Safar can assist with halal-friendly meal planning where available, no-pork meal notes, seafood or
+            vegetarian alternatives where halal-certified restaurants are limited, and flexible prayer stops during
+            touring days where practical. Halal-certified restaurants are more available in major cities such as Hanoi,
+            Da Nang and Ho Chi Minh City. In mountain, cruise or countryside destinations, suitable seafood, vegetarian
+            or no-pork meals may be recommended.
+          </p>
+        </div>
+      </div>
+    </section>
+    
+
+    <section id="enhancements" style="padding: 72px 0;" class="">
+      <div class="container">
+        <div class="section-head" style="grid-template-columns: 1fr;">
+          <h2 style="font-family: var(--serif); font-size: clamp(32px, 4vw, 48px); color: var(--emerald); margin: 0 0 10px;">
+            Optional Enhancements</h2>
+          <p style="color: var(--muted); margin: 0;">Select optional upgrades to personalize your B2B proposal for the
+            guests.</p>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 18px; margin-top: 32px;">
+          
+          <div style="background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px rgba(17,19,15,0.03); transition: transform 0.2s ease, box-shadow 0.2s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 15px 35px rgba(17,19,15,0.06)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px rgba(17,19,15,0.03)';">
+            <h4 style="margin: 0; font-family: var(--serif); font-size: 18px; color: var(--emerald);">Halong Bay seaplane from Hanoi (30 min scenic flight)
+            </h4>
+            <div style="margin-top: 12px; display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); border: 1px solid var(--line); padding: 4px 10px; border-radius: 99px;">
+              On request
+            </div>
+          </div>
+          
+          <div style="background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px rgba(17,19,15,0.03); transition: transform 0.2s ease, box-shadow 0.2s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 15px 35px rgba(17,19,15,0.06)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px rgba(17,19,15,0.03)';">
+            <h4 style="margin: 0; font-family: var(--serif); font-size: 18px; color: var(--emerald);">Private cooking class in Hoi An with market visit
+            </h4>
+            <div style="margin-top: 12px; display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); border: 1px solid var(--line); padding: 4px 10px; border-radius: 99px;">
+              On request
+            </div>
+          </div>
+          
+          <div style="background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px rgba(17,19,15,0.03); transition: transform 0.2s ease, box-shadow 0.2s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 15px 35px rgba(17,19,15,0.06)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px rgba(17,19,15,0.03)';">
+            <h4 style="margin: 0; font-family: var(--serif); font-size: 18px; color: var(--emerald);">Helicopter transfer HCMC-Cu Chi &amp; return
+            </h4>
+            <div style="margin-top: 12px; display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); border: 1px solid var(--line); padding: 4px 10px; border-radius: 99px;">
+              On request
+            </div>
+          </div>
+          
+          <div style="background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px rgba(17,19,15,0.03); transition: transform 0.2s ease, box-shadow 0.2s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 15px 35px rgba(17,19,15,0.06)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px rgba(17,19,15,0.03)';">
+            <h4 style="margin: 0; font-family: var(--serif); font-size: 18px; color: var(--emerald);">Photographer day-rate (Hoi An or HCMC)
+            </h4>
+            <div style="margin-top: 12px; display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); border: 1px solid var(--line); padding: 4px 10px; border-radius: 99px;">
+              On request
+            </div>
+          </div>
+          
+          <div style="background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px rgba(17,19,15,0.03); transition: transform 0.2s ease, box-shadow 0.2s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 15px 35px rgba(17,19,15,0.06)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 30px rgba(17,19,15,0.03)';">
+            <h4 style="margin: 0; font-family: var(--serif); font-size: 18px; color: var(--emerald);">Upgrade hotels to 5-star (e.g., Sofitel Legend Metropole Hanoi)
+            </h4>
+            <div style="margin-top: 12px; display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); border: 1px solid var(--line); padding: 4px 10px; border-radius: 99px;">
+              Subject to availability
+            </div>
+          </div>
+          
+        </div>
+      </div>
+    </section>
+
+    <section id="terms" class="">
+      <div class="container">
+        <div class="section-head">
+          <h2>Price Conditions &amp; Notes</h2>
+          <p>The following conditions apply to this B2B quotation.</p>
+        </div>
+        <div class="experience-grid">
+          
+          <article class="experience">
+            <span class="num">NOTE 1</span>
+            <p data-editable="price_cond_1" spellcheck="false">Rates are B2B net indicative and subject to reconfirmation at the time of booking.</p>
+          </article>
+          
+          <article class="experience">
+            <span class="num">NOTE 2</span>
+            <p data-editable="price_cond_2" spellcheck="false">Final price may vary depending on hotel availability, resort category, cruise selection, domestic flight fare, rooming arrangement, child policy, and final travel services confirmed.</p>
+          </article>
+          
+        </div>
+      </div>
+    </section>
+
+    <section id="payment-terms" style="background: var(--card); border: 1px solid var(--line); border-radius: 40px; padding: 54px; margin: 40px 0; box-shadow: 0 18px 45px rgba(17,19,15,0.04);" class="">
+      <div class="container">
+        <div class="section-head" style="grid-template-columns: 1fr;">
+          <h2 style="font-family: var(--serif); font-size: clamp(32px, 4vw, 48px); color: var(--emerald); margin: 0 0 10px;">
+            Booking &amp; Payment Terms</h2>
+          <p style="color: var(--muted); margin: 0;">Commercial conditions, deposits, and cancellation policy for this
+            booking.</p>
+        </div>
+        <div style="overflow-x: auto; margin-top: 32px; border-radius: 18px; border: 1px solid var(--line);">
+          <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
+            <thead>
+              <tr style="background: var(--emerald); color: white;">
+                <th style="padding: 16px 20px; width: 250px;">Term</th>
+                <th style="padding: 16px 20px;">Condition</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom: 1px solid var(--line); background: white;">
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">Deposit</td>
+                <td style="padding: 16px 20px;" data-editable="term_deposit" spellcheck="false">30% deposit at time of booking confirmation to secure all services.</td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--line); background: rgba(183, 137, 75, 0.03);">
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">Balance</td>
+                <td style="padding: 16px 20px;" data-editable="term_balance" spellcheck="false">Remaining balance due 60 days prior to arrival.</td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--line); background: white;">
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">Cancellation</td>
+                <td style="padding: 16px 20px;" data-editable="term_cancellation" spellcheck="false">Free cancellation up to 45 days before arrival. 50% charge 44-30 days. 100% charge less than 30 days.</td>
+              </tr>
+              <tr style="background: rgba(183, 137, 75, 0.03);">
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">Confirmation</td>
+                <td style="padding: 16px 20px;" data-editable="term_confirmation" spellcheck="false">All services subject to availability at time of booking. Counterpart will provide written confirmation within 48 hours of deposit.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    
+<section id="meet-designer" style="background: var(--ivory-2); padding: 72px 0; border-radius: 40px; margin: 40px 0;" class="">
+      <div class="container designer-container">
+        <div class="designer-card">
+          <div class="designer-img-container">
+            <div class="designer-avatar-large">
+              <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&amp;fit=crop&amp;q=80&amp;w=400&amp;h=400" alt="Kim Quy - Luxury Travel Designer">
+            </div>
+          </div>
+          <div class="designer-info">
+            <span>Your Dedicated Specialist</span>
+            <h2>Meet Kim Quy</h2>
+            <p class="designer-quote">"I am Kim Quy, your dedicated travel designer. I handpicked every hotel, private
+              transfer, and local guide on this itinerary to ensure your family experiences the true depth of Vietnam in
+              comfort, privacy, and at your own slow pace. I will personally oversee your journey from behind the
+              scenes."</p>
+            <div class="designer-details">
+              <div><strong>Expertise:</strong> Family &amp; Multigenerational Travel, Heritage Paths</div>
+              <div><strong>Experience:</strong> 8+ years designing bespoke luxury journeys</div>
+            </div>
+            <div class="designer-signature">Kim Quy</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+<section id="contact" class="">
+      <div class="container">
+        <div class="cta">
+          <div>
+            <div class="kicker">Next step</div>
+            <h2 data-editable="cta_h2" spellcheck="false">Confirm dates, then refine the luxury layer.</h2>
+            <div class="two-col" style="margin-top: 24px; text-align: left; font-size: 13px;">
+              <div>
+                <strong style="color: var(--gold-2); text-transform: uppercase; font-size: 11px; letter-spacing: 0.1em; display: block; margin-bottom: 8px;">Final
+                  Details Required</strong>
+                <ul style="margin: 0; padding-left: 16px; display: grid; gap: 6px; color: rgba(255,255,255,0.8);">
+                  
+                  <li style="line-height: 1.4;">Full passenger names, passport numbers, nationality, date of birth for all travellers. Dietary requirements (vegetarian x2, peanut allergy x1). Flight details for airport transfers.</li>
+                  
+                </ul>
+              </div>
+              <div>
+                <strong style="color: var(--gold-2); text-transform: uppercase; font-size: 11px; letter-spacing: 0.1em; display: block; margin-bottom: 8px;">After
+                  Confirmation</strong>
+                <ul style="margin: 0; padding-left: 16px; display: grid; gap: 6px; color: rgba(255,255,255,0.8);">
+                  
+                  <li style="line-height: 1.4;">Digital itinerary and travel guide will be provided. Pre-departure briefing call with English-speaking guide. 24/7 hotline support during travel.</li>
+                  
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="contact">
+            <label>Website</label>
+            <div data-editable="contact_web" spellcheck="false">www.vietnamsafar.vn</div>
+            <label>WhatsApp</label>
+            <div data-editable="contact_phone" spellcheck="false">+84 911 538 738</div>
+            <label>Prepared by</label>
+            <div data-editable="seller_name2" spellcheck="false">Vietnam Safar – Discovery Asia Travel Group</div>
+            
+            <div style="margin-top:24px" class="no-print">
+              <a class="btn gold" href="mailto:sales@vietnamsafar.vn">Request final confirmation</a>
+            </div>
+            
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PWA Install Section -->
+    <section id="pwa-install-section" class="no-print" style="padding: 72px 0; background: var(--ivory-2); border-top: 1px solid var(--line);">
+      <div class="container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center;">
+        <div>
+          <span class="kicker">Vietnam Safar App</span>
+          <h2 style="font-family: var(--serif); font-size: clamp(32px, 4vw, 44px); color: var(--emerald); margin: 12px 0 16px;">
+            Tải Ứng Dụng Hành Trình</h2>
+          <p style="color: var(--muted); font-size: 15px; line-height: 1.7; margin-bottom: 24px;">
+            Cài đặt ứng dụng trực tiếp trên điện thoại hoặc máy tính của bạn để cập nhật lịch trình nhanh chóng, xem bản
+            đồ du lịch và liên hệ với chuyên viên thiết kế tour ngay cả khi không có mạng Internet.
+          </p>
+          <div style="display: flex; flex-wrap: wrap; gap: 14px;">
+            <button id="btn-pwa-install-hero" class="btn gold" style="display: none;">Cài Đặt Ứng Dụng</button>
+            <div style="display: inline-flex; align-items: center; gap: 10px; opacity: 0.6; font-size: 12px; font-weight: 700; color: var(--muted);">
+              <span>✓ Hỗ trợ ngoại tuyến</span>
+              <span>•</span>
+              <span>✓ Thông báo đẩy</span>
+            </div>
+          </div>
+        </div>
+        <div style="position: relative; text-align: center;">
+          <div style="width: 250px; height: 500px; background: #000; border-radius: 40px; border: 8px solid #333; margin: 0 auto; box-shadow: var(--shadow); overflow: hidden; position: relative;">
+            <div style="position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 110px; height: 18px; background: #000; border-bottom-left-radius: 12px; z-index: 5;">
+            </div>
+            <div style="height: 100%; background: var(--ivory); padding: 20px; text-align: left; display: flex; flex-direction: column; justify-content: space-between;">
+              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 10px; font-weight: bold; color: var(--emerald);">
+                <span>12:30</span>
+                <span style="font-size: 12px;">📶 🔋</span>
+              </div>
+              <div style="margin-top: 15px; flex-grow: 1;">
+                <img src="/assets/vietnam-safar-logo.png" style="width: 36px; height: 36px; border-radius: 50%; display: block;">
+                <h4 style="font-family: var(--serif); color: var(--emerald); margin: 10px 0 5px; font-size: 16px;">
+                  Vietnam Safar</h4>
+                <p style="font-size: 11px; color: var(--muted); margin: 0 0 15px;">Hành trình của bạn đã sẵn sàng</p>
+
+                <div style="background: white; border: 1px solid var(--line); border-radius: 12px; padding: 10px; font-size: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 8px;">
+                  <strong style="color: var(--gold); display: block; margin-bottom: 2px;">NGÀY 1 • HÀ NỘI</strong>
+                  Xin chào Hà Nội. Nhận phòng và thưởng thức bữa tối.
+                </div>
+                <div style="background: white; border: 1px solid var(--line); border-radius: 12px; padding: 10px; font-size: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+                  <strong style="color: var(--gold); display: block; margin-bottom: 2px;">NGÀY 2 • VỊNH HẠ LONG</strong>
+                  Di chuyển đến vịnh Hạ Long và lên du thuyền.
+                </div>
+              </div>
+              <div style="background: var(--emerald); color: white; text-align: center; border-radius: 99px; padding: 8px; font-size: 11px; font-weight: bold;">
+                Mở Bản Đồ
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container" data-editable="footer_text" spellcheck="false">From Hanoi's ancient streets to the Mekong's emerald delta, a private... — Luxury quotation prepared for Family group of 8 adults — includes 2 strict vegetarians, 1....</div>
+  </footer>
+
+  <!-- ── Publish Bar ─────────────────────────────────────────── -->
+  
+
+  <input type="file" accept="image/*" style="display: none;">
+
+  <script id="itinerary-data" type="application/json">
+    [{"activities": ["Private airport transfer (HAN). Afternoon at leisure or guided Old Quarter orientation walk. Welcome dinner at a..."], "date": "", "dayNumber": 1, "description": ["Your story begins in Hanoi, the thousand-year-old capital where French colonial grace meets Vietnamese soul. After a private airport welcome, ease into the seductive rhythm of the Old Quarter \u2014 a labyrinth of narrow streets where each lane hums with its own trade and story."], "destinations": ["Hanoi"], "meals": ["Welcome dinner included. Vegetarian and peanut-free options confirmed."], "notes": ["Sense of Pace: Gentle arrival \u2014 designed for jet-lag recovery. No fixed..."], "overnight": "Hanoi", "title": "Explore Hanoi"}, {"activities": ["Temple of Literature guided tour. Cyclo ride through the Old Quarter. Private street food walking tour (vegetarian..."], "date": "", "dayNumber": 2, "description": ["A day to fall deeper in love with Hanoi. Visit the Temple of Literature \u2014 Vietnam\u0027s first university, serene and ancient. Then glide by cyclo through the Old Quarter\u0027s chaotic ballet of motorbikes and street vendors. Evening unveils Hanoi\u0027s street food soul with a private, diet-adapted tasting walk."], "destinations": ["Hanoi"], "meals": ["Breakfast at hotel. Lunch at leisure. Street food tasting walk for dinner."], "notes": ["Sense of Pace: Moderate \u2014 morning cultural, afternoon cyclo, evening food walk...."], "overnight": "Hanoi", "title": "Explore Hanoi"}, {"activities": ["Private transfer Hanoi-Halong (3.5h). 5-star cruise embarkation. Kayaking, cave visit, sunset cooking demonstration...."], "date": "", "dayNumber": 3, "description": ["A scenic drive through the Red River Delta leads to one of the world\u0027s most extraordinary seascapes. Board a 5-star cruise and sail into the emerald stillness of Ha Long Bay, where limestone pillars rise like dragons from jade waters. Kayak into hidden lagoons, explore a sea cave, and dine under a canopy of stars."], "destinations": ["Ha Long Bay"], "meals": ["Brunch on board pre-sailing. Dinner on board (vegetarian and peanut-free..."], "notes": ["Sense of Pace: Leisurely drive, afternoon cruise activities, evening at leisure..."], "overnight": "Ha Long Bay", "title": "Explore Ha Long Bay"}, {"activities": ["Tai Chi session at dawn. Brunch on board. Private transfer Halong-Hanoi. Free afternoon in Hanoi."], "date": "", "dayNumber": 4, "description": ["Wake to Tai Chi on the sundeck as the sun rises over the karsts. A final brunch as the boat glides back to port. Return to Hanoi for a free afternoon \u2014 perhaps browse the weekend flower market or relax at the hotel spa."], "destinations": ["Halong Bay \u2192 Hanoi"], "meals": ["Brunch on board. Dinner at leisure (recommendations from guide)."], "notes": ["Sense of Pace: Leisurely morning on cruise, relaxed drive back, free..."], "overnight": "Halong Bay \u2192 Hanoi", "title": "Explore Halong Bay \u2192 Hanoi"}, {"activities": ["Free day Hanoi. Evening transfer to Hanoi station. Luxury sleeper train Hanoi-Hue (private cabin, 4 cabins booked)."], "date": "", "dayNumber": 5, "description": ["A free morning to revisit a favourite corner of Hanoi or discover something new. As dusk falls, board a luxury sleeper train bound for Hue. Private cabins with soft beds and attentive service transform the rails into a rolling sanctuary."], "destinations": ["Hanoi \u2192 Hue (Train)"], "meals": ["Breakfast at hotel. Lunch and dinner at leisure. Light refreshments on train."], "notes": ["Sense of Pace: Free day followed by evening train journey. Relaxed transition..."], "overnight": "Hanoi \u2192 Hue (Train)", "title": "Explore Hanoi \u2192 Hue (Train)"}, {"activities": ["Arrival Hue station. Scenic drive Hai Van Pass. Check-in Hoi An. Evening at leisure in Ancient Town."], "date": "", "dayNumber": 6, "description": ["Arrive in Hue, the ancient imperial capital, as the morning light touches the Perfume River. A scenic drive over Hai Van Pass \u2014 one of the world\u0027s most beautiful coastal roads \u2014 delivers you to Hoi An in time to watch the lanterns float across the river."], "destinations": ["Hue \u2192 Hoi An"], "meals": ["Breakfast on train. Lunch en route. Dinner at leisure in Hoi An."], "notes": ["Sense of Pace: Moderate \u2014 train arrival, then 3h scenic drive with photo stops...."], "overnight": "Hue \u2192 Hoi An", "title": "Explore Hue \u2192 Hoi An"}, {"activities": ["Walking tour of Hoi An Ancient Town. Lantern-making workshop. Special birthday dinner with cake (Sarah\u0027s 40th birthday)."], "date": "", "dayNumber": 7, "description": ["Hoi An unveils its magic \u2014 a living museum of yellow-walled merchant houses and tailor shops. Walk the Ancient Town\u0027s timeless lanes, shape your own silk lantern in a workshop, then gather for a birthday dinner that will be remembered long after the candles are blown out."], "destinations": ["Hoi An"], "meals": ["Breakfast at hotel. Lunch at leisure. Birthday dinner (special menu with..."], "notes": ["Sense of Pace: Moderate morning walking tour. Creative afternoon workshop...."], "overnight": "Hoi An", "title": "Explore Hoi An"}, {"activities": ["Full day at leisure. Guide available on request for optional excursions."], "date": "", "dayNumber": 8, "description": ["A day entirely your own. Commission tailor-made clothing (Hoi An is famed for 24-hour tailoring), cycle to An Bang Beach for a swim, or simply lose yourself in the ancient alleyways with no agenda. This is your pause in the journey."], "destinations": ["Hoi An"], "meals": ["Breakfast at hotel. Lunch and dinner at leisure (guide recommendations..."], "notes": ["Sense of Pace: Free unstructured day. Rest, explore, or shop as you wish."], "overnight": "Hoi An", "title": "Explore Hoi An"}, {"activities": ["Leisure morning Hoi An. Private transfer to Da Nang airport. Flight to HCMC (guests book separately). Private airport..."], "date": "", "dayNumber": 9, "description": ["A leisurely morning before flying south to Ho Chi Minh City \u2014 a metropolis where skyscrapers rise beside French colonial landmarks and the streets thrum with an electric energy. Settle into your hotel in the heart of District 1."], "destinations": ["Hoi An \u2192 Ho Chi Minh City"], "meals": ["Breakfast at hotel. Lunch at leisure. Dinner at leisure (guide recommendations..."], "notes": ["Sense of Pace: Leisurely transfer day. Short flight."], "overnight": "Hoi An \u2192 Ho Chi Minh City", "title": "Explore Hoi An \u2192 Ho Chi Minh City"}, {"activities": ["Private full-day Mekong Delta tour. Rowing boat through canals. Fruit tasting at local orchard. Lunch at riverside..."], "date": "", "dayNumber": 10, "description": ["Escape the city to the watery world of the Mekong Delta. Glide through coconut-shaded canals on a rowing boat, taste exotic tropical fruits at a family orchard, and enjoy a rustic lunch on an island. The delta moves at its own pace \u2014 timeless and serene."], "destinations": ["Mekong Delta"], "meals": ["Breakfast at hotel. Lunch at Mekong island restaurant (vegetarian and..."], "notes": ["Sense of Pace: Moderate day trip. Easy walking, boat rides, seated tasting...."], "overnight": "Mekong Delta", "title": "Explore Mekong Delta"}, {"activities": ["Half-day Cu Chi Tunnels tour (gentle route, no crawling). Private airport transfer to SGN."], "date": "", "dayNumber": 11, "description": ["A final adventure before departure \u2014 the Cu Chi Tunnels, explored at a gentle pace with a guide who brings this underground city\u0027s history to life. Then a private transfer to Tan Son Nhat Airport, carrying home not just souvenirs but a thousand memories."], "destinations": ["Ho Chi Minh City \u2014 Departure"], "meals": ["Breakfast at hotel."], "notes": ["Sense of Pace: Morning gentle tour. Afternoon airport transfer."], "overnight": "Ho Chi Minh City \u2014 Departure", "title": "Explore Ho Chi Minh City \u2014 Departure"}]
+  </script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const DEST_COORDS = {
+        "hanoi": [21.0285, 105.8542],
+        "ha noi": [21.0285, 105.8542],
+        "ninh binh": [20.2539, 105.9750],
+        "ninhbinh": [20.2539, 105.9750],
+        "ha long": [20.9599, 107.0436],
+        "halong": [20.9599, 107.0436],
+        "ha long bay": [20.9599, 107.0436],
+        "halong bay": [20.9599, 107.0436],
+        "ho chi minh": [10.8231, 106.6297],
+        "hcmc": [10.8231, 106.6297],
+        "ho chi minh city": [10.8231, 106.6297],
+        "saigon": [10.8231, 106.6297],
+        "sai gon": [10.8231, 106.6297],
+        "mekong": [10.2435, 106.3756],
+        "mekong delta": [10.2435, 106.3756],
+        "ben tre": [10.2401, 106.3768],
+        "bentre": [10.2401, 106.3768],
+        "my tho": [10.3592, 106.3653],
+        "mytho": [10.3592, 106.3653],
+        "hue": [16.4637, 107.5909],
+        "da nang": [16.0544, 108.2022],
+        "danang": [16.0544, 108.2022],
+        "hoi an": [15.8801, 108.3380],
+        "hoian": [15.8801, 108.3380],
+        "sapa": [22.3364, 103.8438],
+        "phu quoc": [10.2899, 103.9840],
+        "nha trang": [12.2388, 109.1967],
+        "da lat": [11.9404, 108.4583]
+      };
+
+      function findCoordinates(destText) {
+        if (!destText) return null;
+        const norm = destText.toLowerCase()
+          .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        for (const [key, coords] of Object.entries(DEST_COORDS)) {
+          if (norm.includes(key)) return coords;
+        }
+        return null;
+      }
+
+      function getDistance(c1, c2) {
+        const R = 6371;
+        const dLat = (c2[0] - c1[0]) * Math.PI / 180;
+        const dLon = (c2[1] - c1[1]) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos(c1[0] * Math.PI / 180) * Math.cos(c2[0] * Math.PI / 180) *
+          Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+      }
+
+      function getBezierPoints(p1, p2, count = 30) {
+        const midLat = (p1[0] + p2[0]) / 2;
+        const midLng = (p1[1] + p2[1]) / 2;
+        const dx = p2[1] - p1[1];
+        const dy = p2[0] - p1[0];
+        const len = Math.sqrt(dx * dx + dy * dy);
+        const scale = len * 0.15;
+        const ctrlLat = midLat - (dx / len) * scale;
+        const ctrlLng = midLng + (dy / len) * scale;
+        const points = [];
+        for (let i = 0; i <= count; i++) {
+          const t = i / count;
+          const lat = (1 - t) * (1 - t) * p1[0] + 2 * (1 - t) * t * ctrlLat + t * t * p2[0];
+          const lng = (1 - t) * (1 - t) * p1[1] + 2 * (1 - t) * t * ctrlLng + t * t * p2[1];
+          points.push([lat, lng]);
+        }
+        return points;
+      }
+
+      const dataEl = document.getElementById('itinerary-data');
+      if (!dataEl) return;
+      const rawDays = JSON.parse(dataEl.textContent);
+
+      const daysData = rawDays.map(day => {
+        let dest = "";
+        if (Array.isArray(day.destinations) && day.destinations.length > 0) {
+          dest = day.destinations[0];
+        } else if (typeof day.destination === 'string') {
+          dest = day.destination;
+        } else if (typeof day.overnight === 'string') {
+          dest = day.overnight;
+        }
+
+        let desc = "";
+        if (Array.isArray(day.description)) {
+          desc = day.description.join(' ');
+        } else if (typeof day.description === 'string') {
+          desc = day.description;
+        } else if (typeof day.summary === 'string') {
+          desc = day.summary;
+        }
+
+        return {
+          dayNumber: day.dayNumber,
+          destination: dest,
+          title: day.title || `Day ${day.dayNumber}`,
+          description: desc,
+          overnight: day.overnight || ""
+        };
+      });
+
+      const mapDestinations = [];
+      const coordPoints = [];
+
+      daysData.forEach(day => {
+        const coords = findCoordinates(day.destination);
+        if (!coords) return;
+
+        const last = mapDestinations[mapDestinations.length - 1];
+        if (!last || last.coords[0] !== coords[0] || last.coords[1] !== coords[1]) {
+          mapDestinations.push({
+            name: day.destination.split(/->|-|\|/)[0].trim(),
+            coords: coords,
+            days: [day.dayNumber],
+            titles: [day.title]
+          });
+          coordPoints.push(coords);
+        } else {
+          last.days.push(day.dayNumber);
+          last.titles.push(day.title);
+        }
+      });
+
+      if (mapDestinations.length === 0) {
+        document.getElementById('route-map').style.display = 'none';
+        return;
+      }
+
+      const map = L.map('map', {
+        zoomControl: true,
+        scrollWheelZoom: false
+      });
+
+      // Thay thế bằng Tile của Google Maps (có hỗ trợ tiếng Việt & hiển thị Hoàng Sa, Trường Sa) 
+      // vì URL eKMap cần có API Key thương mại mới hoạt động được.
+      const vietmanMapUrl = 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi';
+      L.tileLayer(vietmanMapUrl, {
+        maxZoom: 18,
+        attribution: '&copy; Bản đồ chủ quyền Việt Nam | Dữ liệu bản đồ &copy; Google'
+      }).addTo(map);
+
+      const sidebarContainer = document.getElementById('map-sidebar');
+      sidebarContainer.innerHTML = '';
+
+      const markers = [];
+      const polylines = [];
+
+      mapDestinations.forEach((dest, idx) => {
+        const dayRangeStr = dest.days.length > 1
+          ? `Days ${dest.days[0]}-${dest.days[dest.days.length - 1]}`
+          : `Day ${dest.days[0]}`;
+
+        const html = `
+          <div class="custom-marker" id="marker-wrapper-${idx}">
+            <div class="marker-pulse"></div>
+            <div class="marker-core">${idx + 1}</div>
+          </div>
+        `;
+
+        const customIcon = L.divIcon({
+          html: html,
+          className: '',
+          iconSize: [28, 28],
+          iconAnchor: [14, 14]
+        });
+
+        const popupContent = `
+          <div class="map-popup">
+            <h4>${dest.name}</h4>
+            <strong style="color:var(--gold); font-size: 11px;">${dayRangeStr.toUpperCase()}</strong>
+            <p style="margin: 6px 0 0; font-size:12px; color:var(--muted);">${dest.titles[0]}</p>
+          </div>
+        `;
+
+        const marker = L.marker(dest.coords, { icon: customIcon })
+          .addTo(map)
+          .bindPopup(popupContent, { offset: [0, -10] });
+
+        markers.push(marker);
+
+        const card = document.createElement('div');
+        card.className = `sidebar-card ${idx === 0 ? 'active' : ''}`;
+        card.innerHTML = `
+          <span class="days-badge">${dayRangeStr}</span>
+          <h4>${idx + 1}. ${dest.name}</h4>
+          <p>${dest.titles[0]}</p>
+        `;
+
+        card.addEventListener('click', () => {
+          selectDestination(idx);
+        });
+
+        sidebarContainer.appendChild(card);
+        dest.cardEl = card;
+      });
+
+      for (let i = 0; i < coordPoints.length - 1; i++) {
+        const p1 = coordPoints[i];
+        const p2 = coordPoints[i + 1];
+        const dist = getDistance(p1, p2);
+
+        let pathPoints;
+        let isFlight = dist > 300;
+
+        if (isFlight) {
+          pathPoints = getBezierPoints(p1, p2);
+        } else {
+          pathPoints = [p1, p2];
+        }
+
+        const lineOptions = {
+          color: isFlight ? 'var(--gold)' : 'var(--emerald)',
+          weight: 3,
+          opacity: 0.8,
+          dashArray: isFlight ? '6, 8' : 'none'
+        };
+
+        const polyline = L.polyline(pathPoints, lineOptions).addTo(map);
+        polylines.push(polyline);
+      }
+
+      map.fitBounds(L.latLngBounds(coordPoints), {
+        padding: [50, 50],
+        maxZoom: 12
+      });
+
+      function selectDestination(index) {
+        const dest = mapDestinations[index];
+        map.setView(dest.coords, Math.max(map.getZoom(), 8), { animate: true });
+        markers[index].openPopup();
+
+        document.querySelectorAll('.sidebar-card').forEach(c => c.classList.remove('active'));
+        dest.cardEl.classList.add('active');
+        dest.cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+        document.querySelectorAll('.custom-marker').forEach(m => m.classList.remove('active'));
+        const activeMarkerEl = document.getElementById(`marker-wrapper-${index}`);
+        if (activeMarkerEl) {
+          activeMarkerEl.classList.add('active');
+        }
+      }
+
+      markers.forEach((marker, idx) => {
+        marker.on('click', () => {
+          selectDestination(idx);
+        });
+      });
+    });
+  </script>
+
+  <!-- PWA Notification Prompt -->
+  <div id="pwa-notification-prompt" class="notification-prompt-card no-print" style="display: none;">
+    <div class="notification-prompt-header">
+      <div class="notification-prompt-title">
+        <span>🔔</span> Stay Updated
+      </div>
+      <button class="notification-prompt-close" id="pwa-notification-close">×</button>
+    </div>
+    <div class="notification-prompt-body">
+      Enable notifications to get live updates for your itinerary, guide details, and booking status.
+    </div>
+    <div class="notification-prompt-actions">
+      <button class="notification-btn-later" id="pwa-notification-later">Later</button>
+      <button class="notification-btn-allow" id="pwa-notification-allow">Enable</button>
+    </div>
+  </div>
+
+  <!-- Notification Success Toast -->
+  <div id="pwa-notification-success" class="notification-success-card no-print">
+    <div class="notification-success-icon">✓</div>
+    <div class="notification-success-text">
+      <h4>Notifications Active</h4>
+      <p>You'll receive live itinerary updates here.</p>
+    </div>
+  </div>
+
+  <!-- PWA & Notifications Controller -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // Register Service Worker
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('SW registered:', reg.scope))
+            .catch(err => console.error('SW registration failed:', err));
+        });
+      }
+
+      const promptCard = document.getElementById('pwa-notification-prompt');
+      const successCard = document.getElementById('pwa-notification-success');
+      const allowBtn = document.getElementById('pwa-notification-allow');
+      const laterBtn = document.getElementById('pwa-notification-later');
+      const closeBtn = document.getElementById('pwa-notification-close');
+      const navBellBtn = document.getElementById('nav-notification-btn');
+
+      function updateBellState() {
+        if (!navBellBtn) return;
+        if (Notification.permission === 'granted') {
+          navBellBtn.style.color = 'var(--gold)';
+          navBellBtn.style.borderColor = 'var(--gold)';
+          navBellBtn.title = 'Notifications Active (Click to test)';
+        } else if (Notification.permission === 'denied') {
+          navBellBtn.style.color = '#e11d48';
+          navBellBtn.style.borderColor = '#e11d48';
+          navBellBtn.title = 'Notifications Blocked';
+        } else {
+          navBellBtn.style.color = '';
+          navBellBtn.style.borderColor = '';
+          navBellBtn.title = 'Enable Notifications';
+        }
+      }
+
+      if ('Notification' in window) {
+        updateBellState();
+        const isDismissed = localStorage.getItem('pwa_notif_dismissed');
+        if (Notification.permission === 'default' && !isDismissed) {
+          setTimeout(() => {
+            promptCard.classList.add('show');
+          }, 3000);
+        }
+      } else {
+        if (promptCard) promptCard.style.display = 'none';
+        if (navBellBtn) navBellBtn.style.display = 'none';
+      }
+
+      function requestNotifPermission() {
+        Notification.requestPermission().then(permission => {
+          updateBellState();
+          if (permission === 'granted') {
+            if (promptCard) promptCard.classList.remove('show');
+            showSuccessToast();
+            triggerTestNotification("Welcome to Vietnam Safar!", "Notifications are active. We'll update you on your itinerary status here.");
+          } else {
+            if (promptCard) promptCard.classList.remove('show');
+          }
+        });
+      }
+
+      function showSuccessToast() {
+        if (!successCard) return;
+        successCard.classList.add('show');
+        setTimeout(() => {
+          successCard.classList.remove('show');
+        }, 4000);
+      }
+
+      function triggerTestNotification(title, body) {
+        if (Notification.permission !== 'granted') return;
+
+        const options = {
+          body: body,
+          icon: '/assets/vietnam-safar-logo.png',
+          badge: '/assets/vietnam-safar-logo.png',
+          vibrate: [100, 50, 100],
+          data: {
+            url: window.location.href
+          }
+        };
+
+        if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+          navigator.serviceWorker.ready.then(reg => {
+            reg.showNotification(title, options);
+          });
+        } else {
+          new Notification(title, options);
+        }
+      }
+
+      if (allowBtn) {
+        allowBtn.addEventListener('click', requestNotifPermission);
+      }
+
+      if (laterBtn) {
+        laterBtn.addEventListener('click', () => {
+          promptCard.classList.remove('show');
+          localStorage.setItem('pwa_notif_dismissed', 'true');
+        });
+      }
+
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+          promptCard.classList.remove('show');
+        });
+      }
+
+      if (navBellBtn) {
+        navBellBtn.addEventListener('click', () => {
+          if (Notification.permission === 'default') {
+            requestNotifPermission();
+          } else if (Notification.permission === 'granted') {
+            triggerTestNotification("Itinerary Update", "Your private guide has been assigned: Mr. Minh (Phone: +84 911 538 738).");
+            showSuccessToast();
+          } else {
+            alert("Please enable notifications in your browser settings to receive updates.");
+          }
+        });
+      }
+
+      // PWA Installation Flow
+      let deferredInstallPrompt = null;
+      const installButtonHero = document.getElementById('btn-pwa-install-hero');
+
+      window.addEventListener('beforeinstallprompt', (e) => {
+        // Prevent Chrome 67 and earlier from automatically showing the prompt
+        e.preventDefault();
+        // Stash the event so it can be triggered later.
+        deferredInstallPrompt = e;
+        // Update UI to notify the user they can install the PWA
+        if (installButtonHero) {
+          installButtonHero.style.display = 'block';
+        }
+      });
+
+      if (installButtonHero) {
+        installButtonHero.addEventListener('click', async () => {
+          if (!deferredInstallPrompt) return;
+          // Show the install prompt
+          deferredInstallPrompt.prompt();
+          // Wait for the user to respond to the prompt
+          const { outcome } = await deferredInstallPrompt.userChoice;
+          console.log(`User response to the install prompt: ${outcome}`);
+          // We've used the prompt, and can't use it again, discard it
+          deferredInstallPrompt = null;
+          installButtonHero.style.display = 'none';
+        });
+      }
+
+      window.addEventListener('appinstalled', (evt) => {
+        console.log('Vietnam Safar app was installed successfully');
+        if (installButtonHero) {
+          installButtonHero.style.display = 'none';
+        }
+      });
+    });
+  </script>
+
+
+</body></html>
