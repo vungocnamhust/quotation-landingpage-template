@@ -907,63 +907,63 @@ STATIC_DICTIONARY = {
     # Vietnamese Destinations translations
     "Hanoi": {
         "vi": "Hà Nội",
-        "ar": "هانوي"
+        "ar": "Hanoi"
     },
     "Ha Long Bay": {
         "vi": "Vịnh Hạ Long",
-        "ar": "خليج ها لونغ"
+        "ar": "Ha Long Bay"
     },
     "Halong Bay": {
         "vi": "Vịnh Hạ Long",
-        "ar": "خليج ها لونغ"
+        "ar": "Halong Bay"
     },
     "Halong": {
         "vi": "Hạ Long",
-        "ar": "ها لونغ"
+        "ar": "Halong"
     },
     "Sapa": {
         "vi": "Sa Pa",
-        "ar": "سابا"
+        "ar": "Sapa"
     },
     "Da Nang": {
         "vi": "Đà Nẵng",
-        "ar": "دا نانغ"
+        "ar": "Da Nang"
     },
     "Hoi An": {
         "vi": "Hội An",
-        "ar": "هوي آن"
+        "ar": "Hoi An"
     },
     "Dalat": {
         "vi": "Đà Lạt",
-        "ar": "دالات"
+        "ar": "Dalat"
     },
     "Da Lat": {
         "vi": "Đà Lạt",
-        "ar": "دالات"
+        "ar": "Da Lat"
     },
     "Ninh Binh": {
         "vi": "Ninh Bình",
-        "ar": "نينه بينه"
+        "ar": "Ninh Binh"
     },
     "Ninh Bình": {
         "vi": "Ninh Bình",
-        "ar": "نينه بينه"
+        "ar": "Ninh Binh"
     },
     "Mekong Delta": {
         "vi": "Đồng bằng sông Cửu Long",
-        "ar": "دلتا ميكونغ"
+        "ar": "Mekong Delta"
     },
     "Ho Chi Minh City": {
         "vi": "Hồ Chí Minh",
-        "ar": "مدينة هو تشي منه"
+        "ar": "Ho Chi Minh City"
     },
     "Ho Chi Minh": {
         "vi": "Hồ Chí Minh",
-        "ar": "هو تشي منه"
+        "ar": "Ho Chi Minh"
     },
     "Saigon": {
         "vi": "Hồ Chí Minh",
-        "ar": "مدينة هو تشي منه"
+        "ar": "Ho Chi Minh City"
     },
 
     # Specialist Section
@@ -1041,17 +1041,52 @@ def translate_filter(text: str, lang: str = "en") -> str:
 templates.env.filters["translate"] = translate_filter
 
 
+ARABIC_PLACE_NAME_ALIASES = {
+    "مدينة هو تشي منه": "Ho Chi Minh City",
+    "هو تشي منه": "Ho Chi Minh City",
+    "سايغون": "Ho Chi Minh City",
+    "خليج ها لونغ": "Halong Bay",
+    "خليج هالونج": "Halong Bay",
+    "ها لونغ": "Halong",
+    "هالونغ": "Halong",
+    "دا نانغ": "Da Nang",
+    "دانانغ": "Da Nang",
+    "هوي آن": "Hoi An",
+    "هوي ان": "Hoi An",
+    "دالات": "Dalat",
+    "سابا": "Sapa",
+    "هانوي": "Hanoi",
+    "هانوى": "Hanoi",
+    "نينه بينه": "Ninh Binh",
+    "دلتا ميكونغ": "Mekong Delta",
+    "نها ترانغ": "Nha Trang",
+    "نها ترانج": "Nha Trang",
+}
+
+
+def canonicalize_place_names_in_text(text: str, lang: str = "en") -> str:
+    if not text or lang != "ar":
+        return text
+    normalized = text
+    for source, canonical in sorted(ARABIC_PLACE_NAME_ALIASES.items(), key=lambda item: len(item[0]), reverse=True):
+        normalized = normalized.replace(source, canonical)
+    return normalized
+
+
+def canonicalize_place_names_in_data(value, lang: str = "en"):
+    if isinstance(value, str):
+        return canonicalize_place_names_in_text(value, lang)
+    if isinstance(value, list):
+        return [canonicalize_place_names_in_data(item, lang) for item in value]
+    if isinstance(value, dict):
+        return {key: canonicalize_place_names_in_data(item, lang) for key, item in value.items()}
+    return value
+
+
 def localize_place_name(text: str, lang: str = "en") -> str:
     if not text:
         return ""
-    localized = translate_filter(text, lang)
-    if localized and localized != text:
-        return localized
-
     slug = _normalize_location_slug(text)
-    if not slug:
-        return localized
-
     canonical_by_slug = {
         "ha-noi": "Hanoi",
         "quang-ninh": "Halong Bay",
@@ -1064,10 +1099,12 @@ def localize_place_name(text: str, lang: str = "en") -> str:
         "mekong": "Mekong Delta",
         "khanh-hoa": "Nha Trang",
     }
-    canonical_name = canonical_by_slug.get(slug)
-    if not canonical_name:
-        return localized
-    return translate_filter(canonical_name, lang)
+    if slug:
+        canonical_name = canonical_by_slug.get(slug)
+        if canonical_name:
+            return translate_filter(canonical_name, lang)
+
+    return translate_filter(text, lang)
 
 async def translate_payload_llm(payload_dict: dict, target_lang: str, payload_type: str = "quotation", baseline_lang: str = "en") -> dict:
     """
@@ -1312,7 +1349,7 @@ def _load_translation_status(item_id: str, default_lang: str = "en") -> dict:
                 return json.load(f)
         except Exception:
             pass
-    return {
+    ctx = {
         "baseline_lang": default_lang,
         "available_langs": [default_lang]
     }
@@ -2002,11 +2039,17 @@ def _build_timeline_days(
             override_day.get("title") or _build_factual_day_title(itinerary_day.dayNumber, destinations, lang),
             120,
         )
-        summary = truncate_text(override_day.get("summary", itinerary_day.summary), 350)
+        summary = canonicalize_place_names_in_text(
+            truncate_text(override_day.get("summary", itinerary_day.summary), 350),
+            lang,
+        )
         dining = truncate_text(override_day.get("dining", itinerary_day.dining), 80)
-        main_inclusions = truncate_text(
-            override_day.get("mainInclusions", itinerary_day.mainInclusions),
-            140,
+        main_inclusions = canonicalize_place_names_in_text(
+            truncate_text(
+                override_day.get("mainInclusions", itinerary_day.mainInclusions),
+                140,
+            ),
+            lang,
         )
         timeline_days.append({
             "dayNumber": itinerary_day.dayNumber,
@@ -2058,7 +2101,10 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
     timeline_days = _build_timeline_days(quotation_id, payload, lang, manual_override)
     route_stops = _build_route_stops_from_timeline(timeline_days)
     route_list = _compress_route_sequence([stop["displayName"] for stop in route_stops])
-    route_txt = lang_override.get("route_txt") or " \u2013 ".join(route_list)
+    route_txt = canonicalize_place_names_in_text(
+        lang_override.get("route_txt") or " \u2013 ".join(route_list),
+        lang,
+    )
     
     nationality   = truncate_text(payload.journeyGlance.market, 60)
     travel_style  = truncate_text(payload.journeyGlance.partnerNote, 100)
@@ -2158,7 +2204,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
 
     # Extract inclusions from itinerary day mainInclusions dynamically, unless quote override exists
     if lang_override.get("inclusions"):
-        inc_lines = [truncate_text(x, 160) for x in lang_override["inclusions"]]
+        inc_lines = [canonicalize_place_names_in_text(truncate_text(x, 160), lang) for x in lang_override["inclusions"]]
     else:
         inc_lines = []
         for d in payload.itinerary:
@@ -2172,12 +2218,12 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
                 } for item in default_inclusions
             ]
         else:
-            inc_lines = [translate_filter(truncate_text(x, 120), lang) for x in inc_lines]
+            inc_lines = [canonicalize_place_names_in_text(translate_filter(truncate_text(x, 120), lang), lang) for x in inc_lines]
 
     if lang_override.get("exclusions"):
-        exc_lines = [truncate_text(x, 160) for x in lang_override["exclusions"]]
+        exc_lines = [canonicalize_place_names_in_text(truncate_text(x, 160), lang) for x in lang_override["exclusions"]]
     else:
-        exc_lines = [translate_filter(truncate_text(x, 120), lang) for x in default_exclusions]
+        exc_lines = [canonicalize_place_names_in_text(translate_filter(truncate_text(x, 120), lang), lang) for x in default_exclusions]
 
     inclusions_title = translate_filter("What Your Journey Includes", lang)
     inclusions_lede = translate_filter("Your journey has been thoughtfully arranged to ensure a seamless and comfortable experience throughout.", lang)
@@ -2187,18 +2233,18 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
     # Overview paragraphs
     overview_paras = []
     if getattr(payload, "programOverview", None) and payload.programOverview.paragraphs:
-        overview_paras = [truncate_text(p, 500) for p in payload.programOverview.paragraphs]
+        overview_paras = [canonicalize_place_names_in_text(truncate_text(p, 500), lang) for p in payload.programOverview.paragraphs]
         overview_heading = truncate_text(payload.programOverview.heading or "PROGRAM OVERVIEW", 60)
     elif payload.quotationNarrative:
         paras = [p.strip() for p in payload.quotationNarrative.split('\n') if p.strip()]
-        overview_paras = [truncate_text(p, 500) for p in paras]
+        overview_paras = [canonicalize_place_names_in_text(truncate_text(p, 500), lang) for p in paras]
         overview_heading = "PROGRAM OVERVIEW"
     
     if not overview_paras:
         overview_paras = ["A refined travel experience designed for your journey."]
         overview_heading = "PROGRAM OVERVIEW"
         
-    lede = truncate_text(overview_paras[0], 500)
+    lede = canonicalize_place_names_in_text(truncate_text(overview_paras[0], 500), lang)
 
     # Fallback to local parsing if destinations list is empty (e.g. offline/sandbox test)
     if not destinations and payload.itinerary:
@@ -2222,7 +2268,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
     for d in destinations:
         d_copy = d.copy()
         raw_name = d_copy.get("name", "")
-        d_copy["name"] = translate_filter(raw_name, lang)
+        d_copy["name"] = localize_place_name(raw_name, lang)
         translated_destinations.append(d_copy)
     destinations = translated_destinations
 
@@ -2231,7 +2277,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
     for d in destinations:
         d_copy = d.copy()
         raw_name = d_copy.get("name", "")
-        d_copy["name"] = translate_filter(raw_name, lang)
+        d_copy["name"] = localize_place_name(raw_name, lang)
         translated_destinations.append(d_copy)
     destinations = translated_destinations
 
@@ -2247,8 +2293,8 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
 
     # Highlight experiences — first 3 itinerary days
     experiences = [
-        {"num": f"{i+1:02d}", "title": truncate_text(f"{translate_filter('Day', lang)} {day.dayNumber}: {translate_filter(day.destination, lang)}", 80),
-         "desc": truncate_text(day.summary, 160)}
+        {"num": f"{i+1:02d}", "title": truncate_text(f"{translate_filter('Day', lang)} {day.dayNumber}: {localize_place_name(day.destination, lang)}", 80),
+         "desc": canonicalize_place_names_in_text(truncate_text(day.summary, 160), lang)}
         for i, day in enumerate(payload.itinerary[:3])
     ]
     while len(experiences) < 3:
@@ -2310,7 +2356,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
                 index=idx,
                 lang=lang
             )
-            hotel_plan_items.append(details)
+            hotel_plan_items.append(canonicalize_place_names_in_data(details, lang))
         hotel_room_notes = truncate_text(payload.hotelPlan.roomNotes or "", 200)
 
     stay_segments = _build_stay_segments_from_timeline(timeline_days, hotel_plan_items, lang)
@@ -2430,7 +2476,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         # Overview section
         "overview_heading": translate_filter(overview_heading, lang),
         "overview_h2":      f"{translate_filter('Prepared for', lang)}: {prepared_for} \u2014 {tour_title}",
-        "overview_p":       payload.quotationNarrative,
+        "overview_p":       canonicalize_place_names_in_text(payload.quotationNarrative, lang),
         "overview_paras":   overview_paras,
         # Experiences (first 3 days)
         "experiences":      experiences,
@@ -2508,6 +2554,8 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         "template_name": template_name,
         "translation_status": _load_translation_status(quotation_id, default_lang=lang),
     }
+    ctx = canonicalize_place_names_in_data(ctx, lang)
+    return ctx
 
 
 def _load_ctx(quotation_id: str) -> dict | None:
@@ -2974,32 +3022,31 @@ async def create_quotation_b2c(request: Request):
             )
         try:
             # Publish landing page, PDF, ctx, and payload in parallel
-            await asyncio.gather(
-                publish_file_to_github(
-                    file_path=f"published/{quotation_id}/v1{sfx}.html",
-                    html_content=rendered_html,
-                    commit_message=f"Publish B2C quotation {quotation_id} v1{sfx}.html",
-                ),
-                publish_file_to_github(
-                    file_path=f"published/{quotation_id}/pdf{sfx}.html",
-                    html_content=rendered_pdf,
-                    commit_message=f"Publish B2C PDF view for quotation {quotation_id} pdf{sfx}.html",
-                ),
-                publish_file_to_github(
-                    file_path=f"published/{quotation_id}/pdf_{lang}.html",
-                    html_content=rendered_pdf,
-                    commit_message=f"Publish B2C PDF view for quotation {quotation_id} pdf_{lang}.html",
-                ),
-                publish_file_to_github(
-                    file_path=f"published/{quotation_id}/ctx.json",
-                    html_content=json.dumps(ctx, ensure_ascii=False, default=str),
-                    commit_message=f"Publish B2C Context for {quotation_id}",
-                ),
-                publish_file_to_github(
-                    file_path=f"published/{quotation_id}/payload.json",
-                    html_content=json.dumps(payload.model_dump(mode="json"), ensure_ascii=False),
-                    commit_message=f"Publish B2C Payload for {quotation_id}",
-                ),
+            # Publish files sequentially to avoid 409 conflict
+            await publish_file_to_github(
+                file_path=f"published/{quotation_id}/v1{sfx}.html",
+                html_content=rendered_html,
+                commit_message=f"Publish B2C quotation {quotation_id} v1{sfx}.html",
+            )
+            await publish_file_to_github(
+                file_path=f"published/{quotation_id}/pdf{sfx}.html",
+                html_content=rendered_pdf,
+                commit_message=f"Publish B2C PDF view for quotation {quotation_id} pdf{sfx}.html",
+            )
+            await publish_file_to_github(
+                file_path=f"published/{quotation_id}/pdf_{lang}.html",
+                html_content=rendered_pdf,
+                commit_message=f"Publish B2C PDF view for quotation {quotation_id} pdf_{lang}.html",
+            )
+            await publish_file_to_github(
+                file_path=f"published/{quotation_id}/ctx.json",
+                html_content=json.dumps(ctx, ensure_ascii=False, default=str),
+                commit_message=f"Publish B2C Context for {quotation_id}",
+            )
+            await publish_file_to_github(
+                file_path=f"published/{quotation_id}/payload.json",
+                html_content=json.dumps(payload.model_dump(mode="json"), ensure_ascii=False),
+                commit_message=f"Publish B2C Payload for {quotation_id}",
             )
             # Initialize and save translation status
             await _save_translation_status(quotation_id, {"baseline_lang": lang, "available_langs": [lang]})
@@ -3155,32 +3202,31 @@ async def create_quotation(request: Request):
             )
         try:
             # Publish landing page, PDF, ctx, and payload in parallel
-            await asyncio.gather(
-                publish_file_to_github(
-                    file_path=f"published/{quotation_id}/v1{sfx}.html",
-                    html_content=rendered_html,
-                    commit_message=f"Publish B2B quotation {quotation_id} v1{sfx}.html",
-                ),
-                publish_file_to_github(
-                    file_path=f"published/{quotation_id}/pdf{sfx}.html",
-                    html_content=rendered_pdf,
-                    commit_message=f"Publish B2B PDF view for quotation {quotation_id} pdf{sfx}.html",
-                ),
-                publish_file_to_github(
-                    file_path=f"published/{quotation_id}/pdf_{lang}.html",
-                    html_content=rendered_pdf,
-                    commit_message=f"Publish B2B PDF view for quotation {quotation_id} pdf_{lang}.html",
-                ),
-                publish_file_to_github(
-                    file_path=f"published/{quotation_id}/ctx.json",
-                    html_content=json.dumps(ctx, ensure_ascii=False, default=str),
-                    commit_message=f"Publish B2B Context for {quotation_id}",
-                ),
-                publish_file_to_github(
-                    file_path=f"published/{quotation_id}/payload.json",
-                    html_content=json.dumps(payload.model_dump(mode="json"), ensure_ascii=False),
-                    commit_message=f"Publish B2B Payload for {quotation_id}",
-                ),
+            # Publish files sequentially to avoid 409 conflict
+            await publish_file_to_github(
+                file_path=f"published/{quotation_id}/v1{sfx}.html",
+                html_content=rendered_html,
+                commit_message=f"Publish B2B quotation {quotation_id} v1{sfx}.html",
+            )
+            await publish_file_to_github(
+                file_path=f"published/{quotation_id}/pdf{sfx}.html",
+                html_content=rendered_pdf,
+                commit_message=f"Publish B2B PDF view for quotation {quotation_id} pdf{sfx}.html",
+            )
+            await publish_file_to_github(
+                file_path=f"published/{quotation_id}/pdf_{lang}.html",
+                html_content=rendered_pdf,
+                commit_message=f"Publish B2B PDF view for quotation {quotation_id} pdf_{lang}.html",
+            )
+            await publish_file_to_github(
+                file_path=f"published/{quotation_id}/ctx.json",
+                html_content=json.dumps(ctx, ensure_ascii=False, default=str),
+                commit_message=f"Publish B2B Context for {quotation_id}",
+            )
+            await publish_file_to_github(
+                file_path=f"published/{quotation_id}/payload.json",
+                html_content=json.dumps(payload.model_dump(mode="json"), ensure_ascii=False),
+                commit_message=f"Publish B2B Payload for {quotation_id}",
             )
             # Initialize and save translation status
             await _save_translation_status(quotation_id, {"baseline_lang": lang, "available_langs": [lang]})
@@ -3940,39 +3986,30 @@ async def publish_quotation(quotation_id: str, body: PublishRequest, lang: str =
 
     if ENVIRONMENT == "production":
         try:
-            tasks = [
-                publish_to_github(
-                    quotation_id=quotation_id,
-                    html_content=body.html,
-                    version=version,
-                    lang=target_lang,
-                    baseline_lang=baseline_lang
-                )
-            ]
+            # Publish files sequentially to avoid 409 conflict
+            published_url = await publish_to_github(
+                quotation_id=quotation_id,
+                html_content=body.html,
+                version=version,
+                lang=target_lang,
+                baseline_lang=baseline_lang
+            )
             if ctx_data and rendered_pdf is not None:
                 pdf_suffix = "" if effective_lang == baseline_lang else f"_{effective_lang}"
                 pdf_files = {f"published/{quotation_id}/pdf{pdf_suffix}.html"}
                 if effective_lang == baseline_lang:
                     pdf_files.add(f"published/{quotation_id}/pdf_{effective_lang}.html")
-                tasks.extend(
-                    [
-                        publish_file_to_github(
-                            file_path=pdf_path,
-                            html_content=rendered_pdf,
-                            commit_message=f"Update PDF view for quotation {quotation_id} {os.path.basename(pdf_path)} (version {version})",
-                        )
-                        for pdf_path in sorted(pdf_files)
-                    ]
-                )
-                tasks.append(
-                    publish_file_to_github(
-                        file_path=f"published/{quotation_id}/ctx.json",
-                        html_content=json.dumps(ctx_data, ensure_ascii=False, default=str),
-                        commit_message=f"Update context for quotation {quotation_id} (version {version})",
+                for pdf_path in sorted(pdf_files):
+                    await publish_file_to_github(
+                        file_path=pdf_path,
+                        html_content=rendered_pdf,
+                        commit_message=f"Update PDF view for quotation {quotation_id} {os.path.basename(pdf_path)} (version {version})",
                     )
+                await publish_file_to_github(
+                    file_path=f"published/{quotation_id}/ctx.json",
+                    html_content=json.dumps(ctx_data, ensure_ascii=False, default=str),
+                    commit_message=f"Update context for quotation {quotation_id} (version {version})",
                 )
-            results = await asyncio.gather(*tasks)
-            published_url = results[0]
         except Exception as exc:
             log.exception("[publish] Failed for %s", quotation_id)
             raise HTTPException(status_code=502, detail=str(exc))
@@ -4175,27 +4212,26 @@ async def create_itinerary(request: Request):
             )
         try:
             # Commit to GitHub
-            await asyncio.gather(
-                publish_file_to_github(
-                    file_path=f"published/{itinerary_id}/v1{sfx}.html",
-                    html_content=rendered_html,
-                    commit_message=f"Publish itinerary {itinerary_id} v1{sfx}.html",
-                ),
-                publish_file_to_github(
-                    file_path=f"published/{itinerary_id}/pdf{sfx}.html",
-                    html_content=rendered_pdf,
-                    commit_message=f"Publish PDF view for itinerary {itinerary_id} pdf{sfx}.html",
-                ),
-                publish_file_to_github(
-                    file_path=f"published/{itinerary_id}/ctx.json",
-                    html_content=json.dumps(ctx, ensure_ascii=False, default=str),
-                    commit_message=f"Publish itinerary context for {itinerary_id}",
-                ),
-                publish_file_to_github(
-                    file_path=f"published/{itinerary_id}/payload.json",
-                    html_content=json.dumps(payload.model_dump(mode="json"), ensure_ascii=False),
-                    commit_message=f"Publish itinerary payload for {itinerary_id}",
-                ),
+            # Publish files sequentially to avoid 409 conflict
+            await publish_file_to_github(
+                file_path=f"published/{itinerary_id}/v1{sfx}.html",
+                html_content=rendered_html,
+                commit_message=f"Publish itinerary {itinerary_id} v1{sfx}.html",
+            )
+            await publish_file_to_github(
+                file_path=f"published/{itinerary_id}/pdf{sfx}.html",
+                html_content=rendered_pdf,
+                commit_message=f"Publish PDF view for itinerary {itinerary_id} pdf{sfx}.html",
+            )
+            await publish_file_to_github(
+                file_path=f"published/{itinerary_id}/ctx.json",
+                html_content=json.dumps(ctx, ensure_ascii=False, default=str),
+                commit_message=f"Publish itinerary context for {itinerary_id}",
+            )
+            await publish_file_to_github(
+                file_path=f"published/{itinerary_id}/payload.json",
+                html_content=json.dumps(payload.model_dump(mode="json"), ensure_ascii=False),
+                commit_message=f"Publish itinerary payload for {itinerary_id}",
             )
             # Initialize and save translation status
             await _save_translation_status(itinerary_id, {"baseline_lang": lang, "available_langs": [lang]})
@@ -4537,17 +4573,16 @@ async def publish_itinerary(itinerary_id: str, body: PublishRequest, lang: str =
         if ENVIRONMENT == "production":
             from github_publish import publish_file_to_github
             try:
-                await asyncio.gather(
-                    publish_file_to_github(
-                        file_path=f"published/{itinerary_id}/pdf.html",
-                        html_content=rendered_pdf,
-                        commit_message=f"Update PDF view for itinerary {itinerary_id} (version {version})",
-                    ),
-                    publish_file_to_github(
-                        file_path=f"published/{itinerary_id}/ctx.json",
-                        html_content=json.dumps(ctx, ensure_ascii=False, default=str),
-                        commit_message=f"Update context for itinerary {itinerary_id} (version {version})",
-                    )
+                # Publish files sequentially to avoid 409 conflict
+                await publish_file_to_github(
+                    file_path=f"published/{itinerary_id}/pdf.html",
+                    html_content=rendered_pdf,
+                    commit_message=f"Update PDF view for itinerary {itinerary_id} (version {version})",
+                )
+                await publish_file_to_github(
+                    file_path=f"published/{itinerary_id}/ctx.json",
+                    html_content=json.dumps(ctx, ensure_ascii=False, default=str),
+                    commit_message=f"Update context for itinerary {itinerary_id} (version {version})",
                 )
             except Exception as e:
                 log.warning("Failed to publish updated PDF/ctx to GitHub: %s", e)
@@ -4736,17 +4771,16 @@ async def approve_itinerary(itinerary_id: str, body: ApproveRequest):
         if ENVIRONMENT == "production":
             from github_publish import publish_file_to_github
             try:
-                await asyncio.gather(
-                    publish_file_to_github(
-                        file_path=f"published/{itinerary_id}/pdf.html",
-                        html_content=rendered_pdf,
-                        commit_message=f"Update PDF view for approved itinerary {itinerary_id} (version {version})",
-                    ),
-                    publish_file_to_github(
-                        file_path=f"published/{itinerary_id}/ctx.json",
-                        html_content=json.dumps(ctx, ensure_ascii=False, default=str),
-                        commit_message=f"Update context for approved itinerary {itinerary_id} (version {version})",
-                    )
+                # Publish files sequentially to avoid 409 conflict
+                await publish_file_to_github(
+                    file_path=f"published/{itinerary_id}/pdf.html",
+                    html_content=rendered_pdf,
+                    commit_message=f"Update PDF view for approved itinerary {itinerary_id} (version {version})",
+                )
+                await publish_file_to_github(
+                    file_path=f"published/{itinerary_id}/ctx.json",
+                    html_content=json.dumps(ctx, ensure_ascii=False, default=str),
+                    commit_message=f"Update context for approved itinerary {itinerary_id} (version {version})",
                 )
             except Exception as e:
                 log.warning("Failed to publish approved PDF/ctx to GitHub: %s", e)
@@ -5528,13 +5562,12 @@ async def create_landing_page_agent(request: Request):
         try:
             from github_publish import publish_file_to_github, publish_to_github
 
-            published_url, pdf_static_url = await asyncio.gather(
-                publish_to_github(session_id, rendered_html, version=1),
-                publish_file_to_github(
-                    file_path=f"published/{session_id}/pdf.html",
-                    html_content=rendered_pdf,
-                    commit_message=f"Publish PDF for quotation {session_id}",
-                ),
+            # Publish files sequentially to avoid 409 conflict
+            published_url = await publish_to_github(session_id, rendered_html, version=1)
+            pdf_static_url = await publish_file_to_github(
+                file_path=f"published/{session_id}/pdf.html",
+                html_content=rendered_pdf,
+                commit_message=f"Publish PDF for quotation {session_id}",
             )
             log.info("[/api/v1/landing-page] GitHub published: %s", published_url)
         except Exception as exc:

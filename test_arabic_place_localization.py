@@ -20,21 +20,36 @@ sys.modules.setdefault("llm_client", fake_llm_client)
 import main
 
 
-FORBIDDEN_ENGLISH_CITY_NAMES = {
+EXPECTED_CANONICAL_NAMES = {
     "Hanoi",
-    "Ha Long Bay",
     "Halong Bay",
-    "Halong",
     "Sapa",
     "Da Nang",
     "Hoi An",
     "Dalat",
-    "Da Lat",
     "Ninh Binh",
-    "Mekong Delta",
     "Ho Chi Minh City",
-    "Ho Chi Minh",
-    "Saigon",
+    "Mekong Delta",
+}
+
+FORBIDDEN_ARABIC_PLACE_NAMES = {
+    "هانوي",
+    "هانوى",
+    "خليج ها لونغ",
+    "خليج هالونج",
+    "ها لونغ",
+    "هالونغ",
+    "سابا",
+    "دا نانغ",
+    "دانانغ",
+    "هوي آن",
+    "هوي ان",
+    "دالات",
+    "نينه بينه",
+    "مدينة هو تشي منه",
+    "هو تشي منه",
+    "سايغون",
+    "دلتا ميكونغ",
 }
 
 
@@ -52,17 +67,21 @@ def _extract_render_sensitive_location_fields(ctx: dict) -> list[str]:
 
     for experience in ctx.get("experiences", []):
         title = experience.get("title")
+        desc = experience.get("desc")
         if title:
             fields.append(title)
+        if desc:
+            fields.append(desc)
 
     for day in ctx.get("itinerary", []):
         for key in ("title", "overnight"):
             value = day.get(key)
             if value:
                 fields.append(value)
-        for destination in day.get("destinations", []):
-            if destination:
-                fields.append(destination)
+        for collection_key in ("description", "activities", "destinations"):
+            for value in day.get(collection_key, []):
+                if value:
+                    fields.append(value)
 
     for stop in ctx.get("route_stops", []):
         for key in ("displayName", "mapTitle"):
@@ -75,20 +94,43 @@ def _extract_render_sensitive_location_fields(ctx: dict) -> list[str]:
             value = segment.get(key)
             if value:
                 fields.append(value)
-        for excursion in segment.get("excursions", []):
-            if excursion:
-                fields.append(excursion)
+        for collection_key in ("excursions",):
+            for value in segment.get(collection_key, []):
+                if value:
+                    fields.append(value)
+        for preview in segment.get("activityPreviews", []):
+            for key in ("label", "summary"):
+                value = preview.get(key)
+                if value:
+                    fields.append(value)
+
+    for key in ("lede", "overview_p", "footer_text"):
+        value = ctx.get(key)
+        if value:
+            fields.append(value)
+
+    for value in ctx.get("overview_paras", []):
+        if value:
+            fields.append(value)
 
     return fields
 
 
-def _assert_no_english_city_names(ctx: dict):
+def _assert_arabic_output_keeps_canonical_place_names(ctx: dict):
+    fields = _extract_render_sensitive_location_fields(ctx)
     offending: list[tuple[str, str]] = []
-    for field in _extract_render_sensitive_location_fields(ctx):
-        for forbidden in FORBIDDEN_ENGLISH_CITY_NAMES:
+    for field in fields:
+        for forbidden in FORBIDDEN_ARABIC_PLACE_NAMES:
             if forbidden in field:
                 offending.append((forbidden, field))
-    assert not offending, f"English city names leaked into Arabic render fields: {offending}"
+    assert not offending, f"Arabic-translated place names leaked into output: {offending}"
+
+    combined = "\n".join(fields)
+    for expected in EXPECTED_CANONICAL_NAMES:
+        if expected in combined:
+            break
+    else:
+        raise AssertionError("No canonical Latin place names were found in Arabic output")
 
 
 def _build_destinations_from_payload(payload: main.TourQuotationPayload) -> list[dict]:
@@ -110,7 +152,7 @@ def _build_destinations_from_payload(payload: main.TourQuotationPayload) -> list
     return destinations
 
 
-def test_arabic_place_names_are_localized_for_existing_quotation():
+def test_arabic_place_names_stay_canonical_for_existing_quotation():
     quotation_id = "quo_3e9bcd4f2f85"
     ctx_data = json.loads((Path("published") / quotation_id / "ctx.json").read_text(encoding="utf-8"))
     payload_dict = (ctx_data.get("translations") or {}).get("ar") or ctx_data.get("baseline_payload")
@@ -125,18 +167,18 @@ def test_arabic_place_names_are_localized_for_existing_quotation():
         template_name="vietnam_heritage_luxury.html",
     )
 
-    _assert_no_english_city_names(ctx)
+    _assert_arabic_output_keeps_canonical_place_names(ctx)
 
 
-def test_arabic_place_names_are_localized_for_new_generated_quotation():
+def test_arabic_place_names_stay_canonical_for_new_generated_quotation():
     payload = main.TourQuotationPayload.model_validate(
         {
             "quotationNumber": "QT-AR-LOCALIZATION-0001",
-            "quotationNarrative": "Regression test payload to verify Arabic localization of destination names.",
+            "quotationNarrative": "Regression test payload to verify Arabic copy keeps canonical destination names.",
             "programOverview": {
                 "heading": "PROGRAM OVERVIEW",
                 "paragraphs": [
-                    "A multi-stop Vietnam routing scenario for Arabic localization regression coverage."
+                    "A multi-stop Vietnam routing scenario for Arabic proper-noun regression coverage."
                 ],
             },
             "landingpageContent": {
@@ -293,4 +335,4 @@ def test_arabic_place_names_are_localized_for_new_generated_quotation():
         template_name="vietnam_heritage_luxury.html",
     )
 
-    _assert_no_english_city_names(ctx)
+    _assert_arabic_output_keeps_canonical_place_names(ctx)

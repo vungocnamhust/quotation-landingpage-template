@@ -433,7 +433,7 @@
     .panel h3 {
       font-family: var(--serif);
       font-size: 27px;
-      line-height: 1.08;
+      line-height: 1.35;
       font-weight: 500;
       margin: 12px 0 10px;
       color: var(--emerald)
@@ -1141,6 +1141,7 @@
         text-align: center;
       }
 
+      #select-domain,
       #btn-publish {
         flex: 1;
         min-width: 120px;
@@ -1220,6 +1221,39 @@
       opacity: .5;
       cursor: not-allowed;
       transform: none
+    }
+
+    #select-domain {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border: 1px solid rgba(183, 137, 75, 0.4);
+      border-radius: 999px;
+      padding: 11px 20px;
+      font-weight: 700;
+      font-size: 12px;
+      outline: none;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.3s ease;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+      padding-right: 36px;
+    }
+    #select-domain:hover {
+      background-color: rgba(255, 255, 255, 0.15);
+      border-color: rgba(183, 137, 75, 0.8);
+    }
+    #select-domain:focus {
+      border-color: #d8bd85;
+      box-shadow: 0 0 0 2px rgba(183, 137, 75, 0.2);
+    }
+    #select-domain option {
+      background-color: #17412e;
+      color: #fff;
     }
 
     body {
@@ -1387,6 +1421,21 @@
       margin: 2px 0 0;
       font-size: 11px;
       color: rgba(255, 255, 255, 0.75);
+    }
+
+    /* Responsive PWA Notifications */
+    @media(max-width: 768px) {
+      .notification-prompt-card,
+      .notification-success-card {
+        bottom: 24px !important;
+        right: 16px !important;
+        left: 16px !important;
+        width: auto !important;
+      }
+      body:has(#publish-bar) .notification-prompt-card,
+      body:has(#publish-bar) .notification-success-card {
+        bottom: 160px !important;
+      }
     }
 
     #nav-notification-btn {
@@ -2589,6 +2638,12 @@
     </div>
     <span id="publish-status"></span>
 
+    <select id="select-domain" class="no-print">
+      <option value="http://localhost:8111">localhost:8111</option>
+      <option value="https://journeys.capellatravel.com">journeys.capellatravel.com</option>
+      <option value="https://journeys.vietnamsafar.vn">journeys.vietnamsafar.vn</option>
+      <option value="http://my.selvarajourneys.com">my.selvarajourneys.com</option>
+    </select>
     <button id="btn-publish" onclick="publishPage()">🚀 Publish to Web</button>
   </div>
 
@@ -3004,6 +3059,28 @@
     initImageChangers();
     initRemovableBlocks();
 
+    document.addEventListener("DOMContentLoaded", function() {
+      const selectDomain = document.getElementById('select-domain');
+      if (selectDomain) {
+        const currentOrigin = window.location.origin;
+        let matched = false;
+        for (let option of selectDomain.options) {
+          if (option.value.replace(/\/$/, '') === currentOrigin.replace(/\/$/, '')) {
+            selectDomain.value = option.value;
+            matched = true;
+            break;
+          }
+        }
+        if (!matched) {
+          if (currentOrigin.includes('localhost') || currentOrigin.includes('127.0.0.1')) {
+            selectDomain.value = 'http://localhost:8111';
+          } else {
+            selectDomain.value = 'https://journeys.capellatravel.com';
+          }
+        }
+      }
+    });
+
     async function publishPage() {
       const btn = document.getElementById('btn-publish');
       const status = document.getElementById('publish-status');
@@ -3050,7 +3127,17 @@
         }
 
         if (data.published_url) {
-          status.innerHTML = `✅ <a href="${data.published_url}" target="_blank" style="color:#d8bd85">${data.published_url}</a>`;
+          const domainSelect = document.getElementById('select-domain');
+          const selectedDomain = domainSelect ? domainSelect.value.replace(/\/$/, '') : window.location.origin;
+          let finalUrl = data.published_url;
+          try {
+            const urlObj = new URL(data.published_url);
+            finalUrl = selectedDomain + urlObj.pathname + urlObj.search;
+          } catch(e) {
+            finalUrl = data.published_url;
+          }
+
+          status.innerHTML = `✅ <a href="${finalUrl}" target="_blank" style="color:#d8bd85">${finalUrl}</a>`;
           btn.textContent = '🔁 Re-publish';
         } else {
           status.textContent = '❌ ' + (data.detail || 'Publish failed');
