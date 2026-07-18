@@ -1106,6 +1106,13 @@ async def translate_payload_llm(payload_dict: dict, target_lang: str, payload_ty
                 elif isinstance(item, (dict, list)):
                     _inject(item, trans_map, current_path)
 
+    def _normalize_digits(text: str) -> str:
+        table = str.maketrans("٠١٢٣٤٥٦٧٨٩", "0123456789")
+        return text.translate(table)
+
+    def _extract_numeric_tokens(text: str) -> list[str]:
+        return re.findall(r"\d+(?:[.,]\d+)?", _normalize_digits(text or ""))
+
     # Clone the dictionary to avoid side effects
     working_dict = copy.deepcopy(payload_dict)
     all_pairs = _extract(working_dict)
@@ -1157,13 +1164,18 @@ async def translate_payload_llm(payload_dict: dict, target_lang: str, payload_ty
     )
 
     system_prompt = (
-        "You are an expert multilingual Luxury Travel Copywriter.\n"
+        "You are an expert multilingual Luxury Travel Copywritter with faithful translator.\n"
         f"Your task is to translate the given list of travel text strings into {target_lang_name}.\n\n"
         "RULES FOR PREMIUM & LUXURY TRANSLATION:\n"
         "1. Tone and vocabulary:\n"
-        "   - English ('en'): Evoke bespoke elegance, exclusive privileges, and poetic serenity (e.g., 'Serene sanctuary', 'Heritage journey', 'Curated experiences').\n"
-        "   - Vietnamese ('vi'): Use elegant, respectful, and sophisticated Sino-Vietnamese phrasing (e.g., 'Thượng khách', 'Kiệt tác trú ẩn', 'Hành trình di sản', 'Điểm hẹn yên bình').\n"
-        "   - Arabic ('ar'): Use Royal Modern Standard Arabic (Fusha) with respectful honorifics (e.g., 'الضيوف الكرام', 'رحلة منسقة خصيصاً', 'ملاذات هادئة'). Ensure proper Right-to-Left layout flow.\n"
+        "   - English ('en'): polished, elegant, but fact-faithful.\n"
+        "   - Vietnamese ('vi'): natural, polished, but fact-faithful.\n"
+        "   - Arabic ('ar'): polished Modern Standard Arabic, but fact-faithful.\n"
+        "2. Fidelity is mandatory:\n"
+        "   - Do NOT add meals, activities, shopping, romance, welcome experiences, or travel logic not present in the source string.\n"
+        "   - Do NOT change route order, destination sequence, proper nouns, dates, quantities, or prices.\n"
+        "   - If the source string is operational or factual, keep it operational and factual.\n"
+        "   - You may improve fluency, but not meaning.\n"
         "2. Format requirements:\n"
         "   - You MUST return a valid JSON array of strings containing the translations in the EXACT SAME order and quantity.\n"
         "   - Do NOT omit any strings. Do NOT combine strings.\n"
@@ -1196,7 +1208,13 @@ async def translate_payload_llm(payload_dict: dict, target_lang: str, payload_ty
         # Build injection map combining local and LLM translations
         trans_map = copy.deepcopy(local_translations)
         for (path, _), trans in zip(pairs_to_translate, translated_list):
-            trans_map[path] = trans
+            src_numbers = _extract_numeric_tokens(_)
+            tgt_numbers = _extract_numeric_tokens(trans)
+            if src_numbers and src_numbers != tgt_numbers:
+                log.warning("[translate_payload_llm] Numeric drift detected for %s; preserving source text", path)
+                trans_map[path] = _
+            else:
+                trans_map[path] = trans
 
         _inject(working_dict, trans_map)
         return working_dict
@@ -1670,11 +1688,149 @@ def truncate_text(text: Optional[str], max_chars: int) -> str:
         truncated = text_str[:max_chars - 3]
     return truncated.strip() + "..."
 
+
+def _load_quotation_manual_override(quotation_id: str) -> dict:
+    path = os.path.join("published", quotation_id, "manual_overrides.json")
+    if not os.path.isfile(path):
+        return {}
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as exc:
+        log.warning("Failed to load manual override for %s: %s", quotation_id, exc)
+        return {}
+
+
+def _lang_override(override: dict, lang: str) -> dict:
+    return ((override or {}).get("langs") or {}).get(lang, {})
+
+
+def _compress_route_sequence(stops: list[str]) -> list[str]:
+    compressed: list[str] = []
+    for stop in stops:
+        if not stop:
+            continue
+        if not compressed or compressed[-1] != stop:
+            compressed.append(stop)
+    return compressed
+
+
+def _build_factual_day_title(day_number: int, stops: list[str], lang: str) -> str:
+    clean_stops = [truncate_text(stop, 40) for stop in stops if stop]
+    if not clean_stops:
+        clean_stops = ["Vietnam"]
+    day_label = {
+        "vi": f"Ngày {day_number}",
+        "ar": f"اليوم {day_number}",
+    }.get(lang, f"Day {day_number}")
+    route = " → ".join(clean_stops)
+    return f"{day_label} — {route}"
+
+
+def _build_route_stop_label(day_number: int, stop: str, lang: str, *, prefix: str | None = None) -> str:
+    day_label = {
+        "vi": f"Ngày {day_number}",
+        "ar": f"اليوم {day_number}",
+    }.get(lang, f"Day {day_number}")
+    if prefix:
+        return f"{day_label} — {prefix} {stop}"
+    return f"{day_label} — {stop}"
+
+
+def _build_route_stops_from_timeline(timeline_days: list[dict]) -> list[dict]:
+    route_stops: list[dict] = []
+    for day in timeline_days:
+        day_stops = [stop for stop in (day.get("destinations") or []) if stop]
+        if not day_stops and day.get("overnight"):
+            day_stops = [day["overnight"]]
+        first_stop = day_stops[0] if day_stops else ""
+        for idx, stop in enumerate(day_stops, start=1):
+            is_last = idx == len(day_stops)
+            returns_to_origin = len(day_stops) > 2 and is_last and stop == first_stop
+            kind = "overnight" if is_last and stop == day.get("overnight") else "visit"
+            map_title = _build_route_stop_label(day["dayNumber"], stop, day.get("lang", "en"))
+            show_marker = True
+            if len(day_stops) > 1 and idx < len(day_stops):
+                kind = "transfer" if idx == 1 else "visit"
+            if idx == 1 and len(day_stops) > 1:
+                prefix = {"vi": "Khởi hành từ", "ar": "الانطلاق من", "en": "Depart from"}.get(
+                    day.get("lang", "en"),
+                    "Depart from",
+                )
+                map_title = _build_route_stop_label(day["dayNumber"], stop, day.get("lang", "en"), prefix=prefix)
+                show_marker = False
+            elif returns_to_origin:
+                prefix = {"vi": "Trở lại", "ar": "العودة إلى", "en": "Return to"}.get(
+                    day.get("lang", "en"),
+                    "Return to",
+                )
+                map_title = _build_route_stop_label(day["dayNumber"], stop, day.get("lang", "en"), prefix=prefix)
+                kind = "return"
+                show_marker = False
+            elif len(day_stops) > 1:
+                map_title = _build_route_stop_label(day["dayNumber"], stop, day.get("lang", "en"))
+            route_stops.append({
+                "dayNumber": day["dayNumber"],
+                "stopOrder": idx,
+                "destination": stop,
+                "displayName": stop,
+                "mapTitle": map_title,
+                "kind": kind,
+                "showMarker": show_marker,
+            })
+    return route_stops
+
+
+def _build_timeline_days(
+    quotation_id: str,
+    payload: "TourQuotationPayload",
+    lang: str,
+    manual_override: dict,
+) -> list[dict]:
+    lang_override = _lang_override(manual_override, lang)
+    day_overrides = lang_override.get("day_overrides", {})
+    timeline_days: list[dict] = []
+
+    for itinerary_day in payload.itinerary:
+        override_day = day_overrides.get(str(itinerary_day.dayNumber), {})
+        destinations = override_day.get("destinations") or [truncate_text(itinerary_day.destination, 40)]
+        destinations = [truncate_text(dest, 40) for dest in destinations if dest]
+        overnight = truncate_text(
+            override_day.get("overnight", itinerary_day.destination),
+            40,
+        )
+        title = truncate_text(
+            override_day.get("title") or _build_factual_day_title(itinerary_day.dayNumber, destinations, lang),
+            120,
+        )
+        summary = truncate_text(override_day.get("summary", itinerary_day.summary), 350)
+        dining = truncate_text(override_day.get("dining", itinerary_day.dining), 80)
+        main_inclusions = truncate_text(
+            override_day.get("mainInclusions", itinerary_day.mainInclusions),
+            140,
+        )
+        timeline_days.append({
+            "dayNumber": itinerary_day.dayNumber,
+            "date": "",
+            "lang": lang,
+            "title": title,
+            "description": [summary] if summary else [],
+            "overnight": overnight,
+            "meals": [dining] if dining else [],
+            "activities": [main_inclusions] if main_inclusions else [],
+            "notes": [translate_filter(truncate_text(f"Sense of Pace: {itinerary_day.senseOfPace}", 80), lang)] if itinerary_day.senseOfPace else [],
+            "destinations": destinations,
+        })
+
+    return timeline_days
+
 # ── Context builder (pure fn — no I/O) ───────────────────────────────────────
 
 def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, destinations: list[dict], lang: str = "en", template_name: str = "vietnam_heritage_luxury.html"):
     """Build template context. Shared by /quotations (landingpage) and /quotations/{id}/pdf."""
     default_img = "/assets/vietnam-safar-logo.png"
+    manual_override = _load_quotation_manual_override(quotation_id)
+    lang_override = _lang_override(manual_override, lang)
     
     # Defaults for seller/contact
     seller_name  = "Vietnam Safar \u2013 Discovery Asia Travel Group"
@@ -1700,12 +1856,10 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
             
     guests_txt    = truncate_text(payload.journeyGlance.guestProfile, 100)
     
-    # Extract route from itinerary destinations in sequence
-    route_list = []
-    for d in payload.itinerary:
-        if d.destination and d.destination not in route_list:
-            route_list.append(d.destination)
-    route_txt = " \u2013 ".join(route_list)
+    timeline_days = _build_timeline_days(quotation_id, payload, lang, manual_override)
+    route_stops = _build_route_stops_from_timeline(timeline_days)
+    route_list = _compress_route_sequence([stop["displayName"] for stop in route_stops])
+    route_txt = lang_override.get("route_txt") or " \u2013 ".join(route_list)
     
     nationality   = truncate_text(payload.journeyGlance.market, 60)
     travel_style  = truncate_text(payload.journeyGlance.partnerNote, 100)
@@ -1803,23 +1957,28 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         "Any services not expressly listed as included"
     ]
 
-    # Extract inclusions from itinerary day mainInclusions dynamically
-    inc_lines = []
-    for d in payload.itinerary:
-        if d.mainInclusions and d.mainInclusions not in inc_lines:
-            inc_lines.append(d.mainInclusions)
-            
-    if not inc_lines:
-        inc_lines = [
-            {
-                "title": translate_filter(item["title"], lang),
-                "desc": translate_filter(item["desc"], lang)
-            } for item in default_inclusions
-        ]
+    # Extract inclusions from itinerary day mainInclusions dynamically, unless quote override exists
+    if lang_override.get("inclusions"):
+        inc_lines = [truncate_text(x, 160) for x in lang_override["inclusions"]]
     else:
-        inc_lines = [translate_filter(truncate_text(x, 120), lang) for x in inc_lines]
-        
-    exc_lines = [translate_filter(truncate_text(x, 120), lang) for x in default_exclusions]
+        inc_lines = []
+        for d in payload.itinerary:
+            if d.mainInclusions and d.mainInclusions not in inc_lines:
+                inc_lines.append(d.mainInclusions)
+        if not inc_lines:
+            inc_lines = [
+                {
+                    "title": translate_filter(item["title"], lang),
+                    "desc": translate_filter(item["desc"], lang)
+                } for item in default_inclusions
+            ]
+        else:
+            inc_lines = [translate_filter(truncate_text(x, 120), lang) for x in inc_lines]
+
+    if lang_override.get("exclusions"):
+        exc_lines = [truncate_text(x, 160) for x in lang_override["exclusions"]]
+    else:
+        exc_lines = [translate_filter(truncate_text(x, 120), lang) for x in default_exclusions]
 
     inclusions_title = translate_filter("What Your Journey Includes", lang)
     inclusions_lede = translate_filter("Your journey has been thoughtfully arranged to ensure a seamless and comfortable experience throughout.", lang)
@@ -1976,22 +2135,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
     final_req = [truncate_text(final.finalDetailsRequired, 300)]
     final_after = [truncate_text(final.afterConfirmation, 300)]
 
-    # Build itinerary days matching template expectations
-    mapped_itinerary = []
-    for d in payload.itinerary:
-        title = get_luxury_day_title(d.destination, d.dayNumber, lang)
-
-        mapped_itinerary.append({
-            "dayNumber": d.dayNumber,
-            "date": "",  # date is not explicitly in itinerary day in the new schema, but can be empty
-            "title": title,
-            "description": [truncate_text(d.summary, 350)],
-            "overnight": truncate_text(d.destination, 40),
-            "meals": [truncate_text(d.dining, 80)] if d.dining else [],
-            "activities": [truncate_text(d.mainInclusions, 120)] if d.mainInclusions else [],
-            "notes": [translate_filter(truncate_text(f"Sense of Pace: {d.senseOfPace}", 80), lang)] if d.senseOfPace else [],
-            "destinations": [translate_filter(truncate_text(d.destination, 40), lang)]
-        })
+    mapped_itinerary = timeline_days
 
     # Multi-language support for dynamic itinerary subtitle
     days_cnt = len(payload.itinerary)
@@ -2006,14 +2150,29 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
     pricing_h2_title = translate_filter("Journey Investment", lang)
     pricing_h2_val = f"{pricing_h2_title}: {total_price}" if total_price else ""
 
-    # Generate static map URL based on destinations coordinates
+    # Generate static map URL based on route stops or fall back to destinations
     coords_list = []
-    for d in destinations:
-        slug = d.get("slug")
-        if slug and slug in SLUG_COORDS:
-            lat, lng = SLUG_COORDS[slug]
-            if not coords_list or coords_list[-1] != (lat, lng):
-                coords_list.append((lat, lng))
+    for stop in route_stops:
+        normalized = stop["destination"].lower().strip()
+        matched = None
+        for name, coords in SLUG_COORDS.items():
+            if normalized == name:
+                matched = coords
+                break
+        if matched is None:
+            for slug, coords in SLUG_COORDS.items():
+                if normalized in (slug, slug.replace("-", " ")):
+                    matched = coords
+                    break
+        if matched and (not coords_list or coords_list[-1] != tuple(matched)):
+            coords_list.append(tuple(matched))
+    if not coords_list:
+        for d in destinations:
+            slug = d.get("slug")
+            if slug and slug in SLUG_COORDS:
+                lat, lng = SLUG_COORDS[slug]
+                if not coords_list or coords_list[-1] != (lat, lng):
+                    coords_list.append((lat, lng))
 
     static_map_url = ""
     if coords_list:
@@ -2075,7 +2234,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         # Experiences (first 3 days)
         "experiences":      experiences,
         # Gallery section
-        "journey_h2":   translate_filter("Destination imagery woven into the quotation.", lang),
+        "journey_h2":   lang_override.get("journey_h2", translate_filter("Destination imagery woven into the quotation.", lang)),
         "journey_p":    translate_filter("Cinematic destination panels crafted for a premium travel proposal.", lang),
         "gal1_label":   translate_filter("Highlight", lang) if len(destinations) > 0 else translate_filter("Destination", lang),
         "gal1_title":   _d_name(0), "gal2_label": translate_filter("Destination", lang), "gal2_title": _d_name(1),
@@ -2084,6 +2243,8 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         "itinerary_h2": translate_filter("Day-by-Day Journey Program", lang),
         "itinerary_p":  itinerary_p_val,
         "itinerary":    mapped_itinerary,
+        "timeline_days": mapped_itinerary,
+        "route_stops": route_stops,
         # Pricing section
         "currency":       currency,
         "pricing_title":  translate_filter("Journey Investment", lang),
@@ -2104,11 +2265,11 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         "exclusions_title": exclusions_title,
         "exclusions_lede": exclusions_lede,
         # Price conditions
-        "price_cond_paras": price_cond_paras,
+        "price_cond_paras": [] if lang_override.get("hide_price_conditions") else price_cond_paras,
         "payment_terms":    translate_filter("Refer to Booking & Payment terms below.", lang),
-        "terms_p":          price_cond_paras[0],
+        "terms_p":          price_cond_paras[0] if price_cond_paras else "",
         # CTA
-        "cta_h2": translate_filter("Confirm dates, then refine the luxury layer.", lang),
+        "cta_h2": lang_override.get("cta_h2", translate_filter("Confirm dates, then refine the luxury layer.", lang)),
         "cta_p":  translate_filter("Share travel dates, preferred hotel tier, rooming list and any dietary or mobility requirements. We will reconfirm availability and return a finalized quotation.", lang),
         # Footer
         "footer_text": f"{tour_title} — {translate_filter('Luxury quotation prepared for', lang)} {prepared_for}.",
@@ -2139,6 +2300,8 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         "term_confirmation": term_confirmation,
         "final_req": final_req,
         "final_after": final_after,
+        "show_hotel_intro": not lang_override.get("hide_hotel_intro", False),
+        "show_designer_section": not lang_override.get("hide_designer_section", False),
         "lang": lang,
         "template_name": template_name,
         "translation_status": _load_translation_status(quotation_id, default_lang=lang),
@@ -2582,6 +2745,7 @@ async def create_quotation_b2c(request: Request):
         loop.run_in_executor(None, partial(tmpl_lp.render,  **ctx)),
         loop.run_in_executor(None, partial(tmpl_pdf.render, **ctx)),
     )
+    ctx.setdefault("html_sync", {})[lang] = _capture_html_sync_state(rendered_html)
 
     # ── Update in-memory store ────────────────────────────────────────────
     quotations[quotation_id] = {
@@ -2620,6 +2784,11 @@ async def create_quotation_b2c(request: Request):
                     commit_message=f"Publish B2C PDF view for quotation {quotation_id} pdf{sfx}.html",
                 ),
                 publish_file_to_github(
+                    file_path=f"published/{quotation_id}/pdf_{lang}.html",
+                    html_content=rendered_pdf,
+                    commit_message=f"Publish B2C PDF view for quotation {quotation_id} pdf_{lang}.html",
+                ),
+                publish_file_to_github(
                     file_path=f"published/{quotation_id}/ctx.json",
                     html_content=json.dumps(ctx, ensure_ascii=False, default=str),
                     commit_message=f"Publish B2C Context for {quotation_id}",
@@ -2652,6 +2821,8 @@ async def create_quotation_b2c(request: Request):
         with open(os.path.join(quo_dir, f"v1{sfx}.html"),  "w", encoding="utf-8") as _f:
             _f.write(rendered_html)
         with open(os.path.join(quo_dir, f"pdf{sfx}.html"), "w", encoding="utf-8") as _f:
+            _f.write(rendered_pdf)
+        with open(os.path.join(quo_dir, f"pdf_{lang}.html"), "w", encoding="utf-8") as _f:
             _f.write(rendered_pdf)
         with open(os.path.join(quo_dir, "ctx.json"), "w", encoding="utf-8") as _f:
             json.dump(ctx, _f, ensure_ascii=False, default=str)
@@ -2754,6 +2925,7 @@ async def create_quotation(request: Request):
         loop.run_in_executor(None, partial(tmpl_lp.render,  **ctx)),
         loop.run_in_executor(None, partial(tmpl_pdf.render, **ctx)),
     )
+    ctx.setdefault("html_sync", {})[lang] = _capture_html_sync_state(rendered_html)
 
     # ── Update in-memory store ────────────────────────────────────────────
     quotations[quotation_id] = {
@@ -2793,6 +2965,11 @@ async def create_quotation(request: Request):
                     commit_message=f"Publish B2B PDF view for quotation {quotation_id} pdf{sfx}.html",
                 ),
                 publish_file_to_github(
+                    file_path=f"published/{quotation_id}/pdf_{lang}.html",
+                    html_content=rendered_pdf,
+                    commit_message=f"Publish B2B PDF view for quotation {quotation_id} pdf_{lang}.html",
+                ),
+                publish_file_to_github(
                     file_path=f"published/{quotation_id}/ctx.json",
                     html_content=json.dumps(ctx, ensure_ascii=False, default=str),
                     commit_message=f"Publish B2B Context for {quotation_id}",
@@ -2825,6 +3002,8 @@ async def create_quotation(request: Request):
         with open(os.path.join(quo_dir, f"v1{sfx}.html"),  "w", encoding="utf-8") as _f:
             _f.write(rendered_html)
         with open(os.path.join(quo_dir, f"pdf{sfx}.html"), "w", encoding="utf-8") as _f:
+            _f.write(rendered_pdf)
+        with open(os.path.join(quo_dir, f"pdf_{lang}.html"), "w", encoding="utf-8") as _f:
             _f.write(rendered_pdf)
         with open(os.path.join(quo_dir, "ctx.json"), "w", encoding="utf-8") as _f:
             json.dump(ctx, _f, ensure_ascii=False, default=str)
@@ -3008,14 +3187,11 @@ def sync_itinerary_deletions_to_payloads(ctx: dict, active_days: set[int], activ
         for lang_key in ctx["translations"]:
             filter_payload(ctx["translations"][lang_key])
 
-def filter_and_override_ctx_by_html(lang_ctx: dict, html_content: str, override_text: bool = True):
+def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fields: dict, override_text: bool = True):
     """
     Filters out deleted blocks and optionally overrides text content of remaining blocks
-    based on the published HTML content.
+    based on the saved editable state.
     """
-    existing_keys = get_existing_editable_keys(html_content)
-    edited_fields = parse_edited_fields(html_content)
-    
     # Simple variables
     if override_text:
         for key in [
@@ -3123,6 +3299,112 @@ def filter_and_override_ctx_by_html(lang_ctx: dict, html_content: str, override_
             new_price_options.append(opt)
     lang_ctx['price_options'] = new_price_options
 
+def filter_and_override_ctx_by_html(lang_ctx: dict, html_content: str, override_text: bool = True):
+    """
+    Backward-compatible wrapper that derives editable state from HTML.
+    """
+    filter_and_override_ctx(
+        lang_ctx,
+        get_existing_editable_keys(html_content),
+        parse_edited_fields(html_content),
+        override_text=override_text,
+    )
+
+def _get_lang_sync_key(target_lang: str | None, baseline_lang: str) -> str:
+    if target_lang in ("en", "vi", "ar"):
+        return target_lang
+    return baseline_lang
+
+def _capture_html_sync_state(html_content: str) -> dict:
+    return {
+        "existing_keys": sorted(get_existing_editable_keys(html_content)),
+        "edited_fields": parse_edited_fields(html_content),
+    }
+
+def _save_ctx_html_sync_state(ctx_data: dict, target_lang: str | None, html_content: str) -> str:
+    baseline_lang = ctx_data.get("baseline_lang", "en")
+    lang_key = _get_lang_sync_key(target_lang, baseline_lang)
+    html_sync = ctx_data.setdefault("html_sync", {})
+    html_sync[lang_key] = _capture_html_sync_state(html_content)
+    return lang_key
+
+def _apply_ctx_html_sync(
+    lang_ctx: dict,
+    ctx_data: dict,
+    target_lang: str,
+    baseline_lang: str,
+) -> bool:
+    html_sync = ctx_data.get("html_sync", {})
+    applied = False
+
+    lang_sync = html_sync.get(target_lang)
+    if lang_sync:
+        filter_and_override_ctx(
+            lang_ctx,
+            set(lang_sync.get("existing_keys", [])),
+            lang_sync.get("edited_fields", {}),
+            override_text=True,
+        )
+        return True
+
+    if target_lang != baseline_lang:
+        baseline_sync = html_sync.get(baseline_lang)
+        if baseline_sync:
+            filter_and_override_ctx(
+                lang_ctx,
+                set(baseline_sync.get("existing_keys", [])),
+                {},
+                override_text=False,
+            )
+            applied = True
+
+    return applied
+
+async def _render_quotation_pdf_from_ctx(ctx_data: dict, quotation_id: str, target_lang: str) -> tuple[str, str]:
+    baseline_lang = ctx_data.get("baseline_lang", "en")
+    effective_lang = target_lang if target_lang in ("en", "vi", "ar") else baseline_lang
+    payload_dict = (
+        ctx_data.get("baseline_payload")
+        if effective_lang == baseline_lang
+        else ctx_data.get("translations", {}).get(effective_lang)
+    )
+    if not payload_dict:
+        payload_dict = ctx_data.get("baseline_payload")
+        effective_lang = baseline_lang
+
+    payload_obj = TourQuotationPayload.model_validate(payload_dict)
+    base_tmpl = ctx_data.get("template_name", "vietnam_heritage_luxury.html")
+    tmpl_name = base_tmpl.replace(".html", "_pdf.html")
+    tmpl = templates.get_template(tmpl_name)
+
+    lang_ctx = _build_ctx(
+        quotation_id=quotation_id,
+        payload=payload_obj,
+        hero_image_url=ctx_data.get("img_0", "/assets/vietnam-safar-logo.png"),
+        destinations=ctx_data.get("destinations", []),
+        lang=effective_lang,
+        template_name=base_tmpl,
+    )
+    lang_ctx["translations"] = ctx_data.get("translations", {})
+    lang_ctx["baseline_lang"] = baseline_lang
+    lang_ctx["translation_status"] = ctx_data.get(
+        "translation_status",
+        {"baseline_lang": baseline_lang, "available_langs": [baseline_lang]},
+    )
+
+    if not _apply_ctx_html_sync(lang_ctx, ctx_data, effective_lang, baseline_lang):
+        latest_lang = None if effective_lang == baseline_lang else effective_lang
+        html_content = await _get_latest_published_html(quotation_id, lang=latest_lang, fallback=False)
+        if html_content:
+            filter_and_override_ctx_by_html(lang_ctx, html_content, override_text=True)
+        elif effective_lang != baseline_lang:
+            baseline_html = await _get_latest_published_html(quotation_id, lang=None, fallback=False)
+            if baseline_html:
+                filter_and_override_ctx_by_html(lang_ctx, baseline_html, override_text=False)
+
+    rendered_html = tmpl.render(**lang_ctx)
+    return rendered_html, effective_lang
+
 async def _get_latest_published_html(quotation_id: str, lang: str = None, fallback: bool = True) -> str | None:
     """Gets the latest published HTML content from memory, disk, or GitHub."""
     if not lang:
@@ -3207,42 +3489,7 @@ async def get_quotation_pdf(quotation_id: str, request: Request):
         target_lang = baseline_lang
         
     try:
-        payload_obj = TourQuotationPayload.model_validate(payload_dict)
-        base_tmpl = ctx_data.get("template_name", "vietnam_heritage_luxury.html")
-        tmpl_name = base_tmpl.replace(".html", "_pdf.html")
-        tmpl = templates.get_template(tmpl_name)
-        
-        hero_image_url = ctx_data.get("img_0", "/assets/vietnam-safar-logo.png")
-        destinations = ctx_data.get("destinations", [])
-        translations = ctx_data.get("translations", {})
-        
-        lang_ctx = _build_ctx(
-            quotation_id=quotation_id,
-            payload=payload_obj,
-            hero_image_url=hero_image_url,
-            destinations=destinations,
-            lang=target_lang,
-            template_name=base_tmpl
-        )
-        lang_ctx["translations"] = translations
-        lang_ctx["baseline_lang"] = baseline_lang
-        lang_ctx["translation_status"] = ctx_data.get("translation_status", {"baseline_lang": baseline_lang, "available_langs": [baseline_lang]})
-        
-        # Override fields with edited content if available
-        # Try to load language-specific published HTML (no fallback)
-        latest_lang = None if target_lang == baseline_lang else target_lang
-        html_content = await _get_latest_published_html(quotation_id, lang=latest_lang, fallback=False)
-        if html_content:
-            filter_and_override_ctx_by_html(lang_ctx, html_content, override_text=True)
-        else:
-            # If target language HTML is missing, check if baseline published HTML exists
-            # to filter out deleted blocks while keeping translation values
-            if target_lang != baseline_lang:
-                baseline_html = await _get_latest_published_html(quotation_id, lang=None, fallback=False)
-                if baseline_html:
-                    filter_and_override_ctx_by_html(lang_ctx, baseline_html, override_text=False)
-        
-        rendered_html = tmpl.render(**lang_ctx)
+        rendered_html, _ = await _render_quotation_pdf_from_ctx(ctx_data, quotation_id, target_lang)
         return HTMLResponse(content=rendered_html)
     except Exception as err:
         log.exception("[/quotations] Dynamic PDF render failed for %s: %s", quotation_id, err)
@@ -3472,21 +3719,58 @@ async def publish_quotation(quotation_id: str, body: PublishRequest, lang: str =
     
     ctx_data = _load_ctx_data(quotation_id)
     baseline_lang = "en"
+    rendered_pdf = None
+    effective_lang = target_lang
     if ctx_data:
         baseline_lang = ctx_data.get("baseline_lang", "en")
+        _save_ctx_html_sync_state(ctx_data, target_lang, body.html)
+        rendered_pdf, effective_lang = await _render_quotation_pdf_from_ctx(
+            ctx_data,
+            quotation_id,
+            target_lang or baseline_lang,
+        )
+
+        if quotation_id in quotations:
+            quotations[quotation_id]["ctx"] = ctx_data
 
     lang_suffix = f"_{target_lang}" if target_lang and target_lang != baseline_lang else ""
     filename = f"v{version}{lang_suffix}.html"
 
     if ENVIRONMENT == "production":
         try:
-            published_url = await publish_to_github(
-                quotation_id=quotation_id,
-                html_content=body.html,
-                version=version,
-                lang=target_lang,
-                baseline_lang=baseline_lang
-            )
+            tasks = [
+                publish_to_github(
+                    quotation_id=quotation_id,
+                    html_content=body.html,
+                    version=version,
+                    lang=target_lang,
+                    baseline_lang=baseline_lang
+                )
+            ]
+            if ctx_data and rendered_pdf is not None:
+                pdf_suffix = "" if effective_lang == baseline_lang else f"_{effective_lang}"
+                pdf_files = {f"published/{quotation_id}/pdf{pdf_suffix}.html"}
+                if effective_lang == baseline_lang:
+                    pdf_files.add(f"published/{quotation_id}/pdf_{effective_lang}.html")
+                tasks.extend(
+                    [
+                        publish_file_to_github(
+                            file_path=pdf_path,
+                            html_content=rendered_pdf,
+                            commit_message=f"Update PDF view for quotation {quotation_id} {os.path.basename(pdf_path)} (version {version})",
+                        )
+                        for pdf_path in sorted(pdf_files)
+                    ]
+                )
+                tasks.append(
+                    publish_file_to_github(
+                        file_path=f"published/{quotation_id}/ctx.json",
+                        html_content=json.dumps(ctx_data, ensure_ascii=False, default=str),
+                        commit_message=f"Update context for quotation {quotation_id} (version {version})",
+                    )
+                )
+            results = await asyncio.gather(*tasks)
+            published_url = results[0]
         except Exception as exc:
             log.exception("[publish] Failed for %s", quotation_id)
             raise HTTPException(status_code=502, detail=str(exc))
@@ -3497,6 +3781,16 @@ async def publish_quotation(quotation_id: str, body: PublishRequest, lang: str =
         file_path = os.path.join(quo_dir, filename)
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(body.html)
+        if ctx_data and rendered_pdf is not None:
+            with open(os.path.join(quo_dir, "ctx.json"), "w", encoding="utf-8") as f:
+                json.dump(ctx_data, f, ensure_ascii=False, default=str)
+            pdf_suffix = "" if effective_lang == baseline_lang else f"_{effective_lang}"
+            pdf_paths = {os.path.join(quo_dir, f"pdf{pdf_suffix}.html")}
+            if effective_lang == baseline_lang:
+                pdf_paths.add(os.path.join(quo_dir, f"pdf_{effective_lang}.html"))
+            for pdf_path in pdf_paths:
+                with open(pdf_path, "w", encoding="utf-8") as f:
+                    f.write(rendered_pdf)
         published_url = f"{PUBLIC_BASE_URL}/published/{quotation_id}/{filename}"
         log.info("[publish] Localhost: wrote to disk %s", file_path)
 
@@ -3506,6 +3800,10 @@ async def publish_quotation(quotation_id: str, body: PublishRequest, lang: str =
         entry["status"]        = "published"
         entry["published_url"] = published_url
         entry["html"]          = body.html
+        if ctx_data:
+            entry["ctx"] = ctx_data
+        if rendered_pdf is not None:
+            entry["pdf_html"] = rendered_pdf
         entry["version"]       = version
 
     log.info("[publish] ✓ %s v%d (lang=%s) → %s", quotation_id, version, target_lang, published_url)
@@ -5334,4 +5632,3 @@ def get_luxury_hotel_details(hotel_name_or_arr: str, destination: str, checkin: 
         "checkInDate": checkin,
         "checkOutDate": checkout
     }
-

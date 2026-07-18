@@ -1,0 +1,352 @@
+{
+  "langs": {
+    "vi": {
+      "route_txt": "Hà Nội – Ninh Bình – Hạ Long – Hà Nội – Sa Pa – Hà Nội – Đà Nẵng – Hội An – Đà Lạt – Hồ Chí Minh – Đồng bằng sông Cửu Long – Hồ Chí Minh",
+      "journey_h2": "Điểm Dừng Nổi Bật Trên Hành Trình",
+      "cta_h2": "Xác nhận các chi tiết cuối cùng để hoàn tất chương trình.",
+      "hide_hotel_intro": true,
+      "hide_designer_section": true,
+      "hide_price_conditions": true,
+      "inclusions": [
+        "Lưu trú tại các khách sạn 4 sao, bao gồm bữa sáng hằng ngày.",
+        "Lưu trú trên du thuyền 5 sao tại Hạ Long, bao gồm trọn gói 4 bữa ăn.",
+        "Xe ô tô riêng đưa đón tham quan và sân bay theo chương trình, ngoại trừ chặng xe giường nằm khứ hồi Hà Nội – Sa Pa.",
+        "Vé vào cổng các điểm tham quan có trong lịch trình.",
+        "Vé máy bay nội địa theo chương trình.",
+        "Visa điện tử (E-visa).",
+        "Dịch vụ hỗ trợ nhanh (Fast Track) tại sân bay khi đến.",
+        "Hướng dẫn viên riêng cho ngày đầu đón sân bay và các tour tham quan, ngoại trừ thời gian ở du thuyền Hạ Long.",
+        "SIM 4G/Internet."
+      ],
+      "exclusions": [
+        "Chi phí chi tiêu cá nhân.",
+        "Vé máy bay khứ hồi quốc tế."
+      ],
+      "day_overrides": {
+        "1": {
+          "summary": "Đến Hà Nội và nhận phòng khách sạn.",
+          "mainInclusions": "Đón sân bay và xe riêng về khách sạn.",
+          "dining": "",
+          "destinations": ["Hà Nội"]
+        },
+        "3": {
+          "summary": "Tham quan Ninh Bình với Tam Cốc và Hang Múa, sau đó trở về Hà Nội.",
+          "mainInclusions": "Xe riêng tham quan Ninh Bình theo chương trình.",
+          "destinations": ["Hà Nội", "Ninh Bình", "Hà Nội"],
+          "overnight": "Hà Nội"
+        },
+        "4": {
+          "summary": "Di chuyển từ Hà Nội đến Hạ Long bằng xe riêng và lên du thuyền nghỉ đêm.",
+          "mainInclusions": "Xe riêng Hà Nội – Hạ Long và lưu trú trên du thuyền La Casta.",
+          "dining": "Các bữa ăn theo chương trình của du thuyền",
+          "destinations": ["Hà Nội", "Hạ Long"],
+          "overnight": "Hạ Long"
+        },
+        "5": {
+          "summary": "Rời du thuyền và di chuyển từ Hạ Long về lại Hà Nội bằng xe riêng.",
+          "mainInclusions": "Xe riêng Hạ Long – Hà Nội.",
+          "dining": "",
+          "destinations": ["Hạ Long", "Hà Nội"],
+          "overnight": "Hà Nội"
+        },
+        "10": {
+          "summary": "Di chuyển từ Sa Pa về lại Hà Nội bằng xe giường nằm.",
+          "mainInclusions": "Vé xe giường nằm Sa Pa – Hà Nội.",
+          "dining": "",
+          "destinations": ["Sa Pa", "Hà Nội"],
+          "overnight": "Hà Nội"
+        },
+        "11": {
+          "summary": "Bay từ Hà Nội vào Đà Nẵng và trải nghiệm du thuyền sông Hàn.",
+          "mainInclusions": "Vé máy bay nội địa Hà Nội – Đà Nẵng và du thuyền sông Hàn.",
+          "destinations": ["Hà Nội", "Đà Nẵng"],
+          "overnight": "Đà Nẵng"
+        },
+        "12": {
+          "summary": "Tham quan Bà Nà Hills.",
+          "mainInclusions": "Vé tham quan Bà Nà Hills theo chương trình.",
+          "dining": "",
+          "destinations": ["Đà Nẵng"]
+        },
+        "13": {
+          "summary": "Tham quan rừng dừa Bảy Mẫu và Phố cổ Hội An, sau đó trở về Đà Nẵng.",
+          "mainInclusions": "Xe riêng và vé tham quan theo chương trình cho rừng dừa Bảy Mẫu và Hội An.",
+          "dining": "",
+          "destinations": ["Đà Nẵng", "Hội An", "Đà Nẵng"],
+          "overnight": "Đà Nẵng"
+        },
+        "15": {
+          "summary": "Bay thẳng từ Đà Nẵng đến Đà Lạt và nhận phòng khách sạn.",
+          "mainInclusions": "Vé máy bay nội địa Đà Nẵng – Đà Lạt và xe đón sân bay.",
+          "dining": "",
+          "destinations": ["Đà Nẵng", "Đà Lạt"],
+          "overnight": "Đà Lạt"
+        },
+        "17": {
+          "summary": "Tham quan Fresh Garden, Thác Datanla, Thác Voi và cà phê Mê Linh.",
+          "mainInclusions": "Xe riêng và vé tham quan theo chương trình tại Đà Lạt.",
+          "dining": "",
+          "destinations": ["Đà Lạt"]
+        },
+        "18": {
+          "summary": "Bay thẳng từ Đà Lạt vào Thành phố Hồ Chí Minh và nhận phòng khách sạn.",
+          "mainInclusions": "Vé máy bay nội địa Đà Lạt – Thành phố Hồ Chí Minh và xe đón sân bay.",
+          "dining": "",
+          "destinations": ["Đà Lạt", "Hồ Chí Minh"],
+          "overnight": "Hồ Chí Minh"
+        },
+        "19": {
+          "summary": "Tham quan Địa đạo Củ Chi, cà phê chung cư, chợ Bến Thành và Bưu điện Trung tâm Thành phố.",
+          "mainInclusions": "Xe riêng và vé tham quan theo chương trình tại Thành phố Hồ Chí Minh.",
+          "dining": "",
+          "destinations": ["Hồ Chí Minh"]
+        },
+        "20": {
+          "summary": "Tham quan Đồng bằng sông Cửu Long, sau đó trở lại Thành phố Hồ Chí Minh.",
+          "mainInclusions": "Xe riêng và tour tham quan Đồng bằng sông Cửu Long theo chương trình.",
+          "dining": "",
+          "destinations": ["Hồ Chí Minh", "Đồng bằng sông Cửu Long", "Hồ Chí Minh"],
+          "overnight": "Hồ Chí Minh"
+        },
+        "21": {
+          "summary": "Rời Thành phố Hồ Chí Minh và ra sân bay cho chuyến bay về.",
+          "mainInclusions": "Xe riêng đưa ra sân bay quốc tế Tân Sơn Nhất.",
+          "dining": "",
+          "destinations": ["Hồ Chí Minh"]
+        }
+      }
+    },
+    "en": {
+      "route_txt": "Hanoi – Ninh Binh – Halong Bay – Hanoi – Sapa – Hanoi – Da Nang – Hoi An – Dalat – Ho Chi Minh City – Mekong Delta – Ho Chi Minh City",
+      "journey_h2": "Key Stops Along the Journey",
+      "cta_h2": "Confirm the final details to complete the program.",
+      "hide_hotel_intro": true,
+      "hide_designer_section": true,
+      "hide_price_conditions": true,
+      "inclusions": [
+        "Accommodation at 4-star hotels, including daily breakfast.",
+        "Overnight stay on a 5-star Halong cruise, including 4 meals as per cruise program.",
+        "Private vehicle for sightseeing transfers and airport transfers as outlined, except the round-trip Hanoi – Sapa sleeper bus sector.",
+        "Entrance tickets for the sightseeing points included in the itinerary.",
+        "Domestic flight tickets as outlined in the program.",
+        "Vietnam E-visa.",
+        "Fast Track service on arrival at the airport.",
+        "Private guide service for airport welcome on the first day and sightseeing days, excluding time on the Halong cruise.",
+        "4G/Internet SIM card."
+      ],
+      "exclusions": [
+        "Personal expenses.",
+        "International round-trip airfare."
+      ],
+      "day_overrides": {
+        "1": {
+          "summary": "Arrive in Hanoi and check in at the hotel.",
+          "mainInclusions": "Airport pickup and private transfer to the hotel.",
+          "dining": "",
+          "destinations": ["Hanoi"]
+        },
+        "3": {
+          "summary": "Visit Ninh Binh with Tam Coc and Hang Mua, then return to Hanoi.",
+          "mainInclusions": "Private vehicle for the Ninh Binh excursion as scheduled.",
+          "destinations": ["Hanoi", "Ninh Binh", "Hanoi"],
+          "overnight": "Hanoi"
+        },
+        "4": {
+          "summary": "Travel by private car from Hanoi to Halong Bay and board the overnight cruise.",
+          "mainInclusions": "Private transfer Hanoi – Halong Bay and overnight stay on La Casta Cruise.",
+          "dining": "Meals as provided by the cruise program",
+          "destinations": ["Hanoi", "Halong Bay"],
+          "overnight": "Halong Bay"
+        },
+        "5": {
+          "summary": "Disembark the cruise and return from Halong Bay to Hanoi by private car.",
+          "mainInclusions": "Private transfer Halong Bay – Hanoi.",
+          "dining": "",
+          "destinations": ["Halong Bay", "Hanoi"],
+          "overnight": "Hanoi"
+        },
+        "10": {
+          "summary": "Return from Sapa to Hanoi by sleeper bus.",
+          "mainInclusions": "Sleeper bus ticket from Sapa to Hanoi.",
+          "dining": "",
+          "destinations": ["Sapa", "Hanoi"],
+          "overnight": "Hanoi"
+        },
+        "11": {
+          "summary": "Fly from Hanoi to Da Nang and experience the Han River cruise.",
+          "mainInclusions": "Domestic flight Hanoi – Da Nang and Han River cruise.",
+          "destinations": ["Hanoi", "Da Nang"],
+          "overnight": "Da Nang"
+        },
+        "12": {
+          "summary": "Visit Ba Na Hills.",
+          "mainInclusions": "Ba Na Hills admission as scheduled.",
+          "dining": "",
+          "destinations": ["Da Nang"]
+        },
+        "13": {
+          "summary": "Visit Bay Mau Coconut Forest and Hoi An Ancient Town, then return to Da Nang.",
+          "mainInclusions": "Private vehicle and entrance arrangements for Bay Mau Coconut Forest and Hoi An.",
+          "dining": "",
+          "destinations": ["Da Nang", "Hoi An", "Da Nang"],
+          "overnight": "Da Nang"
+        },
+        "15": {
+          "summary": "Take a direct flight from Da Nang to Dalat and check in at the hotel.",
+          "mainInclusions": "Domestic flight Da Nang – Dalat and airport transfer.",
+          "dining": "",
+          "destinations": ["Da Nang", "Dalat"],
+          "overnight": "Dalat"
+        },
+        "17": {
+          "summary": "Visit Fresh Garden, Datanla Waterfall, Elephant Waterfall, and Me Linh Coffee.",
+          "mainInclusions": "Private vehicle and entrance arrangements in Dalat as scheduled.",
+          "dining": "",
+          "destinations": ["Dalat"]
+        },
+        "18": {
+          "summary": "Take a direct flight from Dalat to Ho Chi Minh City and check in at the hotel.",
+          "mainInclusions": "Domestic flight Dalat – Ho Chi Minh City and airport transfer.",
+          "dining": "",
+          "destinations": ["Dalat", "Ho Chi Minh City"],
+          "overnight": "Ho Chi Minh City"
+        },
+        "19": {
+          "summary": "Visit the Cu Chi Tunnels, apartment café, Ben Thanh Market, and the Central Post Office.",
+          "mainInclusions": "Private vehicle and sightseeing arrangements in Ho Chi Minh City as scheduled.",
+          "dining": "",
+          "destinations": ["Ho Chi Minh City"]
+        },
+        "20": {
+          "summary": "Visit the Mekong Delta, then return to Ho Chi Minh City.",
+          "mainInclusions": "Private vehicle and Mekong Delta excursion as scheduled.",
+          "dining": "",
+          "destinations": ["Ho Chi Minh City", "Mekong Delta", "Ho Chi Minh City"],
+          "overnight": "Ho Chi Minh City"
+        },
+        "21": {
+          "summary": "Depart Ho Chi Minh City and transfer to the airport for the international flight.",
+          "mainInclusions": "Private transfer to Tan Son Nhat International Airport.",
+          "dining": "",
+          "destinations": ["Ho Chi Minh City"]
+        }
+      }
+    },
+    "ar": {
+      "route_txt": "هانوي – نينه بينه – خليج ها لونغ – هانوي – سابا – هانوي – دا نانغ – هوي آن – دالات – مدينة هو تشي منه – دلتا ميكونغ – مدينة هو تشي منه",
+      "journey_h2": "محطات رئيسية على امتداد الرحلة",
+      "cta_h2": "أكّد التفاصيل النهائية لاستكمال البرنامج.",
+      "hide_hotel_intro": true,
+      "hide_designer_section": true,
+      "hide_price_conditions": true,
+      "inclusions": [
+        "الإقامة في فنادق 4 نجوم مع وجبة إفطار يومية.",
+        "الإقامة على متن كروز 5 نجوم في ها لونغ مع 4 وجبات وفق برنامج الكروز.",
+        "سيارة خاصة للتنقلات والجولات والنقل من وإلى المطار حسب البرنامج، باستثناء رحلة الحافلة النوم ذهاباً وإياباً بين هانوي وسابا.",
+        "رسوم دخول المواقع السياحية المذكورة في البرنامج.",
+        "تذاكر الطيران الداخلي حسب البرنامج.",
+        "التأشيرة الإلكترونية الفيتنامية (E-visa).",
+        "خدمة Fast Track عند الوصول إلى المطار.",
+        "مرشد خاص لاستقبال المطار في اليوم الأول وخلال الجولات السياحية، باستثناء فترة الإقامة على كروز ها لونغ.",
+        "شريحة SIM للإنترنت 4G."
+      ],
+      "exclusions": [
+        "المصاريف الشخصية.",
+        "تذاكر الطيران الدولي ذهاباً وإياباً."
+      ],
+      "day_overrides": {
+        "1": {
+          "summary": "الوصول إلى هانوي وتسجيل الدخول إلى الفندق.",
+          "mainInclusions": "الاستقبال في المطار والنقل بسيارة خاصة إلى الفندق.",
+          "dining": "",
+          "destinations": ["هانوي"]
+        },
+        "3": {
+          "summary": "زيارة نينه بينه مع تام كوك وهانغ موا ثم العودة إلى هانوي.",
+          "mainInclusions": "سيارة خاصة لرحلة نينه بينه حسب البرنامج.",
+          "destinations": ["هانوي", "نينه بينه", "هانوي"],
+          "overnight": "هانوي"
+        },
+        "4": {
+          "summary": "الانتقال بسيارة خاصة من هانوي إلى خليج ها لونغ والصعود إلى الكروز للمبيت.",
+          "mainInclusions": "نقل خاص من هانوي إلى خليج ها لونغ والمبيت على متن La Casta Cruise.",
+          "dining": "الوجبات حسب برنامج الكروز",
+          "destinations": ["هانوي", "خليج ها لونغ"],
+          "overnight": "خليج ها لونغ"
+        },
+        "5": {
+          "summary": "مغادرة الكروز والعودة من خليج ها لونغ إلى هانوي بسيارة خاصة.",
+          "mainInclusions": "نقل خاص من خليج ها لونغ إلى هانوي.",
+          "dining": "",
+          "destinations": ["خليج ها لونغ", "هانوي"],
+          "overnight": "هانوي"
+        },
+        "10": {
+          "summary": "العودة من سابا إلى هانوي بواسطة حافلة النوم.",
+          "mainInclusions": "تذكرة حافلة النوم من سابا إلى هانوي.",
+          "dining": "",
+          "destinations": ["سابا", "هانوي"],
+          "overnight": "هانوي"
+        },
+        "11": {
+          "summary": "رحلة جوية من هانوي إلى دا نانغ مع تجربة كروز نهر هان.",
+          "mainInclusions": "تذكرة طيران داخلي هانوي – دا نانغ وكروز نهر هان.",
+          "destinations": ["هانوي", "دا نانغ"],
+          "overnight": "دا نانغ"
+        },
+        "12": {
+          "summary": "زيارة با نا هيلز.",
+          "mainInclusions": "تذكرة دخول با نا هيلز حسب البرنامج.",
+          "dining": "",
+          "destinations": ["دا نانغ"]
+        },
+        "13": {
+          "summary": "زيارة غابة جوز الهند باي ماو وبلدة هوي آن القديمة ثم العودة إلى دا نانغ.",
+          "mainInclusions": "سيارة خاصة وترتيبات دخول لزيارة غابة جوز الهند باي ماو وهوي آن.",
+          "dining": "",
+          "destinations": ["دا نانغ", "هوي آن", "دا نانغ"],
+          "overnight": "دا نانغ"
+        },
+        "15": {
+          "summary": "رحلة جوية مباشرة من دا نانغ إلى دالات ثم تسجيل الدخول إلى الفندق.",
+          "mainInclusions": "تذكرة طيران داخلي دا نانغ – دالات والنقل من المطار.",
+          "dining": "",
+          "destinations": ["دا نانغ", "دالات"],
+          "overnight": "دالات"
+        },
+        "17": {
+          "summary": "زيارة Fresh Garden وشلال داتانلا وشلال الفيل ومقهى مي لينه.",
+          "mainInclusions": "سيارة خاصة وترتيبات الزيارة في دالات حسب البرنامج.",
+          "dining": "",
+          "destinations": ["دالات"]
+        },
+        "18": {
+          "summary": "رحلة جوية مباشرة من دالات إلى مدينة هو تشي منه ثم تسجيل الدخول إلى الفندق.",
+          "mainInclusions": "تذكرة طيران داخلي دالات – مدينة هو تشي منه والنقل من المطار.",
+          "dining": "",
+          "destinations": ["دالات", "مدينة هو تشي منه"],
+          "overnight": "مدينة هو تشي منه"
+        },
+        "19": {
+          "summary": "زيارة أنفاق كو تشي ومقهى الشقق وسوق بن ثانه ومكتب البريد المركزي.",
+          "mainInclusions": "سيارة خاصة وترتيبات الجولات في مدينة هو تشي منه حسب البرنامج.",
+          "dining": "",
+          "destinations": ["مدينة هو تشي منه"]
+        },
+        "20": {
+          "summary": "زيارة دلتا ميكونغ ثم العودة إلى مدينة هو تشي منه.",
+          "mainInclusions": "سيارة خاصة وجولة دلتا ميكونغ حسب البرنامج.",
+          "dining": "",
+          "destinations": ["مدينة هو تشي منه", "دلتا ميكونغ", "مدينة هو تشي منه"],
+          "overnight": "مدينة هو تشي منه"
+        },
+        "21": {
+          "summary": "مغادرة مدينة هو تشي منه والانتقال إلى المطار للرحلة الدولية.",
+          "mainInclusions": "نقل خاص إلى مطار تان سون نهات الدولي.",
+          "dining": "",
+          "destinations": ["مدينة هو تشي منه"]
+        }
+      }
+    }
+  }
+}

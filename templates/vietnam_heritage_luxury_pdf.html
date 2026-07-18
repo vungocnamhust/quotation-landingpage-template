@@ -5,7 +5,7 @@
   <!-- Premium Typography Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700&family=Cinzel:wght@400;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   <title>{{ tour_title }} — {{ "PDF Version" | translate(lang) }}</title>
   <!-- Leaflet CSS & JS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
@@ -600,8 +600,8 @@
 
     html[dir="rtl"] {
       direction: rtl;
-      --serif: 'Amiri', Georgia, serif;
-      --sans: 'Plus Jakarta Sans', Arial, sans-serif;
+      --serif: 'Noto Sans Arabic', 'Amiri', Georgia, serif;
+      --sans: 'Noto Sans Arabic', 'Plus Jakarta Sans', Arial, sans-serif;
     }
     html[dir="rtl"] body {
       direction: rtl;
@@ -859,7 +859,9 @@
         <!-- Footer Columns (Introduction & Info/Tel) -->
         <div style="width: 100%; margin-top: 10px;">
           <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
+            {% if show_hotel_intro and item.introduction %}
             <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">{{ item.introduction }}</p>
+            {% endif %}
           </div>
           <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
             <h4 style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">{{ item.name }}</h4>
@@ -963,6 +965,7 @@
   </div>
 </div>
 
+{% if show_designer_section %}
 <!-- ═══════════════════ PAGE 8 — Travel Specialist ═══════════════════ -->
 <div class="pdf-page">
   <div class="page-header">
@@ -984,6 +987,7 @@
     </div>
   </div>
 </div>
+{% endif %}
 
 <!-- ═══════════════════ PAGE 9 — Booking Terms & Finalization ═══════════════════ -->
 <div class="pdf-page">
@@ -1069,6 +1073,9 @@
 
 <script id="itinerary-data" type="application/json">
   {{ itinerary | tojson | safe }}
+</script>
+<script id="route-stops-data" type="application/json">
+  {{ route_stops | tojson | safe }}
 </script>
 
 <script>
@@ -1238,36 +1245,50 @@
     }).addTo(map);
 
     const dataEl = document.getElementById('itinerary-data');
+    const routeStopsEl = document.getElementById('route-stops-data');
     if (dataEl) {
       const itineraryDays = JSON.parse(dataEl.textContent);
+      const rawStops = routeStopsEl ? JSON.parse(routeStopsEl.textContent) : [];
       
-      const daysData = itineraryDays.map(day => {
-        let dest = "";
-        if (typeof day.overnight === 'string' && day.overnight.trim() !== '') {
-          dest = day.overnight;
-        } else if (Array.isArray(day.destinations) && day.destinations.length > 0) {
-          dest = day.destinations[0];
-        } else if (typeof day.destination === 'string') {
-          dest = day.destination;
-        }
-        return {
-          dayNumber: day.dayNumber,
-          destination: dest
-        };
-      });
+      const daysData = Array.isArray(rawStops) && rawStops.length > 0
+        ? rawStops
+        : itineraryDays.map(day => {
+            let dest = "";
+            if (typeof day.overnight === 'string' && day.overnight.trim() !== '') {
+              dest = day.overnight;
+            } else if (Array.isArray(day.destinations) && day.destinations.length > 0) {
+              dest = day.destinations[0];
+            } else if (typeof day.destination === 'string') {
+              dest = day.destination;
+            }
+            return {
+              dayNumber: day.dayNumber,
+              destination: dest,
+              displayName: dest
+            };
+          });
 
       const coordPoints = [];
       const uniqueDestinations = [];
+      const displayStops = daysData.filter(day => day.showMarker !== false);
 
       daysData.forEach(day => {
         const city = day.destination;
         if (!city) return;
         const coords = findCoordinates(city);
         if (coords) {
-          const existing = uniqueDestinations.find(d => d.coords[0] === coords[0] && d.coords[1] === coords[1]);
+          coordPoints.push(coords);
+        }
+      });
+
+      displayStops.forEach(day => {
+        const city = day.destination;
+        if (!city) return;
+        const coords = findCoordinates(city);
+        if (coords) {
+          const existing = uniqueDestinations.find(d => d.name === (day.displayName || city));
           if (!existing) {
-            uniqueDestinations.push({ name: city, coords: coords });
-            coordPoints.push(coords);
+            uniqueDestinations.push({ name: day.displayName || city, coords: coords });
           }
         }
       });

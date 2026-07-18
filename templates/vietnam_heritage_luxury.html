@@ -9,7 +9,7 @@
   <!-- Premium Typography Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700&family=Cairo:wght@300;400;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
   
   <!-- PWA Metadata -->
   <link rel="manifest" href="/manifest.json?id={{ quotation_id }}&type=quotations" />
@@ -39,8 +39,8 @@
     }
 
     html[lang="ar"] {
-      --serif: 'Amiri', Georgia, serif;
-      --sans: 'Cairo', sans-serif;
+      --serif: 'Noto Sans Arabic', 'Amiri', Georgia, serif;
+      --sans: 'Noto Sans Arabic', 'Cairo', sans-serif;
     }
 
     /* Tweak map tile colors to match the luxury warm tone without fading into the background */
@@ -2131,7 +2131,7 @@
     <section id="journey">
       <div class="container">
         <div class="section-head">
-          <h2 data-editable="journey_h2">{{ (['The cities in frames', 'Through Local Eyes', 'The city collection'] | random) | translate(lang) }}</h2>
+          <h2 data-editable="journey_h2">{{ journey_h2 }}</h2>
           <p data-editable="journey_p">{{ journey_p }}</p>
         </div>
         <div class="gallery">
@@ -2346,7 +2346,9 @@
             <!-- Footer Columns (Introduction & Info/Tel) -->
             <div class="hotel-footer-layout" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 40px; margin-top: 20px; flex-wrap: wrap;">
               <div class="hotel-intro" style="flex: 1; min-width: 280px;">
+                {% if show_hotel_intro and item.introduction %}
                 <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_{{ loop.index }}">{{ item.introduction }}</p>
+                {% endif %}
               </div>
               <div class="hotel-info">
                 <h4 style="font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--emerald); margin: 0; letter-spacing: 0.04em; text-transform: uppercase;" data-editable="hotel_info_name_{{ loop.index }}">{{ item.name }}</h4>
@@ -2504,7 +2506,7 @@
       </div>
     </section>
 
-    
+    {% if show_designer_section %}
     <section id="meet-designer" class="no-print"
       style="background: var(--ivory-2); padding: 72px 0; border-radius: 40px; margin: 40px 0;">
       <div class="container designer-container">
@@ -2526,6 +2528,7 @@
         </div>
       </div>
     </section>
+    {% endif %}
 
 <section id="contact">
       <div class="container">
@@ -3029,6 +3032,9 @@
   <script id="itinerary-data" type="application/json">
     {{ itinerary | tojson | safe }}
   </script>
+  <script id="route-stops-data" type="application/json">
+    {{ route_stops | tojson | safe }}
+  </script>
   <script>
     window.currentLang = "{{ lang }}";
     document.addEventListener("DOMContentLoaded", function () {
@@ -3151,6 +3157,8 @@
       const dataEl = document.getElementById('itinerary-data');
       if (!dataEl) return;
       const rawDays = JSON.parse(dataEl.textContent);
+      const routeStopsEl = document.getElementById('route-stops-data');
+      const rawStops = routeStopsEl ? JSON.parse(routeStopsEl.textContent) : [];
 
       const destImagesEl = document.getElementById('destination-images');
       const destImages = destImagesEl ? JSON.parse(destImagesEl.textContent) : {};
@@ -3210,7 +3218,7 @@
         return bestMatch;
       }
 
-      const daysData = rawDays.map(day => {
+      const fallbackStops = rawDays.map(day => {
         let dest = "";
         if (Array.isArray(day.destinations) && day.destinations.length > 0) {
           dest = day.destinations[0];
@@ -3219,35 +3227,34 @@
         } else if (typeof day.overnight === 'string') {
           dest = day.overnight;
         }
-
-        let desc = "";
-        if (Array.isArray(day.description)) {
-          desc = day.description.join(' ');
-        } else if (typeof day.description === 'string') {
-          desc = day.description;
-        } else if (typeof day.summary === 'string') {
-          desc = day.summary;
-        }
-
         return {
           dayNumber: day.dayNumber,
+          stopOrder: 1,
           destination: dest,
-          title: day.title || `Day ${day.dayNumber}`,
-          description: desc,
-          overnight: day.overnight || ""
+          displayName: dest,
+          mapTitle: day.title || `Day ${day.dayNumber}`,
+          kind: 'visit'
         };
       });
+      const stopsData = Array.isArray(rawStops) && rawStops.length > 0 ? rawStops : fallbackStops;
 
       const mapDestinations = [];
       const coordPoints = [];
+      const displayStops = stopsData.filter(stop => stop.showMarker !== false);
 
-      daysData.forEach(day => {
-        const coords = findCoordinates(day.destination);
+      stopsData.forEach(stop => {
+        const coords = findCoordinates(stop.destination);
+        if (!coords) return;
+        coordPoints.push(coords);
+      });
+
+      displayStops.forEach(stop => {
+        const coords = findCoordinates(stop.destination);
         if (!coords) return;
 
         const last = mapDestinations[mapDestinations.length - 1];
-        if (!last || last.coords[0] !== coords[0] || last.coords[1] !== coords[1]) {
-          const destName = day.destination.split(/->|-|\|/)[0].trim();
+        if (!last || last.name !== stop.displayName) {
+          const destName = stop.displayName.split(/->|-|\|/)[0].trim();
           const slug = resolveSlugLocally(destName);
           const imgUrl = (slug && destImages[slug]) ? destImages[slug] : '/assets/vietnam-safar-logo.png';
 
@@ -3256,13 +3263,14 @@
             name: destName,
             coords: coords,
             img: imgUrl,
-            days: [day.dayNumber],
-            titles: [day.title]
+            days: [stop.dayNumber],
+            titles: [stop.mapTitle || destName]
           });
-          coordPoints.push(coords);
         } else {
-          last.days.push(day.dayNumber);
-          last.titles.push(day.title);
+          last.days.push(stop.dayNumber);
+          if (stop.mapTitle && !last.titles.includes(stop.mapTitle)) {
+            last.titles.push(stop.mapTitle);
+          }
         }
       });
 
