@@ -3826,6 +3826,41 @@
   </script>
 
   <script id="editor-scripts">
+    // Inject publishing loader styles
+    (function() {
+      const styleId = 'btn-publish-loading-styles';
+      if (!document.getElementById(styleId)) {
+        const style = document.createElement('style');
+        style.id = styleId;
+        style.textContent = `
+          #btn-publish.is-publishing {
+            color: transparent !important;
+            pointer-events: none;
+            position: relative;
+          }
+          #btn-publish.is-publishing::after {
+            content: "";
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top-color: #1c160d;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            left: 0;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            margin: auto;
+          }
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+    })();
+
     const QUOTATION_ID = "quo_3e9bcd4f2f85";
     const CURRENT_LANG = "ar";
 
@@ -4131,8 +4166,10 @@
       const status = document.getElementById('publish-status');
 
       btn.disabled = true;
+      btn.classList.add('is-publishing');
       btn.textContent = '⏳ Publishing...';
       status.textContent = 'Committing to GitHub...';
+      const startTime = Date.now();
 
       const clone = document.documentElement.cloneNode(true);
       const pb = clone.querySelector('#publish-bar');
@@ -4162,6 +4199,13 @@
           body: JSON.stringify({ html })
         });
         const data = await res.json();
+        
+        // Enforce a minimum delay of 1.2s to show the publishing signal
+        const elapsed = Date.now() - startTime;
+        if (elapsed < 1200) {
+          await new Promise(resolve => setTimeout(resolve, 1200 - elapsed));
+        }
+
         if (data.published_url) {
           status.innerHTML = `✅ <a href="${data.published_url}" target="_blank" style="color:#d8bd85">${data.published_url}</a>`;
           btn.textContent = '🔁 Re-publish';
@@ -4173,6 +4217,7 @@
         status.textContent = '❌ ' + e.message;
         btn.textContent = '🚀 Publish to Web';
       }
+      btn.classList.remove('is-publishing');
       btn.disabled = false;
     }
   </script>

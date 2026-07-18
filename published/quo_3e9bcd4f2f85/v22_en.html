@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl"
+<html lang="en" 
   style="--hero-img: url('/assets/quang-ninh/halong-bay.jpg');  --img-1: url('/assets/ha-noi/hanoi1.jpg');  --img-2: url('/assets/quang-ninh/halong-bay.jpg');  --img-3: url('/assets/lao-cai/fansipan.jpg');  --img-4: url('/assets/da-nang/danang3.jpg');  --img-5: url('/assets/quang-nam/hoian3.jpg');  --img-6: url('/assets/lam-dong/dalat3.jpg');  --img-7: url('/assets/ho-chi-minh/hightower.jpg'); ">
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>اكتشف روعة الطبيعة وسحر الثقافة عبر 21 يومًا من الاسترخاء والمغامرة... - Luxury Quotation</title>
+  <title>Discover the Magnificence of Nature and the Charm of Culture through... - Luxury Quotation</title>
   <!-- Premium Typography Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700&family=Cairo:wght@300;400;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
   
   <!-- PWA Metadata -->
   <link rel="manifest" href="/manifest.json?id=quo_3e9bcd4f2f85&type=quotations" />
@@ -39,8 +39,8 @@
     }
 
     html[lang="ar"] {
-      --serif: 'Amiri', Georgia, serif;
-      --sans: 'Cairo', sans-serif;
+      --serif: 'Noto Sans Arabic', 'Amiri', Georgia, serif;
+      --sans: 'Noto Sans Arabic', 'Cairo', sans-serif;
     }
 
     /* Tweak map tile colors to match the luxury warm tone without fading into the background */
@@ -1806,6 +1806,27 @@
       color: #1c160d;
     }
 
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .btn-inline-translate.loading {
+      color: transparent !important;
+      pointer-events: none;
+      background: var(--emerald) !important;
+    }
+
+    .btn-inline-translate.loading::after {
+      content: "";
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border: 2px solid transparent;
+      border-top-color: var(--gold-2);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
     html[dir="rtl"] .btn-inline-translate {
       right: auto;
       left: 2px;
@@ -1847,7 +1868,7 @@
       left: 16px !important;
     }
     
-            @media (max-width: 768px) {
+    @media (max-width: 768px) {
       .container {
         width: min(1180px, 90%) !important;
       }
@@ -1957,7 +1978,7 @@
         justify-content: center !important;
       }
     }
-    </style>
+  </style>
 </head>
 
 <body>
@@ -1965,7 +1986,7 @@
     <div class="container nav-inner">
       <a class="brand" href="#top"><img src="/assets/vietnam-safar-logo.png" alt="Vietnam Safar logo" /> Vietnam Safar</a>
       <div class="nav-links">
-        <a href="#journey">الرحلة</a>
+        <a href="#journey">Journey</a>
         <a href="#route-map">Route Map</a>
         <a href="#itinerary">Itinerary</a>
         <a href="#quotation">Quotation</a>
@@ -1976,7 +1997,7 @@
           <button class="lang-switcher-btn" onclick="toggleLangDropdown(event)">
             <span>🌐</span>
             <span class="lang-text">
-              العربية
+              English
               
             </span>
             <span class="lang-caret">▼</span>
@@ -1993,7 +2014,7 @@
               d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z" />
           </svg>
         </button>
-        <a class="btn dark" href="/quotations/quo_3e9bcd4f2f85/pdf?lang=ar" target="_blank" id="btn-pdf-view">📄 <span class="pdf-btn-text">PDF Preview</span></a>
+        <a class="btn dark" href="/quotations/quo_3e9bcd4f2f85/pdf?lang=en" target="_blank" id="btn-pdf-view">📄 <span class="pdf-btn-text">PDF Preview</span></a>
       </div>
     </div>
   </nav>
@@ -2002,30 +2023,30 @@
     <header class="hero">
       <div class="container hero-content">
         <div>
-          <div class="kicker" data-editable="kicker">عرض سعر خاص فاخر ‒ 21D20N ‒ 2026-08-10 – 2026-08-30</div>
-          <h1 data-editable="tour_title">اكتشف روعة الطبيعة وسحر الثقافة عبر 21 يومًا من الاسترخاء والمغامرة...</h1>
-          <p class="hero-lede" data-editable="lede">رحلة استثنائية فاخرة ومصممة بعناية تمتد على مدار 21 يومًا لربط أرقى الوجهات في فيتنام. من سحر هانوي التاريخي ونقاء خليج ها لونغ، إلى مرتفعات سابا الشامخة، وصولاً إلى شواطئ دا نانغ الرملية وهدوء دالات الرومانسية وحيوية هو تشي منه. صُممت هذه الرحلة خصيصاً للمسافرين الباحثين عن الفخامة والخصوصية، مع توفير كافة الخدمات الممتازة والتسهيلات التي تضمن راحة تامة طوال الإقامة.</p>
+          <div class="kicker" data-editable="kicker">Private Luxury Quotation ‒ 21D20N ‒ 2026-08-10 – 2026-08-30</div>
+          <h1 data-editable="tour_title">Discover the Magnificence of Nature and the Charm of Culture through...</h1>
+          <p class="hero-lede" data-editable="lede">An exceptional luxury journey, meticulously crafted over 21 days, connecting Vietnam&#39;s finest destinations. From the historic charm of Hanoi and the pristine beauty of Halong Bay, to the majestic heights of Sapa, the sandy beaches of Da Nang, the romantic serenity of Dalat, and the vibrant energy of Ho Chi Minh City. This tour is exclusively designed for travelers seeking luxury and privacy, providing excellent services and facilities to ensure complete comfort throughout the stay.</p>
           <div class="hero-actions no-print">
             <a class="btn gold" href="#quotation">View Luxury Rates</a>
             <a class="btn outline" href="#itinerary">Explore the Journey</a>
           </div>
         </div>
         <aside class="quote-card">
-          <h2>نظرة عامة على الرحلة</h2>
+          <h2>Journey Overview</h2>
           <div class="quote-list">
-            <div class="quote-row"><span>مُعدّ لصالح</span><strong data-editable="customer_name">2 Adults (شخصين)</strong></div>
-            <div class="quote-row"><span>Overview</span><strong data-editable="overview_heading">نظرة عامة على البرنامج</strong></div>
+            <div class="quote-row"><span>Prepared for</span><strong data-editable="customer_name">2 Adults</strong></div>
+            <div class="quote-row"><span>Overview</span><strong data-editable="overview_heading">PROGRAM OVERVIEW</strong></div>
             
-            <div class="quote-row"><span>Guests</span><strong>2 Adults (شخصين)</strong></div>
+            <div class="quote-row"><span>Guests</span><strong>2 Adults</strong></div>
             
             
             <div class="quote-row"><span>Travel dates</span><strong>2026-08-10 – 2026-08-30</strong></div>
             
             
-            <div class="quote-row stacked"><span>Route</span><strong>Hanoi – Halong Bay – Sapa – Da Nang – Dalat – Ho Chi Minh City</strong></div>
+            <div class="quote-row stacked"><span>Route</span><strong>Hanoi – Ninh Binh – Halong Bay – Hanoi – Sapa – Hanoi – Da Nang – Hoi An – Dalat – Ho Chi Minh City – Mekong Delta – Ho Chi Minh City</strong></div>
             
             
-            <div class="quote-row stacked"><span>Style</span><strong>رحلة خاصة بالكامل مع سيارة وسائق مرشد سياحي خاص</strong></div>
+            <div class="quote-row stacked"><span>Style</span><strong>Fully private tour with car, driver, and private tour guide</strong></div>
             
             <div class="quote-row"><span>Ref.</span><strong data-editable="quotation_number">QT-2026-ARAB-21D20N</strong></div>
             <div class="quote-row"><span>Contact</span><strong data-editable="contact">+84 911 538 738</strong></div>
@@ -2039,8 +2060,8 @@
     <section id="route-map" style="padding: 72px 0;">
       <div class="container">
         <div class="section-head">
-          <h2>رحلتك على الخريطة</h2>
-          <p>خريطة تفاعلية تعرض مسارك المنسق عبر معالم فيتنام الشهيرة ومحطات التوقف الفاخرة. انقر على وجهة في القائمة أو الخريطة لاستكشاف المعالم البارزة.</p>
+          <h2>Your Journey, Mapped</h2>
+          <p>An interactive map showing your curated path through Vietnam&#39;s iconic landmarks and luxury stopovers. Click on a destination in the list or the map to explore highlights.</p>
         </div>
         <div class="map-layout">
           <div style="position: relative; height: 100%; z-index: 1;">
@@ -2048,13 +2069,13 @@
               <div
                 style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--ivory-2); color: var(--muted); font-size: 14px;">
                 <span style="font-size: 24px; margin-bottom: 8px;">🗺️</span>
-                <span>جاري تحميل الخريطة التفاعلية...</span>
+                <span>Loading Interactive Route Map...</span>
               </div>
             </div>
             <!-- Map Mode Switcher -->
             <div class="map-mode-toggle no-print" style="position: absolute; top: 16px; right: 16px; z-index: 1000; display: flex; gap: 4px; background: rgba(17, 19, 15, 0.75); padding: 4px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
-              <button id="toggle-mode-classic" class="mode-btn active" onclick="switchMapMode('classic')">كلاسيكي</button>
-              <button id="toggle-mode-image" class="mode-btn" onclick="switchMapMode('image')">صورة</button>
+              <button id="toggle-mode-classic" class="mode-btn active" onclick="switchMapMode('classic')">Classic</button>
+              <button id="toggle-mode-image" class="mode-btn" onclick="switchMapMode('image')">Image</button>
             </div>
           </div>
           <div class="map-sidebar" id="map-sidebar">
@@ -2070,34 +2091,34 @@
         <div class="section-head" style="grid-template-columns: 1fr;">
           <h2
             style="color: white; font-family: var(--serif); font-size: clamp(32px, 4vw, 54px); margin: 0 0 10px;">
-            خلف كواليس تصميم المسار</h2>
-          <p style="color: rgba(255, 255, 255, 0.72); margin: 0;">رعاية مخصصة، وتيرة متوازنة، ولوجستيات سلسة مصممة خصيصًا لمجموعتكم.</p>
+            Why This Journey Inspires</h2>
+          <p style="color: rgba(255, 255, 255, 0.72); margin: 0;">Tailored care, balanced pacing, and seamless logistics designed specifically for your group.</p>
         </div>
         <div
           style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 18px; margin-top: 32px;">
           <article class="experience"
             style="background: rgba(255, 255, 255, 0.05); border-color: rgba(216, 189, 133, 0.25); color: white;">
             <span class="num" style="color: var(--gold-2);">01</span>
-            <h3 style="color: white; font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">خصوصية ومرونة</h3>
-            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_private">تتيح لك السيارة الخاصة والمرشد الشخصي مرونة تامة لتعديل وتيرة الرحلة وجداول اليوم بما يناسب تفضيلاتك الخاصة وعائلتك.</p>
+            <h3 style="color: white; font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">Private &amp; Flexible</h3>
+            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_private">The private car and personal guide offer complete flexibility to adjust the pace and daily itinerary to suit your personal and family preferences.</p>
           </article>
           <article class="experience"
             style="background: rgba(255, 255, 255, 0.05); border-color: rgba(216, 189, 133, 0.25); color: white;">
             <span class="num" style="color: var(--gold-2);">02</span>
-            <h3 style="color: white; font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">الراحة والوتيرة</h3>
-            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_comfort">تم اختيار فنادق 4 نجوم عالية الجودة وكروز 5 نجوم بعناية فائقة لتوفير أقصى درجات الراحة والاسترخاء بعد الجولات اليومية.</p>
+            <h3 style="color: white; font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">Comfort &amp; Pacing</h3>
+            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_comfort">High-quality 4-star hotels and a 5-star cruise have been meticulously selected to provide maximum comfort and relaxation after daily excursions.</p>
           </article>
           <article class="experience"
             style="background: rgba(255, 255, 255, 0.05); border-color: rgba(216, 189, 133, 0.25); color: white;">
             <span class="num" style="color: var(--gold-2);">03</span>
-            <h3 style="color: white; font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">الرعاية الغذائية والخاصة</h3>
-            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_muslim">جميع الوجبات المختارة تتوافق مع تفضيلات الأطعمة الحلال، مع التركيز على المأكولات البحرية الطازجة والخضروات والمأكولات الخالية من لحم الخنزير.</p>
+            <h3 style="color: white; font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">Dietary &amp; Special Care</h3>
+            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_muslim">All selected meals comply with Halal food preferences, focusing on fresh seafood, vegetables, and pork-free dishes.</p>
           </article>
           <article class="experience"
             style="background: rgba(255, 255, 255, 0.05); border-color: rgba(216, 189, 133, 0.25); color: white;">
             <span class="num" style="color: var(--gold-2);">04</span>
-            <h3 style="color: white; font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">أبرز الفعاليات المتوازنة</h3>
-            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_balanced">مزيج متناغم يجمع بين سحر المعالم التاريخية، استكشاف الجبال المغطاة بالضباب، الاسترخاء الشاطئي والرحلات النهرية الهادئة.</p>
+            <h3 style="color: white; font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">Balanced Highlights</h3>
+            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_balanced">A harmonious blend of historic charm, exploration of misty mountains, beach relaxation, and serene river cruises.</p>
           </article>
         </div>
       </div>
@@ -2106,8 +2127,8 @@
     <section id="journey">
       <div class="container">
         <div class="section-head">
-          <h2 data-editable="journey_h2">مجموعة المدينة</h2>
-          <p data-editable="journey_p">لوحات وجهة سينمائية تم إعدادها لمقترح سفر متميز.</p>
+          <h2 data-editable="journey_h2">Key Stops Along the Journey</h2>
+          <p data-editable="journey_p">Cinematic destination panels crafted for a premium travel proposal.</p>
         </div>
         <div class="gallery">
           
@@ -2140,8 +2161,8 @@
             
             
             <div class="image-caption" style="z-index: 3;">
-              <small data-editable="gal1_label">أبرز المعالم</small>
-              <strong data-editable="gal1_title">Hanoi</strong>
+              <small data-editable="gal1_label">Highlight</small>
+              <strong data-editable="gal1_title">هانوي</strong>
             </div>
           </div>
           
@@ -2174,8 +2195,8 @@
             
             
             <div class="image-caption" style="z-index: 3;">
-              <small data-editable="gal2_label">الوجهة</small>
-              <strong data-editable="gal2_title">Halong Bay</strong>
+              <small data-editable="gal2_label">Destination</small>
+              <strong data-editable="gal2_title">خليج ها لونغ</strong>
             </div>
           </div>
           
@@ -2195,8 +2216,8 @@
             
             
             <div class="image-caption" style="z-index: 3;">
-              <small data-editable="gal3_label">التجربة</small>
-              <strong data-editable="gal3_title">Sapa</strong>
+              <small data-editable="gal3_label">Experience</small>
+              <strong data-editable="gal3_title">سابا</strong>
             </div>
           </div>
           
@@ -2233,8 +2254,8 @@
             
             
             <div class="image-caption" style="z-index: 3;">
-              <small data-editable="gal4_label">الرحلة</small>
-              <strong data-editable="gal4_title">Da Nang</strong>
+              <small data-editable="gal4_label">Journey</small>
+              <strong data-editable="gal4_title">دا نانغ</strong>
             </div>
           </div>
           
@@ -2271,8 +2292,8 @@
             
             
             <div class="image-caption" style="z-index: 3;">
-              <small data-editable="gal5_label">الوجهة</small>
-              <strong data-editable="gal5_title">Hoi An</strong>
+              <small data-editable="gal5_label">Destination</small>
+              <strong data-editable="gal5_title">هوي ان</strong>
             </div>
           </div>
           
@@ -2309,8 +2330,8 @@
             
             
             <div class="image-caption" style="z-index: 3;">
-              <small data-editable="gal6_label">الوجهة</small>
-              <strong data-editable="gal6_title">Da Lat</strong>
+              <small data-editable="gal6_label">Destination</small>
+              <strong data-editable="gal6_title">دالات</strong>
             </div>
           </div>
           
@@ -2343,8 +2364,8 @@
             
             
             <div class="image-caption" style="z-index: 3;">
-              <small data-editable="gal7_label">الوجهة</small>
-              <strong data-editable="gal7_title">Ho Chi Minh City</strong>
+              <small data-editable="gal7_label">Destination</small>
+              <strong data-editable="gal7_title">مدينة هو تشي منه</strong>
             </div>
           </div>
           
@@ -2407,32 +2428,32 @@
     <section id="itinerary">
       <div class="container">
         <div class="section-head">
-          <h2 data-editable="itinerary_h2">برنامج الرحلة يومًا بيوم</h2>
-          <p data-editable="itinerary_p">رحلتك الخاصة 21D20N — 21 يوماً، تم تصميمها بعناية.</p>
+          <h2 data-editable="itinerary_h2">Day-by-Day Journey Program</h2>
+          <p data-editable="itinerary_p">Your private 21D20N journey — 21 days, carefully crafted.</p>
         </div>
         <div class="itinerary">
           
           <article class="day">
             <div class="day-label">1</div>
             <div>
-              <span class="num" data-editable="day_num_1">يوم 1</span>
-              <h3 data-editable="day_title_1">خلف الأبواب المغلقة: فصل Hanoi</h3>
+              <span class="num" data-editable="day_num_1">DAY 1</span>
+              <h3 data-editable="day_title_1">Day 1 — Hanoi</h3>
               
-              <p data-editable="day_desc_1_0">الوصول إلى هانوي والاستقرار في الفندق.</p>
+              <p data-editable="day_desc_1_0">Arrive in Hanoi and check in at the hotel.</p>
               
               
               <p style="font-size:13px;color:#706a5d;margin-top:8px">
-                <strong style="color:#17412e;letter-spacing:.06em">أبرز الفعاليات:</strong>
-                الاستقبال في المطار، الانتقال بسيارة خاصة، زجاجات مياه الترحيب.
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Airport pickup and private transfer to the hotel.
               </p>
               
               
               <div
                 style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
-                <strong style="color:#b7894b;letter-spacing:.06em">ملاحظات:</strong>
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
                 <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
                   
-                  <li style="margin-bottom: 2px;">وتيرة السفر: مريحة</li>
+                  <li style="margin-bottom: 2px;">Sense of Pace: Relaxed</li>
                   
                 </ul>
               </div>
@@ -2440,12 +2461,9 @@
             </div>
             <div class="day-meta">
               
-              <span style="font-size:11px;letter-spacing:.12em">المبيت</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
               <span style="font-size:15px;font-family:Georgia,serif">Hanoi</span><br><br>
               
-              
-              <span style="font-size:11px;letter-spacing:.12em">الوجبات</span><br>
-              <span style="font-size:13px">عشاء ترحيبي خاص</span>
               
             </div>
           </article>
@@ -2453,24 +2471,24 @@
           <article class="day">
             <div class="day-label">2</div>
             <div>
-              <span class="num" data-editable="day_num_2">يوم 2</span>
-              <h3 data-editable="day_title_2">كشف أسرار Hanoi: رحلة استكشافية خاصة</h3>
+              <span class="num" data-editable="day_num_2">DAY 2</span>
+              <h3 data-editable="day_title_2">Day 2 — Hanoi</h3>
               
-              <p data-editable="day_desc_1_0">جولة ثقافية في هانوي القديمة تشمل سوق دونغ سوان وركوب السيكلو وتذوق القهوة الفيتنامية التقليدية.</p>
+              <p data-editable="day_desc_1_0">Cultural tour of Hanoi&#39;s Old Quarter including Dong Xuan Market, cyclo ride, and traditional Vietnamese coffee tasting.</p>
               
               
               <p style="font-size:13px;color:#706a5d;margin-top:8px">
-                <strong style="color:#17412e;letter-spacing:.06em">أبرز الفعاليات:</strong>
-                جولة سيكلو، تذاكر دخول، مرشد سياحي خاص، سيارة خاصة.
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Cyclo ride, entrance tickets, private tour guide, private car.
               </p>
               
               
               <div
                 style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
-                <strong style="color:#b7894b;letter-spacing:.06em">ملاحظات:</strong>
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
                 <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
                   
-                  <li style="margin-bottom: 2px;">وتيرة السفر: غامرة</li>
+                  <li style="margin-bottom: 2px;">Sense of Pace: Immersive</li>
                   
                 </ul>
               </div>
@@ -2478,12 +2496,12 @@
             </div>
             <div class="day-meta">
               
-              <span style="font-size:11px;letter-spacing:.12em">المبيت</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
               <span style="font-size:15px;font-family:Georgia,serif">Hanoi</span><br><br>
               
               
-              <span style="font-size:11px;letter-spacing:.12em">الوجبات</span><br>
-              <span style="font-size:13px">إفطار في الفندق</span>
+              <span style="font-size:11px;letter-spacing:.12em">Meals</span><br>
+              <span style="font-size:13px">Breakfast at hotel</span>
               
             </div>
           </article>
@@ -2491,24 +2509,24 @@
           <article class="day">
             <div class="day-label">3</div>
             <div>
-              <span class="num" data-editable="day_num_3">يوم 3</span>
-              <h3 data-editable="day_title_3">التراث الحي لـ Hanoi</h3>
+              <span class="num" data-editable="day_num_3">DAY 3</span>
+              <h3 data-editable="day_title_3">Day 3 — Hanoi → Ninh Binh → Hanoi</h3>
               
-              <p data-editable="day_desc_1_0">رحلة ليوم كامل لزيارة نينه بينه واستكشاف تام كوك وصعود قمة هانغ موا.</p>
+              <p data-editable="day_desc_1_0">Visit Ninh Binh with Tam Coc and Hang Mua, then return to Hanoi.</p>
               
               
               <p style="font-size:13px;color:#706a5d;margin-top:8px">
-                <strong style="color:#17412e;letter-spacing:.06em">أبرز الفعاليات:</strong>
-                رحلة القارب في تام كوك، تذاكر هانغ موا، مرشد خاص، سيارة خاصة.
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Private vehicle for the Ninh Binh excursion as scheduled.
               </p>
               
               
               <div
                 style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
-                <strong style="color:#b7894b;letter-spacing:.06em">ملاحظات:</strong>
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
                 <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
                   
-                  <li style="margin-bottom: 2px;">وتيرة السفر: نشطة</li>
+                  <li style="margin-bottom: 2px;">Sense of Pace: Active</li>
                   
                 </ul>
               </div>
@@ -2516,12 +2534,12 @@
             </div>
             <div class="day-meta">
               
-              <span style="font-size:11px;letter-spacing:.12em">المبيت</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
               <span style="font-size:15px;font-family:Georgia,serif">Hanoi</span><br><br>
               
               
-              <span style="font-size:11px;letter-spacing:.12em">الوجبات</span><br>
-              <span style="font-size:13px">إفطار وغداء محلي</span>
+              <span style="font-size:11px;letter-spacing:.12em">Meals</span><br>
+              <span style="font-size:13px">Breakfast and local lunch</span>
               
             </div>
           </article>
@@ -2529,24 +2547,24 @@
           <article class="day">
             <div class="day-label">4</div>
             <div>
-              <span class="num" data-editable="day_num_4">يوم 4</span>
-              <h3 data-editable="day_title_4">آفاق حصرية: داخل Halong Bay</h3>
+              <span class="num" data-editable="day_num_4">DAY 4</span>
+              <h3 data-editable="day_title_4">Day 4 — Hanoi → Halong Bay</h3>
               
-              <p data-editable="day_desc_1_0">الانتقال من هانوي إلى خليج ها لونغ والصعوذ على متن الكروز الفاخر.</p>
+              <p data-editable="day_desc_1_0">Travel by private car from Hanoi to Halong Bay and board the overnight cruise.</p>
               
               
               <p style="font-size:13px;color:#706a5d;margin-top:8px">
-                <strong style="color:#17412e;letter-spacing:.06em">أبرز الفعاليات:</strong>
-                الانتقال بسيارة خاصة، الإقامة في كروز فاخر، رحلات تجديف وقوارب الكاياك.
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Private transfer Hanoi – Halong Bay and overnight stay on La Casta Cruise.
               </p>
               
               
               <div
                 style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
-                <strong style="color:#b7894b;letter-spacing:.06em">ملاحظات:</strong>
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
                 <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
                   
-                  <li style="margin-bottom: 2px;">وتيرة السفر: مريحة</li>
+                  <li style="margin-bottom: 2px;">Sense of Pace: Relaxed</li>
                   
                 </ul>
               </div>
@@ -2554,12 +2572,12 @@
             </div>
             <div class="day-meta">
               
-              <span style="font-size:11px;letter-spacing:.12em">المبيت</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
               <span style="font-size:15px;font-family:Georgia,serif">Halong Bay</span><br><br>
               
               
-              <span style="font-size:11px;letter-spacing:.12em">الوجبات</span><br>
-              <span style="font-size:13px">إفطار، غداء، وعشاء على متن الكروز</span>
+              <span style="font-size:11px;letter-spacing:.12em">Meals</span><br>
+              <span style="font-size:13px">Meals as provided by the cruise program</span>
               
             </div>
           </article>
@@ -2567,24 +2585,24 @@
           <article class="day">
             <div class="day-label">5</div>
             <div>
-              <span class="num" data-editable="day_num_5">يوم 5</span>
-              <h3 data-editable="day_title_5">دروس احترافية في Hanoi</h3>
+              <span class="num" data-editable="day_num_5">DAY 5</span>
+              <h3 data-editable="day_title_5">Day 5 — Halong Bay → Hanoi</h3>
               
-              <p data-editable="day_desc_1_0">الاستمتاع بأنشطة الصباح في خليج ها لونغ ثم النزول والعودة إلى هانوي.</p>
+              <p data-editable="day_desc_1_0">Disembark the cruise and return from Halong Bay to Hanoi by private car.</p>
               
               
               <p style="font-size:13px;color:#706a5d;margin-top:8px">
-                <strong style="color:#17412e;letter-spacing:.06em">أبرز الفعاليات:</strong>
-                رحلة بحرية صباحية، الانتقال بسيارة خاصة إلى هانوي.
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Private transfer Halong Bay – Hanoi.
               </p>
               
               
               <div
                 style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
-                <strong style="color:#b7894b;letter-spacing:.06em">ملاحظات:</strong>
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
                 <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
                   
-                  <li style="margin-bottom: 2px;">وتيرة السفر: مريحة</li>
+                  <li style="margin-bottom: 2px;">Sense of Pace: Relaxed</li>
                   
                 </ul>
               </div>
@@ -2592,12 +2610,9 @@
             </div>
             <div class="day-meta">
               
-              <span style="font-size:11px;letter-spacing:.12em">المبيت</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
               <span style="font-size:15px;font-family:Georgia,serif">Hanoi</span><br><br>
               
-              
-              <span style="font-size:11px;letter-spacing:.12em">الوجبات</span><br>
-              <span style="font-size:13px">إفطار وغداء خفيف على متن الكروز</span>
               
             </div>
           </article>
@@ -2605,24 +2620,24 @@
           <article class="day">
             <div class="day-label">6</div>
             <div>
-              <span class="num" data-editable="day_num_6">يوم 6</span>
-              <h3 data-editable="day_title_6">مجموعة Sapa: إقامة منسقة</h3>
+              <span class="num" data-editable="day_num_6">DAY 6</span>
+              <h3 data-editable="day_title_6">Day 6 — Sapa</h3>
               
-              <p data-editable="day_desc_1_0">الانتقال من هانوي إلى سابا بواسطة باص النوم المريح والاستقرار في الفندق.</p>
+              <p data-editable="day_desc_1_0">Transfer from Hanoi to Sapa by comfortable sleeper bus and check-in at hotel.</p>
               
               
               <p style="font-size:13px;color:#706a5d;margin-top:8px">
-                <strong style="color:#17412e;letter-spacing:.06em">أبرز الفعاليات:</strong>
-                تذاكر باص النوم الفاخر، الاستقبال والانتقال في سابا.
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Luxury sleeper bus tickets, reception and transfer in Sapa.
               </p>
               
               
               <div
                 style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
-                <strong style="color:#b7894b;letter-spacing:.06em">ملاحظات:</strong>
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
                 <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
                   
-                  <li style="margin-bottom: 2px;">وتيرة السفر: معتدلة</li>
+                  <li style="margin-bottom: 2px;">Sense of Pace: Moderate</li>
                   
                 </ul>
               </div>
@@ -2630,12 +2645,12 @@
             </div>
             <div class="day-meta">
               
-              <span style="font-size:11px;letter-spacing:.12em">المبيت</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
               <span style="font-size:15px;font-family:Georgia,serif">Sapa</span><br><br>
               
               
-              <span style="font-size:11px;letter-spacing:.12em">الوجبات</span><br>
-              <span style="font-size:13px">إفطار في الفندق</span>
+              <span style="font-size:11px;letter-spacing:.12em">Meals</span><br>
+              <span style="font-size:13px">Breakfast at hotel</span>
               
             </div>
           </article>
@@ -2643,24 +2658,24 @@
           <article class="day">
             <div class="day-label">7</div>
             <div>
-              <span class="num" data-editable="day_num_7">يوم 7</span>
-              <h3 data-editable="day_title_7">صورة أنيقة لـ Sapa</h3>
+              <span class="num" data-editable="day_num_7">DAY 7</span>
+              <h3 data-editable="day_title_7">Day 7 — Sapa</h3>
               
-              <p data-editable="day_desc_1_0">زيارة قمة فانسيبان بالتلفريك واستكشاف قرية كات كات التقليدية.</p>
+              <p data-editable="day_desc_1_0">Visit Fansipan peak by cable car and explore Cat Cat traditional village.</p>
               
               
               <p style="font-size:13px;color:#706a5d;margin-top:8px">
-                <strong style="color:#17412e;letter-spacing:.06em">أبرز الفعاليات:</strong>
-                تذاكر تلفريك فانسيبان، رسوم دخول قرية كات كات، مرشد خاص، سيارة خاصة.
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Fansipan cable car tickets, Cat Cat village entrance fee, private guide, private car.
               </p>
               
               
               <div
                 style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
-                <strong style="color:#b7894b;letter-spacing:.06em">ملاحظات:</strong>
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
                 <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
                   
-                  <li style="margin-bottom: 2px;">وتيرة السفر: نشطة</li>
+                  <li style="margin-bottom: 2px;">Sense of Pace: Active</li>
                   
                 </ul>
               </div>
@@ -2668,12 +2683,12 @@
             </div>
             <div class="day-meta">
               
-              <span style="font-size:11px;letter-spacing:.12em">المبيت</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
               <span style="font-size:15px;font-family:Georgia,serif">Sapa</span><br><br>
               
               
-              <span style="font-size:11px;letter-spacing:.12em">الوجبات</span><br>
-              <span style="font-size:13px">إفطار وغداء</span>
+              <span style="font-size:11px;letter-spacing:.12em">Meals</span><br>
+              <span style="font-size:13px">Breakfast and lunch</span>
               
             </div>
           </article>
@@ -2681,24 +2696,24 @@
           <article class="day">
             <div class="day-label">8</div>
             <div>
-              <span class="num" data-editable="day_num_8">يوم 8</span>
-              <h3 data-editable="day_title_8">تفاصيل Sapa: الثقافة والتناقض</h3>
+              <span class="num" data-editable="day_num_8">DAY 8</span>
+              <h3 data-editable="day_title_8">Day 8 — Sapa</h3>
               
-              <p data-editable="day_desc_1_0">جولة مشي لاستكشاف قرى لاو تشاي وتا فان الجبلية وزيارة شلال الفضة.</p>
+              <p data-editable="day_desc_1_0">Walking tour to explore Lao Chai and Ta Van mountain villages and visit Silver Waterfall.</p>
               
               
               <p style="font-size:13px;color:#706a5d;margin-top:8px">
-                <strong style="color:#17412e;letter-spacing:.06em">أبرز الفعاليات:</strong>
-                تذاكر دخول القرى والشلال، مرشد محلي، سيارة خاصة.
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Village and waterfall entrance tickets, local guide, private car.
               </p>
               
               
               <div
                 style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
-                <strong style="color:#b7894b;letter-spacing:.06em">ملاحظات:</strong>
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
                 <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
                   
-                  <li style="margin-bottom: 2px;">وتيرة السفر: معتدلة</li>
+                  <li style="margin-bottom: 2px;">Sense of Pace: Moderate</li>
                   
                 </ul>
               </div>
@@ -2706,12 +2721,12 @@
             </div>
             <div class="day-meta">
               
-              <span style="font-size:11px;letter-spacing:.12em">المبيت</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
               <span style="font-size:15px;font-family:Georgia,serif">Sapa</span><br><br>
               
               
-              <span style="font-size:11px;letter-spacing:.12em">الوجبات</span><br>
-              <span style="font-size:13px">إفطار وغداء محلي</span>
+              <span style="font-size:11px;letter-spacing:.12em">Meals</span><br>
+              <span style="font-size:13px">Breakfast and local lunch</span>
               
             </div>
           </article>
@@ -2719,24 +2734,24 @@
           <article class="day">
             <div class="day-label">9</div>
             <div>
-              <span class="num" data-editable="day_num_9">يوم 9</span>
-              <h3 data-editable="day_title_9">رحلة مستوحاة من التصميم عبر Sapa</h3>
+              <span class="num" data-editable="day_num_9">DAY 9</span>
+              <h3 data-editable="day_title_9">Day 9 — Sapa</h3>
               
-              <p data-editable="day_desc_1_0">زيارة الجسر الزجاجي الشاهق والاسترخاء في مقهى موانا المطل على الوادي.</p>
+              <p data-editable="day_desc_1_0">Visit the towering glass bridge and relax at Moana Café overlooking the valley.</p>
               
               
               <p style="font-size:13px;color:#706a5d;margin-top:8px">
-                <strong style="color:#17412e;letter-spacing:.06em">أبرز الفعاليات:</strong>
-                تذاكر الجسر الزجاجي ورسوم مقهى موانا، سيارة خاصة.
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Glass bridge tickets and Moana Café fee, private car.
               </p>
               
               
               <div
                 style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
-                <strong style="color:#b7894b;letter-spacing:.06em">ملاحظات:</strong>
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
                 <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
                   
-                  <li style="margin-bottom: 2px;">وتيرة السفر: غامرة</li>
+                  <li style="margin-bottom: 2px;">Sense of Pace: Immersive</li>
                   
                 </ul>
               </div>
@@ -2744,12 +2759,12 @@
             </div>
             <div class="day-meta">
               
-              <span style="font-size:11px;letter-spacing:.12em">المبيت</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
               <span style="font-size:15px;font-family:Georgia,serif">Sapa</span><br><br>
               
               
-              <span style="font-size:11px;letter-spacing:.12em">الوجبات</span><br>
-              <span style="font-size:13px">إفطار في الفندق</span>
+              <span style="font-size:11px;letter-spacing:.12em">Meals</span><br>
+              <span style="font-size:13px">Breakfast at hotel</span>
               
             </div>
           </article>
@@ -2757,24 +2772,24 @@
           <article class="day">
             <div class="day-label">10</div>
             <div>
-              <span class="num" data-editable="day_num_10">يوم 10</span>
-              <h3 data-editable="day_title_10">ملف Hanoi: جدول أعمال مخصص</h3>
+              <span class="num" data-editable="day_num_10">DAY 10</span>
+              <h3 data-editable="day_title_10">Day 10 — Sapa → Hanoi</h3>
               
-              <p data-editable="day_desc_1_0">العودة من سابا إلى هانوي بواسطة باص النوم وقضاء وقت حر للتسوق.</p>
+              <p data-editable="day_desc_1_0">Return from Sapa to Hanoi by sleeper bus.</p>
               
               
               <p style="font-size:13px;color:#706a5d;margin-top:8px">
-                <strong style="color:#17412e;letter-spacing:.06em">أبرز الفعاليات:</strong>
-                تذاكر باص النوم الفاخر، الانتقال إلى الفندق.
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Sleeper bus ticket from Sapa to Hanoi.
               </p>
               
               
               <div
                 style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
-                <strong style="color:#b7894b;letter-spacing:.06em">ملاحظات:</strong>
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
                 <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
                   
-                  <li style="margin-bottom: 2px;">وتيرة السفر: مريحة</li>
+                  <li style="margin-bottom: 2px;">Sense of Pace: Relaxed</li>
                   
                 </ul>
               </div>
@@ -2782,12 +2797,9 @@
             </div>
             <div class="day-meta">
               
-              <span style="font-size:11px;letter-spacing:.12em">المبيت</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
               <span style="font-size:15px;font-family:Georgia,serif">Hanoi</span><br><br>
               
-              
-              <span style="font-size:11px;letter-spacing:.12em">الوجبات</span><br>
-              <span style="font-size:13px">إفطار في الفندق</span>
               
             </div>
           </article>
@@ -2795,24 +2807,24 @@
           <article class="day">
             <div class="day-label">11</div>
             <div>
-              <span class="num" data-editable="day_num_11">يوم 11</span>
-              <h3 data-editable="day_title_11">لوحات قصيرة من Da Nang</h3>
+              <span class="num" data-editable="day_num_11">DAY 11</span>
+              <h3 data-editable="day_title_11">Day 11 — Hanoi → Da Nang</h3>
               
-              <p data-editable="day_desc_1_0">السفر بالطائرة إلى دا نانغ والاستمتاع بجولة نهرية مسائية في نهر هان.</p>
+              <p data-editable="day_desc_1_0">Fly from Hanoi to Da Nang and experience the Han River cruise.</p>
               
               
               <p style="font-size:13px;color:#706a5d;margin-top:8px">
-                <strong style="color:#17412e;letter-spacing:.06em">أبرز الفعاليات:</strong>
-                تذكرة الطيران الداخلي، الاستقبال وتوصيل المطار، تذاكر كروز نهر هان.
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Domestic flight Hanoi – Da Nang and Han River cruise.
               </p>
               
               
               <div
                 style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
-                <strong style="color:#b7894b;letter-spacing:.06em">ملاحظات:</strong>
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
                 <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
                   
-                  <li style="margin-bottom: 2px;">وتيرة السفر: معتدلة</li>
+                  <li style="margin-bottom: 2px;">Sense of Pace: Moderate</li>
                   
                 </ul>
               </div>
@@ -2820,12 +2832,12 @@
             </div>
             <div class="day-meta">
               
-              <span style="font-size:11px;letter-spacing:.12em">المبيت</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
               <span style="font-size:15px;font-family:Georgia,serif">Da Nang</span><br><br>
               
               
-              <span style="font-size:11px;letter-spacing:.12em">الوجبات</span><br>
-              <span style="font-size:13px">إفطار في الفندق</span>
+              <span style="font-size:11px;letter-spacing:.12em">Meals</span><br>
+              <span style="font-size:13px">Breakfast at hotel</span>
               
             </div>
           </article>
@@ -2833,24 +2845,24 @@
           <article class="day">
             <div class="day-label">12</div>
             <div>
-              <span class="num" data-editable="day_num_12">يوم 12</span>
-              <h3 data-editable="day_title_12">Da Nang في إطارات: سرد مرئي</h3>
+              <span class="num" data-editable="day_num_12">DAY 12</span>
+              <h3 data-editable="day_title_12">Day 12 — Da Nang</h3>
               
-              <p data-editable="day_desc_1_0">رحلة ليوم كامل لزيارة منتجع با نا هيلز والجسر الذهبي الشهير.</p>
+              <p data-editable="day_desc_1_0">Visit Ba Na Hills.</p>
               
               
               <p style="font-size:13px;color:#706a5d;margin-top:8px">
-                <strong style="color:#17412e;letter-spacing:.06em">أبرز الفعاليات:</strong>
-                تذاكر تلفريك ودخول با نا هيلز، مرشد سياحي، سيارة خاصة.
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Ba Na Hills admission as scheduled.
               </p>
               
               
               <div
                 style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
-                <strong style="color:#b7894b;letter-spacing:.06em">ملاحظات:</strong>
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
                 <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
                   
-                  <li style="margin-bottom: 2px;">وتيرة السفر: نشطة</li>
+                  <li style="margin-bottom: 2px;">Sense of Pace: Active</li>
                   
                 </ul>
               </div>
@@ -2858,12 +2870,9 @@
             </div>
             <div class="day-meta">
               
-              <span style="font-size:11px;letter-spacing:.12em">المبيت</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
               <span style="font-size:15px;font-family:Georgia,serif">Da Nang</span><br><br>
               
-              
-              <span style="font-size:11px;letter-spacing:.12em">الوجبات</span><br>
-              <span style="font-size:13px">إفطار وغداء بوفيه في با نا هيلز</span>
               
             </div>
           </article>
@@ -2871,24 +2880,24 @@
           <article class="day">
             <div class="day-label">13</div>
             <div>
-              <span class="num" data-editable="day_num_13">يوم 13</span>
-              <h3 data-editable="day_title_13">أصداء Da Nang</h3>
+              <span class="num" data-editable="day_num_13">DAY 13</span>
+              <h3 data-editable="day_title_13">Day 13 — Da Nang → Hoi An → Da Nang</h3>
               
-              <p data-editable="day_desc_1_0">ركوب قوارب السلة في غابة جوز الهند وزيارة بلدة هوي آن القديمة ليلاً.</p>
+              <p data-editable="day_desc_1_0">Visit Bay Mau Coconut Forest and Hoi An Ancient Town, then return to Da Nang.</p>
               
               
               <p style="font-size:13px;color:#706a5d;margin-top:8px">
-                <strong style="color:#17412e;letter-spacing:.06em">أبرز الفعاليات:</strong>
-                تذاكر قوارب السلة، رسوم دخول هوي آن، مرشد سياحي، سيارة خاصة.
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Private vehicle and entrance arrangements for Bay Mau Coconut Forest and Hoi An.
               </p>
               
               
               <div
                 style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
-                <strong style="color:#b7894b;letter-spacing:.06em">ملاحظات:</strong>
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
                 <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
                   
-                  <li style="margin-bottom: 2px;">وتيرة السفر: غامرة</li>
+                  <li style="margin-bottom: 2px;">Sense of Pace: Immersive</li>
                   
                 </ul>
               </div>
@@ -2896,12 +2905,9 @@
             </div>
             <div class="day-meta">
               
-              <span style="font-size:11px;letter-spacing:.12em">المبيت</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
               <span style="font-size:15px;font-family:Georgia,serif">Da Nang</span><br><br>
               
-              
-              <span style="font-size:11px;letter-spacing:.12em">الوجبات</span><br>
-              <span style="font-size:13px">إفطار وعشاء رومانسي في هوي آن</span>
               
             </div>
           </article>
@@ -2909,24 +2915,24 @@
           <article class="day">
             <div class="day-label">14</div>
             <div>
-              <span class="num" data-editable="day_num_14">يوم 14</span>
-              <h3 data-editable="day_title_14">روح وجوهر Da Nang</h3>
+              <span class="num" data-editable="day_num_14">DAY 14</span>
+              <h3 data-editable="day_title_14">Day 14 — Da Nang</h3>
               
-              <p data-editable="day_desc_1_0">تجربة المغامرة والتجديف النهري المثير في منطقة هوا فو ثانه.</p>
+              <p data-editable="day_desc_1_0">Adventure experience and exciting river rafting in Hoa Phu Thanh area.</p>
               
               
               <p style="font-size:13px;color:#706a5d;margin-top:8px">
-                <strong style="color:#17412e;letter-spacing:.06em">أبرز الفعاليات:</strong>
-                تذاكر تجديف هوا فو ثانه والمعدات، مرشد خاص، سيارة خاصة.
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Hoa Phu Thanh rafting tickets and equipment, private guide, private car.
               </p>
               
               
               <div
                 style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
-                <strong style="color:#b7894b;letter-spacing:.06em">ملاحظات:</strong>
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
                 <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
                   
-                  <li style="margin-bottom: 2px;">وتيرة السفر: نشطة</li>
+                  <li style="margin-bottom: 2px;">Sense of Pace: Active</li>
                   
                 </ul>
               </div>
@@ -2934,12 +2940,12 @@
             </div>
             <div class="day-meta">
               
-              <span style="font-size:11px;letter-spacing:.12em">المبيت</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
               <span style="font-size:15px;font-family:Georgia,serif">Da Nang</span><br><br>
               
               
-              <span style="font-size:11px;letter-spacing:.12em">الوجبات</span><br>
-              <span style="font-size:13px">إفطار وغداء</span>
+              <span style="font-size:11px;letter-spacing:.12em">Meals</span><br>
+              <span style="font-size:13px">Breakfast and lunch</span>
               
             </div>
           </article>
@@ -2947,24 +2953,24 @@
           <article class="day">
             <div class="day-label">15</div>
             <div>
-              <span class="num" data-editable="day_num_15">يوم 15</span>
-              <h3 data-editable="day_title_15">انطباعات عن Dalat: استكشاف متأنٍ</h3>
+              <span class="num" data-editable="day_num_15">DAY 15</span>
+              <h3 data-editable="day_title_15">Day 15 — Da Nang → Dalat</h3>
               
-              <p data-editable="day_desc_1_0">السفر بالطيران الداخلي إلى نها ترانغ ثم الانتقال بالسيارة الخاصة إلى دالات.</p>
+              <p data-editable="day_desc_1_0">Take a direct flight from Da Nang to Dalat and check in at the hotel.</p>
               
               
               <p style="font-size:13px;color:#706a5d;margin-top:8px">
-                <strong style="color:#17412e;letter-spacing:.06em">أبرز الفعاليات:</strong>
-                تذكرة الطيران الداخلي، سيارة خاصة للانتقال من كام رانه إلى دالات.
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Domestic flight Da Nang – Dalat and airport transfer.
               </p>
               
               
               <div
                 style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
-                <strong style="color:#b7894b;letter-spacing:.06em">ملاحظات:</strong>
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
                 <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
                   
-                  <li style="margin-bottom: 2px;">وتيرة السفر: معتدلة</li>
+                  <li style="margin-bottom: 2px;">Sense of Pace: Moderate</li>
                   
                 </ul>
               </div>
@@ -2972,12 +2978,9 @@
             </div>
             <div class="day-meta">
               
-              <span style="font-size:11px;letter-spacing:.12em">المبيت</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
               <span style="font-size:15px;font-family:Georgia,serif">Dalat</span><br><br>
               
-              
-              <span style="font-size:11px;letter-spacing:.12em">الوجبات</span><br>
-              <span style="font-size:13px">إفطار في الفندق</span>
               
             </div>
           </article>
@@ -2985,24 +2988,24 @@
           <article class="day">
             <div class="day-label">16</div>
             <div>
-              <span class="num" data-editable="day_num_16">يوم 16</span>
-              <h3 data-editable="day_title_16">إعادة تعريف Dalat: بين الأصالة والتجديد</h3>
+              <span class="num" data-editable="day_num_16">DAY 16</span>
+              <h3 data-editable="day_title_16">Day 16 — Dalat</h3>
               
-              <p data-editable="day_desc_1_0">استكشاف معالم دالات: جبل لانغ بيانغ والتلفريك والبيت المجنون ونفق الطين.</p>
+              <p data-editable="day_desc_1_0">Exploring Dalat&#39;s attractions: Lang Biang Mountain, cable car, Crazy House, and Clay Tunnel.</p>
               
               
               <p style="font-size:13px;color:#706a5d;margin-top:8px">
-                <strong style="color:#17412e;letter-spacing:.06em">أبرز الفعاليات:</strong>
-                تذاكر الدخول ورسوم التلفريك، مرشد خاص، سيارة خاصة.
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Entrance tickets and cable car fee, private guide, private car.
               </p>
               
               
               <div
                 style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
-                <strong style="color:#b7894b;letter-spacing:.06em">ملاحظات:</strong>
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
                 <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
                   
-                  <li style="margin-bottom: 2px;">وتيرة السفر: نشطة</li>
+                  <li style="margin-bottom: 2px;">Sense of Pace: Active</li>
                   
                 </ul>
               </div>
@@ -3010,12 +3013,12 @@
             </div>
             <div class="day-meta">
               
-              <span style="font-size:11px;letter-spacing:.12em">المبيت</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
               <span style="font-size:15px;font-family:Georgia,serif">Dalat</span><br><br>
               
               
-              <span style="font-size:11px;letter-spacing:.12em">الوجبات</span><br>
-              <span style="font-size:13px">إفطار وغداء</span>
+              <span style="font-size:11px;letter-spacing:.12em">Meals</span><br>
+              <span style="font-size:13px">Breakfast and lunch</span>
               
             </div>
           </article>
@@ -3023,24 +3026,24 @@
           <article class="day">
             <div class="day-label">17</div>
             <div>
-              <span class="num" data-editable="day_num_17">يوم 17</span>
-              <h3 data-editable="day_title_17">من الشوارع القديمة إلى الإيقاعات الحديثة: مشهد Dalat</h3>
+              <span class="num" data-editable="day_num_17">DAY 17</span>
+              <h3 data-editable="day_title_17">Day 17 — Dalat</h3>
               
-              <p data-editable="day_desc_1_0">زيارة حديقة Fresh Garden وشلالات داتانلا وشلال الفيل ومقهى مي لينه.</p>
+              <p data-editable="day_desc_1_0">Visit Fresh Garden, Datanla Waterfall, Elephant Waterfall, and Me Linh Coffee.</p>
               
               
               <p style="font-size:13px;color:#706a5d;margin-top:8px">
-                <strong style="color:#17412e;letter-spacing:.06em">أبرز الفعاليات:</strong>
-                تذاكر دخول وتجربة الزلاجة، مرشد، سيارة خاصة.
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Private vehicle and entrance arrangements in Dalat as scheduled.
               </p>
               
               
               <div
                 style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
-                <strong style="color:#b7894b;letter-spacing:.06em">ملاحظات:</strong>
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
                 <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
                   
-                  <li style="margin-bottom: 2px;">وتيرة السفر: غامرة</li>
+                  <li style="margin-bottom: 2px;">Sense of Pace: Immersive</li>
                   
                 </ul>
               </div>
@@ -3048,12 +3051,9 @@
             </div>
             <div class="day-meta">
               
-              <span style="font-size:11px;letter-spacing:.12em">المبيت</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
               <span style="font-size:15px;font-family:Georgia,serif">Dalat</span><br><br>
               
-              
-              <span style="font-size:11px;letter-spacing:.12em">الوجبات</span><br>
-              <span style="font-size:13px">إفطار في الفندق</span>
               
             </div>
           </article>
@@ -3061,24 +3061,24 @@
           <article class="day">
             <div class="day-label">18</div>
             <div>
-              <span class="num" data-editable="day_num_18">يوم 18</span>
-              <h3 data-editable="day_title_18">روح Ho Chi Minh City: بين السكون والجمال</h3>
+              <span class="num" data-editable="day_num_18">DAY 18</span>
+              <h3 data-editable="day_title_18">Day 18 — Dalat → Ho Chi Minh City</h3>
               
-              <p data-editable="day_desc_1_0">الانتقال بالسيارة إلى نها ترانغ ثم السفر بالطائرة إلى مدينة هو شي منه.</p>
+              <p data-editable="day_desc_1_0">Take a direct flight from Dalat to Ho Chi Minh City and check in at the hotel.</p>
               
               
               <p style="font-size:13px;color:#706a5d;margin-top:8px">
-                <strong style="color:#17412e;letter-spacing:.06em">أبرز الفعاليات:</strong>
-                الانتقال بسيارة خاصة إلى مطار نها ترانغ، تذكرة الطيران الداخلي، استقبال وتوصيل فندق هو شي منه.
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Domestic flight Dalat – Ho Chi Minh City and airport transfer.
               </p>
               
               
               <div
                 style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
-                <strong style="color:#b7894b;letter-spacing:.06em">ملاحظات:</strong>
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
                 <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
                   
-                  <li style="margin-bottom: 2px;">وتيرة السفر: نشطة</li>
+                  <li style="margin-bottom: 2px;">Sense of Pace: Active</li>
                   
                 </ul>
               </div>
@@ -3086,12 +3086,9 @@
             </div>
             <div class="day-meta">
               
-              <span style="font-size:11px;letter-spacing:.12em">المبيت</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
               <span style="font-size:15px;font-family:Georgia,serif">Ho Chi Minh City</span><br><br>
               
-              
-              <span style="font-size:11px;letter-spacing:.12em">الوجبات</span><br>
-              <span style="font-size:13px">إفطار في الفندق</span>
               
             </div>
           </article>
@@ -3099,24 +3096,24 @@
           <article class="day">
             <div class="day-label">19</div>
             <div>
-              <span class="num" data-editable="day_num_19">يوم 19</span>
-              <h3 data-editable="day_title_19">خلف الأبواب المغلقة: فصل Ho Chi Minh City</h3>
+              <span class="num" data-editable="day_num_19">DAY 19</span>
+              <h3 data-editable="day_title_19">Day 19 — Ho Chi Minh City</h3>
               
-              <p data-editable="day_desc_1_0">زيارة أنفاق كو تشي التاريخية ومعالم وسط المدينة وسوق بين ثانه.</p>
+              <p data-editable="day_desc_1_0">Visit the Cu Chi Tunnels, apartment café, Ben Thanh Market, and the Central Post Office.</p>
               
               
               <p style="font-size:13px;color:#706a5d;margin-top:8px">
-                <strong style="color:#17412e;letter-spacing:.06em">أبرز الفعاليات:</strong>
-                رسوم أنفاق كو تشي، مرشد خاص، سيارة خاصة.
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Private vehicle and sightseeing arrangements in Ho Chi Minh City as scheduled.
               </p>
               
               
               <div
                 style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
-                <strong style="color:#b7894b;letter-spacing:.06em">ملاحظات:</strong>
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
                 <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
                   
-                  <li style="margin-bottom: 2px;">وتيرة السفر: غامرة</li>
+                  <li style="margin-bottom: 2px;">Sense of Pace: Immersive</li>
                   
                 </ul>
               </div>
@@ -3124,12 +3121,9 @@
             </div>
             <div class="day-meta">
               
-              <span style="font-size:11px;letter-spacing:.12em">المبيت</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
               <span style="font-size:15px;font-family:Georgia,serif">Ho Chi Minh City</span><br><br>
               
-              
-              <span style="font-size:11px;letter-spacing:.12em">الوجبات</span><br>
-              <span style="font-size:13px">إفطار وغداء</span>
               
             </div>
           </article>
@@ -3137,24 +3131,24 @@
           <article class="day">
             <div class="day-label">20</div>
             <div>
-              <span class="num" data-editable="day_num_20">يوم 20</span>
-              <h3 data-editable="day_title_20">كشف أسرار Ho Chi Minh City: رحلة استكشافية خاصة</h3>
+              <span class="num" data-editable="day_num_20">DAY 20</span>
+              <h3 data-editable="day_title_20">Day 20 — Ho Chi Minh City → Mekong Delta → Ho Chi Minh City</h3>
               
-              <p data-editable="day_desc_1_0">رحلة ليوم كامل لاستكشاف دلتا ميكونغ بالقوارب الخشبية التقليدية.</p>
+              <p data-editable="day_desc_1_0">Visit the Mekong Delta, then return to Ho Chi Minh City.</p>
               
               
               <p style="font-size:13px;color:#706a5d;margin-top:8px">
-                <strong style="color:#17412e;letter-spacing:.06em">أبرز الفعاليات:</strong>
-                رحلة قارب دلتا ميكونغ، رسوم الجولات، غداء، مرشد خاص، سيارة خاصة.
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Private vehicle and Mekong Delta excursion as scheduled.
               </p>
               
               
               <div
                 style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
-                <strong style="color:#b7894b;letter-spacing:.06em">ملاحظات:</strong>
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
                 <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
                   
-                  <li style="margin-bottom: 2px;">وتيرة السفر: معتدلة</li>
+                  <li style="margin-bottom: 2px;">Sense of Pace: Moderate</li>
                   
                 </ul>
               </div>
@@ -3162,12 +3156,9 @@
             </div>
             <div class="day-meta">
               
-              <span style="font-size:11px;letter-spacing:.12em">المبيت</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
               <span style="font-size:15px;font-family:Georgia,serif">Ho Chi Minh City</span><br><br>
               
-              
-              <span style="font-size:11px;letter-spacing:.12em">الوجبات</span><br>
-              <span style="font-size:13px">إفطار وغداء محلي حلال</span>
               
             </div>
           </article>
@@ -3175,24 +3166,24 @@
           <article class="day">
             <div class="day-label">21</div>
             <div>
-              <span class="num" data-editable="day_num_21">يوم 21</span>
-              <h3 data-editable="day_title_21">التراث الحي لـ Ho Chi Minh City</h3>
+              <span class="num" data-editable="day_num_21">DAY 21</span>
+              <h3 data-editable="day_title_21">Day 21 — Ho Chi Minh City</h3>
               
-              <p data-editable="day_desc_1_0">وقت حر للتسوق قبل الانتقال إلى المطار لرحلة العودة.</p>
+              <p data-editable="day_desc_1_0">Depart Ho Chi Minh City and transfer to the airport for the international flight.</p>
               
               
               <p style="font-size:13px;color:#706a5d;margin-top:8px">
-                <strong style="color:#17412e;letter-spacing:.06em">أبرز الفعاليات:</strong>
-                توصيل بسيارة خاصة إلى مطار تان سون نهات الدولي.
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Private transfer to Tan Son Nhat International Airport.
               </p>
               
               
               <div
                 style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
-                <strong style="color:#b7894b;letter-spacing:.06em">ملاحظات:</strong>
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
                 <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
                   
-                  <li style="margin-bottom: 2px;">وتيرة السفر: مريحة</li>
+                  <li style="margin-bottom: 2px;">Sense of Pace: Relaxed</li>
                   
                 </ul>
               </div>
@@ -3200,12 +3191,9 @@
             </div>
             <div class="day-meta">
               
-              <span style="font-size:11px;letter-spacing:.12em">المبيت</span><br>
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
               <span style="font-size:15px;font-family:Georgia,serif">Ho Chi Minh City</span><br><br>
               
-              
-              <span style="font-size:11px;letter-spacing:.12em">الوجبات</span><br>
-              <span style="font-size:13px">إفطار في الفندق</span>
               
             </div>
           </article>
@@ -3258,8 +3246,8 @@
         <div class="section-head" style="grid-template-columns: 1fr;">
           <h2
             style="font-family: var(--serif); font-size: clamp(32px, 4vw, 48px); color: var(--emerald); margin: 0 0 10px;">
-            خطة الفنادق المختارة</h2>
-          <p style="color: var(--muted); margin: 0;">الفنادق والرحلات البحرية الفاخرة المختارة لرحلتك. تخضع للتوافر عند التأكيد.</p>
+            Selected Hotel Plan</h2>
+          <p style="color: var(--muted); margin: 0;">Proposed hotels and luxury cruises selected for your journey. Subject to availability at confirmation.</p>
         </div>
 
         
@@ -3285,7 +3273,9 @@
             <!-- Footer Columns (Introduction & Info/Tel) -->
             <div class="hotel-footer-layout" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 40px; margin-top: 20px; flex-wrap: wrap;">
               <div class="hotel-intro" style="flex: 1; min-width: 280px;">
-                <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_1">يعد فندق ميناسي بريميوم فندقاً فاخراً يقع في الأحياء التاريخية بمدينة هانوي، ويتميز بتصميم أنيق وخدمة مخصصة ووسائل راحة حديثة.</p>
+                
+                <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_1">Minasi Premium Hotel is a boutique luxury hotel nestled in Hanoi&#39;s historic quarters, offering elegant design, personalized service, and modern comforts.</p>
+                
               </div>
               <div class="hotel-info">
                 <h4 style="font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--emerald); margin: 0; letter-spacing: 0.04em; text-transform: uppercase;" data-editable="hotel_info_name_1">Minasi Premium Hotel</h4>
@@ -3315,7 +3305,9 @@
             <!-- Footer Columns (Introduction & Info/Tel) -->
             <div class="hotel-footer-layout" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 40px; margin-top: 20px; flex-wrap: wrap;">
               <div class="hotel-intro" style="flex: 1; min-width: 280px;">
-                <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_2">تعتبر رحلة لا كاستا كروز البحرية من فئة 5 نجوم الفاخرة في خليج هاليغ، وتوفر أجنحة جونيور واسعة مع شرفات خاصة مطلة على المحيط ووسائل راحة راقية.</p>
+                
+                <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_2">La Casta Cruise is a luxury 5-star cruise on Halong Bay, offering spacious junior suites with private ocean-view balconies and high-class amenities.</p>
+                
               </div>
               <div class="hotel-info">
                 <h4 style="font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--emerald); margin: 0; letter-spacing: 0.04em; text-transform: uppercase;" data-editable="hotel_info_name_2">La Casta Cruise</h4>
@@ -3345,7 +3337,9 @@
             <!-- Footer Columns (Introduction & Info/Tel) -->
             <div class="hotel-footer-layout" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 40px; margin-top: 20px; flex-wrap: wrap;">
               <div class="hotel-intro" style="flex: 1; min-width: 280px;">
-                <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_3">يعد فندق ميناسي بريميوم فندقاً فاخراً يقع في الأحياء التاريخية بمدينة هانوي، ويتميز بتصميم أنيق وخدمة مخصصة ووسائل راحة حديثة.</p>
+                
+                <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_3">Minasi Premium Hotel is a boutique luxury hotel nestled in Hanoi&#39;s historic quarters, offering elegant design, personalized service, and modern comforts.</p>
+                
               </div>
               <div class="hotel-info">
                 <h4 style="font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--emerald); margin: 0; letter-spacing: 0.04em; text-transform: uppercase;" data-editable="hotel_info_name_3">Minasi Premium Hotel</h4>
@@ -3375,7 +3369,9 @@
             <!-- Footer Columns (Introduction & Info/Tel) -->
             <div class="hotel-footer-layout" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 40px; margin-top: 20px; flex-wrap: wrap;">
               <div class="hotel-intro" style="flex: 1; min-width: 280px;">
-                <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_4">يوفر فندق بورا في سابا إطلالات جبلية خلابة وأماكن إقامة أنيقة ومريحة للمسافرين الذين يستكشفون المرتفعات الشمالية الجميلة.</p>
+                
+                <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_4">Bora Hotel in Sapa offers breathtaking mountain views and stylish, cozy accommodations for travelers exploring the beautiful northern highlands.</p>
+                
               </div>
               <div class="hotel-info">
                 <h4 style="font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--emerald); margin: 0; letter-spacing: 0.04em; text-transform: uppercase;" data-editable="hotel_info_name_4">Bora Hotel</h4>
@@ -3405,7 +3401,9 @@
             <!-- Footer Columns (Introduction & Info/Tel) -->
             <div class="hotel-footer-layout" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 40px; margin-top: 20px; flex-wrap: wrap;">
               <div class="hotel-intro" style="flex: 1; min-width: 280px;">
-                <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_5">يعد فندق ميناسي بريميوم فندقاً فاخراً يقع في الأحياء التاريخية بمدينة هانوي، ويتميز بتصميم أنيق وخدمة مخصصة ووسائل راحة حديثة.</p>
+                
+                <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_5">Minasi Premium Hotel is a boutique luxury hotel nestled in Hanoi&#39;s historic quarters, offering elegant design, personalized service, and modern comforts.</p>
+                
               </div>
               <div class="hotel-info">
                 <h4 style="font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--emerald); margin: 0; letter-spacing: 0.04em; text-transform: uppercase;" data-editable="hotel_info_name_5">Minasi Premium Hotel</h4>
@@ -3435,7 +3433,9 @@
             <!-- Footer Columns (Introduction & Info/Tel) -->
             <div class="hotel-footer-layout" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 40px; margin-top: 20px; flex-wrap: wrap;">
               <div class="hotel-intro" style="flex: 1; min-width: 280px;">
-                <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_6">يطل فندق مينه توان صافي أوشن على شاطئ ماي خي المذهل في دا نانغ، ويتميز بغرف واسعة مطلة على البحر وضيافة راقية على شاطئ البحر.</p>
+                
+                <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_6">Minh Toan SAFI Ocean Hotel overlooks the stunning My Khe Beach in Da Nang, offering spacious ocean-view rooms and premium seaside hospitality.</p>
+                
               </div>
               <div class="hotel-info">
                 <h4 style="font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--emerald); margin: 0; letter-spacing: 0.04em; text-transform: uppercase;" data-editable="hotel_info_name_6">Minh Toan SAFI Ocean Hotel</h4>
@@ -3465,7 +3465,9 @@
             <!-- Footer Columns (Introduction & Info/Tel) -->
             <div class="hotel-footer-layout" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 40px; margin-top: 20px; flex-wrap: wrap;">
               <div class="hotel-intro" style="flex: 1; min-width: 280px;">
-                <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_7">يضفي فندق سيسيليا روج دالات سحرًا عتيقًا من العهد الاستعماري وفخامة راقية على شوارع دالات الضبابية.</p>
+                
+                <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_7">CICILIA Rouge Dalat brings colonial vintage charm and sophisticated boutique luxury to the misty streets of Dalat.</p>
+                
               </div>
               <div class="hotel-info">
                 <h4 style="font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--emerald); margin: 0; letter-spacing: 0.04em; text-transform: uppercase;" data-editable="hotel_info_name_7">CICILIA Rouge Dalat</h4>
@@ -3495,7 +3497,9 @@
             <!-- Footer Columns (Introduction & Info/Tel) -->
             <div class="hotel-footer-layout" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 40px; margin-top: 20px; flex-wrap: wrap;">
               <div class="hotel-intro" style="flex: 1; min-width: 280px;">
-                <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_8">يوفر فندق سيسيليا سايغون سنتر أماكن إقامة أنيقة وعصرية في قلب المنطقة 1 بمدينة هو تشي منه.</p>
+                
+                <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_8">Cicilia Saigon Center offers elegant and contemporary accommodations in the heart of District 1, Ho Chi Minh City.</p>
+                
               </div>
               <div class="hotel-info">
                 <h4 style="font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--emerald); margin: 0; letter-spacing: 0.04em; text-transform: uppercase;" data-editable="hotel_info_name_8">Cicilia Saigon Center</h4>
@@ -3512,8 +3516,8 @@
         <div
           style="margin-top: 32px; padding: 18px; background: rgba(183, 137, 75, 0.06); border-radius: 14px; border: 1px dashed var(--gold);">
           <strong
-            style="color: var(--gold); text-transform: uppercase; font-size: 11px; letter-spacing: 0.12em; display: block; margin-bottom: 6px;">ملاحظات الغرفة والطلبات الخاصة</strong>
-          <div data-editable="room_notes" style="font-size: 14px; color: var(--muted);">غرفة مزدوجة لشخصين (Double/Twin Bed Room for 2 Adults)</div>
+            style="color: var(--gold); text-transform: uppercase; font-size: 11px; letter-spacing: 0.12em; display: block; margin-bottom: 6px;">Room Notes &amp; Special Requests</strong>
+          <div data-editable="room_notes" style="font-size: 14px; color: var(--muted);">Double/Twin Bed Room for 2 Adults</div>
         </div>
         
       </div>
@@ -3525,30 +3529,30 @@
 <section id="quotation">
       <div class="container">
         <div class="pricing">
-          <h2 data-editable="pricing_h2">الاستثمار في الرحلة: USD 3,990</h2>
-          <p data-editable="pricing_p">الإجمالي: 2 Adults (شخصين). العملة: USD. الأسعار النهائية تخضع لإعادة التأكيد.</p>
+          <h2 data-editable="pricing_h2">Journey Investment: USD 3,990</h2>
+          <p data-editable="pricing_p">Total: 2 Adults. Currency: USD. Final rates subject to reconfirmation.</p>
           <div class="price-grid">
             
             <div class="price-card featured">
-              <span>الإقامة في فنادق 4 نجوم وكروز 5 نجوم (شخصين)</span>
+              <span>Accommodation in 4-star Hotels and 5-star Cruise (2 persons)</span>
               
-              <small style="color:rgba(255,255,255,.55);font-size:11px;display:block;margin-top:4px">1995 دولار للشخص الواحد في الغرفة المزدوجة</small>
+              <small style="color:rgba(255,255,255,.55);font-size:11px;display:block;margin-top:4px">1995 USD per person in a double room</small>
               
               
               <strong data-editable="price_pax_1" style="font-size:28px">USD 1,995 / person</strong>
-              <small>للشخص الواحد</small><br>
-              <span style="font-size:13px;opacity:.8">الإجمالي: USD 3,990</span>
+              <small>per person</small><br>
+              <span style="font-size:13px;opacity:.8">Total: USD 3,990</span>
               
               
-              <div style="margin-top:12px;font-size:10px;letter-spacing:.14em;color:#d8bd85;font-weight:800">✓ الخيار المؤكد الرئيسي</div>
+              <div style="margin-top:12px;font-size:10px;letter-spacing:.14em;color:#d8bd85;font-weight:800">✓ CONFIRMED MAIN OPTION</div>
               
             </div>
             
           </div>
           
           <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 14px; color: rgba(255,255,255,0.8); line-height: 1.6; text-align: left;">
-            <strong style="color: var(--gold-2); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.15em; font-size: 11px; font-weight: 700;">ملاحظة مهمة</strong>
-            <p style="margin: 0;" data-editable="price_cond_first">الأسعار تقديرية وصافية لشركاء B2B وتخضع لإعادة التأكيد عند الحجز.</p>
+            <strong style="color: var(--gold-2); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.15em; font-size: 11px; font-weight: 700;">Important Note</strong>
+            <p style="margin: 0;" data-editable="price_cond_first">Rates are B2B net indicative and subject to reconfirmation at the time of booking.</p>
           </div>
           
         </div>
@@ -3558,122 +3562,64 @@
     <section>
       <div class="container">
         <div class="section-head" style="grid-template-columns: 1fr; margin-bottom: 32px;">
-          <h2 data-editable="inc_exc_h2">ما تشمله برنامج رحلتك</h2>
+          <h2 data-editable="inc_exc_h2">What Your Journey Includes</h2>
         </div>
         <div class="two-col">
           <article class="panel">
-            <h3>ما يشمله البرنامج</h3>
+            <h3>Inclusions</h3>
             
-            <p style="font-size:14px; color:var(--muted); line-height:1.6; margin-bottom:16px; margin-top:-8px;">لقد تم ترتيب رحلتك بعناية لضمان تجربة سلسة ومريحة طوال الوقت.</p>
+            <p style="font-size:14px; color:var(--muted); line-height:1.6; margin-bottom:16px; margin-top:-8px;">Your journey has been thoughtfully arranged to ensure a seamless and comfortable experience throughout.</p>
             
             <ul id="inclusions-list" style="list-style-type:none; padding-left:0;">
               
                 
-                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_1">الاستقبال في المطار، الانتقال بسيارة خاصة، زجاجات مياه الترحيب.</li>
+                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_1">Accommodation at 4-star hotels, including daily breakfast.</li>
                 
               
                 
-                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_2">جولة سيكلو، تذاكر دخول، مرشد سياحي خاص، سيارة خاصة.</li>
+                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_2">Overnight stay on a 5-star Halong cruise, including 4 meals as per cruise program.</li>
                 
               
                 
-                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_3">رحلة القارب في تام كوك، تذاكر هانغ موا، مرشد خاص، سيارة خاصة.</li>
+                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_3">Private vehicle for sightseeing transfers and airport transfers as outlined, except the round-trip Hanoi – Sapa sleeper bus sector.</li>
                 
               
                 
-                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_4">الانتقال بسيارة خاصة، الاقامة في كروز فاخر، رحلات تجديف وقوارب الكاياك.</li>
+                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_4">Entrance tickets for the sightseeing points included in the itinerary.</li>
                 
               
                 
-                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_5">رحلة بحرية صباحية، الانتقال بسيارة خاصة الى هانوي.</li>
+                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_5">Domestic flight tickets as outlined in the program.</li>
                 
               
                 
-                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_6">تذاكر باص النوم الفاخر، الاستقبال والانتقال في سابا.</li>
+                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_6">Vietnam E-visa.</li>
                 
               
                 
-                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_7">تذاكر تلفريك فانسيبان، رسوم دخول قرية كات كات، مرشد خاص، سيارة خاصة.</li>
+                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_7">Fast Track service on arrival at the airport.</li>
                 
               
                 
-                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_8">تذاكر دخول القرى والشلال، مرشد محلي، سيارة خاصة.</li>
+                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_8">Private guide service for airport welcome on the first day and sightseeing days, excluding time on the Halong cruise.</li>
                 
               
                 
-                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_9">تذاكر الجسر الزجاجي ورسوم مقهى موانا، سيارة خاصة.</li>
-                
-              
-                
-                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_10">تذاكر باص النوم الفاخر، الانتقال الى الفندق.</li>
-                
-              
-                
-                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_11">تذكرة الطيران الداخلي، الاستقبال وتوصيل المطار، تذاكر كروز نهر هان.</li>
-                
-              
-                
-                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_12">تذاكر تلفريك ودخول با نا هيلز، مرشد سياحي، سيارة خاصة.</li>
-                
-              
-                
-                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_13">تذاكر قوارب السلة، رسوم دخول هوي ان، مرشد سياحي، سيارة خاصة.</li>
-                
-              
-                
-                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_14">تذاكر تجديف هوا فو ثانه والمعدات، مرشد خاص، سيارة خاصة.</li>
-                
-              
-                
-                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_15">تذكرة الطيران الداخلي، سيارة خاصة للانتقال من كام رانه الى دالات.</li>
-                
-              
-                
-                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_16">تذاكر الدخول ورسوم التلفريك، مرشد خاص، سيارة خاصة.</li>
-                
-              
-                
-                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_17">تذاكر دخول وتجربة الزلاجة، مرشد، سيارة خاصة.</li>
-                
-              
-                
-                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_18">الانتقال بسيارة خاصة الى مطار نها ترانغ، تذكرة الطيران الداخلي، استقبال وتوصيل فندق هو شي منه.</li>
-                
-              
-                
-                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_19">رسوم انفاق كو تشي، مرشد خاص، سيارة خاصة.</li>
-                
-              
-                
-                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_20">رحلة قارب دلتا ميكونغ، رسوم الجولات، غداء، مرشد خاص، سيارة خاصة.</li>
-                
-              
-                
-                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_21">توصيل بسيارة خاصة الى مطار تان سون نهات الدولي.</li>
+                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_9">4G/Internet SIM card.</li>
                 
               
             </ul>
           </article>
           <article class="panel">
-            <h3>الخدمات غير المشمولة</h3>
+            <h3>Not Included</h3>
             
-            <p style="font-size:14px; color:var(--muted); line-height:1.6; margin-bottom:16px; margin-top:-8px;">للحفاظ على شفافية ووضوح رحلتك، لا تشمل الرحلة الخدمات التالية ما لم يُنص على خلاف ذلك:</p>
+            <p style="font-size:14px; color:var(--muted); line-height:1.6; margin-bottom:16px; margin-top:-8px;">To keep your journey transparent and clearly defined, the following are not included unless specifically stated otherwise:</p>
             
             <ul id="exclusions-list" style="list-style-type:disc; padding-left:20px;">
               
-              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_1">رحلات الطيران الدولية</li>
+              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_1">Personal expenses.</li>
               
-              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_2">رسوم التأشيرة ووثائق السفر</li>
-              
-              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_3">التأمين على السفر</li>
-              
-              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_4">المصاريف الشخصية</li>
-              
-              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_5">التجارب الاختيارية غير المحددة في مسار الرحلة</li>
-              
-              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_6">البقشيش والإكراميات</li>
-              
-              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_7">أي خدمات أخرى لم يتم ذكرها صراحة ضمن الخدمات المشمولة</li>
+              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_2">International round-trip airfare.</li>
               
             </ul>
           </article>
@@ -3689,33 +3635,33 @@
         <div class="section-head" style="grid-template-columns: 1fr;">
           <h2
             style="font-family: var(--serif); font-size: clamp(32px, 4vw, 48px); color: var(--emerald); margin: 0 0 10px;">
-            شروط الحجز والدفع</h2>
-          <p style="color: var(--muted); margin: 0;">الشروط التجارية والودائع وسياسة الإلغاء لهذا الحجز.</p>
+            Booking &amp; Payment Terms</h2>
+          <p style="color: var(--muted); margin: 0;">Commercial conditions, deposits, and cancellation policy for this booking.</p>
         </div>
         <div style="overflow-x: auto; margin-top: 32px; border-radius: 18px; border: 1px solid var(--line);">
           <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
             <thead>
               <tr style="background: var(--emerald); color: white;">
-                <th class="term-th" style="padding: 16px 20px; width: 250px;">البند</th>
-                <th style="padding: 16px 20px;">الشرط</th>
+                <th class="term-th" style="padding: 16px 20px; width: 250px;">Term</th>
+                <th style="padding: 16px 20px;">Condition</th>
               </tr>
             </thead>
             <tbody>
               <tr style="border-bottom: 1px solid var(--line); background: white;">
-                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">الدفعة المقدمة</td>
-                <td style="padding: 16px 20px;" data-editable="term_deposit">شروط الدفع: دفع 30% من إجمالي المبلغ عند تأكيد الحجز للحصول على تأكيدات الغرف والخدمات.</td>
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">Deposit</td>
+                <td style="padding: 16px 20px;" data-editable="term_deposit">Payment Terms: 30% of the total amount is required upon booking confirmation to secure room and service reservations.</td>
               </tr>
               <tr style="border-bottom: 1px solid var(--line); background: rgba(183, 137, 75, 0.03);">
-                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">المبلغ المتبقي</td>
-                <td style="padding: 16px 20px;" data-editable="term_balance">يتم سداد المبلغ المتبقي (70%) قبل 30 يومًا من تاريخ بدء الرحلة.</td>
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">Balance</td>
+                <td style="padding: 16px 20px;" data-editable="term_balance">The remaining balance (70%) must be paid 30 days before the tour start date.</td>
               </tr>
               <tr style="border-bottom: 1px solid var(--line); background: white;">
-                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">الإلغاء</td>
-                <td style="padding: 16px 20px;" data-editable="term_cancellation">سياسة الإلغاء: إلغاء مجاني حتى 45 يومًا قبل الوصول. يُفرض رسم إلغاء 50% بين 44 و 15 يومًا، و 100% في حال الإلغاء قبل أقل من 15 يومًا.</td>
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">Cancellation</td>
+                <td style="padding: 16px 20px;" data-editable="term_cancellation">Cancellation Policy: Free cancellation up to 45 days before arrival. 50% cancellation fee between 44 and 15 days, and 100% for cancellations less than 15 days prior.</td>
               </tr>
               <tr style="background: rgba(183, 137, 75, 0.03);">
-                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">التأكيد</td>
-                <td style="padding: 16px 20px;" data-editable="term_confirmation">تخضع جميع الخدمات والأسعار للتوافر عند الدفع وتأكيد الحجز الفعلي.</td>
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">Confirmation</td>
+                <td style="padding: 16px 20px;" data-editable="term_confirmation">All services and prices are subject to availability at the time of payment and actual booking confirmation.</td>
               </tr>
             </tbody>
           </table>
@@ -3733,56 +3679,57 @@
             </div>
           </div>
           <div class="designer-info">
-            <span data-editable="designer_kicker">مستشارك المتخصص</span>
-            <h2 data-editable="designer_title">تعرّف على مصمم رحلتك</h2>
-            <p class="designer-quote" data-editable="designer_quote">"أنا مصمم رحلتك المخصص. لقد اخترت بنفسي كل فندق، وسيلة نقل خاصة، ومرشد محلي في هذا المسار لضمان تجربتك للعمق الحقيقي لفيتنام بكل راحة وخصوصية وبوتيرتك الخاصة. سأشرف شخصيًا على رحلتك خلف الكواليس."</p>
+            <span data-editable="designer_kicker">Your Dedicated Specialist</span>
+            <h2 data-editable="designer_title">Meet Your Travel Specialist</h2>
+            <p class="designer-quote" data-editable="designer_quote">"I am your dedicated travel specialist. I handpicked every hotel, private transfer, and local guide on this itinerary to ensure you experience the true depth of Vietnam in comfort, privacy, and at your own pace. I will personally oversee your journey from behind the scenes."</p>
             <div class="designer-details">
-              <div><strong>التخصص:</strong> <span data-editable="designer_expertise">مسارات مخصصة، سفر فاخر، تجارب محلية</span></div>
-              <div><strong>الخبرة:</strong> <span data-editable="designer_experience">سنوات من الخبرة في تصميم الرحلات المخصصة</span></div>
+              <div><strong>Expertise:</strong> <span data-editable="designer_expertise">Custom Itineraries, Luxury Travel, Local Experiences</span></div>
+              <div><strong>Experience:</strong> <span data-editable="designer_experience">Years designing bespoke journeys</span></div>
             </div>
             <div class="designer-signature" data-editable="designer_signature">Anh Son Le</div>
           </div>
         </div>
       </div>
     </section>
+    
 
 <section id="contact">
       <div class="container">
         <div class="cta">
           <div>
-            <div class="kicker">الخطوة التالية</div>
-            <h2 data-editable="cta_h2">أكّد التواريخ ثم اضبط مستوى الفخامة.</h2>
+            <div class="kicker">Next step</div>
+            <h2 data-editable="cta_h2">Confirm the final details to complete the program.</h2>
             <div class="two-col" style="margin-top: 24px; text-align: left; font-size: 13px;">
               <div>
                 <strong
-                  style="color: var(--gold-2); text-transform: uppercase; font-size: 11px; letter-spacing: 0.1em; display: block; margin-bottom: 8px;">التفاصيل النهائية المطلوبة</strong>
+                  style="color: var(--gold-2); text-transform: uppercase; font-size: 11px; letter-spacing: 0.1em; display: block; margin-bottom: 8px;">Final Details Required</strong>
                 <ul style="margin: 0; padding-left: 16px; display: grid; gap: 6px; color: rgba(255,255,255,0.8);">
                   
-                  <li style="line-height: 1.4;">المستندات المطلوبة: نسخة ملونة من جواز السفر صالح لمدة 6 أشهر على الأقل وتفاصيل تذاكر الطيران الدولية.</li>
+                  <li style="line-height: 1.4;">Required Documents: Color copy of passport valid for at least 6 months and international flight ticket details.</li>
                   
                 </ul>
               </div>
               <div>
                 <strong
-                  style="color: var(--gold-2); text-transform: uppercase; font-size: 11px; letter-spacing: 0.1em; display: block; margin-bottom: 8px;">بعد التأكيد</strong>
+                  style="color: var(--gold-2); text-transform: uppercase; font-size: 11px; letter-spacing: 0.1em; display: block; margin-bottom: 8px;">After Confirmation</strong>
                 <ul style="margin: 0; padding-left: 16px; display: grid; gap: 6px; color: rgba(255,255,255,0.8);">
                   
-                  <li style="line-height: 1.4;">سيتواصل معك منسق الرحلات الخاص بنا لتوفير قسائم الخدمات (Vouchers) وتفاصيل المرشدين المحليين وأرقام الطوارئ 24/7.</li>
+                  <li style="line-height: 1.4;">Our tour coordinator will contact you to provide service vouchers, local guide details, and 24/7 emergency numbers.</li>
                   
                 </ul>
               </div>
             </div>
           </div>
           <div class="contact">
-            <label>الموقع الإلكتروني</label>
+            <label>Website</label>
             <div data-editable="contact_web">www.vietnamsafar.vn</div>
-            <label>واتساب</label>
+            <label>WhatsApp</label>
             <div data-editable="contact_phone">+84 911 538 738</div>
-            <label>أُعدّ بواسطة</label>
+            <label>Prepared by</label>
             <div data-editable="seller_name2">Vietnam Safar – Discovery Asia Travel Group</div>
             
             <div style="margin-top:24px" class="no-print">
-              <a class="btn gold" href="mailto:sales@vietnamsafar.vn">طلب التأكيد النهائي</a>
+              <a class="btn gold" href="mailto:sales@vietnamsafar.vn">Request final confirmation</a>
             </div>
             
           </div>
@@ -3794,7 +3741,7 @@
   </main>
 
   <footer class="footer">
-    <div class="container" data-editable="footer_text">اكتشف روعة الطبيعة وسحر الثقافة عبر 21 يومًا من الاسترخاء والمغامرة... — عرض سعر فاخر مُعدّ لصالح 2 Adults (شخصين).</div>
+    <div class="container" data-editable="footer_text">Discover the Magnificence of Nature and the Charm of Culture through... — Luxury quotation prepared for 2 Adults.</div>
   </footer>
 
   <!-- ── Publish Bar ─────────────────────────────────────────── -->
@@ -3815,14 +3762,14 @@
         <div class="ring"></div>
         <div class="active-glow"></div>
       </div>
-      <h3>جاري ترجمة الرحلة...</h3>
-      <p>جاري صياغة مسار رحلة فاخر مخصص في <span id="loading-lang-name">English</span></p>
-      <button class="btn-cancel" onclick="cancelTranslation()">إلغاء</button>
+      <h3>Translating Journey...</h3>
+      <p>Crafting a bespoke luxury narrative in <span id="loading-lang-name">English</span></p>
+      <button class="btn-cancel" onclick="cancelTranslation()">CANCEL</button>
     </div>
   </div>
 
   <script id="translation-status" type="application/json">
-    {"available_langs": ["ar"], "baseline_lang": "ar"}
+    {"available_langs": ["ar", "vi", "en"], "baseline_lang": "ar"}
   </script>
 
   <script id="editor-scripts">
@@ -3861,8 +3808,55 @@
       }
     })();
 
-    const QUOTATION_ID = "quo_3e9bcd4f2f85";
-    const CURRENT_LANG = "ar";
+    if (typeof window.QUOTATION_ID === 'undefined') {
+      window.QUOTATION_ID = "quo_3e9bcd4f2f85";
+    }
+    if (typeof window.CURRENT_LANG === 'undefined') {
+      window.CURRENT_LANG = "en";
+    }
+
+    // Set globals for compatibility if not already defined
+    if (typeof QUOTATION_ID === 'undefined') {
+      window.QUOTATION_ID = "quo_3e9bcd4f2f85";
+    }
+    if (typeof CURRENT_LANG === 'undefined') {
+      window.CURRENT_LANG = "en";
+    }
+
+    // Dynamically inject inline translate button styles to support previously published static pages
+    (function() {
+      const styleId = 'btn-translate-loading-styles';
+      if (!document.getElementById(styleId)) {
+        const style = document.createElement('style');
+        style.id = styleId;
+        style.textContent = `
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+          .btn-inline-translate.loading {
+            color: transparent !important;
+            pointer-events: none;
+            background: var(--emerald) !important;
+          }
+          .btn-inline-translate.loading::after {
+            content: "";
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border: 2px solid transparent;
+            border-top-color: var(--gold-2);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            left: 0;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            margin: auto;
+          }
+        `;
+        document.head.appendChild(style);
+      }
+    })();
 
     // Sync language dropdown and links with URL parameters
     (function() {
@@ -3974,7 +3968,7 @@
       const btn = element.parentNode.querySelector('.btn-inline-translate');
       if (btn) {
         btn.disabled = true;
-        btn.innerText = '⏳';
+        btn.classList.add('loading');
       }
       
       try {
@@ -3997,12 +3991,24 @@
       } finally {
         if (btn) {
           btn.disabled = false;
-          btn.innerText = 'A⇄文';
+          btn.classList.remove('loading');
         }
       }
     }
 
     document.querySelectorAll('[data-editable]').forEach(el => {
+      // Prevent double wrapping
+      if (el.parentNode.classList.contains('luxury-editable-wrapper')) {
+        const existingBtn = el.parentNode.querySelector('.btn-inline-translate');
+        if (existingBtn) {
+          existingBtn.onclick = (e) => {
+            e.stopPropagation();
+            translateBlock(el);
+          };
+        }
+        return;
+      }
+
       el.contentEditable = 'true';
       el.spellcheck = false;
 
@@ -4250,10 +4256,16 @@
   </script>
 
   <script id="itinerary-data" type="application/json">
-    [{"activities": ["\u0627\u0644\u0627\u0633\u062a\u0642\u0628\u0627\u0644 \u0641\u064a \u0627\u0644\u0645\u0637\u0627\u0631\u060c \u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0628\u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629\u060c \u0632\u062c\u0627\u062c\u0627\u062a \u0645\u064a\u0627\u0647 \u0627\u0644\u062a\u0631\u062d\u064a\u0628."], "date": "", "dayNumber": 1, "description": ["\u0627\u0644\u0648\u0635\u0648\u0644 \u0625\u0644\u0649 \u0647\u0627\u0646\u0648\u064a \u0648\u0627\u0644\u0627\u0633\u062a\u0642\u0631\u0627\u0631 \u0641\u064a \u0627\u0644\u0641\u0646\u062f\u0642."], "destinations": ["Hanoi"], "meals": ["\u0639\u0634\u0627\u0621 \u062a\u0631\u062d\u064a\u0628\u064a \u062e\u0627\u0635"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0631\u064a\u062d\u0629"], "overnight": "Hanoi", "title": "\u062e\u0644\u0641 \u0627\u0644\u0623\u0628\u0648\u0627\u0628 \u0627\u0644\u0645\u063a\u0644\u0642\u0629: \u0641\u0635\u0644 Hanoi"}, {"activities": ["\u062c\u0648\u0644\u0629 \u0633\u064a\u0643\u0644\u0648\u060c \u062a\u0630\u0627\u0643\u0631 \u062f\u062e\u0648\u0644\u060c \u0645\u0631\u0634\u062f \u0633\u064a\u0627\u062d\u064a \u062e\u0627\u0635\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 2, "description": ["\u062c\u0648\u0644\u0629 \u062b\u0642\u0627\u0641\u064a\u0629 \u0641\u064a \u0647\u0627\u0646\u0648\u064a \u0627\u0644\u0642\u062f\u064a\u0645\u0629 \u062a\u0634\u0645\u0644 \u0633\u0648\u0642 \u062f\u0648\u0646\u063a \u0633\u0648\u0627\u0646 \u0648\u0631\u0643\u0648\u0628 \u0627\u0644\u0633\u064a\u0643\u0644\u0648 \u0648\u062a\u0630\u0648\u0642 \u0627\u0644\u0642\u0647\u0648\u0629 \u0627\u0644\u0641\u064a\u062a\u0646\u0627\u0645\u064a\u0629 \u0627\u0644\u062a\u0642\u0644\u064a\u062f\u064a\u0629."], "destinations": ["Hanoi"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0641\u064a \u0627\u0644\u0641\u0646\u062f\u0642"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u063a\u0627\u0645\u0631\u0629"], "overnight": "Hanoi", "title": "\u0643\u0634\u0641 \u0623\u0633\u0631\u0627\u0631 Hanoi: \u0631\u062d\u0644\u0629 \u0627\u0633\u062a\u0643\u0634\u0627\u0641\u064a\u0629 \u062e\u0627\u0635\u0629"}, {"activities": ["\u0631\u062d\u0644\u0629 \u0627\u0644\u0642\u0627\u0631\u0628 \u0641\u064a \u062a\u0627\u0645 \u0643\u0648\u0643\u060c \u062a\u0630\u0627\u0643\u0631 \u0647\u0627\u0646\u063a \u0645\u0648\u0627\u060c \u0645\u0631\u0634\u062f \u062e\u0627\u0635\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 3, "description": ["\u0631\u062d\u0644\u0629 \u0644\u064a\u0648\u0645 \u0643\u0627\u0645\u0644 \u0644\u0632\u064a\u0627\u0631\u0629 \u0646\u064a\u0646\u0647 \u0628\u064a\u0646\u0647 \u0648\u0627\u0633\u062a\u0643\u0634\u0627\u0641 \u062a\u0627\u0645 \u0643\u0648\u0643 \u0648\u0635\u0639\u0648\u062f \u0642\u0645\u0629 \u0647\u0627\u0646\u063a \u0645\u0648\u0627."], "destinations": ["Hanoi"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0648\u063a\u062f\u0627\u0621 \u0645\u062d\u0644\u064a"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0646\u0634\u0637\u0629"], "overnight": "Hanoi", "title": "\u0627\u0644\u062a\u0631\u0627\u062b \u0627\u0644\u062d\u064a \u0644\u0640 Hanoi"}, {"activities": ["\u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0628\u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629\u060c \u0627\u0644\u0625\u0642\u0627\u0645\u0629 \u0641\u064a \u0643\u0631\u0648\u0632 \u0641\u0627\u062e\u0631\u060c \u0631\u062d\u0644\u0627\u062a \u062a\u062c\u062f\u064a\u0641 \u0648\u0642\u0648\u0627\u0631\u0628 \u0627\u0644\u0643\u0627\u064a\u0627\u0643."], "date": "", "dayNumber": 4, "description": ["\u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0645\u0646 \u0647\u0627\u0646\u0648\u064a \u0625\u0644\u0649 \u062e\u0644\u064a\u062c \u0647\u0627 \u0644\u0648\u0646\u063a \u0648\u0627\u0644\u0635\u0639\u0648\u0630 \u0639\u0644\u0649 \u0645\u062a\u0646 \u0627\u0644\u0643\u0631\u0648\u0632 \u0627\u0644\u0641\u0627\u062e\u0631."], "destinations": ["Halong Bay"], "meals": ["\u0625\u0641\u0637\u0627\u0631\u060c \u063a\u062f\u0627\u0621\u060c \u0648\u0639\u0634\u0627\u0621 \u0639\u0644\u0649 \u0645\u062a\u0646 \u0627\u0644\u0643\u0631\u0648\u0632"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0631\u064a\u062d\u0629"], "overnight": "Halong Bay", "title": "\u0622\u0641\u0627\u0642 \u062d\u0635\u0631\u064a\u0629: \u062f\u0627\u062e\u0644 Halong Bay"}, {"activities": ["\u0631\u062d\u0644\u0629 \u0628\u062d\u0631\u064a\u0629 \u0635\u0628\u0627\u062d\u064a\u0629\u060c \u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0628\u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629 \u0625\u0644\u0649 \u0647\u0627\u0646\u0648\u064a."], "date": "", "dayNumber": 5, "description": ["\u0627\u0644\u0627\u0633\u062a\u0645\u062a\u0627\u0639 \u0628\u0623\u0646\u0634\u0637\u0629 \u0627\u0644\u0635\u0628\u0627\u062d \u0641\u064a \u062e\u0644\u064a\u062c \u0647\u0627 \u0644\u0648\u0646\u063a \u062b\u0645 \u0627\u0644\u0646\u0632\u0648\u0644 \u0648\u0627\u0644\u0639\u0648\u062f\u0629 \u0625\u0644\u0649 \u0647\u0627\u0646\u0648\u064a."], "destinations": ["Hanoi"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0648\u063a\u062f\u0627\u0621 \u062e\u0641\u064a\u0641 \u0639\u0644\u0649 \u0645\u062a\u0646 \u0627\u0644\u0643\u0631\u0648\u0632"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0631\u064a\u062d\u0629"], "overnight": "Hanoi", "title": "\u062f\u0631\u0648\u0633 \u0627\u062d\u062a\u0631\u0627\u0641\u064a\u0629 \u0641\u064a Hanoi"}, {"activities": ["\u062a\u0630\u0627\u0643\u0631 \u0628\u0627\u0635 \u0627\u0644\u0646\u0648\u0645 \u0627\u0644\u0641\u0627\u062e\u0631\u060c \u0627\u0644\u0627\u0633\u062a\u0642\u0628\u0627\u0644 \u0648\u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0641\u064a \u0633\u0627\u0628\u0627."], "date": "", "dayNumber": 6, "description": ["\u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0645\u0646 \u0647\u0627\u0646\u0648\u064a \u0625\u0644\u0649 \u0633\u0627\u0628\u0627 \u0628\u0648\u0627\u0633\u0637\u0629 \u0628\u0627\u0635 \u0627\u0644\u0646\u0648\u0645 \u0627\u0644\u0645\u0631\u064a\u062d \u0648\u0627\u0644\u0627\u0633\u062a\u0642\u0631\u0627\u0631 \u0641\u064a \u0627\u0644\u0641\u0646\u062f\u0642."], "destinations": ["Sapa"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0641\u064a \u0627\u0644\u0641\u0646\u062f\u0642"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0639\u062a\u062f\u0644\u0629"], "overnight": "Sapa", "title": "\u0645\u062c\u0645\u0648\u0639\u0629 Sapa: \u0625\u0642\u0627\u0645\u0629 \u0645\u0646\u0633\u0642\u0629"}, {"activities": ["\u062a\u0630\u0627\u0643\u0631 \u062a\u0644\u0641\u0631\u064a\u0643 \u0641\u0627\u0646\u0633\u064a\u0628\u0627\u0646\u060c \u0631\u0633\u0648\u0645 \u062f\u062e\u0648\u0644 \u0642\u0631\u064a\u0629 \u0643\u0627\u062a \u0643\u0627\u062a\u060c \u0645\u0631\u0634\u062f \u062e\u0627\u0635\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 7, "description": ["\u0632\u064a\u0627\u0631\u0629 \u0642\u0645\u0629 \u0641\u0627\u0646\u0633\u064a\u0628\u0627\u0646 \u0628\u0627\u0644\u062a\u0644\u0641\u0631\u064a\u0643 \u0648\u0627\u0633\u062a\u0643\u0634\u0627\u0641 \u0642\u0631\u064a\u0629 \u0643\u0627\u062a \u0643\u0627\u062a \u0627\u0644\u062a\u0642\u0644\u064a\u062f\u064a\u0629."], "destinations": ["Sapa"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0648\u063a\u062f\u0627\u0621"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0646\u0634\u0637\u0629"], "overnight": "Sapa", "title": "\u0635\u0648\u0631\u0629 \u0623\u0646\u064a\u0642\u0629 \u0644\u0640 Sapa"}, {"activities": ["\u062a\u0630\u0627\u0643\u0631 \u062f\u062e\u0648\u0644 \u0627\u0644\u0642\u0631\u0649 \u0648\u0627\u0644\u0634\u0644\u0627\u0644\u060c \u0645\u0631\u0634\u062f \u0645\u062d\u0644\u064a\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 8, "description": ["\u062c\u0648\u0644\u0629 \u0645\u0634\u064a \u0644\u0627\u0633\u062a\u0643\u0634\u0627\u0641 \u0642\u0631\u0649 \u0644\u0627\u0648 \u062a\u0634\u0627\u064a \u0648\u062a\u0627 \u0641\u0627\u0646 \u0627\u0644\u062c\u0628\u0644\u064a\u0629 \u0648\u0632\u064a\u0627\u0631\u0629 \u0634\u0644\u0627\u0644 \u0627\u0644\u0641\u0636\u0629."], "destinations": ["Sapa"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0648\u063a\u062f\u0627\u0621 \u0645\u062d\u0644\u064a"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0639\u062a\u062f\u0644\u0629"], "overnight": "Sapa", "title": "\u062a\u0641\u0627\u0635\u064a\u0644 Sapa: \u0627\u0644\u062b\u0642\u0627\u0641\u0629 \u0648\u0627\u0644\u062a\u0646\u0627\u0642\u0636"}, {"activities": ["\u062a\u0630\u0627\u0643\u0631 \u0627\u0644\u062c\u0633\u0631 \u0627\u0644\u0632\u062c\u0627\u062c\u064a \u0648\u0631\u0633\u0648\u0645 \u0645\u0642\u0647\u0649 \u0645\u0648\u0627\u0646\u0627\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 9, "description": ["\u0632\u064a\u0627\u0631\u0629 \u0627\u0644\u062c\u0633\u0631 \u0627\u0644\u0632\u062c\u0627\u062c\u064a \u0627\u0644\u0634\u0627\u0647\u0642 \u0648\u0627\u0644\u0627\u0633\u062a\u0631\u062e\u0627\u0621 \u0641\u064a \u0645\u0642\u0647\u0649 \u0645\u0648\u0627\u0646\u0627 \u0627\u0644\u0645\u0637\u0644 \u0639\u0644\u0649 \u0627\u0644\u0648\u0627\u062f\u064a."], "destinations": ["Sapa"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0641\u064a \u0627\u0644\u0641\u0646\u062f\u0642"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u063a\u0627\u0645\u0631\u0629"], "overnight": "Sapa", "title": "\u0631\u062d\u0644\u0629 \u0645\u0633\u062a\u0648\u062d\u0627\u0629 \u0645\u0646 \u0627\u0644\u062a\u0635\u0645\u064a\u0645 \u0639\u0628\u0631 Sapa"}, {"activities": ["\u062a\u0630\u0627\u0643\u0631 \u0628\u0627\u0635 \u0627\u0644\u0646\u0648\u0645 \u0627\u0644\u0641\u0627\u062e\u0631\u060c \u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0625\u0644\u0649 \u0627\u0644\u0641\u0646\u062f\u0642."], "date": "", "dayNumber": 10, "description": ["\u0627\u0644\u0639\u0648\u062f\u0629 \u0645\u0646 \u0633\u0627\u0628\u0627 \u0625\u0644\u0649 \u0647\u0627\u0646\u0648\u064a \u0628\u0648\u0627\u0633\u0637\u0629 \u0628\u0627\u0635 \u0627\u0644\u0646\u0648\u0645 \u0648\u0642\u0636\u0627\u0621 \u0648\u0642\u062a \u062d\u0631 \u0644\u0644\u062a\u0633\u0648\u0642."], "destinations": ["Hanoi"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0641\u064a \u0627\u0644\u0641\u0646\u062f\u0642"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0631\u064a\u062d\u0629"], "overnight": "Hanoi", "title": "\u0645\u0644\u0641 Hanoi: \u062c\u062f\u0648\u0644 \u0623\u0639\u0645\u0627\u0644 \u0645\u062e\u0635\u0635"}, {"activities": ["\u062a\u0630\u0643\u0631\u0629 \u0627\u0644\u0637\u064a\u0631\u0627\u0646 \u0627\u0644\u062f\u0627\u062e\u0644\u064a\u060c \u0627\u0644\u0627\u0633\u062a\u0642\u0628\u0627\u0644 \u0648\u062a\u0648\u0635\u064a\u0644 \u0627\u0644\u0645\u0637\u0627\u0631\u060c \u062a\u0630\u0627\u0643\u0631 \u0643\u0631\u0648\u0632 \u0646\u0647\u0631 \u0647\u0627\u0646."], "date": "", "dayNumber": 11, "description": ["\u0627\u0644\u0633\u0641\u0631 \u0628\u0627\u0644\u0637\u0627\u0626\u0631\u0629 \u0625\u0644\u0649 \u062f\u0627 \u0646\u0627\u0646\u063a \u0648\u0627\u0644\u0627\u0633\u062a\u0645\u062a\u0627\u0639 \u0628\u062c\u0648\u0644\u0629 \u0646\u0647\u0631\u064a\u0629 \u0645\u0633\u0627\u0626\u064a\u0629 \u0641\u064a \u0646\u0647\u0631 \u0647\u0627\u0646."], "destinations": ["Da Nang"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0641\u064a \u0627\u0644\u0641\u0646\u062f\u0642"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0639\u062a\u062f\u0644\u0629"], "overnight": "Da Nang", "title": "\u0644\u0648\u062d\u0627\u062a \u0642\u0635\u064a\u0631\u0629 \u0645\u0646 Da Nang"}, {"activities": ["\u062a\u0630\u0627\u0643\u0631 \u062a\u0644\u0641\u0631\u064a\u0643 \u0648\u062f\u062e\u0648\u0644 \u0628\u0627 \u0646\u0627 \u0647\u064a\u0644\u0632\u060c \u0645\u0631\u0634\u062f \u0633\u064a\u0627\u062d\u064a\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 12, "description": ["\u0631\u062d\u0644\u0629 \u0644\u064a\u0648\u0645 \u0643\u0627\u0645\u0644 \u0644\u0632\u064a\u0627\u0631\u0629 \u0645\u0646\u062a\u062c\u0639 \u0628\u0627 \u0646\u0627 \u0647\u064a\u0644\u0632 \u0648\u0627\u0644\u062c\u0633\u0631 \u0627\u0644\u0630\u0647\u0628\u064a \u0627\u0644\u0634\u0647\u064a\u0631."], "destinations": ["Da Nang"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0648\u063a\u062f\u0627\u0621 \u0628\u0648\u0641\u064a\u0647 \u0641\u064a \u0628\u0627 \u0646\u0627 \u0647\u064a\u0644\u0632"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0646\u0634\u0637\u0629"], "overnight": "Da Nang", "title": "Da Nang \u0641\u064a \u0625\u0637\u0627\u0631\u0627\u062a: \u0633\u0631\u062f \u0645\u0631\u0626\u064a"}, {"activities": ["\u062a\u0630\u0627\u0643\u0631 \u0642\u0648\u0627\u0631\u0628 \u0627\u0644\u0633\u0644\u0629\u060c \u0631\u0633\u0648\u0645 \u062f\u062e\u0648\u0644 \u0647\u0648\u064a \u0622\u0646\u060c \u0645\u0631\u0634\u062f \u0633\u064a\u0627\u062d\u064a\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 13, "description": ["\u0631\u0643\u0648\u0628 \u0642\u0648\u0627\u0631\u0628 \u0627\u0644\u0633\u0644\u0629 \u0641\u064a \u063a\u0627\u0628\u0629 \u062c\u0648\u0632 \u0627\u0644\u0647\u0646\u062f \u0648\u0632\u064a\u0627\u0631\u0629 \u0628\u0644\u062f\u0629 \u0647\u0648\u064a \u0622\u0646 \u0627\u0644\u0642\u062f\u064a\u0645\u0629 \u0644\u064a\u0644\u0627\u064b."], "destinations": ["Da Nang"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0648\u0639\u0634\u0627\u0621 \u0631\u0648\u0645\u0627\u0646\u0633\u064a \u0641\u064a \u0647\u0648\u064a \u0622\u0646"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u063a\u0627\u0645\u0631\u0629"], "overnight": "Da Nang", "title": "\u0623\u0635\u062f\u0627\u0621 Da Nang"}, {"activities": ["\u062a\u0630\u0627\u0643\u0631 \u062a\u062c\u062f\u064a\u0641 \u0647\u0648\u0627 \u0641\u0648 \u062b\u0627\u0646\u0647 \u0648\u0627\u0644\u0645\u0639\u062f\u0627\u062a\u060c \u0645\u0631\u0634\u062f \u062e\u0627\u0635\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 14, "description": ["\u062a\u062c\u0631\u0628\u0629 \u0627\u0644\u0645\u063a\u0627\u0645\u0631\u0629 \u0648\u0627\u0644\u062a\u062c\u062f\u064a\u0641 \u0627\u0644\u0646\u0647\u0631\u064a \u0627\u0644\u0645\u062b\u064a\u0631 \u0641\u064a \u0645\u0646\u0637\u0642\u0629 \u0647\u0648\u0627 \u0641\u0648 \u062b\u0627\u0646\u0647."], "destinations": ["Da Nang"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0648\u063a\u062f\u0627\u0621"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0646\u0634\u0637\u0629"], "overnight": "Da Nang", "title": "\u0631\u0648\u062d \u0648\u062c\u0648\u0647\u0631 Da Nang"}, {"activities": ["\u062a\u0630\u0643\u0631\u0629 \u0627\u0644\u0637\u064a\u0631\u0627\u0646 \u0627\u0644\u062f\u0627\u062e\u0644\u064a\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629 \u0644\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0645\u0646 \u0643\u0627\u0645 \u0631\u0627\u0646\u0647 \u0625\u0644\u0649 \u062f\u0627\u0644\u0627\u062a."], "date": "", "dayNumber": 15, "description": ["\u0627\u0644\u0633\u0641\u0631 \u0628\u0627\u0644\u0637\u064a\u0631\u0627\u0646 \u0627\u0644\u062f\u0627\u062e\u0644\u064a \u0625\u0644\u0649 \u0646\u0647\u0627 \u062a\u0631\u0627\u0646\u063a \u062b\u0645 \u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0628\u0627\u0644\u0633\u064a\u0627\u0631\u0629 \u0627\u0644\u062e\u0627\u0635\u0629 \u0625\u0644\u0649 \u062f\u0627\u0644\u0627\u062a."], "destinations": ["Dalat"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0641\u064a \u0627\u0644\u0641\u0646\u062f\u0642"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0639\u062a\u062f\u0644\u0629"], "overnight": "Dalat", "title": "\u0627\u0646\u0637\u0628\u0627\u0639\u0627\u062a \u0639\u0646 Dalat: \u0627\u0633\u062a\u0643\u0634\u0627\u0641 \u0645\u062a\u0623\u0646\u064d"}, {"activities": ["\u062a\u0630\u0627\u0643\u0631 \u0627\u0644\u062f\u062e\u0648\u0644 \u0648\u0631\u0633\u0648\u0645 \u0627\u0644\u062a\u0644\u0641\u0631\u064a\u0643\u060c \u0645\u0631\u0634\u062f \u062e\u0627\u0635\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 16, "description": ["\u0627\u0633\u062a\u0643\u0634\u0627\u0641 \u0645\u0639\u0627\u0644\u0645 \u062f\u0627\u0644\u0627\u062a: \u062c\u0628\u0644 \u0644\u0627\u0646\u063a \u0628\u064a\u0627\u0646\u063a \u0648\u0627\u0644\u062a\u0644\u0641\u0631\u064a\u0643 \u0648\u0627\u0644\u0628\u064a\u062a \u0627\u0644\u0645\u062c\u0646\u0648\u0646 \u0648\u0646\u0641\u0642 \u0627\u0644\u0637\u064a\u0646."], "destinations": ["Dalat"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0648\u063a\u062f\u0627\u0621"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0646\u0634\u0637\u0629"], "overnight": "Dalat", "title": "\u0625\u0639\u0627\u062f\u0629 \u062a\u0639\u0631\u064a\u0641 Dalat: \u0628\u064a\u0646 \u0627\u0644\u0623\u0635\u0627\u0644\u0629 \u0648\u0627\u0644\u062a\u062c\u062f\u064a\u062f"}, {"activities": ["\u062a\u0630\u0627\u0643\u0631 \u062f\u062e\u0648\u0644 \u0648\u062a\u062c\u0631\u0628\u0629 \u0627\u0644\u0632\u0644\u0627\u062c\u0629\u060c \u0645\u0631\u0634\u062f\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 17, "description": ["\u0632\u064a\u0627\u0631\u0629 \u062d\u062f\u064a\u0642\u0629 Fresh Garden \u0648\u0634\u0644\u0627\u0644\u0627\u062a \u062f\u0627\u062a\u0627\u0646\u0644\u0627 \u0648\u0634\u0644\u0627\u0644 \u0627\u0644\u0641\u064a\u0644 \u0648\u0645\u0642\u0647\u0649 \u0645\u064a \u0644\u064a\u0646\u0647."], "destinations": ["Dalat"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0641\u064a \u0627\u0644\u0641\u0646\u062f\u0642"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u063a\u0627\u0645\u0631\u0629"], "overnight": "Dalat", "title": "\u0645\u0646 \u0627\u0644\u0634\u0648\u0627\u0631\u0639 \u0627\u0644\u0642\u062f\u064a\u0645\u0629 \u0625\u0644\u0649 \u0627\u0644\u0625\u064a\u0642\u0627\u0639\u0627\u062a \u0627\u0644\u062d\u062f\u064a\u062b\u0629: \u0645\u0634\u0647\u062f Dalat"}, {"activities": ["\u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0628\u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629 \u0625\u0644\u0649 \u0645\u0637\u0627\u0631 \u0646\u0647\u0627 \u062a\u0631\u0627\u0646\u063a\u060c \u062a\u0630\u0643\u0631\u0629 \u0627\u0644\u0637\u064a\u0631\u0627\u0646 \u0627\u0644\u062f\u0627\u062e\u0644\u064a\u060c \u0627\u0633\u062a\u0642\u0628\u0627\u0644 \u0648\u062a\u0648\u0635\u064a\u0644 \u0641\u0646\u062f\u0642 \u0647\u0648 \u0634\u064a \u0645\u0646\u0647."], "date": "", "dayNumber": 18, "description": ["\u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0628\u0627\u0644\u0633\u064a\u0627\u0631\u0629 \u0625\u0644\u0649 \u0646\u0647\u0627 \u062a\u0631\u0627\u0646\u063a \u062b\u0645 \u0627\u0644\u0633\u0641\u0631 \u0628\u0627\u0644\u0637\u0627\u0626\u0631\u0629 \u0625\u0644\u0649 \u0645\u062f\u064a\u0646\u0629 \u0647\u0648 \u0634\u064a \u0645\u0646\u0647."], "destinations": ["Ho Chi Minh City"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0641\u064a \u0627\u0644\u0641\u0646\u062f\u0642"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0646\u0634\u0637\u0629"], "overnight": "Ho Chi Minh City", "title": "\u0631\u0648\u062d Ho Chi Minh City: \u0628\u064a\u0646 \u0627\u0644\u0633\u0643\u0648\u0646 \u0648\u0627\u0644\u062c\u0645\u0627\u0644"}, {"activities": ["\u0631\u0633\u0648\u0645 \u0623\u0646\u0641\u0627\u0642 \u0643\u0648 \u062a\u0634\u064a\u060c \u0645\u0631\u0634\u062f \u062e\u0627\u0635\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 19, "description": ["\u0632\u064a\u0627\u0631\u0629 \u0623\u0646\u0641\u0627\u0642 \u0643\u0648 \u062a\u0634\u064a \u0627\u0644\u062a\u0627\u0631\u064a\u062e\u064a\u0629 \u0648\u0645\u0639\u0627\u0644\u0645 \u0648\u0633\u0637 \u0627\u0644\u0645\u062f\u064a\u0646\u0629 \u0648\u0633\u0648\u0642 \u0628\u064a\u0646 \u062b\u0627\u0646\u0647."], "destinations": ["Ho Chi Minh City"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0648\u063a\u062f\u0627\u0621"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u063a\u0627\u0645\u0631\u0629"], "overnight": "Ho Chi Minh City", "title": "\u062e\u0644\u0641 \u0627\u0644\u0623\u0628\u0648\u0627\u0628 \u0627\u0644\u0645\u063a\u0644\u0642\u0629: \u0641\u0635\u0644 Ho Chi Minh City"}, {"activities": ["\u0631\u062d\u0644\u0629 \u0642\u0627\u0631\u0628 \u062f\u0644\u062a\u0627 \u0645\u064a\u0643\u0648\u0646\u063a\u060c \u0631\u0633\u0648\u0645 \u0627\u0644\u062c\u0648\u0644\u0627\u062a\u060c \u063a\u062f\u0627\u0621\u060c \u0645\u0631\u0634\u062f \u062e\u0627\u0635\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 20, "description": ["\u0631\u062d\u0644\u0629 \u0644\u064a\u0648\u0645 \u0643\u0627\u0645\u0644 \u0644\u0627\u0633\u062a\u0643\u0634\u0627\u0641 \u062f\u0644\u062a\u0627 \u0645\u064a\u0643\u0648\u0646\u063a \u0628\u0627\u0644\u0642\u0648\u0627\u0631\u0628 \u0627\u0644\u062e\u0634\u0628\u064a\u0629 \u0627\u0644\u062a\u0642\u0644\u064a\u062f\u064a\u0629."], "destinations": ["Ho Chi Minh City"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0648\u063a\u062f\u0627\u0621 \u0645\u062d\u0644\u064a \u062d\u0644\u0627\u0644"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0639\u062a\u062f\u0644\u0629"], "overnight": "Ho Chi Minh City", "title": "\u0643\u0634\u0641 \u0623\u0633\u0631\u0627\u0631 Ho Chi Minh City: \u0631\u062d\u0644\u0629 \u0627\u0633\u062a\u0643\u0634\u0627\u0641\u064a\u0629 \u062e\u0627\u0635\u0629"}, {"activities": ["\u062a\u0648\u0635\u064a\u0644 \u0628\u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629 \u0625\u0644\u0649 \u0645\u0637\u0627\u0631 \u062a\u0627\u0646 \u0633\u0648\u0646 \u0646\u0647\u0627\u062a \u0627\u0644\u062f\u0648\u0644\u064a."], "date": "", "dayNumber": 21, "description": ["\u0648\u0642\u062a \u062d\u0631 \u0644\u0644\u062a\u0633\u0648\u0642 \u0642\u0628\u0644 \u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0625\u0644\u0649 \u0627\u0644\u0645\u0637\u0627\u0631 \u0644\u0631\u062d\u0644\u0629 \u0627\u0644\u0639\u0648\u062f\u0629."], "destinations": ["Ho Chi Minh City"], "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0641\u064a \u0627\u0644\u0641\u0646\u062f\u0642"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0631\u064a\u062d\u0629"], "overnight": "Ho Chi Minh City", "title": "\u0627\u0644\u062a\u0631\u0627\u062b \u0627\u0644\u062d\u064a \u0644\u0640 Ho Chi Minh City"}]
+    [{"activities": ["Airport pickup and private transfer to the hotel."], "date": "", "dayNumber": 1, "description": ["Arrive in Hanoi and check in at the hotel."], "destinations": ["Hanoi"], "lang": "en", "meals": [], "notes": ["Sense of Pace: Relaxed"], "overnight": "Hanoi", "title": "Day 1 \u2014 Hanoi"}, {"activities": ["Cyclo ride, entrance tickets, private tour guide, private car."], "date": "", "dayNumber": 2, "description": ["Cultural tour of Hanoi\u0027s Old Quarter including Dong Xuan Market, cyclo ride, and traditional Vietnamese coffee tasting."], "destinations": ["Hanoi"], "lang": "en", "meals": ["Breakfast at hotel"], "notes": ["Sense of Pace: Immersive"], "overnight": "Hanoi", "title": "Day 2 \u2014 Hanoi"}, {"activities": ["Private vehicle for the Ninh Binh excursion as scheduled."], "date": "", "dayNumber": 3, "description": ["Visit Ninh Binh with Tam Coc and Hang Mua, then return to Hanoi."], "destinations": ["Hanoi", "Ninh Binh", "Hanoi"], "lang": "en", "meals": ["Breakfast and local lunch"], "notes": ["Sense of Pace: Active"], "overnight": "Hanoi", "title": "Day 3 \u2014 Hanoi \u2192 Ninh Binh \u2192 Hanoi"}, {"activities": ["Private transfer Hanoi \u2013 Halong Bay and overnight stay on La Casta Cruise."], "date": "", "dayNumber": 4, "description": ["Travel by private car from Hanoi to Halong Bay and board the overnight cruise."], "destinations": ["Hanoi", "Halong Bay"], "lang": "en", "meals": ["Meals as provided by the cruise program"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Halong Bay", "title": "Day 4 \u2014 Hanoi \u2192 Halong Bay"}, {"activities": ["Private transfer Halong Bay \u2013 Hanoi."], "date": "", "dayNumber": 5, "description": ["Disembark the cruise and return from Halong Bay to Hanoi by private car."], "destinations": ["Halong Bay", "Hanoi"], "lang": "en", "meals": [], "notes": ["Sense of Pace: Relaxed"], "overnight": "Hanoi", "title": "Day 5 \u2014 Halong Bay \u2192 Hanoi"}, {"activities": ["Luxury sleeper bus tickets, reception and transfer in Sapa."], "date": "", "dayNumber": 6, "description": ["Transfer from Hanoi to Sapa by comfortable sleeper bus and check-in at hotel."], "destinations": ["Sapa"], "lang": "en", "meals": ["Breakfast at hotel"], "notes": ["Sense of Pace: Moderate"], "overnight": "Sapa", "title": "Day 6 \u2014 Sapa"}, {"activities": ["Fansipan cable car tickets, Cat Cat village entrance fee, private guide, private car."], "date": "", "dayNumber": 7, "description": ["Visit Fansipan peak by cable car and explore Cat Cat traditional village."], "destinations": ["Sapa"], "lang": "en", "meals": ["Breakfast and lunch"], "notes": ["Sense of Pace: Active"], "overnight": "Sapa", "title": "Day 7 \u2014 Sapa"}, {"activities": ["Village and waterfall entrance tickets, local guide, private car."], "date": "", "dayNumber": 8, "description": ["Walking tour to explore Lao Chai and Ta Van mountain villages and visit Silver Waterfall."], "destinations": ["Sapa"], "lang": "en", "meals": ["Breakfast and local lunch"], "notes": ["Sense of Pace: Moderate"], "overnight": "Sapa", "title": "Day 8 \u2014 Sapa"}, {"activities": ["Glass bridge tickets and Moana Caf\u00e9 fee, private car."], "date": "", "dayNumber": 9, "description": ["Visit the towering glass bridge and relax at Moana Caf\u00e9 overlooking the valley."], "destinations": ["Sapa"], "lang": "en", "meals": ["Breakfast at hotel"], "notes": ["Sense of Pace: Immersive"], "overnight": "Sapa", "title": "Day 9 \u2014 Sapa"}, {"activities": ["Sleeper bus ticket from Sapa to Hanoi."], "date": "", "dayNumber": 10, "description": ["Return from Sapa to Hanoi by sleeper bus."], "destinations": ["Sapa", "Hanoi"], "lang": "en", "meals": [], "notes": ["Sense of Pace: Relaxed"], "overnight": "Hanoi", "title": "Day 10 \u2014 Sapa \u2192 Hanoi"}, {"activities": ["Domestic flight Hanoi \u2013 Da Nang and Han River cruise."], "date": "", "dayNumber": 11, "description": ["Fly from Hanoi to Da Nang and experience the Han River cruise."], "destinations": ["Hanoi", "Da Nang"], "lang": "en", "meals": ["Breakfast at hotel"], "notes": ["Sense of Pace: Moderate"], "overnight": "Da Nang", "title": "Day 11 \u2014 Hanoi \u2192 Da Nang"}, {"activities": ["Ba Na Hills admission as scheduled."], "date": "", "dayNumber": 12, "description": ["Visit Ba Na Hills."], "destinations": ["Da Nang"], "lang": "en", "meals": [], "notes": ["Sense of Pace: Active"], "overnight": "Da Nang", "title": "Day 12 \u2014 Da Nang"}, {"activities": ["Private vehicle and entrance arrangements for Bay Mau Coconut Forest and Hoi An."], "date": "", "dayNumber": 13, "description": ["Visit Bay Mau Coconut Forest and Hoi An Ancient Town, then return to Da Nang."], "destinations": ["Da Nang", "Hoi An", "Da Nang"], "lang": "en", "meals": [], "notes": ["Sense of Pace: Immersive"], "overnight": "Da Nang", "title": "Day 13 \u2014 Da Nang \u2192 Hoi An \u2192 Da Nang"}, {"activities": ["Hoa Phu Thanh rafting tickets and equipment, private guide, private car."], "date": "", "dayNumber": 14, "description": ["Adventure experience and exciting river rafting in Hoa Phu Thanh area."], "destinations": ["Da Nang"], "lang": "en", "meals": ["Breakfast and lunch"], "notes": ["Sense of Pace: Active"], "overnight": "Da Nang", "title": "Day 14 \u2014 Da Nang"}, {"activities": ["Domestic flight Da Nang \u2013 Dalat and airport transfer."], "date": "", "dayNumber": 15, "description": ["Take a direct flight from Da Nang to Dalat and check in at the hotel."], "destinations": ["Da Nang", "Dalat"], "lang": "en", "meals": [], "notes": ["Sense of Pace: Moderate"], "overnight": "Dalat", "title": "Day 15 \u2014 Da Nang \u2192 Dalat"}, {"activities": ["Entrance tickets and cable car fee, private guide, private car."], "date": "", "dayNumber": 16, "description": ["Exploring Dalat\u0027s attractions: Lang Biang Mountain, cable car, Crazy House, and Clay Tunnel."], "destinations": ["Dalat"], "lang": "en", "meals": ["Breakfast and lunch"], "notes": ["Sense of Pace: Active"], "overnight": "Dalat", "title": "Day 16 \u2014 Dalat"}, {"activities": ["Private vehicle and entrance arrangements in Dalat as scheduled."], "date": "", "dayNumber": 17, "description": ["Visit Fresh Garden, Datanla Waterfall, Elephant Waterfall, and Me Linh Coffee."], "destinations": ["Dalat"], "lang": "en", "meals": [], "notes": ["Sense of Pace: Immersive"], "overnight": "Dalat", "title": "Day 17 \u2014 Dalat"}, {"activities": ["Domestic flight Dalat \u2013 Ho Chi Minh City and airport transfer."], "date": "", "dayNumber": 18, "description": ["Take a direct flight from Dalat to Ho Chi Minh City and check in at the hotel."], "destinations": ["Dalat", "Ho Chi Minh City"], "lang": "en", "meals": [], "notes": ["Sense of Pace: Active"], "overnight": "Ho Chi Minh City", "title": "Day 18 \u2014 Dalat \u2192 Ho Chi Minh City"}, {"activities": ["Private vehicle and sightseeing arrangements in Ho Chi Minh City as scheduled."], "date": "", "dayNumber": 19, "description": ["Visit the Cu Chi Tunnels, apartment caf\u00e9, Ben Thanh Market, and the Central Post Office."], "destinations": ["Ho Chi Minh City"], "lang": "en", "meals": [], "notes": ["Sense of Pace: Immersive"], "overnight": "Ho Chi Minh City", "title": "Day 19 \u2014 Ho Chi Minh City"}, {"activities": ["Private vehicle and Mekong Delta excursion as scheduled."], "date": "", "dayNumber": 20, "description": ["Visit the Mekong Delta, then return to Ho Chi Minh City."], "destinations": ["Ho Chi Minh City", "Mekong Delta", "Ho Chi Minh City"], "lang": "en", "meals": [], "notes": ["Sense of Pace: Moderate"], "overnight": "Ho Chi Minh City", "title": "Day 20 \u2014 Ho Chi Minh City \u2192 Mekong Delta \u2192 Ho Chi Minh City"}, {"activities": ["Private transfer to Tan Son Nhat International Airport."], "date": "", "dayNumber": 21, "description": ["Depart Ho Chi Minh City and transfer to the airport for the international flight."], "destinations": ["Ho Chi Minh City"], "lang": "en", "meals": [], "notes": ["Sense of Pace: Relaxed"], "overnight": "Ho Chi Minh City", "title": "Day 21 \u2014 Ho Chi Minh City"}]
+  </script>
+  <script id="route-stops-data" type="application/json">
+    [{"dayNumber": 1, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "Day 1 \u2014 Hanoi", "showMarker": true, "stopOrder": 1}, {"dayNumber": 2, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "Day 2 \u2014 Hanoi", "showMarker": true, "stopOrder": 1}, {"dayNumber": 3, "destination": "Hanoi", "displayName": "Hanoi", "kind": "transfer", "mapTitle": "Day 3 \u2014 Depart from Hanoi", "showMarker": false, "stopOrder": 1}, {"dayNumber": 3, "destination": "Ninh Binh", "displayName": "Ninh Binh", "kind": "visit", "mapTitle": "Day 3 \u2014 Ninh Binh", "showMarker": true, "stopOrder": 2}, {"dayNumber": 3, "destination": "Hanoi", "displayName": "Hanoi", "kind": "return", "mapTitle": "Day 3 \u2014 Return to Hanoi", "showMarker": false, "stopOrder": 3}, {"dayNumber": 4, "destination": "Hanoi", "displayName": "Hanoi", "kind": "transfer", "mapTitle": "Day 4 \u2014 Depart from Hanoi", "showMarker": false, "stopOrder": 1}, {"dayNumber": 4, "destination": "Halong Bay", "displayName": "Halong Bay", "kind": "overnight", "mapTitle": "Day 4 \u2014 Halong Bay", "showMarker": true, "stopOrder": 2}, {"dayNumber": 5, "destination": "Halong Bay", "displayName": "Halong Bay", "kind": "transfer", "mapTitle": "Day 5 \u2014 Depart from Halong Bay", "showMarker": false, "stopOrder": 1}, {"dayNumber": 5, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "Day 5 \u2014 Hanoi", "showMarker": true, "stopOrder": 2}, {"dayNumber": 6, "destination": "Sapa", "displayName": "Sapa", "kind": "overnight", "mapTitle": "Day 6 \u2014 Sapa", "showMarker": true, "stopOrder": 1}, {"dayNumber": 7, "destination": "Sapa", "displayName": "Sapa", "kind": "overnight", "mapTitle": "Day 7 \u2014 Sapa", "showMarker": true, "stopOrder": 1}, {"dayNumber": 8, "destination": "Sapa", "displayName": "Sapa", "kind": "overnight", "mapTitle": "Day 8 \u2014 Sapa", "showMarker": true, "stopOrder": 1}, {"dayNumber": 9, "destination": "Sapa", "displayName": "Sapa", "kind": "overnight", "mapTitle": "Day 9 \u2014 Sapa", "showMarker": true, "stopOrder": 1}, {"dayNumber": 10, "destination": "Sapa", "displayName": "Sapa", "kind": "transfer", "mapTitle": "Day 10 \u2014 Depart from Sapa", "showMarker": false, "stopOrder": 1}, {"dayNumber": 10, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "Day 10 \u2014 Hanoi", "showMarker": true, "stopOrder": 2}, {"dayNumber": 11, "destination": "Hanoi", "displayName": "Hanoi", "kind": "transfer", "mapTitle": "Day 11 \u2014 Depart from Hanoi", "showMarker": false, "stopOrder": 1}, {"dayNumber": 11, "destination": "Da Nang", "displayName": "Da Nang", "kind": "overnight", "mapTitle": "Day 11 \u2014 Da Nang", "showMarker": true, "stopOrder": 2}, {"dayNumber": 12, "destination": "Da Nang", "displayName": "Da Nang", "kind": "overnight", "mapTitle": "Day 12 \u2014 Da Nang", "showMarker": true, "stopOrder": 1}, {"dayNumber": 13, "destination": "Da Nang", "displayName": "Da Nang", "kind": "transfer", "mapTitle": "Day 13 \u2014 Depart from Da Nang", "showMarker": false, "stopOrder": 1}, {"dayNumber": 13, "destination": "Hoi An", "displayName": "Hoi An", "kind": "visit", "mapTitle": "Day 13 \u2014 Hoi An", "showMarker": true, "stopOrder": 2}, {"dayNumber": 13, "destination": "Da Nang", "displayName": "Da Nang", "kind": "return", "mapTitle": "Day 13 \u2014 Return to Da Nang", "showMarker": false, "stopOrder": 3}, {"dayNumber": 14, "destination": "Da Nang", "displayName": "Da Nang", "kind": "overnight", "mapTitle": "Day 14 \u2014 Da Nang", "showMarker": true, "stopOrder": 1}, {"dayNumber": 15, "destination": "Da Nang", "displayName": "Da Nang", "kind": "transfer", "mapTitle": "Day 15 \u2014 Depart from Da Nang", "showMarker": false, "stopOrder": 1}, {"dayNumber": 15, "destination": "Dalat", "displayName": "Dalat", "kind": "overnight", "mapTitle": "Day 15 \u2014 Dalat", "showMarker": true, "stopOrder": 2}, {"dayNumber": 16, "destination": "Dalat", "displayName": "Dalat", "kind": "overnight", "mapTitle": "Day 16 \u2014 Dalat", "showMarker": true, "stopOrder": 1}, {"dayNumber": 17, "destination": "Dalat", "displayName": "Dalat", "kind": "overnight", "mapTitle": "Day 17 \u2014 Dalat", "showMarker": true, "stopOrder": 1}, {"dayNumber": 18, "destination": "Dalat", "displayName": "Dalat", "kind": "transfer", "mapTitle": "Day 18 \u2014 Depart from Dalat", "showMarker": false, "stopOrder": 1}, {"dayNumber": 18, "destination": "Ho Chi Minh City", "displayName": "Ho Chi Minh City", "kind": "overnight", "mapTitle": "Day 18 \u2014 Ho Chi Minh City", "showMarker": true, "stopOrder": 2}, {"dayNumber": 19, "destination": "Ho Chi Minh City", "displayName": "Ho Chi Minh City", "kind": "overnight", "mapTitle": "Day 19 \u2014 Ho Chi Minh City", "showMarker": true, "stopOrder": 1}, {"dayNumber": 20, "destination": "Ho Chi Minh City", "displayName": "Ho Chi Minh City", "kind": "transfer", "mapTitle": "Day 20 \u2014 Depart from Ho Chi Minh City", "showMarker": false, "stopOrder": 1}, {"dayNumber": 20, "destination": "Mekong Delta", "displayName": "Mekong Delta", "kind": "visit", "mapTitle": "Day 20 \u2014 Mekong Delta", "showMarker": true, "stopOrder": 2}, {"dayNumber": 20, "destination": "Ho Chi Minh City", "displayName": "Ho Chi Minh City", "kind": "return", "mapTitle": "Day 20 \u2014 Return to Ho Chi Minh City", "showMarker": false, "stopOrder": 3}, {"dayNumber": 21, "destination": "Ho Chi Minh City", "displayName": "Ho Chi Minh City", "kind": "overnight", "mapTitle": "Day 21 \u2014 Ho Chi Minh City", "showMarker": true, "stopOrder": 1}]
+  </script>
+  <script id="stay-segments-data" type="application/json">
+    [{"activityPreviews": [{"dayNumber": 1, "label": "Day 1", "summary": "Arrive in Hanoi and check in at the hotel."}, {"dayNumber": 2, "label": "Day 2", "summary": "Cultural tour of Hanoi\u0027s Old Quarter including Dong Xuan Market, cyclo ride, and traditional Vietnamese coffee tasting."}, {"dayNumber": 3, "label": "Day 3", "summary": "Visit Ninh Binh with Tam Coc and Hang Mua, then return to Hanoi."}], "city": "Hanoi", "coords": [21.0285, 105.8542], "dayEnd": 3, "dayStart": 1, "daysLabel": "Days 1-3", "displayName": "Hanoi", "excursions": ["Ninh Binh"], "hotelDateRange": "10 Aug \u2013 13 Aug 2026", "hotelImage": "/assets/hotels/hanoi/minasi-nguyen-truong-to/exterior/1.jpg", "hotelName": "Minasi Premium Hotel", "nights": 3, "nightsLabel": "3 nights", "order": 1, "segmentId": "stay-1", "transportFromPrevious": ""}, {"activityPreviews": [{"dayNumber": 4, "label": "Day 4", "summary": "Travel by private car from Hanoi to Halong Bay and board the overnight cruise."}], "city": "Halong Bay", "coords": [20.9599, 107.0436], "dayEnd": 4, "dayStart": 4, "daysLabel": "Day 4", "displayName": "Halong Bay", "excursions": [], "hotelDateRange": "13 Aug \u2013 14 Aug 2026", "hotelImage": "/assets/hotels/halong/cruise-la-casta/exterior/2.jpg", "hotelName": "La Casta Cruise", "nights": 1, "nightsLabel": "1 night", "order": 2, "segmentId": "stay-2", "transportFromPrevious": "Hanoi \u2192 Halong Bay"}, {"activityPreviews": [{"dayNumber": 5, "label": "Day 5", "summary": "Disembark the cruise and return from Halong Bay to Hanoi by private car."}], "city": "Hanoi", "coords": [21.0285, 105.8542], "dayEnd": 5, "dayStart": 5, "daysLabel": "Day 5", "displayName": "Hanoi", "excursions": [], "hotelDateRange": "14 Aug \u2013 15 Aug 2026", "hotelImage": "/assets/hotels/hanoi/minasi-nguyen-truong-to/exterior/1.jpg", "hotelName": "Minasi Premium Hotel", "nights": 1, "nightsLabel": "1 night", "order": 3, "segmentId": "stay-3", "transportFromPrevious": "Halong Bay \u2192 Hanoi"}, {"activityPreviews": [{"dayNumber": 6, "label": "Day 6", "summary": "Transfer from Hanoi to Sapa by comfortable sleeper bus and check-in at hotel."}, {"dayNumber": 7, "label": "Day 7", "summary": "Visit Fansipan peak by cable car and explore Cat Cat traditional village."}, {"dayNumber": 8, "label": "Day 8", "summary": "Walking tour to explore Lao Chai and Ta Van mountain villages and visit Silver Waterfall."}, {"dayNumber": 9, "label": "Day 9", "summary": "Visit the towering glass bridge and relax at Moana Caf\u00e9 overlooking the valley."}], "city": "Sapa", "coords": [22.3364, 103.8438], "dayEnd": 9, "dayStart": 6, "daysLabel": "Days 6-9", "displayName": "Sapa", "excursions": [], "hotelDateRange": "15 Aug \u2013 19 Aug 2026", "hotelImage": "/assets/hotels/danang/bora-hotel/exterior/1.jpg", "hotelName": "Bora Hotel", "nights": 4, "nightsLabel": "4 nights", "order": 4, "segmentId": "stay-4", "transportFromPrevious": "Hanoi \u2192 Sapa"}, {"activityPreviews": [{"dayNumber": 10, "label": "Day 10", "summary": "Return from Sapa to Hanoi by sleeper bus."}], "city": "Hanoi", "coords": [21.0285, 105.8542], "dayEnd": 10, "dayStart": 10, "daysLabel": "Day 10", "displayName": "Hanoi", "excursions": [], "hotelDateRange": "19 Aug \u2013 20 Aug 2026", "hotelImage": "/assets/hotels/hanoi/minasi-nguyen-truong-to/exterior/1.jpg", "hotelName": "Minasi Premium Hotel", "nights": 1, "nightsLabel": "1 night", "order": 5, "segmentId": "stay-5", "transportFromPrevious": "Sapa \u2192 Hanoi"}, {"activityPreviews": [{"dayNumber": 11, "label": "Day 11", "summary": "Fly from Hanoi to Da Nang and experience the Han River cruise."}, {"dayNumber": 12, "label": "Day 12", "summary": "Visit Ba Na Hills."}, {"dayNumber": 13, "label": "Day 13", "summary": "Visit Bay Mau Coconut Forest and Hoi An Ancient Town, then return to Da Nang."}, {"dayNumber": 14, "label": "Day 14", "summary": "Adventure experience and exciting river rafting in Hoa Phu Thanh area."}], "city": "Da Nang", "coords": [16.0544, 108.2022], "dayEnd": 14, "dayStart": 11, "daysLabel": "Days 11-14", "displayName": "Da Nang", "excursions": ["Hoi An"], "hotelDateRange": "20 Aug \u2013 24 Aug 2026", "hotelImage": "/assets/hotels/danang/minh-toan-ocean/exterior/3.jpg", "hotelName": "Minh Toan SAFI Ocean Hotel", "nights": 4, "nightsLabel": "4 nights", "order": 6, "segmentId": "stay-6", "transportFromPrevious": "Hanoi \u2192 Da Nang"}, {"activityPreviews": [{"dayNumber": 15, "label": "Day 15", "summary": "Take a direct flight from Da Nang to Dalat and check in at the hotel."}, {"dayNumber": 16, "label": "Day 16", "summary": "Exploring Dalat\u0027s attractions: Lang Biang Mountain, cable car, Crazy House, and Clay Tunnel."}, {"dayNumber": 17, "label": "Day 17", "summary": "Visit Fresh Garden, Datanla Waterfall, Elephant Waterfall, and Me Linh Coffee."}], "city": "Dalat", "coords": [11.9404, 108.4583], "dayEnd": 17, "dayStart": 15, "daysLabel": "Days 15-17", "displayName": "Dalat", "excursions": [], "hotelDateRange": "24 Aug \u2013 27 Aug 2026", "hotelImage": "/assets/hotels/dalat/cicilia-rouge-dalat/exterior/1.jpg", "hotelName": "CICILIA Rouge Dalat", "nights": 3, "nightsLabel": "3 nights", "order": 7, "segmentId": "stay-7", "transportFromPrevious": "Da Nang \u2192 Dalat"}, {"activityPreviews": [{"dayNumber": 18, "label": "Day 18", "summary": "Take a direct flight from Dalat to Ho Chi Minh City and check in at the hotel."}, {"dayNumber": 19, "label": "Day 19", "summary": "Visit the Cu Chi Tunnels, apartment caf\u00e9, Ben Thanh Market, and the Central Post Office."}, {"dayNumber": 20, "label": "Day 20", "summary": "Visit the Mekong Delta, then return to Ho Chi Minh City."}, {"dayNumber": 21, "label": "Day 21", "summary": "Depart Ho Chi Minh City and transfer to the airport for the international flight."}], "city": "Ho Chi Minh City", "coords": [10.8231, 106.6297], "dayEnd": 21, "dayStart": 18, "daysLabel": "Days 18-21", "displayName": "Ho Chi Minh City", "excursions": ["Mekong Delta"], "hotelDateRange": "27 Aug \u2013 30 Aug 2026", "hotelImage": "/assets/hotels/saigon/cicilia-saigon/interior/2.jpg", "hotelName": "Cicilia Saigon Center", "nights": 4, "nightsLabel": "4 nights", "order": 8, "segmentId": "stay-8", "transportFromPrevious": "Dalat \u2192 Ho Chi Minh City"}]
   </script>
   <script>
-    window.currentLang = "ar";
+    window.currentLang = "en";
     document.addEventListener("DOMContentLoaded", function () {
       const DEST_COORDS = {
         "hanoi": [21.0285, 105.8542],
@@ -4374,6 +4386,8 @@
       const dataEl = document.getElementById('itinerary-data');
       if (!dataEl) return;
       const rawDays = JSON.parse(dataEl.textContent);
+      const routeStopsEl = document.getElementById('route-stops-data');
+      const rawStops = routeStopsEl ? JSON.parse(routeStopsEl.textContent) : [];
 
       const destImagesEl = document.getElementById('destination-images');
       const destImages = destImagesEl ? JSON.parse(destImagesEl.textContent) : {};
@@ -4433,7 +4447,7 @@
         return bestMatch;
       }
 
-      const daysData = rawDays.map(day => {
+      const fallbackStops = rawDays.map(day => {
         let dest = "";
         if (Array.isArray(day.destinations) && day.destinations.length > 0) {
           dest = day.destinations[0];
@@ -4442,54 +4456,77 @@
         } else if (typeof day.overnight === 'string') {
           dest = day.overnight;
         }
-
-        let desc = "";
-        if (Array.isArray(day.description)) {
-          desc = day.description.join(' ');
-        } else if (typeof day.description === 'string') {
-          desc = day.description;
-        } else if (typeof day.summary === 'string') {
-          desc = day.summary;
-        }
-
         return {
           dayNumber: day.dayNumber,
+          stopOrder: 1,
           destination: dest,
-          title: day.title || `Day ${day.dayNumber}`,
-          description: desc,
-          overnight: day.overnight || ""
+          displayName: dest,
+          mapTitle: day.title || `Day ${day.dayNumber}`,
+          kind: 'visit'
         };
       });
-
-      const mapDestinations = [];
+      const stopsData = Array.isArray(rawStops) && rawStops.length > 0 ? rawStops : fallbackStops;
+      const staySegmentsEl = document.getElementById('stay-segments-data');
+      const rawStaySegments = staySegmentsEl ? JSON.parse(staySegmentsEl.textContent) : [];
       const coordPoints = [];
+      const displayStops = stopsData.filter(stop => stop.showMarker !== false);
 
-      daysData.forEach(day => {
-        const coords = findCoordinates(day.destination);
+      function buildFallbackStaySegments(stops) {
+        const fallbackSegments = [];
+        let current = null;
+        stops.forEach(stop => {
+          if (!stop.displayName) return;
+          if (!current || current.displayName !== stop.displayName) {
+            current = {
+              segmentId: `fallback-${fallbackSegments.length + 1}`,
+              order: fallbackSegments.length + 1,
+              city: stop.displayName,
+              displayName: stop.displayName,
+              dayStart: stop.dayNumber,
+              dayEnd: stop.dayNumber,
+              daysLabel: `${window.currentLang === 'vi' ? 'Ngày' : (window.currentLang === 'ar' ? 'يوم' : 'Day')} ${stop.dayNumber}`,
+              nights: 1,
+              nightsLabel: window.currentLang === 'vi' ? '1 đêm' : (window.currentLang === 'ar' ? 'ليلة واحدة' : '1 night'),
+              hotelName: '',
+              hotelImage: '',
+              excursions: [],
+              activityPreviews: [],
+              transportFromPrevious: '',
+              coords: findCoordinates(stop.destination)
+            };
+            fallbackSegments.push(current);
+            return;
+          }
+          current.dayEnd = stop.dayNumber;
+        });
+        return fallbackSegments;
+      }
+
+      const staySegments = Array.isArray(rawStaySegments) && rawStaySegments.length > 0
+        ? rawStaySegments
+        : buildFallbackStaySegments(displayStops);
+
+      stopsData.forEach(stop => {
+        const coords = findCoordinates(stop.destination);
         if (!coords) return;
-
-        const last = mapDestinations[mapDestinations.length - 1];
-        if (!last || last.coords[0] !== coords[0] || last.coords[1] !== coords[1]) {
-          const destName = day.destination.split(/->|-|\|/)[0].trim();
-          const slug = resolveSlugLocally(destName);
-          const imgUrl = (slug && destImages[slug]) ? destImages[slug] : '/assets/vietnam-safar-logo.png';
-
-          mapDestinations.push({
-            id: `dest-${mapDestinations.length}`,
-            name: destName,
-            coords: coords,
-            img: imgUrl,
-            days: [day.dayNumber],
-            titles: [day.title]
-          });
-          coordPoints.push(coords);
-        } else {
-          last.days.push(day.dayNumber);
-          last.titles.push(day.title);
-        }
+        coordPoints.push(coords);
       });
 
-      if (mapDestinations.length === 0) {
+      const mapSegments = staySegments.map((segment, idx) => {
+        const resolvedCoords = Array.isArray(segment.coords) && segment.coords.length === 2
+          ? segment.coords
+          : findCoordinates(segment.city || segment.displayName);
+        const slug = resolveSlugLocally(segment.city || segment.displayName);
+        return {
+          ...segment,
+          id: segment.segmentId || `stay-${idx + 1}`,
+          coords: resolvedCoords,
+          displayCoords: resolvedCoords,
+          img: segment.hotelImage || ((slug && destImages[slug]) ? destImages[slug] : '/assets/vietnam-safar-logo.png')
+        };
+      }).filter(segment => Array.isArray(segment.coords) && segment.coords.length === 2);
+
+      if (mapSegments.length === 0) {
         document.getElementById('route-map').style.display = 'none';
         return;
       }
@@ -4516,17 +4553,43 @@
       const shapePath = "M30,22 L70,22 C84,22 93,32 91,50 C89,68 82,78 68,78 L32,78 C18,78 9,68 9,50 C9,32 16,22 30,22 Z";
       let mapMode = 'classic'; // Default mode is classic
 
+      function getOffsetPattern(index) {
+        const pattern = [
+          [0, 0],
+          [20, -14],
+          [-20, 14],
+          [0, 24],
+          [24, 10],
+          [-24, -10]
+        ];
+        return pattern[index] || [0, 0];
+      }
+
+      function applyMarkerOffsets() {
+        const grouped = new Map();
+        mapSegments.forEach(segment => {
+          const key = `${segment.coords[0]},${segment.coords[1]}`;
+          if (!grouped.has(key)) grouped.set(key, []);
+          grouped.get(key).push(segment);
+        });
+
+        grouped.forEach(items => {
+          items.forEach((segment, occurrenceIdx) => {
+            const offset = getOffsetPattern(occurrenceIdx);
+            const point = map.project(segment.coords, map.getZoom());
+            const shifted = L.point(point.x + offset[0], point.y + offset[1]);
+            segment.displayCoords = map.unproject(shifted, map.getZoom());
+          });
+        });
+      }
+
       function drawMarkers() {
         // Clear existing markers
         markers.forEach(m => map.removeLayer(m));
         markers.length = 0;
 
-        mapDestinations.forEach((dest, idx) => {
-          const dayText = window.currentLang === 'vi' ? 'Ngày' : (window.currentLang === 'ar' ? 'يوم' : 'Day');
-          const daysText = window.currentLang === 'vi' ? 'Ngày' : (window.currentLang === 'ar' ? 'أيام' : 'Days');
-          const dayRangeStr = dest.days.length > 1
-            ? `${daysText} ${dest.days[0]}-${dest.days[dest.days.length - 1]}`
-            : `${dayText} ${dest.days[0]}`;
+        mapSegments.forEach((dest, idx) => {
+          const dayRangeStr = dest.daysLabel || '';
 
           let html = '';
           let iconSize = [];
@@ -4572,13 +4635,16 @@
 
           const popupContent = `
             <div class="map-popup">
-              <h4>${dest.name}</h4>
+              <h4>${dest.displayName}</h4>
               <strong style="color:var(--gold); font-size: 11px;">${dayRangeStr.toUpperCase()}</strong>
-              <p style="margin: 6px 0 0; font-size:12px; color:var(--muted);">${dest.titles[0]}</p>
+              ${dest.hotelName ? `<p style="margin: 6px 0 0; font-size:12px; color:var(--ink); font-weight:600;">${dest.hotelName}</p>` : ''}
+              <p style="margin: 6px 0 0; font-size:12px; color:var(--muted);">${dest.nightsLabel || ''}</p>
+              ${Array.isArray(dest.excursions) && dest.excursions.length > 0 ? `<p style="margin: 6px 0 0; font-size:12px; color:var(--muted);">${dest.excursions.join(' • ')}</p>` : ''}
+              ${Array.isArray(dest.activityPreviews) && dest.activityPreviews.length > 0 ? `<div style="margin-top:8px; font-size:11px; color:var(--muted);">${dest.activityPreviews.slice(0, 3).map(item => `<div>${item.label}: ${item.summary}</div>`).join('')}</div>` : ''}
             </div>
           `;
 
-          const marker = L.marker(dest.coords, { icon: customIcon })
+          const marker = L.marker(dest.displayCoords, { icon: customIcon })
             .addTo(map)
             .bindPopup(popupContent, { offset: popupOffset });
 
@@ -4590,8 +4656,9 @@
             card.className = `sidebar-card ${idx === 0 ? 'active' : ''}`;
             card.innerHTML = `
               <span class="days-badge">${dayRangeStr}</span>
-              <h4>${dest.name}</h4>
-              <p>${dest.titles[0]}</p>
+              <h4>${dest.displayName}</h4>
+              <p>${dest.hotelName || ''}</p>
+              <p>${dest.nightsLabel || ''}${Array.isArray(dest.excursions) && dest.excursions.length > 0 ? ` · ${dest.excursions.join(' • ')}` : ''}</p>
             `;
 
             card.addEventListener('click', () => {
@@ -4618,9 +4685,6 @@
 
         drawMarkers();
       };
-
-      // Initial draw
-      drawMarkers();
 
       for (let i = 0; i < coordPoints.length - 1; i++) {
         const p1 = coordPoints[i];
@@ -4652,9 +4716,14 @@
         maxZoom: 12
       });
 
+      applyMarkerOffsets();
+
+      // Initial draw
+      drawMarkers();
+
       function selectDestination(index) {
-        const dest = mapDestinations[index];
-        map.setView(dest.coords, Math.max(map.getZoom(), 8), { animate: true });
+        const dest = mapSegments[index];
+        map.setView(dest.displayCoords, Math.max(map.getZoom(), 8), { animate: true });
         markers[index].openPopup();
 
         document.querySelectorAll('.sidebar-card').forEach(c => c.classList.remove('active'));
@@ -4680,16 +4749,16 @@
   <div id="pwa-notification-prompt" class="notification-prompt-card no-print">
     <div class="notification-prompt-header">
       <div class="notification-prompt-title">
-        <span>🔔</span> ابق على اطلاع
+        <span>🔔</span> Stay Updated
       </div>
       <button class="notification-prompt-close" id="pwa-notification-close">&times;</button>
     </div>
     <div class="notification-prompt-body">
-      قم بتمكين الإشعارات للحصول على تحديثات مباشرة لمسار رحلتك وتفاصيل المرشد وحالة الحجز.
+      Enable notifications to get live updates for your itinerary, guide details, and booking status.
     </div>
     <div class="notification-prompt-actions">
-      <button class="notification-btn-later" id="pwa-notification-later">لاحقاً</button>
-      <button class="notification-btn-allow" id="pwa-notification-allow">تمكين</button>
+      <button class="notification-btn-later" id="pwa-notification-later">Later</button>
+      <button class="notification-btn-allow" id="pwa-notification-allow">Enable</button>
     </div>
   </div>
 
@@ -4697,8 +4766,8 @@
   <div id="pwa-notification-success" class="notification-success-card no-print">
     <div class="notification-success-icon">✓</div>
     <div class="notification-success-text">
-      <h4>الإشعارات نشطة</h4>
-      <p>ستتلقى تحديثات مباشرة لمسار الرحلة هنا.</p>
+      <h4>Notifications Active</h4>
+      <p>You&#39;ll receive live itinerary updates here.</p>
     </div>
   </div>
 
