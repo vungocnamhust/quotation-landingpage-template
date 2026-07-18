@@ -1182,11 +1182,13 @@
         display: none !important;
       }
 
-      #btn-select-domain .domain-text {
+      #btn-select-domain .domain-text,
+      #btn-view-live .view-text {
         display: none !important;
       }
 
-      #btn-select-domain {
+      #btn-select-domain,
+      #btn-view-live {
         padding: 8px !important;
         border-radius: 50% !important;
         width: 34px !important;
@@ -1290,7 +1292,8 @@
       display: none !important;
     }
 
-    #btn-select-domain {
+    #btn-select-domain,
+    #btn-view-live {
       background: rgba(255, 255, 255, 0.1);
       color: #fff;
       border: 1px solid rgba(183, 137, 75, 0.4);
@@ -1307,9 +1310,16 @@
       outline: none;
     }
     
-    #btn-select-domain:hover {
+    #btn-select-domain:hover,
+    #btn-view-live:hover {
       background-color: rgba(255, 255, 255, 0.15);
       border-color: rgba(183, 137, 75, 0.8);
+    }
+
+    #btn-view-live svg.view-icon {
+      color: #d8bd85;
+      display: inline-block;
+      vertical-align: middle;
     }
     
     .pb-modal-overlay {
@@ -2271,6 +2281,61 @@
         justify-content: center !important;
       }
     }
+
+    /* Floating Domain Switcher Pill */
+    #floating-domain-btn {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      background: rgba(17, 19, 15, 0.9);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(183, 137, 75, 0.45);
+      border-radius: 30px;
+      padding: 10px 18px;
+      color: #f8f3e9;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    #floating-domain-btn:hover {
+      background: rgba(183, 137, 75, 0.2);
+      border-color: rgba(183, 137, 75, 0.85);
+      transform: translateY(-2px);
+    }
+
+    #floating-domain-btn svg.server-icon {
+      color: #d8bd85;
+    }
+
+    /* Hide in edit mode when the publish bar is present and visible */
+    body:has(#publish-bar:not([style*="display: none"])) #floating-domain-btn {
+      display: none !important;
+    }
+
+    /* Responsive Collapse for Mobile */
+    @media(max-width: 768px) {
+      #floating-domain-btn {
+        bottom: 16px;
+        right: 16px;
+        padding: 11px;
+        border-radius: 50%;
+        width: 38px;
+        height: 38px;
+        justify-content: center;
+      }
+      #floating-domain-btn .btn-text {
+        display: none !important;
+      }
+    }
   </style>
 </head>
 
@@ -2896,6 +2961,13 @@
         <span>🌐</span>
         <span class="domain-text">localhost:8111</span>
       </button>
+      <button id="btn-view-live" onclick="openDomainModal(event, 'redirect')" title="View Live Version">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="view-icon">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+        <span class="view-text">View Live</span>
+      </button>
       <button id="btn-publish" onclick="publishPage()">🚀 {{ client_i18n.publish_to_web }}</button>
     </div>
   </div>
@@ -2956,6 +3028,233 @@
       <button class="btn-cancel" onclick="cancelTranslation()">{{ "CANCEL" | translate(lang) }}</button>
     </div>
   </div>
+
+  <!-- Floating Responsive Domain Selector (Live View Only) -->
+  <button id="floating-domain-btn" class="no-print" onclick="openDomainModal(event, 'redirect')" title="Switch Domain/Environment">
+    <!-- Server Stack SVG Icon -->
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="server-icon">
+      <rect x="2" y="3" width="20" height="7" rx="2" ry="2"></rect>
+      <rect x="2" y="14" width="20" height="7" rx="2" ry="2"></rect>
+      <line x1="6" y1="6.5" x2="6.01" y2="6.5"></line>
+      <line x1="6" y1="17.5" x2="6.01" y2="17.5"></line>
+    </svg>
+    <span class="btn-text">Switch Domain</span>
+  </button>
+
+  <!-- Domain Selector Controls (Persistent Script) -->
+  <script>
+    // Dynamically inject styles for the floating button and bottom bar redirect button
+    (function() {
+      const styleId = 'floating-domain-btn-styles';
+      if (!document.getElementById(styleId)) {
+        const style = document.createElement('style');
+        style.id = styleId;
+        style.textContent = `
+          #floating-domain-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            background: rgba(17, 19, 15, 0.9);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(183, 137, 75, 0.45);
+            border-radius: 30px;
+            padding: 10px 18px;
+            color: #f8f3e9;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          }
+          #floating-domain-btn:hover {
+            background: rgba(183, 137, 75, 0.2);
+            border-color: rgba(183, 137, 75, 0.85);
+            transform: translateY(-2px);
+          }
+          #floating-domain-btn svg.server-icon {
+            color: #d8bd85;
+          }
+          body:has(#publish-bar:not([style*="display: none"])) #floating-domain-btn {
+            display: none !important;
+          }
+          @media(max-width: 768px) {
+            #floating-domain-btn {
+              bottom: 16px;
+              right: 16px;
+              padding: 11px;
+              border-radius: 50%;
+              width: 38px;
+              height: 38px;
+              justify-content: center;
+            }
+            #floating-domain-btn .btn-text {
+              display: none !important;
+            }
+          }
+
+          /* Bottom Bar View Live Button */
+          #btn-view-live {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(183, 137, 75, 0.4);
+            border-radius: 999px;
+            padding: 11px 20px;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            outline: none;
+          }
+          #btn-view-live:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-color: rgba(183, 137, 75, 0.8);
+          }
+          #btn-view-live svg.view-icon {
+            color: #d8bd85;
+            display: inline-block;
+            vertical-align: middle;
+          }
+          @media(max-width: 768px) {
+            #btn-view-live .view-text {
+              display: none !important;
+            }
+            #btn-view-live {
+              padding: 8px !important;
+              border-radius: 50% !important;
+              width: 34px !important;
+              height: 34px !important;
+              justify-content: center !important;
+              display: inline-flex !important;
+              align-items: center !important;
+              margin-left: 0 !important;
+              min-width: 34px !important;
+            }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+    })();
+
+    let domainModalMode = 'publish';
+    let modalLatestVersion = '{{ latest_version or 1 }}';
+    let modalItemId = '{{ quotation_id }}';
+    let modalItemType = 'quotations';
+
+    // Parse path and fetch latest version info on load
+    (function() {
+      const pathParts = window.location.pathname.split('/');
+      const qIdx = pathParts.indexOf('quotations');
+      const iIdx = pathParts.indexOf('itineraries');
+      const pIdx = pathParts.indexOf('published');
+      
+      if (qIdx !== -1 && pathParts[qIdx + 1]) {
+        modalItemId = pathParts[qIdx + 1];
+        modalItemType = 'quotations';
+      } else if (iIdx !== -1 && pathParts[iIdx + 1]) {
+        modalItemId = pathParts[iIdx + 1];
+        modalItemType = 'itineraries';
+      } else if (pIdx !== -1 && pathParts[pIdx + 1]) {
+        modalItemId = pathParts[pIdx + 1];
+        modalItemType = modalItemId.startsWith('iti') ? 'itineraries' : 'quotations';
+        
+        const filename = pathParts[pathParts.length - 1];
+        const match = filename.match(/^v(\d+)/);
+        if (match) {
+          modalLatestVersion = match[1];
+        }
+      }
+
+      if (modalItemId && !window.location.pathname.includes('/published/')) {
+        fetch(`/api/v1/${modalItemType}/${modalItemId}/translation-status`)
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.latest_version) {
+              modalLatestVersion = data.latest_version;
+              const btnViewLive = document.getElementById('btn-view-live');
+              if (btnViewLive) {
+                btnViewLive.setAttribute('data-latest-version', data.latest_version);
+              }
+            }
+          })
+          .catch(err => console.error('Error fetching version:', err));
+      }
+    })();
+
+    function openDomainModal(event, mode = 'publish') {
+      if (event) event.stopPropagation();
+      domainModalMode = mode;
+      const modal = document.getElementById('domain-modal');
+      if (modal) {
+        modal.classList.add('show');
+        const currentOrigin = window.location.origin;
+        const items = modal.querySelectorAll('.pb-domain-item');
+        items.forEach(item => {
+          const val = item.getAttribute('data-value').replace(/\/$/, '');
+          if (val === currentOrigin.replace(/\/$/, '')) {
+            item.classList.add('active');
+          } else {
+            item.classList.remove('active');
+          }
+        });
+      }
+    }
+
+    function closeDomainModal(event) {
+      if (event) event.stopPropagation();
+      const modal = document.getElementById('domain-modal');
+      if (modal) modal.classList.remove('show');
+    }
+
+    function selectDomainOption(val) {
+      const targetOrigin = val.replace(/\/$/, '');
+      if (domainModalMode === 'redirect') {
+        if (window.location.pathname.includes('/published/')) {
+          const targetUrl = targetOrigin + window.location.pathname + window.location.search;
+          window.location.href = targetUrl;
+        } else {
+          const urlParams = new URLSearchParams(window.location.search);
+          const currentLang = urlParams.get('lang') || urlParams.get('language') || 'en';
+          
+          let baselineLang = 'en';
+          const statusEl = document.getElementById('translation-status');
+          if (statusEl) {
+            try {
+              const status = JSON.parse(statusEl.textContent);
+              if (status && status.baseline_lang) {
+                baselineLang = status.baseline_lang;
+              }
+            } catch(e) {}
+          }
+          
+          const langSuffix = (currentLang && currentLang !== baselineLang) ? `_${currentLang}` : '';
+          const filename = `v${modalLatestVersion}${langSuffix}.html`;
+          const targetUrl = `${targetOrigin}/published/${modalItemId}/${filename}`;
+          window.location.href = targetUrl;
+        }
+      } else {
+        const selectDomain = document.getElementById('select-domain');
+        if (selectDomain) {
+          selectDomain.value = val;
+          selectDomain.dispatchEvent(new Event('change'));
+          const domainText = document.querySelector('#btn-select-domain .domain-text');
+          if (domainText) {
+            domainText.textContent = val.replace(/^https?:\/\//, '').replace(/\/$/, '');
+          }
+        }
+        closeDomainModal();
+      }
+    }
+  </script>
 
   <script id="translation-status" type="application/json">
     {{ translation_status | tojson | safe }}
@@ -3393,44 +3692,7 @@
       }
     });
 
-    function openDomainModal(event) {
-      if (event) event.stopPropagation();
-      const modal = document.getElementById('domain-modal');
-      if (modal) {
-        modal.classList.add('show');
-        const selectDomain = document.getElementById('select-domain');
-        if (selectDomain) {
-          const currentValue = selectDomain.value;
-          const items = modal.querySelectorAll('.pb-domain-item');
-          items.forEach(item => {
-            if (item.getAttribute('data-value') === currentValue) {
-              item.classList.add('active');
-            } else {
-              item.classList.remove('active');
-            }
-          });
-        }
-      }
-    }
-
-    function closeDomainModal(event) {
-      if (event) event.stopPropagation();
-      const modal = document.getElementById('domain-modal');
-      if (modal) modal.classList.remove('show');
-    }
-
-    function selectDomainOption(val) {
-      const selectDomain = document.getElementById('select-domain');
-      if (selectDomain) {
-        selectDomain.value = val;
-        selectDomain.dispatchEvent(new Event('change'));
-        const domainText = document.querySelector('#btn-select-domain .domain-text');
-        if (domainText) {
-          domainText.textContent = val.replace(/^https?:\/\//, '').replace(/\/$/, '');
-        }
-      }
-      closeDomainModal();
-    }
+    // Domain modal controls moved to persistent script block below
 
     async function publishPage() {
       const btn = document.getElementById('btn-publish');
@@ -3478,6 +3740,13 @@
         }
 
         if (data.published_url) {
+          if (data.version) {
+            modalLatestVersion = data.version;
+            const btnViewLive = document.getElementById('btn-view-live');
+            if (btnViewLive) {
+              btnViewLive.setAttribute('data-latest-version', data.version);
+            }
+          }
           const domainSelect = document.getElementById('select-domain');
           const selectedDomain = domainSelect ? domainSelect.value.replace(/\/$/, '') : window.location.origin;
           let finalUrl = data.published_url;

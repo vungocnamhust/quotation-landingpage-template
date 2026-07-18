@@ -4134,12 +4134,24 @@ async def translate_itinerary_endpoint(itinerary_id: str, lang: str):
 async def get_quotation_translation_status(quotation_id: str):
     """Returns the translation status of a quotation."""
     status = _load_translation_status(quotation_id)
+    try:
+        from github_publish import get_next_version
+        next_ver = await get_next_version(quotation_id)
+        status["latest_version"] = max(1, next_ver - 1)
+    except Exception:
+        status["latest_version"] = 1
     return status
 
 @app.get("/api/v1/itineraries/{itinerary_id}/translation-status")
 async def get_itinerary_translation_status(itinerary_id: str):
     """Returns the translation status of an itinerary."""
     status = _load_translation_status(itinerary_id)
+    try:
+        from github_publish import get_next_version
+        next_ver = await get_next_version(itinerary_id)
+        status["latest_version"] = max(1, next_ver - 1)
+    except Exception:
+        status["latest_version"] = 1
     return status
 
 
@@ -4265,6 +4277,12 @@ async def get_quotation(quotation_id: str, request: Request):
         lang_ctx["translations"] = translations
         lang_ctx["baseline_lang"] = baseline_lang
         lang_ctx["translation_status"] = ctx_data.get("translation_status", {"baseline_lang": baseline_lang, "available_langs": [baseline_lang]})
+        try:
+            from github_publish import get_next_version
+            next_ver = await get_next_version(quotation_id)
+            lang_ctx["latest_version"] = max(1, next_ver - 1)
+        except Exception:
+            lang_ctx["latest_version"] = 1
         
         # Try to load language-specific published HTML (no fallback)
         latest_lang = None if target_lang == baseline_lang else target_lang
@@ -4705,6 +4723,12 @@ async def get_itinerary(itinerary_id: str, request: Request):
         lang_ctx["translations"] = translations
         lang_ctx["baseline_lang"] = baseline_lang
         lang_ctx["translation_status"] = ctx_data.get("translation_status", {"baseline_lang": baseline_lang, "available_langs": [baseline_lang]})
+        try:
+            from github_publish import get_next_version
+            next_ver = await get_next_version(itinerary_id)
+            lang_ctx["latest_version"] = max(1, next_ver - 1)
+        except Exception:
+            lang_ctx["latest_version"] = 1
         
         # Try to load language-specific published HTML (no fallback)
         latest_lang = None if target_lang == baseline_lang else target_lang
@@ -4803,6 +4827,12 @@ async def get_itinerary_pdf(itinerary_id: str, request: Request):
         lang_ctx["translations"] = translations
         lang_ctx["baseline_lang"] = baseline_lang
         lang_ctx["translation_status"] = ctx_data.get("translation_status", {"baseline_lang": baseline_lang, "available_langs": [baseline_lang]})
+        try:
+            from github_publish import get_next_version
+            next_ver = await get_next_version(itinerary_id)
+            lang_ctx["latest_version"] = max(1, next_ver - 1)
+        except Exception:
+            lang_ctx["latest_version"] = 1
         
         rendered_html = tmpl.render(**lang_ctx)
         return HTMLResponse(content=rendered_html)
@@ -6225,3 +6255,5 @@ def get_luxury_hotel_details(hotel_name_or_arr: str, destination: str, checkin: 
         "checkInDate": checkin,
         "checkOutDate": checkout
     }
+
+# Reload trigger comment to refresh cached templates and routing logic v2
