@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import asyncio
+import re
 from functools import partial
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, HTTPException
@@ -11,6 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.templating import Jinja2Templates
 from fastapi.exceptions import RequestValidationError
+from markupsafe import Markup, escape
 from pydantic import BaseModel, ValidationError, Field
 from typing import List, Optional
 from datetime import date
@@ -198,7 +200,7 @@ STATIC_DICTIONARY = {
     },
     "Vietnam Safar — B2B Travel Proposal": {
         "vi": "Vietnam Safar — Đề Xuất Hành Trình B2B",
-        "ar": "فيتنام سافار — مقترح السفر B2B"
+        "ar": "Vietnam Safar — مقترح سفر للشركاء التجاريين"
     },
     "Journey Specifications": {
         "vi": "Thông Số Hành Trình",
@@ -206,7 +208,7 @@ STATIC_DICTIONARY = {
     },
     "Core parameters of this B2B travel proposal.": {
         "vi": "Các thông số cơ bản của đề xuất hành trình B2B này.",
-        "ar": "المعايير الأساسية لمقترح السفر B2B هذا."
+        "ar": "المعايير الأساسية لمقترح السفر المخصص للشركاء التجاريين."
     },
     "Market & Nationality": {
         "vi": "Thị Trường & Quốc Tịch",
@@ -286,7 +288,7 @@ STATIC_DICTIONARY = {
     },
     "B2B Partners": {
         "vi": "Đối Tác B2B",
-        "ar": "شركاء B2B"
+        "ar": "الشركاء التجاريون"
     },
     "Relaxed": {
         "vi": "Thư Thái",
@@ -314,15 +316,15 @@ STATIC_DICTIONARY = {
     },
     "This document is a confidential B2B quotation prepared exclusively for": {
         "vi": "Tài liệu này là báo giá B2B bảo mật được chuẩn bị riêng cho",
-        "ar": "هذا مستند عبارة عن عرض أسعار B2B سري تم إعداده خصيصًا لـ"
+        "ar": "هذا عرض سعر سري مخصص حصريًا لـ"
     },
     "Confidential B2B": {
         "vi": "Báo Giá B2B Bảo Mật",
-        "ar": "عرض أسعار B2B سري"
+        "ar": "عرض سعر سري"
     },
     "Confidential B2B Proposal": {
         "vi": "Đề Xuất Báo Giá B2B Bảo Mật",
-        "ar": "مقترح B2B سري"
+        "ar": "مقترح سري للشركاء التجاريين"
     },
     "Vietnam Safar can assist with halal-friendly meal planning where available, no-pork meal notes, seafood or vegetarian alternatives where halal-certified restaurants are limited, and flexible prayer stops during touring days where practical. Halal-certified restaurants are more available in major cities such as Hanoi, Da Nang and Ho Chi Minh City. In mountain, cruise or countryside destinations, suitable seafood, vegetarian or no-pork meals may be recommended.": {
         "vi": "Vietnam Safar có thể hỗ trợ lên kế hoạch cho các bữa ăn thân thiện với người Hồi giáo khi có sẵn, lưu ý không thịt lợn, các giải pháp thay thế bằng hải sản hoặc đồ chay tại những nơi hạn chế nhà hàng chứng nhận Halal, và các điểm dừng cầu nguyện linh hoạt trong những ngày tham quan khi thực tế cho phép. Các nhà hàng được chứng nhận Halal có sẵn nhiều hơn ở các thành phố lớn như Hà Nội, Đà Nẵng và Thành phố Hồ Chí Minh. Tại các điểm đến vùng núi, du thuyền hoặc vùng nông thôn, các bữa ăn hải sản, đồ chay hoặc không thịt lợn phù hợp có thể được khuyên dùng.",
@@ -616,7 +618,7 @@ STATIC_DICTIONARY = {
     },
     "Rates are B2B net indicative and subject to reconfirmation at the time of booking.": {
         "vi": "Giá đề xuất net B2B mang tính chất tham khảo và sẽ được xác nhận lại khi đặt dịch vụ.",
-        "ar": "الأسعار تقديرية وصافية لشركاء B2B وتخضع لإعادة التأكيد عند الحجز."
+        "ar": "الأسعار التقديرية الصافية للشركاء التجاريين وتخضع لإعادة التأكيد عند الحجز."
     },
     "Final price may vary depending on hotel availability, resort category, cruise selection, domestic flight fare, rooming arrangement, child policy, and final travel services confirmed.": {
         "vi": "Giá cuối cùng có thể thay đổi tùy thuộc vào tình trạng phòng khách sạn, hạng phòng, lựa chọn du thuyền, giá vé máy bay nội địa, cách sắp xếp phòng, chính sách trẻ em và các dịch vụ du lịch được xác nhận cuối cùng.",
@@ -761,6 +763,154 @@ STATIC_DICTIONARY = {
         "ar": "نظرة عامة على الرحلة",
         "vi": "Tổng Quan Hành Trình"
     },
+    "Route Map": {
+        "ar": "خريطة المسار",
+        "vi": "Bản đồ lộ trình"
+    },
+    "Itinerary": {
+        "ar": "برنامج الرحلة",
+        "vi": "Lịch trình"
+    },
+    "Quotation": {
+        "ar": "عرض السعر",
+        "vi": "Báo giá"
+    },
+    "Terms": {
+        "ar": "الشروط",
+        "vi": "Điều khoản"
+    },
+    "PDF Preview": {
+        "ar": "معاينة PDF",
+        "vi": "Xem trước PDF"
+    },
+    "View Luxury Rates": {
+        "ar": "عرض الأسعار الفاخرة",
+        "vi": "Xem giá cao cấp"
+    },
+    "Explore the Journey": {
+        "ar": "استكشف الرحلة",
+        "vi": "Khám phá hành trình"
+    },
+    "Overview": {
+        "ar": "نظرة عامة",
+        "vi": "Tổng quan"
+    },
+    "Guests": {
+        "ar": "الضيوف",
+        "vi": "Khách"
+    },
+    "Travel dates": {
+        "ar": "تواريخ السفر",
+        "vi": "Ngày đi"
+    },
+    "Route": {
+        "ar": "المسار",
+        "vi": "Tuyến đường"
+    },
+    "Style": {
+        "ar": "النمط",
+        "vi": "Phong cách"
+    },
+    "Ref.": {
+        "ar": "الرقم المرجعي",
+        "vi": "Mã tham chiếu"
+    },
+    "Contact": {
+        "ar": "التواصل",
+        "vi": "Liên hệ"
+    },
+    "Interactive Route map": {
+        "ar": "خريطة المسار التفاعلية",
+        "vi": "Bản đồ lộ trình tương tác"
+    },
+    "Luxury Quotation": {
+        "ar": "عرض سعر فاخر",
+        "vi": "Báo giá cao cấp"
+    },
+    "B2B Travel Proposal": {
+        "ar": "مقترح سفر للشركاء التجاريين",
+        "vi": "Đề xuất du lịch B2B"
+    },
+    "Confidential B2B Proposal": {
+        "ar": "مقترح سري للشركاء التجاريين",
+        "vi": "Đề xuất B2B bảo mật"
+    },
+    "Enable Notifications": {
+        "ar": "تفعيل الإشعارات",
+        "vi": "Bật thông báo"
+    },
+    "Previous image": {
+        "ar": "الصورة السابقة",
+        "vi": "Ảnh trước"
+    },
+    "Next image": {
+        "ar": "الصورة التالية",
+        "vi": "Ảnh tiếp theo"
+    },
+    "Go to slide": {
+        "ar": "الانتقال إلى الشريحة",
+        "vi": "Chuyển đến slide"
+    },
+    "Editing": {
+        "ar": "قيد التحرير",
+        "vi": "Đang chỉnh sửa"
+    },
+    "Publish to Web": {
+        "ar": "نشر على الويب",
+        "vi": "Xuất bản lên web"
+    },
+    "Publishing...": {
+        "ar": "جارٍ النشر...",
+        "vi": "Đang xuất bản..."
+    },
+    "Committing to GitHub...": {
+        "ar": "جارٍ حفظ التغييرات على GitHub...",
+        "vi": "Đang lưu lên GitHub..."
+    },
+    "Translate this block": {
+        "ar": "ترجمة هذا المقطع",
+        "vi": "Dịch đoạn này"
+    },
+    "Change": {
+        "ar": "تغيير",
+        "vi": "Đổi"
+    },
+    "Remove this block": {
+        "ar": "إزالة هذا القسم",
+        "vi": "Xóa khối này"
+    },
+    "Remove this block? This action cannot be undone.": {
+        "ar": "هل تريد إزالة هذا القسم؟ لا يمكن التراجع عن هذا الإجراء.",
+        "vi": "Xóa khối này? Hành động này không thể hoàn tác."
+    },
+    "Itinerary Update": {
+        "ar": "تحديث برنامج الرحلة",
+        "vi": "Cập nhật lịch trình"
+    },
+    "Your private guide has been assigned: Mr. Minh (Phone: +84 911 538 738).": {
+        "ar": "تم تعيين مرشدك الخاص: Mr. Minh (Phone: +84 911 538 738).",
+        "vi": "Hướng dẫn viên riêng của bạn đã được chỉ định: Mr. Minh (Phone: +84 911 538 738)."
+    },
+    "English": {
+        "ar": "الإنجليزية",
+        "vi": "Tiếng Anh"
+    },
+    "Arabic": {
+        "ar": "العربية",
+        "vi": "Tiếng Ả Rập"
+    },
+    "Vietnamese": {
+        "ar": "الفيتنامية",
+        "vi": "Tiếng Việt"
+    },
+    "TEL:": {
+        "ar": "هاتف:",
+        "vi": "ĐT:"
+    },
+    "Please enable notifications in your browser settings to receive updates.": {
+        "ar": "يرجى تفعيل الإشعارات من إعدادات المتصفح لتلقي التحديثات.",
+        "vi": "Vui lòng bật thông báo trong trình duyệt để nhận cập nhật."
+    },
 
     # Value Propositions (Why it works)
     "Private & Flexible": {
@@ -792,6 +942,10 @@ STATIC_DICTIONARY = {
     "Cinematic destination panels crafted for a premium travel proposal.": {
         "ar": "لوحات وجهة سينمائية تم إعدادها لمقترح سفر متميز.",
         "vi": "Hình ảnh điểm đến đậm chất điện ảnh được thiết kế cho đề xuất du lịch cao cấp."
+    },
+    "Destination imagery woven into the quotation.": {
+        "ar": "صور الوجهات منسوجة بعناية داخل عرض السعر.",
+        "vi": "Hình ảnh điểm đến được đan cài tinh tế trong báo giá."
     },
     "Destination Gallery": {
         "ar": "معرض الصور",
@@ -825,27 +979,27 @@ STATIC_DICTIONARY = {
     },
     "Minasi Premium Hotel is a boutique luxury hotel nestled in Hanoi's historic quarters, offering elegant design, personalized service, and modern comforts.": {
         "vi": "Minasi Premium Hotel là khách sạn boutique sang trọng tọa lạc tại khu phố cổ lịch sử của Hà Nội, mang đến thiết kế thanh lịch, dịch vụ cá nhân hóa và tiện nghi hiện đại.",
-        "ar": "يعد فندق ميناسي بريميوم فندقاً فاخراً يقع في الأحياء التاريخية بمدينة هانوي، ويتميز بتصميم أنيق وخدمة مخصصة ووسائل راحة حديثة."
+        "ar": "يُعد Minasi Premium Hotel فندقًا فاخرًا يقع في الأحياء التاريخية بمدينة Hanoi، ويتميز بتصميم أنيق وخدمة مخصصة ووسائل راحة حديثة."
     },
     "La Casta Cruise is a luxury 5-star cruise on Halong Bay, offering spacious junior suites with private ocean-view balconies and high-class amenities.": {
         "vi": "Du thuyền La Casta là du thuyền 5 sao sang trọng trên Vịnh Hạ Long, cung cấp các phòng suite rộng rãi với ban công riêng hướng biển và các tiện nghi cao cấp.",
-        "ar": "تعتبر رحلة لا كاستا كروز البحرية من فئة 5 نجوم الفاخرة في خليج هاليغ، وتوفر أجنحة جونيور واسعة مع شرفات خاصة مطلة على المحيط ووسائل راحة راقية."
+        "ar": "يُعد La Casta Cruise كروزًا فاخرًا من فئة 5 نجوم في Halong Bay، ويوفر أجنحة Junior واسعة مع شرفات خاصة مطلة على البحر ووسائل راحة راقية."
     },
     "Bora Hotel in Sapa offers breathtaking mountain views and stylish, cozy accommodations for travelers exploring the beautiful northern highlands.": {
         "vi": "Bora Hotel tại Sapa mang đến tầm nhìn ra núi non ngoạn mục cùng không gian lưu trú phong cách, ấm cúng cho du khách khám phá vùng cao phía bắc xinh đẹp.",
-        "ar": "يوفر فندق بورا في سابا إطلالات جبلية خلابة وأماكن إقامة أنيقة ومريحة للمسافرين الذين يستكشفون المرتفعات الشمالية الجميلة."
+        "ar": "يوفر Bora Hotel في Sapa إطلالات جبلية خلابة وأماكن إقامة أنيقة ومريحة للمسافرين الذين يستكشفون المرتفعات الشمالية الجميلة."
     },
     "CICILIA Rouge Dalat brings colonial vintage charm and sophisticated boutique luxury to the misty streets of Dalat.": {
         "vi": "CICILIA Rouge Dalat mang nét quyến rũ cổ điển thời thuộc địa và sự sang trọng tinh tế của boutique đến những con phố sương mù của Đà Lạt.",
-        "ar": "يضفي فندق سيسيليا روج دالات سحرًا عتيقًا من العهد الاستعماري وفخامة راقية على شوارع دالات الضبابية."
+        "ar": "يضفي CICILIA Rouge Dalat سحرًا عتيقًا من العهد الاستعماري وفخامة راقية على شوارع Dalat الضبابية."
     },
     "Minh Toan SAFI Ocean Hotel overlooks the stunning My Khe Beach in Da Nang, offering spacious ocean-view rooms and premium seaside hospitality.": {
         "vi": "Khách sạn Minh Toàn SAFI Ocean hướng tầm nhìn ra bãi biển Mỹ Khê tuyệt đẹp ở Đà Nẵng, cung cấp các phòng rộng rãi hướng biển và dịch vụ nghỉ dưỡng cao cấp ven biển.",
-        "ar": "يطل فندق مينه توان صافي أوشن على شاطئ ماي خي المذهل في دا نانغ، ويتميز بغرف واسعة مطلة على البحر وضيافة راقية على شاطئ البحر."
+        "ar": "يطل Minh Toan SAFI Ocean Hotel على شاطئ My Khe المذهل في Da Nang، ويتميز بغرف واسعة مطلة على البحر وضيافة راقية على شاطئ البحر."
     },
     "Cicilia Saigon Center offers elegant and contemporary accommodations in the heart of District 1, Ho Chi Minh City.": {
         "vi": "Cicilia Saigon Center cung cấp chỗ nghỉ thanh lịch và hiện đại ngay tại trung tâm Quận 1, Thành phố Hồ Chí Minh.",
-        "ar": "يوفر فندق سيسيليا سايغون سنتر أماكن إقامة أنيقة وعصرية في قلب المنطقة 1 بمدينة هو تشي منه."
+        "ar": "يوفر Cicilia Saigon Center أماكن إقامة أنيقة وعصرية في قلب المنطقة 1 بمدينة Ho Chi Minh City."
     },
     "offers refined luxury accommodations, personalized service, and modern comforts.": {
         "vi": "mang đến chỗ nghỉ sang trọng tinh tế, dịch vụ cá nhân hóa và các tiện nghi hiện đại.",
@@ -1061,7 +1215,70 @@ ARABIC_PLACE_NAME_ALIASES = {
     "دلتا ميكونغ": "Mekong Delta",
     "نها ترانغ": "Nha Trang",
     "نها ترانج": "Nha Trang",
+    "سوق دونغ سوان": "Dong Xuan Market",
+    "تام كوك": "Tam Coc",
+    "هانغ موا": "Hang Mua",
+    "قمة فانسيبان": "Fansipan",
+    "فانسيبان": "Fansipan",
+    "قرية كات كات": "Cat Cat Village",
+    "كات كات": "Cat Cat",
+    "لاو تشاي": "Lao Chai",
+    "تا فان": "Ta Van",
+    "با نا هيلز": "Ba Na Hills",
+    "غابة جوز الهند باي ماو": "Bay Mau Coconut Forest",
+    "هوا فو ثانه": "Hoa Phu Thanh",
+    "لانغ بيانغ": "Lang Biang",
+    "شلال داتانلا": "Datanla Waterfall",
+    "مقهى مي لينه": "Me Linh Coffee",
+    "أنفاق كو تشي": "Cu Chi Tunnels",
+    "كو تشي": "Cu Chi",
+    "سوق بن ثانه": "Ben Thanh Market",
+    "مطار تان سون نهات": "Tan Son Nhat Airport",
+    "ميناسي بريميوم": "Minasi Premium Hotel",
+    "فندق ميناسي بريميوم": "Minasi Premium Hotel",
+    "لا كاستا كروز": "La Casta Cruise",
+    "فندق بورا": "Bora Hotel",
+    "مينه توان صافي أوشن": "Minh Toan SAFI Ocean Hotel",
+    "فندق مينه توان صافي أوشن": "Minh Toan SAFI Ocean Hotel",
+    "سيسيليا روج دالات": "CICILIA Rouge Dalat",
+    "فندق سيسيليا روج دالات": "CICILIA Rouge Dalat",
+    "سيسيليا سايغون سنتر": "Cicilia Saigon Center",
+    "فندق سيسيليا سايغون سنتر": "Cicilia Saigon Center",
 }
+
+ARABIC_CANONICAL_LTR_PHRASES = tuple(sorted({
+    *ARABIC_PLACE_NAME_ALIASES.values(),
+    "Silver Waterfall",
+    "Egg Coffee",
+    "Train Street Coffee",
+    "Moana Coffee",
+    "Han River Cruise",
+    "Crazy House",
+    "Clay Tunnel",
+    "Fresh Garden",
+    "Elephant Waterfall",
+    "Apartment Coffee",
+    "Central Post Office",
+    "Hoi An Ancient Town",
+    "Vietnam Safar",
+    "Discovery Asia Travel Group",
+    "B2B",
+    "USD",
+    "E-visa",
+    "SIM",
+    "Fast Track",
+    "WhatsApp",
+}, key=len, reverse=True))
+
+ARABIC_LTR_PATTERNS = (
+    re.compile(r"\b(?:QT|VS)-[A-Z0-9-]+\b"),
+    re.compile(r"\+?\d[\d\s().-]{6,}\d"),
+    re.compile(r"\b(?:https?://|www\.)[^\s<]+", re.IGNORECASE),
+    re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b"),
+    re.compile(r"\b\d{4}-\d{2}-\d{2}\b"),
+    re.compile(r"\b\d{1,2}\s+[A-Za-z]+\s+[–-]\s+\d{1,2}\s+[A-Za-z]+\s+\d{4}\b"),
+    re.compile(r"\b\d[\d,]*(?:\.\d+)?\s*(?:USD|دولار أمريكي)\b"),
+)
 
 
 def canonicalize_place_names_in_text(text: str, lang: str = "en") -> str:
@@ -1071,6 +1288,116 @@ def canonicalize_place_names_in_text(text: str, lang: str = "en") -> str:
     for source, canonical in sorted(ARABIC_PLACE_NAME_ALIASES.items(), key=lambda item: len(item[0]), reverse=True):
         normalized = normalized.replace(source, canonical)
     return normalized
+
+
+def _ltr_span(value: str) -> str:
+    return f'<span class="ltr-token">{escape(value)}</span>'
+
+
+def format_arabic_mixed_content(text: str, lang: str = "en"):
+    if not text:
+        return ""
+    if lang != "ar":
+        return text
+
+    normalized = canonicalize_place_names_in_text(text, lang)
+    placeholders: dict[str, str] = {}
+    placeholder_counter = 0
+
+    def add_placeholder(raw_value: str) -> str:
+        nonlocal placeholder_counter
+        key = f"__LTR_TOKEN_{placeholder_counter}__"
+        placeholder_counter += 1
+        placeholders[key] = _ltr_span(raw_value)
+        return key
+
+    working = normalized
+    for phrase in ARABIC_CANONICAL_LTR_PHRASES:
+        pattern = re.compile(re.escape(phrase))
+        working = pattern.sub(lambda match: add_placeholder(match.group(0)), working)
+
+    for pattern in ARABIC_LTR_PATTERNS:
+        working = pattern.sub(lambda match: add_placeholder(match.group(0)), working)
+
+    rendered = str(escape(working))
+    for key, html in placeholders.items():
+        rendered = rendered.replace(key, html)
+    return Markup(rendered)
+
+
+def rtl_mixed_filter(text: str, lang: str = "en"):
+    return format_arabic_mixed_content(text, lang)
+
+
+templates.env.filters["rtl_mixed"] = rtl_mixed_filter
+
+
+def format_display_date_range(checkin: str, checkout: str) -> str:
+    return format_display_date_range_for_lang(checkin, checkout, "en")
+
+
+def format_display_date_range_for_lang(checkin: str, checkout: str, lang: str = "en") -> str:
+    try:
+        from datetime import datetime
+        ci = datetime.strptime(checkin, "%Y-%m-%d")
+        co = datetime.strptime(checkout, "%Y-%m-%d")
+        if lang == "ar":
+            arabic_months = {
+                1: "يناير",
+                2: "فبراير",
+                3: "مارس",
+                4: "أبريل",
+                5: "مايو",
+                6: "يونيو",
+                7: "يوليو",
+                8: "أغسطس",
+                9: "سبتمبر",
+                10: "أكتوبر",
+                11: "نوفمبر",
+                12: "ديسمبر",
+            }
+            return f"{ci.day:02d} {arabic_months[ci.month]} – {co.day:02d} {arabic_months[co.month]} {co.year}"
+        return f"{ci.strftime('%d %b')} – {co.strftime('%d %b %Y')}"
+    except Exception:
+        return f"{checkin} – {checkout}"
+
+
+def format_duration_label(days_count: int, nights_count: int, lang: str = "en") -> str:
+    if lang == "ar":
+        return f"{days_count} يومًا / {nights_count} ليلة"
+    if lang == "vi":
+        return f"{days_count} ngày / {nights_count} đêm"
+    return f"{days_count}D{nights_count}N"
+
+
+def format_currency_display(amount: float, currency: str = "USD", lang: str = "en", *, per_person: bool = False) -> str:
+    amount_text = f"{amount:,.0f}"
+    if lang == "ar":
+        base = f"{amount_text} دولار أمريكي" if currency == "USD" else f"{amount_text} {currency}"
+        return f"{base} للشخص الواحد" if per_person else base
+    base = f"{currency} {amount_text}"
+    return f"{base} / person" if per_person else base
+
+
+def normalize_room_note(text: str, lang: str = "en") -> str:
+    if not text:
+        return ""
+    normalized = text.strip()
+    if lang == "ar":
+        mapping = {
+            "Double/Twin Bed Room for 2 Adults": "غرفة مزدوجة أو بسريرين منفصلين لشخصين بالغين",
+            "Twin/Double Sharing": "مشاركة غرفة مزدوجة أو بسريرين منفصلين",
+        }
+        return mapping.get(normalized, translate_filter(normalized, lang))
+    return normalized
+
+
+def _extract_image_url(image_value, default_img: str = "") -> str:
+    if isinstance(image_value, dict):
+        return image_value.get("url") or default_img
+    if isinstance(image_value, str):
+        return image_value or default_img
+    return default_img
 
 
 def canonicalize_place_names_in_data(value, lang: str = "en"):
@@ -2086,15 +2413,17 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
     # Calculate duration
     days_count = len(payload.itinerary)
     nights_count = max(0, days_count - 1)
-    duration_lbl  = f"{days_count}D{nights_count}N"
+    duration_lbl  = format_duration_label(days_count, nights_count, lang)
     
     # Travel dates - fallback to hotel plan if checkInDate is available, otherwise placeholder
     travel_dates = "Flexible Dates"
+    quotation_start_date = ""
     if payload.hotelPlan.hotels:
         start_date = payload.hotelPlan.hotels[0].checkInDate
         end_date = payload.hotelPlan.hotels[-1].checkOutDate
         if start_date and end_date:
-            travel_dates = f"{start_date} \u2013 {end_date}"
+            travel_dates = format_display_date_range_for_lang(start_date, end_date, lang)
+            quotation_start_date = start_date
             
     guests_txt    = truncate_text(payload.journeyGlance.guestProfile, 100)
     
@@ -2130,8 +2459,8 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
             guests_count = int(m.group(1))
         price_per_person = grand_total_num / max(1, guests_count)
         
-        price_per_pax = f"{currency} {price_per_person:,.0f} / person"
-        total_price = f"{currency} {grand_total_num:,.0f}"
+        price_per_pax = format_currency_display(price_per_person, currency, lang, per_person=True)
+        total_price = format_currency_display(grand_total_num, currency, lang)
         
         price_options = [{
             "hotelCategory": truncate_text(payload.journeyGlance.hotelStandard, 80),
@@ -2159,8 +2488,8 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
             price_per_person_amt = opt.amount or 0.0
             total_price_amt = price_per_person_amt * 2  # default placeholder
             
-            p_pax_txt = f"{currency} {price_per_person_amt:,.0f} / person"
-            tot_txt = f"{currency} {total_price_amt:,.0f}"
+            p_pax_txt = format_currency_display(price_per_person_amt, currency, lang, per_person=True)
+            tot_txt = format_currency_display(total_price_amt, currency, lang)
             
             price_options.append({
                 "hotelCategory": truncate_text(opt.label, 80),
@@ -2182,7 +2511,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
                 "notes": [truncate_text(opt.notes, 150)] if opt.notes else []
             })
         grand_total_num = payload.pricing.grandTotal or 0.0
-        total_price = f"{currency} {grand_total_num:,.0f}"
+        total_price = format_currency_display(grand_total_num, currency, lang)
 
     default_inclusions = [
         {"title": "Handpicked Accommodation", "desc": "Carefully selected hotels and stays as detailed in your journey proposal."},
@@ -2263,21 +2592,18 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
                     }
                     destinations.append(dest_dict)
 
-    # Translate destinations name for multi-language
     translated_destinations = []
     for d in destinations:
         d_copy = d.copy()
         raw_name = d_copy.get("name", "")
         d_copy["name"] = localize_place_name(raw_name, lang)
-        translated_destinations.append(d_copy)
-    destinations = translated_destinations
-
-    # Translate destinations name for multi-language
-    translated_destinations = []
-    for d in destinations:
-        d_copy = d.copy()
-        raw_name = d_copy.get("name", "")
-        d_copy["name"] = localize_place_name(raw_name, lang)
+        d_copy["image_url"] = _extract_image_url(d_copy.get("image_url"), default_img)
+        raw_images = d_copy.get("images") or []
+        d_copy["images"] = [
+            _extract_image_url(img, default_img)
+            for img in raw_images
+            if _extract_image_url(img, default_img)
+        ]
         translated_destinations.append(d_copy)
     destinations = translated_destinations
 
@@ -2285,7 +2611,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
     def _d_img(i): return destinations[i].get("image_url", default_img) if i < len(destinations) else default_img
     def _d_name(i): return truncate_text(destinations[i].get("name", ""), 40) if i < len(destinations) else ""
 
-    img_0 = hero_image_url
+    img_0 = _extract_image_url(hero_image_url, default_img)
     img_1 = _d_img(0)
     img_2 = _d_img(1)
     img_3 = _d_img(2)
@@ -2357,7 +2683,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
                 lang=lang
             )
             hotel_plan_items.append(canonicalize_place_names_in_data(details, lang))
-        hotel_room_notes = truncate_text(payload.hotelPlan.roomNotes or "", 200)
+        hotel_room_notes = truncate_text(normalize_room_note(payload.hotelPlan.roomNotes or "", lang), 200)
 
     stay_segments = _build_stay_segments_from_timeline(timeline_days, hotel_plan_items, lang)
 
@@ -2437,6 +2763,35 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         if len(coords_list) > 1:
             static_map_url += f"&pl={pl_param}"
 
+    client_i18n = {
+        "notification_title": translate_filter("Enable Notifications", lang),
+        "previous_image": translate_filter("Previous image", lang),
+        "next_image": translate_filter("Next image", lang),
+        "go_to_slide": translate_filter("Go to slide", lang),
+        "editing": translate_filter("Editing", lang),
+        "publish_to_web": translate_filter("Publish to Web", lang),
+        "publishing": translate_filter("Publishing...", lang),
+        "committing_to_github": translate_filter("Committing to GitHub...", lang),
+        "translate_block": translate_filter("Translate this block", lang),
+        "change": translate_filter("Change", lang),
+        "remove_block": translate_filter("Remove this block", lang),
+        "remove_block_confirm": translate_filter("Remove this block? This action cannot be undone.", lang),
+        "language_names": {
+            "en": translate_filter("English", lang),
+            "ar": translate_filter("Arabic", lang),
+            "vi": translate_filter("Vietnamese", lang),
+        },
+        "test_notification_title": translate_filter("Itinerary Update", lang),
+        "test_notification_body": translate_filter(
+            "Your private guide has been assigned: Mr. Minh (Phone: +84 911 538 738).",
+            lang,
+        ),
+        "enable_notifications_browser": translate_filter(
+            "Please enable notifications in your browser settings to receive updates.",
+            lang,
+        ),
+    }
+
     return {
         # IDs & images
         "quotation_id":   quotation_id,
@@ -2466,7 +2821,8 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         "contact_phone":  seller_phone,
         # Quotation ref
         "quotation_number": payload.quotationNumber or quotation_id,
-        "quotation_date":   travel_dates.split(" \u2013 ")[0] if "\u2013" in travel_dates else travel_dates,
+        "quotation_date":   quotation_start_date or travel_dates,
+        "travel_dates_raw": quotation_start_date,
         "valid_until":      glance_validity,
         # Strip badges
         "strip_duration":  duration_lbl,
@@ -2481,8 +2837,8 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         # Experiences (first 3 days)
         "experiences":      experiences,
         # Gallery section
-        "journey_h2":   lang_override.get("journey_h2", translate_filter("Destination imagery woven into the quotation.", lang)),
-        "journey_p":    translate_filter("Cinematic destination panels crafted for a premium travel proposal.", lang),
+        "journey_h2":   translate_filter(lang_override.get("journey_h2") or "Destination imagery woven into the quotation.", lang),
+        "journey_p":    translate_filter(lang_override.get("journey_p") or "Cinematic destination panels crafted for a premium travel proposal.", lang),
         "gal1_label":   translate_filter("Highlight", lang) if len(destinations) > 0 else translate_filter("Destination", lang),
         "gal1_title":   _d_name(0), "gal2_label": translate_filter("Destination", lang), "gal2_title": _d_name(1),
         "gal3_label":   translate_filter("Experience", lang), "gal3_title": _d_name(2), "gal4_label": translate_filter("Journey", lang), "gal4_title": _d_name(3),
@@ -2553,6 +2909,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         "lang": lang,
         "template_name": template_name,
         "translation_status": _load_translation_status(quotation_id, default_lang=lang),
+        "client_i18n": client_i18n,
     }
     ctx = canonicalize_place_names_in_data(ctx, lang)
     return ctx
@@ -3557,6 +3914,9 @@ def filter_and_override_ctx_by_html(lang_ctx: dict, html_content: str, override_
         parse_edited_fields(html_content),
         override_text=override_text,
     )
+    lang = lang_ctx.get("lang", "en")
+    if lang == "ar":
+        lang_ctx.update(canonicalize_place_names_in_data(lang_ctx, lang))
 
 def _get_lang_sync_key(target_lang: str | None, baseline_lang: str) -> str:
     if target_lang in ("en", "vi", "ar"):
@@ -3593,6 +3953,8 @@ def _apply_ctx_html_sync(
             lang_sync.get("edited_fields", {}),
             override_text=True,
         )
+        if target_lang == "ar":
+            lang_ctx.update(canonicalize_place_names_in_data(lang_ctx, target_lang))
         return True
 
     if target_lang != baseline_lang:
@@ -3604,6 +3966,8 @@ def _apply_ctx_html_sync(
                 {},
                 override_text=False,
             )
+            if target_lang == "ar":
+                lang_ctx.update(canonicalize_place_names_in_data(lang_ctx, target_lang))
             applied = True
 
     return applied
@@ -5589,14 +5953,8 @@ async def create_landing_page_agent(request: Request):
     }
 
 
-def format_hotel_dates(checkin: str, checkout: str) -> str:
-    try:
-        from datetime import datetime
-        ci = datetime.strptime(checkin, "%Y-%m-%d")
-        co = datetime.strptime(checkout, "%Y-%m-%d")
-        return f"{ci.strftime('%d %b')} – {co.strftime('%d %b %Y')}"
-    except Exception:
-        return f"{checkin} – {checkout}"
+def format_hotel_dates(checkin: str, checkout: str, lang: str = "en") -> str:
+    return format_display_date_range_for_lang(checkin, checkout, lang)
 
 
 # ── Dynamic hotel details fuzzy resolver (Fusion Search + info.json) ──────────
@@ -5796,7 +6154,7 @@ def resolve_hotel_details(hotel_name: str, city_name: str, base_dir: str = "asse
 
 def get_luxury_hotel_details(hotel_name_or_arr: str, destination: str, checkin: str, checkout: str, index: int = 0, lang: str = "en") -> dict:
     name_lower = hotel_name_or_arr.lower() if hotel_name_or_arr else ""
-    date_range = format_hotel_dates(checkin, checkout)
+    date_range = format_hotel_dates(checkin, checkout, lang)
     city_country = f"{destination.upper()}, VIETNAM" if destination else "VIETNAM"
     
     # Parse name, room type, and notes from hotelArrangement

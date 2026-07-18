@@ -71,6 +71,7 @@
       font-family: var(--sans);
       line-height: 1.65;
       overflow-wrap: break-word;
+      padding-bottom: 90px;
     }
 
     a {
@@ -1210,51 +1211,118 @@
     /* ── Publish Bar ────────────────────────────────────────────── */
     #publish-bar {
       position: fixed;
-      bottom: 0;
+      bottom: 24px;
       left: 0;
       right: 0;
+      margin: 0 auto;
       z-index: 9999;
-      background: rgba(23, 65, 46, .96);
-      backdrop-filter: blur(18px);
-      border-top: 1px solid rgba(183, 137, 75, .35);
+      background: rgba(17, 19, 15, 0.95);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(183, 137, 75, 0.4);
+      border-radius: 40px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 14px 32px;
-      gap: 16px
+      padding: 12px 24px;
+      gap: 24px;
+      width: max-content;
+      min-width: 600px;
+      max-width: 90%;
+      box-sizing: border-box;
     }
+
+    #publish-bar .pb-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .pb-label-mobile {
+      display: none;
+    }
+
     @media(max-width: 768px) {
       body {
-        padding-bottom: 110px !important;
+        padding-bottom: 90px !important;
       }
+
       #publish-bar {
-        flex-wrap: wrap;
-        padding: 12px 16px;
-        gap: 8px;
-        justify-content: center;
+        width: 92%;
+        min-width: 0;
+        bottom: 16px;
+        border-radius: 30px;
+        padding: 10px 16px;
+        gap: 12px;
+        flex-wrap: nowrap;
       }
+
       #publish-bar .pb-left {
-        width: 100%;
-        justify-content: center;
-      }
-      #publish-status {
-        width: 100%;
-        order: 3;
-        margin: 2px 0;
-        text-align: center;
-      }
-      #select-domain,
-      #btn-pdf,
-      #btn-publish,
-      #btn-approve {
         flex: 1;
-        min-width: 120px;
-        justify-content: center;
+        min-width: 0;
+        justify-content: flex-start;
+      }
+
+      #publish-bar .pb-label {
+        font-size: 11px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex: 1;
+        min-width: 0;
+      }
+
+      .pb-label-desktop {
+        display: none !important;
+      }
+
+      .pb-label-mobile {
+        display: inline !important;
+      }
+
+      #publish-status {
+        display: none !important;
+      }
+
+      #select-domain {
+        display: none !important;
+      }
+
+      #btn-select-domain .domain-text {
+        display: none !important;
+      }
+
+      #btn-select-domain {
+        padding: 8px !important;
+        border-radius: 50% !important;
+        width: 34px !important;
+        height: 34px !important;
+        justify-content: center !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        margin-left: 0 !important;
+        min-width: 34px !important;
+      }
+
+      #publish-bar .pb-actions {
+        gap: 8px;
+      }
+
+      #btn-publish,
+      #btn-approve,
+      #btn-pdf {
         font-size: 11px !important;
-        padding: 10px 14px !important;
-        text-align: center;
-        display: inline-flex;
-        align-items: center;
+        padding: 8px 14px !important;
+        border-radius: 20px !important;
+        height: 34px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        white-space: nowrap !important;
+        width: auto !important;
+        min-width: 0 !important;
         margin-left: 0 !important;
       }
     }
@@ -1328,6 +1396,10 @@
     }
 
     #select-domain {
+      display: none !important;
+    }
+
+    #btn-select-domain {
       background: rgba(255, 255, 255, 0.1);
       color: #fff;
       border: 1px solid rgba(183, 137, 75, 0.4);
@@ -1335,29 +1407,199 @@
       padding: 11px 20px;
       font-weight: 700;
       font-size: 12px;
-      outline: none;
       cursor: pointer;
-      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
       transition: all 0.3s ease;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      appearance: none;
-      background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 16px center;
-      padding-right: 36px;
+      font-family: inherit;
+      outline: none;
     }
-    #select-domain:hover {
+    
+    #btn-select-domain:hover {
       background-color: rgba(255, 255, 255, 0.15);
       border-color: rgba(183, 137, 75, 0.8);
     }
-    #select-domain:focus {
-      border-color: #d8bd85;
-      box-shadow: 0 0 0 2px rgba(183, 137, 75, 0.2);
+    
+    .pb-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(17, 19, 15, 0.6);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100000;
+      padding: 20px;
+      box-sizing: border-box;
     }
-    #select-domain option {
-      background-color: #17412e;
-      color: #fff;
+    
+    .pb-modal-overlay.show {
+      display: flex;
+    }
+    
+    .pb-modal-card {
+      background: rgba(255, 250, 241, 0.98);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(183, 137, 75, 0.4);
+      border-radius: 24px;
+      width: 100%;
+      max-width: 400px;
+      max-height: calc(100vh - 80px);
+      padding: 24px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+      animation: pbModalFadeIn 0.3s ease;
+      box-sizing: border-box;
+      
+      direction: ltr !important;
+      text-align: left !important;
+      
+      display: flex;
+      flex-direction: column;
+    }
+    
+    @keyframes pbModalFadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    
+    .pb-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      border-bottom: 1px solid rgba(17, 19, 15, 0.08);
+      padding-bottom: 12px;
+      flex-shrink: 0;
+    }
+    
+    .pb-modal-header h3 {
+      margin: 0;
+      font-size: 18px;
+      color: var(--emerald);
+      font-family: var(--serif);
+      font-weight: 700;
+    }
+    
+    .pb-modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: var(--muted);
+      padding: 0;
+      line-height: 1;
+      transition: color 0.2s;
+      margin-left: auto;
+    }
+    
+    .pb-modal-close:hover {
+      color: var(--ink);
+    }
+    
+    .pb-domain-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+      max-height: 320px;
+      padding-right: 6px;
+    }
+    
+    .pb-domain-list::-webkit-scrollbar {
+      width: 6px;
+    }
+    .pb-domain-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .pb-domain-list::-webkit-scrollbar-thumb {
+      background: rgba(183, 137, 75, 0.25);
+      border-radius: 10px;
+    }
+    .pb-domain-list::-webkit-scrollbar-thumb:hover {
+      background: rgba(183, 137, 75, 0.45);
+    }
+    
+    .pb-domain-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: rgba(17, 19, 15, 0.03);
+      border: 1px solid rgba(17, 19, 15, 0.08);
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      box-sizing: border-box;
+      width: 100%;
+    }
+    
+    .pb-domain-item:hover {
+      background: rgba(183, 137, 75, 0.08);
+      border-color: rgba(183, 137, 75, 0.4);
+    }
+    
+    .pb-domain-item.active {
+      background: rgba(23, 65, 46, 0.06);
+      border-color: var(--emerald);
+    }
+    
+    .pb-domain-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    
+    .pb-domain-details {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      text-align: left;
+      flex-grow: 1;
+    }
+    
+    .pb-domain-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+      word-break: break-all;
+    }
+    
+    .pb-domain-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      width: fit-content;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .pb-domain-badge.dev {
+      background: rgba(183, 137, 75, 0.15);
+      color: #9d6d2a;
+    }
+    
+    .pb-domain-badge.prod {
+      background: rgba(23, 65, 46, 0.1);
+      color: var(--emerald);
+    }
+    
+    .pb-domain-check {
+      margin-left: auto;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--emerald);
+      display: none;
+      flex-shrink: 0;
+    }
+    
+    .pb-domain-item.active .pb-domain-check {
+      display: block;
     }
 
     #btn-approve {
@@ -2685,18 +2927,71 @@
   <div id="publish-bar" class="no-print">
     <div class="pb-left">
       <div class="pb-dot"></div>
-      <div class="pb-label">You are viewing the <strong>Live Booking Itinerary</strong>. Click on any text to edit
-        inline.</div>
+      <div class="pb-label">
+        <span class="pb-label-desktop">You are viewing the <strong>Live Booking Itinerary</strong>. Click on any text to edit inline.</span>
+        <span class="pb-label-mobile">✏️ Editing Itinerary</span>
+      </div>
     </div>
     <span id="publish-status"></span>
-    <select id="select-domain" class="no-print">
-      <option value="http://localhost:8111">localhost:8111</option>
-      <option value="https://journeys.capellatravel.com">journeys.capellatravel.com</option>
-      <option value="https://journeys.vietnamsafar.vn">journeys.vietnamsafar.vn</option>
-      <option value="http://my.selvarajourneys.com">my.selvarajourneys.com</option>
-    </select>
-    <button id="btn-publish" onclick="publishPage()">🚀 Publish to Web</button>
-    <button id="btn-approve" onclick="approvePage()">✅ Save & Approve</button>
+
+    <div class="pb-actions">
+      <select id="select-domain" class="no-print" style="display: none !important;">
+        <option value="http://localhost:8111">localhost:8111</option>
+        <option value="https://journeys.capellatravel.com">journeys.capellatravel.com</option>
+        <option value="https://journeys.vietnamsafar.vn">journeys.vietnamsafar.vn</option>
+        <option value="http://my.selvarajourneys.com">my.selvarajourneys.com</option>
+      </select>
+      <button id="btn-select-domain" onclick="openDomainModal(event)" title="Select Domain">
+        <span>🌐</span>
+        <span class="domain-text">localhost:8111</span>
+      </button>
+      <button id="btn-publish" onclick="publishPage()">🚀 Publish to Web</button>
+      <button id="btn-approve" onclick="approvePage()">✅ Save & Approve</button>
+    </div>
+  </div>
+
+  <!-- Custom Responsive Domain Selector Modal -->
+  <div id="domain-modal" class="pb-modal-overlay" onclick="closeDomainModal(event)">
+    <div class="pb-modal-card" onclick="event.stopPropagation()">
+      <div class="pb-modal-header">
+        <h3>Select Domain</h3>
+        <button class="pb-modal-close" onclick="closeDomainModal(event)">&times;</button>
+      </div>
+      <div class="pb-domain-list">
+        <div class="pb-domain-item" data-value="http://localhost:8111" onclick="selectDomainOption('http://localhost:8111')">
+          <span class="pb-domain-icon">💻</span>
+          <div class="pb-domain-details">
+            <div class="pb-domain-name">localhost:8111</div>
+            <div class="pb-domain-badge dev">Local Development</div>
+          </div>
+          <span class="pb-domain-check">✓</span>
+        </div>
+        <div class="pb-domain-item" data-value="https://journeys.vietnamsafar.vn" onclick="selectDomainOption('https://journeys.vietnamsafar.vn')">
+          <span class="pb-domain-icon">🌐</span>
+          <div class="pb-domain-details">
+            <div class="pb-domain-name">journeys.vietnamsafar.vn</div>
+            <div class="pb-domain-badge prod">Production</div>
+          </div>
+          <span class="pb-domain-check">✓</span>
+        </div>
+        <div class="pb-domain-item" data-value="https://journeys.capellatravel.com" onclick="selectDomainOption('https://journeys.capellatravel.com')">
+          <span class="pb-domain-icon">🌐</span>
+          <div class="pb-domain-details">
+            <div class="pb-domain-name">journeys.capellatravel.com</div>
+            <div class="pb-domain-badge prod">Production</div>
+          </div>
+          <span class="pb-domain-check">✓</span>
+        </div>
+        <div class="pb-domain-item" data-value="http://my.selvarajourneys.com" onclick="selectDomainOption('http://my.selvarajourneys.com')">
+          <span class="pb-domain-icon">🌐</span>
+          <div class="pb-domain-details">
+            <div class="pb-domain-name">my.selvarajourneys.com</div>
+            <div class="pb-domain-badge prod">Production</div>
+          </div>
+          <span class="pb-domain-check">✓</span>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ── Image Uploader (Hidden) ── -->
@@ -3604,8 +3899,54 @@
             selectDomain.value = 'https://journeys.capellatravel.com';
           }
         }
+        // Sync custom domain button text on load
+        setTimeout(() => {
+          const domainBtnText = document.querySelector('#btn-select-domain .domain-text');
+          if (domainBtnText) {
+            domainBtnText.textContent = selectDomain.value.replace(/^https?:\/\//, '').replace(/\/$/, '');
+          }
+        }, 50);
       }
     });
+
+    function openDomainModal(event) {
+      if (event) event.stopPropagation();
+      const modal = document.getElementById('domain-modal');
+      if (modal) {
+        modal.classList.add('show');
+        const selectDomain = document.getElementById('select-domain');
+        if (selectDomain) {
+          const currentValue = selectDomain.value;
+          const items = modal.querySelectorAll('.pb-domain-item');
+          items.forEach(item => {
+            if (item.getAttribute('data-value') === currentValue) {
+              item.classList.add('active');
+            } else {
+              item.classList.remove('active');
+            }
+          });
+        }
+      }
+    }
+
+    function closeDomainModal(event) {
+      if (event) event.stopPropagation();
+      const modal = document.getElementById('domain-modal');
+      if (modal) modal.classList.remove('show');
+    }
+
+    function selectDomainOption(val) {
+      const selectDomain = document.getElementById('select-domain');
+      if (selectDomain) {
+        selectDomain.value = val;
+        selectDomain.dispatchEvent(new Event('change'));
+        const domainText = document.querySelector('#btn-select-domain .domain-text');
+        if (domainText) {
+          domainText.textContent = val.replace(/^https?:\/\//, '').replace(/\/$/, '');
+        }
+      }
+      closeDomainModal();
+    }
 
     async function publishPage() {
       const btn = document.getElementById('btn-publish');

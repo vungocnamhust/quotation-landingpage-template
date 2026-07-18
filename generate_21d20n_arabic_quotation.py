@@ -1,25 +1,67 @@
 import json
 import os
 import sys
+import types
 from fastapi.testclient import TestClient
 
 # Add current directory to path so main can be imported
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
-# Mock the OpenAI-based image selector before importing main
-import image_selector
+# Stub the image selector module before importing main so this script
+# can run without the full AI/image-selection dependency stack.
+image_selector = types.ModuleType("image_selector")
 async def mock_extract_and_map_destinations(text, max_items=None):
     print("[Mock] Extracting and mapping destinations for: Hanoi, Halong Bay, Sapa, Da Nang, Hoi An, Dalat, Ho Chi Minh")
     return [
-        {"name": "Hà Nội", "slug": "ha-noi"},
-        {"name": "Vịnh Hạ Long", "slug": "quang-ninh"},
+        {"name": "Hanoi", "slug": "ha-noi"},
+        {"name": "Halong Bay", "slug": "quang-ninh"},
         {"name": "Sapa", "slug": "lao-cai"},
-        {"name": "Đà Nẵng", "slug": "da-nang"},
-        {"name": "Hội An", "slug": "quang-nam"},
-        {"name": "Đà Lạt", "slug": "lam-dong"},
-        {"name": "Hồ Chí Minh", "slug": "ho-chi-minh"}
+        {"name": "Da Nang", "slug": "da-nang"},
+        {"name": "Hoi An", "slug": "quang-nam"},
+        {"name": "Dalat", "slug": "lam-dong"},
+        {"name": "Ho Chi Minh City", "slug": "ho-chi-minh"}
     ]
+
+async def mock_select_landing_image(payload, model_name=None):
+    print("[Mock] Selecting landing image")
+    return "/assets/halong-bay.jpg"
+
+def mock_get_random_image_for_province(slug):
+    return {
+        "url": f"/assets/mock-{slug}.jpg",
+        "province": slug,
+        "source": "mock",
+    }
+
+def mock_get_all_images_for_province(slug):
+    return [mock_get_random_image_for_province(slug)]
+
+def mock_resolve_slug_locally(location):
+    if not location:
+        return None
+    normalized = str(location).strip().lower()
+    slug_map = {
+        "hanoi": "ha-noi",
+        "halong bay": "quang-ninh",
+        "halong": "quang-ninh",
+        "sapa": "lao-cai",
+        "da nang": "da-nang",
+        "hoi an": "quang-nam",
+        "dalat": "lam-dong",
+        "da lat": "lam-dong",
+        "ho chi minh city": "ho-chi-minh",
+        "ninh binh": "ninh-binh",
+        "mekong delta": "mekong",
+        "tan son nhat airport": "ho-chi-minh",
+    }
+    return slug_map.get(normalized)
+
 image_selector.extract_and_map_destinations = mock_extract_and_map_destinations
+image_selector.select_landing_image = mock_select_landing_image
+image_selector.get_random_image_for_province = mock_get_random_image_for_province
+image_selector.get_all_images_for_province = mock_get_all_images_for_province
+image_selector.resolve_slug_locally = mock_resolve_slug_locally
+sys.modules["image_selector"] = image_selector
 
 from main import app
 
@@ -30,10 +72,9 @@ payload = {
     "quotationNumber": "QT-2026-ARAB-21D20N",
     "lang": "ar",  # Triggers RTL and Arabic formatting in templates
     "quotationNarrative": (
-        "رحلة استثنائية فاخرة ومصممة بعناية تمتد على مدار 21 يومًا لربط أرقى الوجهات في فيتنام. "
-        "من سحر هانوي التاريخي ونقاء خليج ها لونغ، إلى مرتفعات سابا الشامخة، وصولاً إلى شواطئ دا نانغ الرملية "
-        "وهدوء دالات الرومانسية وحيوية هو تشي منه. صُممت هذه الرحلة خصيصاً للمسافرين الباحثين عن الفخامة والخصوصية، "
-        "مع توفير كافة الخدمات الممتازة والتسهيلات التي تضمن راحة تامة طوال الإقامة."
+        "رحلة فاخرة مصممة بعناية لمدة 21 يومًا تربط أبرز محطات فيتنام بين Hanoi وHalong Bay وSapa "
+        "ثم Da Nang وDalat وHo Chi Minh City. يركز البرنامج على خط سير واضح، وتنقلات منظمة، وإقامة مختارة بعناية "
+        "مع الحفاظ على دقة التفاصيل كما وردت في البرنامج الأساسي دون إضافة أنشطة أو مزايا غير مؤكدة."
     ),
     "landingpageContent": {
         "heroSection": {
@@ -44,188 +85,188 @@ payload = {
     },
     "journeyGlance": {
         "market": "GCC / Arab Market",
-        "guestProfile": "2 Adults (شخصين)",
+        "guestProfile": "شخصان بالغان",
         "hotelStandard": "فنادق 4 نجوم فاخرة وكروز 5 نجوم",
-        "mealPreference": "وجبات إفطار يومية + وجبات كاملة على متن الكروز (حلال وللأكلات البحرية)",
+        "mealPreference": "إفطار يومي + 4 وجبات مشمولة على متن كروز Halong Bay",
         "priceType": "Indicative",
         "tourCode": "VS-2026-21D20N-ARAB",
-        "domesticFlights": "مشمولة (هانوي - دا نانغ، دا نانغ - نها ترانغ، نها ترانغ - هو تشي منه)",
+        "domesticFlights": "مشمولة (Hanoi - Da Nang، Da Nang - Dalat، Dalat - Ho Chi Minh City)",
         "priceBasis": "أساس الغرفة المزدوجة المشتركة (Twin/Double Sharing)",
-        "partnerNote": "رحلة خاصة بالكامل مع سيارة وسائق مرشد سياحي خاص",
+        "partnerNote": "رحلة خاصة مع تنقلات منظمة وخدمات مختارة وفق البرنامج",
         "validity": "صالحة للسفر في أغسطس 2026"
     },
     "whyWorks": {
         "privateFlexible": "تتيح لك السيارة الخاصة والمرشد الشخصي مرونة تامة لتعديل وتيرة الرحلة وجداول اليوم بما يناسب تفضيلاتك الخاصة وعائلتك.",
         "comfort": "تم اختيار فنادق 4 نجوم عالية الجودة وكروز 5 نجوم بعناية فائقة لتوفير أقصى درجات الراحة والاسترخاء بعد الجولات اليومية.",
-        "muslimFriendly": "جميع الوجبات المختارة تتوافق مع تفضيلات الأطعمة الحلال، مع التركيز على المأكولات البحرية الطازجة والخضروات والمأكولات الخالية من لحم الخنزير.",
-        "balancedHighlights": "مزيج متناغم يجمع بين سحر المعالم التاريخية، استكشاف الجبال المغطاة بالضباب، الاسترخاء الشاطئي والرحلات النهرية الهادئة."
+        "muslimFriendly": "تم تنظيم عناصر الرحلة والخدمات الأساسية بشكل واضح ومباشر بما يسهّل مراجعة كل يوم وكل انتقال بدقة.",
+        "balancedHighlights": "يجمع البرنامج بين المدن التاريخية، الرحلات الطبيعية، المرتفعات الجبلية، الساحل، والجنوب الحضري ضمن تسلسل تنقل متدرج وواضح."
     },
     "itinerary": [
         {
             "dayNumber": 1,
             "destination": "Hanoi",
-            "summary": "الوصول إلى هانوي. استقبال حار في مطار نوي باي الدولي من قبل سائقنا الخاص والانتقال إلى فندق Minasi Premium Hotel للاسترخاء وبداية رحلتك الممتعة.",
-            "mainInclusions": "الاستقبال في المطار، الانتقال بسيارة خاصة، زجاجات مياه الترحيب.",
+            "summary": "الوصول إلى Hanoi والاستقبال في المطار ثم الانتقال إلى Minasi Premium Hotel للمبيت.",
+            "mainInclusions": "الاستقبال في المطار والانتقال بسيارة خاصة إلى الفندق.",
             "senseOfPace": "Relaxed",
-            "dining": "عشاء ترحيبي خاص"
+            "dining": ""
         },
         {
             "dayNumber": 2,
             "destination": "Hanoi",
-            "summary": "ابدأ يومك بجولة ثقافية مميزة في هانوي تشمل زيارة سوق دونغ سوان الشهير، وتجربة ركوب السيكلو التقليدي عبر شوارع المدينة القديمة، تليها تجربة مميزة لتذوق قهوة البيض أو قهوة القطار الفريدة.",
-            "mainInclusions": "جولة سيكلو، تذاكر دخول، مرشد سياحي خاص، سيارة خاصة.",
+            "summary": "استكشاف Hanoi مع زيارة Dong Xuan Market، وركوب السيكلو، وتجربة Egg Coffee أو Train Street Coffee.",
+            "mainInclusions": "جولة سيكلو وتنقلات البرنامج داخل Hanoi.",
             "senseOfPace": "Immersive",
             "dining": "إفطار في الفندق"
         },
         {
             "dayNumber": 3,
             "destination": "Hanoi",
-            "summary": "رحلة ليوم كامل لاستكشاف نينه بينه الساحرة، حيث تزور تام كوك للاستمتاع برحلة القوارب النهرية التقليدية وسط حقول الأرز الشاسعة والجبال الجيرية، ثم الصعود إلى قمة هانغ موا لإطلالة بانورامية رائعة.",
-            "mainInclusions": "رحلة القارب في تام كوك، تذاكر هانغ موا، مرشد خاص، سيارة خاصة.",
+            "summary": "رحلة يومية من Hanoi إلى Ninh Binh لزيارة Tam Coc وHang Mua ثم العودة إلى Hanoi.",
+            "mainInclusions": "تنقل خاص لرحلة Ninh Binh وفق البرنامج.",
             "senseOfPace": "Active",
-            "dining": "إفطار وغداء محلي"
+            "dining": "إفطار في الفندق"
         },
         {
             "dayNumber": 4,
             "destination": "Halong Bay",
-            "summary": "الانتقال صباحاً من هانوي إلى خليج ها لونغ بواسطة سيارتنا الخاصة الفاخرة (حوالي 3 ساعات). الصعود على متن كروز La Casta الفاخر 5 نجوم للاستمتاع برحلة بحرية رائعة بين الجزر الجيرية الخلابة.",
-            "mainInclusions": "الانتقال بسيارة خاصة، الإقامة في كروز فاخر، رحلات تجديف وقوارب الكاياك.",
+            "summary": "الانتقال من Hanoi إلى Halong Bay بسيارة خاصة ثم الصعود على متن La Casta Cruise للمبيت.",
+            "mainInclusions": "سيارة خاصة من Hanoi إلى Halong Bay وإقامة على متن La Casta Cruise.",
             "senseOfPace": "Relaxed",
-            "dining": "إفطار، غداء، وعشاء على متن الكروز"
+            "dining": "الوجبات المشمولة وفق برنامج الكروز"
         },
         {
             "dayNumber": 5,
             "destination": "Hanoi",
-            "summary": "ابدأ صباحك بممارسة رياضة التاي تشي على متن الكروز والتمتع بشروق الشمس الساحر. بعد طعام الغداء المبكر، يتم النزول من الكروز والعودة بالسيارة الخاصة إلى هانوي للمبيت في فندق Minasi Premium Hotel.",
-            "mainInclusions": "رحلة بحرية صباحية، الانتقال بسيارة خاصة إلى هانوي.",
+            "summary": "مغادرة الكروز والعودة من Halong Bay إلى Hanoi بسيارة خاصة للمبيت في Minasi Premium Hotel.",
+            "mainInclusions": "العودة بسيارة خاصة من Halong Bay إلى Hanoi.",
             "senseOfPace": "Relaxed",
-            "dining": "إفطار وغداء خفيف على متن الكروز"
+            "dining": ""
         },
         {
             "dayNumber": 6,
             "destination": "Sapa",
-            "summary": "الانتقال من هانوي إلى سابا الجبلية بواسطة باص النوم المريح والمجهز (حوالي 6 ساعات). الاستمتاع بالطقس الجبلي البارد والمبيت في فندق Bora Hotel الفاخر وسط الإطلالات الجبلية الرائعة.",
-            "mainInclusions": "تذاكر باص النوم الفاخر، الاستقبال والانتقال في سابا.",
+            "summary": "الانتقال من Hanoi إلى Sapa بواسطة حافلة نوم ثم المبيت في Bora Hotel.",
+            "mainInclusions": "تذكرة حافلة النوم والتنقلات الأساسية عند الوصول إلى Sapa.",
             "senseOfPace": "Moderate",
             "dining": "إفطار في الفندق"
         },
         {
             "dayNumber": 7,
             "destination": "Sapa",
-            "summary": "زيارة قمة فانسيبان، أعلى قمة في الهند الصينية بواسطة عربات التلفريك للاستمتاع بإطلالة فوق السحاب، ثم التوجه لاستكشاف قرية كات كات التقليدية والتعرف على ثقافة قبائل الهيمونغ المحلية.",
-            "mainInclusions": "تذاكر تلفريك فانسيبان، رسوم دخول قرية كات كات، مرشد خاص، سيارة خاصة.",
+            "summary": "زيارة Fansipan ثم Cat Cat Village ضمن برنامج الاستكشاف في Sapa.",
+            "mainInclusions": "رسوم برنامج Fansipan وCat Cat Village.",
             "senseOfPace": "Active",
-            "dining": "إفطار وغداء"
+            "dining": "إفطار في الفندق"
         },
         {
             "dayNumber": 8,
             "destination": "Sapa",
-            "summary": "رحلة مشي هادئة عبر القرى الجبلية الجميلة لاو تشاي وتا فان لاستكشاف حقول الأرز المدرجة الخلابة، يعقبها زيارة إلى شلال الفضة الرائع المنساب من قمم الجبال.",
-            "mainInclusions": "تذاكر دخول القرى والشلال، مرشد محلي، سيارة خاصة.",
+            "summary": "زيارة Lao Chai وTa Van ثم Silver Waterfall ضمن برنامج اليوم في Sapa.",
+            "mainInclusions": "تنقلات ورسوم البرنامج في Sapa.",
             "senseOfPace": "Moderate",
-            "dining": "إفطار وغداء محلي"
+            "dining": "إفطار في الفندق"
         },
         {
             "dayNumber": 9,
             "destination": "Sapa",
-            "summary": "تجربة المغامرة فوق الجسر الزجاجي الشاهق والمشي وسط الضباب، ثم التوجه للاسترخاء في مقهى موانا الشهير والتقاط أجمل الصور التذكارية أمام المنحوتات الفنية الرائعة المطلة على الوادي.",
-            "mainInclusions": "تذاكر الجسر الزجاجي ورسوم مقهى موانا، سيارة خاصة.",
+            "summary": "زيارة الجسر الزجاجي ثم Moana Coffee في Sapa.",
+            "mainInclusions": "تنقلات ورسوم البرنامج لليوم في Sapa.",
             "senseOfPace": "Immersive",
             "dining": "إفطار في الفندق"
         },
         {
             "dayNumber": 10,
             "destination": "Hanoi",
-            "summary": "توديع أجواء سابا الجبلية الساحرة والعودة بالباص المريح المخصص للنوم إلى العاصمة هانوي. تسجيل الوصول في فندق Minasi Premium Hotel وقضاء بقية اليوم في التسوق والاسترخاء بحرية.",
-            "mainInclusions": "تذاكر باص النوم الفاخر، الانتقال إلى الفندق.",
+            "summary": "العودة من Sapa إلى Hanoi بواسطة حافلة نوم ثم المبيت في Minasi Premium Hotel.",
+            "mainInclusions": "تذكرة حافلة النوم من Sapa إلى Hanoi.",
             "senseOfPace": "Relaxed",
             "dining": "إفطار في الفندق"
         },
         {
             "dayNumber": 11,
             "destination": "Da Nang",
-            "summary": "الانتقال إلى المطار للسفر بالطائرة الداخلية إلى مدينة دا نانغ الساحلية. استقبال وتوصيل إلى الفندق، وفي المساء التمتع برحلة بحرية رومانسية لمدة 45 دقيقة في نهر هان لمشاهدة جسر التنين وعروض الأنوار اللامعة.",
-            "mainInclusions": "تذكرة الطيران الداخلي، الاستقبال وتوصيل المطار، تذاكر كروز نهر هان.",
+            "summary": "رحلة طيران داخلية من Hanoi إلى Da Nang ثم تجربة Han River Cruise.",
+            "mainInclusions": "تذكرة طيران داخلية Hanoi - Da Nang وHan River Cruise.",
             "senseOfPace": "Moderate",
             "dining": "إفطار في الفندق"
         },
         {
             "dayNumber": 12,
             "destination": "Da Nang",
-            "summary": "قضاء يوم كامل في منتجع با نا هيلز الشهير. ركوب أطول تلفريك في العالم، والمشي فوق الجسر الذهبي الأيقوني المحمول بواسطة اليدين الحجريتين العملاقتين، واستكشاف الألعاب الترفيهية والحدائق الفرنسية.",
-            "mainInclusions": "تذاكر تلفريك ودخول با نا هيلز، مرشد سياحي، سيارة خاصة.",
+            "summary": "زيارة Ba Na Hills ضمن برنامج اليوم الكامل من Da Nang.",
+            "mainInclusions": "رسوم برنامج Ba Na Hills.",
             "senseOfPace": "Active",
-            "dining": "إفطار وغداء بوفيه في با نا هيلز"
+            "dining": "إفطار في الفندق"
         },
         {
             "dayNumber": 13,
             "destination": "Da Nang",
-            "summary": "جولة مميزة تشمل ركوب قوارب السلة الخيزرانية الدائرية في غابة جوز الهند المائية، تليها زيارة إلى بلدة هوي آن القديمة المدرجة ضمن التراث العالمي لليونسكو للاستمتاع بالفوانيس الملونة ليلاً والشوارع التاريخية.",
-            "mainInclusions": "تذاكر قوارب السلة، رسوم دخول هوي آن، مرشد سياحي، سيارة خاصة.",
+            "summary": "زيارة Bay Mau Coconut Forest ثم Hoi An Ancient Town قبل العودة إلى Da Nang.",
+            "mainInclusions": "تنقلات ورسوم البرنامج لزيارة Bay Mau Coconut Forest وHoi An.",
             "senseOfPace": "Immersive",
-            "dining": "إفطار وعشاء رومانسي في هوي آن"
+            "dining": "إفطار في الفندق"
         },
         {
             "dayNumber": 14,
             "destination": "Da Nang",
-            "summary": "رحلة مليئة بالحماس والمغامرة المائية في منطقة هوا فو ثانه للاستمتاع بتجربة التجديف النهري الشيق وسط الطبيعة الاستوائية المورقة.",
-            "mainInclusions": "تذاكر تجديف هوا فو ثانه والمعدات، مرشد خاص، سيارة خاصة.",
+            "summary": "تجربة Hoa Phu Thanh rafting ضمن برنامج اليوم في Da Nang.",
+            "mainInclusions": "رسوم برنامج Hoa Phu Thanh.",
             "senseOfPace": "Active",
-            "dining": "إفطار وغداء"
+            "dining": "إفطار في الفندق"
         },
         {
             "dayNumber": 15,
             "destination": "Dalat",
-            "summary": "السفر بالطيران الداخلي من دا نانغ إلى مطار كام رانه (نها ترانغ) ومن ثم التوجه مباشرة بالسيارة إلى مدينة دالات الجبلية الباردة الملقبة بمدينة الضباب. الاستقرار في فندق CICILIA Rouge Dalat.",
-            "mainInclusions": "تذكرة الطيران الداخلي، سيارة خاصة للانتقال من كام رانه إلى دالات.",
+            "summary": "رحلة طيران داخلية مباشرة من Da Nang إلى Dalat ثم الانتقال إلى CICILIA Rouge Dalat.",
+            "mainInclusions": "تذكرة طيران داخلية Da Nang - Dalat والانتقال من المطار.",
             "senseOfPace": "Moderate",
             "dining": "إفطار في الفندق"
         },
         {
             "dayNumber": 16,
             "destination": "Dalat",
-            "summary": "استكشاف معالم دالات المميزة: زيارة جبل لانغ بيانغ الشهير، ركوب التلفريك لمشاهدة المناظر الطبيعية، زيارة بيت المجنون (Crazy House) ذو التصميم المعماري الفريد، والتجول في نفق الطين الفني.",
-            "mainInclusions": "تذاكر الدخول ورسوم التلفريك، مرشد خاص، سيارة خاصة.",
+            "summary": "زيارة Lang Biang والتلفريك وCrazy House وClay Tunnel ضمن برنامج Dalat.",
+            "mainInclusions": "رسوم برنامج Dalat وفق المسار المحدد.",
             "senseOfPace": "Active",
-            "dining": "إفطار وغداء"
+            "dining": "إفطار في الفندق"
         },
         {
             "dayNumber": 17,
             "destination": "Dalat",
-            "summary": "جولة نهارية رائعة لزيارة Fresh Garden المليئة بالزهور الملونة، شلالات داتانلا مع تجربة زلاجة جبال الألب، شلال الفيل الضخم، والختام مع استراحة شرب القهوة في مقهى مي لينه المطل على مزارع البن الخضراء.",
-            "mainInclusions": "تذاكر دخول وتجربة الزلاجة، مرشد، سيارة خاصة.",
+            "summary": "زيارة Fresh Garden وDatanla Waterfall وElephant Waterfall وMe Linh Coffee.",
+            "mainInclusions": "تنقلات ورسوم البرنامج لزيارة Fresh Garden وDatanla Waterfall وElephant Waterfall وMe Linh Coffee.",
             "senseOfPace": "Immersive",
             "dining": "إفطار في الفندق"
         },
         {
             "dayNumber": 18,
             "destination": "Ho Chi Minh City",
-            "summary": "الانتقال بسيارتنا الخاصة من دالات إلى نها ترانغ للاستمتاع بمناظر الممرات الجبلية، ومن ثم السفر بالطائرة الداخلية إلى مدينة هو شي منه النابضة بالحياة. الاستقرار في فندق Cicilia Saigon Center.",
-            "mainInclusions": "الانتقال بسيارة خاصة إلى مطار نها ترانغ، تذكرة الطيران الداخلي، استقبال وتوصيل فندق هو شي منه.",
+            "summary": "رحلة طيران داخلية مباشرة من Dalat إلى Ho Chi Minh City ثم الانتقال إلى Cicilia Saigon Center.",
+            "mainInclusions": "تذكرة طيران داخلية Dalat - Ho Chi Minh City والانتقال من المطار.",
             "senseOfPace": "Active",
             "dining": "إفطار في الفندق"
         },
         {
             "dayNumber": 19,
             "destination": "Ho Chi Minh City",
-            "summary": "زيارة أنفاق كو تشي التاريخية الشهيرة لمعرفة تاريخ المنطقة، والعودة إلى وسط المدينة لزيارة سوق بين ثانه الصاخب، مكتب بريد المدينة القديم، وتجربة شرب القهوة في مقهى الشقق السكنية الأيقوني.",
-            "mainInclusions": "رسوم أنفاق كو تشي، مرشد خاص، سيارة خاصة.",
+            "summary": "زيارة Cu Chi Tunnels ثم Apartment Coffee وBen Thanh Market وCentral Post Office في Ho Chi Minh City.",
+            "mainInclusions": "تنقلات ورسوم البرنامج في Ho Chi Minh City.",
             "senseOfPace": "Immersive",
-            "dining": "إفطار وغداء"
+            "dining": "إفطار في الفندق"
         },
         {
             "dayNumber": 20,
             "destination": "Ho Chi Minh City",
-            "summary": "رحلة ليوم كامل لاستكشاف دلتا ميكونغ، ركوب القوارب الخشبية التقليدية عبر القنوات المائية المظلله بأشجار جوز الهند وتذوق الفواكه الاستوائية الطازجة والاستماع إلى الموسيقى التقليدية.",
-            "mainInclusions": "رحلة قارب دلتا ميكونغ، رسوم الجولات، غداء، مرشد خاص، سيارة خاصة.",
+            "summary": "رحلة يومية إلى Mekong Delta ثم العودة إلى Ho Chi Minh City.",
+            "mainInclusions": "تنقلات وجولة Mekong Delta وفق البرنامج.",
             "senseOfPace": "Moderate",
-            "dining": "إفطار وغداء محلي حلال"
+            "dining": "إفطار في الفندق"
         },
         {
             "dayNumber": 21,
             "destination": "Ho Chi Minh City",
-            "summary": "وقت حر للاسترخاء أو التسوق الأخير حتى موعد مغادرة رحلتك، حيث يقوم سائقنا الخاص بنقلك إلى مطار تان سون نهات الدولي للعودة إلى ديارك مع ذكريات لا تُنسى عن فيتنام.",
-            "mainInclusions": "توصيل بسيارة خاصة إلى مطار تان سون نهات الدولي.",
+            "summary": "مغادرة Ho Chi Minh City والانتقال إلى Tan Son Nhat Airport للرحلة الدولية.",
+            "mainInclusions": "الانتقال بسيارة خاصة إلى Tan Son Nhat Airport.",
             "senseOfPace": "Relaxed",
             "dining": "إفطار في الفندق"
         }
@@ -281,7 +322,7 @@ payload = {
                 "hotelArrangement": "Cicilia Saigon Center - Premium Deluxe Room (City View, 22 sqm) - 3 Nights"
             }
         ],
-        "roomNotes": "غرفة مزدوجة لشخصين (Double/Twin Bed Room for 2 Adults)"
+        "roomNotes": "غرفة مزدوجة أو بسريرين منفصلين لشخصين بالغين"
     },
     "optionalEnhancements": [
         {
@@ -294,14 +335,14 @@ payload = {
         }
     ],
     "bookingTerms": {
-        "deposit": "شروط الدفع: دفع 30% من إجمالي المبلغ عند تأكيد الحجز للحصول على تأكيدات الغرف والخدمات.",
-        "balance": "يتم سداد المبلغ المتبقي (70%) قبل 30 يومًا من تاريخ بدء الرحلة.",
-        "cancellation": "سياسة الإلغاء: إلغاء مجاني حتى 45 يومًا قبل الوصول. يُفرض رسم إلغاء 50% بين 44 و 15 يومًا، و 100% في حال الإلغاء قبل أقل من 15 يومًا.",
-        "confirmation": "تخضع جميع الخدمات والأسعار للتوافر عند الدفع وتأكيد الحجز الفعلي."
+        "deposit": "شروط الدفع تخضع لسياسة الحجز الفعلية عند التأكيد.",
+        "balance": "يتم استكمال الرصيد وفق جدول الدفع المعتمد عند تثبيت الحجز.",
+        "cancellation": "تطبق سياسة الإلغاء النهائية بحسب شروط الحجز المؤكدة.",
+        "confirmation": "جميع الخدمات والأسعار تخضع للتوافر عند التأكيد النهائي."
     },
     "finalization": {
-        "finalDetailsRequired": "المستندات المطلوبة: نسخة ملونة من جواز السفر صالح لمدة 6 أشهر على الأقل وتفاصيل تذاكر الطيران الدولية.",
-        "afterConfirmation": "سيتواصل معك منسق الرحلات الخاص بنا لتوفير قسائم الخدمات (Vouchers) وتفاصيل المرشدين المحليين وأرقام الطوارئ 24/7."
+        "finalDetailsRequired": "المستندات المطلوبة تشمل نسخة من جواز السفر الصالح وتفاصيل الرحلات الدولية لاستكمال الترتيبات.",
+        "afterConfirmation": "بعد التأكيد سيتم تزويدك بقسائم الخدمات النهائية وتفاصيل التشغيل ذات الصلة."
     },
     "pricing": {
         "currency": "USD",
@@ -377,23 +418,19 @@ payload = {
         }
     ],
     "inclusions": [
-        "لقد تم تنظيم رحلتكم بعناية لضمان تجربة سلسة ومريحة طوال الوقت.",
-        "أماكن إقامة مختارة: فنادق وإقامات مختارة بعناية كما هو مفصل في مقترح رحلتك.",
-        "وسائل نقل خاصة: وسائل نقل برية خاصة وتنقلات مجدولة طوال الرحلة، كما هو محدد في مسار الرحلة.",
-        "تجارب منسقة: رسوم الدخول والأنشطة المشمولة والموضحة في مسار رحلتك.",
-        "إرشاد محلي خبير: خدمات مرشدين محليين مرخصين ومختارين بعناية عند تحديد ذلك.",
-        "تجارب تناول الطعام: الوجبات وترتيبات تناول الطعام كما هي مفصلة في مسار الرحلة.",
-        "روابط التنقل: رحلات الطيران الداخلية، أو السكك الحديدية، أو العبّارات، أو غيرها من وسائل النقل المشمولة عند ذكرها بوضوح في مسار الرحلة."
+        "الإقامة في فنادق 4 نجوم مع وجبة الإفطار اليومية.",
+        "الإقامة على متن كروز 5 نجوم في Halong Bay مع 4 وجبات مشمولة وفق برنامج الكروز.",
+        "سيارة خاصة للتنقلات السياحية واستقبالات المطارات وفق البرنامج، باستثناء رحلة حافلة النوم ذهابًا وإيابًا بين Hanoi وSapa.",
+        "رسوم دخول المواقع المذكورة في البرنامج.",
+        "تذاكر الطيران الداخلية للقطاعات Hanoi - Da Nang وDa Nang - Dalat وDalat - Ho Chi Minh City.",
+        "Vietnam E-visa.",
+        "خدمة Fast Track عند الوصول.",
+        "مرشد خاص للاستقبال في اليوم الأول ولجولات المشاهدة، باستثناء فترة الكروز في Halong Bay.",
+        "SIM 4G / Internet."
     ],
     "exclusions": [
-        "للحفاظ على شفافية ووضوح رحلتك، لا تشمل الرحلة الخدمات التالية ما لم يُنص على خلاف ذلك:",
-        "رحلات الطيران الدولية",
-        "رسوم التأشيرة ووثائق السفر",
-        "التأمين على السفر",
-        "المصاريف الشخصية",
-        "التجارب الاختيارية غير المحددة في مسار الرحلة",
-        "البقشيش والإكراميات",
-        "أي خدمات أخرى لم يتم ذكرها صراحة ضمن الخدمات المشمولة"
+        "المصاريف الشخصية.",
+        "تذاكر الطيران الدولية ذهابًا وإيابًا."
     ]
 }
 

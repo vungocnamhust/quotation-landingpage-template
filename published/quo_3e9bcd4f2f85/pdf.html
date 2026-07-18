@@ -78,6 +78,12 @@
       position: relative;
     }
     .pdf-page:last-of-type { page-break-after: auto; }
+    .ltr-token {
+      direction: ltr;
+      unicode-bidi: isolate;
+      display: inline-block;
+      text-align: left;
+    }
 
     @media screen {
       .pdf-page {
@@ -677,36 +683,36 @@
 </head>
 <body>
 
-<div class="watermark">Vietnam Safar · QT-2026-ARAB-21D20N · عرض أسعار B2B سري</div>
+<div class="watermark">Vietnam Safar · QT-2026-ARAB-21D20N · عرض سعر سري</div>
 
 <!-- ═══════════════════ PAGE 1 — Cover ═══════════════════ -->
 <div class="pdf-page">
   <div class="cover" style="background-image: linear-gradient(160deg,rgba(17,19,15,.88),rgba(17,19,15,.55) 55%,rgba(17,19,15,.18)), url('/assets/quang-ninh/halong-bay.jpg');">
     <div class="cover-body">
       <div>
-        <div style="font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-2);margin-bottom:10px;font-weight:700;">مقترح B2B سري</div>
+        <div style="font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-2);margin-bottom:10px;font-weight:700;">مقترح سري للشركاء التجاريين</div>
         <div class="cover-kicker">عرض سعر خاص فاخر ‒ 21D20N ‒ 2026-08-10 – 2026-08-30</div>
         <h1>اكتشف روعة الطبيعة وسحر الثقافة عبر 21 يومًا من الاسترخاء والمغامرة...</h1>
-        <p class="cover-lede">رحلة استثنائية فاخرة ومصممة بعناية تمتد على مدار 21 يومًا لربط أرقى الوجهات في فيتنام. من سحر Hanoi التاريخي ونقاء Halong Bay، إلى مرتفعات Sapa الشامخة، وصولاً إلى شواطئ Da Nang الرملية وهدوء Dalat الرومانسية وحيوية Ho Chi Minh City. صُممت هذه الرحلة خصيصاً للمسافرين الباحثين عن الفخامة والخصوصية، مع توفير كافة الخدمات الممتازة والتسهيلات التي تضمن راحة تامة طوال الإقامة.</p>
+        <p class="cover-lede">رحلة استثنائية فاخرة ومصممة بعناية تمتد على مدار 21 يومًا لربط أرقى الوجهات في فيتنام. من سحر <span class="ltr-token">Hanoi</span></p>
       </div>
       <div class="quote-card">
         <h2>نظرة عامة على الرحلة</h2>
         <div class="qrow"><span>مُعدّ لصالح</span><strong>2 Adults (شخصين)</strong></div>
-        <div class="qrow"><span>Overview</span><strong>نظرة عامة على البرنامج</strong></div>
+        <div class="qrow"><span>نظرة عامة</span><strong>نظرة عامة على البرنامج</strong></div>
         
-        <div class="qrow"><span>Guests</span><strong>2 Adults (شخصين)</strong></div>
-        
-        
-        <div class="qrow"><span>Travel dates</span><strong>2026-08-10 – 2026-08-30</strong></div>
+        <div class="qrow"><span>الضيوف</span><strong>2 Adults (شخصين)</strong></div>
         
         
-        <div class="qrow stacked"><span>Route</span><strong>Hanoi – Ninh Binh – Halong Bay – Hanoi – Sapa – Hanoi – Da Nang – Hoi An – Dalat – Ho Chi Minh City – Mekong Delta – Ho Chi Minh City</strong></div>
+        <div class="qrow"><span>تواريخ السفر</span><strong><span class="ltr-token">10 أغسطس – 30 أغسطس 2026</span></strong></div>
         
         
-        <div class="qrow stacked"><span>Style</span><strong>رحلة خاصة بالكامل مع سيارة وسائق مرشد سياحي خاص</strong></div>
+        <div class="qrow stacked"><span>المسار</span><strong><span class="ltr-token">Hanoi</span> – <span class="ltr-token">Ninh Binh</span> – <span class="ltr-token">Halong Bay</span> – <span class="ltr-token">Hanoi</span> – <span class="ltr-token">Sapa</span> – <span class="ltr-token">Hanoi</span> – <span class="ltr-token">Da Nang</span> – <span class="ltr-token">Hoi An</span> – <span class="ltr-token">Dalat</span> – <span class="ltr-token">Ho Chi Minh City</span> – <span class="ltr-token">Mekong Delta</span> – <span class="ltr-token">Ho Chi Minh City</span></strong></div>
         
-        <div class="qrow"><span>Ref.</span><strong>QT-2026-ARAB-21D20N</strong></div>
-        <div class="qrow"><span>Contact</span><strong>+84 911 538 738</strong></div>
+        
+        <div class="qrow stacked"><span>النمط</span><strong>رحلة خاصة بالكامل مع سيارة وسائق مرشد سياحي خاص</strong></div>
+        
+        <div class="qrow"><span>الرقم المرجعي</span><strong><span class="ltr-token">QT-2026-ARAB-21D20N</span></strong></div>
+        <div class="qrow"><span>التواصل</span><strong><span class="ltr-token">+84 911 538 738</span></strong></div>
       </div>
     </div>
   </div>
@@ -715,12 +721,12 @@
 <!-- ═══════════════════ PAGE 2 — Glance & Overview ═══════════════════ -->
 <div class="pdf-page">
   <div class="page-header">
-    <span class="brand">Vietnam Safar — B2B Travel Proposal</span>
-    <span class="ref">QT-2026-ARAB-21D20N · 2026-08-10</span>
+    <span class="brand">Vietnam Safar — مقترح سفر للشركاء التجاريين</span>
+    <span class="ref"><span class="ltr-token">QT-2026-ARAB-21D20N · 2026-08-10</span></span>
   </div>
   <div class="page-inner">
 
-    <div class="section-label" style="margin-top:20px;">Interactive Route map</div>
+    <div class="section-label" style="margin-top:20px;">خريطة المسار التفاعلية</div>
     <h2 class="section-h2">رحلتك على الخريطة</h2>
     <div style="margin-top: 15px; border-radius: 18px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 4px 16px rgba(17,19,15,0.04);">
       <div id="map" style="width: 100%; height: 420px; display: block; z-index: 1;"></div>
@@ -731,12 +737,12 @@
 <!-- ═══════════════════ PAGE 3 — Why Works & Gallery ═══════════════════ -->
 <div class="pdf-page">
   <div class="page-header">
-    <span class="brand">Vietnam Safar — B2B Travel Proposal</span>
-    <span class="ref">QT-2026-ARAB-21D20N · 2026-08-10</span>
+    <span class="brand">Vietnam Safar — مقترح سفر للشركاء التجاريين</span>
+    <span class="ref"><span class="ltr-token">QT-2026-ARAB-21D20N · 2026-08-10</span></span>
   </div>
   <div class="page-inner">
     <div class="section-label">خلف كواليس تصميم المسار</div>
-    <h2 class="section-h2">رحلة ذات وتيرة مثالية</h2>
+    <h2 class="section-h2">لماذا تلهم هذه الرحلة</h2>
     <p class="section-p">رعاية مخصصة، وتيرة متوازنة، ولوجستيات سلسة مصممة خصيصًا لمجموعتكم.</p>
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px;">
@@ -766,49 +772,49 @@
       <div class="img-tile large" style="background-image:url('/assets/ha-noi/hanoi1.jpg')">
         <div class="img-caption">
           <small>أبرز المعالم</small>
-          <strong>Hanoi</strong>
+          <strong><span class="ltr-token">Hanoi</span></strong>
         </div>
       </div>
       
       <div class="img-tile " style="background-image:url('/assets/quang-ninh/halong-bay.jpg')">
         <div class="img-caption">
           <small>الوجهة</small>
-          <strong>Halong Bay</strong>
+          <strong><span class="ltr-token">Halong Bay</span></strong>
         </div>
       </div>
       
       <div class="img-tile " style="background-image:url('/assets/lao-cai/fansipan.jpg')">
         <div class="img-caption">
           <small>التجربة</small>
-          <strong>Sapa</strong>
+          <strong><span class="ltr-token">Sapa</span></strong>
         </div>
       </div>
       
       <div class="img-tile " style="background-image:url('/assets/da-nang/danang3.jpg')">
         <div class="img-caption">
           <small>الرحلة</small>
-          <strong>Da Nang</strong>
+          <strong><span class="ltr-token">Da Nang</span></strong>
         </div>
       </div>
       
       <div class="img-tile " style="background-image:url('/assets/quang-nam/hoian3.jpg')">
         <div class="img-caption">
           <small>الوجهة</small>
-          <strong>Hoi An</strong>
+          <strong><span class="ltr-token">Hoi An</span></strong>
         </div>
       </div>
       
       <div class="img-tile " style="background-image:url('/assets/lam-dong/dalat3.jpg')">
         <div class="img-caption">
           <small>الوجهة</small>
-          <strong>Dalat</strong>
+          <strong><span class="ltr-token">Dalat</span></strong>
         </div>
       </div>
       
       <div class="img-tile " style="background-image:url('/assets/ho-chi-minh/hightower.jpg')">
         <div class="img-caption">
           <small>الوجهة</small>
-          <strong>Ho Chi Minh City</strong>
+          <strong><span class="ltr-token">Ho Chi Minh City</span></strong>
         </div>
       </div>
       
@@ -819,8 +825,8 @@
 <!-- ═══════════════════ PAGE 4 — Itinerary ═══════════════════ -->
 <div class="pdf-page">
   <div class="page-header">
-    <span class="brand">Vietnam Safar — Luxury Quotation</span>
-    <span class="ref">QT-2026-ARAB-21D20N · 2026-08-10</span>
+    <span class="brand">Vietnam Safar — عرض سعر فاخر</span>
+    <span class="ref"><span class="ltr-token">QT-2026-ARAB-21D20N · 2026-08-10</span></span>
   </div>
   <div class="page-inner">
     <div class="section-label">برنامج الخدمة</div>
@@ -833,9 +839,9 @@
         <div class="day-num">1</div>
         <div>
           <div class="day-badge">يوم 1</div>
-          <h3>اليوم 1 — Hanoi</h3>
+          <h3>اليوم 1 — <span class="ltr-token">Hanoi</span></h3>
           
-          <p>الوصول إلى Hanoi وتسجيل الدخول إلى الفندق.</p>
+          <p>مغادرة <span class="ltr-token">Ho Chi Minh City</span></p>
           
           
           <p style="margin-top:6px;font-size:10px;color:#b7894b">
@@ -854,7 +860,7 @@
         <div class="day-meta">
           
           <div class="price-sub" style="margin-bottom:2px">المبيت</div>
-          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Hanoi</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e"><span class="ltr-token">Hanoi</span></div>
           
           
         </div>
@@ -864,9 +870,9 @@
         <div class="day-num">2</div>
         <div>
           <div class="day-badge">يوم 2</div>
-          <h3>اليوم 2 — Hanoi</h3>
+          <h3>اليوم 2 — <span class="ltr-token">Hanoi</span></h3>
           
-          <p>جولة ثقافية في Hanoi القديمة تشمل سوق دونغ سوان وركوب السيكلو وتذوق القهوة الفيتنامية التقليدية.</p>
+          <p>جولة ثقافية في <span class="ltr-token">Hanoi</span> القديمة تشمل <span class="ltr-token">Dong Xuan Market</span> وركوب السيكلو وتذوق القهوة الفيتنامية التقليدية.</p>
           
           
           <p style="margin-top:6px;font-size:10px;color:#b7894b">
@@ -885,7 +891,7 @@
         <div class="day-meta">
           
           <div class="price-sub" style="margin-bottom:2px">المبيت</div>
-          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Hanoi</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e"><span class="ltr-token">Hanoi</span></div>
           
           
           <div class="price-sub" style="margin-top:8px;margin-bottom:2px">الوجبات</div>
@@ -898,13 +904,13 @@
         <div class="day-num">3</div>
         <div>
           <div class="day-badge">يوم 3</div>
-          <h3>اليوم 3 — Hanoi → Ninh Binh → Hanoi</h3>
+          <h3>اليوم 3 — <span class="ltr-token">Hanoi</span></h3>
           
-          <p>زيارة Ninh Binh مع تام كوك وهانغ موا ثم العودة إلى Hanoi.</p>
+          <p>زيارة <span class="ltr-token">Ninh Binh</span> مع <span class="ltr-token">Tam Coc</span> و<span class="ltr-token">Hang Mua</span> ثم العودة إلى <span class="ltr-token">Hanoi</span>.</p>
           
           
           <p style="margin-top:6px;font-size:10px;color:#b7894b">
-            <strong>أبرز الفعاليات:</strong> سيارة خاصة لرحلة Ninh Binh حسب البرنامج.
+            <strong>أبرز الفعاليات:</strong> سيارة خاصة لرحلة <span class="ltr-token">Ninh Binh</span> حسب البرنامج.
           </p>
           
           
@@ -919,7 +925,7 @@
         <div class="day-meta">
           
           <div class="price-sub" style="margin-bottom:2px">المبيت</div>
-          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Hanoi</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e"><span class="ltr-token">Hanoi</span></div>
           
           
           <div class="price-sub" style="margin-top:8px;margin-bottom:2px">الوجبات</div>
@@ -932,13 +938,13 @@
         <div class="day-num">4</div>
         <div>
           <div class="day-badge">يوم 4</div>
-          <h3>اليوم 4 — Hanoi → Halong Bay</h3>
+          <h3>اليوم 4 — <span class="ltr-token">Hanoi</span></h3>
           
-          <p>الانتقال بسيارة خاصة من Hanoi إلى Halong Bay والصعود إلى الكروز للمبيت.</p>
+          <p>الانتقال بسيارة خاصة من <span class="ltr-token">Hanoi</span> إلى <span class="ltr-token">Halong Bay</span> والصعود إلى الكروز للمبيت.</p>
           
           
           <p style="margin-top:6px;font-size:10px;color:#b7894b">
-            <strong>أبرز الفعاليات:</strong> نقل خاص من Hanoi إلى Halong Bay والمبيت على متن La Casta Cruise.
+            <strong>أبرز الفعاليات:</strong> نقل خاص من <span class="ltr-token">Hanoi</span> إلى <span class="ltr-token">Halong Bay</span> والمبيت على متن <span class="ltr-token">La Casta Cruise</span>.
           </p>
           
           
@@ -953,7 +959,7 @@
         <div class="day-meta">
           
           <div class="price-sub" style="margin-bottom:2px">المبيت</div>
-          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Halong Bay</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e"><span class="ltr-token">Halong Bay</span></div>
           
           
           <div class="price-sub" style="margin-top:8px;margin-bottom:2px">الوجبات</div>
@@ -966,13 +972,13 @@
         <div class="day-num">5</div>
         <div>
           <div class="day-badge">يوم 5</div>
-          <h3>اليوم 5 — Halong Bay → Hanoi</h3>
+          <h3>اليوم 5 — <span class="ltr-token">Halong Bay</span></h3>
           
-          <p>مغادرة الكروز والعودة من Halong Bay إلى Hanoi بسيارة خاصة.</p>
+          <p>مغادرة الكروز والعودة من <span class="ltr-token">Halong Bay</span> إلى <span class="ltr-token">Hanoi</span> بسيارة خاصة.</p>
           
           
           <p style="margin-top:6px;font-size:10px;color:#b7894b">
-            <strong>أبرز الفعاليات:</strong> نقل خاص من Halong Bay إلى Hanoi.
+            <strong>أبرز الفعاليات:</strong> نقل خاص من <span class="ltr-token">Halong Bay</span> إلى <span class="ltr-token">Hanoi</span>.
           </p>
           
           
@@ -987,7 +993,7 @@
         <div class="day-meta">
           
           <div class="price-sub" style="margin-bottom:2px">المبيت</div>
-          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Hanoi</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e"><span class="ltr-token">Hanoi</span></div>
           
           
         </div>
@@ -997,13 +1003,13 @@
         <div class="day-num">6</div>
         <div>
           <div class="day-badge">يوم 6</div>
-          <h3>اليوم 6 — Sapa</h3>
+          <h3>اليوم 6 — <span class="ltr-token">Sapa</span></h3>
           
-          <p>الانتقال من Hanoi إلى Sapa بواسطة باص النوم المريح والاستقرار في الفندق.</p>
+          <p>الانتقال من <span class="ltr-token">Hanoi</span> إلى <span class="ltr-token">Sapa</span> بواسطة باص النوم المريح والاستقرار في الفندق.</p>
           
           
           <p style="margin-top:6px;font-size:10px;color:#b7894b">
-            <strong>أبرز الفعاليات:</strong> تذاكر باص النوم الفاخر، الاستقبال والانتقال في Sapa.
+            <strong>أبرز الفعاليات:</strong> تذاكر باص النوم الفاخر، الاستقبال والانتقال في <span class="ltr-token">Sapa</span>.
           </p>
           
           
@@ -1018,7 +1024,7 @@
         <div class="day-meta">
           
           <div class="price-sub" style="margin-bottom:2px">المبيت</div>
-          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Sapa</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e"><span class="ltr-token">Sapa</span></div>
           
           
           <div class="price-sub" style="margin-top:8px;margin-bottom:2px">الوجبات</div>
@@ -1031,13 +1037,13 @@
         <div class="day-num">7</div>
         <div>
           <div class="day-badge">يوم 7</div>
-          <h3>اليوم 7 — Sapa</h3>
+          <h3>اليوم 7 — <span class="ltr-token">Sapa</span></h3>
           
-          <p>زيارة قمة فانسيبان بالتلفريك واستكشاف قرية كات كات التقليدية.</p>
+          <p>زيارة <span class="ltr-token">Fansipan</span> بالتلفريك واستكشاف <span class="ltr-token">Cat Cat Village</span> التقليدية.</p>
           
           
           <p style="margin-top:6px;font-size:10px;color:#b7894b">
-            <strong>أبرز الفعاليات:</strong> تذاكر تلفريك فانسيبان، رسوم دخول قرية كات كات، مرشد خاص، سيارة خاصة.
+            <strong>أبرز الفعاليات:</strong> تذاكر تلفريك <span class="ltr-token">Fansipan</span>، رسوم دخول <span class="ltr-token">Cat Cat Village</span>، مرشد خاص، سيارة خاصة.
           </p>
           
           
@@ -1052,7 +1058,7 @@
         <div class="day-meta">
           
           <div class="price-sub" style="margin-bottom:2px">المبيت</div>
-          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Sapa</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e"><span class="ltr-token">Sapa</span></div>
           
           
           <div class="price-sub" style="margin-top:8px;margin-bottom:2px">الوجبات</div>
@@ -1065,9 +1071,9 @@
         <div class="day-num">8</div>
         <div>
           <div class="day-badge">يوم 8</div>
-          <h3>اليوم 8 — Sapa</h3>
+          <h3>اليوم 8 — <span class="ltr-token">Sapa</span></h3>
           
-          <p>جولة مشي لاستكشاف قرى لاو تشاي وتا فان الجبلية وزيارة شلال الفضة.</p>
+          <p>جولة مشي لاستكشاف قرى <span class="ltr-token">Lao Chai</span> و<span class="ltr-token">Ta Van</span> الجبلية وزيارة شلال الفضة.</p>
           
           
           <p style="margin-top:6px;font-size:10px;color:#b7894b">
@@ -1086,7 +1092,7 @@
         <div class="day-meta">
           
           <div class="price-sub" style="margin-bottom:2px">المبيت</div>
-          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Sapa</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e"><span class="ltr-token">Sapa</span></div>
           
           
           <div class="price-sub" style="margin-top:8px;margin-bottom:2px">الوجبات</div>
@@ -1099,7 +1105,7 @@
         <div class="day-num">9</div>
         <div>
           <div class="day-badge">يوم 9</div>
-          <h3>اليوم 9 — Sapa</h3>
+          <h3>اليوم 9 — <span class="ltr-token">Sapa</span></h3>
           
           <p>زيارة الجسر الزجاجي الشاهق والاسترخاء في مقهى موانا المطل على الوادي.</p>
           
@@ -1120,7 +1126,7 @@
         <div class="day-meta">
           
           <div class="price-sub" style="margin-bottom:2px">المبيت</div>
-          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Sapa</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e"><span class="ltr-token">Sapa</span></div>
           
           
           <div class="price-sub" style="margin-top:8px;margin-bottom:2px">الوجبات</div>
@@ -1133,13 +1139,13 @@
         <div class="day-num">10</div>
         <div>
           <div class="day-badge">يوم 10</div>
-          <h3>اليوم 10 — Sapa → Hanoi</h3>
+          <h3>اليوم 10 — <span class="ltr-token">Sapa</span></h3>
           
-          <p>العودة من Sapa إلى Hanoi بواسطة حافلة النوم.</p>
+          <p>العودة من <span class="ltr-token">Sapa</span> إلى <span class="ltr-token">Hanoi</span> بواسطة حافلة النوم.</p>
           
           
           <p style="margin-top:6px;font-size:10px;color:#b7894b">
-            <strong>أبرز الفعاليات:</strong> تذكرة حافلة النوم من Sapa إلى Hanoi.
+            <strong>أبرز الفعاليات:</strong> تذكرة حافلة النوم من <span class="ltr-token">Sapa</span> إلى <span class="ltr-token">Hanoi</span>.
           </p>
           
           
@@ -1154,7 +1160,7 @@
         <div class="day-meta">
           
           <div class="price-sub" style="margin-bottom:2px">المبيت</div>
-          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Hanoi</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e"><span class="ltr-token">Hanoi</span></div>
           
           
         </div>
@@ -1164,13 +1170,13 @@
         <div class="day-num">11</div>
         <div>
           <div class="day-badge">يوم 11</div>
-          <h3>اليوم 11 — Hanoi → Da Nang</h3>
+          <h3>اليوم 11 — <span class="ltr-token">Hanoi</span></h3>
           
-          <p>رحلة جوية من Hanoi إلى Da Nang مع تجربة كروز نهر هان.</p>
+          <p>رحلة جوية من <span class="ltr-token">Hanoi</span> إلى <span class="ltr-token">Da Nang</span> مع تجربة كروز نهر هان.</p>
           
           
           <p style="margin-top:6px;font-size:10px;color:#b7894b">
-            <strong>أبرز الفعاليات:</strong> تذكرة طيران داخلي Hanoi – Da Nang وكروز نهر هان.
+            <strong>أبرز الفعاليات:</strong> تذكرة طيران داخلي <span class="ltr-token">Hanoi</span> – <span class="ltr-token">Da Nang</span> وكروز نهر هان.
           </p>
           
           
@@ -1185,7 +1191,7 @@
         <div class="day-meta">
           
           <div class="price-sub" style="margin-bottom:2px">المبيت</div>
-          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Da Nang</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e"><span class="ltr-token">Da Nang</span></div>
           
           
           <div class="price-sub" style="margin-top:8px;margin-bottom:2px">الوجبات</div>
@@ -1198,13 +1204,13 @@
         <div class="day-num">12</div>
         <div>
           <div class="day-badge">يوم 12</div>
-          <h3>اليوم 12 — Da Nang</h3>
+          <h3>اليوم 12 — <span class="ltr-token">Da Nang</span></h3>
           
-          <p>زيارة با نا هيلز.</p>
+          <p>زيارة <span class="ltr-token">Ba Na Hills</span>.</p>
           
           
           <p style="margin-top:6px;font-size:10px;color:#b7894b">
-            <strong>أبرز الفعاليات:</strong> تذكرة دخول با نا هيلز حسب البرنامج.
+            <strong>أبرز الفعاليات:</strong> تذكرة دخول <span class="ltr-token">Ba Na Hills</span> حسب البرنامج.
           </p>
           
           
@@ -1219,7 +1225,7 @@
         <div class="day-meta">
           
           <div class="price-sub" style="margin-bottom:2px">المبيت</div>
-          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Da Nang</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e"><span class="ltr-token">Da Nang</span></div>
           
           
         </div>
@@ -1229,13 +1235,13 @@
         <div class="day-num">13</div>
         <div>
           <div class="day-badge">يوم 13</div>
-          <h3>اليوم 13 — Da Nang → Hoi An → Da Nang</h3>
+          <h3>اليوم 13 — <span class="ltr-token">Da Nang</span></h3>
           
-          <p>زيارة غابة جوز الهند باي ماو وبلدة Hoi An القديمة ثم العودة إلى Da Nang.</p>
+          <p>زيارة <span class="ltr-token">Bay Mau Coconut Forest</span> وبلدة <span class="ltr-token">Hoi An</span> القديمة ثم العودة إلى <span class="ltr-token">Da Nang</span>.</p>
           
           
           <p style="margin-top:6px;font-size:10px;color:#b7894b">
-            <strong>أبرز الفعاليات:</strong> سيارة خاصة وترتيبات دخول لزيارة غابة جوز الهند باي ماو وHoi An.
+            <strong>أبرز الفعاليات:</strong> سيارة خاصة وترتيبات دخول لزيارة <span class="ltr-token">Bay Mau Coconut Forest</span> و<span class="ltr-token">Hoi An</span>.
           </p>
           
           
@@ -1250,7 +1256,7 @@
         <div class="day-meta">
           
           <div class="price-sub" style="margin-bottom:2px">المبيت</div>
-          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Da Nang</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e"><span class="ltr-token">Da Nang</span></div>
           
           
         </div>
@@ -1260,13 +1266,13 @@
         <div class="day-num">14</div>
         <div>
           <div class="day-badge">يوم 14</div>
-          <h3>اليوم 14 — Da Nang</h3>
+          <h3>اليوم 14 — <span class="ltr-token">Da Nang</span></h3>
           
-          <p>تجربة المغامرة والتجديف النهري المثير في منطقة هوا فو ثانه.</p>
+          <p>تجربة المغامرة والتجديف النهري المثير في منطقة <span class="ltr-token">Hoa Phu Thanh</span>.</p>
           
           
           <p style="margin-top:6px;font-size:10px;color:#b7894b">
-            <strong>أبرز الفعاليات:</strong> تذاكر تجديف هوا فو ثانه والمعدات، مرشد خاص، سيارة خاصة.
+            <strong>أبرز الفعاليات:</strong> تذاكر تجديف <span class="ltr-token">Hoa Phu Thanh</span> والمعدات، مرشد خاص، سيارة خاصة.
           </p>
           
           
@@ -1281,7 +1287,7 @@
         <div class="day-meta">
           
           <div class="price-sub" style="margin-bottom:2px">المبيت</div>
-          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Da Nang</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e"><span class="ltr-token">Da Nang</span></div>
           
           
           <div class="price-sub" style="margin-top:8px;margin-bottom:2px">الوجبات</div>
@@ -1294,13 +1300,13 @@
         <div class="day-num">15</div>
         <div>
           <div class="day-badge">يوم 15</div>
-          <h3>اليوم 15 — Da Nang → Dalat</h3>
+          <h3>اليوم 15 — <span class="ltr-token">Da Nang</span></h3>
           
-          <p>رحلة جوية مباشرة من Da Nang إلى Dalat ثم تسجيل الدخول إلى الفندق.</p>
+          <p>رحلة جوية مباشرة من <span class="ltr-token">Da Nang</span> إلى <span class="ltr-token">Dalat</span> ثم تسجيل الدخول إلى الفندق.</p>
           
           
           <p style="margin-top:6px;font-size:10px;color:#b7894b">
-            <strong>أبرز الفعاليات:</strong> تذكرة طيران داخلي Da Nang – Dalat والنقل من المطار.
+            <strong>أبرز الفعاليات:</strong> تذكرة طيران داخلي <span class="ltr-token">Da Nang</span> – <span class="ltr-token">Dalat</span> والنقل من المطار.
           </p>
           
           
@@ -1315,7 +1321,7 @@
         <div class="day-meta">
           
           <div class="price-sub" style="margin-bottom:2px">المبيت</div>
-          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Dalat</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e"><span class="ltr-token">Dalat</span></div>
           
           
         </div>
@@ -1325,9 +1331,9 @@
         <div class="day-num">16</div>
         <div>
           <div class="day-badge">يوم 16</div>
-          <h3>اليوم 16 — Dalat</h3>
+          <h3>اليوم 16 — <span class="ltr-token">Dalat</span></h3>
           
-          <p>استكشاف معالم Dalat: جبل لانغ بيانغ والتلفريك والبيت المجنون ونفق الطين.</p>
+          <p>استكشاف معالم <span class="ltr-token">Dalat</span>: جبل <span class="ltr-token">Lang Biang</span> والتلفريك والبيت المجنون ونفق الطين.</p>
           
           
           <p style="margin-top:6px;font-size:10px;color:#b7894b">
@@ -1346,7 +1352,7 @@
         <div class="day-meta">
           
           <div class="price-sub" style="margin-bottom:2px">المبيت</div>
-          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Dalat</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e"><span class="ltr-token">Dalat</span></div>
           
           
           <div class="price-sub" style="margin-top:8px;margin-bottom:2px">الوجبات</div>
@@ -1359,13 +1365,13 @@
         <div class="day-num">17</div>
         <div>
           <div class="day-badge">يوم 17</div>
-          <h3>اليوم 17 — Dalat</h3>
+          <h3>اليوم 17 — <span class="ltr-token">Dalat</span></h3>
           
-          <p>زيارة Fresh Garden وشلال داتانلا وشلال الفيل ومقهى مي لينه.</p>
+          <p>زيارة <span class="ltr-token">Fresh Garden</span> و<span class="ltr-token">Datanla Waterfall</span> وشلال الفيل و<span class="ltr-token">Me Linh Coffee</span>.</p>
           
           
           <p style="margin-top:6px;font-size:10px;color:#b7894b">
-            <strong>أبرز الفعاليات:</strong> سيارة خاصة وترتيبات الزيارة في Dalat حسب البرنامج.
+            <strong>أبرز الفعاليات:</strong> سيارة خاصة وترتيبات الزيارة في <span class="ltr-token">Dalat</span> حسب البرنامج.
           </p>
           
           
@@ -1380,7 +1386,7 @@
         <div class="day-meta">
           
           <div class="price-sub" style="margin-bottom:2px">المبيت</div>
-          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Dalat</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e"><span class="ltr-token">Dalat</span></div>
           
           
         </div>
@@ -1390,13 +1396,13 @@
         <div class="day-num">18</div>
         <div>
           <div class="day-badge">يوم 18</div>
-          <h3>اليوم 18 — Dalat → Ho Chi Minh City</h3>
+          <h3>اليوم 18 — <span class="ltr-token">Dalat</span></h3>
           
-          <p>رحلة جوية مباشرة من Dalat إلى Ho Chi Minh City ثم تسجيل الدخول إلى الفندق.</p>
+          <p>رحلة جوية مباشرة من <span class="ltr-token">Dalat</span> إلى <span class="ltr-token">Ho Chi Minh City</span> ثم تسجيل الدخول إلى الفندق.</p>
           
           
           <p style="margin-top:6px;font-size:10px;color:#b7894b">
-            <strong>أبرز الفعاليات:</strong> تذكرة طيران داخلي Dalat – Ho Chi Minh City والنقل من المطار.
+            <strong>أبرز الفعاليات:</strong> تذكرة طيران داخلي <span class="ltr-token">Dalat</span> – <span class="ltr-token">Ho Chi Minh City</span> والنقل من المطار.
           </p>
           
           
@@ -1411,7 +1417,7 @@
         <div class="day-meta">
           
           <div class="price-sub" style="margin-bottom:2px">المبيت</div>
-          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Ho Chi Minh City</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e"><span class="ltr-token">Ho Chi Minh City</span></div>
           
           
         </div>
@@ -1421,13 +1427,13 @@
         <div class="day-num">19</div>
         <div>
           <div class="day-badge">يوم 19</div>
-          <h3>اليوم 19 — Ho Chi Minh City</h3>
+          <h3>اليوم 19 — <span class="ltr-token">Ho Chi Minh City</span></h3>
           
-          <p>زيارة أنفاق كو تشي ومقهى الشقق وسوق بن ثانه ومكتب البريد المركزي.</p>
+          <p>زيارة <span class="ltr-token">Cu Chi Tunnels</span> ومقهى الشقق و<span class="ltr-token">Ben Thanh Market</span> ومكتب البريد المركزي.</p>
           
           
           <p style="margin-top:6px;font-size:10px;color:#b7894b">
-            <strong>أبرز الفعاليات:</strong> سيارة خاصة وترتيبات الجولات في Ho Chi Minh City حسب البرنامج.
+            <strong>أبرز الفعاليات:</strong> سيارة خاصة وترتيبات الجولات في <span class="ltr-token">Ho Chi Minh City</span> حسب البرنامج.
           </p>
           
           
@@ -1442,7 +1448,7 @@
         <div class="day-meta">
           
           <div class="price-sub" style="margin-bottom:2px">المبيت</div>
-          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Ho Chi Minh City</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e"><span class="ltr-token">Ho Chi Minh City</span></div>
           
           
         </div>
@@ -1452,13 +1458,13 @@
         <div class="day-num">20</div>
         <div>
           <div class="day-badge">يوم 20</div>
-          <h3>اليوم 20 — Ho Chi Minh City → Mekong Delta → Ho Chi Minh City</h3>
+          <h3>اليوم 20 — <span class="ltr-token">Ho Chi Minh City</span></h3>
           
-          <p>زيارة Mekong Delta ثم العودة إلى Ho Chi Minh City.</p>
+          <p>زيارة <span class="ltr-token">Mekong Delta</span> ثم العودة إلى <span class="ltr-token">Ho Chi Minh City</span>.</p>
           
           
           <p style="margin-top:6px;font-size:10px;color:#b7894b">
-            <strong>أبرز الفعاليات:</strong> سيارة خاصة وجولة Mekong Delta حسب البرنامج.
+            <strong>أبرز الفعاليات:</strong> سيارة خاصة وجولة <span class="ltr-token">Mekong Delta</span> حسب البرنامج.
           </p>
           
           
@@ -1473,7 +1479,7 @@
         <div class="day-meta">
           
           <div class="price-sub" style="margin-bottom:2px">المبيت</div>
-          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Ho Chi Minh City</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e"><span class="ltr-token">Ho Chi Minh City</span></div>
           
           
         </div>
@@ -1483,13 +1489,13 @@
         <div class="day-num">21</div>
         <div>
           <div class="day-badge">يوم 21</div>
-          <h3>اليوم 21 — Ho Chi Minh City</h3>
+          <h3>اليوم 21 — <span class="ltr-token">Ho Chi Minh City</span></h3>
           
-          <p>مغادرة Ho Chi Minh City والانتقال إلى المطار للرحلة الدولية.</p>
+          <p>مغادرة <span class="ltr-token">Ho Chi Minh City</span> والانتقال إلى المطار للرحلة الدولية.</p>
           
           
           <p style="margin-top:6px;font-size:10px;color:#b7894b">
-            <strong>أبرز الفعاليات:</strong> نقل خاص إلى مطار تان سون نهات الدولي.
+            <strong>أبرز الفعاليات:</strong> نقل خاص إلى <span class="ltr-token">Tan Son Nhat Airport</span> الدولي.
           </p>
           
           
@@ -1504,7 +1510,7 @@
         <div class="day-meta">
           
           <div class="price-sub" style="margin-bottom:2px">المبيت</div>
-          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Ho Chi Minh City</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e"><span class="ltr-token">Ho Chi Minh City</span></div>
           
           
         </div>
@@ -1517,8 +1523,8 @@
 <!-- ═══════════════════ PAGE 5 — Hotel Plan & Pricing ═══════════════════ -->
 <div class="pdf-page">
   <div class="page-header">
-    <span class="brand">Vietnam Safar — B2B Travel Proposal</span>
-    <span class="ref">QT-2026-ARAB-21D20N · 2026-08-10</span>
+    <span class="brand">Vietnam Safar — مقترح سفر للشركاء التجاريين</span>
+    <span class="ref"><span class="ltr-token">QT-2026-ARAB-21D20N · 2026-08-10</span></span>
   </div>
   <div class="page-inner">
     <div class="section-label">خطة الفنادق المختارة</div>
@@ -1532,7 +1538,7 @@
         <!-- Header -->
         <div style="margin-bottom: 10px;">
           <span style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">HANOI, VIETNAM</span>
-          <h3 style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">Minasi Premium Hotel</h3>
+          <h3 style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;"><span class="ltr-token">Minasi Premium Hotel</span></h3>
         </div>
         
         <!-- Side-by-Side Images -->
@@ -1549,13 +1555,13 @@
         <div style="width: 100%; margin-top: 10px;">
           <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
             
-            <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">يعد فندق ميناسي بريميوم فندقاً فاخراً يقع في الأحياء التاريخية بمدينة Hanoi، ويتميز بتصميم أنيق وخدمة مخصصة ووسائل راحة حديثة.</p>
+            <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">يُعد <span class="ltr-token">Minasi Premium Hotel</span> فندقًا فاخرًا يقع في الأحياء التاريخية بمدينة <span class="ltr-token">Hanoi</span>، ويتميز بتصميم أنيق وخدمة مخصصة ووسائل راحة حديثة.</p>
             
           </div>
           <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
-            <h4 style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">Minasi Premium Hotel</h4>
-            <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;">10 Aug – 13 Aug 2026</div>
-            <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">TEL: +84 24 3927 5588</div>
+            <h4 style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;"><span class="ltr-token">Minasi Premium Hotel</span></h4>
+            <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;"><span class="ltr-token">10 أغسطس – 13 أغسطس 2026</span></div>
+            <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">هاتف: <span class="ltr-token">+84 24 3927 5588</span></div>
           </div>
         </div>
       </div>
@@ -1564,7 +1570,7 @@
         <!-- Header -->
         <div style="margin-bottom: 10px;">
           <span style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">HALONG BAY, VIETNAM</span>
-          <h3 style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">La Casta Cruise</h3>
+          <h3 style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;"><span class="ltr-token">La Casta Cruise</span></h3>
         </div>
         
         <!-- Side-by-Side Images -->
@@ -1581,13 +1587,13 @@
         <div style="width: 100%; margin-top: 10px;">
           <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
             
-            <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">تعتبر رحلة لا كاستا كروز البحرية من فئة 5 نجوم الفاخرة في خليج هاليغ، وتوفر أجنحة جونيور واسعة مع شرفات خاصة مطلة على المحيط ووسائل راحة راقية.</p>
+            <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">يُعد <span class="ltr-token">La Casta Cruise</span> كروزًا فاخرًا من فئة 5 نجوم في <span class="ltr-token">Halong Bay</span>، ويوفر أجنحة Junior واسعة مع شرفات خاصة مطلة على البحر ووسائل راحة راقية.</p>
             
           </div>
           <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
-            <h4 style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">La Casta Cruise</h4>
-            <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;">13 Aug – 14 Aug 2026</div>
-            <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">TEL: +84 96 123 4567</div>
+            <h4 style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;"><span class="ltr-token">La Casta Cruise</span></h4>
+            <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;"><span class="ltr-token">13 أغسطس – 14 أغسطس 2026</span></div>
+            <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">هاتف: <span class="ltr-token">+84 96 123 4567</span></div>
           </div>
         </div>
       </div>
@@ -1596,7 +1602,7 @@
         <!-- Header -->
         <div style="margin-bottom: 10px;">
           <span style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">HANOI, VIETNAM</span>
-          <h3 style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">Minasi Premium Hotel</h3>
+          <h3 style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;"><span class="ltr-token">Minasi Premium Hotel</span></h3>
         </div>
         
         <!-- Side-by-Side Images -->
@@ -1613,13 +1619,13 @@
         <div style="width: 100%; margin-top: 10px;">
           <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
             
-            <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">يعد فندق ميناسي بريميوم فندقاً فاخراً يقع في الأحياء التاريخية بمدينة Hanoi، ويتميز بتصميم أنيق وخدمة مخصصة ووسائل راحة حديثة.</p>
+            <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">يُعد <span class="ltr-token">Minasi Premium Hotel</span> فندقًا فاخرًا يقع في الأحياء التاريخية بمدينة <span class="ltr-token">Hanoi</span>، ويتميز بتصميم أنيق وخدمة مخصصة ووسائل راحة حديثة.</p>
             
           </div>
           <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
-            <h4 style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">Minasi Premium Hotel</h4>
-            <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;">14 Aug – 15 Aug 2026</div>
-            <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">TEL: +84 24 3927 5588</div>
+            <h4 style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;"><span class="ltr-token">Minasi Premium Hotel</span></h4>
+            <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;"><span class="ltr-token">14 أغسطس – 15 أغسطس 2026</span></div>
+            <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">هاتف: <span class="ltr-token">+84 24 3927 5588</span></div>
           </div>
         </div>
       </div>
@@ -1628,7 +1634,7 @@
         <!-- Header -->
         <div style="margin-bottom: 10px;">
           <span style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">SAPA, VIETNAM</span>
-          <h3 style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">Bora Hotel</h3>
+          <h3 style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;"><span class="ltr-token">Bora Hotel</span></h3>
         </div>
         
         <!-- Side-by-Side Images -->
@@ -1645,13 +1651,13 @@
         <div style="width: 100%; margin-top: 10px;">
           <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
             
-            <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">يوفر فندق بورا في Sapa إطلالات جبلية خلابة وأماكن إقامة أنيقة ومريحة للمسافرين الذين يستكشفون المرتفعات الشمالية الجميلة.</p>
+            <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">يوفر <span class="ltr-token">Bora Hotel</span> في <span class="ltr-token">Sapa</span> إطلالات جبلية خلابة وأماكن إقامة أنيقة ومريحة للمسافرين الذين يستكشفون المرتفعات الشمالية الجميلة.</p>
             
           </div>
           <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
-            <h4 style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">Bora Hotel</h4>
-            <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;">15 Aug – 19 Aug 2026</div>
-            <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">TEL: +84 214 387 1999</div>
+            <h4 style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;"><span class="ltr-token">Bora Hotel</span></h4>
+            <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;"><span class="ltr-token">15 أغسطس – 19 أغسطس 2026</span></div>
+            <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">هاتف: <span class="ltr-token">+84 214 387 1999</span></div>
           </div>
         </div>
       </div>
@@ -1660,7 +1666,7 @@
         <!-- Header -->
         <div style="margin-bottom: 10px;">
           <span style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">HANOI, VIETNAM</span>
-          <h3 style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">Minasi Premium Hotel</h3>
+          <h3 style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;"><span class="ltr-token">Minasi Premium Hotel</span></h3>
         </div>
         
         <!-- Side-by-Side Images -->
@@ -1677,13 +1683,13 @@
         <div style="width: 100%; margin-top: 10px;">
           <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
             
-            <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">يعد فندق ميناسي بريميوم فندقاً فاخراً يقع في الأحياء التاريخية بمدينة Hanoi، ويتميز بتصميم أنيق وخدمة مخصصة ووسائل راحة حديثة.</p>
+            <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">يُعد <span class="ltr-token">Minasi Premium Hotel</span> فندقًا فاخرًا يقع في الأحياء التاريخية بمدينة <span class="ltr-token">Hanoi</span>، ويتميز بتصميم أنيق وخدمة مخصصة ووسائل راحة حديثة.</p>
             
           </div>
           <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
-            <h4 style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">Minasi Premium Hotel</h4>
-            <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;">19 Aug – 20 Aug 2026</div>
-            <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">TEL: +84 24 3927 5588</div>
+            <h4 style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;"><span class="ltr-token">Minasi Premium Hotel</span></h4>
+            <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;"><span class="ltr-token">19 أغسطس – 20 أغسطس 2026</span></div>
+            <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">هاتف: <span class="ltr-token">+84 24 3927 5588</span></div>
           </div>
         </div>
       </div>
@@ -1692,7 +1698,7 @@
         <!-- Header -->
         <div style="margin-bottom: 10px;">
           <span style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">DA NANG, VIETNAM</span>
-          <h3 style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">Minh Toan SAFI Ocean Hotel</h3>
+          <h3 style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;"><span class="ltr-token">Minh Toan SAFI Ocean Hotel</span></h3>
         </div>
         
         <!-- Side-by-Side Images -->
@@ -1709,13 +1715,13 @@
         <div style="width: 100%; margin-top: 10px;">
           <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
             
-            <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">يطل فندق مينه توان صافي أوشن على شاطئ ماي خي المذهل في Da Nang، ويتميز بغرف واسعة مطلة على البحر وضيافة راقية على شاطئ البحر.</p>
+            <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">يطل <span class="ltr-token">Minh Toan SAFI Ocean Hotel</span> على شاطئ My Khe المذهل في <span class="ltr-token">Da Nang</span>، ويتميز بغرف واسعة مطلة على البحر وضيافة راقية على شاطئ البحر.</p>
             
           </div>
           <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
-            <h4 style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">Minh Toan SAFI Ocean Hotel</h4>
-            <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;">20 Aug – 24 Aug 2026</div>
-            <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">TEL: +84 236 3731 888</div>
+            <h4 style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;"><span class="ltr-token">Minh Toan SAFI Ocean Hotel</span></h4>
+            <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;"><span class="ltr-token">20 أغسطس – 24 أغسطس 2026</span></div>
+            <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">هاتف: <span class="ltr-token">+84 236 3731 888</span></div>
           </div>
         </div>
       </div>
@@ -1724,7 +1730,7 @@
         <!-- Header -->
         <div style="margin-bottom: 10px;">
           <span style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">DALAT, VIETNAM</span>
-          <h3 style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">CICILIA Rouge Dalat</h3>
+          <h3 style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;"><span class="ltr-token">CICILIA Rouge Dalat</span></h3>
         </div>
         
         <!-- Side-by-Side Images -->
@@ -1741,13 +1747,13 @@
         <div style="width: 100%; margin-top: 10px;">
           <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
             
-            <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">يضفي فندق سيسيليا روج Dalat سحرًا عتيقًا من العهد الاستعماري وفخامة راقية على شوارع Dalat الضبابية.</p>
+            <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">يضفي <span class="ltr-token">CICILIA Rouge Dalat</span> سحرًا عتيقًا من العهد الاستعماري وفخامة راقية على شوارع <span class="ltr-token">Dalat</span> الضبابية.</p>
             
           </div>
           <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
-            <h4 style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">CICILIA Rouge Dalat</h4>
-            <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;">24 Aug – 27 Aug 2026</div>
-            <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">TEL: +84 263 382 8888</div>
+            <h4 style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;"><span class="ltr-token">CICILIA Rouge Dalat</span></h4>
+            <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;"><span class="ltr-token">24 أغسطس – 27 أغسطس 2026</span></div>
+            <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">هاتف: <span class="ltr-token">+84 263 382 8888</span></div>
           </div>
         </div>
       </div>
@@ -1756,7 +1762,7 @@
         <!-- Header -->
         <div style="margin-bottom: 10px;">
           <span style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">HO CHI MINH CITY, VIETNAM</span>
-          <h3 style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">Cicilia Saigon Center</h3>
+          <h3 style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;"><span class="ltr-token">Cicilia Saigon Center</span></h3>
         </div>
         
         <!-- Side-by-Side Images -->
@@ -1773,13 +1779,13 @@
         <div style="width: 100%; margin-top: 10px;">
           <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
             
-            <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">يوفر فندق سيسيليا Ho Chi Minh City سنتر أماكن إقامة أنيقة وعصرية في قلب المنطقة 1 بHo Chi Minh City.</p>
+            <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">يوفر <span class="ltr-token">Cicilia Saigon Center</span> أماكن إقامة أنيقة وعصرية في قلب المنطقة 1 بمدينة <span class="ltr-token">Ho Chi Minh City</span>.</p>
             
           </div>
           <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
-            <h4 style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">Cicilia Saigon Center</h4>
-            <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;">27 Aug – 30 Aug 2026</div>
-            <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">TEL: +84 28 3823 8888</div>
+            <h4 style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;"><span class="ltr-token">Cicilia Saigon Center</span></h4>
+            <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;"><span class="ltr-token">27 أغسطس – 30 أغسطس 2026</span></div>
+            <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">هاتف: <span class="ltr-token">+84 28 3823 8888</span></div>
           </div>
         </div>
       </div>
@@ -1804,9 +1810,9 @@
           <small style="display:block;margin-top:3px;font-size:9px;opacity:.7">1995 دولار للشخص الواحد في الغرفة المزدوجة</small>
           
           
-          <strong>USD 1,995 / person</strong>
+          <strong><span class="ltr-token">USD 1,995 / person</span></strong>
           <small>للشخص الواحد</small><br>
-          <small>الإجمالي: USD 3,990</small>
+          <small>الإجمالي: <span class="ltr-token">3,990 دولار أمريكي</span></small>
           
           
           <div style="margin-top:8px;font-size:8px;letter-spacing:.14em;color:#d8bd85;font-weight:800">✓ الخيار المؤكد الرئيسي</div>
@@ -1817,7 +1823,7 @@
       
       <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 11px; color: rgba(255,255,255,0.8); line-height: 1.5; text-align: left;">
         <strong style="color: var(--gold-2); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.1em; font-size: 9px;">ملاحظة مهمة</strong>
-        <p style="margin: 0;">الأسعار تقديرية وصافية لشركاء B2B وتخضع لإعادة التأكيد عند الحجز.</p>
+        <p style="margin: 0;">الأسعار التقديرية الصافية للشركاء التجاريين وتخضع لإعادة التأكيد عند الحجز.</p>
       </div>
       
     </div>
@@ -1827,8 +1833,8 @@
 <!-- ═══════════════════ PAGE 6 — Inc/Exc & Muslim Care ═══════════════════ -->
 <div class="pdf-page">
   <div class="page-header">
-    <span class="brand">Vietnam Safar — B2B Travel Proposal</span>
-    <span class="ref">QT-2026-ARAB-21D20N · 2026-08-10</span>
+    <span class="brand">Vietnam Safar — مقترح سفر للشركاء التجاريين</span>
+    <span class="ref"><span class="ltr-token">QT-2026-ARAB-21D20N · 2026-08-10</span></span>
   </div>
   <div class="page-inner">
     <div class="section-label">الخدمات المشمولة والمستثناة من الباقة B2B</div>
@@ -1903,8 +1909,8 @@
 <!-- ═══════════════════ PAGE 8 — Travel Specialist ═══════════════════ -->
 <div class="pdf-page">
   <div class="page-header">
-    <span class="brand">Vietnam Safar — B2B Travel Proposal</span>
-    <span class="ref">QT-2026-ARAB-21D20N · 2026-08-10</span>
+    <span class="brand">Vietnam Safar — مقترح سفر للشركاء التجاريين</span>
+    <span class="ref"><span class="ltr-token">QT-2026-ARAB-21D20N · 2026-08-10</span></span>
   </div>
   <div class="page-inner" style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
     <div class="section-label">مستشارك المتخصص</div>
@@ -1913,7 +1919,7 @@
     <div style="display: flex; gap: 28px; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 28px; align-items: center; box-shadow: 0 4px 16px rgba(17,19,15,0.02);">
       <div style="width: 140px; height: 140px; border-radius: 50%; background-image: var(--designer-img, url('/assets/dias_team/director.png')); background-size: cover; background-position: center; border: 2px solid var(--gold); flex-shrink: 0; box-shadow: 0 8px 24px rgba(23,65,46,0.15);"></div>
       <div>
-        <p style="font-size: 12px; line-height: 1.6; color: var(--muted); margin: 0 0 16px; font-style: italic;">"أنا مصمم رحلتك المخصص. لقد اخترت بنفسي كل فندق، وسيلة نقل خاصة، ومرشد محلي في هذا المسار لضمان تجربتك للعمق الحقيقي لفيتنام بكل راحة وخصوصية وبوتيرتك الخاصة. سأشرف شخصيًا على رحلتك خلف الكواليس."</p>
+        <p style="font-size: 12px; line-height: 1.6; color: var(--muted); margin: 0 0 16px; font-style: italic;">"&#34;أنا مصمم رحلتك المخصص. لقد اخترت بنفسي كل فندق، وسيلة نقل خاصة، ومرشد محلي في هذا المسار لضمان تجربتك للعمق الحقيقي لفيتنام بكل راحة وخصوصية وبوتيرتك الخاصة. سأشرف شخصيًا على رحلتك خلف الكواليس.&#34;"</p>
         <div style="font-size: 11px; color: var(--ink); margin-bottom: 6px;"><strong>التخصص:</strong> مسارات مخصصة، سفر فاخر، تجارب محلية</div>
         <div style="font-size: 11px; color: var(--ink); margin-bottom: 16px;"><strong>الخبرة:</strong> سنوات من الخبرة في تصميم الرحلات المخصصة</div>
         <div style="font-family: var(--serif); font-size: 15px; color: var(--emerald); font-weight: 700; letter-spacing: 0.05em;">Anh Son Le</div>
@@ -1926,8 +1932,8 @@
 <!-- ═══════════════════ PAGE 9 — Booking Terms & Finalization ═══════════════════ -->
 <div class="pdf-page">
   <div class="page-header">
-    <span class="brand">Vietnam Safar — B2B Travel Proposal</span>
-    <span class="ref">QT-2026-ARAB-21D20N · 2026-08-10</span>
+    <span class="brand">Vietnam Safar — مقترح سفر للشركاء التجاريين</span>
+    <span class="ref"><span class="ltr-token">QT-2026-ARAB-21D20N · 2026-08-10</span></span>
   </div>
   <div class="page-inner">
     <div class="section-label">Booking Conditions</div>
@@ -1985,34 +1991,34 @@
       </div>
       <div class="contact-box" style="padding: 12px;">
         <span class="clabel" style="margin-top:0;">أُعدّ بواسطة</span>
-        <div class="cval" style="font-size:11px;">Vietnam Safar – Discovery Asia Travel Group</div>
+        <div class="cval" style="font-size:11px;"><span class="ltr-token">Vietnam Safar</span> – <span class="ltr-token">Discovery Asia Travel Group</span></div>
         
         <span class="clabel">Email</span>
         <div class="cval" style="font-size:11px; word-break:break-all;">sales@vietnamsafar.vn</div>
         
         <span class="clabel">واتساب</span>
-        <div class="cval" style="font-size:11px;">+84 911 538 738</div>
+        <div class="cval" style="font-size:11px;"><span class="ltr-token">+84 911 538 738</span></div>
         <span class="clabel">الموقع الإلكتروني</span>
-        <div class="cval" style="font-size:11px;">www.vietnamsafar.vn</div>
+        <div class="cval" style="font-size:11px;"><span class="ltr-token">www.vietnamsafar.vn</span></div>
       </div>
     </div>
 
     <div class="pdf-footer" style="padding: 10px 0; font-size: 10px;">
       اكتشف روعة الطبيعة وسحر الثقافة عبر 21 يومًا من الاسترخاء والمغامرة... — عرض سعر فاخر مُعدّ لصالح 2 Adults (شخصين).<br>
       <span style="color:var(--gold);font-weight:700;">vietnamsafar.vn</span> &nbsp;·&nbsp;
-      هذا مستند عبارة عن عرض أسعار B2B سري تم إعداده خصيصًا لـ 2 Adults (شخصين).
+      هذا عرض سعر سري مخصص حصريًا لـ 2 Adults (شخصين).
     </div>
   </div>
 </div>
 
 <script id="itinerary-data" type="application/json">
-  [{"activities": ["\u0627\u0644\u0627\u0633\u062a\u0642\u0628\u0627\u0644 \u0641\u064a \u0627\u0644\u0645\u0637\u0627\u0631 \u0648\u0627\u0644\u0646\u0642\u0644 \u0628\u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629 \u0625\u0644\u0649 \u0627\u0644\u0641\u0646\u062f\u0642."], "date": "", "dayNumber": 1, "description": ["\u0627\u0644\u0648\u0635\u0648\u0644 \u0625\u0644\u0649 Hanoi \u0648\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644 \u0625\u0644\u0649 \u0627\u0644\u0641\u0646\u062f\u0642."], "destinations": ["Hanoi"], "lang": "ar", "meals": [], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0631\u064a\u062d\u0629"], "overnight": "Hanoi", "title": "\u0627\u0644\u064a\u0648\u0645 1 \u2014 Hanoi"}, {"activities": ["\u062c\u0648\u0644\u0629 \u0633\u064a\u0643\u0644\u0648\u060c \u062a\u0630\u0627\u0643\u0631 \u062f\u062e\u0648\u0644\u060c \u0645\u0631\u0634\u062f \u0633\u064a\u0627\u062d\u064a \u062e\u0627\u0635\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 2, "description": ["\u062c\u0648\u0644\u0629 \u062b\u0642\u0627\u0641\u064a\u0629 \u0641\u064a Hanoi \u0627\u0644\u0642\u062f\u064a\u0645\u0629 \u062a\u0634\u0645\u0644 \u0633\u0648\u0642 \u062f\u0648\u0646\u063a \u0633\u0648\u0627\u0646 \u0648\u0631\u0643\u0648\u0628 \u0627\u0644\u0633\u064a\u0643\u0644\u0648 \u0648\u062a\u0630\u0648\u0642 \u0627\u0644\u0642\u0647\u0648\u0629 \u0627\u0644\u0641\u064a\u062a\u0646\u0627\u0645\u064a\u0629 \u0627\u0644\u062a\u0642\u0644\u064a\u062f\u064a\u0629."], "destinations": ["Hanoi"], "lang": "ar", "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0641\u064a \u0627\u0644\u0641\u0646\u062f\u0642"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u063a\u0627\u0645\u0631\u0629"], "overnight": "Hanoi", "title": "\u0627\u0644\u064a\u0648\u0645 2 \u2014 Hanoi"}, {"activities": ["\u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629 \u0644\u0631\u062d\u0644\u0629 Ninh Binh \u062d\u0633\u0628 \u0627\u0644\u0628\u0631\u0646\u0627\u0645\u062c."], "date": "", "dayNumber": 3, "description": ["\u0632\u064a\u0627\u0631\u0629 Ninh Binh \u0645\u0639 \u062a\u0627\u0645 \u0643\u0648\u0643 \u0648\u0647\u0627\u0646\u063a \u0645\u0648\u0627 \u062b\u0645 \u0627\u0644\u0639\u0648\u062f\u0629 \u0625\u0644\u0649 Hanoi."], "destinations": ["Hanoi", "Ninh Binh", "Hanoi"], "lang": "ar", "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0648\u063a\u062f\u0627\u0621 \u0645\u062d\u0644\u064a"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0646\u0634\u0637\u0629"], "overnight": "Hanoi", "title": "\u0627\u0644\u064a\u0648\u0645 3 \u2014 Hanoi \u2192 Ninh Binh \u2192 Hanoi"}, {"activities": ["\u0646\u0642\u0644 \u062e\u0627\u0635 \u0645\u0646 Hanoi \u0625\u0644\u0649 Halong Bay \u0648\u0627\u0644\u0645\u0628\u064a\u062a \u0639\u0644\u0649 \u0645\u062a\u0646 La Casta Cruise."], "date": "", "dayNumber": 4, "description": ["\u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0628\u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629 \u0645\u0646 Hanoi \u0625\u0644\u0649 Halong Bay \u0648\u0627\u0644\u0635\u0639\u0648\u062f \u0625\u0644\u0649 \u0627\u0644\u0643\u0631\u0648\u0632 \u0644\u0644\u0645\u0628\u064a\u062a."], "destinations": ["Hanoi", "Halong Bay"], "lang": "ar", "meals": ["\u0627\u0644\u0648\u062c\u0628\u0627\u062a \u062d\u0633\u0628 \u0628\u0631\u0646\u0627\u0645\u062c \u0627\u0644\u0643\u0631\u0648\u0632"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0631\u064a\u062d\u0629"], "overnight": "Halong Bay", "title": "\u0627\u0644\u064a\u0648\u0645 4 \u2014 Hanoi \u2192 Halong Bay"}, {"activities": ["\u0646\u0642\u0644 \u062e\u0627\u0635 \u0645\u0646 Halong Bay \u0625\u0644\u0649 Hanoi."], "date": "", "dayNumber": 5, "description": ["\u0645\u063a\u0627\u062f\u0631\u0629 \u0627\u0644\u0643\u0631\u0648\u0632 \u0648\u0627\u0644\u0639\u0648\u062f\u0629 \u0645\u0646 Halong Bay \u0625\u0644\u0649 Hanoi \u0628\u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "destinations": ["Halong Bay", "Hanoi"], "lang": "ar", "meals": [], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0631\u064a\u062d\u0629"], "overnight": "Hanoi", "title": "\u0627\u0644\u064a\u0648\u0645 5 \u2014 Halong Bay \u2192 Hanoi"}, {"activities": ["\u062a\u0630\u0627\u0643\u0631 \u0628\u0627\u0635 \u0627\u0644\u0646\u0648\u0645 \u0627\u0644\u0641\u0627\u062e\u0631\u060c \u0627\u0644\u0627\u0633\u062a\u0642\u0628\u0627\u0644 \u0648\u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0641\u064a Sapa."], "date": "", "dayNumber": 6, "description": ["\u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0645\u0646 Hanoi \u0625\u0644\u0649 Sapa \u0628\u0648\u0627\u0633\u0637\u0629 \u0628\u0627\u0635 \u0627\u0644\u0646\u0648\u0645 \u0627\u0644\u0645\u0631\u064a\u062d \u0648\u0627\u0644\u0627\u0633\u062a\u0642\u0631\u0627\u0631 \u0641\u064a \u0627\u0644\u0641\u0646\u062f\u0642."], "destinations": ["Sapa"], "lang": "ar", "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0641\u064a \u0627\u0644\u0641\u0646\u062f\u0642"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0639\u062a\u062f\u0644\u0629"], "overnight": "Sapa", "title": "\u0627\u0644\u064a\u0648\u0645 6 \u2014 Sapa"}, {"activities": ["\u062a\u0630\u0627\u0643\u0631 \u062a\u0644\u0641\u0631\u064a\u0643 \u0641\u0627\u0646\u0633\u064a\u0628\u0627\u0646\u060c \u0631\u0633\u0648\u0645 \u062f\u062e\u0648\u0644 \u0642\u0631\u064a\u0629 \u0643\u0627\u062a \u0643\u0627\u062a\u060c \u0645\u0631\u0634\u062f \u062e\u0627\u0635\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 7, "description": ["\u0632\u064a\u0627\u0631\u0629 \u0642\u0645\u0629 \u0641\u0627\u0646\u0633\u064a\u0628\u0627\u0646 \u0628\u0627\u0644\u062a\u0644\u0641\u0631\u064a\u0643 \u0648\u0627\u0633\u062a\u0643\u0634\u0627\u0641 \u0642\u0631\u064a\u0629 \u0643\u0627\u062a \u0643\u0627\u062a \u0627\u0644\u062a\u0642\u0644\u064a\u062f\u064a\u0629."], "destinations": ["Sapa"], "lang": "ar", "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0648\u063a\u062f\u0627\u0621"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0646\u0634\u0637\u0629"], "overnight": "Sapa", "title": "\u0627\u0644\u064a\u0648\u0645 7 \u2014 Sapa"}, {"activities": ["\u062a\u0630\u0627\u0643\u0631 \u062f\u062e\u0648\u0644 \u0627\u0644\u0642\u0631\u0649 \u0648\u0627\u0644\u0634\u0644\u0627\u0644\u060c \u0645\u0631\u0634\u062f \u0645\u062d\u0644\u064a\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 8, "description": ["\u062c\u0648\u0644\u0629 \u0645\u0634\u064a \u0644\u0627\u0633\u062a\u0643\u0634\u0627\u0641 \u0642\u0631\u0649 \u0644\u0627\u0648 \u062a\u0634\u0627\u064a \u0648\u062a\u0627 \u0641\u0627\u0646 \u0627\u0644\u062c\u0628\u0644\u064a\u0629 \u0648\u0632\u064a\u0627\u0631\u0629 \u0634\u0644\u0627\u0644 \u0627\u0644\u0641\u0636\u0629."], "destinations": ["Sapa"], "lang": "ar", "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0648\u063a\u062f\u0627\u0621 \u0645\u062d\u0644\u064a"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0639\u062a\u062f\u0644\u0629"], "overnight": "Sapa", "title": "\u0627\u0644\u064a\u0648\u0645 8 \u2014 Sapa"}, {"activities": ["\u062a\u0630\u0627\u0643\u0631 \u0627\u0644\u062c\u0633\u0631 \u0627\u0644\u0632\u062c\u0627\u062c\u064a \u0648\u0631\u0633\u0648\u0645 \u0645\u0642\u0647\u0649 \u0645\u0648\u0627\u0646\u0627\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 9, "description": ["\u0632\u064a\u0627\u0631\u0629 \u0627\u0644\u062c\u0633\u0631 \u0627\u0644\u0632\u062c\u0627\u062c\u064a \u0627\u0644\u0634\u0627\u0647\u0642 \u0648\u0627\u0644\u0627\u0633\u062a\u0631\u062e\u0627\u0621 \u0641\u064a \u0645\u0642\u0647\u0649 \u0645\u0648\u0627\u0646\u0627 \u0627\u0644\u0645\u0637\u0644 \u0639\u0644\u0649 \u0627\u0644\u0648\u0627\u062f\u064a."], "destinations": ["Sapa"], "lang": "ar", "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0641\u064a \u0627\u0644\u0641\u0646\u062f\u0642"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u063a\u0627\u0645\u0631\u0629"], "overnight": "Sapa", "title": "\u0627\u0644\u064a\u0648\u0645 9 \u2014 Sapa"}, {"activities": ["\u062a\u0630\u0643\u0631\u0629 \u062d\u0627\u0641\u0644\u0629 \u0627\u0644\u0646\u0648\u0645 \u0645\u0646 Sapa \u0625\u0644\u0649 Hanoi."], "date": "", "dayNumber": 10, "description": ["\u0627\u0644\u0639\u0648\u062f\u0629 \u0645\u0646 Sapa \u0625\u0644\u0649 Hanoi \u0628\u0648\u0627\u0633\u0637\u0629 \u062d\u0627\u0641\u0644\u0629 \u0627\u0644\u0646\u0648\u0645."], "destinations": ["Sapa", "Hanoi"], "lang": "ar", "meals": [], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0631\u064a\u062d\u0629"], "overnight": "Hanoi", "title": "\u0627\u0644\u064a\u0648\u0645 10 \u2014 Sapa \u2192 Hanoi"}, {"activities": ["\u062a\u0630\u0643\u0631\u0629 \u0637\u064a\u0631\u0627\u0646 \u062f\u0627\u062e\u0644\u064a Hanoi \u2013 Da Nang \u0648\u0643\u0631\u0648\u0632 \u0646\u0647\u0631 \u0647\u0627\u0646."], "date": "", "dayNumber": 11, "description": ["\u0631\u062d\u0644\u0629 \u062c\u0648\u064a\u0629 \u0645\u0646 Hanoi \u0625\u0644\u0649 Da Nang \u0645\u0639 \u062a\u062c\u0631\u0628\u0629 \u0643\u0631\u0648\u0632 \u0646\u0647\u0631 \u0647\u0627\u0646."], "destinations": ["Hanoi", "Da Nang"], "lang": "ar", "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0641\u064a \u0627\u0644\u0641\u0646\u062f\u0642"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0639\u062a\u062f\u0644\u0629"], "overnight": "Da Nang", "title": "\u0627\u0644\u064a\u0648\u0645 11 \u2014 Hanoi \u2192 Da Nang"}, {"activities": ["\u062a\u0630\u0643\u0631\u0629 \u062f\u062e\u0648\u0644 \u0628\u0627 \u0646\u0627 \u0647\u064a\u0644\u0632 \u062d\u0633\u0628 \u0627\u0644\u0628\u0631\u0646\u0627\u0645\u062c."], "date": "", "dayNumber": 12, "description": ["\u0632\u064a\u0627\u0631\u0629 \u0628\u0627 \u0646\u0627 \u0647\u064a\u0644\u0632."], "destinations": ["Da Nang"], "lang": "ar", "meals": [], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0646\u0634\u0637\u0629"], "overnight": "Da Nang", "title": "\u0627\u0644\u064a\u0648\u0645 12 \u2014 Da Nang"}, {"activities": ["\u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629 \u0648\u062a\u0631\u062a\u064a\u0628\u0627\u062a \u062f\u062e\u0648\u0644 \u0644\u0632\u064a\u0627\u0631\u0629 \u063a\u0627\u0628\u0629 \u062c\u0648\u0632 \u0627\u0644\u0647\u0646\u062f \u0628\u0627\u064a \u0645\u0627\u0648 \u0648Hoi An."], "date": "", "dayNumber": 13, "description": ["\u0632\u064a\u0627\u0631\u0629 \u063a\u0627\u0628\u0629 \u062c\u0648\u0632 \u0627\u0644\u0647\u0646\u062f \u0628\u0627\u064a \u0645\u0627\u0648 \u0648\u0628\u0644\u062f\u0629 Hoi An \u0627\u0644\u0642\u062f\u064a\u0645\u0629 \u062b\u0645 \u0627\u0644\u0639\u0648\u062f\u0629 \u0625\u0644\u0649 Da Nang."], "destinations": ["Da Nang", "Hoi An", "Da Nang"], "lang": "ar", "meals": [], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u063a\u0627\u0645\u0631\u0629"], "overnight": "Da Nang", "title": "\u0627\u0644\u064a\u0648\u0645 13 \u2014 Da Nang \u2192 Hoi An \u2192 Da Nang"}, {"activities": ["\u062a\u0630\u0627\u0643\u0631 \u062a\u062c\u062f\u064a\u0641 \u0647\u0648\u0627 \u0641\u0648 \u062b\u0627\u0646\u0647 \u0648\u0627\u0644\u0645\u0639\u062f\u0627\u062a\u060c \u0645\u0631\u0634\u062f \u062e\u0627\u0635\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 14, "description": ["\u062a\u062c\u0631\u0628\u0629 \u0627\u0644\u0645\u063a\u0627\u0645\u0631\u0629 \u0648\u0627\u0644\u062a\u062c\u062f\u064a\u0641 \u0627\u0644\u0646\u0647\u0631\u064a \u0627\u0644\u0645\u062b\u064a\u0631 \u0641\u064a \u0645\u0646\u0637\u0642\u0629 \u0647\u0648\u0627 \u0641\u0648 \u062b\u0627\u0646\u0647."], "destinations": ["Da Nang"], "lang": "ar", "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0648\u063a\u062f\u0627\u0621"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0646\u0634\u0637\u0629"], "overnight": "Da Nang", "title": "\u0627\u0644\u064a\u0648\u0645 14 \u2014 Da Nang"}, {"activities": ["\u062a\u0630\u0643\u0631\u0629 \u0637\u064a\u0631\u0627\u0646 \u062f\u0627\u062e\u0644\u064a Da Nang \u2013 Dalat \u0648\u0627\u0644\u0646\u0642\u0644 \u0645\u0646 \u0627\u0644\u0645\u0637\u0627\u0631."], "date": "", "dayNumber": 15, "description": ["\u0631\u062d\u0644\u0629 \u062c\u0648\u064a\u0629 \u0645\u0628\u0627\u0634\u0631\u0629 \u0645\u0646 Da Nang \u0625\u0644\u0649 Dalat \u062b\u0645 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644 \u0625\u0644\u0649 \u0627\u0644\u0641\u0646\u062f\u0642."], "destinations": ["Da Nang", "Dalat"], "lang": "ar", "meals": [], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0639\u062a\u062f\u0644\u0629"], "overnight": "Dalat", "title": "\u0627\u0644\u064a\u0648\u0645 15 \u2014 Da Nang \u2192 Dalat"}, {"activities": ["\u062a\u0630\u0627\u0643\u0631 \u0627\u0644\u062f\u062e\u0648\u0644 \u0648\u0631\u0633\u0648\u0645 \u0627\u0644\u062a\u0644\u0641\u0631\u064a\u0643\u060c \u0645\u0631\u0634\u062f \u062e\u0627\u0635\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 16, "description": ["\u0627\u0633\u062a\u0643\u0634\u0627\u0641 \u0645\u0639\u0627\u0644\u0645 Dalat: \u062c\u0628\u0644 \u0644\u0627\u0646\u063a \u0628\u064a\u0627\u0646\u063a \u0648\u0627\u0644\u062a\u0644\u0641\u0631\u064a\u0643 \u0648\u0627\u0644\u0628\u064a\u062a \u0627\u0644\u0645\u062c\u0646\u0648\u0646 \u0648\u0646\u0641\u0642 \u0627\u0644\u0637\u064a\u0646."], "destinations": ["Dalat"], "lang": "ar", "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0648\u063a\u062f\u0627\u0621"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0646\u0634\u0637\u0629"], "overnight": "Dalat", "title": "\u0627\u0644\u064a\u0648\u0645 16 \u2014 Dalat"}, {"activities": ["\u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629 \u0648\u062a\u0631\u062a\u064a\u0628\u0627\u062a \u0627\u0644\u0632\u064a\u0627\u0631\u0629 \u0641\u064a Dalat \u062d\u0633\u0628 \u0627\u0644\u0628\u0631\u0646\u0627\u0645\u062c."], "date": "", "dayNumber": 17, "description": ["\u0632\u064a\u0627\u0631\u0629 Fresh Garden \u0648\u0634\u0644\u0627\u0644 \u062f\u0627\u062a\u0627\u0646\u0644\u0627 \u0648\u0634\u0644\u0627\u0644 \u0627\u0644\u0641\u064a\u0644 \u0648\u0645\u0642\u0647\u0649 \u0645\u064a \u0644\u064a\u0646\u0647."], "destinations": ["Dalat"], "lang": "ar", "meals": [], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u063a\u0627\u0645\u0631\u0629"], "overnight": "Dalat", "title": "\u0627\u0644\u064a\u0648\u0645 17 \u2014 Dalat"}, {"activities": ["\u062a\u0630\u0643\u0631\u0629 \u0637\u064a\u0631\u0627\u0646 \u062f\u0627\u062e\u0644\u064a Dalat \u2013 Ho Chi Minh City \u0648\u0627\u0644\u0646\u0642\u0644 \u0645\u0646 \u0627\u0644\u0645\u0637\u0627\u0631."], "date": "", "dayNumber": 18, "description": ["\u0631\u062d\u0644\u0629 \u062c\u0648\u064a\u0629 \u0645\u0628\u0627\u0634\u0631\u0629 \u0645\u0646 Dalat \u0625\u0644\u0649 Ho Chi Minh City \u062b\u0645 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644 \u0625\u0644\u0649 \u0627\u0644\u0641\u0646\u062f\u0642."], "destinations": ["Dalat", "Ho Chi Minh City"], "lang": "ar", "meals": [], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0646\u0634\u0637\u0629"], "overnight": "Ho Chi Minh City", "title": "\u0627\u0644\u064a\u0648\u0645 18 \u2014 Dalat \u2192 Ho Chi Minh City"}, {"activities": ["\u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629 \u0648\u062a\u0631\u062a\u064a\u0628\u0627\u062a \u0627\u0644\u062c\u0648\u0644\u0627\u062a \u0641\u064a Ho Chi Minh City \u062d\u0633\u0628 \u0627\u0644\u0628\u0631\u0646\u0627\u0645\u062c."], "date": "", "dayNumber": 19, "description": ["\u0632\u064a\u0627\u0631\u0629 \u0623\u0646\u0641\u0627\u0642 \u0643\u0648 \u062a\u0634\u064a \u0648\u0645\u0642\u0647\u0649 \u0627\u0644\u0634\u0642\u0642 \u0648\u0633\u0648\u0642 \u0628\u0646 \u062b\u0627\u0646\u0647 \u0648\u0645\u0643\u062a\u0628 \u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0645\u0631\u0643\u0632\u064a."], "destinations": ["Ho Chi Minh City"], "lang": "ar", "meals": [], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u063a\u0627\u0645\u0631\u0629"], "overnight": "Ho Chi Minh City", "title": "\u0627\u0644\u064a\u0648\u0645 19 \u2014 Ho Chi Minh City"}, {"activities": ["\u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629 \u0648\u062c\u0648\u0644\u0629 Mekong Delta \u062d\u0633\u0628 \u0627\u0644\u0628\u0631\u0646\u0627\u0645\u062c."], "date": "", "dayNumber": 20, "description": ["\u0632\u064a\u0627\u0631\u0629 Mekong Delta \u062b\u0645 \u0627\u0644\u0639\u0648\u062f\u0629 \u0625\u0644\u0649 Ho Chi Minh City."], "destinations": ["Ho Chi Minh City", "Mekong Delta", "Ho Chi Minh City"], "lang": "ar", "meals": [], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0639\u062a\u062f\u0644\u0629"], "overnight": "Ho Chi Minh City", "title": "\u0627\u0644\u064a\u0648\u0645 20 \u2014 Ho Chi Minh City \u2192 Mekong Delta \u2192 Ho Chi Minh City"}, {"activities": ["\u0646\u0642\u0644 \u062e\u0627\u0635 \u0625\u0644\u0649 \u0645\u0637\u0627\u0631 \u062a\u0627\u0646 \u0633\u0648\u0646 \u0646\u0647\u0627\u062a \u0627\u0644\u062f\u0648\u0644\u064a."], "date": "", "dayNumber": 21, "description": ["\u0645\u063a\u0627\u062f\u0631\u0629 Ho Chi Minh City \u0648\u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0625\u0644\u0649 \u0627\u0644\u0645\u0637\u0627\u0631 \u0644\u0644\u0631\u062d\u0644\u0629 \u0627\u0644\u062f\u0648\u0644\u064a\u0629."], "destinations": ["Ho Chi Minh City"], "lang": "ar", "meals": [], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0631\u064a\u062d\u0629"], "overnight": "Ho Chi Minh City", "title": "\u0627\u0644\u064a\u0648\u0645 21 \u2014 Ho Chi Minh City"}]
+  [{"activities": ["\u0627\u0644\u0627\u0633\u062a\u0642\u0628\u0627\u0644 \u0641\u064a \u0627\u0644\u0645\u0637\u0627\u0631 \u0648\u0627\u0644\u0646\u0642\u0644 \u0628\u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629 \u0625\u0644\u0649 \u0627\u0644\u0641\u0646\u062f\u0642."], "date": "", "dayNumber": 1, "description": ["\u0645\u063a\u0627\u062f\u0631\u0629 Ho Chi Minh City"], "destinations": ["Hanoi"], "lang": "ar", "meals": [], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0631\u064a\u062d\u0629"], "overnight": "Hanoi", "title": "\u0627\u0644\u064a\u0648\u0645 1 \u2014 Hanoi"}, {"activities": ["\u062c\u0648\u0644\u0629 \u0633\u064a\u0643\u0644\u0648\u060c \u062a\u0630\u0627\u0643\u0631 \u062f\u062e\u0648\u0644\u060c \u0645\u0631\u0634\u062f \u0633\u064a\u0627\u062d\u064a \u062e\u0627\u0635\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 2, "description": ["\u062c\u0648\u0644\u0629 \u062b\u0642\u0627\u0641\u064a\u0629 \u0641\u064a Hanoi \u0627\u0644\u0642\u062f\u064a\u0645\u0629 \u062a\u0634\u0645\u0644 Dong Xuan Market \u0648\u0631\u0643\u0648\u0628 \u0627\u0644\u0633\u064a\u0643\u0644\u0648 \u0648\u062a\u0630\u0648\u0642 \u0627\u0644\u0642\u0647\u0648\u0629 \u0627\u0644\u0641\u064a\u062a\u0646\u0627\u0645\u064a\u0629 \u0627\u0644\u062a\u0642\u0644\u064a\u062f\u064a\u0629."], "destinations": ["Hanoi"], "lang": "ar", "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0641\u064a \u0627\u0644\u0641\u0646\u062f\u0642"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u063a\u0627\u0645\u0631\u0629"], "overnight": "Hanoi", "title": "\u0627\u0644\u064a\u0648\u0645 2 \u2014 Hanoi"}, {"activities": ["\u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629 \u0644\u0631\u062d\u0644\u0629 Ninh Binh \u062d\u0633\u0628 \u0627\u0644\u0628\u0631\u0646\u0627\u0645\u062c."], "date": "", "dayNumber": 3, "description": ["\u0632\u064a\u0627\u0631\u0629 Ninh Binh \u0645\u0639 Tam Coc \u0648Hang Mua \u062b\u0645 \u0627\u0644\u0639\u0648\u062f\u0629 \u0625\u0644\u0649 Hanoi."], "destinations": ["Hanoi", "Ninh Binh", "Hanoi"], "lang": "ar", "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0648\u063a\u062f\u0627\u0621 \u0645\u062d\u0644\u064a"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0646\u0634\u0637\u0629"], "overnight": "Hanoi", "title": "\u0627\u0644\u064a\u0648\u0645 3 \u2014 Hanoi"}, {"activities": ["\u0646\u0642\u0644 \u062e\u0627\u0635 \u0645\u0646 Hanoi \u0625\u0644\u0649 Halong Bay \u0648\u0627\u0644\u0645\u0628\u064a\u062a \u0639\u0644\u0649 \u0645\u062a\u0646 La Casta Cruise."], "date": "", "dayNumber": 4, "description": ["\u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0628\u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629 \u0645\u0646 Hanoi \u0625\u0644\u0649 Halong Bay \u0648\u0627\u0644\u0635\u0639\u0648\u062f \u0625\u0644\u0649 \u0627\u0644\u0643\u0631\u0648\u0632 \u0644\u0644\u0645\u0628\u064a\u062a."], "destinations": ["Hanoi", "Halong Bay"], "lang": "ar", "meals": ["\u0627\u0644\u0648\u062c\u0628\u0627\u062a \u062d\u0633\u0628 \u0628\u0631\u0646\u0627\u0645\u062c \u0627\u0644\u0643\u0631\u0648\u0632"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0631\u064a\u062d\u0629"], "overnight": "Halong Bay", "title": "\u0627\u0644\u064a\u0648\u0645 4 \u2014 Hanoi"}, {"activities": ["\u0646\u0642\u0644 \u062e\u0627\u0635 \u0645\u0646 Halong Bay \u0625\u0644\u0649 Hanoi."], "date": "", "dayNumber": 5, "description": ["\u0645\u063a\u0627\u062f\u0631\u0629 \u0627\u0644\u0643\u0631\u0648\u0632 \u0648\u0627\u0644\u0639\u0648\u062f\u0629 \u0645\u0646 Halong Bay \u0625\u0644\u0649 Hanoi \u0628\u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "destinations": ["Halong Bay", "Hanoi"], "lang": "ar", "meals": [], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0631\u064a\u062d\u0629"], "overnight": "Hanoi", "title": "\u0627\u0644\u064a\u0648\u0645 5 \u2014 Halong Bay"}, {"activities": ["\u062a\u0630\u0627\u0643\u0631 \u0628\u0627\u0635 \u0627\u0644\u0646\u0648\u0645 \u0627\u0644\u0641\u0627\u062e\u0631\u060c \u0627\u0644\u0627\u0633\u062a\u0642\u0628\u0627\u0644 \u0648\u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0641\u064a Sapa."], "date": "", "dayNumber": 6, "description": ["\u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0645\u0646 Hanoi \u0625\u0644\u0649 Sapa \u0628\u0648\u0627\u0633\u0637\u0629 \u0628\u0627\u0635 \u0627\u0644\u0646\u0648\u0645 \u0627\u0644\u0645\u0631\u064a\u062d \u0648\u0627\u0644\u0627\u0633\u062a\u0642\u0631\u0627\u0631 \u0641\u064a \u0627\u0644\u0641\u0646\u062f\u0642."], "destinations": ["Sapa"], "lang": "ar", "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0641\u064a \u0627\u0644\u0641\u0646\u062f\u0642"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0639\u062a\u062f\u0644\u0629"], "overnight": "Sapa", "title": "\u0627\u0644\u064a\u0648\u0645 6 \u2014 Sapa"}, {"activities": ["\u062a\u0630\u0627\u0643\u0631 \u062a\u0644\u0641\u0631\u064a\u0643 Fansipan\u060c \u0631\u0633\u0648\u0645 \u062f\u062e\u0648\u0644 Cat Cat Village\u060c \u0645\u0631\u0634\u062f \u062e\u0627\u0635\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 7, "description": ["\u0632\u064a\u0627\u0631\u0629 Fansipan \u0628\u0627\u0644\u062a\u0644\u0641\u0631\u064a\u0643 \u0648\u0627\u0633\u062a\u0643\u0634\u0627\u0641 Cat Cat Village \u0627\u0644\u062a\u0642\u0644\u064a\u062f\u064a\u0629."], "destinations": ["Sapa"], "lang": "ar", "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0648\u063a\u062f\u0627\u0621"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0646\u0634\u0637\u0629"], "overnight": "Sapa", "title": "\u0627\u0644\u064a\u0648\u0645 7 \u2014 Sapa"}, {"activities": ["\u062a\u0630\u0627\u0643\u0631 \u062f\u062e\u0648\u0644 \u0627\u0644\u0642\u0631\u0649 \u0648\u0627\u0644\u0634\u0644\u0627\u0644\u060c \u0645\u0631\u0634\u062f \u0645\u062d\u0644\u064a\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 8, "description": ["\u062c\u0648\u0644\u0629 \u0645\u0634\u064a \u0644\u0627\u0633\u062a\u0643\u0634\u0627\u0641 \u0642\u0631\u0649 Lao Chai \u0648Ta Van \u0627\u0644\u062c\u0628\u0644\u064a\u0629 \u0648\u0632\u064a\u0627\u0631\u0629 \u0634\u0644\u0627\u0644 \u0627\u0644\u0641\u0636\u0629."], "destinations": ["Sapa"], "lang": "ar", "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0648\u063a\u062f\u0627\u0621 \u0645\u062d\u0644\u064a"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0639\u062a\u062f\u0644\u0629"], "overnight": "Sapa", "title": "\u0627\u0644\u064a\u0648\u0645 8 \u2014 Sapa"}, {"activities": ["\u062a\u0630\u0627\u0643\u0631 \u0627\u0644\u062c\u0633\u0631 \u0627\u0644\u0632\u062c\u0627\u062c\u064a \u0648\u0631\u0633\u0648\u0645 \u0645\u0642\u0647\u0649 \u0645\u0648\u0627\u0646\u0627\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 9, "description": ["\u0632\u064a\u0627\u0631\u0629 \u0627\u0644\u062c\u0633\u0631 \u0627\u0644\u0632\u062c\u0627\u062c\u064a \u0627\u0644\u0634\u0627\u0647\u0642 \u0648\u0627\u0644\u0627\u0633\u062a\u0631\u062e\u0627\u0621 \u0641\u064a \u0645\u0642\u0647\u0649 \u0645\u0648\u0627\u0646\u0627 \u0627\u0644\u0645\u0637\u0644 \u0639\u0644\u0649 \u0627\u0644\u0648\u0627\u062f\u064a."], "destinations": ["Sapa"], "lang": "ar", "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0641\u064a \u0627\u0644\u0641\u0646\u062f\u0642"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u063a\u0627\u0645\u0631\u0629"], "overnight": "Sapa", "title": "\u0627\u0644\u064a\u0648\u0645 9 \u2014 Sapa"}, {"activities": ["\u062a\u0630\u0643\u0631\u0629 \u062d\u0627\u0641\u0644\u0629 \u0627\u0644\u0646\u0648\u0645 \u0645\u0646 Sapa \u0625\u0644\u0649 Hanoi."], "date": "", "dayNumber": 10, "description": ["\u0627\u0644\u0639\u0648\u062f\u0629 \u0645\u0646 Sapa \u0625\u0644\u0649 Hanoi \u0628\u0648\u0627\u0633\u0637\u0629 \u062d\u0627\u0641\u0644\u0629 \u0627\u0644\u0646\u0648\u0645."], "destinations": ["Sapa", "Hanoi"], "lang": "ar", "meals": [], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0631\u064a\u062d\u0629"], "overnight": "Hanoi", "title": "\u0627\u0644\u064a\u0648\u0645 10 \u2014 Sapa"}, {"activities": ["\u062a\u0630\u0643\u0631\u0629 \u0637\u064a\u0631\u0627\u0646 \u062f\u0627\u062e\u0644\u064a Hanoi \u2013 Da Nang \u0648\u0643\u0631\u0648\u0632 \u0646\u0647\u0631 \u0647\u0627\u0646."], "date": "", "dayNumber": 11, "description": ["\u0631\u062d\u0644\u0629 \u062c\u0648\u064a\u0629 \u0645\u0646 Hanoi \u0625\u0644\u0649 Da Nang \u0645\u0639 \u062a\u062c\u0631\u0628\u0629 \u0643\u0631\u0648\u0632 \u0646\u0647\u0631 \u0647\u0627\u0646."], "destinations": ["Hanoi", "Da Nang"], "lang": "ar", "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0641\u064a \u0627\u0644\u0641\u0646\u062f\u0642"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0639\u062a\u062f\u0644\u0629"], "overnight": "Da Nang", "title": "\u0627\u0644\u064a\u0648\u0645 11 \u2014 Hanoi"}, {"activities": ["\u062a\u0630\u0643\u0631\u0629 \u062f\u062e\u0648\u0644 Ba Na Hills \u062d\u0633\u0628 \u0627\u0644\u0628\u0631\u0646\u0627\u0645\u062c."], "date": "", "dayNumber": 12, "description": ["\u0632\u064a\u0627\u0631\u0629 Ba Na Hills."], "destinations": ["Da Nang"], "lang": "ar", "meals": [], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0646\u0634\u0637\u0629"], "overnight": "Da Nang", "title": "\u0627\u0644\u064a\u0648\u0645 12 \u2014 Da Nang"}, {"activities": ["\u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629 \u0648\u062a\u0631\u062a\u064a\u0628\u0627\u062a \u062f\u062e\u0648\u0644 \u0644\u0632\u064a\u0627\u0631\u0629 Bay Mau Coconut Forest \u0648Hoi An."], "date": "", "dayNumber": 13, "description": ["\u0632\u064a\u0627\u0631\u0629 Bay Mau Coconut Forest \u0648\u0628\u0644\u062f\u0629 Hoi An \u0627\u0644\u0642\u062f\u064a\u0645\u0629 \u062b\u0645 \u0627\u0644\u0639\u0648\u062f\u0629 \u0625\u0644\u0649 Da Nang."], "destinations": ["Da Nang", "Hoi An", "Da Nang"], "lang": "ar", "meals": [], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u063a\u0627\u0645\u0631\u0629"], "overnight": "Da Nang", "title": "\u0627\u0644\u064a\u0648\u0645 13 \u2014 Da Nang"}, {"activities": ["\u062a\u0630\u0627\u0643\u0631 \u062a\u062c\u062f\u064a\u0641 Hoa Phu Thanh \u0648\u0627\u0644\u0645\u0639\u062f\u0627\u062a\u060c \u0645\u0631\u0634\u062f \u062e\u0627\u0635\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 14, "description": ["\u062a\u062c\u0631\u0628\u0629 \u0627\u0644\u0645\u063a\u0627\u0645\u0631\u0629 \u0648\u0627\u0644\u062a\u062c\u062f\u064a\u0641 \u0627\u0644\u0646\u0647\u0631\u064a \u0627\u0644\u0645\u062b\u064a\u0631 \u0641\u064a \u0645\u0646\u0637\u0642\u0629 Hoa Phu Thanh."], "destinations": ["Da Nang"], "lang": "ar", "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0648\u063a\u062f\u0627\u0621"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0646\u0634\u0637\u0629"], "overnight": "Da Nang", "title": "\u0627\u0644\u064a\u0648\u0645 14 \u2014 Da Nang"}, {"activities": ["\u062a\u0630\u0643\u0631\u0629 \u0637\u064a\u0631\u0627\u0646 \u062f\u0627\u062e\u0644\u064a Da Nang \u2013 Dalat \u0648\u0627\u0644\u0646\u0642\u0644 \u0645\u0646 \u0627\u0644\u0645\u0637\u0627\u0631."], "date": "", "dayNumber": 15, "description": ["\u0631\u062d\u0644\u0629 \u062c\u0648\u064a\u0629 \u0645\u0628\u0627\u0634\u0631\u0629 \u0645\u0646 Da Nang \u0625\u0644\u0649 Dalat \u062b\u0645 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644 \u0625\u0644\u0649 \u0627\u0644\u0641\u0646\u062f\u0642."], "destinations": ["Da Nang", "Dalat"], "lang": "ar", "meals": [], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0639\u062a\u062f\u0644\u0629"], "overnight": "Dalat", "title": "\u0627\u0644\u064a\u0648\u0645 15 \u2014 Da Nang"}, {"activities": ["\u062a\u0630\u0627\u0643\u0631 \u0627\u0644\u062f\u062e\u0648\u0644 \u0648\u0631\u0633\u0648\u0645 \u0627\u0644\u062a\u0644\u0641\u0631\u064a\u0643\u060c \u0645\u0631\u0634\u062f \u062e\u0627\u0635\u060c \u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."], "date": "", "dayNumber": 16, "description": ["\u0627\u0633\u062a\u0643\u0634\u0627\u0641 \u0645\u0639\u0627\u0644\u0645 Dalat: \u062c\u0628\u0644 Lang Biang \u0648\u0627\u0644\u062a\u0644\u0641\u0631\u064a\u0643 \u0648\u0627\u0644\u0628\u064a\u062a \u0627\u0644\u0645\u062c\u0646\u0648\u0646 \u0648\u0646\u0641\u0642 \u0627\u0644\u0637\u064a\u0646."], "destinations": ["Dalat"], "lang": "ar", "meals": ["\u0625\u0641\u0637\u0627\u0631 \u0648\u063a\u062f\u0627\u0621"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0646\u0634\u0637\u0629"], "overnight": "Dalat", "title": "\u0627\u0644\u064a\u0648\u0645 16 \u2014 Dalat"}, {"activities": ["\u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629 \u0648\u062a\u0631\u062a\u064a\u0628\u0627\u062a \u0627\u0644\u0632\u064a\u0627\u0631\u0629 \u0641\u064a Dalat \u062d\u0633\u0628 \u0627\u0644\u0628\u0631\u0646\u0627\u0645\u062c."], "date": "", "dayNumber": 17, "description": ["\u0632\u064a\u0627\u0631\u0629 Fresh Garden \u0648Datanla Waterfall \u0648\u0634\u0644\u0627\u0644 \u0627\u0644\u0641\u064a\u0644 \u0648Me Linh Coffee."], "destinations": ["Dalat"], "lang": "ar", "meals": [], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u063a\u0627\u0645\u0631\u0629"], "overnight": "Dalat", "title": "\u0627\u0644\u064a\u0648\u0645 17 \u2014 Dalat"}, {"activities": ["\u062a\u0630\u0643\u0631\u0629 \u0637\u064a\u0631\u0627\u0646 \u062f\u0627\u062e\u0644\u064a Dalat \u2013 Ho Chi Minh City \u0648\u0627\u0644\u0646\u0642\u0644 \u0645\u0646 \u0627\u0644\u0645\u0637\u0627\u0631."], "date": "", "dayNumber": 18, "description": ["\u0631\u062d\u0644\u0629 \u062c\u0648\u064a\u0629 \u0645\u0628\u0627\u0634\u0631\u0629 \u0645\u0646 Dalat \u0625\u0644\u0649 Ho Chi Minh City \u062b\u0645 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644 \u0625\u0644\u0649 \u0627\u0644\u0641\u0646\u062f\u0642."], "destinations": ["Dalat", "Ho Chi Minh City"], "lang": "ar", "meals": [], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0646\u0634\u0637\u0629"], "overnight": "Ho Chi Minh City", "title": "\u0627\u0644\u064a\u0648\u0645 18 \u2014 Dalat"}, {"activities": ["\u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629 \u0648\u062a\u0631\u062a\u064a\u0628\u0627\u062a \u0627\u0644\u062c\u0648\u0644\u0627\u062a \u0641\u064a Ho Chi Minh City \u062d\u0633\u0628 \u0627\u0644\u0628\u0631\u0646\u0627\u0645\u062c."], "date": "", "dayNumber": 19, "description": ["\u0632\u064a\u0627\u0631\u0629 Cu Chi Tunnels \u0648\u0645\u0642\u0647\u0649 \u0627\u0644\u0634\u0642\u0642 \u0648Ben Thanh Market \u0648\u0645\u0643\u062a\u0628 \u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0645\u0631\u0643\u0632\u064a."], "destinations": ["Ho Chi Minh City"], "lang": "ar", "meals": [], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u063a\u0627\u0645\u0631\u0629"], "overnight": "Ho Chi Minh City", "title": "\u0627\u0644\u064a\u0648\u0645 19 \u2014 Ho Chi Minh City"}, {"activities": ["\u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629 \u0648\u062c\u0648\u0644\u0629 Mekong Delta \u062d\u0633\u0628 \u0627\u0644\u0628\u0631\u0646\u0627\u0645\u062c."], "date": "", "dayNumber": 20, "description": ["\u0632\u064a\u0627\u0631\u0629 Mekong Delta \u062b\u0645 \u0627\u0644\u0639\u0648\u062f\u0629 \u0625\u0644\u0649 Ho Chi Minh City."], "destinations": ["Ho Chi Minh City", "Mekong Delta", "Ho Chi Minh City"], "lang": "ar", "meals": [], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0639\u062a\u062f\u0644\u0629"], "overnight": "Ho Chi Minh City", "title": "\u0627\u0644\u064a\u0648\u0645 20 \u2014 Ho Chi Minh City"}, {"activities": ["\u0646\u0642\u0644 \u062e\u0627\u0635 \u0625\u0644\u0649 Tan Son Nhat Airport \u0627\u0644\u062f\u0648\u0644\u064a."], "date": "", "dayNumber": 21, "description": ["\u0645\u063a\u0627\u062f\u0631\u0629 Ho Chi Minh City \u0648\u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0625\u0644\u0649 \u0627\u0644\u0645\u0637\u0627\u0631 \u0644\u0644\u0631\u062d\u0644\u0629 \u0627\u0644\u062f\u0648\u0644\u064a\u0629."], "destinations": ["Ho Chi Minh City"], "lang": "ar", "meals": [], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0631\u064a\u062d\u0629"], "overnight": "Ho Chi Minh City", "title": "\u0627\u0644\u064a\u0648\u0645 21 \u2014 Ho Chi Minh City"}]
 </script>
 <script id="route-stops-data" type="application/json">
   [{"dayNumber": 1, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 1 \u2014 Hanoi", "showMarker": true, "stopOrder": 1}, {"dayNumber": 2, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 2 \u2014 Hanoi", "showMarker": true, "stopOrder": 1}, {"dayNumber": 3, "destination": "Hanoi", "displayName": "Hanoi", "kind": "transfer", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 3 \u2014 \u0627\u0644\u0627\u0646\u0637\u0644\u0627\u0642 \u0645\u0646 Hanoi", "showMarker": false, "stopOrder": 1}, {"dayNumber": 3, "destination": "Ninh Binh", "displayName": "Ninh Binh", "kind": "visit", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 3 \u2014 Ninh Binh", "showMarker": true, "stopOrder": 2}, {"dayNumber": 3, "destination": "Hanoi", "displayName": "Hanoi", "kind": "return", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 3 \u2014 \u0627\u0644\u0639\u0648\u062f\u0629 \u0625\u0644\u0649 Hanoi", "showMarker": false, "stopOrder": 3}, {"dayNumber": 4, "destination": "Hanoi", "displayName": "Hanoi", "kind": "transfer", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 4 \u2014 \u0627\u0644\u0627\u0646\u0637\u0644\u0627\u0642 \u0645\u0646 Hanoi", "showMarker": false, "stopOrder": 1}, {"dayNumber": 4, "destination": "Halong Bay", "displayName": "Halong Bay", "kind": "overnight", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 4 \u2014 Halong Bay", "showMarker": true, "stopOrder": 2}, {"dayNumber": 5, "destination": "Halong Bay", "displayName": "Halong Bay", "kind": "transfer", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 5 \u2014 \u0627\u0644\u0627\u0646\u0637\u0644\u0627\u0642 \u0645\u0646 Halong Bay", "showMarker": false, "stopOrder": 1}, {"dayNumber": 5, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 5 \u2014 Hanoi", "showMarker": true, "stopOrder": 2}, {"dayNumber": 6, "destination": "Sapa", "displayName": "Sapa", "kind": "overnight", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 6 \u2014 Sapa", "showMarker": true, "stopOrder": 1}, {"dayNumber": 7, "destination": "Sapa", "displayName": "Sapa", "kind": "overnight", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 7 \u2014 Sapa", "showMarker": true, "stopOrder": 1}, {"dayNumber": 8, "destination": "Sapa", "displayName": "Sapa", "kind": "overnight", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 8 \u2014 Sapa", "showMarker": true, "stopOrder": 1}, {"dayNumber": 9, "destination": "Sapa", "displayName": "Sapa", "kind": "overnight", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 9 \u2014 Sapa", "showMarker": true, "stopOrder": 1}, {"dayNumber": 10, "destination": "Sapa", "displayName": "Sapa", "kind": "transfer", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 10 \u2014 \u0627\u0644\u0627\u0646\u0637\u0644\u0627\u0642 \u0645\u0646 Sapa", "showMarker": false, "stopOrder": 1}, {"dayNumber": 10, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 10 \u2014 Hanoi", "showMarker": true, "stopOrder": 2}, {"dayNumber": 11, "destination": "Hanoi", "displayName": "Hanoi", "kind": "transfer", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 11 \u2014 \u0627\u0644\u0627\u0646\u0637\u0644\u0627\u0642 \u0645\u0646 Hanoi", "showMarker": false, "stopOrder": 1}, {"dayNumber": 11, "destination": "Da Nang", "displayName": "Da Nang", "kind": "overnight", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 11 \u2014 Da Nang", "showMarker": true, "stopOrder": 2}, {"dayNumber": 12, "destination": "Da Nang", "displayName": "Da Nang", "kind": "overnight", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 12 \u2014 Da Nang", "showMarker": true, "stopOrder": 1}, {"dayNumber": 13, "destination": "Da Nang", "displayName": "Da Nang", "kind": "transfer", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 13 \u2014 \u0627\u0644\u0627\u0646\u0637\u0644\u0627\u0642 \u0645\u0646 Da Nang", "showMarker": false, "stopOrder": 1}, {"dayNumber": 13, "destination": "Hoi An", "displayName": "Hoi An", "kind": "visit", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 13 \u2014 Hoi An", "showMarker": true, "stopOrder": 2}, {"dayNumber": 13, "destination": "Da Nang", "displayName": "Da Nang", "kind": "return", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 13 \u2014 \u0627\u0644\u0639\u0648\u062f\u0629 \u0625\u0644\u0649 Da Nang", "showMarker": false, "stopOrder": 3}, {"dayNumber": 14, "destination": "Da Nang", "displayName": "Da Nang", "kind": "overnight", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 14 \u2014 Da Nang", "showMarker": true, "stopOrder": 1}, {"dayNumber": 15, "destination": "Da Nang", "displayName": "Da Nang", "kind": "transfer", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 15 \u2014 \u0627\u0644\u0627\u0646\u0637\u0644\u0627\u0642 \u0645\u0646 Da Nang", "showMarker": false, "stopOrder": 1}, {"dayNumber": 15, "destination": "Dalat", "displayName": "Dalat", "kind": "overnight", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 15 \u2014 Dalat", "showMarker": true, "stopOrder": 2}, {"dayNumber": 16, "destination": "Dalat", "displayName": "Dalat", "kind": "overnight", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 16 \u2014 Dalat", "showMarker": true, "stopOrder": 1}, {"dayNumber": 17, "destination": "Dalat", "displayName": "Dalat", "kind": "overnight", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 17 \u2014 Dalat", "showMarker": true, "stopOrder": 1}, {"dayNumber": 18, "destination": "Dalat", "displayName": "Dalat", "kind": "transfer", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 18 \u2014 \u0627\u0644\u0627\u0646\u0637\u0644\u0627\u0642 \u0645\u0646 Dalat", "showMarker": false, "stopOrder": 1}, {"dayNumber": 18, "destination": "Ho Chi Minh City", "displayName": "Ho Chi Minh City", "kind": "overnight", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 18 \u2014 Ho Chi Minh City", "showMarker": true, "stopOrder": 2}, {"dayNumber": 19, "destination": "Ho Chi Minh City", "displayName": "Ho Chi Minh City", "kind": "overnight", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 19 \u2014 Ho Chi Minh City", "showMarker": true, "stopOrder": 1}, {"dayNumber": 20, "destination": "Ho Chi Minh City", "displayName": "Ho Chi Minh City", "kind": "transfer", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 20 \u2014 \u0627\u0644\u0627\u0646\u0637\u0644\u0627\u0642 \u0645\u0646 Ho Chi Minh City", "showMarker": false, "stopOrder": 1}, {"dayNumber": 20, "destination": "Mekong Delta", "displayName": "Mekong Delta", "kind": "visit", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 20 \u2014 Mekong Delta", "showMarker": true, "stopOrder": 2}, {"dayNumber": 20, "destination": "Ho Chi Minh City", "displayName": "Ho Chi Minh City", "kind": "return", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 20 \u2014 \u0627\u0644\u0639\u0648\u062f\u0629 \u0625\u0644\u0649 Ho Chi Minh City", "showMarker": false, "stopOrder": 3}, {"dayNumber": 21, "destination": "Ho Chi Minh City", "displayName": "Ho Chi Minh City", "kind": "overnight", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 21 \u2014 Ho Chi Minh City", "showMarker": true, "stopOrder": 1}]
 </script>
 <script id="stay-segments-data" type="application/json">
-  [{"activityPreviews": [{"dayNumber": 1, "label": "\u0627\u0644\u064a\u0648\u0645 1", "summary": "\u0627\u0644\u0648\u0635\u0648\u0644 \u0625\u0644\u0649 Hanoi \u0648\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644 \u0625\u0644\u0649 \u0627\u0644\u0641\u0646\u062f\u0642."}, {"dayNumber": 2, "label": "\u0627\u0644\u064a\u0648\u0645 2", "summary": "\u062c\u0648\u0644\u0629 \u062b\u0642\u0627\u0641\u064a\u0629 \u0641\u064a Hanoi \u0627\u0644\u0642\u062f\u064a\u0645\u0629 \u062a\u0634\u0645\u0644 \u0633\u0648\u0642 \u062f\u0648\u0646\u063a \u0633\u0648\u0627\u0646 \u0648\u0631\u0643\u0648\u0628 \u0627\u0644\u0633\u064a\u0643\u0644\u0648 \u0648\u062a\u0630\u0648\u0642 \u0627\u0644\u0642\u0647\u0648\u0629 \u0627\u0644\u0641\u064a\u062a\u0646\u0627\u0645\u064a\u0629 \u0627\u0644\u062a\u0642\u0644\u064a\u062f\u064a\u0629."}, {"dayNumber": 3, "label": "\u0627\u0644\u064a\u0648\u0645 3", "summary": "\u0632\u064a\u0627\u0631\u0629 Ninh Binh \u0645\u0639 \u062a\u0627\u0645 \u0643\u0648\u0643 \u0648\u0647\u0627\u0646\u063a \u0645\u0648\u0627 \u062b\u0645 \u0627\u0644\u0639\u0648\u062f\u0629 \u0625\u0644\u0649 Hanoi."}], "city": "Hanoi", "coords": [21.0285, 105.8542], "dayEnd": 3, "dayStart": 1, "daysLabel": "\u0627\u0644\u0623\u064a\u0627\u0645 1-3", "displayName": "Hanoi", "excursions": ["Ninh Binh"], "hotelDateRange": "10 Aug \u2013 13 Aug 2026", "hotelImage": "/assets/hotels/hanoi/minasi-nguyen-truong-to/exterior/1.jpg", "hotelName": "Minasi Premium Hotel", "nights": 3, "nightsLabel": "3 \u0644\u064a\u0627\u0644\u064d", "order": 1, "segmentId": "stay-1", "transportFromPrevious": ""}, {"activityPreviews": [{"dayNumber": 4, "label": "\u0627\u0644\u064a\u0648\u0645 4", "summary": "\u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0628\u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629 \u0645\u0646 Hanoi \u0625\u0644\u0649 Halong Bay \u0648\u0627\u0644\u0635\u0639\u0648\u062f \u0625\u0644\u0649 \u0627\u0644\u0643\u0631\u0648\u0632 \u0644\u0644\u0645\u0628\u064a\u062a."}], "city": "Halong Bay", "coords": [20.9599, 107.0436], "dayEnd": 4, "dayStart": 4, "daysLabel": "\u0627\u0644\u064a\u0648\u0645 4", "displayName": "Halong Bay", "excursions": [], "hotelDateRange": "13 Aug \u2013 14 Aug 2026", "hotelImage": "/assets/hotels/halong/cruise-la-casta/exterior/2.jpg", "hotelName": "La Casta Cruise", "nights": 1, "nightsLabel": "\u0644\u064a\u0644\u0629 \u0648\u0627\u062d\u062f\u0629", "order": 2, "segmentId": "stay-2", "transportFromPrevious": "Hanoi \u2192 Halong Bay"}, {"activityPreviews": [{"dayNumber": 5, "label": "\u0627\u0644\u064a\u0648\u0645 5", "summary": "\u0645\u063a\u0627\u062f\u0631\u0629 \u0627\u0644\u0643\u0631\u0648\u0632 \u0648\u0627\u0644\u0639\u0648\u062f\u0629 \u0645\u0646 Halong Bay \u0625\u0644\u0649 Hanoi \u0628\u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."}], "city": "Hanoi", "coords": [21.0285, 105.8542], "dayEnd": 5, "dayStart": 5, "daysLabel": "\u0627\u0644\u064a\u0648\u0645 5", "displayName": "Hanoi", "excursions": [], "hotelDateRange": "14 Aug \u2013 15 Aug 2026", "hotelImage": "/assets/hotels/hanoi/minasi-nguyen-truong-to/exterior/1.jpg", "hotelName": "Minasi Premium Hotel", "nights": 1, "nightsLabel": "\u0644\u064a\u0644\u0629 \u0648\u0627\u062d\u062f\u0629", "order": 3, "segmentId": "stay-3", "transportFromPrevious": "Halong Bay \u2192 Hanoi"}, {"activityPreviews": [{"dayNumber": 6, "label": "\u0627\u0644\u064a\u0648\u0645 6", "summary": "\u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0645\u0646 Hanoi \u0625\u0644\u0649 Sapa \u0628\u0648\u0627\u0633\u0637\u0629 \u0628\u0627\u0635 \u0627\u0644\u0646\u0648\u0645 \u0627\u0644\u0645\u0631\u064a\u062d \u0648\u0627\u0644\u0627\u0633\u062a\u0642\u0631\u0627\u0631 \u0641\u064a \u0627\u0644\u0641\u0646\u062f\u0642."}, {"dayNumber": 7, "label": "\u0627\u0644\u064a\u0648\u0645 7", "summary": "\u0632\u064a\u0627\u0631\u0629 \u0642\u0645\u0629 \u0641\u0627\u0646\u0633\u064a\u0628\u0627\u0646 \u0628\u0627\u0644\u062a\u0644\u0641\u0631\u064a\u0643 \u0648\u0627\u0633\u062a\u0643\u0634\u0627\u0641 \u0642\u0631\u064a\u0629 \u0643\u0627\u062a \u0643\u0627\u062a \u0627\u0644\u062a\u0642\u0644\u064a\u062f\u064a\u0629."}, {"dayNumber": 8, "label": "\u0627\u0644\u064a\u0648\u0645 8", "summary": "\u062c\u0648\u0644\u0629 \u0645\u0634\u064a \u0644\u0627\u0633\u062a\u0643\u0634\u0627\u0641 \u0642\u0631\u0649 \u0644\u0627\u0648 \u062a\u0634\u0627\u064a \u0648\u062a\u0627 \u0641\u0627\u0646 \u0627\u0644\u062c\u0628\u0644\u064a\u0629 \u0648\u0632\u064a\u0627\u0631\u0629 \u0634\u0644\u0627\u0644 \u0627\u0644\u0641\u0636\u0629."}, {"dayNumber": 9, "label": "\u0627\u0644\u064a\u0648\u0645 9", "summary": "\u0632\u064a\u0627\u0631\u0629 \u0627\u0644\u062c\u0633\u0631 \u0627\u0644\u0632\u062c\u0627\u062c\u064a \u0627\u0644\u0634\u0627\u0647\u0642 \u0648\u0627\u0644\u0627\u0633\u062a\u0631\u062e\u0627\u0621 \u0641\u064a \u0645\u0642\u0647\u0649 \u0645\u0648\u0627\u0646\u0627 \u0627\u0644\u0645\u0637\u0644 \u0639\u0644\u0649 \u0627\u0644\u0648\u0627\u062f\u064a."}], "city": "Sapa", "coords": [22.3364, 103.8438], "dayEnd": 9, "dayStart": 6, "daysLabel": "\u0627\u0644\u0623\u064a\u0627\u0645 6-9", "displayName": "Sapa", "excursions": [], "hotelDateRange": "15 Aug \u2013 19 Aug 2026", "hotelImage": "/assets/hotels/danang/bora-hotel/exterior/1.jpg", "hotelName": "Bora Hotel", "nights": 4, "nightsLabel": "4 \u0644\u064a\u0627\u0644\u064d", "order": 4, "segmentId": "stay-4", "transportFromPrevious": "Hanoi \u2192 Sapa"}, {"activityPreviews": [{"dayNumber": 10, "label": "\u0627\u0644\u064a\u0648\u0645 10", "summary": "\u0627\u0644\u0639\u0648\u062f\u0629 \u0645\u0646 Sapa \u0625\u0644\u0649 Hanoi \u0628\u0648\u0627\u0633\u0637\u0629 \u062d\u0627\u0641\u0644\u0629 \u0627\u0644\u0646\u0648\u0645."}], "city": "Hanoi", "coords": [21.0285, 105.8542], "dayEnd": 10, "dayStart": 10, "daysLabel": "\u0627\u0644\u064a\u0648\u0645 10", "displayName": "Hanoi", "excursions": [], "hotelDateRange": "19 Aug \u2013 20 Aug 2026", "hotelImage": "/assets/hotels/hanoi/minasi-nguyen-truong-to/exterior/1.jpg", "hotelName": "Minasi Premium Hotel", "nights": 1, "nightsLabel": "\u0644\u064a\u0644\u0629 \u0648\u0627\u062d\u062f\u0629", "order": 5, "segmentId": "stay-5", "transportFromPrevious": "Sapa \u2192 Hanoi"}, {"activityPreviews": [{"dayNumber": 11, "label": "\u0627\u0644\u064a\u0648\u0645 11", "summary": "\u0631\u062d\u0644\u0629 \u062c\u0648\u064a\u0629 \u0645\u0646 Hanoi \u0625\u0644\u0649 Da Nang \u0645\u0639 \u062a\u062c\u0631\u0628\u0629 \u0643\u0631\u0648\u0632 \u0646\u0647\u0631 \u0647\u0627\u0646."}, {"dayNumber": 12, "label": "\u0627\u0644\u064a\u0648\u0645 12", "summary": "\u0632\u064a\u0627\u0631\u0629 \u0628\u0627 \u0646\u0627 \u0647\u064a\u0644\u0632."}, {"dayNumber": 13, "label": "\u0627\u0644\u064a\u0648\u0645 13", "summary": "\u0632\u064a\u0627\u0631\u0629 \u063a\u0627\u0628\u0629 \u062c\u0648\u0632 \u0627\u0644\u0647\u0646\u062f \u0628\u0627\u064a \u0645\u0627\u0648 \u0648\u0628\u0644\u062f\u0629 Hoi An \u0627\u0644\u0642\u062f\u064a\u0645\u0629 \u062b\u0645 \u0627\u0644\u0639\u0648\u062f\u0629 \u0625\u0644\u0649 Da Nang."}, {"dayNumber": 14, "label": "\u0627\u0644\u064a\u0648\u0645 14", "summary": "\u062a\u062c\u0631\u0628\u0629 \u0627\u0644\u0645\u063a\u0627\u0645\u0631\u0629 \u0648\u0627\u0644\u062a\u062c\u062f\u064a\u0641 \u0627\u0644\u0646\u0647\u0631\u064a \u0627\u0644\u0645\u062b\u064a\u0631 \u0641\u064a \u0645\u0646\u0637\u0642\u0629 \u0647\u0648\u0627 \u0641\u0648 \u062b\u0627\u0646\u0647."}], "city": "Da Nang", "coords": [16.0544, 108.2022], "dayEnd": 14, "dayStart": 11, "daysLabel": "\u0627\u0644\u0623\u064a\u0627\u0645 11-14", "displayName": "Da Nang", "excursions": ["Hoi An"], "hotelDateRange": "20 Aug \u2013 24 Aug 2026", "hotelImage": "/assets/hotels/danang/minh-toan-ocean/exterior/3.jpg", "hotelName": "Minh Toan SAFI Ocean Hotel", "nights": 4, "nightsLabel": "4 \u0644\u064a\u0627\u0644\u064d", "order": 6, "segmentId": "stay-6", "transportFromPrevious": "Hanoi \u2192 Da Nang"}, {"activityPreviews": [{"dayNumber": 15, "label": "\u0627\u0644\u064a\u0648\u0645 15", "summary": "\u0631\u062d\u0644\u0629 \u062c\u0648\u064a\u0629 \u0645\u0628\u0627\u0634\u0631\u0629 \u0645\u0646 Da Nang \u0625\u0644\u0649 Dalat \u062b\u0645 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644 \u0625\u0644\u0649 \u0627\u0644\u0641\u0646\u062f\u0642."}, {"dayNumber": 16, "label": "\u0627\u0644\u064a\u0648\u0645 16", "summary": "\u0627\u0633\u062a\u0643\u0634\u0627\u0641 \u0645\u0639\u0627\u0644\u0645 Dalat: \u062c\u0628\u0644 \u0644\u0627\u0646\u063a \u0628\u064a\u0627\u0646\u063a \u0648\u0627\u0644\u062a\u0644\u0641\u0631\u064a\u0643 \u0648\u0627\u0644\u0628\u064a\u062a \u0627\u0644\u0645\u062c\u0646\u0648\u0646 \u0648\u0646\u0641\u0642 \u0627\u0644\u0637\u064a\u0646."}, {"dayNumber": 17, "label": "\u0627\u0644\u064a\u0648\u0645 17", "summary": "\u0632\u064a\u0627\u0631\u0629 Fresh Garden \u0648\u0634\u0644\u0627\u0644 \u062f\u0627\u062a\u0627\u0646\u0644\u0627 \u0648\u0634\u0644\u0627\u0644 \u0627\u0644\u0641\u064a\u0644 \u0648\u0645\u0642\u0647\u0649 \u0645\u064a \u0644\u064a\u0646\u0647."}], "city": "Dalat", "coords": [11.9404, 108.4583], "dayEnd": 17, "dayStart": 15, "daysLabel": "\u0627\u0644\u0623\u064a\u0627\u0645 15-17", "displayName": "Dalat", "excursions": [], "hotelDateRange": "24 Aug \u2013 27 Aug 2026", "hotelImage": "/assets/hotels/dalat/cicilia-rouge-dalat/exterior/1.jpg", "hotelName": "CICILIA Rouge Dalat", "nights": 3, "nightsLabel": "3 \u0644\u064a\u0627\u0644\u064d", "order": 7, "segmentId": "stay-7", "transportFromPrevious": "Da Nang \u2192 Dalat"}, {"activityPreviews": [{"dayNumber": 18, "label": "\u0627\u0644\u064a\u0648\u0645 18", "summary": "\u0631\u062d\u0644\u0629 \u062c\u0648\u064a\u0629 \u0645\u0628\u0627\u0634\u0631\u0629 \u0645\u0646 Dalat \u0625\u0644\u0649 Ho Chi Minh City \u062b\u0645 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644 \u0625\u0644\u0649 \u0627\u0644\u0641\u0646\u062f\u0642."}, {"dayNumber": 19, "label": "\u0627\u0644\u064a\u0648\u0645 19", "summary": "\u0632\u064a\u0627\u0631\u0629 \u0623\u0646\u0641\u0627\u0642 \u0643\u0648 \u062a\u0634\u064a \u0648\u0645\u0642\u0647\u0649 \u0627\u0644\u0634\u0642\u0642 \u0648\u0633\u0648\u0642 \u0628\u0646 \u062b\u0627\u0646\u0647 \u0648\u0645\u0643\u062a\u0628 \u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0645\u0631\u0643\u0632\u064a."}, {"dayNumber": 20, "label": "\u0627\u0644\u064a\u0648\u0645 20", "summary": "\u0632\u064a\u0627\u0631\u0629 Mekong Delta \u062b\u0645 \u0627\u0644\u0639\u0648\u062f\u0629 \u0625\u0644\u0649 Ho Chi Minh City."}, {"dayNumber": 21, "label": "\u0627\u0644\u064a\u0648\u0645 21", "summary": "\u0645\u063a\u0627\u062f\u0631\u0629 Ho Chi Minh City \u0648\u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0625\u0644\u0649 \u0627\u0644\u0645\u0637\u0627\u0631 \u0644\u0644\u0631\u062d\u0644\u0629 \u0627\u0644\u062f\u0648\u0644\u064a\u0629."}], "city": "Ho Chi Minh City", "coords": [10.8231, 106.6297], "dayEnd": 21, "dayStart": 18, "daysLabel": "\u0627\u0644\u0623\u064a\u0627\u0645 18-21", "displayName": "Ho Chi Minh City", "excursions": ["Mekong Delta"], "hotelDateRange": "27 Aug \u2013 30 Aug 2026", "hotelImage": "/assets/hotels/saigon/cicilia-saigon/interior/2.jpg", "hotelName": "Cicilia Saigon Center", "nights": 4, "nightsLabel": "4 \u0644\u064a\u0627\u0644\u064d", "order": 8, "segmentId": "stay-8", "transportFromPrevious": "Dalat \u2192 Ho Chi Minh City"}]
+  [{"activityPreviews": [{"dayNumber": 1, "label": "\u0627\u0644\u064a\u0648\u0645 1", "summary": "\u0627\u0644\u0648\u0635\u0648\u0644 \u0625\u0644\u0649 Hanoi \u0648\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644 \u0625\u0644\u0649 \u0627\u0644\u0641\u0646\u062f\u0642."}, {"dayNumber": 2, "label": "\u0627\u0644\u064a\u0648\u0645 2", "summary": "\u062c\u0648\u0644\u0629 \u062b\u0642\u0627\u0641\u064a\u0629 \u0641\u064a Hanoi \u0627\u0644\u0642\u062f\u064a\u0645\u0629 \u062a\u0634\u0645\u0644 Dong Xuan Market \u0648\u0631\u0643\u0648\u0628 \u0627\u0644\u0633\u064a\u0643\u0644\u0648 \u0648\u062a\u0630\u0648\u0642 \u0627\u0644\u0642\u0647\u0648\u0629 \u0627\u0644\u0641\u064a\u062a\u0646\u0627\u0645\u064a\u0629 \u0627\u0644\u062a\u0642\u0644\u064a\u062f\u064a\u0629."}, {"dayNumber": 3, "label": "\u0627\u0644\u064a\u0648\u0645 3", "summary": "\u0632\u064a\u0627\u0631\u0629 Ninh Binh \u0645\u0639 Tam Coc \u0648Hang Mua \u062b\u0645 \u0627\u0644\u0639\u0648\u062f\u0629 \u0625\u0644\u0649 Hanoi."}], "city": "Hanoi", "coords": [21.0285, 105.8542], "dayEnd": 3, "dayStart": 1, "daysLabel": "\u0627\u0644\u0623\u064a\u0627\u0645 1-3", "displayName": "Hanoi", "excursions": ["Ninh Binh"], "hotelDateRange": "10 \u0623\u063a\u0633\u0637\u0633 \u2013 13 \u0623\u063a\u0633\u0637\u0633 2026", "hotelImage": "/assets/hotels/hanoi/minasi-nguyen-truong-to/exterior/1.jpg", "hotelName": "Minasi Premium Hotel", "nights": 3, "nightsLabel": "3 \u0644\u064a\u0627\u0644\u064d", "order": 1, "segmentId": "stay-1", "transportFromPrevious": ""}, {"activityPreviews": [{"dayNumber": 4, "label": "\u0627\u0644\u064a\u0648\u0645 4", "summary": "\u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0628\u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629 \u0645\u0646 Hanoi \u0625\u0644\u0649 Halong Bay \u0648\u0627\u0644\u0635\u0639\u0648\u062f \u0625\u0644\u0649 \u0627\u0644\u0643\u0631\u0648\u0632 \u0644\u0644\u0645\u0628\u064a\u062a."}], "city": "Halong Bay", "coords": [20.9599, 107.0436], "dayEnd": 4, "dayStart": 4, "daysLabel": "\u0627\u0644\u064a\u0648\u0645 4", "displayName": "Halong Bay", "excursions": [], "hotelDateRange": "13 \u0623\u063a\u0633\u0637\u0633 \u2013 14 \u0623\u063a\u0633\u0637\u0633 2026", "hotelImage": "/assets/hotels/halong/cruise-la-casta/exterior/2.jpg", "hotelName": "La Casta Cruise", "nights": 1, "nightsLabel": "\u0644\u064a\u0644\u0629 \u0648\u0627\u062d\u062f\u0629", "order": 2, "segmentId": "stay-2", "transportFromPrevious": "Hanoi \u2192 Halong Bay"}, {"activityPreviews": [{"dayNumber": 5, "label": "\u0627\u0644\u064a\u0648\u0645 5", "summary": "\u0645\u063a\u0627\u062f\u0631\u0629 \u0627\u0644\u0643\u0631\u0648\u0632 \u0648\u0627\u0644\u0639\u0648\u062f\u0629 \u0645\u0646 Halong Bay \u0625\u0644\u0649 Hanoi \u0628\u0633\u064a\u0627\u0631\u0629 \u062e\u0627\u0635\u0629."}], "city": "Hanoi", "coords": [21.0285, 105.8542], "dayEnd": 5, "dayStart": 5, "daysLabel": "\u0627\u0644\u064a\u0648\u0645 5", "displayName": "Hanoi", "excursions": [], "hotelDateRange": "14 \u0623\u063a\u0633\u0637\u0633 \u2013 15 \u0623\u063a\u0633\u0637\u0633 2026", "hotelImage": "/assets/hotels/hanoi/minasi-nguyen-truong-to/exterior/1.jpg", "hotelName": "Minasi Premium Hotel", "nights": 1, "nightsLabel": "\u0644\u064a\u0644\u0629 \u0648\u0627\u062d\u062f\u0629", "order": 3, "segmentId": "stay-3", "transportFromPrevious": "Halong Bay \u2192 Hanoi"}, {"activityPreviews": [{"dayNumber": 6, "label": "\u0627\u0644\u064a\u0648\u0645 6", "summary": "\u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0645\u0646 Hanoi \u0625\u0644\u0649 Sapa \u0628\u0648\u0627\u0633\u0637\u0629 \u0628\u0627\u0635 \u0627\u0644\u0646\u0648\u0645 \u0627\u0644\u0645\u0631\u064a\u062d \u0648\u0627\u0644\u0627\u0633\u062a\u0642\u0631\u0627\u0631 \u0641\u064a \u0627\u0644\u0641\u0646\u062f\u0642."}, {"dayNumber": 7, "label": "\u0627\u0644\u064a\u0648\u0645 7", "summary": "\u0632\u064a\u0627\u0631\u0629 Fansipan \u0628\u0627\u0644\u062a\u0644\u0641\u0631\u064a\u0643 \u0648\u0627\u0633\u062a\u0643\u0634\u0627\u0641 Cat Cat Village \u0627\u0644\u062a\u0642\u0644\u064a\u062f\u064a\u0629."}, {"dayNumber": 8, "label": "\u0627\u0644\u064a\u0648\u0645 8", "summary": "\u062c\u0648\u0644\u0629 \u0645\u0634\u064a \u0644\u0627\u0633\u062a\u0643\u0634\u0627\u0641 \u0642\u0631\u0649 Lao Chai \u0648Ta Van \u0627\u0644\u062c\u0628\u0644\u064a\u0629 \u0648\u0632\u064a\u0627\u0631\u0629 \u0634\u0644\u0627\u0644 \u0627\u0644\u0641\u0636\u0629."}, {"dayNumber": 9, "label": "\u0627\u0644\u064a\u0648\u0645 9", "summary": "\u0632\u064a\u0627\u0631\u0629 \u0627\u0644\u062c\u0633\u0631 \u0627\u0644\u0632\u062c\u0627\u062c\u064a \u0627\u0644\u0634\u0627\u0647\u0642 \u0648\u0627\u0644\u0627\u0633\u062a\u0631\u062e\u0627\u0621 \u0641\u064a \u0645\u0642\u0647\u0649 \u0645\u0648\u0627\u0646\u0627 \u0627\u0644\u0645\u0637\u0644 \u0639\u0644\u0649 \u0627\u0644\u0648\u0627\u062f\u064a."}], "city": "Sapa", "coords": [22.3364, 103.8438], "dayEnd": 9, "dayStart": 6, "daysLabel": "\u0627\u0644\u0623\u064a\u0627\u0645 6-9", "displayName": "Sapa", "excursions": [], "hotelDateRange": "15 \u0623\u063a\u0633\u0637\u0633 \u2013 19 \u0623\u063a\u0633\u0637\u0633 2026", "hotelImage": "/assets/hotels/danang/bora-hotel/exterior/1.jpg", "hotelName": "Bora Hotel", "nights": 4, "nightsLabel": "4 \u0644\u064a\u0627\u0644\u064d", "order": 4, "segmentId": "stay-4", "transportFromPrevious": "Hanoi \u2192 Sapa"}, {"activityPreviews": [{"dayNumber": 10, "label": "\u0627\u0644\u064a\u0648\u0645 10", "summary": "\u0627\u0644\u0639\u0648\u062f\u0629 \u0645\u0646 Sapa \u0625\u0644\u0649 Hanoi \u0628\u0648\u0627\u0633\u0637\u0629 \u062d\u0627\u0641\u0644\u0629 \u0627\u0644\u0646\u0648\u0645."}], "city": "Hanoi", "coords": [21.0285, 105.8542], "dayEnd": 10, "dayStart": 10, "daysLabel": "\u0627\u0644\u064a\u0648\u0645 10", "displayName": "Hanoi", "excursions": [], "hotelDateRange": "19 \u0623\u063a\u0633\u0637\u0633 \u2013 20 \u0623\u063a\u0633\u0637\u0633 2026", "hotelImage": "/assets/hotels/hanoi/minasi-nguyen-truong-to/exterior/1.jpg", "hotelName": "Minasi Premium Hotel", "nights": 1, "nightsLabel": "\u0644\u064a\u0644\u0629 \u0648\u0627\u062d\u062f\u0629", "order": 5, "segmentId": "stay-5", "transportFromPrevious": "Sapa \u2192 Hanoi"}, {"activityPreviews": [{"dayNumber": 11, "label": "\u0627\u0644\u064a\u0648\u0645 11", "summary": "\u0631\u062d\u0644\u0629 \u062c\u0648\u064a\u0629 \u0645\u0646 Hanoi \u0625\u0644\u0649 Da Nang \u0645\u0639 \u062a\u062c\u0631\u0628\u0629 \u0643\u0631\u0648\u0632 \u0646\u0647\u0631 \u0647\u0627\u0646."}, {"dayNumber": 12, "label": "\u0627\u0644\u064a\u0648\u0645 12", "summary": "\u0632\u064a\u0627\u0631\u0629 Ba Na Hills."}, {"dayNumber": 13, "label": "\u0627\u0644\u064a\u0648\u0645 13", "summary": "\u0632\u064a\u0627\u0631\u0629 Bay Mau Coconut Forest \u0648\u0628\u0644\u062f\u0629 Hoi An \u0627\u0644\u0642\u062f\u064a\u0645\u0629 \u062b\u0645 \u0627\u0644\u0639\u0648\u062f\u0629 \u0625\u0644\u0649 Da Nang."}, {"dayNumber": 14, "label": "\u0627\u0644\u064a\u0648\u0645 14", "summary": "\u062a\u062c\u0631\u0628\u0629 \u0627\u0644\u0645\u063a\u0627\u0645\u0631\u0629 \u0648\u0627\u0644\u062a\u062c\u062f\u064a\u0641 \u0627\u0644\u0646\u0647\u0631\u064a \u0627\u0644\u0645\u062b\u064a\u0631 \u0641\u064a \u0645\u0646\u0637\u0642\u0629 Hoa Phu Thanh."}], "city": "Da Nang", "coords": [16.0544, 108.2022], "dayEnd": 14, "dayStart": 11, "daysLabel": "\u0627\u0644\u0623\u064a\u0627\u0645 11-14", "displayName": "Da Nang", "excursions": ["Hoi An"], "hotelDateRange": "20 \u0623\u063a\u0633\u0637\u0633 \u2013 24 \u0623\u063a\u0633\u0637\u0633 2026", "hotelImage": "/assets/hotels/danang/minh-toan-ocean/exterior/3.jpg", "hotelName": "Minh Toan SAFI Ocean Hotel", "nights": 4, "nightsLabel": "4 \u0644\u064a\u0627\u0644\u064d", "order": 6, "segmentId": "stay-6", "transportFromPrevious": "Hanoi \u2192 Da Nang"}, {"activityPreviews": [{"dayNumber": 15, "label": "\u0627\u0644\u064a\u0648\u0645 15", "summary": "\u0631\u062d\u0644\u0629 \u062c\u0648\u064a\u0629 \u0645\u0628\u0627\u0634\u0631\u0629 \u0645\u0646 Da Nang \u0625\u0644\u0649 Dalat \u062b\u0645 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644 \u0625\u0644\u0649 \u0627\u0644\u0641\u0646\u062f\u0642."}, {"dayNumber": 16, "label": "\u0627\u0644\u064a\u0648\u0645 16", "summary": "\u0627\u0633\u062a\u0643\u0634\u0627\u0641 \u0645\u0639\u0627\u0644\u0645 Dalat: \u062c\u0628\u0644 Lang Biang \u0648\u0627\u0644\u062a\u0644\u0641\u0631\u064a\u0643 \u0648\u0627\u0644\u0628\u064a\u062a \u0627\u0644\u0645\u062c\u0646\u0648\u0646 \u0648\u0646\u0641\u0642 \u0627\u0644\u0637\u064a\u0646."}, {"dayNumber": 17, "label": "\u0627\u0644\u064a\u0648\u0645 17", "summary": "\u0632\u064a\u0627\u0631\u0629 Fresh Garden \u0648Datanla Waterfall \u0648\u0634\u0644\u0627\u0644 \u0627\u0644\u0641\u064a\u0644 \u0648Me Linh Coffee."}], "city": "Dalat", "coords": [11.9404, 108.4583], "dayEnd": 17, "dayStart": 15, "daysLabel": "\u0627\u0644\u0623\u064a\u0627\u0645 15-17", "displayName": "Dalat", "excursions": [], "hotelDateRange": "24 \u0623\u063a\u0633\u0637\u0633 \u2013 27 \u0623\u063a\u0633\u0637\u0633 2026", "hotelImage": "/assets/hotels/dalat/cicilia-rouge-dalat/exterior/1.jpg", "hotelName": "CICILIA Rouge Dalat", "nights": 3, "nightsLabel": "3 \u0644\u064a\u0627\u0644\u064d", "order": 7, "segmentId": "stay-7", "transportFromPrevious": "Da Nang \u2192 Dalat"}, {"activityPreviews": [{"dayNumber": 18, "label": "\u0627\u0644\u064a\u0648\u0645 18", "summary": "\u0631\u062d\u0644\u0629 \u062c\u0648\u064a\u0629 \u0645\u0628\u0627\u0634\u0631\u0629 \u0645\u0646 Dalat \u0625\u0644\u0649 Ho Chi Minh City \u062b\u0645 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644 \u0625\u0644\u0649 \u0627\u0644\u0641\u0646\u062f\u0642."}, {"dayNumber": 19, "label": "\u0627\u0644\u064a\u0648\u0645 19", "summary": "\u0632\u064a\u0627\u0631\u0629 Cu Chi Tunnels \u0648\u0645\u0642\u0647\u0649 \u0627\u0644\u0634\u0642\u0642 \u0648Ben Thanh Market \u0648\u0645\u0643\u062a\u0628 \u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0645\u0631\u0643\u0632\u064a."}, {"dayNumber": 20, "label": "\u0627\u0644\u064a\u0648\u0645 20", "summary": "\u0632\u064a\u0627\u0631\u0629 Mekong Delta \u062b\u0645 \u0627\u0644\u0639\u0648\u062f\u0629 \u0625\u0644\u0649 Ho Chi Minh City."}, {"dayNumber": 21, "label": "\u0627\u0644\u064a\u0648\u0645 21", "summary": "\u0645\u063a\u0627\u062f\u0631\u0629 Ho Chi Minh City \u0648\u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0625\u0644\u0649 \u0627\u0644\u0645\u0637\u0627\u0631 \u0644\u0644\u0631\u062d\u0644\u0629 \u0627\u0644\u062f\u0648\u0644\u064a\u0629."}], "city": "Ho Chi Minh City", "coords": [10.8231, 106.6297], "dayEnd": 21, "dayStart": 18, "daysLabel": "\u0627\u0644\u0623\u064a\u0627\u0645 18-21", "displayName": "Ho Chi Minh City", "excursions": ["Mekong Delta"], "hotelDateRange": "27 \u0623\u063a\u0633\u0637\u0633 \u2013 30 \u0623\u063a\u0633\u0637\u0633 2026", "hotelImage": "/assets/hotels/saigon/cicilia-saigon/interior/2.jpg", "hotelName": "Cicilia Saigon Center", "nights": 4, "nightsLabel": "4 \u0644\u064a\u0627\u0644\u064d", "order": 8, "segmentId": "stay-8", "transportFromPrevious": "Dalat \u2192 Ho Chi Minh City"}]
 </script>
 
 <script>
