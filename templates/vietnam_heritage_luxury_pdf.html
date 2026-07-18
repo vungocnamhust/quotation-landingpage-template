@@ -1077,6 +1077,9 @@
 <script id="route-stops-data" type="application/json">
   {{ route_stops | tojson | safe }}
 </script>
+<script id="stay-segments-data" type="application/json">
+  {{ stay_segments | tojson | safe }}
+</script>
 
 <script>
   window.currentLang = "{{ lang }}";
@@ -1246,9 +1249,11 @@
 
     const dataEl = document.getElementById('itinerary-data');
     const routeStopsEl = document.getElementById('route-stops-data');
+    const staySegmentsEl = document.getElementById('stay-segments-data');
     if (dataEl) {
       const itineraryDays = JSON.parse(dataEl.textContent);
       const rawStops = routeStopsEl ? JSON.parse(routeStopsEl.textContent) : [];
+      const rawStaySegments = staySegmentsEl ? JSON.parse(staySegmentsEl.textContent) : [];
       
       const daysData = Array.isArray(rawStops) && rawStops.length > 0
         ? rawStops
@@ -1268,9 +1273,37 @@
             };
           });
 
+      function buildFallbackStaySegments(stops) {
+        const fallbackSegments = [];
+        let current = null;
+        stops.filter(day => day.showMarker !== false).forEach(day => {
+          const city = day.displayName || day.destination;
+          if (!city) return;
+          if (!current || current.displayName !== city) {
+            current = {
+              segmentId: `fallback-${fallbackSegments.length + 1}`,
+              order: fallbackSegments.length + 1,
+              displayName: city,
+              city,
+              coords: findCoordinates(city)
+            };
+            fallbackSegments.push(current);
+          }
+        });
+        return fallbackSegments;
+      }
+
+      const staySegments = Array.isArray(rawStaySegments) && rawStaySegments.length > 0
+        ? rawStaySegments
+        : buildFallbackStaySegments(daysData);
+
       const coordPoints = [];
-      const uniqueDestinations = [];
-      const displayStops = daysData.filter(day => day.showMarker !== false);
+      const mapSegments = staySegments.map((segment, idx) => ({
+        ...segment,
+        id: segment.segmentId || `stay-${idx + 1}`,
+        coords: Array.isArray(segment.coords) && segment.coords.length === 2 ? segment.coords : findCoordinates(segment.city || segment.displayName),
+        displayCoords: Array.isArray(segment.coords) && segment.coords.length === 2 ? segment.coords : findCoordinates(segment.city || segment.displayName)
+      })).filter(segment => Array.isArray(segment.coords) && segment.coords.length === 2);
 
       daysData.forEach(day => {
         const city = day.destination;
@@ -1281,20 +1314,42 @@
         }
       });
 
-      displayStops.forEach(day => {
-        const city = day.destination;
-        if (!city) return;
-        const coords = findCoordinates(city);
-        if (coords) {
-          const existing = uniqueDestinations.find(d => d.name === (day.displayName || city));
-          if (!existing) {
-            uniqueDestinations.push({ name: day.displayName || city, coords: coords });
-          }
-        }
+      function getOffsetPattern(index) {
+        const pattern = [
+          [0, 0],
+          [20, -14],
+          [-20, 14],
+          [0, 24],
+          [24, 10],
+          [-24, -10]
+        ];
+        return pattern[index] || [0, 0];
+      }
+
+      if (coordPoints.length > 0) {
+        map.fitBounds(L.latLngBounds(coordPoints), {
+          padding: [25, 25],
+          maxZoom: 12
+        });
+      }
+
+      const grouped = new Map();
+      mapSegments.forEach(segment => {
+        const key = `${segment.coords[0]},${segment.coords[1]}`;
+        if (!grouped.has(key)) grouped.set(key, []);
+        grouped.get(key).push(segment);
+      });
+      grouped.forEach(items => {
+        items.forEach((segment, occurrenceIdx) => {
+          const offset = getOffsetPattern(occurrenceIdx);
+          const point = map.project(segment.coords, map.getZoom());
+          const shifted = L.point(point.x + offset[0], point.y + offset[1]);
+          segment.displayCoords = map.unproject(shifted, map.getZoom());
+        });
       });
 
       // Draw markers
-      uniqueDestinations.forEach((dest, idx) => {
+      mapSegments.forEach((dest, idx) => {
         const html = `
           <div class="custom-marker">
             <div class="marker-pulse"></div>
@@ -1307,7 +1362,7 @@
           iconSize: [28, 28],
           iconAnchor: [14, 14]
         });
-        L.marker(dest.coords, { icon: customIcon }).addTo(map);
+        L.marker(dest.displayCoords, { icon: customIcon }).addTo(map);
       });
 
       // Draw polylines
@@ -1333,12 +1388,6 @@
         L.polyline(pathPoints, lineOptions).addTo(map);
       }
 
-      if (coordPoints.length > 0) {
-        map.fitBounds(L.latLngBounds(coordPoints), {
-          padding: [25, 25],
-          maxZoom: 12
-        });
-      }
     }
   });
 

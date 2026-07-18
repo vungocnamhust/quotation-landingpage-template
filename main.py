@@ -907,39 +907,43 @@ STATIC_DICTIONARY = {
     # Vietnamese Destinations translations
     "Hanoi": {
         "vi": "Hà Nội",
-        "ar": "Hanoi"
+        "ar": "هانوي"
     },
     "Ha Long Bay": {
         "vi": "Vịnh Hạ Long",
-        "ar": "Ha Long Bay"
+        "ar": "خليج ها لونغ"
     },
     "Halong Bay": {
         "vi": "Vịnh Hạ Long",
-        "ar": "Halong Bay"
+        "ar": "خليج ها لونغ"
     },
     "Halong": {
         "vi": "Hạ Long",
-        "ar": "Halong"
+        "ar": "ها لونغ"
     },
     "Sapa": {
         "vi": "Sa Pa",
-        "ar": "Sapa"
+        "ar": "سابا"
     },
     "Da Nang": {
         "vi": "Đà Nẵng",
-        "ar": "Da Nang"
+        "ar": "دا نانغ"
     },
     "Hoi An": {
         "vi": "Hội An",
-        "ar": "Hoi An"
+        "ar": "هوي آن"
     },
     "Dalat": {
         "vi": "Đà Lạt",
-        "ar": "Dalat"
+        "ar": "دالات"
+    },
+    "Da Lat": {
+        "vi": "Đà Lạt",
+        "ar": "دالات"
     },
     "Ninh Binh": {
         "vi": "Ninh Bình",
-        "ar": "Ninh Binh"
+        "ar": "نينه بينه"
     },
     "Ninh Bình": {
         "vi": "Ninh Bình",
@@ -947,19 +951,19 @@ STATIC_DICTIONARY = {
     },
     "Mekong Delta": {
         "vi": "Đồng bằng sông Cửu Long",
-        "ar": "Mekong Delta"
+        "ar": "دلتا ميكونغ"
     },
     "Ho Chi Minh City": {
         "vi": "Hồ Chí Minh",
-        "ar": "Ho Chi Minh City"
+        "ar": "مدينة هو تشي منه"
     },
     "Ho Chi Minh": {
         "vi": "Hồ Chí Minh",
-        "ar": "Ho Chi Minh"
+        "ar": "هو تشي منه"
     },
     "Saigon": {
         "vi": "Hồ Chí Minh",
-        "ar": "Ho Chi Minh City"
+        "ar": "مدينة هو تشي منه"
     },
 
     # Specialist Section
@@ -1035,6 +1039,35 @@ def translate_filter(text: str, lang: str = "en") -> str:
     return clean_text
 
 templates.env.filters["translate"] = translate_filter
+
+
+def localize_place_name(text: str, lang: str = "en") -> str:
+    if not text:
+        return ""
+    localized = translate_filter(text, lang)
+    if localized and localized != text:
+        return localized
+
+    slug = _normalize_location_slug(text)
+    if not slug:
+        return localized
+
+    canonical_by_slug = {
+        "ha-noi": "Hanoi",
+        "quang-ninh": "Halong Bay",
+        "lao-cai": "Sapa",
+        "da-nang": "Da Nang",
+        "quang-nam": "Hoi An",
+        "lam-dong": "Dalat",
+        "ninh-binh": "Ninh Binh",
+        "ho-chi-minh": "Ho Chi Minh City",
+        "mekong": "Mekong Delta",
+        "khanh-hoa": "Nha Trang",
+    }
+    canonical_name = canonical_by_slug.get(slug)
+    if not canonical_name:
+        return localized
+    return translate_filter(canonical_name, lang)
 
 async def translate_payload_llm(payload_dict: dict, target_lang: str, payload_type: str = "quotation", baseline_lang: str = "en") -> dict:
     """
@@ -1716,7 +1749,7 @@ def _compress_route_sequence(stops: list[str]) -> list[str]:
 
 
 def _build_factual_day_title(day_number: int, stops: list[str], lang: str) -> str:
-    clean_stops = [truncate_text(stop, 40) for stop in stops if stop]
+    clean_stops = [truncate_text(localize_place_name(stop, lang), 40) for stop in stops if stop]
     if not clean_stops:
         clean_stops = ["Vietnam"]
     day_label = {
@@ -1732,9 +1765,10 @@ def _build_route_stop_label(day_number: int, stop: str, lang: str, *, prefix: st
         "vi": f"Ngày {day_number}",
         "ar": f"اليوم {day_number}",
     }.get(lang, f"Day {day_number}")
+    localized_stop = localize_place_name(stop, lang)
     if prefix:
-        return f"{day_label} — {prefix} {stop}"
-    return f"{day_label} — {stop}"
+        return f"{day_label} — {prefix} {localized_stop}"
+    return f"{day_label} — {localized_stop}"
 
 
 def _build_route_stops_from_timeline(timeline_days: list[dict]) -> list[dict]:
@@ -1769,16 +1803,181 @@ def _build_route_stops_from_timeline(timeline_days: list[dict]) -> list[dict]:
                 show_marker = False
             elif len(day_stops) > 1:
                 map_title = _build_route_stop_label(day["dayNumber"], stop, day.get("lang", "en"))
+            localized_stop = localize_place_name(stop, day.get("lang", "en"))
             route_stops.append({
                 "dayNumber": day["dayNumber"],
                 "stopOrder": idx,
                 "destination": stop,
-                "displayName": stop,
+                "displayName": localized_stop,
                 "mapTitle": map_title,
                 "kind": kind,
                 "showMarker": show_marker,
             })
     return route_stops
+
+
+def _format_day_range_label(day_start: int, day_end: int, lang: str) -> str:
+    if day_start == day_end:
+        return {
+            "vi": f"Ngày {day_start}",
+            "ar": f"اليوم {day_start}",
+        }.get(lang, f"Day {day_start}")
+    return {
+        "vi": f"Ngày {day_start}-{day_end}",
+        "ar": f"الأيام {day_start}-{day_end}",
+    }.get(lang, f"Days {day_start}-{day_end}")
+
+
+def _format_nights_label(nights: int, lang: str) -> str:
+    if lang == "vi":
+        return f"{nights} đêm"
+    if lang == "ar":
+        return f"{nights} ليالٍ" if nights != 1 else "ليلة واحدة"
+    return f"{nights} night" if nights == 1 else f"{nights} nights"
+
+
+def _normalize_location_slug(location: str) -> str | None:
+    if not location:
+        return None
+    from image_selector import resolve_slug_locally
+    resolved = resolve_slug_locally(location)
+    if resolved:
+        return resolved
+
+    normalized = location.lower().strip()
+    extra_keywords = {
+        "هانوي": "ha-noi",
+        "هانوى": "ha-noi",
+        "مدينة هو تشي منه": "ho-chi-minh",
+        "هو تشي منه": "ho-chi-minh",
+        "سايغون": "ho-chi-minh",
+        "دا نانغ": "da-nang",
+        "دانانغ": "da-nang",
+        "هوي آن": "quang-nam",
+        "هوي ان": "quang-nam",
+        "خليج ها لونغ": "quang-ninh",
+        "خليج هالونج": "quang-ninh",
+        "هالونغ": "quang-ninh",
+        "سابا": "lao-cai",
+        "نينه بينه": "ninh-binh",
+        "نها ترانغ": "khanh-hoa",
+        "نها ترانج": "khanh-hoa",
+        "دالات": "lam-dong",
+        "دلتا ميكونغ": "mekong",
+    }
+    if normalized in extra_keywords:
+        return extra_keywords[normalized]
+    for keyword, slug in extra_keywords.items():
+        if keyword in normalized:
+            return slug
+    return None
+
+
+def _build_stay_segments_from_timeline(
+    timeline_days: list[dict],
+    hotel_plan_items: list[dict],
+    lang: str,
+) -> list[dict]:
+    stay_segments: list[dict] = []
+    if not timeline_days:
+        return stay_segments
+
+    grouped_days: list[list[dict]] = []
+    current_group: list[dict] = []
+    current_overnight_slug = None
+
+    for day in timeline_days:
+        overnight = day.get("overnight") or (day.get("destinations") or [None])[-1]
+        overnight_slug = _normalize_location_slug(overnight or "")
+        if not current_group or overnight_slug == current_overnight_slug:
+            current_group.append(day)
+            current_overnight_slug = overnight_slug
+            continue
+        grouped_days.append(current_group)
+        current_group = [day]
+        current_overnight_slug = overnight_slug
+    if current_group:
+        grouped_days.append(current_group)
+
+    hotel_cursor = 0
+    for order, days in enumerate(grouped_days, start=1):
+        first_day = days[0]
+        last_day = days[-1]
+        city = last_day.get("overnight") or (last_day.get("destinations") or [None])[-1] or "Vietnam"
+        city_slug = _normalize_location_slug(city)
+        display_name = localize_place_name(city, lang)
+
+        matched_hotel = None
+        for idx in range(hotel_cursor, len(hotel_plan_items)):
+            hotel = hotel_plan_items[idx]
+            hotel_slug = _normalize_location_slug(hotel.get("destination", ""))
+            if city_slug and hotel_slug == city_slug:
+                matched_hotel = hotel
+                hotel_cursor = idx + 1
+                break
+            if not city_slug and hotel.get("destination") == city:
+                matched_hotel = hotel
+                hotel_cursor = idx + 1
+                break
+        if matched_hotel is None and hotel_cursor < len(hotel_plan_items):
+            matched_hotel = hotel_plan_items[hotel_cursor]
+            hotel_cursor += 1
+
+        excursions: list[str] = []
+        activity_previews: list[dict] = []
+        for day in days:
+            day_destinations = [dest for dest in (day.get("destinations") or []) if dest]
+            excursion_candidates = day_destinations[1:-1] if len(day_destinations) > 2 else []
+            for dest in excursion_candidates:
+                if not dest or _normalize_location_slug(dest) == city_slug:
+                    continue
+                translated_dest = localize_place_name(dest, lang)
+                if translated_dest not in excursions:
+                    excursions.append(translated_dest)
+            description = ""
+            if day.get("description"):
+                description = day["description"][0]
+            elif day.get("activities"):
+                description = day["activities"][0]
+            if description:
+                activity_previews.append({
+                    "dayNumber": day["dayNumber"],
+                    "label": {
+                        "vi": f"Ngày {day['dayNumber']}",
+                        "ar": f"اليوم {day['dayNumber']}",
+                    }.get(lang, f"Day {day['dayNumber']}"),
+                    "summary": truncate_text(description, 120),
+                })
+
+        day_start = first_day["dayNumber"]
+        day_end = last_day["dayNumber"]
+        nights = max(1, day_end - day_start + 1)
+        stay_segments.append({
+            "segmentId": f"stay-{order}",
+            "order": order,
+            "city": city,
+            "displayName": display_name,
+            "dayStart": day_start,
+            "dayEnd": day_end,
+            "daysLabel": _format_day_range_label(day_start, day_end, lang),
+            "nights": nights,
+            "nightsLabel": _format_nights_label(nights, lang),
+            "hotelName": matched_hotel.get("name", "") if matched_hotel else "",
+            "hotelImage": matched_hotel.get("hotel_img", "") if matched_hotel else "",
+            "hotelDateRange": matched_hotel.get("date_range", "") if matched_hotel else "",
+            "coords": list(SLUG_COORDS.get(city_slug, ())) if city_slug in SLUG_COORDS else None,
+            "excursions": excursions,
+            "activityPreviews": activity_previews,
+            "transportFromPrevious": "",
+        })
+
+    for idx, segment in enumerate(stay_segments):
+        if idx == 0:
+            continue
+        previous = stay_segments[idx - 1]
+        segment["transportFromPrevious"] = f"{previous['displayName']} → {segment['displayName']}"
+
+    return stay_segments
 
 
 def _build_timeline_days(
@@ -1793,10 +1992,10 @@ def _build_timeline_days(
 
     for itinerary_day in payload.itinerary:
         override_day = day_overrides.get(str(itinerary_day.dayNumber), {})
-        destinations = override_day.get("destinations") or [truncate_text(itinerary_day.destination, 40)]
-        destinations = [truncate_text(dest, 40) for dest in destinations if dest]
+        raw_destinations = override_day.get("destinations") or [itinerary_day.destination]
+        destinations = [truncate_text(localize_place_name(dest, lang), 40) for dest in raw_destinations if dest]
         overnight = truncate_text(
-            override_day.get("overnight", itinerary_day.destination),
+            localize_place_name(override_day.get("overnight", itinerary_day.destination), lang),
             40,
         )
         title = truncate_text(
@@ -2114,6 +2313,8 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
             hotel_plan_items.append(details)
         hotel_room_notes = truncate_text(payload.hotelPlan.roomNotes or "", 200)
 
+    stay_segments = _build_stay_segments_from_timeline(timeline_days, hotel_plan_items, lang)
+
     # Optional Enhancements defaults/fallbacks
     opt_enhancements = []
     if payload.optionalEnhancements:
@@ -2245,6 +2446,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         "itinerary":    mapped_itinerary,
         "timeline_days": mapped_itinerary,
         "route_stops": route_stops,
+        "stay_segments": stay_segments,
         # Pricing section
         "currency":       currency,
         "pricing_title":  translate_filter("Journey Investment", lang),

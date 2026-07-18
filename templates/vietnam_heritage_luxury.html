@@ -3035,6 +3035,9 @@
   <script id="route-stops-data" type="application/json">
     {{ route_stops | tojson | safe }}
   </script>
+  <script id="stay-segments-data" type="application/json">
+    {{ stay_segments | tojson | safe }}
+  </script>
   <script>
     window.currentLang = "{{ lang }}";
     document.addEventListener("DOMContentLoaded", function () {
@@ -3237,10 +3240,45 @@
         };
       });
       const stopsData = Array.isArray(rawStops) && rawStops.length > 0 ? rawStops : fallbackStops;
-
-      const mapDestinations = [];
+      const staySegmentsEl = document.getElementById('stay-segments-data');
+      const rawStaySegments = staySegmentsEl ? JSON.parse(staySegmentsEl.textContent) : [];
       const coordPoints = [];
       const displayStops = stopsData.filter(stop => stop.showMarker !== false);
+
+      function buildFallbackStaySegments(stops) {
+        const fallbackSegments = [];
+        let current = null;
+        stops.forEach(stop => {
+          if (!stop.displayName) return;
+          if (!current || current.displayName !== stop.displayName) {
+            current = {
+              segmentId: `fallback-${fallbackSegments.length + 1}`,
+              order: fallbackSegments.length + 1,
+              city: stop.displayName,
+              displayName: stop.displayName,
+              dayStart: stop.dayNumber,
+              dayEnd: stop.dayNumber,
+              daysLabel: `${window.currentLang === 'vi' ? 'Ngày' : (window.currentLang === 'ar' ? 'يوم' : 'Day')} ${stop.dayNumber}`,
+              nights: 1,
+              nightsLabel: window.currentLang === 'vi' ? '1 đêm' : (window.currentLang === 'ar' ? 'ليلة واحدة' : '1 night'),
+              hotelName: '',
+              hotelImage: '',
+              excursions: [],
+              activityPreviews: [],
+              transportFromPrevious: '',
+              coords: findCoordinates(stop.destination)
+            };
+            fallbackSegments.push(current);
+            return;
+          }
+          current.dayEnd = stop.dayNumber;
+        });
+        return fallbackSegments;
+      }
+
+      const staySegments = Array.isArray(rawStaySegments) && rawStaySegments.length > 0
+        ? rawStaySegments
+        : buildFallbackStaySegments(displayStops);
 
       stopsData.forEach(stop => {
         const coords = findCoordinates(stop.destination);
@@ -3248,33 +3286,21 @@
         coordPoints.push(coords);
       });
 
-      displayStops.forEach(stop => {
-        const coords = findCoordinates(stop.destination);
-        if (!coords) return;
+      const mapSegments = staySegments.map((segment, idx) => {
+        const resolvedCoords = Array.isArray(segment.coords) && segment.coords.length === 2
+          ? segment.coords
+          : findCoordinates(segment.city || segment.displayName);
+        const slug = resolveSlugLocally(segment.city || segment.displayName);
+        return {
+          ...segment,
+          id: segment.segmentId || `stay-${idx + 1}`,
+          coords: resolvedCoords,
+          displayCoords: resolvedCoords,
+          img: segment.hotelImage || ((slug && destImages[slug]) ? destImages[slug] : '/assets/vietnam-safar-logo.png')
+        };
+      }).filter(segment => Array.isArray(segment.coords) && segment.coords.length === 2);
 
-        const last = mapDestinations[mapDestinations.length - 1];
-        if (!last || last.name !== stop.displayName) {
-          const destName = stop.displayName.split(/->|-|\|/)[0].trim();
-          const slug = resolveSlugLocally(destName);
-          const imgUrl = (slug && destImages[slug]) ? destImages[slug] : '/assets/vietnam-safar-logo.png';
-
-          mapDestinations.push({
-            id: `dest-${mapDestinations.length}`,
-            name: destName,
-            coords: coords,
-            img: imgUrl,
-            days: [stop.dayNumber],
-            titles: [stop.mapTitle || destName]
-          });
-        } else {
-          last.days.push(stop.dayNumber);
-          if (stop.mapTitle && !last.titles.includes(stop.mapTitle)) {
-            last.titles.push(stop.mapTitle);
-          }
-        }
-      });
-
-      if (mapDestinations.length === 0) {
+      if (mapSegments.length === 0) {
         document.getElementById('route-map').style.display = 'none';
         return;
       }
@@ -3301,17 +3327,43 @@
       const shapePath = "M30,22 L70,22 C84,22 93,32 91,50 C89,68 82,78 68,78 L32,78 C18,78 9,68 9,50 C9,32 16,22 30,22 Z";
       let mapMode = 'classic'; // Default mode is classic
 
+      function getOffsetPattern(index) {
+        const pattern = [
+          [0, 0],
+          [20, -14],
+          [-20, 14],
+          [0, 24],
+          [24, 10],
+          [-24, -10]
+        ];
+        return pattern[index] || [0, 0];
+      }
+
+      function applyMarkerOffsets() {
+        const grouped = new Map();
+        mapSegments.forEach(segment => {
+          const key = `${segment.coords[0]},${segment.coords[1]}`;
+          if (!grouped.has(key)) grouped.set(key, []);
+          grouped.get(key).push(segment);
+        });
+
+        grouped.forEach(items => {
+          items.forEach((segment, occurrenceIdx) => {
+            const offset = getOffsetPattern(occurrenceIdx);
+            const point = map.project(segment.coords, map.getZoom());
+            const shifted = L.point(point.x + offset[0], point.y + offset[1]);
+            segment.displayCoords = map.unproject(shifted, map.getZoom());
+          });
+        });
+      }
+
       function drawMarkers() {
         // Clear existing markers
         markers.forEach(m => map.removeLayer(m));
         markers.length = 0;
 
-        mapDestinations.forEach((dest, idx) => {
-          const dayText = window.currentLang === 'vi' ? 'Ngày' : (window.currentLang === 'ar' ? 'يوم' : 'Day');
-          const daysText = window.currentLang === 'vi' ? 'Ngày' : (window.currentLang === 'ar' ? 'أيام' : 'Days');
-          const dayRangeStr = dest.days.length > 1
-            ? `${daysText} ${dest.days[0]}-${dest.days[dest.days.length - 1]}`
-            : `${dayText} ${dest.days[0]}`;
+        mapSegments.forEach((dest, idx) => {
+          const dayRangeStr = dest.daysLabel || '';
 
           let html = '';
           let iconSize = [];
@@ -3357,13 +3409,16 @@
 
           const popupContent = `
             <div class="map-popup">
-              <h4>${dest.name}</h4>
+              <h4>${dest.displayName}</h4>
               <strong style="color:var(--gold); font-size: 11px;">${dayRangeStr.toUpperCase()}</strong>
-              <p style="margin: 6px 0 0; font-size:12px; color:var(--muted);">${dest.titles[0]}</p>
+              ${dest.hotelName ? `<p style="margin: 6px 0 0; font-size:12px; color:var(--ink); font-weight:600;">${dest.hotelName}</p>` : ''}
+              <p style="margin: 6px 0 0; font-size:12px; color:var(--muted);">${dest.nightsLabel || ''}</p>
+              ${Array.isArray(dest.excursions) && dest.excursions.length > 0 ? `<p style="margin: 6px 0 0; font-size:12px; color:var(--muted);">${dest.excursions.join(' • ')}</p>` : ''}
+              ${Array.isArray(dest.activityPreviews) && dest.activityPreviews.length > 0 ? `<div style="margin-top:8px; font-size:11px; color:var(--muted);">${dest.activityPreviews.slice(0, 3).map(item => `<div>${item.label}: ${item.summary}</div>`).join('')}</div>` : ''}
             </div>
           `;
 
-          const marker = L.marker(dest.coords, { icon: customIcon })
+          const marker = L.marker(dest.displayCoords, { icon: customIcon })
             .addTo(map)
             .bindPopup(popupContent, { offset: popupOffset });
 
@@ -3375,8 +3430,9 @@
             card.className = `sidebar-card ${idx === 0 ? 'active' : ''}`;
             card.innerHTML = `
               <span class="days-badge">${dayRangeStr}</span>
-              <h4>${idx + 1}. ${dest.name}</h4>
-              <p>${dest.titles[0]}</p>
+              <h4>${dest.displayName}</h4>
+              <p>${dest.hotelName || ''}</p>
+              <p>${dest.nightsLabel || ''}${Array.isArray(dest.excursions) && dest.excursions.length > 0 ? ` · ${dest.excursions.join(' • ')}` : ''}</p>
             `;
 
             card.addEventListener('click', () => {
@@ -3403,9 +3459,6 @@
 
         drawMarkers();
       };
-
-      // Initial draw
-      drawMarkers();
 
       for (let i = 0; i < coordPoints.length - 1; i++) {
         const p1 = coordPoints[i];
@@ -3437,9 +3490,14 @@
         maxZoom: 12
       });
 
+      applyMarkerOffsets();
+
+      // Initial draw
+      drawMarkers();
+
       function selectDestination(index) {
-        const dest = mapDestinations[index];
-        map.setView(dest.coords, Math.max(map.getZoom(), 8), { animate: true });
+        const dest = mapSegments[index];
+        map.setView(dest.displayCoords, Math.max(map.getZoom(), 8), { animate: true });
         markers[index].openPopup();
 
         document.querySelectorAll('.sidebar-card').forEach(c => c.classList.remove('active'));
