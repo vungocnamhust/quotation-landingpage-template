@@ -691,7 +691,7 @@
         <div class="day-card">
           <div class="day-num">{{ day.dayNumber }}</div>
           <div>
-            <div class="day-badge">DAY {{ day.dayNumber }}{% if day.date %} · {{ day.date }}{% endif %}</div>
+            <div class="day-badge">DAY {{ day.dayNumber }}{% if day.date %} &middot; {{ day.date | format_date }}{% endif %}</div>
             <h3>{{ day.title }}</h3>
             {% for para in day.description %}
             <p style="margin-bottom: 6px;">{{ para }}</p>

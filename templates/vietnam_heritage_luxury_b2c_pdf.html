@@ -759,7 +759,7 @@
       <div class="day-card">
         <div class="day-num">{{ day.day_badge_text | default(day.dayNumber) }}</div>
         <div>
-          <div class="day-badge">{{ day.day_num_text | default("DAY " ~ day.dayNumber ~ ((" · " ~ day.date) if day.date else "")) }}</div>
+          <div class="day-badge">{{ day.day_num_text | default("DAY " ~ day.dayNumber ~ ((" &middot; " ~ (day.date | format_date)) if day.date else "")) }}</div>
           <h3>{{ day.title }}</h3>
           {% for para in day.description %}
           <p>{{ para }}</p>

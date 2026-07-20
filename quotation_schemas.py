@@ -64,6 +64,9 @@ class ItineraryDay(FrozenModel):
     dining: str = pydantic_Field(
         description="Dining arrangements or notes, including halal context if relevant."
     )
+    date: Optional[str] = pydantic_Field(
+        default=None, description="Actual date of this itinerary day (YYYY-MM-DD)."
+    )
 
 
 class LandingpageHeroSection(FrozenModel):

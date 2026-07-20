@@ -1386,6 +1386,33 @@ def rtl_mixed_filter(text: str, lang: str = "en"):
 templates.env.filters["rtl_mixed"] = rtl_mixed_filter
 
 
+def format_date_filter(date_str: str) -> str:
+    if not date_str:
+        return ""
+    try:
+        from datetime import datetime
+        formats = [
+            "%Y-%m-%d", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%SZ",
+            "%d/%m/%Y", "%m/%d/%Y",
+            "%Y/%m/%d", "%b %d, %Y", "%d %b %Y", "%B %d, %Y",
+            "%d %b %Y", "%d %B %Y"
+        ]
+        dt = None
+        for fmt in formats:
+            try:
+                dt = datetime.strptime(date_str.strip(), fmt)
+                break
+            except ValueError:
+                pass
+        if dt:
+            return dt.strftime("%d %b %Y")
+    except Exception:
+        pass
+    return str(date_str)
+
+templates.env.filters["format_date"] = format_date_filter
+
+
 def format_display_date_range(checkin: str, checkout: str) -> str:
     return format_display_date_range_for_lang(checkin, checkout, "en")
 
@@ -2403,10 +2430,19 @@ def _build_timeline_days(
     payload: "TourQuotationPayload",
     lang: str,
     manual_override: dict,
+    start_date_str: str = ""
 ) -> list[dict]:
+    from datetime import datetime, timedelta
     lang_override = _lang_override(manual_override, lang)
     day_overrides = lang_override.get("day_overrides", {})
     timeline_days: list[dict] = []
+
+    base_date = None
+    if start_date_str:
+        try:
+            base_date = datetime.strptime(start_date_str, "%Y-%m-%d")
+        except ValueError:
+            pass
 
     for itinerary_day in payload.itinerary:
         override_day = day_overrides.get(str(itinerary_day.dayNumber), {})
@@ -2432,9 +2468,17 @@ def _build_timeline_days(
             ),
             lang,
         )
+        day_date_str = getattr(itinerary_day, "date", "") or ""
+        if base_date:
+            try:
+                curr_date = base_date + timedelta(days=itinerary_day.dayNumber - 1)
+                day_date_str = curr_date.strftime("%Y-%m-%d")
+            except Exception:
+                pass
+
         timeline_days.append({
             "dayNumber": itinerary_day.dayNumber,
-            "date": "",
+            "date": day_date_str,
             "lang": lang,
             "title": title,
             "description": [summary] if summary else [],
@@ -2488,7 +2532,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
             
     guests_txt    = truncate_text(payload.journeyGlance.guestProfile, 100)
     
-    timeline_days = _build_timeline_days(quotation_id, payload, lang, manual_override)
+    timeline_days = _build_timeline_days(quotation_id, payload, lang, manual_override, start_date_str=quotation_start_date)
     route_stops = _build_route_stops_from_timeline(timeline_days)
     route_list = _compress_route_sequence([stop["displayName"] for stop in route_stops])
     route_txt = canonicalize_place_names_in_text(
@@ -4137,9 +4181,16 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
     new_price_options = []
     for p_idx, opt in enumerate(lang_ctx.get('price_options', []), 1):
         key = f"price_pax_{p_idx}"
-        if key in existing_keys:
-            if override_text and key in edited_fields:
-                opt['pricePerPerson']['displayText'] = edited_fields[key]
+        key_cat = f"price_opt_cat_{p_idx}"
+        key_name = f"price_opt_name_{p_idx}"
+        if key in existing_keys or key_cat in existing_keys or key_name in existing_keys:
+            if override_text:
+                if key in edited_fields:
+                    opt['pricePerPerson']['displayText'] = edited_fields[key]
+                if key_cat in edited_fields:
+                    opt['hotelCategory'] = edited_fields[key_cat]
+                if key_name in edited_fields:
+                    opt['optionName'] = edited_fields[key_name]
             new_price_options.append(opt)
     lang_ctx['price_options'] = new_price_options
 
@@ -6524,7 +6575,7 @@ def get_luxury_hotel_details(hotel_name_or_arr: str, destination: str, checkin: 
     room_img = ""
     
     # 1. Try resolving dynamically from the local database (Fusion Search + info.json)
-    resolved = resolve_hotel_details(raw_name, destination, index=index, lang=lang)
+    resolved = resolve_hotel_details(name, destination, index=index, lang=lang)
     if resolved:
         name = resolved["name"]
         tel = resolved["tel"]

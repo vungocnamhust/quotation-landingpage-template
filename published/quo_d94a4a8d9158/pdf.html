@@ -1,0 +1,2521 @@
+<!DOCTYPE html>
+<html lang="en" >
+
+<head>
+  <meta charset="UTF-8" />
+  <!-- Premium Typography Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700&family=Cinzel:wght@400;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap"
+    rel="stylesheet">
+  <title>A Privately Arranged Family Journey from Hanoi to Ho Chi Minh City — PDF Version</title>
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <style>
+    :root {
+      --ivory: #f8f3e9;
+      --ink: #11130f;
+      --muted: #706a5d;
+      --emerald: #17412e;
+      --emerald-2: #0e2f22;
+      --gold: #b7894b;
+      --gold-2: #d8bd85;
+      --line: rgba(183, 137, 75, .28);
+      --card: #fffaf1;
+      --charcoal: #171915;
+      --serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+      --sans: 'Plus Jakarta Sans', Arial, Helvetica, sans-serif;
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.6;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* Screen-only viewer styles */
+    @media screen {
+      body {
+        background: #525659;
+        /* PDF viewer gray */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 40px 0;
+        gap: 20px;
+      }
+    }
+
+    @media print {
+      body {
+        background-color: var(--ivory) !important;
+        padding: 0;
+        display: block;
+      }
+
+      .pdf-page {
+        width: auto !important;
+        min-height: auto !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+      }
+
+      .cover {
+        height: 100vh !important;
+      }
+    }
+
+    /* ── Page wrapper ── */
+    .pdf-page {
+      width: 794px;
+      min-height: 1123px;
+      background: var(--ivory);
+      page-break-after: always;
+      position: relative;
+    }
+
+    .pdf-page:last-of-type {
+      page-break-after: auto;
+    }
+
+    .ltr-token {
+      direction: ltr;
+      unicode-bidi: isolate;
+      display: inline-block;
+      text-align: left;
+    }
+
+    @media screen {
+      .pdf-page {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      }
+    }
+
+    /* ── Page watermark (fixed = repeats on every print page) ── */
+    .watermark {
+      position: fixed;
+      bottom: 10px;
+      right: 20px;
+      font-size: 9px;
+      color: rgba(0, 0, 0, .22);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      font-family: var(--sans);
+    }
+
+    /* ═══════════════════════════════════════════
+       PAGE 1 — Cover
+    ═══════════════════════════════════════════ */
+    .cover {
+      width: 794px;
+      height: 1123px;
+      background: linear-gradient(160deg, rgba(17, 19, 15, .88) 0%, rgba(17, 19, 15, .55) 55%, rgba(17, 19, 15, .18) 100%),
+        center/cover no-repeat;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 0;
+    }
+
+    .cover-body {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 24px;
+      align-items: end;
+      padding: 48px 48px 54px;
+    }
+
+    .cover-kicker {
+      color: var(--gold-2);
+      font-size: 10px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .cover h1 {
+      font-family: var(--serif);
+      font-size: 42px;
+      line-height: 1.15;
+      font-weight: 500;
+      letter-spacing: -.02em;
+      margin-bottom: 16px;
+      max-width: 420px;
+    }
+
+    .cover-lede {
+      font-size: 14px;
+      color: rgba(255, 255, 255, .76);
+      max-width: 380px;
+      line-height: 1.6;
+    }
+
+    /* Quote card on cover */
+    .quote-card {
+      background: rgba(255, 250, 241, .93);
+      color: var(--ink);
+      border-radius: 24px;
+      padding: 22px 24px;
+      border: 1px solid rgba(255, 255, 255, .6);
+    }
+
+    .quote-card h2 {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 14px;
+      color: var(--emerald);
+    }
+
+    .qrow {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(17, 19, 15, .1);
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .qrow:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .qrow strong {
+      color: var(--ink);
+      text-align: right;
+      font-size: 11px;
+    }
+
+    .qrow.stacked {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 3px;
+    }
+
+    .qrow.stacked strong {
+      text-align: left;
+    }
+
+    /* Strip bar at bottom of cover */
+    .cover-strip {
+      background: rgba(23, 65, 46, .92);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      padding: 16px 48px;
+    }
+
+    .strip-item {
+      text-align: center;
+    }
+
+    .strip-item span {
+      display: block;
+      color: var(--gold-2);
+      font-size: 8px;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .strip-item strong {
+      font-family: var(--serif);
+      font-size: 20px;
+      font-weight: 500;
+      color: white;
+      display: block;
+      margin-top: 3px;
+    }
+
+    /* ═══════════════════════════════════════════
+       Shared section styles
+    ═══════════════════════════════════════════ */
+    .page-inner {
+      padding: 44px 48px;
+    }
+
+    .section-label {
+      color: var(--gold);
+      font-size: 9px;
+      letter-spacing: .24em;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .section-h2 {
+      font-family: var(--serif);
+      font-size: 36px;
+      line-height: .98;
+      letter-spacing: -.04em;
+      font-weight: 500;
+      color: var(--emerald);
+      margin-bottom: 8px;
+    }
+
+    .section-p {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 24px;
+    }
+
+    /* ═══════════════════════════════════════════
+       PAGE 2 — Overview + Gallery
+    ═══════════════════════════════════════════ */
+    .experience-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .exp-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .exp-num {
+      color: var(--gold);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .18em;
+    }
+
+    .exp-card h3 {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--emerald);
+      margin: 8px 0 6px;
+      line-height: 1.1;
+    }
+
+    .exp-card p {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* Gallery 2-col for A4 */
+    .gallery {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      grid-auto-rows: 200px;
+      gap: 10px;
+    }
+
+    .img-tile {
+      border-radius: 18px;
+      overflow: hidden;
+      background: center/cover no-repeat;
+      position: relative;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .img-tile.large {
+      grid-row: span 2;
+    }
+
+    .img-tile::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 40%, rgba(17, 19, 15, .7));
+    }
+
+    .img-caption {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 14px;
+      color: white;
+    }
+
+    .img-caption small {
+      display: block;
+      color: var(--gold-2);
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: .18em;
+      font-weight: 700;
+    }
+
+    .img-caption strong {
+      font-family: var(--serif);
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    /* ═══════════════════════════════════════════
+       PAGE 3 — Itinerary
+    ═══════════════════════════════════════════ */
+    .itinerary {
+      display: grid;
+      gap: 10px;
+    }
+
+    .day-card {
+      display: grid;
+      grid-template-columns: 56px 1fr 140px;
+      gap: 16px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      align-items: start;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .day-num {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--emerald);
+      color: white;
+      display: grid;
+      place-items: center;
+      font-family: var(--serif);
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .day-card h3 {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--emerald);
+      margin: 2px 0 5px;
+      line-height: 1.1;
+    }
+
+    .day-badge {
+      font-size: 8px;
+      color: var(--gold);
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .day-card p {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .day-meta {
+      text-align: right;
+      padding-top: 6px;
+    }
+
+    .day-meta .price {
+      font-family: var(--serif);
+      font-size: 22px;
+      color: var(--emerald);
+      font-weight: 500;
+    }
+
+    .day-meta .price-sub {
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .day-meta .qty {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    /* ═══════════════════════════════════════════
+       PAGE 4 — Pricing + Inc/Exc
+    ═══════════════════════════════════════════ */
+    .pricing-block {
+      background: var(--charcoal);
+      border-radius: 24px;
+      padding: 32px;
+      color: white;
+      margin-bottom: 16px;
+      break-inside: avoid;
+    }
+
+    .pricing-block h2 {
+      font-family: var(--serif);
+      font-size: 32px;
+      font-weight: 500;
+      letter-spacing: -.04em;
+      margin-bottom: 8px;
+    }
+
+    .pricing-block .sub {
+      color: rgba(255, 255, 255, .68);
+      font-size: 12px;
+      margin-bottom: 20px;
+    }
+
+    .price-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .price-card {
+      background: rgba(255, 255, 255, .08);
+      border: 1px solid rgba(216, 189, 133, .35);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .price-card.featured {
+      background: linear-gradient(180deg, rgba(183, 137, 75, .25), rgba(255, 255, 255, .06));
+      border-color: var(--gold-2);
+    }
+
+    .price-card span {
+      color: var(--gold-2);
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    .price-card strong {
+      display: block;
+      font-family: var(--serif);
+      font-size: 28px;
+      font-weight: 500;
+      margin: 6px 0 2px;
+    }
+
+    .price-card small {
+      font-size: 10px;
+      color: rgba(255, 255, 255, .65);
+    }
+
+    .price-note {
+      margin-top: 14px;
+      font-size: 11px;
+      color: rgba(255, 255, 255, .55);
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 20px;
+      break-inside: avoid;
+    }
+
+    .panel h3 {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--emerald);
+      margin-bottom: 10px;
+    }
+
+    .panel ul {
+      padding-left: 18px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .panel ul li {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* ═══════════════════════════════════════════
+       PAGE 5 — Terms + CTA + Footer
+    ═══════════════════════════════════════════ */
+    .terms-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .term-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      break-inside: avoid;
+    }
+
+    .term-card .label {
+      font-size: 8px;
+      color: var(--gold);
+      font-weight: 800;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .term-card h3 {
+      font-family: var(--serif);
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--emerald);
+      margin-bottom: 6px;
+    }
+
+    .term-card p {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .cta-block {
+      background: linear-gradient(135deg, var(--emerald-2), #11130f 64%, #332711);
+      color: white;
+      border-radius: 24px;
+      padding: 32px;
+      display: grid;
+      grid-template-columns: 1fr 220px;
+      gap: 28px;
+      align-items: center;
+      break-inside: avoid;
+      margin-bottom: 20px;
+    }
+
+    .cta-block h2 {
+      font-family: var(--serif);
+      font-size: 32px;
+      font-weight: 500;
+      letter-spacing: -.04em;
+      line-height: .96;
+      margin-bottom: 10px;
+    }
+
+    .cta-block p {
+      color: rgba(255, 255, 255, .72);
+      font-size: 13px;
+    }
+
+    .contact-box {
+      background: rgba(255, 255, 255, .09);
+      border: 1px solid rgba(255, 255, 255, .2);
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .contact-box .clabel {
+      display: block;
+      color: var(--gold-2);
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: .16em;
+      font-weight: 800;
+      margin-top: 12px;
+    }
+
+    .contact-box .clabel:first-child {
+      margin-top: 0;
+    }
+
+    .contact-box .cval {
+      font-weight: 700;
+      font-size: 13px;
+      margin-top: 2px;
+    }
+
+    .pdf-footer {
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+      padding: 16px 0 20px;
+      border-top: 1px solid var(--line);
+      margin-top: 8px;
+    }
+
+    /* Page header bar (pages 2-5) */
+    .page-header {
+      background: var(--emerald);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 48px;
+    }
+
+    .page-header .brand {
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .page-header .ref {
+      color: var(--gold-2);
+      font-size: 9px;
+      letter-spacing: .1em;
+    }
+
+    html[dir="rtl"] {
+      direction: rtl;
+      --serif: 'Noto Sans Arabic', 'Amiri', Georgia, serif;
+      --sans: 'Noto Sans Arabic', 'Plus Jakarta Sans', Arial, sans-serif;
+    }
+
+    html[dir="rtl"] body {
+      direction: rtl;
+      text-align: right;
+    }
+
+    html[dir="rtl"] .qrow strong {
+      text-align: left;
+    }
+
+    html[dir="rtl"] .qrow.stacked strong {
+      text-align: right;
+    }
+
+    html[dir="rtl"] .day-meta {
+      text-align: left;
+    }
+
+    html[dir="rtl"] .hotel-pdf-card div[style*="text-align: right"] {
+      text-align: left !important;
+    }
+
+    html[dir="rtl"] table {
+      text-align: right;
+    }
+
+    html[dir="rtl"] th {
+      text-align: right;
+    }
+
+    html[dir="rtl"] .contact-box {
+      text-align: left;
+    }
+
+    /* Custom Leaflet Map Markers & Styling */
+    .custom-marker {
+      position: relative;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .marker-core {
+      width: 24px;
+      height: 24px;
+      background: var(--emerald);
+      border: 2px solid var(--gold-2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 800;
+      font-size: 11px;
+      box-shadow: 0 4px 12px rgba(17, 19, 15, 0.2);
+      z-index: 2;
+    }
+
+    .marker-pulse {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      background: rgba(183, 137, 75, 0.25);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .leaflet-control-attribution {
+      font-size: 8px !important;
+      background: rgba(255, 255, 255, 0.75) !important;
+    }
+
+    /* Clean up Map for Printing */
+    .leaflet-container {
+      background-color: var(--ivory) !important;
+    }
+
+    .leaflet-tile {
+      filter: sepia(0.7) hue-rotate(-10deg) saturate(0.4) contrast(1.05) brightness(0.98) !important;
+    }
+  </style>
+</head>
+
+<body >
+
+  <div class="watermark">Vietnam Safar · QT-2027-SARA-2PAX · Confidential</div>
+
+  <!-- ═══════════════════ PAGE 1 — Cover ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="cover"
+      style="background-image: linear-gradient(160deg,rgba(17,19,15,.88),rgba(17,19,15,.55) 55%,rgba(17,19,15,.18)), url('/assets/quang-nam/hoian3.jpg');">
+      <div class="cover-body">
+        <div>
+          <div
+            style="font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-2);margin-bottom:10px;font-weight:700;">
+            Confidential Proposal</div>
+          <div class="cover-kicker">Private Luxury Quotation ‒ 14D13N ‒ 01 Apr – 14 Apr 2027</div>
+          <h1>A Privately Arranged Family Journey from Hanoi to Ho Chi Minh City</h1>
+          <p class="cover-lede">A privately arranged family journey following a graceful north-to-south rhythm through Vietnam. Combining historic Hanoi, the limestone landscapes of Ninh Binh, an overnight cruise in Ha Long Bay, the mountain air of Sapa, the beaches and heritage towns of Central Vietnam, and a meaningful final chapter in Ho Chi Minh City.</p>
+        </div>
+        <div class="quote-card">
+          <h2>Journey Overview</h2>
+          <div class="qrow">
+            <span>Prepared for</span>
+            <strong>Family Vacation (2 Pax)</strong>
+          </div>
+          <div class="qrow">
+            <span>Overview</span>
+            <strong>PROGRAM OVERVIEW</strong>
+          </div>
+          
+          <div class="qrow">
+            <span>Guests</span>
+            <strong>Family Vacation (2 Pax)</strong>
+          </div>
+          
+          
+          <div class="qrow">
+            <span>Travel dates</span>
+            <strong><span class="ltr-token">01 Apr – 14 Apr 2027</span></strong>
+          </div>
+          
+          
+          <div class="qrow stacked">
+            <span>Route</span>
+            <strong>Hanoi – Ninh Binh – Hanoi – Halong Bay – Hanoi – Sapa – Da Nang – Hoi An – Ho Chi Minh City</strong>
+          </div>
+          
+          
+          <div class="qrow stacked">
+            <span>Style</span>
+            <strong>Early check-in in Hanoi included. Private guide and driver, premium overnight train cabin.</strong>
+          </div>
+          
+          <div class="qrow">
+            <span>Ref.</span>
+            <strong><span class="ltr-token">QT-2027-SARA-2PAX</span></strong>
+          </div>
+          <div class="qrow">
+            <span>Contact</span>
+            <strong><span class="ltr-token">+84 913 393 119</span></strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ PAGE 2 — Glance & Overview ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="page-header">
+      <span class="brand">Vietnam Safar — Travel Proposal</span>
+      <span class="ref"><span class="ltr-token">QT-2027-SARA-2PAX · 2027-04-01</span></span>
+    </div>
+    <div class="page-inner">
+
+      <div class="section-label" style="margin-top:20px;">Interactive Route map</div>
+      <h2 class="section-h2">Your Journey, Mapped</h2>
+      <div
+        style="margin-top: 15px; border-radius: 18px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 4px 16px rgba(17,19,15,0.04);">
+        <div id="map" style="width: 100%; height: 420px; display: block; z-index: 1;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ PAGE 3 — Why Works & Gallery ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="page-header">
+      <span class="brand">Vietnam Safar — Travel Proposal</span>
+      <span class="ref"><span class="ltr-token">QT-2027-SARA-2PAX · 2027-04-01</span></span>
+    </div>
+    <div class="page-inner">
+      <div class="section-label">Behind the Itinerary Curation</div>
+      <h2 class="section-h2">Behind the Itinerary Curation</h2>
+      <p class="section-p">Tailored care, balanced pacing, and seamless logistics designed specifically for your
+        group.</p>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px;">
+        <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
+          <strong
+            style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">Private &amp; Flexible</strong>
+          <p style="font-size:11px; color:var(--muted); line-height:1.4;">Every transfer, excursion, and guided tour is entirely private, allowing your family to set a comfortable pace and adapt the daily schedule to your energy levels.</p>
+        </div>
+        <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
+          <strong
+            style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">Comfort &amp; Pacing</strong>
+          <p style="font-size:11px; color:var(--muted); line-height:1.4;">Rest easy with handpicked 4-5 star accommodations, early check-in pre-booked on arrival, private AC Mercedes vehicles, and premium sleeper cabins on the Chapa Express.</p>
+        </div>
+        <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
+          <strong
+            style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">Dietary &amp; Special Care</strong>
+          <p style="font-size:11px; color:var(--muted); line-height:1.4;">Dietary preferences and special meal requests (including vegetarian, non-seafood, or child-friendly options) are fully respected and pre-arranged at all destinations.</p>
+        </div>
+        <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
+          <strong
+            style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">Balanced Highlights</strong>
+          <p style="font-size:11px; color:var(--muted); line-height:1.4;">Thoughtfully curated to balance historic cities, serene limestone waterways, soft mountain trekking, coastal relaxation, and meaningful local encounters.</p>
+        </div>
+      </div>
+
+      <div class="section-label">Destination Gallery</div>
+      <h2 class="section-h2" style="margin-top: 10px; margin-bottom: 6px;">Destination imagery woven into the quotation.</h2>
+      <p class="section-p" style="margin-bottom: 16px;">Cinematic destination panels crafted for a premium travel proposal.</p>
+      <div class="gallery" style="margin-top:8px;">
+        
+        <div class="img-tile large"
+          style="background-image:url('/assets/ha-noi/hanoi1.jpg')">
+          <div class="img-caption">
+            <small>Highlight</small>
+            <strong>Hanoi</strong>
+          </div>
+        </div>
+        
+        <div class="img-tile "
+          style="background-image:url('/assets/ninh-binh/tamcoc.jpg')">
+          <div class="img-caption">
+            <small>Destination</small>
+            <strong>Ninh Binh</strong>
+          </div>
+        </div>
+        
+        <div class="img-tile "
+          style="background-image:url('/assets/quang-ninh/halong.jpg')">
+          <div class="img-caption">
+            <small>Experience</small>
+            <strong>Halong Bay</strong>
+          </div>
+        </div>
+        
+        <div class="img-tile "
+          style="background-image:url('/assets/lao-cai/fansipan.jpg')">
+          <div class="img-caption">
+            <small>Journey</small>
+            <strong>Sapa</strong>
+          </div>
+        </div>
+        
+        <div class="img-tile "
+          style="background-image:url('/assets/da-nang/danang2.jpg')">
+          <div class="img-caption">
+            <small>Destination</small>
+            <strong>Da Nang</strong>
+          </div>
+        </div>
+        
+        <div class="img-tile "
+          style="background-image:url('/assets/quang-nam/hoian3.jpg')">
+          <div class="img-caption">
+            <small>Destination</small>
+            <strong>Hoi An</strong>
+          </div>
+        </div>
+        
+        <div class="img-tile "
+          style="background-image:url('/assets/ho-chi-minh/hightower.jpg')">
+          <div class="img-caption">
+            <small>Destination</small>
+            <strong>Ho Chi Minh City</strong>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ PAGE 4 — Itinerary ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="page-header">
+      <span class="brand">Vietnam Safar — Luxury Quotation</span>
+      <span class="ref"><span class="ltr-token">QT-2027-SARA-2PAX · 2027-04-01</span></span>
+    </div>
+    <div class="page-inner">
+      <div class="section-label">Service Program</div>
+      <h2>Day-by-Day Journey Program</h2>
+      <p class="section-p">Your private 14D13N journey — 14 days, carefully crafted.</p>
+
+      <div class="itinerary">
+        
+        <div class="day-card">
+          <div class="day-num">1</div>
+          <div>
+            <div class="day-badge">DAY 1 · 01 Apr 2027</div>
+            <h3>Day 1 — Hanoi</h3>
+            
+            <p>Upon arrival in Hanoi, meet your private airport representative and transfer smoothly to Pullman Hanoi, where early check-in will be booked in advance. This is especially important because the majority of flights from Belgium arrive in the morning, allowing the family to rest, shower and refresh immediately after the long journey instead of...</p>
+            
+            
+            <p style="margin-top:6px;font-size:10px;color:#b7894b">
+              <strong>Highlights:</strong> Private airport welcome · early check · in · lunch · welcome dinner · private airport transfer.
+            </p>
+            
+            
+            <div
+              style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+              <strong>Notes:</strong>
+              <ul style="margin:2px 0 0;padding-left:10px;">
+                <li>Sense of Pace: Relaxed</li>
+              </ul>
+            </div>
+            
+          </div>
+          <div class="day-meta">
+            
+            <div class="price-sub" style="margin-bottom:2px">Overnight</div>
+            <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Hanoi
+            </div>
+            
+            
+            <div class="price-sub" style="margin-top:8px;margin-bottom:2px">Meals</div>
+            <div style="font-size:11px">Lunch · Dinner</div>
+            
+          </div>
+        </div>
+        
+        <div class="day-card">
+          <div class="day-num">2</div>
+          <div>
+            <div class="day-badge">DAY 2 · 02 Apr 2027</div>
+            <h3>Day 2 — Ninh Binh</h3>
+            
+            <p>After breakfast, leave Hanoi by private vehicle and travel south toward Ninh Binh, where limestone peaks, rice fields and village lanes create a softer countryside atmosphere. The drive takes approximately two hours, making this a comfortable transition from the capital into one of northern Vietnam’s most scenic rural regions.
+
+Upon arrival, check...</p>
+            
+            
+            <p style="margin-top:6px;font-size:10px;color:#b7894b">
+              <strong>Highlights:</strong> Private AC transfer · resort check · in · lunch · Deluxe Garden View Double room.
+            </p>
+            
+            
+            <div
+              style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+              <strong>Notes:</strong>
+              <ul style="margin:2px 0 0;padding-left:10px;">
+                <li>Sense of Pace: Relaxed</li>
+              </ul>
+            </div>
+            
+          </div>
+          <div class="day-meta">
+            
+            <div class="price-sub" style="margin-bottom:2px">Overnight</div>
+            <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Ninh Binh
+            </div>
+            
+            
+            <div class="price-sub" style="margin-top:8px;margin-bottom:2px">Meals</div>
+            <div style="font-size:11px">Breakfast · Lunch</div>
+            
+          </div>
+        </div>
+        
+        <div class="day-card">
+          <div class="day-num">3</div>
+          <div>
+            <div class="day-badge">DAY 3 · 03 Apr 2027</div>
+            <h3>Day 3 — Hanoi</h3>
+            
+            <p>Begin the day with a gentle countryside programme in Ninh Binh, moving at a comfortable family pace. Depending on weather and local conditions, enjoy easy cycling through village lanes and rice-field scenery, with time to observe rural life, limestone backdrops and the quieter rhythm that makes this region feel so different from Hanoi.
+
+The...</p>
+            
+            
+            <p style="margin-top:6px;font-size:10px;color:#b7894b">
+              <strong>Highlights:</strong> Bicycle rental · Trang An boat tour tickets · private transport · lunch.
+            </p>
+            
+            
+            <div
+              style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+              <strong>Notes:</strong>
+              <ul style="margin:2px 0 0;padding-left:10px;">
+                <li>Sense of Pace: Moderate</li>
+              </ul>
+            </div>
+            
+          </div>
+          <div class="day-meta">
+            
+            <div class="price-sub" style="margin-bottom:2px">Overnight</div>
+            <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Hanoi
+            </div>
+            
+            
+            <div class="price-sub" style="margin-top:8px;margin-bottom:2px">Meals</div>
+            <div style="font-size:11px">Breakfast · Lunch</div>
+            
+          </div>
+        </div>
+        
+        <div class="day-card">
+          <div class="day-num">4</div>
+          <div>
+            <div class="day-badge">DAY 4 · 04 Apr 2027</div>
+            <h3>Day 4 — Halong Bay</h3>
+            
+            <p>After breakfast, travel privately from Hanoi to Ha Long Bay for the overnight cruise experience. Upon arrival at the marina, complete check-in procedures and board La Casta Cruise, where the day transitions from road travel to a slower rhythm on the water among limestone islands and open bay scenery.
+
+Lunch is served onboard as the cruise begins...</p>
+            
+            
+            <p style="margin-top:6px;font-size:10px;color:#b7894b">
+              <strong>Highlights:</strong> Private transfer to bay · cruise tickets · onboard activities · lunch · dinner.
+            </p>
+            
+            
+            <div
+              style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+              <strong>Notes:</strong>
+              <ul style="margin:2px 0 0;padding-left:10px;">
+                <li>Sense of Pace: Relaxed</li>
+              </ul>
+            </div>
+            
+          </div>
+          <div class="day-meta">
+            
+            <div class="price-sub" style="margin-bottom:2px">Overnight</div>
+            <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Halong Bay
+            </div>
+            
+            
+            <div class="price-sub" style="margin-top:8px;margin-bottom:2px">Meals</div>
+            <div style="font-size:11px">Breakfast · Lunch · Dinner onboard</div>
+            
+          </div>
+        </div>
+        
+        <div class="day-card">
+          <div class="day-num">5</div>
+          <div>
+            <div class="day-badge">DAY 5 · 05 Apr 2027</div>
+            <h3>Day 5 — Hanoi</h3>
+            
+            <p>Wake to the calm morning atmosphere of the bay, when the limestone formations are often softened by mist and early light. The cruise programme may include a short morning activity, tai chi on deck or a final scenic passage, depending on the confirmed route, operating conditions and weather on the day.
+
+After breakfast or brunch onboard, disembark...</p>
+            
+            
+            <p style="margin-top:6px;font-size:10px;color:#b7894b">
+              <strong>Highlights:</strong> Onboard breakfast · brunch · private return transfer to Hanoi.
+            </p>
+            
+            
+            <div
+              style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+              <strong>Notes:</strong>
+              <ul style="margin:2px 0 0;padding-left:10px;">
+                <li>Sense of Pace: Relaxed</li>
+              </ul>
+            </div>
+            
+          </div>
+          <div class="day-meta">
+            
+            <div class="price-sub" style="margin-bottom:2px">Overnight</div>
+            <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Hanoi
+            </div>
+            
+            
+            <div class="price-sub" style="margin-top:8px;margin-bottom:2px">Meals</div>
+            <div style="font-size:11px">Breakfast · Lunch</div>
+            
+          </div>
+        </div>
+        
+        <div class="day-card">
+          <div class="day-num">6</div>
+          <div>
+            <div class="day-badge">DAY 6 · 06 Apr 2027</div>
+            <h3>Day 6 — Sapa</h3>
+            
+            <p>After breakfast, begin a privately guided Hanoi discovery focused on history, local atmosphere and family-friendly pacing. Visit Hoa Lo Prison Relic, a powerful but well-presented site that introduces an important chapter of Vietnam’s modern history. Continue with time around the Old Quarter, local streets and selected cafe stops, with the route...</p>
+            
+            
+            <p style="margin-top:6px;font-size:10px;color:#b7894b">
+              <strong>Highlights:</strong> Hanoi city tour guide · entries · private transfers · Chapa Express sleeper ticket.
+            </p>
+            
+            
+            <div
+              style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+              <strong>Notes:</strong>
+              <ul style="margin:2px 0 0;padding-left:10px;">
+                <li>Sense of Pace: Immersive</li>
+              </ul>
+            </div>
+            
+          </div>
+          <div class="day-meta">
+            
+            <div class="price-sub" style="margin-bottom:2px">Overnight</div>
+            <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Sapa
+            </div>
+            
+            
+            <div class="price-sub" style="margin-top:8px;margin-bottom:2px">Meals</div>
+            <div style="font-size:11px">Breakfast · Lunch</div>
+            
+          </div>
+        </div>
+        
+        <div class="day-card">
+          <div class="day-num">7</div>
+          <div>
+            <div class="day-badge">DAY 7 · 07 Apr 2027</div>
+            <h3>Day 7 — Sapa</h3>
+            
+            <p>Arrive early in Lao Cai and continue by private transfer up to Sapa, where cooler air, mountain views and terraced valleys mark a clear change in landscape. After time to freshen up, begin a soft trekking programme designed around comfort rather than intensity, allowing the family to enjoy scenery and local culture without a demanding pace.
+
+The...</p>
+            
+            
+            <p style="margin-top:6px;font-size:10px;color:#b7894b">
+              <strong>Highlights:</strong> Private transfer Lao Cai to Sapa · trekking guide · lunch · Silk Path Sapa check · in.
+            </p>
+            
+            
+            <div
+              style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+              <strong>Notes:</strong>
+              <ul style="margin:2px 0 0;padding-left:10px;">
+                <li>Sense of Pace: Relaxed</li>
+              </ul>
+            </div>
+            
+          </div>
+          <div class="day-meta">
+            
+            <div class="price-sub" style="margin-bottom:2px">Overnight</div>
+            <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Sapa
+            </div>
+            
+            
+            <div class="price-sub" style="margin-top:8px;margin-bottom:2px">Meals</div>
+            <div style="font-size:11px">Breakfast · Lunch</div>
+            
+          </div>
+        </div>
+        
+        <div class="day-card">
+          <div class="day-num">8</div>
+          <div>
+            <div class="day-badge">DAY 8 · 08 Apr 2027</div>
+            <h3>Day 8 — Da Nang</h3>
+            
+            <p>Enjoy a slower morning in Sapa before departing by private transfer toward the airport for the flight to Da Nang. The timing of this day will depend on the confirmed domestic flight schedule, so the programme is intentionally arranged with flexibility to protect comfort and avoid unnecessary pressure during the long transition from mountains to...</p>
+            
+            
+            <p style="margin-top:6px;font-size:10px;color:#b7894b">
+              <strong>Highlights:</strong> Private airport transfer · flight Sapa · Da Nang · arrival transfer · Radisson RED Danang check · in.
+            </p>
+            
+            
+            <div
+              style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+              <strong>Notes:</strong>
+              <ul style="margin:2px 0 0;padding-left:10px;">
+                <li>Sense of Pace: Relaxed</li>
+              </ul>
+            </div>
+            
+          </div>
+          <div class="day-meta">
+            
+            <div class="price-sub" style="margin-bottom:2px">Overnight</div>
+            <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Da Nang
+            </div>
+            
+            
+            <div class="price-sub" style="margin-top:8px;margin-bottom:2px">Meals</div>
+            <div style="font-size:11px">Breakfast · Lunch</div>
+            
+          </div>
+        </div>
+        
+        <div class="day-card">
+          <div class="day-num">9</div>
+          <div>
+            <div class="day-badge">DAY 9 · 09 Apr 2027</div>
+            <h3>Day 9 — Da Nang</h3>
+            
+            <p>After breakfast, begin a privately guided day combining Da Nang’s coastal landmarks with Hoi An’s heritage atmosphere. Visit Marble Mountains, where caves, pagodas and viewpoints reveal one of the city’s most recognisable natural sites. The visit can be adjusted with elevators and gentle routing to keep the pace comfortable.
+
+Continue toward Cam...</p>
+            
+            
+            <p style="margin-top:6px;font-size:10px;color:#b7894b">
+              <strong>Highlights:</strong> Guide · Marble Mountain entry · basket boat ticket · Hoi An walking tour.
+            </p>
+            
+            
+            <div
+              style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+              <strong>Notes:</strong>
+              <ul style="margin:2px 0 0;padding-left:10px;">
+                <li>Sense of Pace: Immersive</li>
+              </ul>
+            </div>
+            
+          </div>
+          <div class="day-meta">
+            
+            <div class="price-sub" style="margin-bottom:2px">Overnight</div>
+            <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Da Nang
+            </div>
+            
+            
+            <div class="price-sub" style="margin-top:8px;margin-bottom:2px">Meals</div>
+            <div style="font-size:11px">Breakfast · Lunch</div>
+            
+          </div>
+        </div>
+        
+        <div class="day-card">
+          <div class="day-num">10</div>
+          <div>
+            <div class="day-badge">DAY 10 · 10 Apr 2027</div>
+            <h3>Day 10 — Da Nang</h3>
+            
+            <p>Today moves beyond the most familiar coastal route to introduce Central Vietnam’s layered history and quieter heritage sites. Depending on confirmed routing, visit selected Cham tower remains or cultural stops that reflect the region’s ancient Champa legacy, adding a historical dimension to the beach and old-town experiences of previous...</p>
+            
+            
+            <p style="margin-top:6px;font-size:10px;color:#b7894b">
+              <strong>Highlights:</strong> Cham towers entry · Ky Anh tunnel tour · guide · transport · lunch.
+            </p>
+            
+            
+            <div
+              style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+              <strong>Notes:</strong>
+              <ul style="margin:2px 0 0;padding-left:10px;">
+                <li>Sense of Pace: Moderate</li>
+              </ul>
+            </div>
+            
+          </div>
+          <div class="day-meta">
+            
+            <div class="price-sub" style="margin-bottom:2px">Overnight</div>
+            <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Da Nang
+            </div>
+            
+            
+            <div class="price-sub" style="margin-top:8px;margin-bottom:2px">Meals</div>
+            <div style="font-size:11px">Breakfast · Lunch</div>
+            
+          </div>
+        </div>
+        
+        <div class="day-card">
+          <div class="day-num">11</div>
+          <div>
+            <div class="day-badge">DAY 11 · 11 Apr 2027</div>
+            <h3>Day 11 — Hoi An</h3>
+            
+            <p>After breakfast, check out from Da Nang and transfer privately toward Hoi An for a relaxed countryside and local-life programme. Begin with gentle cycling or a soft countryside visit through flat village lanes, rice fields and small farms, with stops adapted to the family’s comfort level and interest in local daily life.
+
+Lunch is included at a...</p>
+            
+            
+            <p style="margin-top:6px;font-size:10px;color:#b7894b">
+              <strong>Highlights:</strong> Bicycle rental · Tra Que entry · resort transfer · Hoiana Resort check · in.
+            </p>
+            
+            
+            <div
+              style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+              <strong>Notes:</strong>
+              <ul style="margin:2px 0 0;padding-left:10px;">
+                <li>Sense of Pace: Relaxed</li>
+              </ul>
+            </div>
+            
+          </div>
+          <div class="day-meta">
+            
+            <div class="price-sub" style="margin-bottom:2px">Overnight</div>
+            <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Hoi An
+            </div>
+            
+            
+            <div class="price-sub" style="margin-top:8px;margin-bottom:2px">Meals</div>
+            <div style="font-size:11px">Breakfast · Lunch</div>
+            
+          </div>
+        </div>
+        
+        <div class="day-card">
+          <div class="day-num">12</div>
+          <div>
+            <div class="day-badge">DAY 12 · 12 Apr 2027</div>
+            <h3>Day 12 — Ho Chi Minh City</h3>
+            
+            <p>After breakfast, transfer from Hoiana to Da Nang Airport for the domestic flight to Ho Chi Minh City. Upon arrival, meet your private driver and continue to Liberty Central Saigon Riverside Hotel for check-in. The afternoon is kept flexible for rest, unpacking or a short independent walk along the riverfront.
+
+In the evening, enjoy a Saigon by...</p>
+            
+            
+            <p style="margin-top:6px;font-size:10px;color:#b7894b">
+              <strong>Highlights:</strong> Airport transfers · flight Da Nang · Saigon · Saigon by Night tour with dinner.
+            </p>
+            
+            
+            <div
+              style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+              <strong>Notes:</strong>
+              <ul style="margin:2px 0 0;padding-left:10px;">
+                <li>Sense of Pace: Active</li>
+              </ul>
+            </div>
+            
+          </div>
+          <div class="day-meta">
+            
+            <div class="price-sub" style="margin-bottom:2px">Overnight</div>
+            <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Ho Chi Minh City
+            </div>
+            
+            
+            <div class="price-sub" style="margin-top:8px;margin-bottom:2px">Meals</div>
+            <div style="font-size:11px">Breakfast · Lunch · Dinner</div>
+            
+          </div>
+        </div>
+        
+        <div class="day-card">
+          <div class="day-num">13</div>
+          <div>
+            <div class="day-badge">DAY 13 · 13 Apr 2027</div>
+            <h3>Day 13 — Ho Chi Minh City</h3>
+            
+            <p>Depart Ho Chi Minh City after breakfast for a privately guided excursion to the Cu Chi Tunnels, one of the most important wartime sites in southern Vietnam. With your guide, explore selected tunnel sections, reconstructed living areas, hidden entrances and interpretive displays that explain how underground networks supported communication, shelter...</p>
+            
+            
+            <p style="margin-top:6px;font-size:10px;color:#b7894b">
+              <strong>Highlights:</strong> Cu Chi Tunnels entry · guide · transport · lunch.
+            </p>
+            
+            
+            <div
+              style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+              <strong>Notes:</strong>
+              <ul style="margin:2px 0 0;padding-left:10px;">
+                <li>Sense of Pace: Immersive</li>
+              </ul>
+            </div>
+            
+          </div>
+          <div class="day-meta">
+            
+            <div class="price-sub" style="margin-bottom:2px">Overnight</div>
+            <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Ho Chi Minh City
+            </div>
+            
+            
+            <div class="price-sub" style="margin-top:8px;margin-bottom:2px">Meals</div>
+            <div style="font-size:11px">Breakfast · Lunch</div>
+            
+          </div>
+        </div>
+        
+        <div class="day-card">
+          <div class="day-num">14</div>
+          <div>
+            <div class="day-badge">DAY 14 · 14 Apr 2027</div>
+            <h3>Day 14 — Ho Chi Minh City</h3>
+            
+            <p>Enjoy the final morning in Ho Chi Minh City at a relaxed pace. Depending on the confirmed flight schedule, there may be time for a short walk near the hotel, last-minute shopping, coffee by the river or simply a calm breakfast before preparing for the airport transfer.
+
+Lunch is included subject to the departure timing. Your private driver will...</p>
+            
+            
+            <p style="margin-top:6px;font-size:10px;color:#b7894b">
+              <strong>Highlights:</strong> Private airport departure transfer · lunch (depending on flight timing).
+            </p>
+            
+            
+            <div
+              style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+              <strong>Notes:</strong>
+              <ul style="margin:2px 0 0;padding-left:10px;">
+                <li>Sense of Pace: Relaxed</li>
+              </ul>
+            </div>
+            
+          </div>
+          <div class="day-meta">
+            
+            <div class="price-sub" style="margin-bottom:2px">Overnight</div>
+            <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Ho Chi Minh City
+            </div>
+            
+            
+            <div class="price-sub" style="margin-top:8px;margin-bottom:2px">Meals</div>
+            <div style="font-size:11px">Breakfast · Lunch</div>
+            
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ PAGE 5 — Hotel Plan & Pricing ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="page-header">
+      <span class="brand">Vietnam Safar — Travel Proposal</span>
+      <span class="ref"><span class="ltr-token">QT-2027-SARA-2PAX · 2027-04-01</span></span>
+    </div>
+    <div class="page-inner">
+      <div class="section-label">Selected Hotel Plan</div>
+      <h2 class="section-h2">Selected Hotel Plan</h2>
+      <p class="section-p">Proposed hotels and luxury cruises selected for your journey. Subject to availability at
+        confirmation.</p>
+
+      
+      <div class="hotel-plan-pdf" style="margin-top: 15px;">
+        
+        <div class="hotel-pdf-card"
+          style="page-break-inside: avoid; border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 20px; ">
+          <!-- Header -->
+          <div style="margin-bottom: 10px;">
+            <span
+              style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">HANOI, VIETNAM</span>
+            <h3
+              style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">
+              Pullman Hanoi</h3>
+          </div>
+
+          <!-- Side-by-Side Images -->
+          <div style="margin: 10px 0; font-size: 0; width: 100%;">
+            <div style="width: 38%; display: inline-block; vertical-align: top; margin-right: 2%;">
+              <img src="/assets/hotels/hanoi/pullman-hanoi/exterior/exterior_1.jpg" alt="Pullman Hanoi"
+                style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+            </div>
+            <div style="width: 60%; display: inline-block; vertical-align: top;">
+              <img src="/assets/hotels/hanoi/pullman-hanoi/interior/interior_2.jpg" alt="Pullman Hanoi Room"
+                style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+            </div>
+          </div>
+
+          <!-- Footer Columns (Introduction & Info/Tel) -->
+          <div style="width: 100%; margin-top: 10px;">
+            <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
+              
+              <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">A comfortable city base for the Hanoi arrivals, returns from Ninh Binh and Ha Long, and preparation before the overnight train. The hotel keeps the capital section smooth with easy access to dining, guide pick-up and rest time.</p>
+              
+            </div>
+            <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
+              <h4
+                style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">
+                Pullman Hanoi</h4>
+              <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;"><span
+                  class="ltr-token">01 Apr – 02 Apr 2027</span></div>
+              <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">TEL: <span
+                  class="ltr-token">+84 24 3733 0688</span></div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="hotel-pdf-card"
+          style="page-break-inside: avoid; border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 20px; ">
+          <!-- Header -->
+          <div style="margin-bottom: 10px;">
+            <span
+              style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">NINH BINH, VIETNAM</span>
+            <h3
+              style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">
+              An&#39;s Eco Garden Resort</h3>
+          </div>
+
+          <!-- Side-by-Side Images -->
+          <div style="margin: 10px 0; font-size: 0; width: 100%;">
+            <div style="width: 38%; display: inline-block; vertical-align: top; margin-right: 2%;">
+              <img src="/assets/hotels/ninh-binh/ans-eco-garden-resort/exterior/exterior_2.jpg" alt="An&#39;s Eco Garden Resort"
+                style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+            </div>
+            <div style="width: 60%; display: inline-block; vertical-align: top;">
+              <img src="/assets/hotels/ninh-binh/ans-eco-garden-resort/interior/interior_3.jpg" alt="An&#39;s Eco Garden Resort Room"
+                style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+            </div>
+          </div>
+
+          <!-- Footer Columns (Introduction & Info/Tel) -->
+          <div style="width: 100%; margin-top: 10px;">
+            <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
+              
+              <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">A peaceful countryside stay surrounded by garden scenery and limestone atmosphere, well matched to the gentle Ninh Binh programme and slower family pacing.</p>
+              
+            </div>
+            <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
+              <h4
+                style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">
+                An&#39;s Eco Garden Resort</h4>
+              <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;"><span
+                  class="ltr-token">02 Apr – 03 Apr 2027</span></div>
+              <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">TEL: <span
+                  class="ltr-token">+84 96 931 2288</span></div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="hotel-pdf-card"
+          style="page-break-inside: avoid; border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 20px; ">
+          <!-- Header -->
+          <div style="margin-bottom: 10px;">
+            <span
+              style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">HANOI, VIETNAM</span>
+            <h3
+              style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">
+              Pullman Hanoi</h3>
+          </div>
+
+          <!-- Side-by-Side Images -->
+          <div style="margin: 10px 0; font-size: 0; width: 100%;">
+            <div style="width: 38%; display: inline-block; vertical-align: top; margin-right: 2%;">
+              <img src="/assets/hotels/hanoi/pullman-hanoi/exterior/exterior_3.jpg" alt="Pullman Hanoi"
+                style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+            </div>
+            <div style="width: 60%; display: inline-block; vertical-align: top;">
+              <img src="/assets/hotels/hanoi/pullman-hanoi/interior/interior_1.jpg" alt="Pullman Hanoi Room"
+                style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+            </div>
+          </div>
+
+          <!-- Footer Columns (Introduction & Info/Tel) -->
+          <div style="width: 100%; margin-top: 10px;">
+            <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
+              
+              <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">A comfortable city base for the Hanoi arrivals, returns from Ninh Binh and Ha Long, and preparation before the overnight train. The hotel keeps the capital section smooth with easy access to dining, guide pick-up and rest time.</p>
+              
+            </div>
+            <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
+              <h4
+                style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">
+                Pullman Hanoi</h4>
+              <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;"><span
+                  class="ltr-token">03 Apr – 04 Apr 2027</span></div>
+              <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">TEL: <span
+                  class="ltr-token">+84 24 3733 0688</span></div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="hotel-pdf-card"
+          style="page-break-inside: avoid; border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 20px; ">
+          <!-- Header -->
+          <div style="margin-bottom: 10px;">
+            <span
+              style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">HALONG BAY, VIETNAM</span>
+            <h3
+              style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">
+              La Casta Cruise</h3>
+          </div>
+
+          <!-- Side-by-Side Images -->
+          <div style="margin: 10px 0; font-size: 0; width: 100%;">
+            <div style="width: 38%; display: inline-block; vertical-align: top; margin-right: 2%;">
+              <img src="/assets/hotels/halong/cruise-la-casta/exterior/1.jpg" alt="La Casta Cruise"
+                style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+            </div>
+            <div style="width: 60%; display: inline-block; vertical-align: top;">
+              <img src="/assets/hotels/halong/cruise-la-casta/interior/2.jpg" alt="La Casta Cruise Room"
+                style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+            </div>
+          </div>
+
+          <!-- Footer Columns (Introduction & Info/Tel) -->
+          <div style="width: 100%; margin-top: 10px;">
+            <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
+              
+              <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">La Casta Cruise is a luxury 5-star cruise on Halong Bay, offering spacious junior suites with private ocean-view balconies and high-class amenities.</p>
+              
+            </div>
+            <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
+              <h4
+                style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">
+                La Casta Cruise</h4>
+              <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;"><span
+                  class="ltr-token">04 Apr – 05 Apr 2027</span></div>
+              <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">TEL: <span
+                  class="ltr-token">+84 96 123 4567</span></div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="hotel-pdf-card"
+          style="page-break-inside: avoid; border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 20px; ">
+          <!-- Header -->
+          <div style="margin-bottom: 10px;">
+            <span
+              style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">HANOI, VIETNAM</span>
+            <h3
+              style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">
+              Pullman Hanoi</h3>
+          </div>
+
+          <!-- Side-by-Side Images -->
+          <div style="margin: 10px 0; font-size: 0; width: 100%;">
+            <div style="width: 38%; display: inline-block; vertical-align: top; margin-right: 2%;">
+              <img src="/assets/hotels/hanoi/pullman-hanoi/exterior/exterior_1.jpg" alt="Pullman Hanoi"
+                style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+            </div>
+            <div style="width: 60%; display: inline-block; vertical-align: top;">
+              <img src="/assets/hotels/hanoi/pullman-hanoi/interior/interior_3.jpg" alt="Pullman Hanoi Room"
+                style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+            </div>
+          </div>
+
+          <!-- Footer Columns (Introduction & Info/Tel) -->
+          <div style="width: 100%; margin-top: 10px;">
+            <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
+              
+              <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">A comfortable city base for the Hanoi arrivals, returns from Ninh Binh and Ha Long, and preparation before the overnight train. The hotel keeps the capital section smooth with easy access to dining, guide pick-up and rest time.</p>
+              
+            </div>
+            <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
+              <h4
+                style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">
+                Pullman Hanoi</h4>
+              <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;"><span
+                  class="ltr-token">05 Apr – 06 Apr 2027</span></div>
+              <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">TEL: <span
+                  class="ltr-token">+84 24 3733 0688</span></div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="hotel-pdf-card"
+          style="page-break-inside: avoid; border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 20px; ">
+          <!-- Header -->
+          <div style="margin-bottom: 10px;">
+            <span
+              style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">OVERNIGHT TRAIN, VIETNAM</span>
+            <h3
+              style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">
+              Chapa Express Train</h3>
+          </div>
+
+          <!-- Side-by-Side Images -->
+          <div style="margin: 10px 0; font-size: 0; width: 100%;">
+            <div style="width: 38%; display: inline-block; vertical-align: top; margin-right: 2%;">
+              <img src="/assets/hotels/sapa/chapa-express-train/exterior/exterior_2.jpg" alt="Chapa Express Train"
+                style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+            </div>
+            <div style="width: 60%; display: inline-block; vertical-align: top;">
+              <img src="/assets/hotels/sapa/chapa-express-train/interior/interior_2.jpg" alt="Chapa Express Train Room"
+                style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+            </div>
+          </div>
+
+          <!-- Footer Columns (Introduction & Info/Tel) -->
+          <div style="width: 100%; margin-top: 10px;">
+            <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
+              
+              <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">Chapa Express Train offers premium overnight sleeper service between Hanoi and Lao Cai (Sapa). Featuring traditional wooden panels, comfortable air-conditioned cabins, clean amenities, and personalized passenger hospitality.</p>
+              
+            </div>
+            <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
+              <h4
+                style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">
+                Chapa Express Train</h4>
+              <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;"><span
+                  class="ltr-token">06 Apr – 07 Apr 2027</span></div>
+              <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">TEL: <span
+                  class="ltr-token">+84 24 3999 6868</span></div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="hotel-pdf-card"
+          style="page-break-inside: avoid; border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 20px; ">
+          <!-- Header -->
+          <div style="margin-bottom: 10px;">
+            <span
+              style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">SAPA, VIETNAM</span>
+            <h3
+              style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">
+              Silk Path Grand Sapa Resort &amp; Spa</h3>
+          </div>
+
+          <!-- Side-by-Side Images -->
+          <div style="margin: 10px 0; font-size: 0; width: 100%;">
+            <div style="width: 38%; display: inline-block; vertical-align: top; margin-right: 2%;">
+              <img src="/assets/hotels/sapa/silk-path-sapa/exterior/exterior_3.jpg" alt="Silk Path Grand Sapa Resort &amp; Spa"
+                style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+            </div>
+            <div style="width: 60%; display: inline-block; vertical-align: top;">
+              <img src="/assets/hotels/sapa/silk-path-sapa/interior/interior_4.jpg" alt="Silk Path Grand Sapa Resort &amp; Spa Room"
+                style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+            </div>
+          </div>
+
+          <!-- Footer Columns (Introduction & Info/Tel) -->
+          <div style="width: 100%; margin-top: 10px;">
+            <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
+              
+              <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">A refined mountain stay with convenient access to Sapa town, scenic viewpoints and a comfortable place to recover after soft trekking.</p>
+              
+            </div>
+            <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
+              <h4
+                style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">
+                Silk Path Grand Sapa Resort &amp; Spa</h4>
+              <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;"><span
+                  class="ltr-token">07 Apr – 08 Apr 2027</span></div>
+              <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">TEL: <span
+                  class="ltr-token">+84 214 3781 555</span></div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="hotel-pdf-card"
+          style="page-break-inside: avoid; border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 20px; ">
+          <!-- Header -->
+          <div style="margin-bottom: 10px;">
+            <span
+              style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">DA NANG, VIETNAM</span>
+            <h3
+              style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">
+              Radisson RED Danang</h3>
+          </div>
+
+          <!-- Side-by-Side Images -->
+          <div style="margin: 10px 0; font-size: 0; width: 100%;">
+            <div style="width: 38%; display: inline-block; vertical-align: top; margin-right: 2%;">
+              <img src="/assets/hotels/danang/radisson-red-danang/exterior/exterior_4.jpg" alt="Radisson RED Danang"
+                style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+            </div>
+            <div style="width: 60%; display: inline-block; vertical-align: top;">
+              <img src="/assets/hotels/danang/radisson-red-danang/interior/interior_1.jpg" alt="Radisson RED Danang Room"
+                style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+            </div>
+          </div>
+
+          <!-- Footer Columns (Introduction & Info/Tel) -->
+          <div style="width: 100%; margin-top: 10px;">
+            <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
+              
+              <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">A modern beachfront base for the central Vietnam section, convenient for Da Nang touring, Hoi An evening access and coastal downtime.</p>
+              
+            </div>
+            <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
+              <h4
+                style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">
+                Radisson RED Danang</h4>
+              <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;"><span
+                  class="ltr-token">08 Apr – 11 Apr 2027</span></div>
+              <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">TEL: <span
+                  class="ltr-token">+84 236 3968 888</span></div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="hotel-pdf-card"
+          style="page-break-inside: avoid; border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 20px; ">
+          <!-- Header -->
+          <div style="margin-bottom: 10px;">
+            <span
+              style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">HOI AN / HOIANA, VIETNAM</span>
+            <h3
+              style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">
+              Hoiana Resort &amp; Golf</h3>
+          </div>
+
+          <!-- Side-by-Side Images -->
+          <div style="margin: 10px 0; font-size: 0; width: 100%;">
+            <div style="width: 38%; display: inline-block; vertical-align: top; margin-right: 2%;">
+              <img src="/assets/hotels/quang-nam/hoiana-resort/exterior/exterior_1.jpg" alt="Hoiana Resort &amp; Golf"
+                style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+            </div>
+            <div style="width: 60%; display: inline-block; vertical-align: top;">
+              <img src="/assets/hotels/quang-nam/hoiana-resort/interior/interior_2.jpg" alt="Hoiana Resort &amp; Golf Room"
+                style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+            </div>
+          </div>
+
+          <!-- Footer Columns (Introduction & Info/Tel) -->
+          <div style="width: 100%; margin-top: 10px;">
+            <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
+              
+              <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">A resort-style finale to the central region, allowing the family to slow down after countryside discovery before flying south.</p>
+              
+            </div>
+            <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
+              <h4
+                style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">
+                Hoiana Resort &amp; Golf</h4>
+              <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;"><span
+                  class="ltr-token">11 Apr – 12 Apr 2027</span></div>
+              <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">TEL: <span
+                  class="ltr-token">+84 235 858 8888</span></div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="hotel-pdf-card"
+          style="page-break-inside: avoid; border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 20px; border-bottom: none; margin-bottom: 0;">
+          <!-- Header -->
+          <div style="margin-bottom: 10px;">
+            <span
+              style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">HO CHI MINH CITY, VIETNAM</span>
+            <h3
+              style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">
+              Liberty Central Saigon Riverside Hotel</h3>
+          </div>
+
+          <!-- Side-by-Side Images -->
+          <div style="margin: 10px 0; font-size: 0; width: 100%;">
+            <div style="width: 38%; display: inline-block; vertical-align: top; margin-right: 2%;">
+              <img src="/assets/hotels/saigon/liberty-central-saigon-riverside-hotel/exterior/exterior_2.jpg" alt="Liberty Central Saigon Riverside Hotel"
+                style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+            </div>
+            <div style="width: 60%; display: inline-block; vertical-align: top;">
+              <img src="/assets/hotels/saigon/liberty-central-saigon-riverside-hotel/interior/interior_3.jpg" alt="Liberty Central Saigon Riverside Hotel Room"
+                style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+            </div>
+          </div>
+
+          <!-- Footer Columns (Introduction & Info/Tel) -->
+          <div style="width: 100%; margin-top: 10px;">
+            <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
+              
+              <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">A riverside city base for the Saigon by Night experience, Cu Chi excursion and final departure from Ho Chi Minh City.</p>
+              
+            </div>
+            <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
+              <h4
+                style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">
+                Liberty Central Saigon Riverside Hotel</h4>
+              <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;"><span
+                  class="ltr-token">12 Apr – 14 Apr 2027</span></div>
+              <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">TEL: <span
+                  class="ltr-token">+84 28 3827 1717</span></div>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+      
+      <div
+        style="margin-top: 20px; padding: 10px 14px; background: rgba(183, 137, 75, 0.05); border-radius: 8px; border: 1px dashed var(--gold); font-size: 10px; color: var(--muted); margin-bottom: 24px; page-break-inside: avoid;">
+        <strong>Room Notes &amp; Special Requests:</strong> 1 Double Bed / Twin sharing basis. Early check-in pre-confirmed at Hanoi. Premium quiet cabins requested on Chapa Express Train.
+      </div>
+      
+      
+
+      <div class="section-label">Package Pricing</div>
+      <div class="pricing-block" style="margin-bottom: 0;">
+        <h2>Journey Investment: USD 8,500</h2>
+        <p class="sub">Total: Family Vacation (2 Pax). Currency: USD. Final rates subject to reconfirmation.</p>
+        <div class="price-cards">
+          
+          <div class="price-card featured">
+            <span>Sara 2pax Package</span>
+            
+            <small style="display:block;margin-top:3px;font-size:9px;opacity:.7">B2B Net Indicative Price per person</small>
+            
+            
+            <strong><span class="ltr-token">USD 4,250 / person</span></strong>
+            
+            
+            <div style="margin-top:8px;font-size:8px;letter-spacing:.14em;color:#d8bd85;font-weight:800">✓ CONFIRMED
+              MAIN OPTION</div>
+            
+          </div>
+          
+        </div>
+        
+        <div
+          style="margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 11px; color: rgba(255,255,255,0.8); line-height: 1.5; text-align: left;">
+          <strong
+            style="color: var(--gold-2); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.1em; font-size: 9px;">Important Note</strong>
+          <p style="margin: 0;">Rates are B2B net indicative and subject to reconfirmation at the time of booking.</p>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ PAGE 6 — Inc/Exc & Muslim Care ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="page-header">
+      <span class="brand">Vietnam Safar — Travel Proposal</span>
+      <span class="ref"><span class="ltr-token">QT-2027-SARA-2PAX · 2027-04-01</span></span>
+    </div>
+    <div class="page-inner">
+      <div class="section-label">Package Inclusions &amp; Exclusions</div>
+      <h2 class="section-h2">What Your Journey Includes</h2>
+
+
+      <div class="two-col" style="margin-bottom: 24px;">
+        <div class="panel">
+          <h3>Inclusions</h3>
+          
+          <p style="font-size:10px; color:var(--muted); line-height:1.5; margin-bottom:10px;">Your journey has been thoughtfully arranged to ensure a seamless and comfortable experience throughout.</p>
+          
+          <ul style="list-style-type:none; padding-left:0;">
+            
+            
+            <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">Private airport welcome, early check-in, lunch, welcome dinner, private airport transfer.</li>
+            
+            
+            
+            <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">Private AC transfer, resort check-in, lunch, Deluxe Garden View Double room.</li>
+            
+            
+            
+            <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">Bicycle rental, Trang An boat tour tickets, private transport, lunch.</li>
+            
+            
+            
+            <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">Private transfer to bay, cruise tickets, onboard activities, lunch, dinner.</li>
+            
+            
+            
+            <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">Onboard breakfast/brunch, private return transfer to Hanoi.</li>
+            
+            
+            
+            <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">Hanoi city tour guide, entries, private transfers, Chapa Express sleeper ticket.</li>
+            
+            
+            
+            <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">Private transfer Lao Cai to Sapa, trekking guide, lunch, Silk Path Sapa check-in.</li>
+            
+            
+            
+            <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">Private airport transfer, flight Sapa-Da Nang, arrival transfer, Radisson RED Danang check-in.</li>
+            
+            
+            
+            <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">Guide, Marble Mountain entry, basket boat ticket, Hoi An walking tour.</li>
+            
+            
+            
+            <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">Cham towers entry, Ky Anh tunnel tour, guide, transport, lunch.</li>
+            
+            
+            
+            <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">Bicycle rental, Tra Que entry, resort transfer, Hoiana Resort check-in.</li>
+            
+            
+            
+            <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">Airport transfers, flight Da Nang-Saigon, Saigon by Night tour with dinner.</li>
+            
+            
+            
+            <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">Cu Chi Tunnels entry, guide, transport, lunch.</li>
+            
+            
+            
+            <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">Private airport departure transfer, lunch (depending on flight timing).</li>
+            
+            
+          </ul>
+        </div>
+        <div class="panel">
+          <h3>Not Included</h3>
+          
+          <p style="font-size:10px; color:var(--muted); line-height:1.5; margin-bottom:10px;">To keep your journey transparent and clearly defined, the following are not included unless specifically stated otherwise:</p>
+          
+          <ul style="list-style-type:disc; padding-left:15px;">
+            
+            <li style="margin-bottom:5px; line-height:1.4;">International flights</li>
+            
+            <li style="margin-bottom:5px; line-height:1.4;">Visa fees and travel documentation</li>
+            
+            <li style="margin-bottom:5px; line-height:1.4;">Travel insurance</li>
+            
+            <li style="margin-bottom:5px; line-height:1.4;">Personal expenses</li>
+            
+            <li style="margin-bottom:5px; line-height:1.4;">Optional experiences not specified in the itinerary</li>
+            
+            <li style="margin-bottom:5px; line-height:1.4;">Tips and gratuities</li>
+            
+            <li style="margin-bottom:5px; line-height:1.4;">Any services not expressly listed as included</li>
+            
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  
+  <!-- ═══════════════════ PAGE 8 — Travel Specialist ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="page-header">
+      <span class="brand">Vietnam Safar — Travel Proposal</span>
+      <span class="ref"><span class="ltr-token">QT-2027-SARA-2PAX · 2027-04-01</span></span>
+    </div>
+    <div class="page-inner" style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
+      <div class="section-label">Your Dedicated Specialist</div>
+      <h2 class="section-h2" style="margin-bottom: 24px;">Meet Your Travel Specialist</h2>
+
+      <div
+        style="display: flex; gap: 28px; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 28px; align-items: center; box-shadow: 0 4px 16px rgba(17,19,15,0.02);">
+        <div
+          style="width: 140px; height: 140px; border-radius: 50%; background-image: var(--designer-img, url('/assets/dias_team/director.png')); background-size: cover; background-position: center; border: 2px solid var(--gold); flex-shrink: 0; box-shadow: 0 8px 24px rgba(23,65,46,0.15);">
+        </div>
+        <div>
+          <p style="font-size: 12px; line-height: 1.6; color: var(--muted); margin: 0 0 16px; font-style: italic;">"&#34;I am your dedicated travel specialist. My recommendations are shaped by my practical experience as a licensed international tour guide in Vietnam and the four years I spent living in Japan. I believe the desire to travel is contagious—and it is my privilege to turn that inspiration into thoughtfully designed journeys filled with meaningful experiences, authentic connections, and lasting memories.&#34;"</p>
+          <div style="font-size: 11px; color: var(--ink); margin-bottom: 6px;"><strong>Expertise:</strong> Custom Itineraries, Luxury Travel, Local Experiences</div>
+          <div style="font-size: 11px; color: var(--ink); margin-bottom: 16px;"><strong>Experience:</strong> 2+ year</div>
+          <div
+            style="font-family: var(--serif); font-size: 15px; color: var(--emerald); font-weight: 700; letter-spacing: 0.05em;">
+            Eddie - Trung Hieu Pham</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+
+  <!-- ═══════════════════ PAGE 9 — Booking Terms & Finalization ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="page-header">
+      <span class="brand">Vietnam Safar — Travel Proposal</span>
+      <span class="ref"><span class="ltr-token">QT-2027-SARA-2PAX · 2027-04-01</span></span>
+    </div>
+    <div class="page-inner">
+      <div class="section-label">Booking Conditions</div>
+      <h2 class="section-h2">Booking Terms</h2>
+      <p class="section-p">Commercial conditions, deposits, and cancellation policy for this booking.</p>
+
+      <div style="border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 24px;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11px;">
+          <thead>
+            <tr style="background: var(--emerald); color: white;">
+              <th style="padding: 10px 14px; width: 180px;">Term</th>
+              <th style="padding: 10px 14px;">Condition</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom: 1px solid var(--line); background: white;">
+              <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Deposit
+              </td>
+              <td style="padding: 10px 14px;">30% deposit upon booking confirmation to secure accommodations.</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--line); background: rgba(183, 137, 75, 0.03);">
+              <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Balance
+              </td>
+              <td style="padding: 10px 14px;">70% balance due 45 days prior to arrival date.</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--line); background: white;">
+              <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Cancellation</td>
+              <td style="padding: 10px 14px;">Free cancellation up to 60 days prior to arrival. 50% cancellation fee between 59 and 30 days. 100% within 30 days.</td>
+            </tr>
+            <tr style="background: rgba(183, 137, 75, 0.03);">
+              <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Confirmation</td>
+              <td style="padding: 10px 14px;">Reservations are subject to availability. Confirmation vouchers are issued within 3 working days after deposit is verified.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section-label">Next step</div>
+
+      <div class="cta-block" style="margin-bottom: 10px; padding: 24px; grid-template-columns: 1fr 180px; gap: 14px;">
+        <div>
+          <h2>Confirm dates, then refine the luxury layer.</h2>
+          <div
+            style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; font-size: 10px; margin-top: 14px; text-align: left;">
+            <div>
+              <strong style="color: var(--gold-2); display:block; margin-bottom:4px; text-transform:uppercase;">Final Details Required</strong>
+              <ul style="padding-left:12px; display:grid; gap:3px; color:rgba(255,255,255,0.85);">
+                <li>Colored copies of passports valid for at least 6 months, and confirmed flight details for airport transfers.</li>
+              </ul>
+            </div>
+            <div>
+              <strong style="color: var(--gold-2); display:block; margin-bottom:4px; text-transform:uppercase;">After Confirmation</strong>
+              <ul style="padding-left:12px; display:grid; gap:3px; color:rgba(255,255,255,0.85);">
+                <li>Vouchers, detailed daily itinerary guidelines, and emergency contact details for the local tour coordinator will be provided.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="contact-box" style="padding: 12px;">
+          <span class="clabel" style="margin-top:0;">Prepared by</span>
+          <div class="cval" style="font-size:11px;">Vietnam Safar – Discovery Asia Travel Group</div>
+          
+          <span class="clabel">Email</span>
+          <div class="cval" style="font-size:11px; word-break:break-all;">sales@vietnamsafar.vn</div>
+          
+          <span class="clabel">WhatsApp</span>
+          <div class="cval" style="font-size:11px;"><span class="ltr-token">+84 911 538 738</span></div>
+          <span class="clabel">Website</span>
+          <div class="cval" style="font-size:11px;"><span class="ltr-token">journeys.vietnamsafar.vn</span></div>
+        </div>
+      </div>
+
+      <div class="pdf-footer" style="padding: 10px 0; font-size: 10px;">
+        A Privately Arranged Family Journey from Hanoi to Ho Chi Minh City — Luxury quotation prepared for Family Vacation (2 Pax).<br>
+        <span style="color:var(--gold);font-weight:700;">journeys.vietnamsafar.vn</span> &nbsp;·&nbsp;
+        This document is a confidential quotation prepared exclusively for Family Vacation (2 Pax).
+      </div>
+    </div>
+  </div>
+
+  <script id="itinerary-data" type="application/json">
+  [{"activities": ["Private airport welcome", "early check", "in", "lunch", "welcome dinner", "private airport transfer."], "date": "2027-04-01", "dayNumber": 1, "day_badge_text": "1", "day_num_text": "DAY 1 \u00b7 01 Apr 2027", "description": ["Upon arrival in Hanoi, meet your private airport representative and transfer smoothly to Pullman Hanoi, where early check-in will be booked in advance. This is especially important because the majority of flights from Belgium arrive in the morning, allowing the family to rest, shower and refresh immediately after the long journey instead of..."], "destinations": ["Hanoi"], "label_highlights": "Highlights:", "label_meals": "Meals", "label_notes": "Notes:", "label_overnight": "Overnight", "lang": "en", "meals": ["Lunch", "Dinner"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Hanoi", "title": "Day 1 \u2014 Hanoi"}, {"activities": ["Private AC transfer", "resort check", "in", "lunch", "Deluxe Garden View Double room."], "date": "2027-04-02", "dayNumber": 2, "day_badge_text": "2", "day_num_text": "DAY 2 \u00b7 02 Apr 2027", "description": ["After breakfast, leave Hanoi by private vehicle and travel south toward Ninh Binh, where limestone peaks, rice fields and village lanes create a softer countryside atmosphere. The drive takes approximately two hours, making this a comfortable transition from the capital into one of northern Vietnam\u2019s most scenic rural regions.\n\nUpon arrival, check..."], "destinations": ["Ninh Binh"], "label_highlights": "Highlights:", "label_meals": "Meals", "label_notes": "Notes:", "label_overnight": "Overnight", "lang": "en", "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Ninh Binh", "title": "Day 2 \u2014 Ninh Binh"}, {"activities": ["Bicycle rental", "Trang An boat tour tickets", "private transport", "lunch."], "date": "2027-04-03", "dayNumber": 3, "day_badge_text": "3", "day_num_text": "DAY 3 \u00b7 03 Apr 2027", "description": ["Begin the day with a gentle countryside programme in Ninh Binh, moving at a comfortable family pace. Depending on weather and local conditions, enjoy easy cycling through village lanes and rice-field scenery, with time to observe rural life, limestone backdrops and the quieter rhythm that makes this region feel so different from Hanoi.\n\nThe..."], "destinations": ["Hanoi"], "label_highlights": "Highlights:", "label_meals": "Meals", "label_notes": "Notes:", "label_overnight": "Overnight", "lang": "en", "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Moderate"], "overnight": "Hanoi", "title": "Day 3 \u2014 Hanoi"}, {"activities": ["Private transfer to bay", "cruise tickets", "onboard activities", "lunch", "dinner."], "date": "2027-04-04", "dayNumber": 4, "day_badge_text": "4", "day_num_text": "DAY 4 \u00b7 04 Apr 2027", "description": ["After breakfast, travel privately from Hanoi to Ha Long Bay for the overnight cruise experience. Upon arrival at the marina, complete check-in procedures and board La Casta Cruise, where the day transitions from road travel to a slower rhythm on the water among limestone islands and open bay scenery.\n\nLunch is served onboard as the cruise begins..."], "destinations": ["Halong Bay"], "label_highlights": "Highlights:", "label_meals": "Meals", "label_notes": "Notes:", "label_overnight": "Overnight", "lang": "en", "meals": ["Breakfast", "Lunch", "Dinner onboard"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Halong Bay", "title": "Day 4 \u2014 Halong Bay"}, {"activities": ["Onboard breakfast", "brunch", "private return transfer to Hanoi."], "date": "2027-04-05", "dayNumber": 5, "day_badge_text": "5", "day_num_text": "DAY 5 \u00b7 05 Apr 2027", "description": ["Wake to the calm morning atmosphere of the bay, when the limestone formations are often softened by mist and early light. The cruise programme may include a short morning activity, tai chi on deck or a final scenic passage, depending on the confirmed route, operating conditions and weather on the day.\n\nAfter breakfast or brunch onboard, disembark..."], "destinations": ["Hanoi"], "label_highlights": "Highlights:", "label_meals": "Meals", "label_notes": "Notes:", "label_overnight": "Overnight", "lang": "en", "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Hanoi", "title": "Day 5 \u2014 Hanoi"}, {"activities": ["Hanoi city tour guide", "entries", "private transfers", "Chapa Express sleeper ticket."], "date": "2027-04-06", "dayNumber": 6, "day_badge_text": "6", "day_num_text": "DAY 6 \u00b7 06 Apr 2027", "description": ["After breakfast, begin a privately guided Hanoi discovery focused on history, local atmosphere and family-friendly pacing. Visit Hoa Lo Prison Relic, a powerful but well-presented site that introduces an important chapter of Vietnam\u2019s modern history. Continue with time around the Old Quarter, local streets and selected cafe stops, with the route..."], "destinations": ["Sapa"], "label_highlights": "Highlights:", "label_meals": "Meals", "label_notes": "Notes:", "label_overnight": "Overnight", "lang": "en", "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Immersive"], "overnight": "Sapa", "title": "Day 6 \u2014 Sapa"}, {"activities": ["Private transfer Lao Cai to Sapa", "trekking guide", "lunch", "Silk Path Sapa check", "in."], "date": "2027-04-07", "dayNumber": 7, "day_badge_text": "7", "day_num_text": "DAY 7 \u00b7 07 Apr 2027", "description": ["Arrive early in Lao Cai and continue by private transfer up to Sapa, where cooler air, mountain views and terraced valleys mark a clear change in landscape. After time to freshen up, begin a soft trekking programme designed around comfort rather than intensity, allowing the family to enjoy scenery and local culture without a demanding pace.\n\nThe..."], "destinations": ["Sapa"], "label_highlights": "Highlights:", "label_meals": "Meals", "label_notes": "Notes:", "label_overnight": "Overnight", "lang": "en", "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Sapa", "title": "Day 7 \u2014 Sapa"}, {"activities": ["Private airport transfer", "flight Sapa", "Da Nang", "arrival transfer", "Radisson RED Danang check", "in."], "date": "2027-04-08", "dayNumber": 8, "day_badge_text": "8", "day_num_text": "DAY 8 \u00b7 08 Apr 2027", "description": ["Enjoy a slower morning in Sapa before departing by private transfer toward the airport for the flight to Da Nang. The timing of this day will depend on the confirmed domestic flight schedule, so the programme is intentionally arranged with flexibility to protect comfort and avoid unnecessary pressure during the long transition from mountains to..."], "destinations": ["Da Nang"], "label_highlights": "Highlights:", "label_meals": "Meals", "label_notes": "Notes:", "label_overnight": "Overnight", "lang": "en", "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Da Nang", "title": "Day 8 \u2014 Da Nang"}, {"activities": ["Guide", "Marble Mountain entry", "basket boat ticket", "Hoi An walking tour."], "date": "2027-04-09", "dayNumber": 9, "day_badge_text": "9", "day_num_text": "DAY 9 \u00b7 09 Apr 2027", "description": ["After breakfast, begin a privately guided day combining Da Nang\u2019s coastal landmarks with Hoi An\u2019s heritage atmosphere. Visit Marble Mountains, where caves, pagodas and viewpoints reveal one of the city\u2019s most recognisable natural sites. The visit can be adjusted with elevators and gentle routing to keep the pace comfortable.\n\nContinue toward Cam..."], "destinations": ["Da Nang"], "label_highlights": "Highlights:", "label_meals": "Meals", "label_notes": "Notes:", "label_overnight": "Overnight", "lang": "en", "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Immersive"], "overnight": "Da Nang", "title": "Day 9 \u2014 Da Nang"}, {"activities": ["Cham towers entry", "Ky Anh tunnel tour", "guide", "transport", "lunch."], "date": "2027-04-10", "dayNumber": 10, "day_badge_text": "10", "day_num_text": "DAY 10 \u00b7 10 Apr 2027", "description": ["Today moves beyond the most familiar coastal route to introduce Central Vietnam\u2019s layered history and quieter heritage sites. Depending on confirmed routing, visit selected Cham tower remains or cultural stops that reflect the region\u2019s ancient Champa legacy, adding a historical dimension to the beach and old-town experiences of previous..."], "destinations": ["Da Nang"], "label_highlights": "Highlights:", "label_meals": "Meals", "label_notes": "Notes:", "label_overnight": "Overnight", "lang": "en", "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Moderate"], "overnight": "Da Nang", "title": "Day 10 \u2014 Da Nang"}, {"activities": ["Bicycle rental", "Tra Que entry", "resort transfer", "Hoiana Resort check", "in."], "date": "2027-04-11", "dayNumber": 11, "day_badge_text": "11", "day_num_text": "DAY 11 \u00b7 11 Apr 2027", "description": ["After breakfast, check out from Da Nang and transfer privately toward Hoi An for a relaxed countryside and local-life programme. Begin with gentle cycling or a soft countryside visit through flat village lanes, rice fields and small farms, with stops adapted to the family\u2019s comfort level and interest in local daily life.\n\nLunch is included at a..."], "destinations": ["Hoi An"], "label_highlights": "Highlights:", "label_meals": "Meals", "label_notes": "Notes:", "label_overnight": "Overnight", "lang": "en", "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Hoi An", "title": "Day 11 \u2014 Hoi An"}, {"activities": ["Airport transfers", "flight Da Nang", "Saigon", "Saigon by Night tour with dinner."], "date": "2027-04-12", "dayNumber": 12, "day_badge_text": "12", "day_num_text": "DAY 12 \u00b7 12 Apr 2027", "description": ["After breakfast, transfer from Hoiana to Da Nang Airport for the domestic flight to Ho Chi Minh City. Upon arrival, meet your private driver and continue to Liberty Central Saigon Riverside Hotel for check-in. The afternoon is kept flexible for rest, unpacking or a short independent walk along the riverfront.\n\nIn the evening, enjoy a Saigon by..."], "destinations": ["Ho Chi Minh City"], "label_highlights": "Highlights:", "label_meals": "Meals", "label_notes": "Notes:", "label_overnight": "Overnight", "lang": "en", "meals": ["Breakfast", "Lunch", "Dinner"], "notes": ["Sense of Pace: Active"], "overnight": "Ho Chi Minh City", "title": "Day 12 \u2014 Ho Chi Minh City"}, {"activities": ["Cu Chi Tunnels entry", "guide", "transport", "lunch."], "date": "2027-04-13", "dayNumber": 13, "day_badge_text": "13", "day_num_text": "DAY 13 \u00b7 13 Apr 2027", "description": ["Depart Ho Chi Minh City after breakfast for a privately guided excursion to the Cu Chi Tunnels, one of the most important wartime sites in southern Vietnam. With your guide, explore selected tunnel sections, reconstructed living areas, hidden entrances and interpretive displays that explain how underground networks supported communication, shelter..."], "destinations": ["Ho Chi Minh City"], "label_highlights": "Highlights:", "label_meals": "Meals", "label_notes": "Notes:", "label_overnight": "Overnight", "lang": "en", "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Immersive"], "overnight": "Ho Chi Minh City", "title": "Day 13 \u2014 Ho Chi Minh City"}, {"activities": ["Private airport departure transfer", "lunch (depending on flight timing)."], "date": "2027-04-14", "dayNumber": 14, "day_badge_text": "14", "day_num_text": "DAY 14 \u00b7 14 Apr 2027", "description": ["Enjoy the final morning in Ho Chi Minh City at a relaxed pace. Depending on the confirmed flight schedule, there may be time for a short walk near the hotel, last-minute shopping, coffee by the river or simply a calm breakfast before preparing for the airport transfer.\n\nLunch is included subject to the departure timing. Your private driver will..."], "destinations": ["Ho Chi Minh City"], "label_highlights": "Highlights:", "label_meals": "Meals", "label_notes": "Notes:", "label_overnight": "Overnight", "lang": "en", "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Ho Chi Minh City", "title": "Day 14 \u2014 Ho Chi Minh City"}]
+</script>
+  <script id="route-stops-data" type="application/json">
+  [{"dayNumber": 1, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "Day 1 \u2014 Hanoi", "showMarker": true, "stopOrder": 1}, {"dayNumber": 2, "destination": "Ninh Binh", "displayName": "Ninh Binh", "kind": "overnight", "mapTitle": "Day 2 \u2014 Ninh Binh", "showMarker": true, "stopOrder": 1}, {"dayNumber": 3, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "Day 3 \u2014 Hanoi", "showMarker": true, "stopOrder": 1}, {"dayNumber": 4, "destination": "Halong Bay", "displayName": "Halong Bay", "kind": "overnight", "mapTitle": "Day 4 \u2014 Halong Bay", "showMarker": true, "stopOrder": 1}, {"dayNumber": 5, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "Day 5 \u2014 Hanoi", "showMarker": true, "stopOrder": 1}, {"dayNumber": 6, "destination": "Sapa", "displayName": "Sapa", "kind": "overnight", "mapTitle": "Day 6 \u2014 Sapa", "showMarker": true, "stopOrder": 1}, {"dayNumber": 7, "destination": "Sapa", "displayName": "Sapa", "kind": "overnight", "mapTitle": "Day 7 \u2014 Sapa", "showMarker": true, "stopOrder": 1}, {"dayNumber": 8, "destination": "Da Nang", "displayName": "Da Nang", "kind": "overnight", "mapTitle": "Day 8 \u2014 Da Nang", "showMarker": true, "stopOrder": 1}, {"dayNumber": 9, "destination": "Da Nang", "displayName": "Da Nang", "kind": "overnight", "mapTitle": "Day 9 \u2014 Da Nang", "showMarker": true, "stopOrder": 1}, {"dayNumber": 10, "destination": "Da Nang", "displayName": "Da Nang", "kind": "overnight", "mapTitle": "Day 10 \u2014 Da Nang", "showMarker": true, "stopOrder": 1}, {"dayNumber": 11, "destination": "Hoi An", "displayName": "Hoi An", "kind": "overnight", "mapTitle": "Day 11 \u2014 Hoi An", "showMarker": true, "stopOrder": 1}, {"dayNumber": 12, "destination": "Ho Chi Minh City", "displayName": "Ho Chi Minh City", "kind": "overnight", "mapTitle": "Day 12 \u2014 Ho Chi Minh City", "showMarker": true, "stopOrder": 1}, {"dayNumber": 13, "destination": "Ho Chi Minh City", "displayName": "Ho Chi Minh City", "kind": "overnight", "mapTitle": "Day 13 \u2014 Ho Chi Minh City", "showMarker": true, "stopOrder": 1}, {"dayNumber": 14, "destination": "Ho Chi Minh City", "displayName": "Ho Chi Minh City", "kind": "overnight", "mapTitle": "Day 14 \u2014 Ho Chi Minh City", "showMarker": true, "stopOrder": 1}]
+</script>
+  <script id="stay-segments-data" type="application/json">
+  [{"activityPreviews": [{"dayNumber": 1, "label": "Day 1", "summary": "Upon arrival in Hanoi, meet your private airport representative and transfer smoothly to Pullman Hanoi, where early..."}], "city": "Hanoi", "coords": [21.0285, 105.8542], "dayEnd": 1, "dayStart": 1, "daysLabel": "Day 1", "displayName": "Hanoi", "excursions": [], "hotelDateRange": "01 Apr \u2013 02 Apr 2027", "hotelImage": "/assets/hotels/hanoi/pullman-hanoi/exterior/exterior_1.jpg", "hotelName": "Pullman Hanoi", "nights": 1, "nightsLabel": "1 night", "order": 1, "segmentId": "stay-1", "transportFromPrevious": ""}, {"activityPreviews": [{"dayNumber": 2, "label": "Day 2", "summary": "After breakfast, leave Hanoi by private vehicle and travel south toward Ninh Binh, where limestone peaks, rice fields..."}], "city": "Ninh Binh", "coords": [20.2539, 105.975], "dayEnd": 2, "dayStart": 2, "daysLabel": "Day 2", "displayName": "Ninh Binh", "excursions": [], "hotelDateRange": "02 Apr \u2013 03 Apr 2027", "hotelImage": "/assets/hotels/ninh-binh/ans-eco-garden-resort/exterior/exterior_2.jpg", "hotelName": "An\u0027s Eco Garden Resort", "nights": 1, "nightsLabel": "1 night", "order": 2, "segmentId": "stay-2", "transportFromPrevious": "Hanoi \u2192 Ninh Binh"}, {"activityPreviews": [{"dayNumber": 3, "label": "Day 3", "summary": "Begin the day with a gentle countryside programme in Ninh Binh, moving at a comfortable family pace. Depending on..."}], "city": "Hanoi", "coords": [21.0285, 105.8542], "dayEnd": 3, "dayStart": 3, "daysLabel": "Day 3", "displayName": "Hanoi", "excursions": [], "hotelDateRange": "03 Apr \u2013 04 Apr 2027", "hotelImage": "/assets/hotels/hanoi/pullman-hanoi/exterior/exterior_3.jpg", "hotelName": "Pullman Hanoi", "nights": 1, "nightsLabel": "1 night", "order": 3, "segmentId": "stay-3", "transportFromPrevious": "Ninh Binh \u2192 Hanoi"}, {"activityPreviews": [{"dayNumber": 4, "label": "Day 4", "summary": "After breakfast, travel privately from Hanoi to Ha Long Bay for the overnight cruise experience. Upon arrival at the..."}], "city": "Halong Bay", "coords": [20.9599, 107.0436], "dayEnd": 4, "dayStart": 4, "daysLabel": "Day 4", "displayName": "Halong Bay", "excursions": [], "hotelDateRange": "04 Apr \u2013 05 Apr 2027", "hotelImage": "/assets/hotels/halong/cruise-la-casta/exterior/1.jpg", "hotelName": "La Casta Cruise", "nights": 1, "nightsLabel": "1 night", "order": 4, "segmentId": "stay-4", "transportFromPrevious": "Hanoi \u2192 Halong Bay"}, {"activityPreviews": [{"dayNumber": 5, "label": "Day 5", "summary": "Wake to the calm morning atmosphere of the bay, when the limestone formations are often softened by mist and early..."}], "city": "Hanoi", "coords": [21.0285, 105.8542], "dayEnd": 5, "dayStart": 5, "daysLabel": "Day 5", "displayName": "Hanoi", "excursions": [], "hotelDateRange": "05 Apr \u2013 06 Apr 2027", "hotelImage": "/assets/hotels/hanoi/pullman-hanoi/exterior/exterior_1.jpg", "hotelName": "Pullman Hanoi", "nights": 1, "nightsLabel": "1 night", "order": 5, "segmentId": "stay-5", "transportFromPrevious": "Halong Bay \u2192 Hanoi"}, {"activityPreviews": [{"dayNumber": 6, "label": "Day 6", "summary": "After breakfast, begin a privately guided Hanoi discovery focused on history, local atmosphere and family-friendly..."}, {"dayNumber": 7, "label": "Day 7", "summary": "Arrive early in Lao Cai and continue by private transfer up to Sapa, where cooler air, mountain views and terraced..."}], "city": "Sapa", "coords": [22.3364, 103.8438], "dayEnd": 7, "dayStart": 6, "daysLabel": "Days 6-7", "displayName": "Sapa", "excursions": [], "hotelDateRange": "07 Apr \u2013 08 Apr 2027", "hotelImage": "/assets/hotels/sapa/silk-path-sapa/exterior/exterior_3.jpg", "hotelName": "Silk Path Grand Sapa Resort \u0026 Spa", "nights": 2, "nightsLabel": "2 nights", "order": 6, "segmentId": "stay-6", "transportFromPrevious": "Hanoi \u2192 Sapa"}, {"activityPreviews": [{"dayNumber": 8, "label": "Day 8", "summary": "Enjoy a slower morning in Sapa before departing by private transfer toward the airport for the flight to Da Nang. The..."}, {"dayNumber": 9, "label": "Day 9", "summary": "After breakfast, begin a privately guided day combining Da Nang\u2019s coastal landmarks with Hoi An\u2019s heritage atmosphere...."}, {"dayNumber": 10, "label": "Day 10", "summary": "Today moves beyond the most familiar coastal route to introduce Central Vietnam\u2019s layered history and quieter heritage..."}], "city": "Da Nang", "coords": [16.0544, 108.2022], "dayEnd": 10, "dayStart": 8, "daysLabel": "Days 8-10", "displayName": "Da Nang", "excursions": [], "hotelDateRange": "08 Apr \u2013 11 Apr 2027", "hotelImage": "/assets/hotels/danang/radisson-red-danang/exterior/exterior_4.jpg", "hotelName": "Radisson RED Danang", "nights": 3, "nightsLabel": "3 nights", "order": 7, "segmentId": "stay-7", "transportFromPrevious": "Sapa \u2192 Da Nang"}, {"activityPreviews": [{"dayNumber": 11, "label": "Day 11", "summary": "After breakfast, check out from Da Nang and transfer privately toward Hoi An for a relaxed countryside and local-life..."}], "city": "Hoi An", "coords": [15.8801, 108.338], "dayEnd": 11, "dayStart": 11, "daysLabel": "Day 11", "displayName": "Hoi An", "excursions": [], "hotelDateRange": "11 Apr \u2013 12 Apr 2027", "hotelImage": "/assets/hotels/quang-nam/hoiana-resort/exterior/exterior_1.jpg", "hotelName": "Hoiana Resort \u0026 Golf", "nights": 1, "nightsLabel": "1 night", "order": 8, "segmentId": "stay-8", "transportFromPrevious": "Da Nang \u2192 Hoi An"}, {"activityPreviews": [{"dayNumber": 12, "label": "Day 12", "summary": "After breakfast, transfer from Hoiana to Da Nang Airport for the domestic flight to Ho Chi Minh City. Upon arrival,..."}, {"dayNumber": 13, "label": "Day 13", "summary": "Depart Ho Chi Minh City after breakfast for a privately guided excursion to the Cu Chi Tunnels, one of the most..."}, {"dayNumber": 14, "label": "Day 14", "summary": "Enjoy the final morning in Ho Chi Minh City at a relaxed pace. Depending on the confirmed flight schedule, there may be..."}], "city": "Ho Chi Minh City", "coords": [10.8231, 106.6297], "dayEnd": 14, "dayStart": 12, "daysLabel": "Days 12-14", "displayName": "Ho Chi Minh City", "excursions": [], "hotelDateRange": "12 Apr \u2013 14 Apr 2027", "hotelImage": "/assets/hotels/saigon/liberty-central-saigon-riverside-hotel/exterior/exterior_2.jpg", "hotelName": "Liberty Central Saigon Riverside Hotel", "nights": 3, "nightsLabel": "3 nights", "order": 9, "segmentId": "stay-9", "transportFromPrevious": "Hoi An \u2192 Ho Chi Minh City"}]
+</script>
+
+  <script>
+    window.currentLang = "en";
+
+    // Coordinate resolutions and math helpers copied from landing page
+    const DEST_COORDS = {
+      "hanoi": [21.0285, 105.8542],
+      "ha noi": [21.0285, 105.8542],
+      "ninh binh": [20.2539, 105.9750],
+      "ninhbinh": [20.2539, 105.9750],
+      "ha long": [20.9599, 107.0436],
+      "halong": [20.9599, 107.0436],
+      "ha giang": [22.8233, 104.9836],
+      "hagiang": [22.8233, 104.9836],
+      "sapa": [22.3364, 103.8438],
+      "hue": [16.4637, 107.5909],
+      "da nang": [16.0544, 108.2022],
+      "danang": [16.0544, 108.2022],
+      "hoi an": [15.8801, 108.3380],
+      "hoian": [15.8801, 108.3380],
+      "nha trang": [12.2388, 109.1967],
+      "nhatrang": [12.2388, 109.1967],
+      "da lat": [11.9404, 108.4583],
+      "dalat": [11.9404, 108.4583],
+      "ho chi minh city": [10.8231, 106.6297],
+      "saigon": [10.8231, 106.6297],
+      "sai gon": [10.8231, 106.6297],
+      "mekong": [10.2435, 106.3756],
+      "mekong delta": [10.2435, 106.3756],
+      "ben tre": [10.2401, 106.3768],
+      "bentre": [10.2401, 106.3768],
+      "my tho": [10.3592, 106.3653],
+      "mytho": [10.3592, 106.3653],
+      "phu quoc": [10.2899, 103.9840]
+    };
+
+    const SLUG_COORDS = {
+      "ha-noi": [21.0285, 105.8542],
+      "quang-ninh": [20.9599, 107.0436],
+      "lao-cai": [22.3364, 103.8438],
+      "da-nang": [16.0544, 108.2022],
+      "quang-nam": [15.8801, 108.3380],
+      "lam-dong": [11.9404, 108.4583],
+      "ho-chi-minh": [10.8231, 106.6297],
+      "khanh-hoa": [12.2388, 109.1967],
+      "ninh-binh": [20.2539, 105.9750],
+      "thua-thien-hue": [16.4637, 107.5909],
+      "kien-giang": [10.2899, 103.9840],
+      "binh-thuan": [10.9333, 108.1000],
+      "can-tho": [10.0401, 105.7882],
+      "mekong": [10.2435, 106.3756],
+      "ha-giang": [22.8233, 104.9836],
+      "nghe-an": [18.6736, 105.6811],
+      "quang-binh": [17.4833, 106.6000],
+      "hai-phong": [20.8449, 106.6881],
+      "dak-lak": [12.6667, 108.0500],
+      "gia-lai": [13.9833, 108.0000],
+      "kon-tum": [14.3500, 108.0000],
+      "ba-ria-vung-tau": [10.4114, 107.1363],
+      "thanh-hoa": [19.8075, 105.7764],
+      "phu-yen": [13.0881, 109.3025],
+      "binh-dinh": [13.7753, 109.2294],
+      "dien-bien": [21.3833, 103.0167],
+      "son-la": [21.3333, 103.9167],
+      "lai-chau": [22.4000, 103.4500],
+      "yen-bai": [21.7000, 104.8667],
+      "hoa-binh": [20.8167, 105.3333],
+      "lang-son": [21.8500, 106.7500],
+      "dong-nai": [10.9574, 106.8427],
+      "binh-duong": [11.0000, 106.6667],
+      "tien-giang": [10.3592, 106.3653],
+      "dong-thap": [10.4500, 105.6333],
+      "vinh-long": [10.2500, 105.9667],
+      "an-giang": [10.3833, 105.4333],
+      "cao-bang": [22.6667, 106.2500]
+    };
+
+    function resolveSlugLocally(location) {
+      if (!location) return null;
+      const normalized = location.toLowerCase().trim();
+      const keywordMap = {
+        "hà nội": "ha-noi", "ha noi": "ha-noi", "hanoi": "ha-noi", "hanoï": "ha-noi", "هانوي": "ha-noi",
+        "hồ chí minh": "ho-chi-minh", "ho chi minh": "ho-chi-minh", "hcm": "ho-chi-minh", "saigon": "ho-chi-minh", "sài gòn": "ho-chi-minh", "sai gon": "ho-chi-minh", "tphcm": "ho-chi-minh", "مدينة هو تشي منه": "ho-chi-minh", "هو تشي منه": "ho-chi-minh", "سايغون": "ho-chi-minh",
+        "đà nẵng": "da-nang", "da nang": "da-nang", "danang": "da-nang", "دانانغ": "da-nang", "دا نانغ": "da-nang",
+        "quảng nam": "quang-nam", "quang nam": "quang-nam", "hội an": "quang-nam", "hoi an": "quang-nam", "hoian": "quang-nam", "هوي آن": "quang-nam", "هوي ان": "quang-nam",
+        "quảng ninh": "quang-ninh", "quang ninh": "quang-ninh", "hạ long": "quang-ninh", "ha long": "quang-ninh", "halong": "quang-ninh", "vịnh hạ long": "quang-ninh", "vinh ha long": "quang-ninh", "cat ba": "quang-ninh", "cát bà": "quang-ninh", "خليج هاليغ": "quang-ninh", "هالونغ": "quang-ninh", "خليج هالونج": "quang-ninh",
+        "lào cai": "lao-cai", "lao cai": "lao-cai", "laocai": "lao-cai", "sapa": "lao-cai", "sa pa": "lao-cai", "bắc hà": "lao-cai", "bac ha": "lao-cai", "سابا": "lao-cai",
+        "khánh hoà": "khanh-hoa", "khanh hoa": "khanh-hoa", "nha trang": "khanh-hoa", "nhatrang": "khanh-hoa", "نها ترانغ": "khanh-hoa", "نها ترانج": "khanh-hoa",
+        "lâm đồng": "lam-dong", "lam dong": "lam-dong", "đà lạt": "lam-dong", "da lat": "lam-dong", "dalat": "lam-dong", "دالات": "lam-dong",
+        "thừa thiên huế": "thua-thien-hue", "thua thien hue": "thua-thien-hue", "huế": "thua-thien-hue", "hue": "thua-thien-hue", "lăng cô": "thua-thien-hue", "lang co": "thua-thien-hue",
+        "kiên giang": "kien-giang", "kien giang": "kien-giang", "phú quốc": "kien-giang", "phu quoc": "kien-giang", "phuquoc": "kien-giang",
+        "bình thuận": "binh-thuan", "binh thuan": "binh-thuan", "mũi né": "binh-thuan", "mui ne": "binh-thuan", "phan thiết": "binh-thuan", "phan thiet": "binh-thuan",
+        "cần thơ": "can-tho", "can tho": "can-tho", "cantho": "can-tho", "bến ninh kiều": "can-tho", "ben ninh kieu": "can-tho",
+        "mekong": "mekong", "đồng bằng sông cửu long": "mekong", "dong bang song cuu long": "mekong", "miền tây": "mekong", "mien tay": "mekong", "tây nam bộ": "mekong", "tay nam bo": "mekong",
+        "hà giang": "ha-giang", "ha giang": "ha-giang", "đồng văn": "ha-giang", "dong van": "ha-giang", "mèo vạc": "ha-giang", "meo vac": "ha-giang",
+        "ninh bình": "ninh-binh", "ninh binh": "ninh-binh", "tràng an": "ninh-binh", "trang an": "ninh-binh", "tam cốc": "ninh-binh", "tam coc": "ninh-binh", "bích động": "ninh-binh", "bich dong": "ninh-binh",
+        "nghệ an": "nghe-an", "nghe an": "nghe-an", "cửa lò": "nghe-an", "cua lo": "nghe-an",
+        "quảng bình": "quang-binh", "quang binh": "quang-binh", "phong nha": "quang-binh", "ke bang": "quang-binh",
+        "hải phòng": "hai-phong", "hai phong": "hai-phong", "haiphong": "hai-phong",
+        "đắk lắk": "dak-lak", "dak lak": "dak-lak", "daklak": "dak-lak", "buôn ma thuột": "dak-lak", "buon ma thuot": "dak-lak", "bmt": "dak-lak",
+        "gia lai": "gia-lai", "pleiku": "gia-lai",
+        "kon tum": "kon-tum", "kontum": "kon-tum",
+        "bà rịa": "ba-ria-vung-tau", "ba ria": "ba-ria-vung-tau", "vũng tàu": "ba-ria-vung-tau", "vung tau": "ba-ria-vung-tau", "vungtau": "ba-ria-vung-tau",
+        "thanh hoá": "thanh-hoa", "thanh hoa": "thanh-hoa", "sầm sơn": "thanh-hoa", "sam son": "thanh-hoa",
+        "phú yên": "phu-yen", "phu yen": "phu-yen", "tuy hoà": "phu-yen", "tuy hoa": "phu-yen",
+        "bình định": "binh-dinh", "binh dinh": "binh-dinh", "quy nhơn": "binh-dinh", "quy nhon": "binh-dinh", "quynhon": "binh-dinh"
+      };
+      return keywordMap[normalized] || null;
+    }
+
+    function findCoordinates(destText) {
+      if (!destText) return null;
+      const slug = resolveSlugLocally(destText);
+      if (slug && SLUG_COORDS[slug]) {
+        return SLUG_COORDS[slug];
+      }
+      const norm = destText.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      for (const [key, coords] of Object.entries(DEST_COORDS)) {
+        if (norm.includes(key)) return coords;
+      }
+      return null;
+    }
+
+    function getDistance(c1, c2) {
+      const R = 6371;
+      const dLat = (c2[0] - c1[0]) * Math.PI / 180;
+      const dLon = (c2[1] - c1[1]) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(c1[0] * Math.PI / 180) * Math.cos(c2[0] * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    }
+
+    function getBezierPoints(p1, p2, count = 30) {
+      const midLat = (p1[0] + p2[0]) / 2;
+      const midLng = (p1[1] + p2[1]) / 2;
+      const dx = p2[1] - p1[1];
+      const dy = p2[0] - p1[0];
+      const len = Math.sqrt(dx * dx + dy * dy);
+      const scale = len * 0.15;
+      const ctrlLat = midLat - (dx / len) * scale;
+      const ctrlLng = midLng + (dy / len) * scale;
+      const points = [];
+      for (let i = 0; i <= count; i++) {
+        const t = i / count;
+        const lat = (1 - t) * (1 - t) * p1[0] + 2 * (1 - t) * t * ctrlLat + t * t * p2[0];
+        const lng = (1 - t) * (1 - t) * p1[1] + 2 * (1 - t) * t * ctrlLng + t * t * p2[1];
+        points.push([lat, lng]);
+      }
+      return points;
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const map = L.map('map', {
+        zoomControl: false,
+        scrollWheelZoom: false,
+        doubleClickZoom: false,
+        dragging: false,
+        boxZoom: false
+      });
+
+      L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi', {
+        maxZoom: 18,
+        attribution: '&copy; Google Maps'
+      }).addTo(map);
+
+      const dataEl = document.getElementById('itinerary-data');
+      const routeStopsEl = document.getElementById('route-stops-data');
+      const staySegmentsEl = document.getElementById('stay-segments-data');
+      if (dataEl) {
+        const itineraryDays = JSON.parse(dataEl.textContent);
+        const rawStops = routeStopsEl ? JSON.parse(routeStopsEl.textContent) : [];
+        const rawStaySegments = staySegmentsEl ? JSON.parse(staySegmentsEl.textContent) : [];
+
+        const daysData = Array.isArray(rawStops) && rawStops.length > 0
+          ? rawStops
+          : itineraryDays.map(day => {
+            let dest = "";
+            if (typeof day.overnight === 'string' && day.overnight.trim() !== '') {
+              dest = day.overnight;
+            } else if (Array.isArray(day.destinations) && day.destinations.length > 0) {
+              dest = day.destinations[0];
+            } else if (typeof day.destination === 'string') {
+              dest = day.destination;
+            }
+            return {
+              dayNumber: day.dayNumber,
+              destination: dest,
+              displayName: dest
+            };
+          });
+
+        function buildFallbackStaySegments(stops) {
+          const fallbackSegments = [];
+          let current = null;
+          stops.filter(day => day.showMarker !== false).forEach(day => {
+            const city = day.displayName || day.destination;
+            if (!city) return;
+            if (!current || current.displayName !== city) {
+              current = {
+                segmentId: `fallback-${fallbackSegments.length + 1}`,
+                order: fallbackSegments.length + 1,
+                displayName: city,
+                city,
+                coords: findCoordinates(city)
+              };
+              fallbackSegments.push(current);
+            }
+          });
+          return fallbackSegments;
+        }
+
+        const staySegments = Array.isArray(rawStaySegments) && rawStaySegments.length > 0
+          ? rawStaySegments
+          : buildFallbackStaySegments(daysData);
+
+        const coordPoints = [];
+        const mapSegments = staySegments.map((segment, idx) => ({
+          ...segment,
+          id: segment.segmentId || `stay-${idx + 1}`,
+          coords: Array.isArray(segment.coords) && segment.coords.length === 2 ? segment.coords : findCoordinates(segment.city || segment.displayName),
+          displayCoords: Array.isArray(segment.coords) && segment.coords.length === 2 ? segment.coords : findCoordinates(segment.city || segment.displayName)
+        })).filter(segment => Array.isArray(segment.coords) && segment.coords.length === 2);
+
+        daysData.forEach(day => {
+          const city = day.destination;
+          if (!city) return;
+          const coords = findCoordinates(city);
+          if (coords) {
+            coordPoints.push(coords);
+          }
+        });
+
+        function getOffsetPattern(index) {
+          const pattern = [
+            [0, 0],
+            [20, -14],
+            [-20, 14],
+            [0, 24],
+            [24, 10],
+            [-24, -10]
+          ];
+          return pattern[index] || [0, 0];
+        }
+
+        if (coordPoints.length > 0) {
+          map.fitBounds(L.latLngBounds(coordPoints), {
+            padding: [25, 25],
+            maxZoom: 12
+          });
+        }
+
+        const grouped = new Map();
+        mapSegments.forEach(segment => {
+          const key = `${segment.coords[0]},${segment.coords[1]}`;
+          if (!grouped.has(key)) grouped.set(key, []);
+          grouped.get(key).push(segment);
+        });
+        grouped.forEach(items => {
+          items.forEach((segment, occurrenceIdx) => {
+            const offset = getOffsetPattern(occurrenceIdx);
+            const point = map.project(segment.coords, map.getZoom());
+            const shifted = L.point(point.x + offset[0], point.y + offset[1]);
+            segment.displayCoords = map.unproject(shifted, map.getZoom());
+          });
+        });
+
+        // Draw markers
+        mapSegments.forEach((dest, idx) => {
+          const html = `
+          <div class="custom-marker">
+            <div class="marker-pulse"></div>
+            <div class="marker-core">${idx + 1}</div>
+          </div>
+        `;
+          const customIcon = L.divIcon({
+            html: html,
+            className: '',
+            iconSize: [28, 28],
+            iconAnchor: [14, 14]
+          });
+          L.marker(dest.displayCoords, { icon: customIcon }).addTo(map);
+        });
+
+        // Draw polylines
+        for (let i = 0; i < coordPoints.length - 1; i++) {
+          const p1 = coordPoints[i];
+          const p2 = coordPoints[i + 1];
+          const dist = getDistance(p1, p2);
+          const isFlight = dist > 300;
+
+          let pathPoints;
+          if (isFlight) {
+            pathPoints = getBezierPoints(p1, p2);
+          } else {
+            pathPoints = [p1, p2];
+          }
+
+          const lineOptions = {
+            color: isFlight ? '#b7894b' : '#17412e',
+            weight: 3,
+            opacity: 0.8,
+            dashArray: isFlight ? '6, 8' : 'none'
+          };
+          L.polyline(pathPoints, lineOptions).addTo(map);
+        }
+
+      }
+    });
+
+    // Auto-trigger print dialog after a safe delay to let tiles render
+    window.addEventListener('load', function () {
+      setTimeout(function () { window.print(); }, 1200);
+    });
+  </script>
+</body>
+
+</html>

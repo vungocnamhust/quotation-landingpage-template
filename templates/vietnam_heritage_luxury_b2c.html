@@ -2535,7 +2535,7 @@
           <article class="day">
             <div class="day-label" data-editable="day_badge_{{ loop.index }}">{{ day.day_badge_text | default(day.dayNumber) }}</div>
             <div>
-              <span class="num" data-editable="day_num_{{ loop.index }}">{{ day.day_num_text | default("DAY" | translate(lang) ~ " " ~ day.dayNumber ~ (("&nbsp;&middot;&nbsp; " ~ day.date) if day.date else "")) }}</span>
+              <span class="num" data-editable="day_num_{{ loop.index }}">{{ day.day_num_text | default("DAY" | translate(lang) ~ " " ~ day.dayNumber ~ ((" · " ~ (day.date | format_date)) if day.date else "")) }}</span>
               <h3 data-editable="day_title_{{ loop.index }}">{{ day.title }}</h3>
               {% for para in day.description %}
               <p data-editable="day_desc_{{ day_idx }}_{{ loop.index0 }}">{{ para }}</p>
@@ -2680,9 +2680,9 @@
           <div class="price-grid">
             {% for opt in price_options %}
             <div class="price-card {% if opt.isConfirmedMainOption %}featured{% endif %}">
-              <span>{{ opt.hotelCategory }}</span>
+              <span data-editable="price_opt_cat_{{ loop.index }}">{{ opt.hotelCategory }}</span>
               {% if opt.optionName %}
-              <small style="color:rgba(255,255,255,.55);font-size:11px;display:block;margin-top:4px">{{ opt.optionName
+              <small data-editable="price_opt_name_{{ loop.index }}" style="color:rgba(255,255,255,.55);font-size:11px;display:block;margin-top:4px">{{ opt.optionName
                 }}</small>
               {% endif %}
               {% if opt.is_total %}
@@ -3643,6 +3643,14 @@
         return bestMatch;
       }
 
+      function formatDate(dateStr) {
+        if (!dateStr) return "";
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        return d.getDate() + " " + months[d.getMonth()] + " " + d.getFullYear();
+      }
+
       const daysData = rawDays.map(day => {
         let dest = "";
         if (Array.isArray(day.destinations) && day.destinations.length > 0) {
@@ -3662,12 +3670,16 @@
           desc = day.summary;
         }
 
+        const formattedDate = day.date ? ' · ' + formatDate(day.date) : '';
+        const t = day.title || `Day ${day.dayNumber}`;
+
         return {
           dayNumber: day.dayNumber,
           destination: dest,
-          title: day.title || `Day ${day.dayNumber}`,
+          title: t.includes('·') ? t : `${t}${formattedDate}`,
           description: desc,
-          overnight: day.overnight || ""
+          overnight: day.overnight || "",
+          formattedDate: formattedDate
         };
       });
 
@@ -3744,7 +3756,7 @@
           if (mapMode === 'image') {
             const patternId = `img-pattern-${dest.id}-${idx}`;
             html = `
-              <div class="custom-irregular-marker" id="marker-wrapper-${idx}">
+              <div class="custom-irregular-marker" id="marker-wrapper-${idx}" style="transform: translate(${off[0]}px, ${off[1]}px);">
                 <svg viewBox="0 0 100 100" class="marker-svg-container" xmlns="http://www.w3.org/2000/svg">
                   <defs>
                     <pattern id="${patternId}" x="0" y="0" width="1" height="1" patternContentUnits="objectBoundingBox">
@@ -3761,7 +3773,7 @@
             popupOffset = [0, -25];
           } else {
             html = `
-              <div class="custom-marker" id="marker-wrapper-${idx}">
+              <div class="custom-marker" id="marker-wrapper-${idx}" style="transform: translate(${off[0]}px, ${off[1]}px);">
                 <div class="marker-pulse"></div>
                 <div class="marker-core">${idx + 1}</div>
               </div>
