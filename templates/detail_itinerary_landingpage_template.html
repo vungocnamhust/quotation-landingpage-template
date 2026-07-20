@@ -2894,8 +2894,7 @@
             {% else %}
             <strong data-editable="true" style="font-size:28px" class="price-per-person-display">{{
               opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~
-              opt.pricePerPerson.currency) }}</strong>
-            <small>{{ "per person" | translate(lang) }}</small><br>
+              opt.pricePerPerson.currency) }}</strong><br>
             <span style="font-size:13px;opacity:.8">{{ "Total:" | translate(lang) }} <span class="total-price-display">{{
                 opt.totalPrice.displayText or ('{:,.0f}'.format(opt.totalPrice.amount) ~ ' ' ~ opt.totalPrice.currency)
                 }}</span></span>

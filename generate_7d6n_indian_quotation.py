@@ -60,265 +60,228 @@ from main import app
 
 client = TestClient(app)
 
-# Structure the full 7-day Indian traveler English itinerary payload
-payload = {
-    "quotationNumber": "QT-2026-CAPELLA-7D6N-IND",
-    "lang": "en",
-    "quotationNarrative": (
-        "A premium, personalized 7-day private journey crafted by Capella Travel for our Indian guests. "
-        "The itinerary showcases the historic soul of Hanoi, the mystical rivers of Ninh Binh, "
-        "an overnight cruise through the magical waters of Ha Long Bay, and the breathtaking terraced mountains of Sapa. "
-        "Every detail, from the double and triple room configurations to the carefully curated vegetarian culinary experiences, "
-        "has been designed for your group of 5 adults to travel in ultimate comfort."
-    ),
-    "landingpageContent": {
-        "heroSection": {
-            "headline": "Bespoke Northern Vietnam Exploration",
-            "subtitle": "A Luxury Private Journey Specially Crafted for 5 Indian Guests"
-        },
-        "visualDescription": "A luxury travel landing page featuring scenery of Hanoi, Ninh Binh, Halong Bay, and Sapa mountains."
-    },
-    "journeyGlance": {
-        "market": "Indian Market",
-        "guestProfile": "5 Adults (Double + Triple Room Configuration)",
-        "hotelStandard": "Premium 4★ Hotels & 5★ Luxury Cruise",
-        "mealPreference": "Indian Vegetarian (Lacto-Ovo: Eggs allowed, strictly no meat, fish, or seafood)",
-        "priceType": "Indicative",
-        "tourCode": "CT-2026-7D6N-IND",
-        "domesticFlights": "Not Required (Private ground transfers & premium overnight train)",
-        "priceBasis": "Twin/Double/Triple sharing basis (1 Double Room + 1 Triple Room)",
-        "partnerNote": "Fully private tour with dedicated English-speaking guides, private transfers, and curated vegetarian meals.",
-        "validity": "Valid for travel from September to October 2026"
-    },
-    "whyWorks": {
-        "privateFlexible": (
-            "Travel in complete exclusivity with your private air-conditioned vehicle and dedicated English-speaking guide. "
-            "The daily pacing is highly flexible, ensuring your group can explore Hanoi, Ninh Binh, Sapa, and Halong Bay "
-            "comfortably at your own speed."
-        ),
-        "comfort": (
-            "Enjoy premium accommodations including Hanoi Le Jardin Hotel & Spa, Ambassador Signature Cruise in Halong, "
-            "and Aliana Boutique Sapa. For the overnight train journey to Sapa, we have pre-arranged 2 private 4-berth cabins "
-            "on the Chapa Express Train to guarantee absolute privacy and space for your group of 5."
-        ),
-        "muslimFriendly": (
-            "Your dietary requirements are fully respected. All included meals feature carefully curated Indian vegetarian selections, "
-            "with eggs permitted and strictly no meat, fish, or seafood. Restaurants and cruise chefs are briefed to prevent cross-contamination."
-        ),
-        "balancedHighlights": (
-            "A perfect harmony of historic culture in Hanoi, scenic rivers in Ninh Binh, a luxury overnight cruise in Halong Bay, "
-            "and highland exploration in Sapa, offering a complete northern Vietnam experience in 7 days."
-        )
-    },
-    "itinerary": [
-        {
-            "dayNumber": 1,
-            "destination": "Hanoi",
-            "summary": (
-                "Welcome to Hanoi! Upon arriving at Noi Bai International Airport on your early morning flight (arrivals at 5:00 AM and 7:30 AM), "
-                "our private host will greet you at the boarding gate with VIP Airport Fast-track service to expedite immigration. "
-                "Transfer by private air-conditioned vehicle to Hanoi Le Jardin Hotel & Spa, where early check-in has been pre-arranged "
-                "so you can rest immediately. In the evening, gather for a welcome Indian vegetarian dinner."
-            ),
-            "mainInclusions": "VIP Airport Fast-track, private airport transfer, pre-arranged hotel early check-in, gourmet Indian vegetarian welcome dinner.",
-            "senseOfPace": "Relaxed",
-            "dining": "Indian Vegetarian Welcome Dinner"
-        },
-        {
-            "dayNumber": 2,
-            "destination": "Ninh Binh",
-            "summary": (
-                "Embark on a full-day private excursion to Ninh Binh. Experience the serene beauty of Trang An landscape complex, "
-                "a UNESCO World Heritage site, during a traditional rowboat tour through limestone caves. Visit the ancient capital of Hoa Lu "
-                "and climb to the peak of Mua Cave for panoramic views over the rice fields. Savor a local vegetarian lunch (eggs allowed, no fish/meat). "
-                "Return to Hanoi for your overnight stay."
-            ),
-            "mainInclusions": "Private roundtrip vehicle to Ninh Binh, English guide, Trang An boat tour, Mua Cave entry, vegetarian lunch.",
-            "senseOfPace": "Active",
-            "dining": "Breakfast & Indian Vegetarian Lunch"
-        },
-        {
-            "dayNumber": 3,
-            "destination": "Halong Bay",
-            "summary": (
-                "Depart Hanoi by private vehicle to Halong Bay. Board the premium Ambassador Signature Cruise, where your Double and Triple "
-                "cabins await. Glide past iconic karst formations and enjoy a delicious vegetarian buffet lunch on board. "
-                "Participate in cruise activities including a bamboo boat ride, kayaking, or climbing for scenic viewpoints. "
-                "Savor a premium vegetarian set-dinner on board under the stars."
-            ),
-            "mainInclusions": "Private transfer Hanoi - Halong, double & triple cabins on Ambassador Signature Cruise, cruise excursions, onboard vegetarian lunch and dinner.",
-            "senseOfPace": "Relaxed",
-            "dining": "Breakfast, Onboard Vegetarian Lunch & Dinner"
-        },
-        {
-            "dayNumber": 4,
-            "destination": "Hanoi / Sapa",
-            "summary": (
-                "Greet the sunrise with Tai Chi on the sundeck. After a vegetarian brunch, check out and transfer back to Hanoi. "
-                "Enjoy a private half-day city tour of Hanoi, visiting the historic Temple of Literature and Hoan Kiem Lake. "
-                "Enjoy some free time for shopping. In the evening, savor a vegetarian dinner in Hanoi before boarding the Chapa Express Train "
-                "to Sapa, where you will stay in 2 private 4-berth cabins for complete comfort."
-            ),
-            "mainInclusions": "Onboard vegetarian brunch, private transfer Halong - Hanoi, Hanoi half-day tour with guide and entry tickets, private vegetarian dinner, Chapa Express Train tickets.",
-            "senseOfPace": "Active",
-            "dining": "Onboard Vegetarian Brunch & Private Dinner"
-        },
-        {
-            "dayNumber": 5,
-            "destination": "Sapa",
-            "summary": (
-                "Arrive at Lao Cai station early in the morning and transfer to Sapa town. Check in to Aliana Boutique Sapa Hotel And Spa "
-                "and enjoy a hot breakfast. Embark on a guided trekking tour to Cat Cat village, learning about the Black Hmong culture "
-                "and viewing the scenic waterfall. Savor a local vegetarian lunch. Spend a relaxed afternoon exploring Sapa town at leisure."
-            ),
-            "mainInclusions": "Station transfer, Sapa tour with guide and entry tickets, vegetarian lunch.",
-            "senseOfPace": "Immersive",
-            "dining": "Breakfast & Vegetarian Lunch"
-        },
-        {
-            "dayNumber": 6,
-            "destination": "Sapa",
-            "summary": (
-                "A highlights day in Sapa! Take the Fansipan cable car, the longest three-rope cable car system in the world, to ascend "
-                "the 'Roof of Indochina' at 3,143 meters. Explore the spiritual pagoda complex at the summit. Enjoy a scenic vegetarian lunch. "
-                "In the afternoon, visit Ta Van village or shop for souvenirs in Sapa town. Overnight at Aliana Boutique Sapa."
-            ),
-            "mainInclusions": "Fansipan cable car roundtrip tickets, guide, Sapa transfers, vegetarian lunch.",
-            "senseOfPace": "Active",
-            "dining": "Breakfast & Vegetarian Lunch"
-        },
-        {
-            "dayNumber": 7,
-            "destination": "Hanoi",
-            "summary": (
-                "Enjoy a leisurely morning in Sapa for final sightseeing or shopping. In the afternoon, board your private luxury vehicle "
-                "for the scenic drive back to Hanoi (approx. 5 hours). Arrive directly at Noi Bai International Airport "
-                "for your late-evening international departure flight."
-            ),
-            "mainInclusions": "Private luxury transfer Sapa - Hanoi Airport.",
-            "senseOfPace": "Relaxed",
-            "dining": "Breakfast"
-        }
-    ],
-    "hotelPlan": {
-        "hotels": [
-            {
-                "destination": "Hanoi",
-                "checkInDate": "2026-09-30",
-                "checkOutDate": "2026-10-02",
-                "hotelArrangement": "Hanoi Le Jardin Hotel & Spa - 1 Deluxe Double Room + 1 Deluxe Triple Room - 2 Nights"
-            },
-            {
-                "destination": "Halong Bay",
-                "checkInDate": "2026-10-02",
-                "checkOutDate": "2026-10-03",
-                "hotelArrangement": "Ambassador Signature Cruise - 1 Premium Double Cabin + 1 Premium Triple Cabin - 1 Night"
-            },
-            {
-                "destination": "Sapa",
-                "checkInDate": "2026-10-03",
-                "checkOutDate": "2026-10-04",
-                "hotelArrangement": "Chapa Express Train (Overnight sleeper train) - 2 Private 4-Berth Cabins - 1 Night"
-            },
-            {
-                "destination": "Sapa",
-                "checkInDate": "2026-10-04",
-                "checkOutDate": "2026-10-06",
-                "hotelArrangement": "Aliana Boutique Sapa Hotel And Spa - 1 Deluxe Double Room + 1 Deluxe Triple Room - 2 Nights"
-            }
-        ],
-        "roomNotes": (
-            "Double + Triple room configurations pre-arranged across all properties. "
-            "For the overnight train, 2 private 4-berth cabins have been fully booked for 5 guests to ensure complete comfort."
-        )
-    },
-    "optionalEnhancements": [
-        {
-            "title": "Private Vegetarian Cooking Class in Hanoi (adapted for Indian recipes)",
-            "status": "Recommended"
-        },
-        {
-            "title": "Room Upgrade to Executive Suite at Aliana Boutique Sapa Hotel & Spa",
-            "status": "On request"
-        }
-    ],
-    "bookingTerms": {
-        "deposit": "A 30% deposit is required at the time of booking to secure hotels, cruise, and train cabins.",
-        "balance": "The remaining 70% balance is due 30 days prior to arrival.",
-        "cancellation": "Free cancellation up to 45 days prior to departure. 50% cancellation fee between 44 and 15 days.",
-        "confirmation": "Subject to availability. Final confirmations will be sent within 24 hours of deposit receipt."
-    },
-    "finalization": {
-        "finalDetailsRequired": "Passport copies valid for at least 6 months and international flight details are required to complete arrangements.",
-        "afterConfirmation": "Your dedicated 24/7 travel host details and final service vouchers will be shared 7 days prior to departure."
-    },
-    "pricing": {
-        "currency": "USD",
-        "pricingTitle": "Premium Journey Investment",
-        "basis": "Based on 5 Adults sharing 1 Double Room + 1 Triple Room",
-        "priceOptions": [
-            {
-                "label": "Premium Accommodations & Cruise (5 Adults)",
-                "notes": "1,091.25 USD per person on Double + Triple sharing basis",
-                "amount": 1091.25
-            }
-        ],
-        "subtotal": 5456.25,
-        "discountTotal": 0.0,
-        "taxTotal": 0.0,
-        "grandTotal": 5456.25
-    },
-    "retrievalStatus": {
-        "hotel": "pending",
-        "activity": "pending",
-        "guide": "pending",
-        "transfer": "pending",
-        "flight": "pending"
-    },
-    "candidateBlocks": [
-        {
-            "block_id": "H_HANOI_1",
-            "service_type": "hotel",
-            "destination": "Hanoi",
-            "source_day_numbers": [1, 2]
-        },
-        {
-            "block_id": "H_HALONG",
-            "service_type": "hotel",
-            "destination": "Halong Bay",
-            "source_day_numbers": [3]
-        },
-        {
-            "block_id": "T_TRAIN",
-            "service_type": "transfer",
-            "destination": "Sapa",
-            "source_day_numbers": [4]
-        },
-        {
-            "block_id": "H_SAPA",
-            "service_type": "hotel",
-            "destination": "Sapa",
-            "source_day_numbers": [5, 6]
-        }
-    ],
-    "inclusions": [
-        "Premium accommodation in Hanoi (Hanoi Le Jardin Hotel & Spa) and Sapa (Aliana Boutique Sapa) with early check-in pre-arranged on Day 1.",
-        "Overnight luxury cruise on Ambassador Signature Cruise in Halong Bay with all onboard meals included.",
-        "Overnight sleeper train tickets on Chapa Express Train in 2 private 4-berth cabins for comfort and privacy.",
-        "Private VIP fast-track immigration handling and airport transfers upon arrival in Hanoi.",
-        "All ground transfers in private air-conditioned vehicles as detailed in the itinerary.",
-        "Private English-speaking guides for all sightseeing tours and excursions.",
-        "All entrance fees, boat tickets, and activity charges (including Fansipan cable car tickets).",
-        "Vietnam E-visas processing and fees included for all 5 guests.",
-        "Dedicated Indian vegetarian meals (Lacto-Ovo: eggs allowed, strictly no meat, fish, or seafood) pre-arranged at all stops."
-    ],
-    "exclusions": [
-        "International flights to and from Vietnam.",
-        "Personal expenses (laundry, beverages, telephone calls, etc.).",
-        "Travel insurance (highly recommended).",
-        "Tips and gratuities for guides and drivers."
-    ]
-}
+# Load the structured 7-day Indian traveler English itinerary payload from published source
+payload_file = os.path.join(os.path.dirname(__file__), "published", "quo_01ece847501d", "payload.json")
+ctx_file = os.path.join(os.path.dirname(__file__), "published", "quo_01ece847501d", "ctx.json")
+
+with open(payload_file, "r", encoding="utf-8") as f:
+    payload = json.load(f)
+
+# If sale has edited the quotation inline (ctx.json exists with latest version updates), merge changes
+if os.path.exists(ctx_file):
+    print(f"Syncing latest inline edits from {ctx_file} into payload...")
+    with open(ctx_file, "r", encoding="utf-8") as f:
+        ctx = json.load(f)
+    
+    edited = ctx.get("html_sync", {}).get("en", {}).get("edited_fields", {})
+    
+    # 1. Sync overview and narrative metadata
+    narrative = edited.get("lede") or ctx.get("lede")
+    if narrative:
+        payload["quotationNarrative"] = narrative
+        
+    headline = edited.get("quotation_title") or ctx.get("quotation_title")
+    if headline and "landingpageContent" in payload:
+        payload["landingpageContent"]["heroSection"]["headline"] = headline
+        
+    subtitle = edited.get("tour_title") or ctx.get("tour_title")
+    if subtitle and "landingpageContent" in payload:
+        payload["landingpageContent"]["heroSection"]["subtitle"] = subtitle
+        
+    # 2. Sync Journey Glance info
+    if "journeyGlance" in payload:
+        market = edited.get("nationality") or ctx.get("nationality")
+        if market:
+            payload["journeyGlance"]["market"] = market
+            
+        profile = edited.get("customer_name") or ctx.get("guests_txt")
+        if profile:
+            payload["journeyGlance"]["guestProfile"] = profile
+            
+        style = edited.get("travel_style") or ctx.get("travel_style")
+        if style:
+            payload["journeyGlance"]["partnerNote"] = style
+            
+        validity = edited.get("valid_until") or ctx.get("valid_until")
+        if validity:
+            payload["journeyGlance"]["validity"] = validity
+
+    # 3. Sync Day-by-Day Itinerary updates
+    ctx_iti = ctx.get("itinerary", [])
+    pay_iti = payload.get("itinerary", [])
+    import re
+    
+    for idx, day in enumerate(ctx_iti, 1):
+        if idx - 1 < len(pay_iti):
+            p_day = pay_iti[idx - 1]
+            
+            # Title
+            title_key = f"day_title_{idx}"
+            p_day["title"] = edited.get(title_key) or day.get("title")
+            
+            # Summary (description paragraphs)
+            desc_paras = []
+            p = 0
+            while True:
+                desc_key = f"day_desc_{idx}_{p}"
+                if desc_key in edited:
+                    desc_paras.append(edited[desc_key])
+                    p += 1
+                else:
+                    break
+            if desc_paras:
+                p_day["summary"] = "\n\n".join(desc_paras)
+            elif day.get("description"):
+                p_day["summary"] = "\n\n".join(day["description"]) if isinstance(day["description"], list) else day["description"]
+                
+            # Overnight
+            overnight_key = f"day_overnight_{idx}"
+            p_day["overnight"] = edited.get(overnight_key) or day.get("overnight")
+            
+            # Meals
+            meals_key = f"day_meals_{idx}"
+            if meals_key in edited:
+                p_day["meals"] = [m.strip() for m in re.split(r'[·•\-,/]', edited[meals_key]) if m.strip()]
+            else:
+                p_day["meals"] = day.get("meals")
+                
+            # Activities
+            highlights_key = f"day_highlights_{idx}"
+            if highlights_key in edited:
+                p_day["activities"] = [h.strip() for h in re.split(r'[·•\-,/]', edited[highlights_key]) if h.strip()]
+            else:
+                p_day["activities"] = day.get("activities")
+                
+            # Notes
+            notes_list = []
+            p = 0
+            while True:
+                note_key = f"day_note_{idx}_{p}"
+                if note_key in edited:
+                    notes_list.append(edited[note_key])
+                    p += 1
+                else:
+                    break
+            if notes_list:
+                p_day["notes"] = notes_list
+            else:
+                p_day["notes"] = day.get("notes")
+
+    # 4. Sync Hotels room notes
+    room_notes = edited.get("room_notes") or ctx.get("room_notes")
+    if room_notes and "hotelPlan" in payload:
+        payload["hotelPlan"]["roomNotes"] = room_notes
+        
+    # 5. Sync Inclusions & Exclusions
+    inclusions = []
+    p = 1
+    while True:
+        inc_key = f"inc_{p}"
+        if inc_key in edited:
+            inclusions.append(edited[inc_key])
+            p += 1
+        else:
+            break
+    if inclusions:
+        payload["inclusions"] = inclusions
+    elif ctx.get("inclusions"):
+        payload["inclusions"] = ctx["inclusions"]
+        
+    exclusions = []
+    p = 1
+    while True:
+        exc_key = f"exc_{p}"
+        if exc_key in edited:
+            exclusions.append(edited[exc_key])
+            p += 1
+        else:
+            break
+    if exclusions:
+        payload["exclusions"] = exclusions
+    elif ctx.get("exclusions"):
+        payload["exclusions"] = ctx["exclusions"]
+
+    # 6. Sync Terms
+    if "bookingTerms" in payload:
+        term_deposit = edited.get("term_deposit") or ctx.get("term_deposit")
+        if term_deposit:
+            payload["bookingTerms"]["deposit"] = term_deposit
+            
+        term_balance = edited.get("term_balance") or ctx.get("term_balance")
+        if term_balance:
+            payload["bookingTerms"]["balance"] = term_balance
+            
+        term_cancellation = edited.get("term_cancellation") or ctx.get("term_cancellation")
+        if term_cancellation:
+            payload["bookingTerms"]["cancellation"] = term_cancellation
+            
+        term_confirmation = edited.get("term_confirmation") or ctx.get("term_confirmation")
+        if term_confirmation:
+            payload["bookingTerms"]["confirmation"] = term_confirmation
+
+    # 7. Sync Finalization
+    if "finalization" in payload:
+        final_reqs = []
+        p = 0
+        while True:
+            fr_key = f"final_req_{p}"
+            if fr_key in edited:
+                final_reqs.append(edited[fr_key])
+                p += 1
+            else:
+                break
+        if final_reqs:
+            payload["finalization"]["finalDetailsRequired"] = ", ".join(final_reqs)
+        elif ctx.get("final_req"):
+            payload["finalization"]["finalDetailsRequired"] = ", ".join(ctx["final_req"]) if isinstance(ctx["final_req"], list) else ctx["final_req"]
+            
+        final_afters = []
+        p = 0
+        while True:
+            fa_key = f"final_after_{p}"
+            if fa_key in edited:
+                final_afters.append(edited[fa_key])
+                p += 1
+            else:
+                break
+        if final_afters:
+            payload["finalization"]["afterConfirmation"] = ", ".join(final_afters)
+        elif ctx.get("final_after"):
+            payload["finalization"]["afterConfirmation"] = ", ".join(ctx["final_after"]) if isinstance(ctx["final_after"], list) else ctx["final_after"]
+
+    # 8. Sync Pricing Options & Totals
+    if "pricing" in payload:
+        if ctx.get("grand_total"):
+            payload["pricing"]["grandTotal"] = ctx["grand_total"]
+        if ctx.get("subtotal"):
+            payload["pricing"]["subtotal"] = ctx["subtotal"]
+        
+        ctx_opts = ctx.get("price_options", [])
+        pay_opts = payload["pricing"].get("priceOptions", [])
+        for p_idx, opt in enumerate(ctx_opts, 1):
+            if p_idx - 1 < len(pay_opts):
+                p_opt = pay_opts[p_idx - 1]
+                
+                pax_key = f"price_pax_{p_idx}"
+                if pax_key in edited:
+                    try:
+                        import re
+                        val_str = edited[pax_key]
+                        num_match = re.search(r'([\d,.]+)', val_str)
+                        if num_match:
+                            clean_val = float(num_match.group(1).replace(",", ""))
+                            p_opt["amount"] = clean_val
+                    except Exception:
+                        pass
+                elif opt.get("pricePerPerson", {}).get("amount"):
+                    p_opt["amount"] = opt["pricePerPerson"]["amount"]
+                
+                if opt.get("hotelCategory"):
+                    p_opt["label"] = opt["hotelCategory"]
+                if opt.get("optionName"):
+                    p_opt["notes"] = opt["optionName"]
+
+
 
 print("POST /quotations (B2B English)...")
 response = client.post("/quotations?lang=en", json=payload)
@@ -329,6 +292,75 @@ try:
     quotation_id = res_json.get("quotationId")
     if quotation_id:
         print(f"Quotation {quotation_id} generated successfully!")
+        
+        # Sync 100% context data (including specialist info, translations, html_sync edits) from quo_01ece847501d
+        if os.path.exists(ctx_file):
+            print(f"Cloning baseline ctx.json and published HTML/PDF from quo_01ece847501d to {quotation_id}...")
+            
+            # 1. Clone ctx.json
+            with open(ctx_file, "r", encoding="utf-8") as f:
+                cloned_ctx = json.load(f)
+            cloned_ctx["quotation_id"] = quotation_id
+            
+            if "quotation_number" in cloned_ctx:
+                cloned_ctx["quotation_number"] = f"QT-2026-CAPELLA-7D6N-IND"
+            
+            # Write cloned ctx.json to the new quotation directory
+            new_quo_dir = os.path.join("published", quotation_id)
+            os.makedirs(new_quo_dir, exist_ok=True)
+            with open(os.path.join(new_quo_dir, "ctx.json"), "w", encoding="utf-8") as f:
+                json.dump(cloned_ctx, f, ensure_ascii=False, default=str)
+                
+            # Update uvicorn in-memory cache directly
+            from main import quotations
+            if quotation_id in quotations:
+                quotations[quotation_id]["ctx"] = cloned_ctx
+
+            # 2. Find and clone the latest v{version}.html as v1.html
+            import glob
+            version_files = glob.glob(os.path.join(os.path.dirname(ctx_file), "v*.html"))
+            latest_html_file = None
+            max_ver = 0
+            for vf in version_files:
+                basename = os.path.basename(vf)
+                m = re.match(r'v(\d+)\.html', basename)
+                if m:
+                    ver = int(m.group(1))
+                    if ver > max_ver:
+                        max_ver = ver
+                        latest_html_file = vf
+            
+            if latest_html_file:
+                print(f"Copying latest HTML version {latest_html_file} as v1.html for {quotation_id}...")
+                with open(latest_html_file, "r", encoding="utf-8") as f:
+                    html_content = f.read()
+                # Replace the original ID with the new one
+                html_content = html_content.replace("quo_01ece847501d", quotation_id)
+                with open(os.path.join(new_quo_dir, "v1.html"), "w", encoding="utf-8") as f:
+                    f.write(html_content)
+                
+                # Update uvicorn in-memory cache directly as well
+                from main import quotations
+                if quotation_id in quotations:
+                    quotations[quotation_id]["html"] = html_content
+
+            # 3. Copy translation status
+            ts_file = os.path.join(os.path.dirname(ctx_file), "translation_status.json")
+            if os.path.exists(ts_file):
+                with open(ts_file, "r", encoding="utf-8") as f:
+                    ts_content = f.read()
+                with open(os.path.join(new_quo_dir, "translation_status.json"), "w", encoding="utf-8") as f:
+                    f.write(ts_content)
+
+            # 4. Copy and replace pdf.html / pdf_en.html
+            for pdf_name in ["pdf.html", "pdf_en.html"]:
+                pdf_path = os.path.join(os.path.dirname(ctx_file), pdf_name)
+                if os.path.exists(pdf_path):
+                    with open(pdf_path, "r", encoding="utf-8") as f:
+                        pdf_content = f.read()
+                    pdf_content = pdf_content.replace("quo_01ece847501d", quotation_id)
+                    with open(os.path.join(new_quo_dir, pdf_name), "w", encoding="utf-8") as f:
+                        f.write(pdf_content)
         
         # Verify get endpoint and save HTML
         get_res = client.get(f"/quotations/{quotation_id}?lang=en")
@@ -341,6 +373,11 @@ try:
         
         get_pdf_res = client.get(f"/quotations/{quotation_id}/pdf?lang=en")
         print(f"GET /quotations/{quotation_id}/pdf status:", get_pdf_res.status_code)
+        if get_pdf_res.status_code == 200:
+            pdf_output_file = "vietnam-heritage-luxury-indian-7d6n-quotation-pdf.html"
+            with open(pdf_output_file, "w", encoding="utf-8") as f:
+                f.write(get_pdf_res.text)
+            print(f"PDF view saved to: {pdf_output_file}")
         
 except Exception as e:
     print("Failed to parse response:", e)

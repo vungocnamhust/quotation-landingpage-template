@@ -4,7 +4,7 @@ import requests
 
 PROD_URL = "https://journeys.vietnamsafar.vn"
 
-# 1. Load B2B quotation payload from test_b2b.py
+# 1. Load quotation payload from test_b2b.py
 import test_b2b
 quotation_payload = test_b2b.payload
 

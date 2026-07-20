@@ -1,0 +1,1748 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8" />
+  <!-- Premium Typography Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700&family=Cinzel:wght@400;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <title>Anisha&#39;s Family Trip — PDF Version</title>
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <style>
+    :root {
+      --ivory: #f8f3e9;
+      --ink: #11130f;
+      --muted: #706a5d;
+      --emerald: #17412e;
+      --emerald-2: #0e2f22;
+      --gold: #b7894b;
+      --gold-2: #d8bd85;
+      --line: rgba(183,137,75,.28);
+      --card: #fffaf1;
+      --charcoal: #171915;
+      --serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+      --sans: 'Plus Jakarta Sans', Arial, Helvetica, sans-serif;
+    }
+
+    @page { size: A4 portrait; margin: 0; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.6;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* Screen-only viewer styles */
+    @media screen {
+      body {
+        background: #525659; /* PDF viewer gray */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 40px 0;
+        gap: 20px;
+      }
+    }
+
+    @media print {
+      body { 
+        background-color: var(--ivory) !important; 
+        padding: 0; 
+        display: block; 
+      }
+      .pdf-page {
+        width: auto !important;
+        min-height: auto !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+      }
+      .cover {
+        height: 100vh !important;
+      }
+    }
+
+    /* ── Page wrapper ── */
+    .pdf-page {
+      width: 794px;
+      min-height: 1123px;
+      background: var(--ivory);
+      page-break-after: always;
+      position: relative;
+    }
+    .pdf-page:last-of-type { page-break-after: auto; }
+    .ltr-token {
+      direction: ltr;
+      unicode-bidi: isolate;
+      display: inline-block;
+      text-align: left;
+    }
+
+    @media screen {
+      .pdf-page {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+      }
+    }
+
+    /* ── Page watermark (fixed = repeats on every print page) ── */
+    .watermark {
+      position: fixed;
+      bottom: 10px;
+      right: 20px;
+      font-size: 9px;
+      color: rgba(0,0,0,.22);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      font-family: var(--sans);
+    }
+
+    /* ═══════════════════════════════════════════
+       PAGE 1 — Cover
+    ═══════════════════════════════════════════ */
+    .cover {
+      width: 794px;
+      height: 1123px;
+      background: linear-gradient(160deg, rgba(17,19,15,.88) 0%, rgba(17,19,15,.55) 55%, rgba(17,19,15,.18) 100%),
+                  center/cover no-repeat;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 0;
+    }
+
+    .cover-body {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 24px;
+      align-items: end;
+      padding: 48px 48px 54px;
+    }
+
+    .cover-kicker {
+      color: var(--gold-2);
+      font-size: 10px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .cover h1 {
+      font-family: var(--serif);
+      font-size: 42px;
+      line-height: 1.15;
+      font-weight: 500;
+      letter-spacing: -.02em;
+      margin-bottom: 16px;
+      max-width: 420px;
+    }
+
+    .cover-lede {
+      font-size: 14px;
+      color: rgba(255,255,255,.76);
+      max-width: 380px;
+      line-height: 1.6;
+    }
+
+    /* Quote card on cover */
+    .quote-card {
+      background: rgba(255,250,241,.93);
+      color: var(--ink);
+      border-radius: 24px;
+      padding: 22px 24px;
+      border: 1px solid rgba(255,255,255,.6);
+    }
+
+    .quote-card h2 {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 14px;
+      color: var(--emerald);
+    }
+
+    .qrow {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(17,19,15,.1);
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .qrow:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .qrow strong { color: var(--ink); text-align: right; font-size: 11px; }
+
+    .qrow.stacked {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 3px;
+    }
+    .qrow.stacked strong {
+      text-align: left;
+    }
+
+    /* Strip bar at bottom of cover */
+    .cover-strip {
+      background: rgba(23,65,46,.92);
+      display: grid;
+      grid-template-columns: repeat(4,1fr);
+      padding: 16px 48px;
+    }
+
+    .strip-item { text-align: center; }
+    .strip-item span {
+      display: block;
+      color: var(--gold-2);
+      font-size: 8px;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .strip-item strong {
+      font-family: var(--serif);
+      font-size: 20px;
+      font-weight: 500;
+      color: white;
+      display: block;
+      margin-top: 3px;
+    }
+
+    /* ═══════════════════════════════════════════
+       Shared section styles
+    ═══════════════════════════════════════════ */
+    .page-inner { padding: 44px 48px; }
+
+    .section-label {
+      color: var(--gold);
+      font-size: 9px;
+      letter-spacing: .24em;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .section-h2 {
+      font-family: var(--serif);
+      font-size: 36px;
+      line-height: .98;
+      letter-spacing: -.04em;
+      font-weight: 500;
+      color: var(--emerald);
+      margin-bottom: 8px;
+    }
+
+    .section-p {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 24px;
+    }
+
+    /* ═══════════════════════════════════════════
+       PAGE 2 — Overview + Gallery
+    ═══════════════════════════════════════════ */
+    .experience-grid {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .exp-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .exp-num {
+      color: var(--gold);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .18em;
+    }
+
+    .exp-card h3 {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--emerald);
+      margin: 8px 0 6px;
+      line-height: 1.1;
+    }
+
+    .exp-card p { font-size: 12px; color: var(--muted); }
+
+    /* Gallery 2-col for A4 */
+    .gallery {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      grid-auto-rows: 200px;
+      gap: 10px;
+    }
+
+    .img-tile {
+      border-radius: 18px;
+      overflow: hidden;
+      background: center/cover no-repeat;
+      position: relative;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    .img-tile.large { grid-row: span 2; }
+
+    .img-tile::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 40%, rgba(17,19,15,.7));
+    }
+
+    .img-caption {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 14px;
+      color: white;
+    }
+
+    .img-caption small {
+      display: block;
+      color: var(--gold-2);
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: .18em;
+      font-weight: 700;
+    }
+
+    .img-caption strong {
+      font-family: var(--serif);
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    /* ═══════════════════════════════════════════
+       PAGE 3 — Itinerary
+    ═══════════════════════════════════════════ */
+    .itinerary { display: grid; gap: 10px; }
+
+    .day-card {
+      display: grid;
+      grid-template-columns: 56px 1fr 140px;
+      gap: 16px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      align-items: start;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .day-num {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--emerald);
+      color: white;
+      display: grid;
+      place-items: center;
+      font-family: var(--serif);
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .day-card h3 {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--emerald);
+      margin: 2px 0 5px;
+      line-height: 1.1;
+    }
+
+    .day-badge {
+      font-size: 8px;
+      color: var(--gold);
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .day-card p { font-size: 11px; color: var(--muted); }
+
+    .day-meta {
+      text-align: right;
+      padding-top: 6px;
+    }
+
+    .day-meta .price {
+      font-family: var(--serif);
+      font-size: 22px;
+      color: var(--emerald);
+      font-weight: 500;
+    }
+
+    .day-meta .price-sub { font-size: 10px; color: var(--muted); }
+    .day-meta .qty { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+
+    /* ═══════════════════════════════════════════
+       PAGE 4 — Pricing + Inc/Exc
+    ═══════════════════════════════════════════ */
+    .pricing-block {
+      background: var(--charcoal);
+      border-radius: 24px;
+      padding: 32px;
+      color: white;
+      margin-bottom: 16px;
+      break-inside: avoid;
+    }
+
+    .pricing-block h2 {
+      font-family: var(--serif);
+      font-size: 32px;
+      font-weight: 500;
+      letter-spacing: -.04em;
+      margin-bottom: 8px;
+    }
+
+    .pricing-block .sub {
+      color: rgba(255,255,255,.68);
+      font-size: 12px;
+      margin-bottom: 20px;
+    }
+
+    .price-cards {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 12px;
+    }
+
+    .price-card {
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(216,189,133,.35);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .price-card.featured {
+      background: linear-gradient(180deg,rgba(183,137,75,.25),rgba(255,255,255,.06));
+      border-color: var(--gold-2);
+    }
+
+    .price-card span {
+      color: var(--gold-2);
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    .price-card strong {
+      display: block;
+      font-family: var(--serif);
+      font-size: 28px;
+      font-weight: 500;
+      margin: 6px 0 2px;
+    }
+
+    .price-card small { font-size: 10px; color: rgba(255,255,255,.65); }
+
+    .price-note {
+      margin-top: 14px;
+      font-size: 11px;
+      color: rgba(255,255,255,.55);
+    }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 20px;
+      break-inside: avoid;
+    }
+
+    .panel h3 {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--emerald);
+      margin-bottom: 10px;
+    }
+
+    .panel ul {
+      padding-left: 18px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .panel ul li { font-size: 12px; color: var(--muted); }
+
+    /* ═══════════════════════════════════════════
+       PAGE 5 — Terms + CTA + Footer
+    ═══════════════════════════════════════════ */
+    .terms-grid {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .term-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      break-inside: avoid;
+    }
+
+    .term-card .label {
+      font-size: 8px;
+      color: var(--gold);
+      font-weight: 800;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .term-card h3 {
+      font-family: var(--serif);
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--emerald);
+      margin-bottom: 6px;
+    }
+
+    .term-card p { font-size: 11px; color: var(--muted); }
+
+    .cta-block {
+      background: linear-gradient(135deg, var(--emerald-2), #11130f 64%, #332711);
+      color: white;
+      border-radius: 24px;
+      padding: 32px;
+      display: grid;
+      grid-template-columns: 1fr 220px;
+      gap: 28px;
+      align-items: center;
+      break-inside: avoid;
+      margin-bottom: 20px;
+    }
+
+    .cta-block h2 {
+      font-family: var(--serif);
+      font-size: 32px;
+      font-weight: 500;
+      letter-spacing: -.04em;
+      line-height: .96;
+      margin-bottom: 10px;
+    }
+
+    .cta-block p { color: rgba(255,255,255,.72); font-size: 13px; }
+
+    .contact-box {
+      background: rgba(255,255,255,.09);
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .contact-box .clabel {
+      display: block;
+      color: var(--gold-2);
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: .16em;
+      font-weight: 800;
+      margin-top: 12px;
+    }
+
+    .contact-box .clabel:first-child { margin-top: 0; }
+    .contact-box .cval { font-weight: 700; font-size: 13px; margin-top: 2px; }
+
+    .pdf-footer {
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+      padding: 16px 0 20px;
+      border-top: 1px solid var(--line);
+      margin-top: 8px;
+    }
+
+    /* Page header bar (pages 2-5) */
+    .page-header {
+      background: var(--emerald);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 48px;
+    }
+
+    .page-header .brand {
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .page-header .ref {
+      color: var(--gold-2);
+      font-size: 9px;
+      letter-spacing: .1em;
+    }
+
+    html[dir="rtl"] {
+      direction: rtl;
+      --serif: 'Noto Sans Arabic', 'Amiri', Georgia, serif;
+      --sans: 'Noto Sans Arabic', 'Plus Jakarta Sans', Arial, sans-serif;
+    }
+    html[dir="rtl"] body {
+      direction: rtl;
+      text-align: right;
+    }
+    html[dir="rtl"] .qrow strong {
+      text-align: left;
+    }
+    html[dir="rtl"] .qrow.stacked strong {
+      text-align: right;
+    }
+    html[dir="rtl"] .day-meta {
+      text-align: left;
+    }
+    html[dir="rtl"] .hotel-pdf-card div[style*="text-align: right"] {
+      text-align: left !important;
+    }
+    html[dir="rtl"] table {
+      text-align: right;
+    }
+    html[dir="rtl"] th {
+      text-align: right;
+    }
+    html[dir="rtl"] .contact-box {
+      text-align: left;
+    }
+
+    /* Custom Leaflet Map Markers & Styling */
+    .custom-marker {
+      position: relative;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .marker-core {
+      width: 24px;
+      height: 24px;
+      background: var(--emerald);
+      border: 2px solid var(--gold-2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 800;
+      font-size: 11px;
+      box-shadow: 0 4px 12px rgba(17, 19, 15, 0.2);
+      z-index: 2;
+    }
+    .marker-pulse {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      background: rgba(183, 137, 75, 0.25);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .leaflet-control-attribution {
+      font-size: 8px !important;
+      background: rgba(255, 255, 255, 0.75) !important;
+    }
+    /* Clean up Map for Printing */
+    .leaflet-container {
+      background-color: var(--ivory) !important;
+    }
+    .leaflet-tile {
+      filter: sepia(0.7) hue-rotate(-10deg) saturate(0.4) contrast(1.05) brightness(0.98) !important;
+    }
+  </style>
+</head>
+<body>
+
+<div class="watermark">Capella Travel · QT-2026-CAPELLA-7D6N-IND · Confidential B2B</div>
+
+<!-- ═══════════════════ PAGE 1 — Cover ═══════════════════ -->
+<div class="pdf-page">
+  <div class="cover" style="background-image: linear-gradient(160deg,rgba(17,19,15,.88),rgba(17,19,15,.55) 55%,rgba(17,19,15,.18)), url('/assets/ha-noi/hanoi1.jpg');">
+    <div class="cover-body">
+      <div>
+        <div style="font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-2);margin-bottom:10px;font-weight:700;">Confidential B2B Proposal</div>
+        <div class="cover-kicker">Private Luxury Quotation ‒ 7D6N ‒ 30 Sep – 06 Oct 2026</div>
+        <h1>Anisha&#39;s Family Trip</h1>
+        <p class="cover-lede">A premium, personalized 7-day private journey crafted by Capella Travel for our guests. The itinerary showcases the historic soul of Hanoi, the mystical rivers of Ninh Binh, an overnight cruise through the magical waters of Ha Long Bay, and the breathtaking terraced mountains of Sapa. Every detail, from the double and triple room configurations to the carefully curated vegetarian culinary experiences, has been designed for your group of 5 adults to travel in ultimate comfort.</p>
+      </div>
+      <div class="quote-card">
+        <h2>Journey Overview</h2>
+        <div class="qrow"><span>Prepared for</span><strong>Anisha</strong></div>
+        <div class="qrow"><span>Overview</span><strong>Less Crowded, Scenic Journey</strong></div>
+        
+        <div class="qrow"><span>Guests</span><strong>5 Adults (Double + Triple Room Configuration)</strong></div>
+        
+        
+        <div class="qrow"><span>Travel dates</span><strong><span class="ltr-token">30 Sep – 06 Oct 2026</span></strong></div>
+        
+        
+        <div class="qrow stacked"><span>Route</span><strong>Hanoi – Ninh Binh – Halong Bay – Hanoi – Sapa – Hanoi</strong></div>
+        
+        
+        <div class="qrow stacked"><span>Style</span><strong>Fully private tour with dedicated English-speaking guides, private transfers, and curated...</strong></div>
+        
+        <div class="qrow"><span>Ref.</span><strong><span class="ltr-token">QT-2026-CAPELLA-7D6N-IND</span></strong></div>
+        <div class="qrow"><span>Contact</span><strong><span class="ltr-token">+84 913393119</span></strong></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE 2 — Glance & Overview ═══════════════════ -->
+<div class="pdf-page">
+  <div class="page-header">
+    <span class="brand">Capella Travel — B2B Travel Proposal</span>
+    <span class="ref"><span class="ltr-token">QT-2026-CAPELLA-7D6N-IND · 2026-09-30</span></span>
+  </div>
+  <div class="page-inner">
+
+    <div class="section-label" style="margin-top:20px;">Interactive Route map</div>
+    <h2 class="section-h2">Your Journey, Mapped</h2>
+    <div style="margin-top: 15px; border-radius: 18px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 4px 16px rgba(17,19,15,0.04);">
+      <div id="map" style="width: 100%; height: 420px; display: block; z-index: 1;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE 3 — Why Works & Gallery ═══════════════════ -->
+<div class="pdf-page">
+  <div class="page-header">
+    <span class="brand">Capella Travel — B2B Travel Proposal</span>
+    <span class="ref"><span class="ltr-token">QT-2026-CAPELLA-7D6N-IND · 2026-09-30</span></span>
+  </div>
+  <div class="page-inner">
+    <div class="section-label">Behind the Itinerary Curation</div>
+    <h2 class="section-h2">A Perfectly Paced Journey</h2>
+    <p class="section-p">Tailored care, balanced pacing, and seamless logistics designed specifically for your group.</p>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px;">
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
+        <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">Private &amp; Flexible</strong>
+        <p style="font-size:11px; color:var(--muted); line-height:1.4;">Travel in complete exclusivity with your private air-conditioned vehicle and dedicated English-speaking guide. The daily pacing is highly flexible, ensuring your group enjoy the journey.</p>
+      </div>
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
+        <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">Comfort &amp; Pacing</strong>
+        <p style="font-size:11px; color:var(--muted); line-height:1.4;">Enjoy premium accommodations including Hanoi Le Jardin Hotel &amp; Spa, Ambassador Signature Cruise in Halong, and Aliana Boutique Sapa.</p>
+      </div>
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
+        <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">Dietary &amp; Special Care</strong>
+        <p style="font-size:11px; color:var(--muted); line-height:1.4;">Your dietary requirements are fully respected. All included meals feature carefully vegetarian selections, with eggs permitted and strictly no meat, fish, or seafood.</p>
+      </div>
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
+        <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">Balanced Highlights</strong>
+        <p style="font-size:11px; color:var(--muted); line-height:1.4;">A perfect harmony of historic culture in Hanoi, scenic rivers in Ninh Binh, a luxury overnight cruise in Halong Bay, and highland exploration in Sapa.</p>
+      </div>
+    </div>
+
+    <div class="section-label">Destination Gallery</div>
+    <h2 class="section-h2" style="margin-top: 10px; margin-bottom: 6px;">Destination imagery woven into the quotation.</h2>
+    <p class="section-p" style="margin-bottom: 16px;">Cinematic destination panels crafted for a premium travel proposal.</p>
+    <div class="gallery" style="margin-top:8px;">
+      
+      <div class="img-tile large" style="background-image:url('/assets/ha-noi/duongtau.jpg')">
+        <div class="img-caption">
+          <small>Highlight</small>
+          <strong>Hanoi</strong>
+        </div>
+      </div>
+      
+      <div class="img-tile " style="background-image:url('/assets/ninh-binh/tamcoc.jpg')">
+        <div class="img-caption">
+          <small>Destination</small>
+          <strong>Ninh Binh</strong>
+        </div>
+      </div>
+      
+      <div class="img-tile " style="background-image:url('/assets/quang-ninh/halong-bay.jpg')">
+        <div class="img-caption">
+          <small>Experience</small>
+          <strong>Halong Bay</strong>
+        </div>
+      </div>
+      
+      <div class="img-tile " style="background-image:url('/assets/lao-cai/fansipan.jpg')">
+        <div class="img-caption">
+          <small>Journey</small>
+          <strong>Sapa</strong>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE 4 — Itinerary ═══════════════════ -->
+<div class="pdf-page">
+  <div class="page-header">
+    <span class="brand">Capella Travel — Luxury Quotation</span>
+    <span class="ref"><span class="ltr-token">QT-2026-CAPELLA-7D6N-IND · 2026-09-30</span></span>
+  </div>
+  <div class="page-inner">
+    <div class="section-label">Service Program</div>
+    <h2>Day-by-Day Journey Program</h2>
+    <p class="section-p">Your private 7D6N journey — 7 days, carefully crafted.</p>
+
+    <div class="itinerary">
+      
+      <div class="day-card">
+        <div class="day-num">1</div>
+        <div>
+          <div class="day-badge">DAY 1</div>
+          <h3>Day 1 — Hanoi</h3>
+          
+          <p>Enjoy a leisurely morning in Sapa for final sightseeing or shopping. After lunch, board your private vehicle for the scenic drive back to Hanoi (approx. 5 hours). Arrive directly at Noi Bai International Airport for your late-evening international departure flight.</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>Highlights:</strong> VIP Airport Fast-track, private airport transfer, pre-arranged hotel early check-in, gourmet Indian vegetarian welcome dinner.
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>Notes:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>Sense of Pace: Relaxed</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">Overnight</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Hanoi</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">Meals</div>
+          <div style="font-size:11px">Indian Vegetarian Welcome Dinner</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">2</div>
+        <div>
+          <div class="day-badge">DAY 2</div>
+          <h3>Day 2 — Ninh Binh</h3>
+          
+          <p>Embark on a full-day private excursion to Ninh Binh. Experience the serene beauty of Trang An landscape complex, a UNESCO World Heritage site, during a traditional rowboat tour through limestone caves. Visit the ancient capital of Hoa Lu and climb to the peak of Mua Cave for panoramic views over the rice fields. Savor a local vegetarian lunch...</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>Highlights:</strong> Private roundtrip vehicle to Ninh Binh, English guide, Trang An boat tour, Mua Cave entry, vegetarian lunch.
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>Notes:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>Sense of Pace: Active</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">Overnight</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Ninh Binh</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">Meals</div>
+          <div style="font-size:11px">Breakfast &amp; Indian Vegetarian Lunch</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">3</div>
+        <div>
+          <div class="day-badge">DAY 3</div>
+          <h3>Day 3 — Halong Bay</h3>
+          
+          <p>Depart Hanoi by private vehicle to Halong Bay. Board the premium Ambassador Signature Cruise, where your Double and Triple cabins await. Glide past iconic karst formations and enjoy a delicious vegetarian buffet lunch on board. Participate in cruise activities including a bamboo boat ride, kayaking, or climbing for scenic viewpoints. Savor a...</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>Highlights:</strong> Private transfer Hanoi - Halong, double &amp; triple cabins on Ambassador Signature Cruise, cruise excursions, onboard vegetarian lunch and...
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>Notes:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>Sense of Pace: Relaxed</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">Overnight</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Halong Bay</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">Meals</div>
+          <div style="font-size:11px">Breakfast, Onboard Vegetarian Lunch &amp; Dinner</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">4</div>
+        <div>
+          <div class="day-badge">DAY 4</div>
+          <h3>Day 4 — Hanoi / Sapa</h3>
+          
+          <p>Greet the sunrise with Tai Chi on the sundeck. After a vegetarian brunch, check out and transfer back to Hanoi. Enjoy a private half-day city tour of Hanoi, visiting the historic Temple of Literature and Hoan Kiem Lake. Enjoy some free time for shopping. In the evening, savor a vegetarian dinner in Hanoi before boarding the Chapa Express Train to...</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>Highlights:</strong> Onboard vegetarian brunch, private transfer Halong - Hanoi, Hanoi half-day tour with guide and entry tickets, private vegetarian dinner,...
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>Notes:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>Sense of Pace: Active</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">Overnight</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Hanoi</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">Meals</div>
+          <div style="font-size:11px">Onboard Vegetarian Brunch &amp; Private Dinner</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">5</div>
+        <div>
+          <div class="day-badge">DAY 5</div>
+          <h3>Day 5 — Sapa</h3>
+          
+          <p>Arrive at Lao Cai station early in the morning and transfer to Sapa town. Check in to Aliana Boutique Sapa Hotel And Spa and enjoy a hot breakfast. Embark on a guided trekking tour to Cat Cat village, learning about the Black Hmong culture and viewing the scenic waterfall. Savor a local vegetarian lunch. Spend a relaxed afternoon exploring Sapa...</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>Highlights:</strong> Station transfer, Sapa tour with guide and entry tickets, vegetarian lunch.
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>Notes:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>Sense of Pace: Immersive</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">Overnight</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Sapa</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">Meals</div>
+          <div style="font-size:11px">Breakfast &amp; Vegetarian Lunch</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">6</div>
+        <div>
+          <div class="day-badge">DAY 6</div>
+          <h3>Day 6 — Sapa</h3>
+          
+          <p>A highlights day in Sapa! Take the Fansipan cable car, the longest three-rope cable car system in the world, to ascend the &#39;Roof of Indochina&#39; at 3,143 meters. Explore the spiritual pagoda complex at the summit. Enjoy a scenic vegetarian lunch. In the afternoon, visit Ta Van village or shop for souvenirs in Sapa town. Overnight at Aliana Boutique...</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>Highlights:</strong> Fansipan cable car roundtrip tickets, guide, Sapa transfers, vegetarian lunch.
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>Notes:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>Sense of Pace: Active</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">Overnight</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Sapa</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">Meals</div>
+          <div style="font-size:11px">Breakfast &amp; Vegetarian Lunch</div>
+          
+        </div>
+      </div>
+      
+      <div class="day-card">
+        <div class="day-num">7</div>
+        <div>
+          <div class="day-badge">DAY 7</div>
+          <h3>Day 7 — Departure</h3>
+          
+          <p>Enjoy a leisurely morning in Sapa for final sightseeing or shopping. In the afternoon, board your private luxury vehicle for the scenic drive back to Hanoi (approx. 5 hours). Arrive directly at Noi Bai International Airport for your late-evening international departure flight.</p>
+          
+          
+          <p style="margin-top:6px;font-size:10px;color:#b7894b">
+            <strong>Highlights:</strong> Private luxury transfer Sapa - Hanoi Airport.
+          </p>
+          
+          
+          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+            <strong>Notes:</strong>
+            <ul style="margin:2px 0 0;padding-left:10px;">
+              <li>Sense of Pace: Relaxed</li>
+            </ul>
+          </div>
+          
+        </div>
+        <div class="day-meta">
+          
+          <div class="price-sub" style="margin-bottom:2px">Overnight</div>
+          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">Hanoi</div>
+          
+          
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">Meals</div>
+          <div style="font-size:11px">Breakfast</div>
+          
+        </div>
+      </div>
+      
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE 5 — Hotel Plan & Pricing ═══════════════════ -->
+<div class="pdf-page">
+  <div class="page-header">
+    <span class="brand">Capella Travel — B2B Travel Proposal</span>
+    <span class="ref"><span class="ltr-token">QT-2026-CAPELLA-7D6N-IND · 2026-09-30</span></span>
+  </div>
+  <div class="page-inner">
+    <div class="section-label">Selected Hotel Plan</div>
+    <h2 class="section-h2">Selected Hotel Plan</h2>
+    <p class="section-p">Proposed hotels and luxury cruises selected for your journey. Subject to availability at confirmation.</p>
+
+    
+    <div class="hotel-plan-pdf" style="margin-top: 15px;">
+      
+      <div class="hotel-pdf-card" style="page-break-inside: avoid; border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 20px; ">
+        <!-- Header -->
+        <div style="margin-bottom: 10px;">
+          <span style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">HANOI, VIETNAM</span>
+          <h3 style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">Hanoi Le Jardin Hotel &amp; Spa</h3>
+        </div>
+        
+        <!-- Side-by-Side Images -->
+        <div style="margin: 10px 0; font-size: 0; width: 100%;">
+          <div style="width: 38%; display: inline-block; vertical-align: top; margin-right: 2%;">
+            <img src="/assets/hotels/hanoi/hanoi-le-jardin-hotel-spa/exterior/exterior_1.jpg" alt="Hanoi Le Jardin Hotel &amp; Spa" style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+          </div>
+          <div style="width: 60%; display: inline-block; vertical-align: top;">
+            <img src="/assets/hotels/hanoi/hanoi-le-jardin-hotel-spa/interior/interior_2.jpg" alt="Hanoi Le Jardin Hotel &amp; Spa Room" style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+          </div>
+        </div>
+        
+        <!-- Footer Columns (Introduction & Info/Tel) -->
+        <div style="width: 100%; margin-top: 10px;">
+          <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
+            
+            <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">Nestled in the historic Ba Dinh district, Hanoi Le Jardin Hotel &amp; Spa blends French colonial charm with modern hospitality. It offers elegant rooms, a rooftop bar with spectacular city views, and a serene spa for a perfect urban retreat.</p>
+            
+          </div>
+          <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
+            <h4 style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">Hanoi Le Jardin Hotel &amp; Spa</h4>
+            <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;"><span class="ltr-token">30 Sep – 02 Oct 2026</span></div>
+            <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">TEL: <span class="ltr-token">+84 24 3927 5888</span></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="hotel-pdf-card" style="page-break-inside: avoid; border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 20px; ">
+        <!-- Header -->
+        <div style="margin-bottom: 10px;">
+          <span style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">HALONG BAY, VIETNAM</span>
+          <h3 style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">Ambassador Signature Cruise</h3>
+        </div>
+        
+        <!-- Side-by-Side Images -->
+        <div style="margin: 10px 0; font-size: 0; width: 100%;">
+          <div style="width: 38%; display: inline-block; vertical-align: top; margin-right: 2%;">
+            <img src="/assets/hotels/halong/ambassador-signature-cruise/exterior/exterior_2.jpg" alt="Ambassador Signature Cruise" style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+          </div>
+          <div style="width: 60%; display: inline-block; vertical-align: top;">
+            <img src="/assets/hotels/halong/ambassador-signature-cruise/interior/interior_3.jpg" alt="Ambassador Signature Cruise Room" style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+          </div>
+        </div>
+        
+        <!-- Footer Columns (Introduction & Info/Tel) -->
+        <div style="width: 100%; margin-top: 10px;">
+          <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
+            
+            <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">A premier 5-star overnight cruise sailing through the mystical waters of Halong Bay and Lan Ha Bay. The cruise features elegant cabins with private balconies, upscale dining, an outdoor jacuzzi, and immersive itineraries showcasing natural wonders.</p>
+            
+          </div>
+          <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
+            <h4 style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">Ambassador Signature Cruise</h4>
+            <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;"><span class="ltr-token">02 Oct – 03 Oct 2026</span></div>
+            <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">TEL: <span class="ltr-token">+84 90 175 8888</span></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="hotel-pdf-card" style="page-break-inside: avoid; border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 20px; ">
+        <!-- Header -->
+        <div style="margin-bottom: 10px;">
+          <span style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">SAPA, VIETNAM</span>
+          <h3 style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">Chapa Express Train</h3>
+        </div>
+        
+        <!-- Side-by-Side Images -->
+        <div style="margin: 10px 0; font-size: 0; width: 100%;">
+          <div style="width: 38%; display: inline-block; vertical-align: top; margin-right: 2%;">
+            <img src="/assets/hotels/sapa/chapa-express-train/exterior/exterior_3.jpg" alt="Chapa Express Train" style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+          </div>
+          <div style="width: 60%; display: inline-block; vertical-align: top;">
+            <img src="/assets/hotels/sapa/chapa-express-train/interior/interior_2.jpg" alt="Chapa Express Train Room" style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+          </div>
+        </div>
+        
+        <!-- Footer Columns (Introduction & Info/Tel) -->
+        <div style="width: 100%; margin-top: 10px;">
+          <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
+            
+            <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">Chapa Express Train offers premium overnight sleeper service between Hanoi and Lao Cai (Sapa). Featuring traditional wooden panels, comfortable air-conditioned cabins, clean amenities, and personalized passenger hospitality.</p>
+            
+          </div>
+          <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
+            <h4 style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">Chapa Express Train</h4>
+            <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;"><span class="ltr-token">03 Oct – 04 Oct 2026</span></div>
+            <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">TEL: <span class="ltr-token">+84 24 3999 6868</span></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="hotel-pdf-card" style="page-break-inside: avoid; border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 20px; border-bottom: none; margin-bottom: 0;">
+        <!-- Header -->
+        <div style="margin-bottom: 10px;">
+          <span style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">SAPA, VIETNAM</span>
+          <h3 style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">Aliana Boutique Sapa Hotel And Spa</h3>
+        </div>
+        
+        <!-- Side-by-Side Images -->
+        <div style="margin: 10px 0; font-size: 0; width: 100%;">
+          <div style="width: 38%; display: inline-block; vertical-align: top; margin-right: 2%;">
+            <img src="/assets/hotels/sapa/aliana-boutique-sapa-hotel-spa/exterior/exterior_4.jpg" alt="Aliana Boutique Sapa Hotel And Spa" style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+          </div>
+          <div style="width: 60%; display: inline-block; vertical-align: top;">
+            <img src="/assets/hotels/sapa/aliana-boutique-sapa-hotel-spa/interior/interior_1.jpg" alt="Aliana Boutique Sapa Hotel And Spa Room" style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+          </div>
+        </div>
+        
+        <!-- Footer Columns (Introduction & Info/Tel) -->
+        <div style="width: 100%; margin-top: 10px;">
+          <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
+            
+            <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">Located in the scenic mist-covered hills of Sapa, Aliana Boutique Sapa Hotel And Spa features stunning panoramic views of Fansipan mountain and Muong Hoa valley. Designed with local heritage details, the hotel offers comfortable heated rooms, an outdoor pool, and local gourmet dining.</p>
+            
+          </div>
+          <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
+            <h4 style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">Aliana Boutique Sapa Hotel And Spa</h4>
+            <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;"><span class="ltr-token">04 Oct – 06 Oct 2026</span></div>
+            <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">TEL: <span class="ltr-token">+84 214 377 8888</span></div>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+    
+    <div style="margin-top: 20px; padding: 10px 14px; background: rgba(183, 137, 75, 0.05); border-radius: 8px; border: 1px dashed var(--gold); font-size: 10px; color: var(--muted); margin-bottom: 24px; page-break-inside: avoid;">
+      <strong>Room Notes &amp; Special Requests:</strong> Double + Triple room configurations pre-arranged across all properties. For the overnight train, 2 private 4-berth cabins have been fully booked for 5 guests to ensure complete comfort.
+    </div>
+    
+    
+
+    <div class="section-label">Package Pricing</div>
+    <div class="pricing-block" style="margin-bottom: 0;">
+      <h2>Journey Investment: USD 5,300</h2>
+      <p class="sub">Total: 5 Adults (Double + Triple Room Configuration). Currency: USD. Final rates subject to reconfirmation.</p>
+      <div class="price-cards">
+        
+        <div class="price-card featured">
+          <span>Premium Accommodations &amp; Cruise (5 Adults)</span>
+          
+          <small style="display:block;margin-top:3px;font-size:9px;opacity:.7">1,091.25 USD per person on Double + Triple sharing basis</small>
+          
+          
+          <strong><span class="ltr-token">USD 1,060 /person</span></strong>
+          <small>per person</small><br>
+          <small>Total: <span class="ltr-token">USD 2,182</span></small>
+          
+          
+          <div style="margin-top:8px;font-size:8px;letter-spacing:.14em;color:#d8bd85;font-weight:800">✓ CONFIRMED MAIN OPTION</div>
+          
+        </div>
+        
+      </div>
+      
+      <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 11px; color: rgba(255,255,255,0.8); line-height: 1.5; text-align: left;">
+        <strong style="color: var(--gold-2); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.1em; font-size: 9px;">Important Note</strong>
+        <p style="margin: 0;">Rates are B2B net indicative and subject to reconfirmation at the time of booking.</p>
+      </div>
+      
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE 6 — Inc/Exc & Muslim Care ═══════════════════ -->
+<div class="pdf-page">
+  <div class="page-header">
+    <span class="brand">Capella Travel — B2B Travel Proposal</span>
+    <span class="ref"><span class="ltr-token">QT-2026-CAPELLA-7D6N-IND · 2026-09-30</span></span>
+  </div>
+  <div class="page-inner">
+    <div class="section-label">Package Inclusions &amp; Exclusions</div>
+    <h2 class="section-h2">What Your Journey Includes</h2>
+
+
+    <div class="two-col" style="margin-bottom: 24px;">
+      <div class="panel">
+        <h3>Inclusions</h3>
+        
+        <p style="font-size:10px; color:var(--muted); line-height:1.5; margin-bottom:10px;">Your journey has been thoughtfully arranged to ensure a seamless and comfortable experience throughout.</p>
+        
+        <ul style="list-style-type:none; padding-left:0;">
+          
+            
+              <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">Private airport transfer, pre-arranged hotel early check-in, gourmet Indian vegetarian welcome...</li>
+            
+          
+            
+              <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">Private roundtrip vehicle to Ninh Binh, English guide, Trang An boat tour, Mua Cave entry, vegetarian lunch.</li>
+            
+          
+            
+              <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">Double &amp; triple cabins on Ambassador Signature Cruise, cruise excursions, onboard...</li>
+            
+          
+            
+              <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">Onboard brunch, transfer Halong - Hanoi, Hanoi half-day tour with guide and entry tickets, private...</li>
+            
+          
+            
+              <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">Station transfer, Sapa tour with guide and entry tickets, vegetarian lunch.</li>
+            
+          
+            
+              <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">Fansipan cable car round-trip tickets, guide, Sapa transfers, vegetarian lunch.</li>
+            
+          
+            
+              <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">Private transfer Sapa - Hanoi Airport.</li>
+            
+          
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Not Included</h3>
+        
+        <p style="font-size:10px; color:var(--muted); line-height:1.5; margin-bottom:10px;">To keep your journey transparent and clearly defined, the following are not included unless specifically stated otherwise:</p>
+        
+        <ul style="list-style-type:disc; padding-left:15px;">
+          
+          <li style="margin-bottom:5px; line-height:1.4;">International flights</li>
+          
+          <li style="margin-bottom:5px; line-height:1.4;">Travel insurance</li>
+          
+          <li style="margin-bottom:5px; line-height:1.4;">Personal expenses</li>
+          
+          <li style="margin-bottom:5px; line-height:1.4;">Optional experiences not specified in the itinerary</li>
+          
+          <li style="margin-bottom:5px; line-height:1.4;">Tips and gratuities</li>
+          
+          <li style="margin-bottom:5px; line-height:1.4;">Any services not expressly listed as included</li>
+          
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════ PAGE 8 — Travel Specialist ═══════════════════ -->
+<div class="pdf-page">
+  <div class="page-header">
+    <span class="brand">Capella Travel — B2B Travel Proposal</span>
+    <span class="ref"><span class="ltr-token">QT-2026-CAPELLA-7D6N-IND · 2026-09-30</span></span>
+  </div>
+  <div class="page-inner" style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
+    <div class="section-label">Your Dedicated Specialist</div>
+    <h2 class="section-h2" style="margin-bottom: 24px;">Meet Your Travel Specialist</h2>
+    
+    <div style="display: flex; gap: 28px; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 28px; align-items: center; box-shadow: 0 4px 16px rgba(17,19,15,0.02);">
+      <div style="width: 140px; height: 140px; border-radius: 50%; background-image: var(--designer-img, url('/assets/dias_team/director.png')); background-size: cover; background-position: center; border: 2px solid var(--gold); flex-shrink: 0; box-shadow: 0 8px 24px rgba(23,65,46,0.15);"></div>
+      <div>
+        <p style="font-size: 12px; line-height: 1.6; color: var(--muted); margin: 0 0 16px; font-style: italic;">"&#34;I am your dedicated travel specialist. My recommendations are shaped by my practical experience as a licensed international tour guide in Vietnam and the four years I spent living in Japan. I believe the desire to travel is contagious—and it is my privilege to turn that inspiration into thoughtfully designed journeys filled with meaningful experiences, authentic connections, and lasting memories.&#34;"</p>
+        <div style="font-size: 11px; color: var(--ink); margin-bottom: 6px;"><strong>Expertise:</strong> Custom Itineraries, Local Experiences, Indochina &amp; Japan</div>
+        <div style="font-size: 11px; color: var(--ink); margin-bottom: 16px;"><strong>Experience:</strong> 2+ year</div>
+        <div style="font-family: var(--serif); font-size: 15px; color: var(--emerald); font-weight: 700; letter-spacing: 0.05em;">Eddie - Trung Hieu Pham</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════ PAGE 9 — Booking Terms & Finalization ═══════════════════ -->
+<div class="pdf-page">
+  <div class="page-header">
+    <span class="brand">Capella Travel — B2B Travel Proposal</span>
+    <span class="ref"><span class="ltr-token">QT-2026-CAPELLA-7D6N-IND · 2026-09-30</span></span>
+  </div>
+  <div class="page-inner">
+    <div class="section-label">Booking Conditions</div>
+    <h2 class="section-h2">Booking Terms</h2>
+    <p class="section-p">Commercial conditions, deposits, and cancellation policy for this booking.</p>
+
+    <div style="border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 24px;">
+      <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11px;">
+        <thead>
+          <tr style="background: var(--emerald); color: white;">
+            <th style="padding: 10px 14px; width: 180px;">Term</th>
+            <th style="padding: 10px 14px;">Condition</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom: 1px solid var(--line); background: white;">
+            <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Deposit</td>
+            <td style="padding: 10px 14px;">A 30% deposit is required at the time of booking to secure hotels, cruise, and train cabins.</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--line); background: rgba(183, 137, 75, 0.03);">
+            <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Balance</td>
+            <td style="padding: 10px 14px;">The remaining 70% balance is due 30 days prior to arrival.</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--line); background: white;">
+            <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Cancellation</td>
+            <td style="padding: 10px 14px;">Free cancellation up to 45 days prior to departure. 50% cancellation fee between 44 and 15 days.</td>
+          </tr>
+          <tr style="background: rgba(183, 137, 75, 0.03);">
+            <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Confirmation</td>
+            <td style="padding: 10px 14px;">Subject to availability. Final confirmations will be sent within 24 hours of deposit receipt.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-label">Next step</div>
+    
+    <div class="cta-block" style="margin-bottom: 10px; padding: 24px; grid-template-columns: 1fr 180px; gap: 14px;">
+      <div>
+        <h2>Confirm dates, then refine the luxury layer.</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; font-size: 10px; margin-top: 14px; text-align: left;">
+          <div>
+            <strong style="color: var(--gold-2); display:block; margin-bottom:4px; text-transform:uppercase;">Final Details Required</strong>
+            <ul style="padding-left:12px; display:grid; gap:3px; color:rgba(255,255,255,0.85);">
+              <li>Passport copies valid for at least 6 months and international flight details are required to complete arrangements.</li>
+            </ul>
+          </div>
+          <div>
+            <strong style="color: var(--gold-2); display:block; margin-bottom:4px; text-transform:uppercase;">After Confirmation</strong>
+            <ul style="padding-left:12px; display:grid; gap:3px; color:rgba(255,255,255,0.85);">
+              <li>Your dedicated 24/7 travel host details and final service vouchers will be shared 7 days prior to departure.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="contact-box" style="padding: 12px;">
+        <span class="clabel" style="margin-top:0;">Prepared by</span>
+        <div class="cval" style="font-size:11px;">Capella Travel</div>
+        
+        <span class="clabel">Email</span>
+        <div class="cval" style="font-size:11px; word-break:break-all;">sales@capellatravel.com</div>
+        
+        <span class="clabel">WhatsApp</span>
+        <div class="cval" style="font-size:11px;"><span class="ltr-token">+84 911 538 738</span></div>
+        <span class="clabel">Website</span>
+        <div class="cval" style="font-size:11px;"><span class="ltr-token">journeys.capellatravel.com</span></div>
+      </div>
+    </div>
+
+    <div class="pdf-footer" style="padding: 10px 0; font-size: 10px;">
+      A Luxury Private Journey Specially Crafted for 5 Indian Guests — Luxury quotation prepared for 5 Adults (Double + Triple Room Configuration).<br>
+      <span style="color:var(--gold);font-weight:700;">journeys.capellatravel.com</span> &nbsp;·&nbsp;
+      This document is a confidential B2B quotation prepared exclusively for Anisha.
+    </div>
+  </div>
+</div>
+
+<script id="itinerary-data" type="application/json">
+  [{"activities": ["VIP Airport Fast-track, private airport transfer, pre-arranged hotel early check-in, gourmet Indian vegetarian welcome dinner."], "date": "", "dayNumber": 1, "description": ["Enjoy a leisurely morning in Sapa for final sightseeing or shopping. After lunch, board your private vehicle for the scenic drive back to Hanoi (approx. 5 hours). Arrive directly at Noi Bai International Airport for your late-evening international departure flight."], "destinations": ["Hanoi"], "lang": "en", "meals": ["Indian Vegetarian Welcome Dinner"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Hanoi", "title": "Day 1 \u2014 Hanoi"}, {"activities": ["Private roundtrip vehicle to Ninh Binh, English guide, Trang An boat tour, Mua Cave entry, vegetarian lunch."], "date": "", "dayNumber": 2, "description": ["Embark on a full-day private excursion to Ninh Binh. Experience the serene beauty of Trang An landscape complex, a UNESCO World Heritage site, during a traditional rowboat tour through limestone caves. Visit the ancient capital of Hoa Lu and climb to the peak of Mua Cave for panoramic views over the rice fields. Savor a local vegetarian lunch..."], "destinations": ["Ninh Binh"], "lang": "en", "meals": ["Breakfast \u0026 Indian Vegetarian Lunch"], "notes": ["Sense of Pace: Active"], "overnight": "Ninh Binh", "title": "Day 2 \u2014 Ninh Binh"}, {"activities": ["Private transfer Hanoi - Halong, double \u0026 triple cabins on Ambassador Signature Cruise, cruise excursions, onboard vegetarian lunch and..."], "date": "", "dayNumber": 3, "description": ["Depart Hanoi by private vehicle to Halong Bay. Board the premium Ambassador Signature Cruise, where your Double and Triple cabins await. Glide past iconic karst formations and enjoy a delicious vegetarian buffet lunch on board. Participate in cruise activities including a bamboo boat ride, kayaking, or climbing for scenic viewpoints. Savor a..."], "destinations": ["Halong Bay"], "lang": "en", "meals": ["Breakfast, Onboard Vegetarian Lunch \u0026 Dinner"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Halong Bay", "title": "Day 3 \u2014 Halong Bay"}, {"activities": ["Onboard vegetarian brunch, private transfer Halong - Hanoi, Hanoi half-day tour with guide and entry tickets, private vegetarian dinner,..."], "date": "", "dayNumber": 4, "description": ["Greet the sunrise with Tai Chi on the sundeck. After a vegetarian brunch, check out and transfer back to Hanoi. Enjoy a private half-day city tour of Hanoi, visiting the historic Temple of Literature and Hoan Kiem Lake. Enjoy some free time for shopping. In the evening, savor a vegetarian dinner in Hanoi before boarding the Chapa Express Train to..."], "destinations": ["Hanoi"], "lang": "en", "meals": ["Onboard Vegetarian Brunch \u0026 Private Dinner"], "notes": ["Sense of Pace: Active"], "overnight": "Hanoi", "title": "Day 4 \u2014 Hanoi / Sapa"}, {"activities": ["Station transfer, Sapa tour with guide and entry tickets, vegetarian lunch."], "date": "", "dayNumber": 5, "description": ["Arrive at Lao Cai station early in the morning and transfer to Sapa town. Check in to Aliana Boutique Sapa Hotel And Spa and enjoy a hot breakfast. Embark on a guided trekking tour to Cat Cat village, learning about the Black Hmong culture and viewing the scenic waterfall. Savor a local vegetarian lunch. Spend a relaxed afternoon exploring Sapa..."], "destinations": ["Sapa"], "lang": "en", "meals": ["Breakfast \u0026 Vegetarian Lunch"], "notes": ["Sense of Pace: Immersive"], "overnight": "Sapa", "title": "Day 5 \u2014 Sapa"}, {"activities": ["Fansipan cable car roundtrip tickets, guide, Sapa transfers, vegetarian lunch."], "date": "", "dayNumber": 6, "description": ["A highlights day in Sapa! Take the Fansipan cable car, the longest three-rope cable car system in the world, to ascend the \u0027Roof of Indochina\u0027 at 3,143 meters. Explore the spiritual pagoda complex at the summit. Enjoy a scenic vegetarian lunch. In the afternoon, visit Ta Van village or shop for souvenirs in Sapa town. Overnight at Aliana Boutique..."], "destinations": ["Sapa"], "lang": "en", "meals": ["Breakfast \u0026 Vegetarian Lunch"], "notes": ["Sense of Pace: Active"], "overnight": "Sapa", "title": "Day 6 \u2014 Sapa"}, {"activities": ["Private luxury transfer Sapa - Hanoi Airport."], "date": "", "dayNumber": 7, "description": ["Enjoy a leisurely morning in Sapa for final sightseeing or shopping. In the afternoon, board your private luxury vehicle for the scenic drive back to Hanoi (approx. 5 hours). Arrive directly at Noi Bai International Airport for your late-evening international departure flight."], "destinations": ["Hanoi"], "lang": "en", "meals": ["Breakfast"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Hanoi", "title": "Day 7 \u2014 Departure"}]
+</script>
+<script id="route-stops-data" type="application/json">
+  [{"dayNumber": 1, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "Day 1 \u2014 Hanoi", "showMarker": true, "stopOrder": 1}, {"dayNumber": 2, "destination": "Ninh Binh", "displayName": "Ninh Binh", "kind": "overnight", "mapTitle": "Day 2 \u2014 Ninh Binh", "showMarker": true, "stopOrder": 1}, {"dayNumber": 3, "destination": "Halong Bay", "displayName": "Halong Bay", "kind": "overnight", "mapTitle": "Day 3 \u2014 Halong Bay", "showMarker": true, "stopOrder": 1}, {"dayNumber": 4, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "Day 4 \u2014 Hanoi", "showMarker": true, "stopOrder": 1}, {"dayNumber": 5, "destination": "Sapa", "displayName": "Sapa", "kind": "overnight", "mapTitle": "Day 5 \u2014 Sapa", "showMarker": true, "stopOrder": 1}, {"dayNumber": 6, "destination": "Sapa", "displayName": "Sapa", "kind": "overnight", "mapTitle": "Day 6 \u2014 Sapa", "showMarker": true, "stopOrder": 1}, {"dayNumber": 7, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "Day 7 \u2014 Hanoi", "showMarker": true, "stopOrder": 1}]
+</script>
+<script id="stay-segments-data" type="application/json">
+  [{"activityPreviews": [{"dayNumber": 1, "label": "Day 1", "summary": "Welcome to Hanoi! Upon arriving at Noi Bai International Airport on your early morning flight (arrivals at 5:00 AM and..."}], "city": "Hanoi", "coords": [21.0285, 105.8542], "dayEnd": 1, "dayStart": 1, "daysLabel": "Day 1", "displayName": "Hanoi", "excursions": [], "hotelDateRange": "30 Sep \u2013 02 Oct 2026", "hotelImage": "/assets/hotels/hanoi/hanoi-le-jardin-hotel-spa/exterior/exterior_1.jpg", "hotelName": "Hanoi Le Jardin Hotel \u0026 Spa", "nights": 1, "nightsLabel": "1 night", "order": 1, "segmentId": "stay-1", "transportFromPrevious": ""}, {"activityPreviews": [{"dayNumber": 2, "label": "Day 2", "summary": "Embark on a full-day private excursion to Ninh Binh. Experience the serene beauty of Trang An landscape complex, a..."}], "city": "Ninh Binh", "coords": [20.2539, 105.975], "dayEnd": 2, "dayStart": 2, "daysLabel": "Day 2", "displayName": "Ninh Binh", "excursions": [], "hotelDateRange": "02 Oct \u2013 03 Oct 2026", "hotelImage": "/assets/hotels/halong/ambassador-signature-cruise/exterior/exterior_2.jpg", "hotelName": "Ambassador Signature Cruise", "nights": 1, "nightsLabel": "1 night", "order": 2, "segmentId": "stay-2", "transportFromPrevious": "Hanoi \u2192 Ninh Binh"}, {"activityPreviews": [{"dayNumber": 3, "label": "Day 3", "summary": "Depart Hanoi by private vehicle to Halong Bay. Board the premium Ambassador Signature Cruise, where your Double and..."}], "city": "Halong Bay", "coords": [20.9599, 107.0436], "dayEnd": 3, "dayStart": 3, "daysLabel": "Day 3", "displayName": "Halong Bay", "excursions": [], "hotelDateRange": "03 Oct \u2013 04 Oct 2026", "hotelImage": "/assets/hotels/sapa/chapa-express-train/exterior/exterior_3.jpg", "hotelName": "Chapa Express Train", "nights": 1, "nightsLabel": "1 night", "order": 3, "segmentId": "stay-3", "transportFromPrevious": "Ninh Binh \u2192 Halong Bay"}, {"activityPreviews": [{"dayNumber": 4, "label": "Day 4", "summary": "Greet the sunrise with Tai Chi on the sundeck. After a vegetarian brunch, check out and transfer back to Hanoi. Enjoy a..."}], "city": "Hanoi", "coords": [21.0285, 105.8542], "dayEnd": 4, "dayStart": 4, "daysLabel": "Day 4", "displayName": "Hanoi", "excursions": [], "hotelDateRange": "04 Oct \u2013 06 Oct 2026", "hotelImage": "/assets/hotels/sapa/aliana-boutique-sapa-hotel-spa/exterior/exterior_4.jpg", "hotelName": "Aliana Boutique Sapa Hotel And Spa", "nights": 1, "nightsLabel": "1 night", "order": 4, "segmentId": "stay-4", "transportFromPrevious": "Halong Bay \u2192 Hanoi"}, {"activityPreviews": [{"dayNumber": 5, "label": "Day 5", "summary": "Arrive at Lao Cai station early in the morning and transfer to Sapa town. Check in to Aliana Boutique Sapa Hotel And..."}, {"dayNumber": 6, "label": "Day 6", "summary": "A highlights day in Sapa! Take the Fansipan cable car, the longest three-rope cable car system in the world, to ascend..."}], "city": "Sapa", "coords": [22.3364, 103.8438], "dayEnd": 6, "dayStart": 5, "daysLabel": "Days 5-6", "displayName": "Sapa", "excursions": [], "hotelDateRange": "", "hotelImage": "", "hotelName": "", "nights": 2, "nightsLabel": "2 nights", "order": 5, "segmentId": "stay-5", "transportFromPrevious": "Hanoi \u2192 Sapa"}, {"activityPreviews": [{"dayNumber": 7, "label": "Day 7", "summary": "Enjoy a leisurely morning in Sapa for final sightseeing or shopping. In the afternoon, board your private luxury..."}], "city": "Hanoi", "coords": [21.0285, 105.8542], "dayEnd": 7, "dayStart": 7, "daysLabel": "Day 7", "displayName": "Hanoi", "excursions": [], "hotelDateRange": "", "hotelImage": "", "hotelName": "", "nights": 1, "nightsLabel": "1 night", "order": 6, "segmentId": "stay-6", "transportFromPrevious": "Sapa \u2192 Hanoi"}]
+</script>
+
+<script>
+  window.currentLang = "en";
+  
+  // Coordinate resolutions and math helpers copied from landing page
+  const DEST_COORDS = {
+    "hanoi": [21.0285, 105.8542],
+    "ha noi": [21.0285, 105.8542],
+    "ninh binh": [20.2539, 105.9750],
+    "ninhbinh": [20.2539, 105.9750],
+    "ha long": [20.9599, 107.0436],
+    "halong": [20.9599, 107.0436],
+    "ha giang": [22.8233, 104.9836],
+    "hagiang": [22.8233, 104.9836],
+    "sapa": [22.3364, 103.8438],
+    "hue": [16.4637, 107.5909],
+    "da nang": [16.0544, 108.2022],
+    "danang": [16.0544, 108.2022],
+    "hoi an": [15.8801, 108.3380],
+    "hoian": [15.8801, 108.3380],
+    "nha trang": [12.2388, 109.1967],
+    "nhatrang": [12.2388, 109.1967],
+    "da lat": [11.9404, 108.4583],
+    "dalat": [11.9404, 108.4583],
+    "ho chi minh city": [10.8231, 106.6297],
+    "saigon": [10.8231, 106.6297],
+    "sai gon": [10.8231, 106.6297],
+    "mekong": [10.2435, 106.3756],
+    "mekong delta": [10.2435, 106.3756],
+    "ben tre": [10.2401, 106.3768],
+    "bentre": [10.2401, 106.3768],
+    "my tho": [10.3592, 106.3653],
+    "mytho": [10.3592, 106.3653],
+    "phu quoc": [10.2899, 103.9840]
+  };
+
+  const SLUG_COORDS = {
+    "ha-noi": [21.0285, 105.8542],
+    "quang-ninh": [20.9599, 107.0436],
+    "lao-cai": [22.3364, 103.8438],
+    "da-nang": [16.0544, 108.2022],
+    "quang-nam": [15.8801, 108.3380],
+    "lam-dong": [11.9404, 108.4583],
+    "ho-chi-minh": [10.8231, 106.6297],
+    "khanh-hoa": [12.2388, 109.1967],
+    "ninh-binh": [20.2539, 105.9750],
+    "thua-thien-hue": [16.4637, 107.5909],
+    "kien-giang": [10.2899, 103.9840],
+    "binh-thuan": [10.9333, 108.1000],
+    "can-tho": [10.0401, 105.7882],
+    "mekong": [10.2435, 106.3756],
+    "ha-giang": [22.8233, 104.9836],
+    "nghe-an": [18.6736, 105.6811],
+    "quang-binh": [17.4833, 106.6000],
+    "hai-phong": [20.8449, 106.6881],
+    "dak-lak": [12.6667, 108.0500],
+    "gia-lai": [13.9833, 108.0000],
+    "kon-tum": [14.3500, 108.0000],
+    "ba-ria-vung-tau": [10.4114, 107.1363],
+    "thanh-hoa": [19.8075, 105.7764],
+    "phu-yen": [13.0881, 109.3025],
+    "binh-dinh": [13.7753, 109.2294],
+    "dien-bien": [21.3833, 103.0167],
+    "son-la": [21.3333, 103.9167],
+    "lai-chau": [22.4000, 103.4500],
+    "yen-bai": [21.7000, 104.8667],
+    "hoa-binh": [20.8167, 105.3333],
+    "lang-son": [21.8500, 106.7500],
+    "dong-nai": [10.9574, 106.8427],
+    "binh-duong": [11.0000, 106.6667],
+    "tien-giang": [10.3592, 106.3653],
+    "dong-thap": [10.4500, 105.6333],
+    "vinh-long": [10.2500, 105.9667],
+    "an-giang": [10.3833, 105.4333],
+    "cao-bang": [22.6667, 106.2500]
+  };
+
+  function resolveSlugLocally(location) {
+    if (!location) return null;
+    const normalized = location.toLowerCase().trim();
+    const keywordMap = {
+      "hà nội": "ha-noi", "ha noi": "ha-noi", "hanoi": "ha-noi", "hanoï": "ha-noi", "هانوي": "ha-noi",
+      "hồ chí minh": "ho-chi-minh", "ho chi minh": "ho-chi-minh", "hcm": "ho-chi-minh", "saigon": "ho-chi-minh", "sài gòn": "ho-chi-minh", "sai gon": "ho-chi-minh", "tphcm": "ho-chi-minh", "مدينة هو تشي منه": "ho-chi-minh", "هو تشي منه": "ho-chi-minh", "سايغون": "ho-chi-minh",
+      "đà nẵng": "da-nang", "da nang": "da-nang", "danang": "da-nang", "دانانغ": "da-nang", "دا نانغ": "da-nang",
+      "quảng nam": "quang-nam", "quang nam": "quang-nam", "hội an": "quang-nam", "hoi an": "quang-nam", "hoian": "quang-nam", "هوي آن": "quang-nam", "هوي ان": "quang-nam",
+      "quảng ninh": "quang-ninh", "quang ninh": "quang-ninh", "hạ long": "quang-ninh", "ha long": "quang-ninh", "halong": "quang-ninh", "vịnh hạ long": "quang-ninh", "vinh ha long": "quang-ninh", "cat ba": "quang-ninh", "cát bà": "quang-ninh", "خليج هاليغ": "quang-ninh", "هالونغ": "quang-ninh", "خليج هالونج": "quang-ninh",
+      "lào cai": "lao-cai", "lao cai": "lao-cai", "laocai": "lao-cai", "sapa": "lao-cai", "sa pa": "lao-cai", "bắc hà": "lao-cai", "bac ha": "lao-cai", "سابا": "lao-cai",
+      "khánh hoà": "khanh-hoa", "khanh hoa": "khanh-hoa", "nha trang": "khanh-hoa", "nhatrang": "khanh-hoa", "نها ترانغ": "khanh-hoa", "نها ترانج": "khanh-hoa",
+      "lâm đồng": "lam-dong", "lam dong": "lam-dong", "đà lạt": "lam-dong", "da lat": "lam-dong", "dalat": "lam-dong", "دالات": "lam-dong",
+      "thừa thiên huế": "thua-thien-hue", "thua thien hue": "thua-thien-hue", "huế": "thua-thien-hue", "hue": "thua-thien-hue", "lăng cô": "thua-thien-hue", "lang co": "thua-thien-hue",
+      "kiên giang": "kien-giang", "kien giang": "kien-giang", "phú quốc": "kien-giang", "phu quoc": "kien-giang", "phuquoc": "kien-giang",
+      "bình thuận": "binh-thuan", "binh thuan": "binh-thuan", "mũi né": "binh-thuan", "mui ne": "binh-thuan", "phan thiết": "binh-thuan", "phan thiet": "binh-thuan",
+      "cần thơ": "can-tho", "can tho": "can-tho", "cantho": "can-tho", "bến ninh kiều": "can-tho", "ben ninh kieu": "can-tho",
+      "mekong": "mekong", "đồng bằng sông cửu long": "mekong", "dong bang song cuu long": "mekong", "miền tây": "mekong", "mien tay": "mekong", "tây nam bộ": "mekong", "tay nam bo": "mekong",
+      "hà giang": "ha-giang", "ha giang": "ha-giang", "đồng văn": "ha-giang", "dong van": "ha-giang", "mèo vạc": "ha-giang", "meo vac": "ha-giang",
+      "ninh bình": "ninh-binh", "ninh binh": "ninh-binh", "tràng an": "ninh-binh", "trang an": "ninh-binh", "tam cốc": "ninh-binh", "tam coc": "ninh-binh", "bích động": "ninh-binh", "bich dong": "ninh-binh",
+      "nghệ an": "nghe-an", "nghe an": "nghe-an", "cửa lò": "nghe-an", "cua lo": "nghe-an",
+      "quảng bình": "quang-binh", "quang binh": "quang-binh", "phong nha": "quang-binh", "ke bang": "quang-binh",
+      "hải phòng": "hai-phong", "hai phong": "hai-phong", "haiphong": "hai-phong",
+      "đắk lắk": "dak-lak", "dak lak": "dak-lak", "daklak": "dak-lak", "buôn ma thuột": "dak-lak", "buon ma thuot": "dak-lak", "bmt": "dak-lak",
+      "gia lai": "gia-lai", "pleiku": "gia-lai",
+      "kon tum": "kon-tum", "kontum": "kon-tum",
+      "bà rịa": "ba-ria-vung-tau", "ba ria": "ba-ria-vung-tau", "vũng tàu": "ba-ria-vung-tau", "vung tau": "ba-ria-vung-tau", "vungtau": "ba-ria-vung-tau",
+      "thanh hoá": "thanh-hoa", "thanh hoa": "thanh-hoa", "sầm sơn": "thanh-hoa", "sam son": "thanh-hoa",
+      "phú yên": "phu-yen", "phu yen": "phu-yen", "tuy hoà": "phu-yen", "tuy hoa": "phu-yen",
+      "bình định": "binh-dinh", "binh dinh": "binh-dinh", "quy nhơn": "binh-dinh", "quy nhon": "binh-dinh", "quynhon": "binh-dinh"
+    };
+    return keywordMap[normalized] || null;
+  }
+
+  function findCoordinates(destText) {
+    if (!destText) return null;
+    const slug = resolveSlugLocally(destText);
+    if (slug && SLUG_COORDS[slug]) {
+      return SLUG_COORDS[slug];
+    }
+    const norm = destText.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    for (const [key, coords] of Object.entries(DEST_COORDS)) {
+      if (norm.includes(key)) return coords;
+    }
+    return null;
+  }
+
+  function getDistance(c1, c2) {
+    const R = 6371;
+    const dLat = (c2[0] - c1[0]) * Math.PI / 180;
+    const dLon = (c2[1] - c1[1]) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(c1[0] * Math.PI / 180) * Math.cos(c2[0] * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  function getBezierPoints(p1, p2, count = 30) {
+    const midLat = (p1[0] + p2[0]) / 2;
+    const midLng = (p1[1] + p2[1]) / 2;
+    const dx = p2[1] - p1[1];
+    const dy = p2[0] - p1[0];
+    const len = Math.sqrt(dx * dx + dy * dy);
+    const scale = len * 0.15;
+    const ctrlLat = midLat - (dx / len) * scale;
+    const ctrlLng = midLng + (dy / len) * scale;
+    const points = [];
+    for (let i = 0; i <= count; i++) {
+      const t = i / count;
+      const lat = (1 - t) * (1 - t) * p1[0] + 2 * (1 - t) * t * ctrlLat + t * t * p2[0];
+      const lng = (1 - t) * (1 - t) * p1[1] + 2 * (1 - t) * t * ctrlLng + t * t * p2[1];
+      points.push([lat, lng]);
+    }
+    return points;
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const map = L.map('map', {
+      zoomControl: false,
+      scrollWheelZoom: false,
+      doubleClickZoom: false,
+      dragging: false,
+      boxZoom: false
+    });
+
+    L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi', {
+      maxZoom: 18,
+      attribution: '&copy; Google Maps'
+    }).addTo(map);
+
+    const dataEl = document.getElementById('itinerary-data');
+    const routeStopsEl = document.getElementById('route-stops-data');
+    const staySegmentsEl = document.getElementById('stay-segments-data');
+    if (dataEl) {
+      const itineraryDays = JSON.parse(dataEl.textContent);
+      const rawStops = routeStopsEl ? JSON.parse(routeStopsEl.textContent) : [];
+      const rawStaySegments = staySegmentsEl ? JSON.parse(staySegmentsEl.textContent) : [];
+      
+      const daysData = Array.isArray(rawStops) && rawStops.length > 0
+        ? rawStops
+        : itineraryDays.map(day => {
+            let dest = "";
+            if (typeof day.overnight === 'string' && day.overnight.trim() !== '') {
+              dest = day.overnight;
+            } else if (Array.isArray(day.destinations) && day.destinations.length > 0) {
+              dest = day.destinations[0];
+            } else if (typeof day.destination === 'string') {
+              dest = day.destination;
+            }
+            return {
+              dayNumber: day.dayNumber,
+              destination: dest,
+              displayName: dest
+            };
+          });
+
+      function buildFallbackStaySegments(stops) {
+        const fallbackSegments = [];
+        let current = null;
+        stops.filter(day => day.showMarker !== false).forEach(day => {
+          const city = day.displayName || day.destination;
+          if (!city) return;
+          if (!current || current.displayName !== city) {
+            current = {
+              segmentId: `fallback-${fallbackSegments.length + 1}`,
+              order: fallbackSegments.length + 1,
+              displayName: city,
+              city,
+              coords: findCoordinates(city)
+            };
+            fallbackSegments.push(current);
+          }
+        });
+        return fallbackSegments;
+      }
+
+      const staySegments = Array.isArray(rawStaySegments) && rawStaySegments.length > 0
+        ? rawStaySegments
+        : buildFallbackStaySegments(daysData);
+
+      const coordPoints = [];
+      const mapSegments = staySegments.map((segment, idx) => ({
+        ...segment,
+        id: segment.segmentId || `stay-${idx + 1}`,
+        coords: Array.isArray(segment.coords) && segment.coords.length === 2 ? segment.coords : findCoordinates(segment.city || segment.displayName),
+        displayCoords: Array.isArray(segment.coords) && segment.coords.length === 2 ? segment.coords : findCoordinates(segment.city || segment.displayName)
+      })).filter(segment => Array.isArray(segment.coords) && segment.coords.length === 2);
+
+      daysData.forEach(day => {
+        const city = day.destination;
+        if (!city) return;
+        const coords = findCoordinates(city);
+        if (coords) {
+          coordPoints.push(coords);
+        }
+      });
+
+      function getOffsetPattern(index) {
+        const pattern = [
+          [0, 0],
+          [20, -14],
+          [-20, 14],
+          [0, 24],
+          [24, 10],
+          [-24, -10]
+        ];
+        return pattern[index] || [0, 0];
+      }
+
+      if (coordPoints.length > 0) {
+        map.fitBounds(L.latLngBounds(coordPoints), {
+          padding: [25, 25],
+          maxZoom: 12
+        });
+      }
+
+      const grouped = new Map();
+      mapSegments.forEach(segment => {
+        const key = `${segment.coords[0]},${segment.coords[1]}`;
+        if (!grouped.has(key)) grouped.set(key, []);
+        grouped.get(key).push(segment);
+      });
+      grouped.forEach(items => {
+        items.forEach((segment, occurrenceIdx) => {
+          const offset = getOffsetPattern(occurrenceIdx);
+          const point = map.project(segment.coords, map.getZoom());
+          const shifted = L.point(point.x + offset[0], point.y + offset[1]);
+          segment.displayCoords = map.unproject(shifted, map.getZoom());
+        });
+      });
+
+      // Draw markers
+      mapSegments.forEach((dest, idx) => {
+        const html = `
+          <div class="custom-marker">
+            <div class="marker-pulse"></div>
+            <div class="marker-core">${idx + 1}</div>
+          </div>
+        `;
+        const customIcon = L.divIcon({
+          html: html,
+          className: '',
+          iconSize: [28, 28],
+          iconAnchor: [14, 14]
+        });
+        L.marker(dest.displayCoords, { icon: customIcon }).addTo(map);
+      });
+
+      // Draw polylines
+      for (let i = 0; i < coordPoints.length - 1; i++) {
+        const p1 = coordPoints[i];
+        const p2 = coordPoints[i + 1];
+        const dist = getDistance(p1, p2);
+        const isFlight = dist > 300;
+
+        let pathPoints;
+        if (isFlight) {
+          pathPoints = getBezierPoints(p1, p2);
+        } else {
+          pathPoints = [p1, p2];
+        }
+
+        const lineOptions = {
+          color: isFlight ? '#b7894b' : '#17412e',
+          weight: 3,
+          opacity: 0.8,
+          dashArray: isFlight ? '6, 8' : 'none'
+        };
+        L.polyline(pathPoints, lineOptions).addTo(map);
+      }
+
+    }
+  });
+
+  // Auto-trigger print dialog after a safe delay to let tiles render
+  window.addEventListener('load', function() {
+    setTimeout(function() { window.print(); }, 1200);
+  });
+</script>
+</body>
+</html>

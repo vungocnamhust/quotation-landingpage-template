@@ -2499,6 +2499,13 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
     nationality   = truncate_text(payload.journeyGlance.market, 60)
     travel_style  = truncate_text(payload.journeyGlance.partnerNote, 100)
 
+    # Estimate guest count
+    guests_count = 1
+    import re
+    m = re.search(r'(\d+)\s+adult', guests_txt, re.IGNORECASE)
+    if m:
+        guests_count = int(m.group(1))
+
     # Construct pricing context from agent custom pricing dict or default
     price_options = []
     total_price = ""
@@ -2512,12 +2519,6 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         currency = p_dict.get("currency", "USD")
         grand_total_num = p_dict.get("totalPriceUsd", 0.0)
         
-        # Estimate per-person
-        guests_count = 1
-        import re
-        m = re.search(r'(\d+)\s+adult', guests_txt, re.IGNORECASE)
-        if m:
-            guests_count = int(m.group(1))
         price_per_person = grand_total_num / max(1, guests_count)
         
         price_per_pax = format_currency_display(price_per_person, currency, lang, per_person=True)
@@ -2547,7 +2548,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         currency = payload.pricing.currency
         for opt in payload.pricing.priceOptions:
             price_per_person_amt = opt.amount or 0.0
-            total_price_amt = price_per_person_amt * 2  # default placeholder
+            total_price_amt = price_per_person_amt * guests_count
             
             p_pax_txt = format_currency_display(price_per_person_amt, currency, lang, per_person=True)
             tot_txt = format_currency_display(total_price_amt, currency, lang)

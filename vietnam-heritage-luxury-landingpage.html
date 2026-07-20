@@ -51,7 +51,20 @@
     }
 
     /* Enforce word wrapping globally to prevent text layout overflow */
-    body, p, h1, h2, h3, h4, h5, h6, li, span, strong, div, td, th {
+    body,
+    p,
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    li,
+    span,
+    strong,
+    div,
+    td,
+    th {
       overflow-wrap: break-word;
       word-wrap: break-word;
       word-break: break-word;
@@ -290,7 +303,8 @@
       border-radius: 26px;
       padding: 22px;
       box-shadow: 0 14px 45px rgba(17, 19, 15, .08);
-      min-width: 0; /* Ensure overflow works on grid items */
+      min-width: 0;
+      /* Ensure overflow works on grid items */
     }
 
     .strip-card span {
@@ -634,22 +648,27 @@
       .container {
         width: min(1180px, 95%);
       }
+
       .hero-content {
         gap: 36px;
       }
+
       .day {
         grid-template-columns: 110px 1fr 140px;
         gap: 16px;
         padding: 20px;
       }
+
       .day-label {
         height: 60px;
         width: 60px;
         font-size: 20px;
       }
+
       .strip-grid {
         gap: 10px;
       }
+
       .strip-card {
         padding: 16px;
       }
@@ -1211,7 +1230,8 @@
             <div class="quote-row"><span>Tour code</span><strong>VS-KSA-8D-HNNBIHL-SGNMKD</strong></div>
             <div class="quote-row stacked"><span>Route</span><strong>Hanoi - Ninh Binh - Ha Long Bay - HCMC - Mekong
                 Delta</strong></div>
-            <div class="quote-row stacked"><span>Style</span><strong>Private | Scenic | Relaxed | Luxury-ready</strong></div>
+            <div class="quote-row stacked"><span>Style</span><strong>Private | Scenic | Relaxed | Luxury-ready</strong>
+            </div>
             <div class="quote-row"><span>Contact</span><strong>www.vietnamsafar.vn<br>+84 911 538 738</strong></div>
           </div>
         </aside>
@@ -1452,7 +1472,7 @@
       <div class="container">
         <div class="section-head">
           <h2>Commercial notes</h2>
-          <p>These notes keep the proposal professional and protect the B2B quotation before services are reconfirmed.
+          <p>These notes keep the proposal professional and protect the quotation before services are reconfirmed.
           </p>
         </div>
         <div class="experience-grid">
@@ -1701,7 +1721,7 @@
 
       // Thay thế bằng Tile của Google Maps (có hỗ trợ tiếng Việt & hiển thị Hoàng Sa, Trường Sa) 
       // vì URL eKMap cần có API Key thương mại mới hoạt động được.
-      const vietmanMapUrl = 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi'; 
+      const vietmanMapUrl = 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi';
       L.tileLayer(vietmanMapUrl, {
         maxZoom: 18,
         attribution: '&copy; Bản đồ chủ quyền Việt Nam | Dữ liệu bản đồ &copy; Google'

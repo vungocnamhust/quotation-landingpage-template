@@ -2410,16 +2410,16 @@
                 }}</strong></div>
             <div class="quote-row"><span>{{ "Overview" | translate(lang) }}</span><strong data-editable="overview_heading">{{ overview_heading }}</strong></div>
             {% if guests_txt %}
-            <div class="quote-row"><span>{{ "Guests" | translate(lang) }}</span><strong>{{ guests_txt }}</strong></div>
+            <div class="quote-row"><span>{{ "Guests" | translate(lang) }}</span><strong data-editable="guests_txt">{{ guests_txt }}</strong></div>
             {% endif %}
             {% if travel_dates %}
-            <div class="quote-row"><span>{{ "Travel dates" | translate(lang) }}</span><strong><span class="ltr-token">{{ travel_dates }}</span></strong></div>
+            <div class="quote-row"><span>{{ "Travel dates" | translate(lang) }}</span><strong data-editable="travel_dates"><span class="ltr-token">{{ travel_dates }}</span></strong></div>
             {% endif %}
             {% if route_txt %}
-            <div class="quote-row stacked"><span>{{ "Route" | translate(lang) }}</span><strong>{{ route_txt | rtl_mixed(lang) }}</strong></div>
+            <div class="quote-row stacked"><span>{{ "Route" | translate(lang) }}</span><strong data-editable="route_txt">{{ route_txt | rtl_mixed(lang) }}</strong></div>
             {% endif %}
             {% if travel_style %}
-            <div class="quote-row stacked"><span>{{ "Style" | translate(lang) }}</span><strong>{{ travel_style | rtl_mixed(lang) }}</strong></div>
+            <div class="quote-row stacked"><span>{{ "Style" | translate(lang) }}</span><strong data-editable="travel_style">{{ travel_style | rtl_mixed(lang) }}</strong></div>
             {% endif %}
             <div class="quote-row"><span>{{ "Ref." | translate(lang) }}</span><strong data-editable="quotation_number"><span class="ltr-token">{{ quotation_number
                 }}</span></strong></div>
@@ -2602,6 +2602,7 @@
         </div>
         <div class="itinerary">
           {% for day in itinerary %}
+          {% set day_idx = loop.index %}
           <article class="day">
             <div class="day-label">{{ day.dayNumber }}</div>
             <div>
@@ -2614,7 +2615,7 @@
               {% if day.activities %}
               <p style="font-size:13px;color:#706a5d;margin-top:8px">
                 <strong style="color:#17412e;letter-spacing:.06em">{{ "Highlights:" | translate(lang) }}</strong>
-                {{ (day.activities | join(' · ')) | rtl_mixed(lang) }}
+                <span data-editable="day_highlights_{{ loop.index }}">{{ (day.activities | join(' · ')) | rtl_mixed(lang) }}</span>
               </p>
               {% endif %}
               {% if day.notes %}
@@ -2623,7 +2624,7 @@
                 <strong style="color:#b7894b;letter-spacing:.06em">{{ "Notes:" | translate(lang) }}</strong>
                 <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
                   {% for note in day.notes %}
-                  <li style="margin-bottom: 2px;">{{ note | rtl_mixed(lang) }}</li>
+                  <li style="margin-bottom: 2px;" data-editable="day_note_{{ day_idx }}_{{ loop.index0 }}">{{ note | rtl_mixed(lang) }}</li>
                   {% endfor %}
                 </ul>
               </div>
@@ -2632,11 +2633,11 @@
             <div class="day-meta">
               {% if day.overnight %}
               <span style="font-size:11px;letter-spacing:.12em">{{ "Overnight" | translate(lang) }}</span><br>
-              <span style="font-size:15px;font-family:Georgia,serif">{{ day.overnight | rtl_mixed(lang) }}</span><br><br>
+              <span style="font-size:15px;font-family:Georgia,serif" data-editable="day_overnight_{{ loop.index }}">{{ day.overnight | rtl_mixed(lang) }}</span><br><br>
               {% endif %}
               {% if day.meals %}
               <span style="font-size:11px;letter-spacing:.12em">{{ "Meals" | translate(lang) }}</span><br>
-              <span style="font-size:13px">{{ (day.meals | join(' · ')) | rtl_mixed(lang) }}</span>
+              <span style="font-size:13px" data-editable="day_meals_{{ loop.index }}">{{ (day.meals | join(' · ')) | rtl_mixed(lang) }}</span>
               {% endif %}
             </div>
           </article>
@@ -2770,8 +2771,7 @@
               {% else %}
               <strong data-editable="price_pax_{{ loop.index }}" style="font-size:28px"><span class="ltr-token">{{
                 opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~
-                opt.pricePerPerson.currency) }}</span></strong>
-              <small>{{ "per person" | translate(lang) }}</small><br>
+                opt.pricePerPerson.currency) }}</span></strong><br>
               <span style="font-size:13px;opacity:.8">{{ "Total:" | translate(lang) }} <span class="ltr-token">{{ opt.totalPrice.displayText or
                 ('{:,.0f}'.format(opt.totalPrice.amount) ~ ' ' ~ opt.totalPrice.currency) }}</span></span>
               {% endif %}

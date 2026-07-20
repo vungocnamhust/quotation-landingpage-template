@@ -839,8 +839,7 @@
             {% if opt.optionName %}
             <small style="color:rgba(255,255,255,.55);font-size:9px;display:block;margin-top:4px">{{ opt.optionName }}</small>
             {% endif %}
-            <strong>{{ opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~ opt.pricePerPerson.currency) }}</strong>
-            <small>per person</small><br>
+            <strong>{{ opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~ opt.pricePerPerson.currency) }}</strong><br>
             <span style="font-size:11px;opacity:.8">Total: {{ opt.totalPrice.displayText or ('{:,.0f}'.format(opt.totalPrice.amount) ~ ' ' ~ opt.totalPrice.currency) }}</span>
           </div>
           {% endfor %}

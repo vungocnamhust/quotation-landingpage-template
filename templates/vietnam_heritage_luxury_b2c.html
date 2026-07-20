@@ -2314,16 +2314,16 @@
                 }}</strong></div>
             <div class="quote-row"><span>Overview</span><strong data-editable="overview_heading">{{ overview_heading }}</strong></div>
             {% if guests_txt %}
-            <div class="quote-row"><span>Guests</span><strong>{{ guests_txt }}</strong></div>
+            <div class="quote-row"><span>Guests</span><strong data-editable="guests_txt">{{ guests_txt }}</strong></div>
             {% endif %}
             {% if travel_dates %}
-            <div class="quote-row"><span>Travel dates</span><strong>{{ travel_dates }}</strong></div>
+            <div class="quote-row"><span>Travel dates</span><strong data-editable="travel_dates">{{ travel_dates }}</strong></div>
             {% endif %}
             {% if route_txt %}
-            <div class="quote-row stacked"><span>Route</span><strong>{{ route_txt }}</strong></div>
+            <div class="quote-row stacked"><span>Route</span><strong data-editable="route_txt">{{ route_txt }}</strong></div>
             {% endif %}
             {% if travel_style %}
-            <div class="quote-row stacked"><span>Style</span><strong>{{ travel_style }}</strong></div>
+            <div class="quote-row stacked"><span>Style</span><strong data-editable="travel_style">{{ travel_style }}</strong></div>
             {% endif %}
             <div class="quote-row"><span>Ref.</span><strong data-editable="quotation_number">{{ quotation_number
                 }}</strong></div>
@@ -2509,6 +2509,7 @@
         </div>
         <div class="itinerary">
           {% for day in itinerary %}
+          {% set day_idx = loop.index %}
           <article class="day">
             <div class="day-label">{{ day.dayNumber }}</div>
             <div>
@@ -2521,7 +2522,7 @@
               {% if day.activities %}
               <p style="font-size:13px;color:#706a5d;margin-top:8px">
                 <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
-                {{ day.activities | join(' &nbsp;·&nbsp; ') }}
+                <span data-editable="day_highlights_{{ loop.index }}">{{ day.activities | join(' &nbsp;·&nbsp; ') }}</span>
               </p>
               {% endif %}
               {% if day.notes %}
@@ -2530,7 +2531,7 @@
                 <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
                 <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
                   {% for note in day.notes %}
-                  <li style="margin-bottom: 2px;">{{ note }}</li>
+                  <li style="margin-bottom: 2px;" data-editable="day_note_{{ day_idx }}_{{ loop.index0 }}">{{ note }}</li>
                   {% endfor %}
                 </ul>
               </div>
@@ -2539,11 +2540,11 @@
             <div class="day-meta">
               {% if day.overnight %}
               <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
-              <span style="font-size:15px;font-family:Georgia,serif">{{ day.overnight }}</span><br><br>
+              <span style="font-size:15px;font-family:Georgia,serif" data-editable="day_overnight_{{ loop.index }}">{{ day.overnight }}</span><br><br>
               {% endif %}
               {% if day.meals %}
               <span style="font-size:11px;letter-spacing:.12em">Meals</span><br>
-              <span style="font-size:13px">{{ day.meals | join(' · ') }}</span>
+              <span style="font-size:13px" data-editable="day_meals_{{ loop.index }}">{{ day.meals | join(' · ') }}</span>
               {% endif %}
             </div>
           </article>
@@ -2673,8 +2674,7 @@
               {% else %}
               <strong data-editable="price_pax_{{ loop.index }}" style="font-size:28px">{{
                 opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~
-                opt.pricePerPerson.currency) }}</strong>
-              <small>per person</small><br>
+                opt.pricePerPerson.currency) }}</strong><br>
               <span style="font-size:13px;opacity:.8">Total: {{ opt.totalPrice.displayText or
                 ('{:,.0f}'.format(opt.totalPrice.amount) ~ ' ' ~ opt.totalPrice.currency) }}</span>
               {% endif %}
