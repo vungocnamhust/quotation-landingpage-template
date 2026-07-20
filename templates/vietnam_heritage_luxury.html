@@ -2631,7 +2631,7 @@
               <span class="num" data-editable="day_num_{{ loop.index }}">{{ day.day_num_text | default("DAY" | translate(lang) ~ " " ~ day.dayNumber ~ (("&nbsp;&middot;&nbsp; " ~ day.date) if day.date else "")) }}</span>
               <h3 data-editable="day_title_{{ loop.index }}">{{ day.title | rtl_mixed(lang) }}</h3>
               {% for para in day.description %}
-              <p data-editable="day_desc_{{ loop.index }}_{{ loop.index0 }}">{{ para | rtl_mixed(lang) }}</p>
+              <p data-editable="day_desc_{{ day_idx }}_{{ loop.index0 }}">{{ para | rtl_mixed(lang) }}</p>
               {% endfor %}
               {% if day.activities %}
               <p style="font-size:13px;color:#706a5d;margin-top:8px">
