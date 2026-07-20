@@ -47,6 +47,55 @@ app.mount("/assets", StaticFiles(directory="assets"), name="assets")
 # Jinja2 templates
 templates = Jinja2Templates(directory="templates")
 
+# Multi-brand configurations
+BRANDS = {
+    "vietnam_safar": {
+        "id": "vietnam_safar",
+        "name": "Vietnam Safar",
+        "domain": "journeys.vietnamsafar.vn",
+        "logo": "/assets/brands/vietnam_safar.png"
+    },
+    "capella_travel": {
+        "id": "capella_travel",
+        "name": "Capella Travel",
+        "domain": "journeys.capellatravel.com",
+        "logo": "/assets/brands/capella_travel.png"
+    },
+    "selvara": {
+        "id": "selvara",
+        "name": "Selvara Journeys",
+        "domain": "my.selvarajourneys.com",
+        "logo": "/assets/brands/selvara.svg"
+    }
+}
+
+def resolve_brand(request: Request, payload_dict: dict = None) -> dict:
+    """Resolve brand based on query param, seller name, or content match."""
+    brand_id = request.query_params.get("brand")
+    if brand_id and brand_id in BRANDS:
+        return BRANDS[brand_id]
+    
+    if payload_dict:
+        # Check seller companyName
+        seller = payload_dict.get("seller") or {}
+        comp_name = seller.get("companyName", "").lower() if isinstance(seller, dict) else ""
+        if "capella" in comp_name:
+            return BRANDS["capella_travel"]
+        elif "selvara" in comp_name:
+            return BRANDS["selvara"]
+            
+        # General string match fallback in payload representation
+        try:
+            payload_str = json.dumps(payload_dict).lower()
+            if "capella" in payload_str:
+                return BRANDS["capella_travel"]
+            elif "selvara" in payload_str:
+                return BRANDS["selvara"]
+        except Exception:
+            pass
+            
+    return BRANDS["vietnam_safar"]
+
 # ── Luxury Day Title Templates ────────────────────────────────────────────────
 LUXURY_DAY_TEMPLATES = [
     {
@@ -198,7 +247,7 @@ STATIC_DICTIONARY = {
         "vi": "Lịch Trình Chi Tiết",
         "ar": "الجدول الزمني"
     },
-    "Vietnam Safar — B2B Travel Proposal": {
+    "Vietnam Safar": {
         "vi": "Vietnam Safar — Đề Xuất Hành Trình B2B",
         "ar": "Vietnam Safar — مقترح سفر للشركاء التجاريين"
     },
@@ -2395,16 +2444,23 @@ def _build_timeline_days(
 
 # ── Context builder (pure fn — no I/O) ───────────────────────────────────────
 
-def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, destinations: list[dict], lang: str = "en", template_name: str = "vietnam_heritage_luxury.html"):
+def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, destinations: list[dict], lang: str = "en", template_name: str = "vietnam_heritage_luxury.html", brand: dict = None):
     """Build template context. Shared by /quotations (landingpage) and /quotations/{id}/pdf."""
     default_img = "/assets/vietnam-safar-logo.png"
     manual_override = _load_quotation_manual_override(quotation_id)
     lang_override = _lang_override(manual_override, lang)
     
     # Defaults for seller/contact
-    seller_name  = "Vietnam Safar \u2013 Discovery Asia Travel Group"
+    seller_name  = "Vietnam Safar – Discovery Asia Travel Group"
     seller_email = "sales@vietnamsafar.vn"
     seller_phone = "+84 911 538 738"
+    if brand:
+        if brand.get("id") == "capella_travel":
+            seller_name = "Capella Travel"
+            seller_email = "sales@capellatravel.com"
+        elif brand.get("id") == "selvara":
+            seller_name = "Selvara Journeys"
+            seller_email = "sales@selvarajourneys.com"
 
     # Resolve key display strings from new Spec 36 schema
     tour_title    = truncate_text(payload.landingpageContent.heroSection.subtitle, 70)
@@ -2592,18 +2648,109 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
                     }
                     destinations.append(dest_dict)
 
+    import os
+    import random
+
+    def _local_slug_lookup(text: str) -> str | None:
+        if not text:
+            return None
+        normalized = str(text).strip().lower()
+        slug_map = {
+            "hanoi": "ha-noi", "hà nội": "ha-noi", "ha noi": "ha-noi", "hanoï": "ha-noi",
+            "ninh binh": "ninh-binh", "ninh bình": "ninh-binh", "ninhbinh": "ninh-binh",
+            "halong bay": "quang-ninh", "halong": "quang-ninh", "ha long": "quang-ninh", "quảng ninh": "quang-ninh", "vịnh hạ long": "quang-ninh", "vinh ha long": "quang-ninh",
+            "sapa": "lao-cai", "sa pa": "lao-cai", "lào cai": "lao-cai", "lao cai": "lao-cai", "laocai": "lao-cai"
+        }
+        for k, v in slug_map.items():
+            if k in normalized:
+                return v
+        return None
+
+    def _find_real_image_for_province(slug: str, fallback_img: str = "/assets/vietnam-safar-logo.png") -> str:
+        if not slug or slug == "unknown":
+            return fallback_img
+        folder_path = os.path.join("assets", slug)
+        if os.path.isdir(folder_path):
+            valid_exts = {".jpg", ".jpeg", ".png", ".webp"}
+            files = [
+                f for f in os.listdir(folder_path)
+                if os.path.isfile(os.path.join(folder_path, f)) and os.path.splitext(f)[1].lower() in valid_exts
+            ]
+            if files:
+                return f"/assets/{slug}/{random.choice(files)}"
+        return fallback_img
+
+    def _find_all_real_images_for_province(slug: str, fallback_img: str = "/assets/vietnam-safar-logo.png") -> list[str]:
+        if not slug or slug == "unknown":
+            return [fallback_img]
+        folder_path = os.path.join("assets", slug)
+        if os.path.isdir(folder_path):
+            valid_exts = {".jpg", ".jpeg", ".png", ".webp"}
+            files = sorted([
+                f for f in os.listdir(folder_path)
+                if os.path.isfile(os.path.join(folder_path, f)) and os.path.splitext(f)[1].lower() in valid_exts
+            ])
+            if files:
+                return [f"/assets/{slug}/{f}" for f in files]
+        return [fallback_img]
+
     translated_destinations = []
     for d in destinations:
         d_copy = d.copy()
         raw_name = d_copy.get("name", "")
         d_copy["name"] = localize_place_name(raw_name, lang)
-        d_copy["image_url"] = _extract_image_url(d_copy.get("image_url"), default_img)
+        
+        # Resolve slug for the destination
+        slug = d_copy.get("slug")
+        if not slug or slug == "unknown":
+            slug = _local_slug_lookup(raw_name) or _local_slug_lookup(d_copy.get("name"))
+
+        image_url = _extract_image_url(d_copy.get("image_url"), default_img)
         raw_images = d_copy.get("images") or []
-        d_copy["images"] = [
+        images = [
             _extract_image_url(img, default_img)
             for img in raw_images
             if _extract_image_url(img, default_img)
         ]
+
+        # If mock path or file doesn't exist, replace with real image
+        if slug and slug != "unknown":
+            is_mock_url = "mock-" in image_url
+            file_exists = True
+            if image_url.startswith("/assets/"):
+                file_path = image_url.lstrip("/")
+                if not os.path.exists(file_path):
+                    file_exists = False
+            
+            if is_mock_url or not file_exists or image_url == default_img:
+                real_img = _find_real_image_for_province(slug, default_img)
+                if real_img != default_img:
+                    image_url = real_img
+
+            real_images = []
+            for img in images:
+                is_mock = "mock-" in img
+                f_exists = True
+                if img.startswith("/assets/"):
+                    f_path = img.lstrip("/")
+                    if not os.path.exists(f_path):
+                        f_exists = False
+                if not is_mock and f_exists and img != default_img:
+                    real_images.append(img)
+            
+            if not real_images:
+                real_prov_imgs = _find_all_real_images_for_province(slug, default_img)
+                if real_prov_imgs and real_prov_imgs[0] != default_img:
+                    real_images = real_prov_imgs
+            
+            if not real_images:
+                real_images = [image_url]
+                
+            images = real_images
+
+        d_copy["image_url"] = image_url
+        d_copy["images"] = images
+        d_copy["slug"] = slug or "unknown"
         translated_destinations.append(d_copy)
     destinations = translated_destinations
 
@@ -2612,6 +2759,19 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
     def _d_name(i): return truncate_text(destinations[i].get("name", ""), 40) if i < len(destinations) else ""
 
     img_0 = _extract_image_url(hero_image_url, default_img)
+    if "mock-" in img_0 or (img_0.startswith("/assets/") and not os.path.exists(img_0.lstrip("/"))):
+        import re
+        hero_slug = None
+        m = re.search(r'mock-([^./\s]+)', img_0)
+        if m:
+            hero_slug = _local_slug_lookup(m.group(1))
+        if not hero_slug and destinations:
+            hero_slug = destinations[0].get("slug")
+        if hero_slug and hero_slug != "unknown":
+            real_hero = _find_real_image_for_province(hero_slug, default_img)
+            if real_hero != default_img:
+                img_0 = real_hero
+
     img_1 = _d_img(0)
     img_2 = _d_img(1)
     img_3 = _d_img(2)
@@ -2817,7 +2977,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         "seller_name":    seller_name,
         "seller_email":   seller_email,
         "contact":        seller_phone,
-        "contact_web":    "www.vietnamsafar.vn",
+        "contact_web":    brand.get("domain") if brand else "www.vietnamsafar.vn",
         "contact_phone":  seller_phone,
         # Quotation ref
         "quotation_number": payload.quotationNumber or quotation_id,
@@ -3336,9 +3496,11 @@ async def create_quotation_b2c(request: Request):
 
     log.debug("[/quotations/b2c] Hero image resolved: %s", hero_image_url)
 
-    ctx = _build_ctx(quotation_id, payload, hero_image_url, destinations, lang=lang, template_name="vietnam_heritage_luxury_b2c.html")
+    brand_config = resolve_brand(request, payload.model_dump(mode="json"))
+    ctx = _build_ctx(quotation_id, payload, hero_image_url, destinations, lang=lang, template_name="vietnam_heritage_luxury_b2c.html", brand=brand_config)
     ctx["baseline_payload"] = payload.model_dump(mode="json")
     ctx["baseline_lang"] = lang
+    ctx["brand"] = brand_config
     ctx["translations"] = {}
     ctx["available_langs"] = [lang]
     ctx["translation_status"] = {"baseline_lang": lang, "available_langs": [lang]}
@@ -3515,12 +3677,14 @@ async def create_quotation(request: Request):
 
     log.debug("[/quotations] Hero image resolved: %s", hero_image_url)
 
-    ctx = _build_ctx(quotation_id, payload, hero_image_url, destinations, lang=lang, template_name="vietnam_heritage_luxury.html")
+    brand_config = resolve_brand(request, payload.model_dump(mode="json"))
+    ctx = _build_ctx(quotation_id, payload, hero_image_url, destinations, lang=lang, template_name="vietnam_heritage_luxury.html", brand=brand_config)
     ctx["baseline_payload"] = payload.model_dump(mode="json")
     ctx["baseline_lang"] = lang
     ctx["translations"] = {}
     ctx["available_langs"] = [lang]
     ctx["translation_status"] = {"baseline_lang": lang, "available_langs": [lang]}
+    ctx["brand"] = brand_config
 
     # ── Render landing page HTML ───────────────────────────────────────────────
     loop = asyncio.get_event_loop()
@@ -3972,7 +4136,7 @@ def _apply_ctx_html_sync(
 
     return applied
 
-async def _render_quotation_pdf_from_ctx(ctx_data: dict, quotation_id: str, target_lang: str) -> tuple[str, str]:
+async def _render_quotation_pdf_from_ctx(ctx_data: dict, quotation_id: str, target_lang: str, request: Request = None) -> tuple[str, str]:
     baseline_lang = ctx_data.get("baseline_lang", "en")
     effective_lang = target_lang if target_lang in ("en", "vi", "ar") else baseline_lang
     payload_dict = (
@@ -3989,6 +4153,7 @@ async def _render_quotation_pdf_from_ctx(ctx_data: dict, quotation_id: str, targ
     tmpl_name = base_tmpl.replace(".html", "_pdf.html")
     tmpl = templates.get_template(tmpl_name)
 
+    brand_config = resolve_brand(request, payload_dict)
     lang_ctx = _build_ctx(
         quotation_id=quotation_id,
         payload=payload_obj,
@@ -3996,7 +4161,10 @@ async def _render_quotation_pdf_from_ctx(ctx_data: dict, quotation_id: str, targ
         destinations=ctx_data.get("destinations", []),
         lang=effective_lang,
         template_name=base_tmpl,
+        brand=brand_config,
     )
+    lang_ctx["brand"] = brand_config
+
     lang_ctx["translations"] = ctx_data.get("translations", {})
     lang_ctx["baseline_lang"] = baseline_lang
     lang_ctx["translation_status"] = ctx_data.get(
@@ -4101,7 +4269,7 @@ async def get_quotation_pdf(quotation_id: str, request: Request):
         target_lang = baseline_lang
         
     try:
-        rendered_html, _ = await _render_quotation_pdf_from_ctx(ctx_data, quotation_id, target_lang)
+        rendered_html, _ = await _render_quotation_pdf_from_ctx(ctx_data, quotation_id, target_lang, request)
         return HTMLResponse(content=rendered_html)
     except Exception as err:
         log.exception("[/quotations] Dynamic PDF render failed for %s: %s", quotation_id, err)
@@ -4266,14 +4434,19 @@ async def get_quotation(quotation_id: str, request: Request):
         destinations = ctx_data.get("destinations", [])
         translations = ctx_data.get("translations", {})
         
+        # Resolve brand from request and payload
+        brand_config = resolve_brand(request, payload_dict)
+
         lang_ctx = _build_ctx(
             quotation_id=quotation_id,
             payload=payload_obj,
             hero_image_url=hero_image_url,
             destinations=destinations,
             lang=target_lang,
-            template_name=tmpl_name
+            template_name=tmpl_name,
+            brand=brand_config,
         )
+        lang_ctx["brand"] = brand_config
         lang_ctx["translations"] = translations
         lang_ctx["baseline_lang"] = baseline_lang
         lang_ctx["translation_status"] = ctx_data.get("translation_status", {"baseline_lang": baseline_lang, "available_langs": [baseline_lang]})
@@ -4288,6 +4461,32 @@ async def get_quotation(quotation_id: str, request: Request):
         latest_lang = None if target_lang == baseline_lang else target_lang
         html_content = await _get_latest_published_html(quotation_id, lang=latest_lang, fallback=False)
         if html_content:
+            # Strip the old editor block entirely if it exists in the static HTML to avoid duplicate DOM elements and duplicate IDs (e.g. duplicate domain-modal)
+            idx_bar = html_content.find('id="publish-bar"')
+            if idx_bar == -1:
+                idx_bar = html_content.find("id='publish-bar'")
+            if idx_bar != -1:
+                idx_start = html_content.rfind('<div', 0, idx_bar)
+                if idx_start != -1:
+                    idx_scripts = html_content.find('id="editor-scripts"')
+                    if idx_scripts == -1:
+                        idx_scripts = html_content.find("id='editor-scripts'")
+                    if idx_scripts != -1:
+                        idx_end_script = html_content.find('</script>', idx_scripts)
+                        if idx_end_script != -1:
+                            idx_end = idx_end_script + len('</script>')
+                            html_content = html_content[:idx_start] + html_content[idx_end:]
+
+            # Re-inject brand data dynamically into the static HTML to support brand switching
+            import json
+            brand_json = json.dumps(brand_config, ensure_ascii=False)
+            import re
+            html_content = re.sub(
+                r'<script[^>]*id=["\']brand-data["\'][^>]*>.*?</script>',
+                f'<script id="brand-data" type="application/json">{brand_json}</script>',
+                html_content,
+                flags=re.DOTALL
+            )
             # Re-inject editor components
             editor_block = extract_editor_components(tmpl.render(**lang_ctx))
             if editor_block:
@@ -4559,6 +4758,7 @@ async def create_itinerary(request: Request):
     ctx["translations"] = {}
     ctx["available_langs"] = [lang]
     ctx["translation_status"] = {"baseline_lang": lang, "available_langs": [lang]}
+    ctx["brand"] = resolve_brand(request, payload.model_dump(mode="json"))
 
     # Render landing page HTML and PDF
     loop = asyncio.get_event_loop()
@@ -4712,6 +4912,9 @@ async def get_itinerary(itinerary_id: str, request: Request):
         destinations = ctx_data.get("destinations", [])
         translations = ctx_data.get("translations", {})
         
+        # Resolve brand from request and payload
+        brand_config = resolve_brand(request, payload_dict)
+
         lang_ctx = _build_itinerary_ctx(
             itinerary_id=itinerary_id,
             payload=payload_obj,
@@ -4720,6 +4923,7 @@ async def get_itinerary(itinerary_id: str, request: Request):
             lang=target_lang,
             template_name=tmpl_name
         )
+        lang_ctx["brand"] = brand_config
         lang_ctx["translations"] = translations
         lang_ctx["baseline_lang"] = baseline_lang
         lang_ctx["translation_status"] = ctx_data.get("translation_status", {"baseline_lang": baseline_lang, "available_langs": [baseline_lang]})
@@ -4734,6 +4938,16 @@ async def get_itinerary(itinerary_id: str, request: Request):
         latest_lang = None if target_lang == baseline_lang else target_lang
         html_content = await _get_latest_published_html(itinerary_id, lang=latest_lang, fallback=False)
         if html_content:
+            # Re-inject brand data dynamically into the static HTML to support brand switching
+            import json
+            brand_json = json.dumps(brand_config, ensure_ascii=False)
+            import re
+            html_content = re.sub(
+                r'<script[^>]*id=["\']brand-data["\'][^>]*>.*?</script>',
+                f'<script id="brand-data" type="application/json">{brand_json}</script>',
+                html_content,
+                flags=re.DOTALL
+            )
             # Re-enable editor publish bar by making it visible
             html_content = make_itinerary_editor_visible(html_content)
             return HTMLResponse(content=html_content)
@@ -4816,6 +5030,9 @@ async def get_itinerary_pdf(itinerary_id: str, request: Request):
         destinations = ctx_data.get("destinations", [])
         translations = ctx_data.get("translations", {})
         
+        # Resolve brand from request and payload
+        brand_config = resolve_brand(request, payload_dict)
+
         lang_ctx = _build_itinerary_ctx(
             itinerary_id=itinerary_id,
             payload=payload_obj,
@@ -4824,6 +5041,7 @@ async def get_itinerary_pdf(itinerary_id: str, request: Request):
             lang=target_lang,
             template_name=base_tmpl
         )
+        lang_ctx["brand"] = brand_config
         lang_ctx["translations"] = translations
         lang_ctx["baseline_lang"] = baseline_lang
         lang_ctx["translation_status"] = ctx_data.get("translation_status", {"baseline_lang": baseline_lang, "available_langs": [baseline_lang]})

@@ -7,6 +7,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{{ tour_title }} - Booking Itinerary</title>
+  <script id="brand-data" type="application/json">
+    {{ brand | tojson | safe }}
+  </script>
   <!-- Premium Typography Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -550,6 +553,10 @@
       grid-row: span 2
     }
 
+    .image-tile.wide {
+      grid-column: span 2
+    }
+
     .image-tile:before {
       content: "";
       position: absolute;
@@ -1064,8 +1071,10 @@
         grid-auto-rows: 280px
       }
 
-      .image-tile.large {
-        grid-row: auto
+      .image-tile.large,
+      .image-tile.wide {
+        grid-row: auto;
+        grid-column: auto;
       }
 
       .day {
@@ -2352,8 +2361,8 @@
     <div class="container">
       <div class="nav-inner">
         <a class="brand" href="/">
-          <img src="/assets/vietnam-safar-logo.png" alt="Vietnam Safar" />
-          <span>Vietnam Safar</span>
+          <img src="{{ (brand.logo if brand else '') or '/assets/vietnam-safar-logo.png' }}" alt="{{ (brand.name if brand else '') or 'Vietnam Safar' }}" />
+          <span>{{ (brand.name if brand else '') or 'Vietnam Safar' }}</span>
         </a>
         <div class="nav-links">
           <a href="#overview">{{ "Overview" | translate(lang) }}</a>
@@ -2584,7 +2593,7 @@
               else "Local Culture" }}</strong>
           </div>
         </div>
-        <div class="image-tile" style="background-image: var(--img-4)">
+        <div class="image-tile {% if destinations and destinations|length == 4 %}wide{% endif %}" style="background-image: var(--img-4)">
           <div class="image-caption">
             <small>{{ (destinations[3].slug | default("Journey") | replace("-", " ") | title) if destinations and
               destinations|length > 3 else ("Journey" | translate(lang)) }}</small>
@@ -3001,16 +3010,13 @@
 
     <div class="pb-actions">
       <select id="select-domain" class="no-print" style="display: none !important;">
-        <option value="http://localhost:8111">localhost:8111</option>
-        <option value="https://journeys.capellatravel.com">journeys.capellatravel.com</option>
-        <option value="https://journeys.vietnamsafar.vn">journeys.vietnamsafar.vn</option>
-        <option value="http://my.selvarajourneys.com">my.selvarajourneys.com</option>
+        <option value="https://{{ (brand.domain if brand else '') or 'journeys.vietnamsafar.vn' }}">Production</option>
       </select>
-      <button id="btn-select-domain" onclick="openDomainModal(event)" title="Select Domain">
-        <span>🌐</span>
-        <span class="domain-text">localhost:8111</span>
+      <button id="btn-select-domain" onclick="openDomainModal(event)" title="Select Brand">
+        <img src="{{ (brand.logo if brand else '') or '/assets/vietnam-safar-logo.png' }}" style="width:16px; height:16px; border-radius:50%; object-fit:contain; background:white; margin-right:4px;" />
+        <span class="domain-text" style="font-weight:600;">{{ (brand.name if brand else '') or 'Vietnam Safar' }}</span>
       </button>
-      <button id="btn-view-live" onclick="openDomainModal(event, 'redirect')" title="View Live Version">
+      <button id="btn-view-live" onclick="redirectToLiveVersion(event)" title="View Live Version">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="view-icon">
           <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
           <circle cx="12" cy="12" r="3"></circle>
@@ -3022,46 +3028,32 @@
     </div>
   </div>
 
-  <!-- Custom Responsive Domain Selector Modal -->
+  <!-- Custom Responsive Domain Selector Modal (Transformed to Brand Selector) -->
   <div id="domain-modal" class="pb-modal-overlay" onclick="closeDomainModal(event)">
     <div class="pb-modal-card" onclick="event.stopPropagation()">
       <div class="pb-modal-header">
-        <h3>Select Domain</h3>
+        <h3>Select Brand</h3>
         <button class="pb-modal-close" onclick="closeDomainModal(event)">&times;</button>
       </div>
       <div class="pb-domain-list">
-        <div class="pb-domain-item" data-value="http://localhost:8111" onclick="selectDomainOption('http://localhost:8111')">
-          <span class="pb-domain-icon">💻</span>
-          <div class="pb-domain-details">
-            <div class="pb-domain-name">localhost:8111</div>
-            <div class="pb-domain-badge dev">Local Development</div>
+        {% set brands_list = [
+          {'id': 'vietnam_safar', 'name': 'Vietnam Safar', 'domain': 'journeys.vietnamsafar.vn', 'logo': '/assets/brands/vietnam_safar.png'},
+          {'id': 'capella_travel', 'name': 'Capella Travel', 'domain': 'journeys.capellatravel.com', 'logo': '/assets/brands/capella_travel.svg'},
+          {'id': 'selvara', 'name': 'Selvara', 'domain': 'my.selvarajourneys.com', 'logo': '/assets/brands/selvara.svg'}
+        ] %}
+        {% for b in brands_list %}
+        {% set is_active = brand and brand.id == b.id %}
+        <div class="pb-domain-item {% if is_active %}active{% endif %}" data-brand="{{ b.id }}" onclick="selectBrandOption('{{ b.id }}')" style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <img src="{{ b.logo }}" style="width:28px; height:28px; border-radius:50%; object-fit:contain; background:white; border:1px solid rgba(0,0,0,0.1);" />
+            <div class="pb-domain-details">
+              <div class="pb-domain-name" style="font-weight:600; font-size:14px; text-align:left;">{{ b.name }}</div>
+              <div class="pb-domain-badge prod" style="font-size:11px; color:#666;">{{ b.domain }}</div>
+            </div>
           </div>
-          <span class="pb-domain-check">✓</span>
+          <span class="pb-domain-check" style="visibility: {% if is_active %}visible{% else %}hidden{% endif %}; color:var(--emerald, #17412e); font-weight:bold;">✓</span>
         </div>
-        <div class="pb-domain-item" data-value="https://journeys.vietnamsafar.vn" onclick="selectDomainOption('https://journeys.vietnamsafar.vn')">
-          <span class="pb-domain-icon">🌐</span>
-          <div class="pb-domain-details">
-            <div class="pb-domain-name">journeys.vietnamsafar.vn</div>
-            <div class="pb-domain-badge prod">Production</div>
-          </div>
-          <span class="pb-domain-check">✓</span>
-        </div>
-        <div class="pb-domain-item" data-value="https://journeys.capellatravel.com" onclick="selectDomainOption('https://journeys.capellatravel.com')">
-          <span class="pb-domain-icon">🌐</span>
-          <div class="pb-domain-details">
-            <div class="pb-domain-name">journeys.capellatravel.com</div>
-            <div class="pb-domain-badge prod">Production</div>
-          </div>
-          <span class="pb-domain-check">✓</span>
-        </div>
-        <div class="pb-domain-item" data-value="http://my.selvarajourneys.com" onclick="selectDomainOption('http://my.selvarajourneys.com')">
-          <span class="pb-domain-icon">🌐</span>
-          <div class="pb-domain-details">
-            <div class="pb-domain-name">my.selvarajourneys.com</div>
-            <div class="pb-domain-badge prod">Production</div>
-          </div>
-          <span class="pb-domain-check">✓</span>
-        </div>
+        {% endfor %}
       </div>
     </div>
   </div>
@@ -3509,22 +3501,11 @@
       }
     })();
 
-    function openDomainModal(event, mode = 'publish') {
+    function openDomainModal(event) {
       if (event) event.stopPropagation();
-      domainModalMode = mode;
       const modal = document.getElementById('domain-modal');
       if (modal) {
         modal.classList.add('show');
-        const currentOrigin = window.location.origin;
-        const items = modal.querySelectorAll('.pb-domain-item');
-        items.forEach(item => {
-          const val = item.getAttribute('data-value').replace(/\/$/, '');
-          if (val === currentOrigin.replace(/\/$/, '')) {
-            item.classList.add('active');
-          } else {
-            item.classList.remove('active');
-          }
-        });
       }
     }
 
@@ -3534,43 +3515,39 @@
       if (modal) modal.classList.remove('show');
     }
 
-    function selectDomainOption(val) {
-      const targetOrigin = val.replace(/\/$/, '');
-      if (domainModalMode === 'redirect') {
-        if (window.location.pathname.includes('/published/')) {
-          const targetUrl = targetOrigin + window.location.pathname + window.location.search;
-          window.location.href = targetUrl;
-        } else {
-          const urlParams = new URLSearchParams(window.location.search);
-          const currentLang = urlParams.get('lang') || urlParams.get('language') || 'en';
-          
-          let baselineLang = 'en';
-          const statusEl = document.getElementById('translation-status');
-          if (statusEl) {
-            try {
-              const status = JSON.parse(statusEl.textContent);
-              if (status && status.baseline_lang) {
-                baselineLang = status.baseline_lang;
-              }
-            } catch(e) {}
-          }
-          
-          const langSuffix = (currentLang && currentLang !== baselineLang) ? `_${currentLang}` : '';
-          const filename = `v${modalLatestVersion}${langSuffix}.html`;
-          const targetUrl = `${targetOrigin}/published/${modalItemId}/${filename}`;
-          window.location.href = targetUrl;
-        }
+    function selectBrandOption(brandId) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('brand', brandId);
+      window.location.href = url.toString();
+    }
+
+    function redirectToLiveVersion(event) {
+      if (event) event.stopPropagation();
+      
+      const brandDomain = "{{ (brand.domain if brand else '') or 'journeys.vietnamsafar.vn' }}";
+      const targetOrigin = `https://${brandDomain}`;
+      
+      if (window.location.pathname.includes('/published/')) {
+        window.location.href = targetOrigin + window.location.pathname + window.location.search;
       } else {
-        const selectDomain = document.getElementById('select-domain');
-        if (selectDomain) {
-          selectDomain.value = val;
-          selectDomain.dispatchEvent(new Event('change'));
-          const domainText = document.querySelector('#btn-select-domain .domain-text');
-          if (domainText) {
-            domainText.textContent = val.replace(/^https?:\/\//, '').replace(/\/$/, '');
-          }
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentLang = urlParams.get('lang') || urlParams.get('language') || 'en';
+        
+        let baselineLang = 'en';
+        const statusEl = document.getElementById('translation-status');
+        if (statusEl) {
+          try {
+            const status = JSON.parse(statusEl.textContent);
+            if (status && status.baseline_lang) {
+              baselineLang = status.baseline_lang;
+            }
+          } catch(e) {}
         }
-        closeDomainModal();
+        
+        const langSuffix = (currentLang && currentLang !== baselineLang) ? `_${currentLang}` : '';
+        const filename = `v${modalLatestVersion}${langSuffix}.html`;
+        const targetUrl = `${targetOrigin}/published/${modalItemId}/${filename}`;
+        window.location.href = targetUrl;
       }
     }
   </script>
@@ -4182,29 +4159,55 @@
     document.addEventListener("DOMContentLoaded", function() {
       const selectDomain = document.getElementById('select-domain');
       if (selectDomain) {
-        const currentOrigin = window.location.origin;
-        let matched = false;
-        for (let option of selectDomain.options) {
-          if (option.value.replace(/\/$/, '') === currentOrigin.replace(/\/$/, '')) {
-            selectDomain.value = option.value;
-            matched = true;
-            break;
+        selectDomain.value = "https://{{ (brand.domain if brand else '') or 'journeys.vietnamsafar.vn' }}";
+      }
+      try {
+        const brandDataEl = document.getElementById('brand-data');
+        if (brandDataEl) {
+          const brandData = JSON.parse(brandDataEl.textContent);
+          if (brandData && brandData.id && brandData.logo && brandData.name) {
+            // 1. Sync Header
+            const brandLink = document.querySelector('a.brand');
+            if (brandLink) {
+              const img = brandLink.querySelector('img');
+              const span = brandLink.querySelector('span');
+              if (img) {
+                img.src = brandData.logo;
+                img.alt = brandData.name;
+              }
+              if (span) {
+                span.textContent = brandData.name;
+              }
+            }
+            // 2. Sync Publish Bar Button
+            const pbBtn = document.getElementById('btn-select-domain');
+            if (pbBtn) {
+              const img = pbBtn.querySelector('img');
+              const span = pbBtn.querySelector('.domain-text');
+              if (img) {
+                img.src = brandData.logo;
+              }
+              if (span) {
+                span.textContent = brandData.name;
+              }
+            }
+            // 3. Sync Modal Items
+            const modalItems = document.querySelectorAll('.pb-domain-item');
+            modalItems.forEach(item => {
+              const bId = item.getAttribute('data-brand');
+              const checkmark = item.querySelector('.pb-domain-check');
+              if (bId === brandData.id) {
+                item.classList.add('active');
+                if (checkmark) checkmark.style.visibility = 'visible';
+              } else {
+                item.classList.remove('active');
+                if (checkmark) checkmark.style.visibility = 'hidden';
+              }
+            });
           }
         }
-        if (!matched) {
-          if (currentOrigin.includes('localhost') || currentOrigin.includes('127.0.0.1')) {
-            selectDomain.value = 'http://localhost:8111';
-          } else {
-            selectDomain.value = 'https://journeys.capellatravel.com';
-          }
-        }
-        // Sync custom domain button text on load
-        setTimeout(() => {
-          const domainBtnText = document.querySelector('#btn-select-domain .domain-text');
-          if (domainBtnText) {
-            domainBtnText.textContent = selectDomain.value.replace(/^https?:\/\//, '').replace(/\/$/, '');
-          }
-        }, 50);
+      } catch (e) {
+        console.error("Failed to sync header and popup brand dynamically:", e);
       }
     });
 

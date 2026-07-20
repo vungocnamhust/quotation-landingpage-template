@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="{{ lang or 'en' }}" {% if lang == 'ar' %}dir="rtl"{% endif %}
-  style="--hero-img: url('{{ img_0 }}'); {% for dest in destinations %} --img-{{ loop.index }}: url('{{ dest.image_url or '/assets/vietnam-safar-logo.png' }}'); {% endfor %}">
+<html lang="en" 
+  style="--hero-img: url('/assets/ha-noi/hanoi1.jpg');  --img-1: url('/assets/ha-noi/duongtau.jpg');  --img-2: url('/assets/ninh-binh/tamcoc.jpg');  --img-3: url('/assets/quang-ninh/halong-bay.jpg');  --img-4: url('/assets/lao-cai/fansipan.jpg'); ">
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{{ tour_title }} - {{ "Luxury Quotation" | translate(lang) }}</title>
+  <title>A Luxury Private Journey Specially Crafted for 5 Indian Guests - Luxury Quotation</title>
   <script id="brand-data" type="application/json">
-    {{ brand | tojson | safe }}
+    {"domain": "journeys.capellatravel.com", "id": "capella_travel", "logo": "/assets/brands/capella_travel.png", "name": "Capella Travel"}
   </script>
   <!-- Premium Typography Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,7 +15,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700&family=Cairo:wght@300;400;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
   
   <!-- PWA Metadata -->
-  <link rel="manifest" href="/manifest.json?id={{ quotation_id }}&type=quotations" />
+  <link rel="manifest" href="/manifest.json?id=quo_01ece847501d&type=quotations" />
   <meta name="theme-color" content="#17412e" />
   <link rel="apple-touch-icon" href="/assets/vietnam-safar-logo.png" />
   <!-- Leaflet CSS & JS -->
@@ -2352,41 +2352,39 @@
   <nav class="nav no-print">
     <div class="container nav-inner">
       <a class="brand" href="#top">
-        <img src="{{ (brand.logo if brand else '') or '/assets/vietnam-safar-logo.png' }}" alt="{{ (brand.name if brand else '') or 'Vietnam Safar' }}" />
-        <span>{{ (brand.name if brand else '') or 'Vietnam Safar' }}</span>
+        <img src="/assets/brands/capella_travel.png" alt="Capella Travel" />
+        <span>Capella Travel</span>
       </a>
       <div class="nav-links">
-        <a href="#journey">{{ "Journey" | translate(lang) }}</a>
-        <a href="#route-map">{{ "Route Map" | translate(lang) }}</a>
-        <a href="#itinerary">{{ "Itinerary" | translate(lang) }}</a>
-        <a href="#quotation">{{ "Quotation" | translate(lang) }}</a>
-        <a href="#terms">{{ "Terms" | translate(lang) }}</a>
+        <a href="#journey">Journey</a>
+        <a href="#route-map">Route Map</a>
+        <a href="#itinerary">Itinerary</a>
+        <a href="#quotation">Quotation</a>
+        <a href="#terms">Terms</a>
       </div>
       <div class="nav-actions">
         <div class="lang-switcher">
           <button class="lang-switcher-btn" onclick="toggleLangDropdown(event)">
             <span>🌐</span>
             <span class="lang-text">
-              {% if lang == 'ar' %}{{ client_i18n.language_names.ar }}
-              {% elif lang == 'vi' %}{{ client_i18n.language_names.vi }}
-              {% else %}{{ client_i18n.language_names.en }}
-              {% endif %}
+              English
+              
             </span>
             <span class="lang-caret">▼</span>
           </button>
           <div class="lang-dropdown">
-            <div class="lang-option" onclick="switchLanguage('en')">{{ client_i18n.language_names.en }}</div>
-            <div class="lang-option" onclick="switchLanguage('ar')">{{ client_i18n.language_names.ar }}</div>
-            <div class="lang-option" onclick="switchLanguage('vi')">{{ client_i18n.language_names.vi }}</div>
+            <div class="lang-option" onclick="switchLanguage('en')">English</div>
+            <div class="lang-option" onclick="switchLanguage('ar')">Arabic</div>
+            <div class="lang-option" onclick="switchLanguage('vi')">Vietnamese</div>
           </div>
         </div>
-        <button id="nav-notification-btn" title="{{ client_i18n.notification_title }}">
+        <button id="nav-notification-btn" title="Enable Notifications">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
             <path
               d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z" />
           </svg>
         </button>
-        <a class="btn dark" href="/quotations/{{ quotation_id }}/pdf?lang={{ lang }}" target="_blank" id="btn-pdf-view">📄 <span class="pdf-btn-text">{{ "PDF Preview" | translate(lang) }}</span></a>
+        <a class="btn dark" href="/quotations/quo_01ece847501d/pdf?lang=en" target="_blank" id="btn-pdf-view">📄 <span class="pdf-btn-text">PDF Preview</span></a>
       </div>
     </div>
   </nav>
@@ -2395,35 +2393,33 @@
     <header class="hero">
       <div class="container hero-content">
         <div>
-          <div class="kicker" data-editable="kicker">{{ kicker }}</div>
-          <h1 data-editable="tour_title">{{ tour_title }}</h1>
-          <p class="hero-lede" data-editable="lede">{{ lede | rtl_mixed(lang) }}</p>
+          <div class="kicker" data-editable="kicker">Private Luxury Quotation ‒ 7D6N ‒ 30 Sep – 06 Oct 2026</div>
+          <h1 data-editable="tour_title">A Luxury Private Journey Specially Crafted for 5 Indian Guests</h1>
+          <p class="hero-lede" data-editable="lede">A premium, personalized 7-day private journey crafted by Capella Travel for our Indian guests. The itinerary showcases the historic soul of Hanoi, the mystical rivers of Ninh Binh, an overnight cruise through the magical waters of Ha Long Bay, and the breathtaking terraced mountains of Sapa. Every detail, from the double and triple room configurations to the carefully curated vegetarian culinary experiences, has been designed for your group of 5 adults to travel in ultimate comfort.</p>
           <div class="hero-actions no-print">
-            <a class="btn gold" href="#quotation">{{ "View Luxury Rates" | translate(lang) }}</a>
-            <a class="btn outline" href="#itinerary">{{ "Explore the Journey" | translate(lang) }}</a>
+            <a class="btn gold" href="#quotation">View Luxury Rates</a>
+            <a class="btn outline" href="#itinerary">Explore the Journey</a>
           </div>
         </div>
         <aside class="quote-card">
-          <h2>{{ "Journey Overview" | translate(lang) }}</h2>
+          <h2>Journey Overview</h2>
           <div class="quote-list">
-            <div class="quote-row"><span>{{ "Prepared for" | translate(lang) }}</span><strong data-editable="customer_name">{{ customer_name
-                }}</strong></div>
-            <div class="quote-row"><span>{{ "Overview" | translate(lang) }}</span><strong data-editable="overview_heading">{{ overview_heading }}</strong></div>
-            {% if guests_txt %}
-            <div class="quote-row"><span>{{ "Guests" | translate(lang) }}</span><strong>{{ guests_txt }}</strong></div>
-            {% endif %}
-            {% if travel_dates %}
-            <div class="quote-row"><span>{{ "Travel dates" | translate(lang) }}</span><strong><span class="ltr-token">{{ travel_dates }}</span></strong></div>
-            {% endif %}
-            {% if route_txt %}
-            <div class="quote-row stacked"><span>{{ "Route" | translate(lang) }}</span><strong>{{ route_txt | rtl_mixed(lang) }}</strong></div>
-            {% endif %}
-            {% if travel_style %}
-            <div class="quote-row stacked"><span>{{ "Style" | translate(lang) }}</span><strong>{{ travel_style | rtl_mixed(lang) }}</strong></div>
-            {% endif %}
-            <div class="quote-row"><span>{{ "Ref." | translate(lang) }}</span><strong data-editable="quotation_number"><span class="ltr-token">{{ quotation_number
-                }}</span></strong></div>
-            <div class="quote-row"><span>{{ "Contact" | translate(lang) }}</span><strong data-editable="contact"><span class="ltr-token">{{ contact }}</span></strong></div>
+            <div class="quote-row"><span>Prepared for</span><strong data-editable="customer_name">5 Adults (Double + Triple Room Configuration)</strong></div>
+            <div class="quote-row"><span>Overview</span><strong data-editable="overview_heading">PROGRAM OVERVIEW</strong></div>
+            
+            <div class="quote-row"><span>Guests</span><strong>5 Adults (Double + Triple Room Configuration)</strong></div>
+            
+            
+            <div class="quote-row"><span>Travel dates</span><strong><span class="ltr-token">30 Sep – 06 Oct 2026</span></strong></div>
+            
+            
+            <div class="quote-row stacked"><span>Route</span><strong>Hanoi – Ninh Binh – Halong Bay – Hanoi / Sapa – Sapa – Hanoi</strong></div>
+            
+            
+            <div class="quote-row stacked"><span>Style</span><strong>Fully private tour with dedicated English-speaking guides, private transfers, and curated...</strong></div>
+            
+            <div class="quote-row"><span>Ref.</span><strong data-editable="quotation_number"><span class="ltr-token">QT-2026-CAPELLA-7D6N-IND</span></strong></div>
+            <div class="quote-row"><span>Contact</span><strong data-editable="contact"><span class="ltr-token">+84 911 538 738</span></strong></div>
           </div>
         </aside>
       </div>
@@ -2434,8 +2430,8 @@
     <section id="route-map" style="padding: 72px 0;">
       <div class="container">
         <div class="section-head">
-          <h2>{{ "Your Journey, Mapped" | translate(lang) }}</h2>
-          <p>{{ "An interactive map showing your curated path through Vietnam's iconic landmarks and luxury stopovers. Click on a destination in the list or the map to explore highlights." | translate(lang) }}</p>
+          <h2>Your Journey, Mapped</h2>
+          <p>An interactive map showing your curated path through Vietnam&#39;s iconic landmarks and luxury stopovers. Click on a destination in the list or the map to explore highlights.</p>
         </div>
         <div class="map-layout">
           <div style="position: relative; height: 100%; z-index: 1;">
@@ -2443,13 +2439,13 @@
               <div
                 style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--ivory-2); color: var(--muted); font-size: 14px;">
                 <span style="font-size: 24px; margin-bottom: 8px;">🗺️</span>
-                <span>{{ "Loading Interactive Route Map..." | translate(lang) }}</span>
+                <span>Loading Interactive Route Map...</span>
               </div>
             </div>
             <!-- Map Mode Switcher -->
             <div class="map-mode-toggle no-print" style="position: absolute; top: 16px; right: 16px; z-index: 1000; display: flex; gap: 4px; background: rgba(17, 19, 15, 0.75); padding: 4px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
-              <button id="toggle-mode-classic" class="mode-btn active" onclick="switchMapMode('classic')">{{ "Classic" | translate(lang) }}</button>
-              <button id="toggle-mode-image" class="mode-btn" onclick="switchMapMode('image')">{{ "Image" | translate(lang) }}</button>
+              <button id="toggle-mode-classic" class="mode-btn active" onclick="switchMapMode('classic')">Classic</button>
+              <button id="toggle-mode-image" class="mode-btn" onclick="switchMapMode('image')">Image</button>
             </div>
           </div>
           <div class="map-sidebar" id="map-sidebar">
@@ -2465,34 +2461,34 @@
         <div class="section-head" style="grid-template-columns: 1fr;">
           <h2
             style="color: white; font-family: var(--serif); font-size: clamp(32px, 4vw, 54px); margin: 0 0 10px;">
-            {{ (['Behind the Itinerary Curation', 'Why This Journey Inspires', 'The Anatomy of the Experience', 'A Perfectly Paced Journey'] | random) | translate(lang) }}</h2>
-          <p style="color: rgba(255, 255, 255, 0.72); margin: 0;">{{ "Tailored care, balanced pacing, and seamless logistics designed specifically for your group." | translate(lang) }}</p>
+            Why This Journey Inspires</h2>
+          <p style="color: rgba(255, 255, 255, 0.72); margin: 0;">Tailored care, balanced pacing, and seamless logistics designed specifically for your group.</p>
         </div>
         <div
           style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 18px; margin-top: 32px;">
           <article class="experience"
             style="background: rgba(255, 255, 255, 0.05); border-color: rgba(216, 189, 133, 0.25); color: white;">
             <span class="num" style="color: var(--gold-2);">01</span>
-            <h3 style="color: white; font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">{{ "Private & Flexible" | translate(lang) }}</h3>
-            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_private">{{ why_private }}</p>
+            <h3 style="color: white; font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">Private &amp; Flexible</h3>
+            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_private">Travel in complete exclusivity with your private air-conditioned vehicle and dedicated English-speaking guide. The daily pacing is highly flexible, ensuring your group can explore Hanoi, Ninh Binh, Sapa, and Halong Bay comfortably at your own speed.</p>
           </article>
           <article class="experience"
             style="background: rgba(255, 255, 255, 0.05); border-color: rgba(216, 189, 133, 0.25); color: white;">
             <span class="num" style="color: var(--gold-2);">02</span>
-            <h3 style="color: white; font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">{{ "Comfort & Pacing" | translate(lang) }}</h3>
-            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_comfort">{{ why_comfort }}</p>
+            <h3 style="color: white; font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">Comfort &amp; Pacing</h3>
+            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_comfort">Enjoy premium accommodations including Hanoi Le Jardin Hotel &amp; Spa, Ambassador Signature Cruise in Halong, and Aliana Boutique Sapa. For the overnight train journey to Sapa, we have pre-arranged 2 private 4-berth cabins on the Chapa Express Train to...</p>
           </article>
           <article class="experience"
             style="background: rgba(255, 255, 255, 0.05); border-color: rgba(216, 189, 133, 0.25); color: white;">
             <span class="num" style="color: var(--gold-2);">03</span>
-            <h3 style="color: white; font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">{{ "Dietary & Special Care" | translate(lang) }}</h3>
-            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_muslim">{{ why_muslim }}</p>
+            <h3 style="color: white; font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">Dietary &amp; Special Care</h3>
+            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_muslim">Your dietary requirements are fully respected. All included meals feature carefully curated Indian vegetarian selections, with eggs permitted and strictly no meat, fish, or seafood. Restaurants and cruise chefs are briefed to prevent...</p>
           </article>
           <article class="experience"
             style="background: rgba(255, 255, 255, 0.05); border-color: rgba(216, 189, 133, 0.25); color: white;">
             <span class="num" style="color: var(--gold-2);">04</span>
-            <h3 style="color: white; font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">{{ "Balanced Highlights" | translate(lang) }}</h3>
-            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_balanced">{{ why_balanced }}</p>
+            <h3 style="color: white; font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">Balanced Highlights</h3>
+            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_balanced">A perfect harmony of historic culture in Hanoi, scenic rivers in Ninh Binh, a luxury overnight cruise in Halong Bay, and highland exploration in Sapa, offering a complete northern Vietnam experience in 7 days.</p>
           </article>
         </div>
       </div>
@@ -2501,43 +2497,134 @@
     <section id="journey">
       <div class="container">
         <div class="section-head">
-          <h2 data-editable="journey_h2">{{ journey_h2 | rtl_mixed(lang) }}</h2>
-          <p data-editable="journey_p">{{ journey_p | rtl_mixed(lang) }}</p>
+          <h2 data-editable="journey_h2">Destination imagery woven into the quotation.</h2>
+          <p data-editable="journey_p">Cinematic destination panels crafted for a premium travel proposal.</p>
         </div>
         <div class="gallery">
-          {% for dest in destinations %}
-          <div class="image-tile {% if loop.index == 1 %}large{% endif %} {% if destinations|length == 4 and loop.index == 4 %}wide{% endif %}">
+          
+          <div class="image-tile large ">
             <div class="carousel-inner" style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
-              {% if dest.images %}
-                {% for img in dest.images %}
-                <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('{{ img }}') center/cover no-repeat;"></div>
-                {% endfor %}
-              {% else %}
-                <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('{{ dest.image_url or '/assets/vietnam-safar-logo.png' }}') center/cover no-repeat;"></div>
-              {% endif %}
+              
+                
+                <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/ha-noi/duongtau.jpg') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/ha-noi/hanoi1.jpg') center/cover no-repeat;"></div>
+                
+              
             </div>
             
             <!-- Gradient Overlay -->
             <div style="position: absolute; inset: 0; background: linear-gradient(180deg, transparent 34%, rgba(17,19,15,0.72)); pointer-events: none; z-index: 2;"></div>
 
             <!-- Controls (only show if there is more than 1 image) -->
-            {% if dest.images and dest.images|length > 1 %}
-            <button class="carousel-control prev no-print" aria-label="{{ client_i18n.previous_image }}" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); background: rgba(17,19,15,0.4); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 18px; line-height: 1; transition: background 0.2s, opacity 0.2s; backdrop-filter: blur(4px); padding-bottom: 2px;">‹</button>
-            <button class="carousel-control next no-print" aria-label="{{ client_i18n.next_image }}" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); background: rgba(17,19,15,0.4); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 18px; line-height: 1; transition: background 0.2s, opacity 0.2s; backdrop-filter: blur(4px); padding-bottom: 2px;">›</button>
+            
+            <button class="carousel-control prev no-print" aria-label="Previous image" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); background: rgba(17,19,15,0.4); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 18px; line-height: 1; transition: background 0.2s, opacity 0.2s; backdrop-filter: blur(4px); padding-bottom: 2px;">‹</button>
+            <button class="carousel-control next no-print" aria-label="Next image" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); background: rgba(17,19,15,0.4); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 18px; line-height: 1; transition: background 0.2s, opacity 0.2s; backdrop-filter: blur(4px); padding-bottom: 2px;">›</button>
             
             <div class="carousel-dots no-print" style="position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3;">
-              {% for img in dest.images %}
-              <button class="carousel-dot {% if loop.first %}active{% endif %}" aria-label="{{ client_i18n.go_to_slide }} {{ loop.index }}" style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
-              {% endfor %}
+              
+              <button class="carousel-dot active" aria-label="Go to slide 1" style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+              
+              <button class="carousel-dot " aria-label="Go to slide 2" style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+              
             </div>
-            {% endif %}
+            
             
             <div class="image-caption" style="z-index: 3;">
-              <small data-editable="gal{{ loop.index }}_label">{% if loop.index == 1 %}{{ "Highlight" | translate(lang) }}{% elif loop.index == 3 %}{{ "Experience" | translate(lang) }}{% elif loop.index == 4 %}{{ "Journey" | translate(lang) }}{% else %}{{ "Destination" | translate(lang) }}{% endif %}</small>
-              <strong data-editable="gal{{ loop.index }}_title">{{ dest.name | rtl_mixed(lang) }}</strong>
+              <small data-editable="gal1_label">Highlight</small>
+              <strong data-editable="gal1_title">Hanoi</strong>
             </div>
           </div>
-          {% endfor %}
+          
+          <div class="image-tile  ">
+            <div class="carousel-inner" style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
+              
+                
+                <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/ninh-binh/tamcoc.jpg') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/ninh-binh/trangan.jpg') center/cover no-repeat;"></div>
+                
+              
+            </div>
+            
+            <!-- Gradient Overlay -->
+            <div style="position: absolute; inset: 0; background: linear-gradient(180deg, transparent 34%, rgba(17,19,15,0.72)); pointer-events: none; z-index: 2;"></div>
+
+            <!-- Controls (only show if there is more than 1 image) -->
+            
+            <button class="carousel-control prev no-print" aria-label="Previous image" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); background: rgba(17,19,15,0.4); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 18px; line-height: 1; transition: background 0.2s, opacity 0.2s; backdrop-filter: blur(4px); padding-bottom: 2px;">‹</button>
+            <button class="carousel-control next no-print" aria-label="Next image" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); background: rgba(17,19,15,0.4); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 18px; line-height: 1; transition: background 0.2s, opacity 0.2s; backdrop-filter: blur(4px); padding-bottom: 2px;">›</button>
+            
+            <div class="carousel-dots no-print" style="position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3;">
+              
+              <button class="carousel-dot active" aria-label="Go to slide 1" style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+              
+              <button class="carousel-dot " aria-label="Go to slide 2" style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+              
+            </div>
+            
+            
+            <div class="image-caption" style="z-index: 3;">
+              <small data-editable="gal2_label">Destination</small>
+              <strong data-editable="gal2_title">Ninh Binh</strong>
+            </div>
+          </div>
+          
+          <div class="image-tile  ">
+            <div class="carousel-inner" style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
+              
+                
+                <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-ninh/halong-bay.jpg') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-ninh/halong.jpg') center/cover no-repeat;"></div>
+                
+              
+            </div>
+            
+            <!-- Gradient Overlay -->
+            <div style="position: absolute; inset: 0; background: linear-gradient(180deg, transparent 34%, rgba(17,19,15,0.72)); pointer-events: none; z-index: 2;"></div>
+
+            <!-- Controls (only show if there is more than 1 image) -->
+            
+            <button class="carousel-control prev no-print" aria-label="Previous image" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); background: rgba(17,19,15,0.4); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 18px; line-height: 1; transition: background 0.2s, opacity 0.2s; backdrop-filter: blur(4px); padding-bottom: 2px;">‹</button>
+            <button class="carousel-control next no-print" aria-label="Next image" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); background: rgba(17,19,15,0.4); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 18px; line-height: 1; transition: background 0.2s, opacity 0.2s; backdrop-filter: blur(4px); padding-bottom: 2px;">›</button>
+            
+            <div class="carousel-dots no-print" style="position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3;">
+              
+              <button class="carousel-dot active" aria-label="Go to slide 1" style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+              
+              <button class="carousel-dot " aria-label="Go to slide 2" style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+              
+            </div>
+            
+            
+            <div class="image-caption" style="z-index: 3;">
+              <small data-editable="gal3_label">Experience</small>
+              <strong data-editable="gal3_title">Halong Bay</strong>
+            </div>
+          </div>
+          
+          <div class="image-tile  wide">
+            <div class="carousel-inner" style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
+              
+                
+                <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/lao-cai/fansipan.jpg') center/cover no-repeat;"></div>
+                
+              
+            </div>
+            
+            <!-- Gradient Overlay -->
+            <div style="position: absolute; inset: 0; background: linear-gradient(180deg, transparent 34%, rgba(17,19,15,0.72)); pointer-events: none; z-index: 2;"></div>
+
+            <!-- Controls (only show if there is more than 1 image) -->
+            
+            
+            <div class="image-caption" style="z-index: 3;">
+              <small data-editable="gal4_label">Journey</small>
+              <strong data-editable="gal4_title">Sapa</strong>
+            </div>
+          </div>
+          
         </div>
       </div>
     </section>
@@ -2597,50 +2684,277 @@
     <section id="itinerary">
       <div class="container">
         <div class="section-head">
-          <h2 data-editable="itinerary_h2">{{ itinerary_h2 }}</h2>
-          <p data-editable="itinerary_p">{{ itinerary_p }}</p>
+          <h2 data-editable="itinerary_h2">Day-by-Day Journey Program</h2>
+          <p data-editable="itinerary_p">Your private 7D6N journey — 7 days, carefully crafted.</p>
         </div>
         <div class="itinerary">
-          {% for day in itinerary %}
+          
           <article class="day">
-            <div class="day-label">{{ day.dayNumber }}</div>
+            <div class="day-label">1</div>
             <div>
-              <span class="num" data-editable="day_num_{{ loop.index }}">{{ "DAY" | translate(lang) }} {{ day.dayNumber }}{% if day.date %}
-                &nbsp;&middot;&nbsp; {{ day.date }}{% endif %}</span>
-              <h3 data-editable="day_title_{{ loop.index }}">{{ day.title | rtl_mixed(lang) }}</h3>
-              {% for para in day.description %}
-              <p data-editable="day_desc_{{ loop.index }}_{{ loop.index0 }}">{{ para | rtl_mixed(lang) }}</p>
-              {% endfor %}
-              {% if day.activities %}
+              <span class="num" data-editable="day_num_1">DAY 1</span>
+              <h3 data-editable="day_title_1">Day 1 — Hanoi</h3>
+              
+              <p data-editable="day_desc_1_0">Welcome to Hanoi! Upon arriving at Noi Bai International Airport on your early morning flight (arrivals at 5:00 AM and 7:30 AM), our private host will greet you at the boarding gate with VIP Airport Fast-track service to expedite immigration. Transfer by private air-conditioned vehicle to Hanoi Le Jardin Hotel &amp; Spa, where early check-in has been...</p>
+              
+              
               <p style="font-size:13px;color:#706a5d;margin-top:8px">
-                <strong style="color:#17412e;letter-spacing:.06em">{{ "Highlights:" | translate(lang) }}</strong>
-                {{ (day.activities | join(' · ')) | rtl_mixed(lang) }}
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                VIP Airport Fast-track, private airport transfer, pre-arranged hotel early check-in, gourmet Indian vegetarian welcome dinner.
               </p>
-              {% endif %}
-              {% if day.notes %}
+              
+              
               <div
                 style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
-                <strong style="color:#b7894b;letter-spacing:.06em">{{ "Notes:" | translate(lang) }}</strong>
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
                 <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
-                  {% for note in day.notes %}
-                  <li style="margin-bottom: 2px;">{{ note | rtl_mixed(lang) }}</li>
-                  {% endfor %}
+                  
+                  <li style="margin-bottom: 2px;">Sense of Pace: Relaxed</li>
+                  
                 </ul>
               </div>
-              {% endif %}
+              
             </div>
             <div class="day-meta">
-              {% if day.overnight %}
-              <span style="font-size:11px;letter-spacing:.12em">{{ "Overnight" | translate(lang) }}</span><br>
-              <span style="font-size:15px;font-family:Georgia,serif">{{ day.overnight | rtl_mixed(lang) }}</span><br><br>
-              {% endif %}
-              {% if day.meals %}
-              <span style="font-size:11px;letter-spacing:.12em">{{ "Meals" | translate(lang) }}</span><br>
-              <span style="font-size:13px">{{ (day.meals | join(' · ')) | rtl_mixed(lang) }}</span>
-              {% endif %}
+              
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
+              <span style="font-size:15px;font-family:Georgia,serif">Hanoi</span><br><br>
+              
+              
+              <span style="font-size:11px;letter-spacing:.12em">Meals</span><br>
+              <span style="font-size:13px">Indian Vegetarian Welcome Dinner</span>
+              
             </div>
           </article>
-          {% endfor %}
+          
+          <article class="day">
+            <div class="day-label">2</div>
+            <div>
+              <span class="num" data-editable="day_num_2">DAY 2</span>
+              <h3 data-editable="day_title_2">Day 2 — Ninh Binh</h3>
+              
+              <p data-editable="day_desc_1_0">Embark on a full-day private excursion to Ninh Binh. Experience the serene beauty of Trang An landscape complex, a UNESCO World Heritage site, during a traditional rowboat tour through limestone caves. Visit the ancient capital of Hoa Lu and climb to the peak of Mua Cave for panoramic views over the rice fields. Savor a local vegetarian lunch...</p>
+              
+              
+              <p style="font-size:13px;color:#706a5d;margin-top:8px">
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Private roundtrip vehicle to Ninh Binh, English guide, Trang An boat tour, Mua Cave entry, vegetarian lunch.
+              </p>
+              
+              
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;">Sense of Pace: Active</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <div class="day-meta">
+              
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
+              <span style="font-size:15px;font-family:Georgia,serif">Ninh Binh</span><br><br>
+              
+              
+              <span style="font-size:11px;letter-spacing:.12em">Meals</span><br>
+              <span style="font-size:13px">Breakfast &amp; Indian Vegetarian Lunch</span>
+              
+            </div>
+          </article>
+          
+          <article class="day">
+            <div class="day-label">3</div>
+            <div>
+              <span class="num" data-editable="day_num_3">DAY 3</span>
+              <h3 data-editable="day_title_3">Day 3 — Halong Bay</h3>
+              
+              <p data-editable="day_desc_1_0">Depart Hanoi by private vehicle to Halong Bay. Board the premium Ambassador Signature Cruise, where your Double and Triple cabins await. Glide past iconic karst formations and enjoy a delicious vegetarian buffet lunch on board. Participate in cruise activities including a bamboo boat ride, kayaking, or climbing for scenic viewpoints. Savor a...</p>
+              
+              
+              <p style="font-size:13px;color:#706a5d;margin-top:8px">
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Private transfer Hanoi - Halong, double &amp; triple cabins on Ambassador Signature Cruise, cruise excursions, onboard vegetarian lunch and...
+              </p>
+              
+              
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;">Sense of Pace: Relaxed</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <div class="day-meta">
+              
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
+              <span style="font-size:15px;font-family:Georgia,serif">Halong Bay</span><br><br>
+              
+              
+              <span style="font-size:11px;letter-spacing:.12em">Meals</span><br>
+              <span style="font-size:13px">Breakfast, Onboard Vegetarian Lunch &amp; Dinner</span>
+              
+            </div>
+          </article>
+          
+          <article class="day">
+            <div class="day-label">4</div>
+            <div>
+              <span class="num" data-editable="day_num_4">DAY 4</span>
+              <h3 data-editable="day_title_4">Day 4 — Hanoi / Sapa</h3>
+              
+              <p data-editable="day_desc_1_0">Greet the sunrise with Tai Chi on the sundeck. After a vegetarian brunch, check out and transfer back to Hanoi. Enjoy a private half-day city tour of Hanoi, visiting the historic Temple of Literature and Hoan Kiem Lake. Enjoy some free time for shopping. In the evening, savor a vegetarian dinner in Hanoi before boarding the Chapa Express Train to...</p>
+              
+              
+              <p style="font-size:13px;color:#706a5d;margin-top:8px">
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Onboard vegetarian brunch, private transfer Halong - Hanoi, Hanoi half-day tour with guide and entry tickets, private vegetarian dinner,...
+              </p>
+              
+              
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;">Sense of Pace: Active</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <div class="day-meta">
+              
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
+              <span style="font-size:15px;font-family:Georgia,serif">Hanoi / Sapa</span><br><br>
+              
+              
+              <span style="font-size:11px;letter-spacing:.12em">Meals</span><br>
+              <span style="font-size:13px">Onboard Vegetarian Brunch &amp; Private Dinner</span>
+              
+            </div>
+          </article>
+          
+          <article class="day">
+            <div class="day-label">5</div>
+            <div>
+              <span class="num" data-editable="day_num_5">DAY 5</span>
+              <h3 data-editable="day_title_5">Day 5 — Sapa</h3>
+              
+              <p data-editable="day_desc_1_0">Arrive at Lao Cai station early in the morning and transfer to Sapa town. Check in to Aliana Boutique Sapa Hotel And Spa and enjoy a hot breakfast. Embark on a guided trekking tour to Cat Cat village, learning about the Black Hmong culture and viewing the scenic waterfall. Savor a local vegetarian lunch. Spend a relaxed afternoon exploring Sapa...</p>
+              
+              
+              <p style="font-size:13px;color:#706a5d;margin-top:8px">
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Station transfer, Sapa tour with guide and entry tickets, vegetarian lunch.
+              </p>
+              
+              
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;">Sense of Pace: Immersive</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <div class="day-meta">
+              
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
+              <span style="font-size:15px;font-family:Georgia,serif">Sapa</span><br><br>
+              
+              
+              <span style="font-size:11px;letter-spacing:.12em">Meals</span><br>
+              <span style="font-size:13px">Breakfast &amp; Vegetarian Lunch</span>
+              
+            </div>
+          </article>
+          
+          <article class="day">
+            <div class="day-label">6</div>
+            <div>
+              <span class="num" data-editable="day_num_6">DAY 6</span>
+              <h3 data-editable="day_title_6">Day 6 — Sapa</h3>
+              
+              <p data-editable="day_desc_1_0">A highlights day in Sapa! Take the Fansipan cable car, the longest three-rope cable car system in the world, to ascend the &#39;Roof of Indochina&#39; at 3,143 meters. Explore the spiritual pagoda complex at the summit. Enjoy a scenic vegetarian lunch. In the afternoon, visit Ta Van village or shop for souvenirs in Sapa town. Overnight at Aliana Boutique...</p>
+              
+              
+              <p style="font-size:13px;color:#706a5d;margin-top:8px">
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Fansipan cable car roundtrip tickets, guide, Sapa transfers, vegetarian lunch.
+              </p>
+              
+              
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;">Sense of Pace: Active</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <div class="day-meta">
+              
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
+              <span style="font-size:15px;font-family:Georgia,serif">Sapa</span><br><br>
+              
+              
+              <span style="font-size:11px;letter-spacing:.12em">Meals</span><br>
+              <span style="font-size:13px">Breakfast &amp; Vegetarian Lunch</span>
+              
+            </div>
+          </article>
+          
+          <article class="day">
+            <div class="day-label">7</div>
+            <div>
+              <span class="num" data-editable="day_num_7">DAY 7</span>
+              <h3 data-editable="day_title_7">Day 7 — Hanoi</h3>
+              
+              <p data-editable="day_desc_1_0">Enjoy a leisurely morning in Sapa for final sightseeing or shopping. In the afternoon, board your private luxury vehicle for the scenic drive back to Hanoi (approx. 5 hours). Arrive directly at Noi Bai International Airport for your late-evening international departure flight.</p>
+              
+              
+              <p style="font-size:13px;color:#706a5d;margin-top:8px">
+                <strong style="color:#17412e;letter-spacing:.06em">Highlights:</strong>
+                Private luxury transfer Sapa - Hanoi Airport.
+              </p>
+              
+              
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
+                <strong style="color:#b7894b;letter-spacing:.06em">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;">Sense of Pace: Relaxed</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <div class="day-meta">
+              
+              <span style="font-size:11px;letter-spacing:.12em">Overnight</span><br>
+              <span style="font-size:15px;font-family:Georgia,serif">Hanoi</span><br><br>
+              
+              
+              <span style="font-size:11px;letter-spacing:.12em">Meals</span><br>
+              <span style="font-size:13px">Breakfast</span>
+              
+            </div>
+          </article>
+          
         </div>
       </div>
     </section>
@@ -2689,58 +3003,152 @@
         <div class="section-head" style="grid-template-columns: 1fr;">
           <h2
             style="font-family: var(--serif); font-size: clamp(32px, 4vw, 48px); color: var(--emerald); margin: 0 0 10px;">
-            {{ "Selected Hotel Plan" | translate(lang) }}</h2>
-          <p style="color: var(--muted); margin: 0;">{{ "Proposed hotels and luxury cruises selected for your journey. Subject to availability at confirmation." | translate(lang) }}</p>
+            Selected Hotel Plan</h2>
+          <p style="color: var(--muted); margin: 0;">Proposed hotels and luxury cruises selected for your journey. Subject to availability at confirmation.</p>
         </div>
 
-        {% if hotels %}
+        
         <div class="hotel-plan-container" style="display: flex; flex-direction: column; gap: 48px; margin-top: 40px;">
-          {% for item in hotels %}
-          <div class="hotel-card" style="border-bottom: 1px solid var(--line); padding-bottom: 40px; {% if loop.last %}border-bottom: none; padding-bottom: 0;{% endif %}">
+          
+          <div class="hotel-card" style="border-bottom: 1px solid var(--line); padding-bottom: 40px; ">
             <!-- Header (City / Country & Hotel Name) -->
             <div class="hotel-header" style="margin-bottom: 20px;">
-              <span class="hotel-city" style="display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--muted); text-transform: uppercase; margin-bottom: 4px;" data-editable="hotel_city_{{ loop.index }}">{{ item.city_country | rtl_mixed(lang) }}</span>
-              <h3 class="hotel-name" style="font-family: var(--serif); font-size: 26px; font-weight: 700; color: var(--ink); margin: 0; letter-spacing: 0.02em;" data-editable="hotel_name_{{ loop.index }}">{{ item.name | rtl_mixed(lang) }}</h3>
+              <span class="hotel-city" style="display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--muted); text-transform: uppercase; margin-bottom: 4px;" data-editable="hotel_city_1">HANOI, VIETNAM</span>
+              <h3 class="hotel-name" style="font-family: var(--serif); font-size: 26px; font-weight: 700; color: var(--ink); margin: 0; letter-spacing: 0.02em;" data-editable="hotel_name_1">Hanoi Le Jardin Hotel &amp; Spa</h3>
             </div>
             
             <!-- Side-by-Side Images -->
             <div class="hotel-images-grid" style="display: grid; grid-template-columns: 1fr 1.6fr; gap: 16px; margin: 20px 0;">
               <div class="hotel-image-wrapper" style="height: 280px; border-radius: 4px; overflow: hidden; position: relative;">
-                <img src="{{ item.hotel_img }}" alt="{{ item.name }}" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                <img src="/assets/hotels/hanoi/hanoi-le-jardin-hotel-spa/exterior/exterior_1.jpg" alt="Hanoi Le Jardin Hotel &amp; Spa" style="width: 100%; height: 100%; object-fit: cover; display: block;">
               </div>
               <div class="hotel-image-wrapper" style="height: 280px; border-radius: 4px; overflow: hidden; position: relative;">
-                <img src="{{ item.room_img }}" alt="{{ item.name }} Room" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                <img src="/assets/hotels/hanoi/hanoi-le-jardin-hotel-spa/interior/interior_2.jpg" alt="Hanoi Le Jardin Hotel &amp; Spa Room" style="width: 100%; height: 100%; object-fit: cover; display: block;">
               </div>
             </div>
             
             <!-- Footer Columns (Introduction & Info/Tel) -->
             <div class="hotel-footer-layout" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 40px; margin-top: 20px; flex-wrap: wrap;">
               <div class="hotel-intro" style="flex: 1; min-width: 280px;">
-                {% if show_hotel_intro and item.introduction %}
-                <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_{{ loop.index }}">{{ item.introduction | rtl_mixed(lang) }}</p>
-                {% endif %}
+                
+                <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_1">Nestled in the historic Ba Dinh district, Hanoi Le Jardin Hotel &amp; Spa blends French colonial charm with modern hospitality. It offers elegant rooms, a rooftop bar with spectacular city views, and a serene spa for a perfect urban retreat.</p>
+                
               </div>
               <div class="hotel-info">
-                <h4 style="font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--emerald); margin: 0; letter-spacing: 0.04em; text-transform: uppercase;" data-editable="hotel_info_name_{{ loop.index }}">{{ item.name | rtl_mixed(lang) }}</h4>
-                <span style="font-size: 14px; font-weight: 500; color: var(--ink); margin-top: 8px;" data-editable="hotel_date_{{ loop.index }}"><span class="ltr-token">{{ item.date_range }}</span></span>
-                <span style="font-size: 12px; color: var(--muted); margin-top: 6px; letter-spacing: 0.05em;" data-editable="hotel_tel_{{ loop.index }}">{{ "TEL:" | translate(lang) }} <span class="ltr-token">{{ item.tel }}</span></span>
+                <h4 style="font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--emerald); margin: 0; letter-spacing: 0.04em; text-transform: uppercase;" data-editable="hotel_info_name_1">Hanoi Le Jardin Hotel &amp; Spa</h4>
+                <span style="font-size: 14px; font-weight: 500; color: var(--ink); margin-top: 8px;" data-editable="hotel_date_1"><span class="ltr-token">30 Sep – 02 Oct 2026</span></span>
+                <span style="font-size: 12px; color: var(--muted); margin-top: 6px; letter-spacing: 0.05em;" data-editable="hotel_tel_1">TEL: <span class="ltr-token">+84 24 3927 5888</span></span>
               </div>
             </div>
           </div>
-          {% endfor %}
+          
+          <div class="hotel-card" style="border-bottom: 1px solid var(--line); padding-bottom: 40px; ">
+            <!-- Header (City / Country & Hotel Name) -->
+            <div class="hotel-header" style="margin-bottom: 20px;">
+              <span class="hotel-city" style="display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--muted); text-transform: uppercase; margin-bottom: 4px;" data-editable="hotel_city_2">HALONG BAY, VIETNAM</span>
+              <h3 class="hotel-name" style="font-family: var(--serif); font-size: 26px; font-weight: 700; color: var(--ink); margin: 0; letter-spacing: 0.02em;" data-editable="hotel_name_2">Ambassador Signature Cruise</h3>
+            </div>
+            
+            <!-- Side-by-Side Images -->
+            <div class="hotel-images-grid" style="display: grid; grid-template-columns: 1fr 1.6fr; gap: 16px; margin: 20px 0;">
+              <div class="hotel-image-wrapper" style="height: 280px; border-radius: 4px; overflow: hidden; position: relative;">
+                <img src="/assets/hotels/halong/ambassador-signature-cruise/exterior/exterior_2.jpg" alt="Ambassador Signature Cruise" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+              </div>
+              <div class="hotel-image-wrapper" style="height: 280px; border-radius: 4px; overflow: hidden; position: relative;">
+                <img src="/assets/hotels/halong/ambassador-signature-cruise/interior/interior_3.jpg" alt="Ambassador Signature Cruise Room" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+              </div>
+            </div>
+            
+            <!-- Footer Columns (Introduction & Info/Tel) -->
+            <div class="hotel-footer-layout" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 40px; margin-top: 20px; flex-wrap: wrap;">
+              <div class="hotel-intro" style="flex: 1; min-width: 280px;">
+                
+                <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_2">A premier 5-star overnight cruise sailing through the mystical waters of Halong Bay and Lan Ha Bay. The cruise features elegant cabins with private balconies, upscale dining, an outdoor jacuzzi, and immersive itineraries showcasing natural wonders.</p>
+                
+              </div>
+              <div class="hotel-info">
+                <h4 style="font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--emerald); margin: 0; letter-spacing: 0.04em; text-transform: uppercase;" data-editable="hotel_info_name_2">Ambassador Signature Cruise</h4>
+                <span style="font-size: 14px; font-weight: 500; color: var(--ink); margin-top: 8px;" data-editable="hotel_date_2"><span class="ltr-token">02 Oct – 03 Oct 2026</span></span>
+                <span style="font-size: 12px; color: var(--muted); margin-top: 6px; letter-spacing: 0.05em;" data-editable="hotel_tel_2">TEL: <span class="ltr-token">+84 90 175 8888</span></span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="hotel-card" style="border-bottom: 1px solid var(--line); padding-bottom: 40px; ">
+            <!-- Header (City / Country & Hotel Name) -->
+            <div class="hotel-header" style="margin-bottom: 20px;">
+              <span class="hotel-city" style="display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--muted); text-transform: uppercase; margin-bottom: 4px;" data-editable="hotel_city_3">SAPA, VIETNAM</span>
+              <h3 class="hotel-name" style="font-family: var(--serif); font-size: 26px; font-weight: 700; color: var(--ink); margin: 0; letter-spacing: 0.02em;" data-editable="hotel_name_3">Chapa Express Train</h3>
+            </div>
+            
+            <!-- Side-by-Side Images -->
+            <div class="hotel-images-grid" style="display: grid; grid-template-columns: 1fr 1.6fr; gap: 16px; margin: 20px 0;">
+              <div class="hotel-image-wrapper" style="height: 280px; border-radius: 4px; overflow: hidden; position: relative;">
+                <img src="/assets/hotels/sapa/chapa-express-train/exterior/exterior_3.jpg" alt="Chapa Express Train" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+              </div>
+              <div class="hotel-image-wrapper" style="height: 280px; border-radius: 4px; overflow: hidden; position: relative;">
+                <img src="/assets/hotels/sapa/chapa-express-train/interior/interior_2.jpg" alt="Chapa Express Train Room" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+              </div>
+            </div>
+            
+            <!-- Footer Columns (Introduction & Info/Tel) -->
+            <div class="hotel-footer-layout" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 40px; margin-top: 20px; flex-wrap: wrap;">
+              <div class="hotel-intro" style="flex: 1; min-width: 280px;">
+                
+                <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_3">Chapa Express Train offers premium overnight sleeper service between Hanoi and Lao Cai (Sapa). Featuring traditional wooden panels, comfortable air-conditioned cabins, clean amenities, and personalized passenger hospitality.</p>
+                
+              </div>
+              <div class="hotel-info">
+                <h4 style="font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--emerald); margin: 0; letter-spacing: 0.04em; text-transform: uppercase;" data-editable="hotel_info_name_3">Chapa Express Train</h4>
+                <span style="font-size: 14px; font-weight: 500; color: var(--ink); margin-top: 8px;" data-editable="hotel_date_3"><span class="ltr-token">03 Oct – 04 Oct 2026</span></span>
+                <span style="font-size: 12px; color: var(--muted); margin-top: 6px; letter-spacing: 0.05em;" data-editable="hotel_tel_3">TEL: <span class="ltr-token">+84 24 3999 6868</span></span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="hotel-card" style="border-bottom: 1px solid var(--line); padding-bottom: 40px; border-bottom: none; padding-bottom: 0;">
+            <!-- Header (City / Country & Hotel Name) -->
+            <div class="hotel-header" style="margin-bottom: 20px;">
+              <span class="hotel-city" style="display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--muted); text-transform: uppercase; margin-bottom: 4px;" data-editable="hotel_city_4">SAPA, VIETNAM</span>
+              <h3 class="hotel-name" style="font-family: var(--serif); font-size: 26px; font-weight: 700; color: var(--ink); margin: 0; letter-spacing: 0.02em;" data-editable="hotel_name_4">Aliana Boutique Sapa Hotel And Spa</h3>
+            </div>
+            
+            <!-- Side-by-Side Images -->
+            <div class="hotel-images-grid" style="display: grid; grid-template-columns: 1fr 1.6fr; gap: 16px; margin: 20px 0;">
+              <div class="hotel-image-wrapper" style="height: 280px; border-radius: 4px; overflow: hidden; position: relative;">
+                <img src="/assets/hotels/sapa/aliana-boutique-sapa-hotel-spa/exterior/exterior_4.jpg" alt="Aliana Boutique Sapa Hotel And Spa" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+              </div>
+              <div class="hotel-image-wrapper" style="height: 280px; border-radius: 4px; overflow: hidden; position: relative;">
+                <img src="/assets/hotels/sapa/aliana-boutique-sapa-hotel-spa/interior/interior_1.jpg" alt="Aliana Boutique Sapa Hotel And Spa Room" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+              </div>
+            </div>
+            
+            <!-- Footer Columns (Introduction & Info/Tel) -->
+            <div class="hotel-footer-layout" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 40px; margin-top: 20px; flex-wrap: wrap;">
+              <div class="hotel-intro" style="flex: 1; min-width: 280px;">
+                
+                <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_4">Located in the scenic mist-covered hills of Sapa, Aliana Boutique Sapa Hotel And Spa features stunning panoramic views of Fansipan mountain and Muong Hoa valley. Designed with local heritage details, the hotel offers comfortable heated rooms, an outdoor pool, and local gourmet dining.</p>
+                
+              </div>
+              <div class="hotel-info">
+                <h4 style="font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--emerald); margin: 0; letter-spacing: 0.04em; text-transform: uppercase;" data-editable="hotel_info_name_4">Aliana Boutique Sapa Hotel And Spa</h4>
+                <span style="font-size: 14px; font-weight: 500; color: var(--ink); margin-top: 8px;" data-editable="hotel_date_4"><span class="ltr-token">04 Oct – 06 Oct 2026</span></span>
+                <span style="font-size: 12px; color: var(--muted); margin-top: 6px; letter-spacing: 0.05em;" data-editable="hotel_tel_4">TEL: <span class="ltr-token">+84 214 377 8888</span></span>
+              </div>
+            </div>
+          </div>
+          
         </div>
-        {% else %}
-        <p style="color: var(--muted); font-style: italic; margin-top: 20px;">Hotel arrangements will be tailored and detailed here for your specific travel dates.</p>
-        {% endif %}
+        
 
-        {% if room_notes %}
+        
         <div
           style="margin-top: 32px; padding: 18px; background: rgba(183, 137, 75, 0.06); border-radius: 14px; border: 1px dashed var(--gold);">
           <strong
-            style="color: var(--gold); text-transform: uppercase; font-size: 11px; letter-spacing: 0.12em; display: block; margin-bottom: 6px;">{{ "Room Notes & Special Requests" | translate(lang) }}</strong>
-          <div data-editable="room_notes" style="font-size: 14px; color: var(--muted);">{{ room_notes | rtl_mixed(lang) }}</div>
+            style="color: var(--gold); text-transform: uppercase; font-size: 11px; letter-spacing: 0.12em; display: block; margin-bottom: 6px;">Room Notes &amp; Special Requests</strong>
+          <div data-editable="room_notes" style="font-size: 14px; color: var(--muted);">Double + Triple room configurations pre-arranged across all properties. For the overnight train, 2 private 4-berth cabins have been fully booked for 5 guests to ensure complete comfort.</div>
         </div>
-        {% endif %}
+        
       </div>
     </section>
 
@@ -2750,47 +3158,32 @@
 <section id="quotation">
       <div class="container">
         <div class="pricing">
-          <h2 data-editable="pricing_h2">{{ pricing_h2 }}</h2>
-          <p data-editable="pricing_p">{{ pricing_p }}</p>
+          <h2 data-editable="pricing_h2">Journey Investment: USD 5,456</h2>
+          <p data-editable="pricing_p">Total: 5 Adults (Double + Triple Room Configuration). Currency: USD. Final rates subject to reconfirmation.</p>
           <div class="price-grid">
-            {% for opt in price_options %}
-            <div class="price-card {% if opt.isConfirmedMainOption %}featured{% endif %}">
-              <span>{{ opt.hotelCategory }}</span>
-              {% if opt.optionName %}
-              <small style="color:rgba(255,255,255,.55);font-size:11px;display:block;margin-top:4px">{{ opt.optionName
-                }}</small>
-              {% endif %}
-              {% if opt.is_total %}
-              <strong data-editable="price_pax_{{ loop.index }}" style="font-size:28px"><span class="ltr-token">{{
-                opt.totalPrice.displayText or ('{:,.0f}'.format(opt.totalPrice.amount) ~ ' ' ~
-                opt.totalPrice.currency) }}</span></strong>
-              <small>{{ "total package" | translate(lang) }}</small><br>
-              <span style="font-size:13px;opacity:.8">{{ "Per person:" | translate(lang) }} <span class="ltr-token">{{ opt.pricePerPerson.displayText or
-                ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~ opt.pricePerPerson.currency) }}</span></span>
-              {% else %}
-              <strong data-editable="price_pax_{{ loop.index }}" style="font-size:28px"><span class="ltr-token">{{
-                opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~
-                opt.pricePerPerson.currency) }}</span></strong>
-              <small>{{ "per person" | translate(lang) }}</small><br>
-              <span style="font-size:13px;opacity:.8">{{ "Total:" | translate(lang) }} <span class="ltr-token">{{ opt.totalPrice.displayText or
-                ('{:,.0f}'.format(opt.totalPrice.amount) ~ ' ' ~ opt.totalPrice.currency) }}</span></span>
-              {% endif %}
-              {% if opt.isConfirmedMainOption %}
-              <div style="margin-top:12px;font-size:10px;letter-spacing:.14em;color:#d8bd85;font-weight:800">{{ "✓ CONFIRMED MAIN OPTION" | translate(lang) }}</div>
-              {% elif opt.isAlternativeOption %}
-              <div
-                style="margin-top:12px;font-size:10px;letter-spacing:.14em;color:rgba(216,189,133,.6);font-weight:700">
-                {{ "ALTERNATIVE OPTION" | translate(lang) }}</div>
-              {% endif %}
+            
+            <div class="price-card featured">
+              <span>Premium Accommodations &amp; Cruise (5 Adults)</span>
+              
+              <small style="color:rgba(255,255,255,.55);font-size:11px;display:block;margin-top:4px">1,091.25 USD per person on Double + Triple sharing basis</small>
+              
+              
+              <strong data-editable="price_pax_1" style="font-size:28px"><span class="ltr-token">USD 1,091 / person</span></strong>
+              <small>per person</small><br>
+              <span style="font-size:13px;opacity:.8">Total: <span class="ltr-token">USD 2,182</span></span>
+              
+              
+              <div style="margin-top:12px;font-size:10px;letter-spacing:.14em;color:#d8bd85;font-weight:800">✓ CONFIRMED MAIN OPTION</div>
+              
             </div>
-            {% endfor %}
+            
           </div>
-          {% if price_cond_paras and price_cond_paras[0] %}
+          
           <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 14px; color: rgba(255,255,255,0.8); line-height: 1.6; text-align: left;">
-            <strong style="color: var(--gold-2); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.15em; font-size: 11px; font-weight: 700;">{{ "Important Note" | translate(lang) }}</strong>
-            <p style="margin: 0;" data-editable="price_cond_first">{{ price_cond_paras[0] }}</p>
+            <strong style="color: var(--gold-2); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.15em; font-size: 11px; font-weight: 700;">Important Note</strong>
+            <p style="margin: 0;" data-editable="price_cond_first">Rates are B2B net indicative and subject to reconfirmation at the time of booking.</p>
           </div>
-          {% endif %}
+          
         </div>
       </div>
     </section>
@@ -2798,36 +3191,67 @@
     <section>
       <div class="container">
         <div class="section-head" style="grid-template-columns: 1fr; margin-bottom: 32px;">
-          <h2 data-editable="inc_exc_h2">{{ inclusions_title | default("What Your Journey Includes" | translate(lang)) }}</h2>
+          <h2 data-editable="inc_exc_h2">What Your Journey Includes</h2>
         </div>
         <div class="two-col">
           <article class="panel">
-            <h3>{{ "Inclusions" | translate(lang) }}</h3>
-            {% if inclusions_lede %}
-            <p style="font-size:14px; color:var(--muted); line-height:1.6; margin-bottom:16px; margin-top:-8px;">{{ inclusions_lede }}</p>
-            {% endif %}
+            <h3>Inclusions</h3>
+            
+            <p style="font-size:14px; color:var(--muted); line-height:1.6; margin-bottom:16px; margin-top:-8px;">Your journey has been thoughtfully arranged to ensure a seamless and comfortable experience throughout.</p>
+            
             <ul id="inclusions-list" style="list-style-type:none; padding-left:0;">
-              {% for item in inclusions %}
-                {% if item is mapping %}
-                  <li style="margin-bottom:16px; line-height:1.6;">
-                    <strong style="color:var(--emerald); display:block; font-size:15px; margin-bottom:2px;">{{ item.title }}</strong>
-                    <span style="font-size:13px; color:var(--muted);">{{ item.desc }}</span>
-                  </li>
-                {% else %}
-                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_{{ loop.index }}">{{ item }}</li>
-                {% endif %}
-              {% endfor %}
+              
+                
+                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_1">VIP Airport Fast-track, private airport transfer, pre-arranged hotel early check-in, gourmet Indian vegetarian welcome...</li>
+                
+              
+                
+                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_2">Private roundtrip vehicle to Ninh Binh, English guide, Trang An boat tour, Mua Cave entry, vegetarian lunch.</li>
+                
+              
+                
+                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_3">Private transfer Hanoi - Halong, double &amp; triple cabins on Ambassador Signature Cruise, cruise excursions, onboard...</li>
+                
+              
+                
+                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_4">Onboard vegetarian brunch, private transfer Halong - Hanoi, Hanoi half-day tour with guide and entry tickets, private...</li>
+                
+              
+                
+                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_5">Station transfer, Sapa tour with guide and entry tickets, vegetarian lunch.</li>
+                
+              
+                
+                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_6">Fansipan cable car roundtrip tickets, guide, Sapa transfers, vegetarian lunch.</li>
+                
+              
+                
+                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_7">Private luxury transfer Sapa - Hanoi Airport.</li>
+                
+              
             </ul>
           </article>
           <article class="panel">
-            <h3>{{ exclusions_title | default("Exclusions" | translate(lang)) }}</h3>
-            {% if exclusions_lede %}
-            <p style="font-size:14px; color:var(--muted); line-height:1.6; margin-bottom:16px; margin-top:-8px;">{{ exclusions_lede }}</p>
-            {% endif %}
+            <h3>Not Included</h3>
+            
+            <p style="font-size:14px; color:var(--muted); line-height:1.6; margin-bottom:16px; margin-top:-8px;">To keep your journey transparent and clearly defined, the following are not included unless specifically stated otherwise:</p>
+            
             <ul id="exclusions-list" style="list-style-type:disc; padding-left:20px;">
-              {% for item in exclusions %}
-              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_{{ loop.index }}">{{ item }}</li>
-              {% endfor %}
+              
+              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_1">International flights</li>
+              
+              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_2">Visa fees and travel documentation</li>
+              
+              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_3">Travel insurance</li>
+              
+              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_4">Personal expenses</li>
+              
+              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_5">Optional experiences not specified in the itinerary</li>
+              
+              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_6">Tips and gratuities</li>
+              
+              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_7">Any services not expressly listed as included</li>
+              
             </ul>
           </article>
         </div>
@@ -2842,33 +3266,33 @@
         <div class="section-head" style="grid-template-columns: 1fr;">
           <h2
             style="font-family: var(--serif); font-size: clamp(32px, 4vw, 48px); color: var(--emerald); margin: 0 0 10px;">
-            {{ "Booking & Payment Terms" | translate(lang) }}</h2>
-          <p style="color: var(--muted); margin: 0;">{{ "Commercial conditions, deposits, and cancellation policy for this booking." | translate(lang) }}</p>
+            Booking &amp; Payment Terms</h2>
+          <p style="color: var(--muted); margin: 0;">Commercial conditions, deposits, and cancellation policy for this booking.</p>
         </div>
         <div style="overflow-x: auto; margin-top: 32px; border-radius: 18px; border: 1px solid var(--line);">
           <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
             <thead>
               <tr style="background: var(--emerald); color: white;">
-                <th class="term-th" style="padding: 16px 20px; width: 250px;">{{ "Term" | translate(lang) }}</th>
-                <th style="padding: 16px 20px;">{{ "Condition" | translate(lang) }}</th>
+                <th class="term-th" style="padding: 16px 20px; width: 250px;">Term</th>
+                <th style="padding: 16px 20px;">Condition</th>
               </tr>
             </thead>
             <tbody>
               <tr style="border-bottom: 1px solid var(--line); background: white;">
-                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">{{ "Deposit" | translate(lang) }}</td>
-                <td style="padding: 16px 20px;" data-editable="term_deposit">{{ term_deposit }}</td>
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">Deposit</td>
+                <td style="padding: 16px 20px;" data-editable="term_deposit">A 30% deposit is required at the time of booking to secure hotels, cruise, and train cabins.</td>
               </tr>
               <tr style="border-bottom: 1px solid var(--line); background: rgba(183, 137, 75, 0.03);">
-                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">{{ "Balance" | translate(lang) }}</td>
-                <td style="padding: 16px 20px;" data-editable="term_balance">{{ term_balance }}</td>
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">Balance</td>
+                <td style="padding: 16px 20px;" data-editable="term_balance">The remaining 70% balance is due 30 days prior to arrival.</td>
               </tr>
               <tr style="border-bottom: 1px solid var(--line); background: white;">
-                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">{{ "Cancellation" | translate(lang) }}</td>
-                <td style="padding: 16px 20px;" data-editable="term_cancellation">{{ term_cancellation }}</td>
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">Cancellation</td>
+                <td style="padding: 16px 20px;" data-editable="term_cancellation">Free cancellation up to 45 days prior to departure. 50% cancellation fee between 44 and 15 days.</td>
               </tr>
               <tr style="background: rgba(183, 137, 75, 0.03);">
-                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">{{ "Confirmation" | translate(lang) }}</td>
-                <td style="padding: 16px 20px;" data-editable="term_confirmation">{{ term_confirmation }}</td>
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">Confirmation</td>
+                <td style="padding: 16px 20px;" data-editable="term_confirmation">Subject to availability. Final confirmations will be sent within 24 hours of deposit receipt.</td>
               </tr>
             </tbody>
           </table>
@@ -2876,7 +3300,7 @@
       </div>
     </section>
 
-    {% if show_designer_section %}
+    
     <section id="meet-designer" class="no-print"
       style="background: var(--ivory-2); padding: 72px 0; border-radius: 40px; margin: 40px 0;">
       <div class="container designer-container">
@@ -2886,59 +3310,59 @@
             </div>
           </div>
           <div class="designer-info">
-            <span data-editable="designer_kicker">{{ "Your Dedicated Specialist" | translate(lang) }}</span>
-            <h2 data-editable="designer_title">{{ "Meet Your Travel Specialist" | translate(lang) }}</h2>
-            <p class="designer-quote" data-editable="designer_quote">"{{ "I am your dedicated travel specialist. I handpicked every hotel, private transfer, and local guide on this itinerary to ensure you experience the true depth of Vietnam in comfort, privacy, and at your own pace. I will personally oversee your journey from behind the scenes." | translate(lang) }}"</p>
+            <span data-editable="designer_kicker">Your Dedicated Specialist</span>
+            <h2 data-editable="designer_title">Meet Your Travel Specialist</h2>
+            <p class="designer-quote" data-editable="designer_quote">"I am your dedicated travel specialist. I handpicked every hotel, private transfer, and local guide on this itinerary to ensure you experience the true depth of Vietnam in comfort, privacy, and at your own pace. I will personally oversee your journey from behind the scenes."</p>
             <div class="designer-details">
-              <div><strong>{{ "Expertise:" | translate(lang) }}</strong> <span data-editable="designer_expertise">{{ "Custom Itineraries, Luxury Travel, Local Experiences" | translate(lang) }}</span></div>
-              <div><strong>{{ "Experience:" | translate(lang) }}</strong> <span data-editable="designer_experience">{{ "Years designing bespoke journeys" | translate(lang) }}</span></div>
+              <div><strong>Expertise:</strong> <span data-editable="designer_expertise">Custom Itineraries, Luxury Travel, Local Experiences</span></div>
+              <div><strong>Experience:</strong> <span data-editable="designer_experience">Years designing bespoke journeys</span></div>
             </div>
-            <div class="designer-signature" data-editable="designer_signature">{{ "Your Travel Specialist" | translate(lang) }}</div>
+            <div class="designer-signature" data-editable="designer_signature">Anh Son Le</div>
           </div>
         </div>
       </div>
     </section>
-    {% endif %}
+    
 
 <section id="contact">
       <div class="container">
         <div class="cta">
           <div>
-            <div class="kicker">{{ "Next step" | translate(lang) }}</div>
-            <h2 data-editable="cta_h2">{{ cta_h2 }}</h2>
+            <div class="kicker">Next step</div>
+            <h2 data-editable="cta_h2">Confirm dates, then refine the luxury layer.</h2>
             <div class="two-col" style="margin-top: 24px; text-align: left; font-size: 13px;">
               <div>
                 <strong
-                  style="color: var(--gold-2); text-transform: uppercase; font-size: 11px; letter-spacing: 0.1em; display: block; margin-bottom: 8px;">{{ "Final Details Required" | translate(lang) }}</strong>
+                  style="color: var(--gold-2); text-transform: uppercase; font-size: 11px; letter-spacing: 0.1em; display: block; margin-bottom: 8px;">Final Details Required</strong>
                 <ul style="margin: 0; padding-left: 16px; display: grid; gap: 6px; color: rgba(255,255,255,0.8);">
-                  {% for item in final_req %}
-                  <li style="line-height: 1.4;">{{ item }}</li>
-                  {% endfor %}
+                  
+                  <li style="line-height: 1.4;">Passport copies valid for at least 6 months and international flight details are required to complete arrangements.</li>
+                  
                 </ul>
               </div>
               <div>
                 <strong
-                  style="color: var(--gold-2); text-transform: uppercase; font-size: 11px; letter-spacing: 0.1em; display: block; margin-bottom: 8px;">{{ "After Confirmation" | translate(lang) }}</strong>
+                  style="color: var(--gold-2); text-transform: uppercase; font-size: 11px; letter-spacing: 0.1em; display: block; margin-bottom: 8px;">After Confirmation</strong>
                 <ul style="margin: 0; padding-left: 16px; display: grid; gap: 6px; color: rgba(255,255,255,0.8);">
-                  {% for item in final_after %}
-                  <li style="line-height: 1.4;">{{ item }}</li>
-                  {% endfor %}
+                  
+                  <li style="line-height: 1.4;">Your dedicated 24/7 travel host details and final service vouchers will be shared 7 days prior to departure.</li>
+                  
                 </ul>
               </div>
             </div>
           </div>
           <div class="contact">
-            <label>{{ "Website" | translate(lang) }}</label>
-            <div data-editable="contact_web"><span class="ltr-token">{{ contact_web }}</span></div>
-            <label>{{ "WhatsApp" | translate(lang) }}</label>
-            <div data-editable="contact_phone"><span class="ltr-token">{{ contact_phone }}</span></div>
-            <label>{{ "Prepared by" | translate(lang) }}</label>
-            <div data-editable="seller_name2">{{ seller_name | rtl_mixed(lang) }}</div>
-            {% if seller_email %}
+            <label>Website</label>
+            <div data-editable="contact_web"><span class="ltr-token">journeys.capellatravel.com</span></div>
+            <label>WhatsApp</label>
+            <div data-editable="contact_phone"><span class="ltr-token">+84 911 538 738</span></div>
+            <label>Prepared by</label>
+            <div data-editable="seller_name2">Capella Travel</div>
+            
             <div style="margin-top:24px" class="no-print">
-              <a class="btn gold" href="mailto:{{ seller_email }}">{{ "Request final confirmation" | translate(lang) }}</a>
+              <a class="btn gold" href="mailto:sales@capellatravel.com">Request final confirmation</a>
             </div>
-            {% endif %}
+            
           </div>
         </div>
       </div>
@@ -2948,7 +3372,7 @@
   </main>
 
   <footer class="footer">
-    <div class="container" data-editable="footer_text">{{ footer_text | rtl_mixed(lang) }}</div>
+    <div class="container" data-editable="footer_text">A Luxury Private Journey Specially Crafted for 5 Indian Guests — Luxury quotation prepared for 5 Adults (Double + Triple Room Configuration).</div>
   </footer>
 
   <!-- ── Publish Bar ─────────────────────────────────────────── -->
@@ -2956,19 +3380,19 @@
     <div class="pb-left">
       <div class="pb-dot"></div>
       <div class="pb-label">
-        <span class="pb-label-desktop">✏️ {{ client_i18n.editing }} <strong class="ltr-token">{{ quotation_id }}</strong></span>
-        <span class="pb-label-mobile">✏️ <strong class="ltr-token">{{ quotation_id }}</strong></span>
+        <span class="pb-label-desktop">✏️ Editing <strong class="ltr-token">quo_01ece847501d</strong></span>
+        <span class="pb-label-mobile">✏️ <strong class="ltr-token">quo_01ece847501d</strong></span>
       </div>
     </div>
     <span id="publish-status"></span>
 
     <div class="pb-actions">
       <select id="select-domain" class="no-print" style="display: none !important;">
-        <option value="https://{{ (brand.domain if brand else '') or 'journeys.vietnamsafar.vn' }}">Production</option>
+        <option value="https://journeys.capellatravel.com">Production</option>
       </select>
       <button id="btn-select-domain" onclick="openDomainModal(event)" title="Select Brand">
-        <img src="{{ (brand.logo if brand else '') or '/assets/vietnam-safar-logo.png' }}" style="width:16px; height:16px; border-radius:50%; object-fit:contain; background:white; margin-right:4px;" />
-        <span class="domain-text" style="font-weight:600;">{{ (brand.name if brand else '') or 'Vietnam Safar' }}</span>
+        <img src="/assets/brands/capella_travel.png" style="width:16px; height:16px; border-radius:50%; object-fit:contain; background:white; margin-right:4px;" />
+        <span class="domain-text" style="font-weight:600;">Capella Travel</span>
       </button>
       <button id="btn-view-live" onclick="redirectToLiveVersion(event)" title="View Live Version">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="view-icon">
@@ -2977,7 +3401,7 @@
         </svg>
         <span class="view-text">View Live</span>
       </button>
-      <button id="btn-publish" onclick="publishPage()">🚀 {{ client_i18n.publish_to_web }}</button>
+      <button id="btn-publish" onclick="publishPage()">🚀 Publish to Web</button>
     </div>
   </div>
 
@@ -2989,24 +3413,44 @@
         <button class="pb-modal-close" onclick="closeDomainModal(event)">&times;</button>
       </div>
       <div class="pb-domain-list">
-        {% set brands_list = [
-          {'id': 'vietnam_safar', 'name': 'Vietnam Safar', 'domain': 'journeys.vietnamsafar.vn', 'logo': '/assets/brands/vietnam_safar.png'},
-          {'id': 'capella_travel', 'name': 'Capella Travel', 'domain': 'journeys.capellatravel.com', 'logo': '/assets/brands/capella_travel.svg'},
-          {'id': 'selvara', 'name': 'Selvara', 'domain': 'my.selvarajourneys.com', 'logo': '/assets/brands/selvara.svg'}
-        ] %}
-        {% for b in brands_list %}
-        {% set is_active = brand and brand.id == b.id %}
-        <div class="pb-domain-item {% if is_active %}active{% endif %}" data-brand="{{ b.id }}" onclick="selectBrandOption('{{ b.id }}')" style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
+        
+        
+        
+        <div class="pb-domain-item " data-brand="vietnam_safar" onclick="selectBrandOption('vietnam_safar')" style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
           <div style="display:flex; align-items:center; gap:12px;">
-            <img src="{{ b.logo }}" style="width:28px; height:28px; border-radius:50%; object-fit:contain; background:white; border:1px solid rgba(0,0,0,0.1);" />
+            <img src="/assets/brands/vietnam_safar.png" style="width:28px; height:28px; border-radius:50%; object-fit:contain; background:white; border:1px solid rgba(0,0,0,0.1);" />
             <div class="pb-domain-details">
-              <div class="pb-domain-name" style="font-weight:600; font-size:14px; text-align:left;">{{ b.name }}</div>
-              <div class="pb-domain-badge prod" style="font-size:11px; color:#666;">{{ b.domain }}</div>
+              <div class="pb-domain-name" style="font-weight:600; font-size:14px; text-align:left;">Vietnam Safar</div>
+              <div class="pb-domain-badge prod" style="font-size:11px; color:#666;">journeys.vietnamsafar.vn</div>
             </div>
           </div>
-          <span class="pb-domain-check" style="visibility: {% if is_active %}visible{% else %}hidden{% endif %}; color:var(--emerald, #17412e); font-weight:bold;">✓</span>
+          <span class="pb-domain-check" style="visibility: hidden; color:var(--emerald, #17412e); font-weight:bold;">✓</span>
         </div>
-        {% endfor %}
+        
+        
+        <div class="pb-domain-item active" data-brand="capella_travel" onclick="selectBrandOption('capella_travel')" style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <img src="/assets/brands/capella_travel.svg" style="width:28px; height:28px; border-radius:50%; object-fit:contain; background:white; border:1px solid rgba(0,0,0,0.1);" />
+            <div class="pb-domain-details">
+              <div class="pb-domain-name" style="font-weight:600; font-size:14px; text-align:left;">Capella Travel</div>
+              <div class="pb-domain-badge prod" style="font-size:11px; color:#666;">journeys.capellatravel.com</div>
+            </div>
+          </div>
+          <span class="pb-domain-check" style="visibility: visible; color:var(--emerald, #17412e); font-weight:bold;">✓</span>
+        </div>
+        
+        
+        <div class="pb-domain-item " data-brand="selvara" onclick="selectBrandOption('selvara')" style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <img src="/assets/brands/selvara.svg" style="width:28px; height:28px; border-radius:50%; object-fit:contain; background:white; border:1px solid rgba(0,0,0,0.1);" />
+            <div class="pb-domain-details">
+              <div class="pb-domain-name" style="font-weight:600; font-size:14px; text-align:left;">Selvara</div>
+              <div class="pb-domain-badge prod" style="font-size:11px; color:#666;">my.selvarajourneys.com</div>
+            </div>
+          </div>
+          <span class="pb-domain-check" style="visibility: hidden; color:var(--emerald, #17412e); font-weight:bold;">✓</span>
+        </div>
+        
       </div>
     </div>
   </div>
@@ -3018,9 +3462,9 @@
         <div class="ring"></div>
         <div class="active-glow"></div>
       </div>
-      <h3>{{ "Translating Journey..." | translate(lang) }}</h3>
-      <p>{{ "Crafting a bespoke luxury narrative in" | translate(lang) }} <span id="loading-lang-name">{{ client_i18n.language_names.en }}</span></p>
-      <button class="btn-cancel" onclick="cancelTranslation()">{{ "CANCEL" | translate(lang) }}</button>
+      <h3>Translating Journey...</h3>
+      <p>Crafting a bespoke luxury narrative in <span id="loading-lang-name">English</span></p>
+      <button class="btn-cancel" onclick="cancelTranslation()">CANCEL</button>
     </div>
   </div>
 
@@ -3141,8 +3585,8 @@
     })();
 
     let domainModalMode = 'publish';
-    let modalLatestVersion = '{{ latest_version or 1 }}';
-    let modalItemId = '{{ quotation_id }}';
+    let modalLatestVersion = '1';
+    let modalItemId = 'quo_01ece847501d';
     let modalItemType = 'quotations';
 
     // Parse path and fetch latest version info on load
@@ -3208,7 +3652,7 @@
     function redirectToLiveVersion(event) {
       if (event) event.stopPropagation();
       
-      const brandDomain = "{{ (brand.domain if brand else '') or 'journeys.vietnamsafar.vn' }}";
+      const brandDomain = "journeys.capellatravel.com";
       const targetOrigin = `https://${brandDomain}`;
       
       if (window.location.pathname.includes('/published/')) {
@@ -3237,10 +3681,10 @@
   </script>
 
   <script id="translation-status" type="application/json">
-    {{ translation_status | tojson | safe }}
+    {"available_langs": ["en"], "baseline_lang": "en"}
   </script>
   <script id="client-i18n" type="application/json">
-    {{ client_i18n | tojson | safe }}
+    {"change": "Change", "committing_to_github": "Committing to GitHub...", "editing": "Editing", "enable_notifications_browser": "Please enable notifications in your browser settings to receive updates.", "go_to_slide": "Go to slide", "language_names": {"ar": "Arabic", "en": "English", "vi": "Vietnamese"}, "next_image": "Next image", "notification_title": "Enable Notifications", "previous_image": "Previous image", "publish_to_web": "Publish to Web", "publishing": "Publishing...", "remove_block": "Remove this block", "remove_block_confirm": "Remove this block? This action cannot be undone.", "test_notification_body": "Your private guide has been assigned: Mr. Minh (Phone: +84 911 538 738).", "test_notification_title": "Itinerary Update", "translate_block": "Translate this block"}
   </script>
 
   <script id="editor-scripts">
@@ -3280,19 +3724,19 @@
     })();
 
     if (typeof window.QUOTATION_ID === 'undefined') {
-      window.QUOTATION_ID = "{{ quotation_id }}";
+      window.QUOTATION_ID = "quo_01ece847501d";
     }
     if (typeof window.CURRENT_LANG === 'undefined') {
-      window.CURRENT_LANG = "{{ lang or 'en' }}";
+      window.CURRENT_LANG = "en";
     }
     const CLIENT_I18N = JSON.parse(document.getElementById('client-i18n').textContent);
 
     // Set globals for compatibility if not already defined
     if (typeof QUOTATION_ID === 'undefined') {
-      window.QUOTATION_ID = "{{ quotation_id }}";
+      window.QUOTATION_ID = "quo_01ece847501d";
     }
     if (typeof CURRENT_LANG === 'undefined') {
-      window.CURRENT_LANG = "{{ lang or 'en' }}";
+      window.CURRENT_LANG = "en";
     }
 
     // Dynamically inject inline translate button styles to support previously published static pages
@@ -3646,7 +4090,7 @@
     document.addEventListener("DOMContentLoaded", function() {
       const selectDomain = document.getElementById('select-domain');
       if (selectDomain) {
-        selectDomain.value = "https://{{ (brand.domain if brand else '') or 'journeys.vietnamsafar.vn' }}";
+        selectDomain.value = "https://journeys.capellatravel.com";
       }
       try {
         const brandDataEl = document.getElementById('brand-data');
@@ -3780,24 +4224,33 @@
 
   <script id="destination-images" type="application/json">
     {
-      {% for dest in destinations %}
-        "{{ dest.slug }}": "{{ dest.image_url or (dest.images[0] if dest.images else '/assets/vietnam-safar-logo.png') }}"
-        {% if not loop.last %},{% endif %}
-      {% endfor %}
+      
+        "ha-noi": "/assets/ha-noi/duongtau.jpg"
+        ,
+      
+        "ninh-binh": "/assets/ninh-binh/tamcoc.jpg"
+        ,
+      
+        "quang-ninh": "/assets/quang-ninh/halong-bay.jpg"
+        ,
+      
+        "lao-cai": "/assets/lao-cai/fansipan.jpg"
+        
+      
     }
   </script>
 
   <script id="itinerary-data" type="application/json">
-    {{ itinerary | tojson | safe }}
+    [{"activities": ["VIP Airport Fast-track, private airport transfer, pre-arranged hotel early check-in, gourmet Indian vegetarian welcome dinner."], "date": "", "dayNumber": 1, "description": ["Welcome to Hanoi! Upon arriving at Noi Bai International Airport on your early morning flight (arrivals at 5:00 AM and 7:30 AM), our private host will greet you at the boarding gate with VIP Airport Fast-track service to expedite immigration. Transfer by private air-conditioned vehicle to Hanoi Le Jardin Hotel \u0026 Spa, where early check-in has been..."], "destinations": ["Hanoi"], "lang": "en", "meals": ["Indian Vegetarian Welcome Dinner"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Hanoi", "title": "Day 1 \u2014 Hanoi"}, {"activities": ["Private roundtrip vehicle to Ninh Binh, English guide, Trang An boat tour, Mua Cave entry, vegetarian lunch."], "date": "", "dayNumber": 2, "description": ["Embark on a full-day private excursion to Ninh Binh. Experience the serene beauty of Trang An landscape complex, a UNESCO World Heritage site, during a traditional rowboat tour through limestone caves. Visit the ancient capital of Hoa Lu and climb to the peak of Mua Cave for panoramic views over the rice fields. Savor a local vegetarian lunch..."], "destinations": ["Ninh Binh"], "lang": "en", "meals": ["Breakfast \u0026 Indian Vegetarian Lunch"], "notes": ["Sense of Pace: Active"], "overnight": "Ninh Binh", "title": "Day 2 \u2014 Ninh Binh"}, {"activities": ["Private transfer Hanoi - Halong, double \u0026 triple cabins on Ambassador Signature Cruise, cruise excursions, onboard vegetarian lunch and..."], "date": "", "dayNumber": 3, "description": ["Depart Hanoi by private vehicle to Halong Bay. Board the premium Ambassador Signature Cruise, where your Double and Triple cabins await. Glide past iconic karst formations and enjoy a delicious vegetarian buffet lunch on board. Participate in cruise activities including a bamboo boat ride, kayaking, or climbing for scenic viewpoints. Savor a..."], "destinations": ["Halong Bay"], "lang": "en", "meals": ["Breakfast, Onboard Vegetarian Lunch \u0026 Dinner"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Halong Bay", "title": "Day 3 \u2014 Halong Bay"}, {"activities": ["Onboard vegetarian brunch, private transfer Halong - Hanoi, Hanoi half-day tour with guide and entry tickets, private vegetarian dinner,..."], "date": "", "dayNumber": 4, "description": ["Greet the sunrise with Tai Chi on the sundeck. After a vegetarian brunch, check out and transfer back to Hanoi. Enjoy a private half-day city tour of Hanoi, visiting the historic Temple of Literature and Hoan Kiem Lake. Enjoy some free time for shopping. In the evening, savor a vegetarian dinner in Hanoi before boarding the Chapa Express Train to..."], "destinations": ["Hanoi / Sapa"], "lang": "en", "meals": ["Onboard Vegetarian Brunch \u0026 Private Dinner"], "notes": ["Sense of Pace: Active"], "overnight": "Hanoi / Sapa", "title": "Day 4 \u2014 Hanoi / Sapa"}, {"activities": ["Station transfer, Sapa tour with guide and entry tickets, vegetarian lunch."], "date": "", "dayNumber": 5, "description": ["Arrive at Lao Cai station early in the morning and transfer to Sapa town. Check in to Aliana Boutique Sapa Hotel And Spa and enjoy a hot breakfast. Embark on a guided trekking tour to Cat Cat village, learning about the Black Hmong culture and viewing the scenic waterfall. Savor a local vegetarian lunch. Spend a relaxed afternoon exploring Sapa..."], "destinations": ["Sapa"], "lang": "en", "meals": ["Breakfast \u0026 Vegetarian Lunch"], "notes": ["Sense of Pace: Immersive"], "overnight": "Sapa", "title": "Day 5 \u2014 Sapa"}, {"activities": ["Fansipan cable car roundtrip tickets, guide, Sapa transfers, vegetarian lunch."], "date": "", "dayNumber": 6, "description": ["A highlights day in Sapa! Take the Fansipan cable car, the longest three-rope cable car system in the world, to ascend the \u0027Roof of Indochina\u0027 at 3,143 meters. Explore the spiritual pagoda complex at the summit. Enjoy a scenic vegetarian lunch. In the afternoon, visit Ta Van village or shop for souvenirs in Sapa town. Overnight at Aliana Boutique..."], "destinations": ["Sapa"], "lang": "en", "meals": ["Breakfast \u0026 Vegetarian Lunch"], "notes": ["Sense of Pace: Active"], "overnight": "Sapa", "title": "Day 6 \u2014 Sapa"}, {"activities": ["Private luxury transfer Sapa - Hanoi Airport."], "date": "", "dayNumber": 7, "description": ["Enjoy a leisurely morning in Sapa for final sightseeing or shopping. In the afternoon, board your private luxury vehicle for the scenic drive back to Hanoi (approx. 5 hours). Arrive directly at Noi Bai International Airport for your late-evening international departure flight."], "destinations": ["Hanoi"], "lang": "en", "meals": ["Breakfast"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Hanoi", "title": "Day 7 \u2014 Hanoi"}]
   </script>
   <script id="route-stops-data" type="application/json">
-    {{ route_stops | tojson | safe }}
+    [{"dayNumber": 1, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "Day 1 \u2014 Hanoi", "showMarker": true, "stopOrder": 1}, {"dayNumber": 2, "destination": "Ninh Binh", "displayName": "Ninh Binh", "kind": "overnight", "mapTitle": "Day 2 \u2014 Ninh Binh", "showMarker": true, "stopOrder": 1}, {"dayNumber": 3, "destination": "Halong Bay", "displayName": "Halong Bay", "kind": "overnight", "mapTitle": "Day 3 \u2014 Halong Bay", "showMarker": true, "stopOrder": 1}, {"dayNumber": 4, "destination": "Hanoi / Sapa", "displayName": "Hanoi / Sapa", "kind": "overnight", "mapTitle": "Day 4 \u2014 Hanoi / Sapa", "showMarker": true, "stopOrder": 1}, {"dayNumber": 5, "destination": "Sapa", "displayName": "Sapa", "kind": "overnight", "mapTitle": "Day 5 \u2014 Sapa", "showMarker": true, "stopOrder": 1}, {"dayNumber": 6, "destination": "Sapa", "displayName": "Sapa", "kind": "overnight", "mapTitle": "Day 6 \u2014 Sapa", "showMarker": true, "stopOrder": 1}, {"dayNumber": 7, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "Day 7 \u2014 Hanoi", "showMarker": true, "stopOrder": 1}]
   </script>
   <script id="stay-segments-data" type="application/json">
-    {{ stay_segments | tojson | safe }}
+    [{"activityPreviews": [{"dayNumber": 1, "label": "Day 1", "summary": "Welcome to Hanoi! Upon arriving at Noi Bai International Airport on your early morning flight (arrivals at 5:00 AM and..."}], "city": "Hanoi", "coords": [21.0285, 105.8542], "dayEnd": 1, "dayStart": 1, "daysLabel": "Day 1", "displayName": "Hanoi", "excursions": [], "hotelDateRange": "30 Sep \u2013 02 Oct 2026", "hotelImage": "/assets/hotels/hanoi/hanoi-le-jardin-hotel-spa/exterior/exterior_1.jpg", "hotelName": "Hanoi Le Jardin Hotel \u0026 Spa", "nights": 1, "nightsLabel": "1 night", "order": 1, "segmentId": "stay-1", "transportFromPrevious": ""}, {"activityPreviews": [{"dayNumber": 2, "label": "Day 2", "summary": "Embark on a full-day private excursion to Ninh Binh. Experience the serene beauty of Trang An landscape complex, a..."}], "city": "Ninh Binh", "coords": [20.2539, 105.975], "dayEnd": 2, "dayStart": 2, "daysLabel": "Day 2", "displayName": "Ninh Binh", "excursions": [], "hotelDateRange": "02 Oct \u2013 03 Oct 2026", "hotelImage": "/assets/hotels/halong/ambassador-signature-cruise/exterior/exterior_2.jpg", "hotelName": "Ambassador Signature Cruise", "nights": 1, "nightsLabel": "1 night", "order": 2, "segmentId": "stay-2", "transportFromPrevious": "Hanoi \u2192 Ninh Binh"}, {"activityPreviews": [{"dayNumber": 3, "label": "Day 3", "summary": "Depart Hanoi by private vehicle to Halong Bay. Board the premium Ambassador Signature Cruise, where your Double and..."}], "city": "Halong Bay", "coords": [20.9599, 107.0436], "dayEnd": 3, "dayStart": 3, "daysLabel": "Day 3", "displayName": "Halong Bay", "excursions": [], "hotelDateRange": "03 Oct \u2013 04 Oct 2026", "hotelImage": "/assets/hotels/sapa/chapa-express-train/exterior/exterior_3.jpg", "hotelName": "Chapa Express Train", "nights": 1, "nightsLabel": "1 night", "order": 3, "segmentId": "stay-3", "transportFromPrevious": "Ninh Binh \u2192 Halong Bay"}, {"activityPreviews": [{"dayNumber": 4, "label": "Day 4", "summary": "Greet the sunrise with Tai Chi on the sundeck. After a vegetarian brunch, check out and transfer back to Hanoi. Enjoy a..."}], "city": "Hanoi / Sapa", "coords": null, "dayEnd": 4, "dayStart": 4, "daysLabel": "Day 4", "displayName": "Hanoi / Sapa", "excursions": [], "hotelDateRange": "04 Oct \u2013 06 Oct 2026", "hotelImage": "/assets/hotels/sapa/aliana-boutique-sapa-hotel-spa/exterior/exterior_4.jpg", "hotelName": "Aliana Boutique Sapa Hotel And Spa", "nights": 1, "nightsLabel": "1 night", "order": 4, "segmentId": "stay-4", "transportFromPrevious": "Halong Bay \u2192 Hanoi / Sapa"}, {"activityPreviews": [{"dayNumber": 5, "label": "Day 5", "summary": "Arrive at Lao Cai station early in the morning and transfer to Sapa town. Check in to Aliana Boutique Sapa Hotel And..."}, {"dayNumber": 6, "label": "Day 6", "summary": "A highlights day in Sapa! Take the Fansipan cable car, the longest three-rope cable car system in the world, to ascend..."}], "city": "Sapa", "coords": [22.3364, 103.8438], "dayEnd": 6, "dayStart": 5, "daysLabel": "Days 5-6", "displayName": "Sapa", "excursions": [], "hotelDateRange": "", "hotelImage": "", "hotelName": "", "nights": 2, "nightsLabel": "2 nights", "order": 5, "segmentId": "stay-5", "transportFromPrevious": "Hanoi / Sapa \u2192 Sapa"}, {"activityPreviews": [{"dayNumber": 7, "label": "Day 7", "summary": "Enjoy a leisurely morning in Sapa for final sightseeing or shopping. In the afternoon, board your private luxury..."}], "city": "Hanoi", "coords": [21.0285, 105.8542], "dayEnd": 7, "dayStart": 7, "daysLabel": "Day 7", "displayName": "Hanoi", "excursions": [], "hotelDateRange": "", "hotelImage": "", "hotelName": "", "nights": 1, "nightsLabel": "1 night", "order": 6, "segmentId": "stay-6", "transportFromPrevious": "Sapa \u2192 Hanoi"}]
   </script>
   <script>
-    window.currentLang = "{{ lang }}";
+    window.currentLang = "en";
     document.addEventListener("DOMContentLoaded", function () {
       const DEST_COORDS = {
         "hanoi": [21.0285, 105.8542],
@@ -3917,20 +4370,7 @@
 
       const dataEl = document.getElementById('itinerary-data');
       if (!dataEl) return;
-      const rtlTokenPhrases = {{ [
-        "Hanoi", "Halong Bay", "Sapa", "Da Nang", "Hoi An", "Dalat", "Ninh Binh",
-        "Ho Chi Minh City", "Mekong Delta", "Nha Trang", "Dong Xuan Market", "Tam Coc",
-        "Hang Mua", "Fansipan", "Cat Cat Village", "Lao Chai", "Ta Van",
-        "Ba Na Hills", "Bay Mau Coconut Forest", "Hoa Phu Thanh", "Lang Biang",
-        "Datanla Waterfall", "Me Linh Coffee", "Cu Chi Tunnels", "Ben Thanh Market",
-        "Tan Son Nhat Airport", "Silver Waterfall", "Egg Coffee", "Train Street Coffee",
-        "Moana Coffee", "Han River Cruise", "Crazy House", "Clay Tunnel",
-        "Fresh Garden", "Elephant Waterfall", "Apartment Coffee", "Central Post Office",
-        "Hoi An Ancient Town", "Minasi Premium Hotel", "La Casta Cruise", "Bora Hotel",
-        "Minh Toan SAFI Ocean Hotel", "CICILIA Rouge Dalat", "Cicilia Saigon Center",
-        "Vietnam Safar", "Discovery Asia Travel Group", "USD", "B2B", "E-visa", "SIM",
-        "Fast Track", "WhatsApp"
-      ] | tojson | safe }};
+      const rtlTokenPhrases = ["Hanoi", "Halong Bay", "Sapa", "Da Nang", "Hoi An", "Dalat", "Ninh Binh", "Ho Chi Minh City", "Mekong Delta", "Nha Trang", "Dong Xuan Market", "Tam Coc", "Hang Mua", "Fansipan", "Cat Cat Village", "Lao Chai", "Ta Van", "Ba Na Hills", "Bay Mau Coconut Forest", "Hoa Phu Thanh", "Lang Biang", "Datanla Waterfall", "Me Linh Coffee", "Cu Chi Tunnels", "Ben Thanh Market", "Tan Son Nhat Airport", "Silver Waterfall", "Egg Coffee", "Train Street Coffee", "Moana Coffee", "Han River Cruise", "Crazy House", "Clay Tunnel", "Fresh Garden", "Elephant Waterfall", "Apartment Coffee", "Central Post Office", "Hoi An Ancient Town", "Minasi Premium Hotel", "La Casta Cruise", "Bora Hotel", "Minh Toan SAFI Ocean Hotel", "CICILIA Rouge Dalat", "Cicilia Saigon Center", "Vietnam Safar", "Discovery Asia Travel Group", "USD", "B2B", "E-visa", "SIM", "Fast Track", "WhatsApp"];
 
       function escapeHtml(value) {
         return String(value ?? '')
@@ -4346,16 +4786,16 @@
   <div id="pwa-notification-prompt" class="notification-prompt-card no-print">
     <div class="notification-prompt-header">
       <div class="notification-prompt-title">
-        <span>🔔</span> {{ "Stay Updated" | translate(lang) }}
+        <span>🔔</span> Stay Updated
       </div>
       <button class="notification-prompt-close" id="pwa-notification-close">&times;</button>
     </div>
     <div class="notification-prompt-body">
-      {{ "Enable notifications to get live updates for your itinerary, guide details, and booking status." | translate(lang) }}
+      Enable notifications to get live updates for your itinerary, guide details, and booking status.
     </div>
     <div class="notification-prompt-actions">
-      <button class="notification-btn-later" id="pwa-notification-later">{{ "Later" | translate(lang) }}</button>
-      <button class="notification-btn-allow" id="pwa-notification-allow">{{ "Enable" | translate(lang) }}</button>
+      <button class="notification-btn-later" id="pwa-notification-later">Later</button>
+      <button class="notification-btn-allow" id="pwa-notification-allow">Enable</button>
     </div>
   </div>
 
@@ -4363,8 +4803,8 @@
   <div id="pwa-notification-success" class="notification-success-card no-print">
     <div class="notification-success-icon">✓</div>
     <div class="notification-success-text">
-      <h4>{{ "Notifications Active" | translate(lang) }}</h4>
-      <p>{{ "You'll receive live itinerary updates here." | translate(lang) }}</p>
+      <h4>Notifications Active</h4>
+      <p>You&#39;ll receive live itinerary updates here.</p>
     </div>
   </div>
 

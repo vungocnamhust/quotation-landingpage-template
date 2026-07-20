@@ -683,7 +683,7 @@
 </head>
 <body>
 
-<div class="watermark">Vietnam Safar · {{ quotation_number }} · {{ "Confidential B2B" | translate(lang) }}</div>
+<div class="watermark">{{ (brand.name if brand else '') or 'Vietnam Safar' }} · {{ quotation_number }} · {{ "Confidential B2B" | translate(lang) }}</div>
 
 <!-- ═══════════════════ PAGE 1 — Cover ═══════════════════ -->
 <div class="pdf-page">
@@ -721,7 +721,7 @@
 <!-- ═══════════════════ PAGE 2 — Glance & Overview ═══════════════════ -->
 <div class="pdf-page">
   <div class="page-header">
-    <span class="brand">Vietnam Safar — {{ "B2B Travel Proposal" | translate(lang) }}</span>
+    <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — {{ "B2B Travel Proposal" | translate(lang) }}</span>
     <span class="ref"><span class="ltr-token">{{ quotation_number }} · {{ quotation_date }}</span></span>
   </div>
   <div class="page-inner">
@@ -737,7 +737,7 @@
 <!-- ═══════════════════ PAGE 3 — Why Works & Gallery ═══════════════════ -->
 <div class="pdf-page">
   <div class="page-header">
-    <span class="brand">Vietnam Safar — {{ "B2B Travel Proposal" | translate(lang) }}</span>
+    <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — {{ "B2B Travel Proposal" | translate(lang) }}</span>
     <span class="ref"><span class="ltr-token">{{ quotation_number }} · {{ quotation_date }}</span></span>
   </div>
   <div class="page-inner">
@@ -783,7 +783,7 @@
 <!-- ═══════════════════ PAGE 4 — Itinerary ═══════════════════ -->
 <div class="pdf-page">
   <div class="page-header">
-    <span class="brand">Vietnam Safar — {{ "Luxury Quotation" | translate(lang) }}</span>
+    <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — {{ "Luxury Quotation" | translate(lang) }}</span>
     <span class="ref"><span class="ltr-token">{{ quotation_number }} · {{ quotation_date }}</span></span>
   </div>
   <div class="page-inner">
@@ -834,7 +834,7 @@
 <!-- ═══════════════════ PAGE 5 — Hotel Plan & Pricing ═══════════════════ -->
 <div class="pdf-page">
   <div class="page-header">
-    <span class="brand">Vietnam Safar — {{ "B2B Travel Proposal" | translate(lang) }}</span>
+    <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — {{ "B2B Travel Proposal" | translate(lang) }}</span>
     <span class="ref"><span class="ltr-token">{{ quotation_number }} · {{ quotation_date }}</span></span>
   </div>
   <div class="page-inner">
@@ -928,7 +928,7 @@
 <!-- ═══════════════════ PAGE 6 — Inc/Exc & Muslim Care ═══════════════════ -->
 <div class="pdf-page">
   <div class="page-header">
-    <span class="brand">Vietnam Safar — {{ "B2B Travel Proposal" | translate(lang) }}</span>
+    <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — {{ "B2B Travel Proposal" | translate(lang) }}</span>
     <span class="ref"><span class="ltr-token">{{ quotation_number }} · {{ quotation_date }}</span></span>
   </div>
   <div class="page-inner">
@@ -975,7 +975,7 @@
 <!-- ═══════════════════ PAGE 8 — Travel Specialist ═══════════════════ -->
 <div class="pdf-page">
   <div class="page-header">
-    <span class="brand">Vietnam Safar — {{ "B2B Travel Proposal" | translate(lang) }}</span>
+    <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — {{ "B2B Travel Proposal" | translate(lang) }}</span>
     <span class="ref"><span class="ltr-token">{{ quotation_number }} · {{ quotation_date }}</span></span>
   </div>
   <div class="page-inner" style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
@@ -998,7 +998,7 @@
 <!-- ═══════════════════ PAGE 9 — Booking Terms & Finalization ═══════════════════ -->
 <div class="pdf-page">
   <div class="page-header">
-    <span class="brand">Vietnam Safar — {{ "B2B Travel Proposal" | translate(lang) }}</span>
+    <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — {{ "B2B Travel Proposal" | translate(lang) }}</span>
     <span class="ref"><span class="ltr-token">{{ quotation_number }} · {{ quotation_date }}</span></span>
   </div>
   <div class="page-inner">
@@ -1071,7 +1071,7 @@
 
     <div class="pdf-footer" style="padding: 10px 0; font-size: 10px;">
       {{ footer_text | rtl_mixed(lang) }}<br>
-      <span style="color:var(--gold);font-weight:700;">vietnamsafar.vn</span> &nbsp;·&nbsp;
+      <span style="color:var(--gold);font-weight:700;">{{ (brand.domain if brand else '') or 'vietnamsafar.vn' }}</span> &nbsp;·&nbsp;
       {{ "This document is a confidential B2B quotation prepared exclusively for" | translate(lang) }} {{ customer_name }}.
     </div>
   </div>

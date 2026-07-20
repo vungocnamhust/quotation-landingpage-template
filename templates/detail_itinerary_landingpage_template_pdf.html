@@ -566,7 +566,7 @@
 </head>
 <body>
 
-  <div class="watermark">Vietnam Safar · {{ quotation_number }} · Booking Itinerary</div>
+  <div class="watermark">{{ (brand.name if brand else '') or 'Vietnam Safar' }} · {{ quotation_number }} · Booking Itinerary</div>
 
   <!-- ═══════════════════ PAGE 1 — Cover ═══════════════════ -->
   <div class="pdf-page">
@@ -600,7 +600,7 @@
   <!-- ═══════════════════ PAGE 2 — Overview & Bookings Summary ═══════════════════ -->
   <div class="pdf-page">
     <div class="page-header">
-      <span class="brand">Vietnam Safar — Booking Itinerary</span>
+      <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — Booking Itinerary</span>
       <span class="ref">{{ quotation_number }}</span>
     </div>
     <div class="page-inner">
@@ -660,7 +660,7 @@
   <!-- ═══════════════════ PAGES 3+ — Daily Itinerary timeline ═══════════════════ -->
   <div class="pdf-page">
     <div class="page-header">
-      <span class="brand">Vietnam Safar — Booking Itinerary</span>
+      <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — Booking Itinerary</span>
       <span class="ref">{{ quotation_number }}</span>
     </div>
     <div class="page-inner">
@@ -821,7 +821,7 @@
   {% if price_options %}
   <div class="pdf-page">
     <div class="page-header">
-      <span class="brand">Vietnam Safar — Booking Itinerary</span>
+      <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — Booking Itinerary</span>
       <span class="ref">{{ quotation_number }}</span>
     </div>
     <div class="page-inner">
@@ -853,7 +853,7 @@
   <!-- ═══════════════════ LAST PAGE — Inclusions/Exclusions & Concierge ═══════════════════ -->
   <div class="pdf-page">
     <div class="page-header">
-      <span class="brand">Vietnam Safar — Booking Itinerary</span>
+      <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — Booking Itinerary</span>
       <span class="ref">{{ quotation_number }}</span>
     </div>
     <div class="page-inner">
