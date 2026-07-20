@@ -295,7 +295,7 @@ try:
         
         # Sync 100% context data (including specialist info, translations, html_sync edits) from quo_01ece847501d
         if os.path.exists(ctx_file):
-            print(f"Cloning baseline ctx.json and published HTML/PDF from quo_01ece847501d to {quotation_id}...")
+            print(f"Cloning baseline ctx.json from quo_01ece847501d to {quotation_id}...")
             
             # 1. Clone ctx.json
             with open(ctx_file, "r", encoding="utf-8") as f:
@@ -315,68 +315,98 @@ try:
             from main import quotations
             if quotation_id in quotations:
                 quotations[quotation_id]["ctx"] = cloned_ctx
-
-            # 2. Find and clone the latest v{version}.html as v1.html
-            import glob
-            version_files = glob.glob(os.path.join(os.path.dirname(ctx_file), "v*.html"))
-            latest_html_file = None
-            max_ver = 0
-            for vf in version_files:
-                basename = os.path.basename(vf)
-                m = re.match(r'v(\d+)\.html', basename)
-                if m:
-                    ver = int(m.group(1))
-                    if ver > max_ver:
-                        max_ver = ver
-                        latest_html_file = vf
+                # Remove static HTML in-memory cache to force a dynamic render from JINJA2 templates
+                if "html" in quotations[quotation_id]:
+                    del quotations[quotation_id]["html"]
             
-            if latest_html_file:
-                print(f"Copying latest HTML version {latest_html_file} as v1.html for {quotation_id}...")
-                with open(latest_html_file, "r", encoding="utf-8") as f:
-                    html_content = f.read()
-                # Replace the original ID with the new one
-                html_content = html_content.replace("quo_01ece847501d", quotation_id)
-                with open(os.path.join(new_quo_dir, "v1.html"), "w", encoding="utf-8") as f:
-                    f.write(html_content)
-                
-                # Update uvicorn in-memory cache directly as well
-                from main import quotations
-                if quotation_id in quotations:
-                    quotations[quotation_id]["html"] = html_content
+            # Remove any baseline cached files on disk to prevent GET fallback cache hits
+            for cached_file in ["v1.html", "v1_pdf.html", "pdf.html", "pdf_en.html"]:
+                local_cached = os.path.join(new_quo_dir, cached_file)
+                if os.path.exists(local_cached):
+                    try:
+                        os.remove(local_cached)
+                    except Exception:
+                        pass
 
-            # 3. Copy translation status
+            # 2. Copy translation status
             ts_file = os.path.join(os.path.dirname(ctx_file), "translation_status.json")
             if os.path.exists(ts_file):
                 with open(ts_file, "r", encoding="utf-8") as f:
                     ts_content = f.read()
                 with open(os.path.join(new_quo_dir, "translation_status.json"), "w", encoding="utf-8") as f:
                     f.write(ts_content)
-
-            # 4. Copy and replace pdf.html / pdf_en.html
-            for pdf_name in ["pdf.html", "pdf_en.html"]:
-                pdf_path = os.path.join(os.path.dirname(ctx_file), pdf_name)
-                if os.path.exists(pdf_path):
-                    with open(pdf_path, "r", encoding="utf-8") as f:
-                        pdf_content = f.read()
-                    pdf_content = pdf_content.replace("quo_01ece847501d", quotation_id)
-                    with open(os.path.join(new_quo_dir, pdf_name), "w", encoding="utf-8") as f:
-                        f.write(pdf_content)
         
-        # Verify get endpoint and save HTML
+        # Verify get endpoint and save HTML (forces dynamic render of user's updated templates)
         get_res = client.get(f"/quotations/{quotation_id}?lang=en")
         print(f"GET /quotations/{quotation_id} status:", get_res.status_code)
         if get_res.status_code == 200:
+            html_content = get_res.text
+            
+            # Apply regex replacements to update data-editable texts from edited_fields (resolves hardcoded signature issue)
+            if os.path.exists(ctx_file):
+                edited = cloned_ctx.get("html_sync", {}).get("en", {}).get("edited_fields", {})
+                
+                # Replace ID and data-editable inner contents
+                html_content = html_content.replace("quo_01ece847501d", quotation_id)
+                for key, new_val in edited.items():
+                    if new_val:
+                        # Target tags with data-editable="key" or data-editable='key'
+                        pattern = r'(<[^>]*data-editable=["\']' + re.escape(key) + r'["\'][^>]*>)(.*?)(</[a-zA-Z0-9]+>)'
+                        def repl(match, val=new_val):
+                            return match.group(1) + str(val) + match.group(3)
+                        html_content = re.sub(pattern, repl, html_content, flags=re.DOTALL)
+                
+                # Replace designer avatar to Hieu's avatar if signature matches Hieu/Eddie
+                sig_val = edited.get("designer_signature", "")
+                if "Eddie" in sig_val or "Hieu" in sig_val:
+                    html_content = html_content.replace("/assets/dias_team/director.png", "/assets/dias_team/hieu.jpg")
+            
+            # Save updated HTML to disk as v1.html for permanent cache
+            with open(os.path.join(new_quo_dir, "v1.html"), "w", encoding="utf-8") as f:
+                f.write(html_content)
+            
+            # Update memory cache
+            from main import quotations
+            if quotation_id in quotations:
+                quotations[quotation_id]["html"] = html_content
+            
             output_file = "vietnam-heritage-luxury-indian-7d6n-quotation.html"
             with open(output_file, "w", encoding="utf-8") as f:
-                f.write(get_res.text)
+                f.write(html_content)
             print(f"HTML saved to: {output_file}")
         
         get_pdf_res = client.get(f"/quotations/{quotation_id}/pdf?lang=en")
         print(f"GET /quotations/{quotation_id}/pdf status:", get_pdf_res.status_code)
         if get_pdf_res.status_code == 200:
+            pdf_content = get_pdf_res.text
+            
+            # Apply similar replacements to PDF view
+            if os.path.exists(ctx_file):
+                edited = cloned_ctx.get("html_sync", {}).get("en", {}).get("edited_fields", {})
+                pdf_content = pdf_content.replace("quo_01ece847501d", quotation_id)
+                for key, new_val in edited.items():
+                    if new_val:
+                        pattern = r'(<[^>]*data-editable=["\']' + re.escape(key) + r'["\'][^>]*>)(.*?)(</[a-zA-Z0-9]+>)'
+                        # Also target non-editable tags if they display the same keys (PDF uses plain spans)
+                        # To keep it safe, we just use regex replacement for data-editable if present, or do general fallback replacements
+                        def repl(match, val=new_val):
+                            return match.group(1) + str(val) + match.group(3)
+                        pdf_content = re.sub(pattern, repl, pdf_content, flags=re.DOTALL)
+                
+                # Replace designer avatar in PDF as well
+                sig_val = edited.get("designer_signature", "")
+                if "Eddie" in sig_val or "Hieu" in sig_val:
+                    pdf_content = pdf_content.replace("/assets/dias_team/director.png", "/assets/dias_team/hieu.jpg")
+            
+            # Save to disk as pdf.html / pdf_en.html
+            with open(os.path.join(new_quo_dir, "pdf.html"), "w", encoding="utf-8") as f:
+                f.write(pdf_content)
+            with open(os.path.join(new_quo_dir, "pdf_en.html"), "w", encoding="utf-8") as f:
+                f.write(pdf_content)
+                
             pdf_output_file = "vietnam-heritage-luxury-indian-7d6n-quotation-pdf.html"
             with open(pdf_output_file, "w", encoding="utf-8") as f:
-                f.write(get_pdf_res.text)
+                f.write(pdf_content)
             print(f"PDF view saved to: {pdf_output_file}")
         
 except Exception as e:

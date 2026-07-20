@@ -607,20 +607,41 @@
         <p class="cover-lede">{{ lede }}</p>
       </div>
       <div class="quote-card">
-        <h2>Journey Overview</h2>
-        <div class="qrow"><span>Prepared for</span><strong>{{ customer_name }}</strong></div>
-        <div class="qrow"><span>Overview</span><strong>{{ overview_heading }}</strong></div>
+        <h2>{{ journey_overview_title | default("Journey Overview") }}</h2>
+        <div class="qrow">
+          <span>{{ label_prepared_for | default("Prepared for") }}</span>
+          <strong>{{ customer_name }}</strong>
+        </div>
+        <div class="qrow">
+          <span>{{ label_overview | default("Overview") }}</span>
+          <strong>{{ overview_heading }}</strong>
+        </div>
         {% if guests_txt %}
-        <div class="qrow"><span>Guests</span><strong>{{ guests_txt }}</strong></div>
+        <div class="qrow">
+          <span>{{ label_guests | default("Guests") }}</span>
+          <strong>{{ guests_txt }}</strong>
+        </div>
         {% endif %}
         {% if travel_dates %}
-        <div class="qrow"><span>Travel dates</span><strong>{{ travel_dates }}</strong></div>
+        <div class="qrow">
+          <span>{{ label_travel_dates | default("Travel dates") }}</span>
+          <strong>{{ travel_dates }}</strong>
+        </div>
         {% endif %}
         {% if route_txt %}
-        <div class="qrow stacked"><span>Route</span><strong>{{ route_txt }}</strong></div>
+        <div class="qrow stacked">
+          <span>{{ label_route | default("Route") }}</span>
+          <strong>{{ route_txt }}</strong>
+        </div>
         {% endif %}
-        <div class="qrow"><span>Ref.</span><strong>{{ quotation_number }}</strong></div>
-        <div class="qrow"><span>Contact</span><strong>{{ contact }}</strong></div>
+        <div class="qrow">
+          <span>{{ label_ref | default("Ref.") }}</span>
+          <strong>{{ quotation_number }}</strong>
+        </div>
+        <div class="qrow">
+          <span>{{ label_contact | default("Contact") }}</span>
+          <strong>{{ contact }}</strong>
+        </div>
       </div>
     </div>
     <div class="cover-strip">
@@ -736,21 +757,21 @@
     <div class="itinerary">
       {% for day in itinerary %}
       <div class="day-card">
-        <div class="day-num">{{ day.dayNumber }}</div>
+        <div class="day-num">{{ day.day_badge_text | default(day.dayNumber) }}</div>
         <div>
-          <div class="day-badge">DAY {{ day.dayNumber }}{% if day.date %} · {{ day.date }}{% endif %}</div>
+          <div class="day-badge">{{ day.day_num_text | default("DAY " ~ day.dayNumber ~ ((" · " ~ day.date) if day.date else "")) }}</div>
           <h3>{{ day.title }}</h3>
           {% for para in day.description %}
           <p>{{ para }}</p>
           {% endfor %}
           {% if day.activities %}
           <p style="margin-top:6px;font-size:10px;color:#b7894b">
-            <strong>Highlights:</strong> {{ day.activities | join(' · ') }}
+            <strong>{{ day.label_highlights | default("Highlights:") }}</strong> {{ day.activities | join(' · ') }}
           </p>
           {% endif %}
           {% if day.notes %}
           <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
-            <strong>Notes:</strong>
+            <strong>{{ day.label_notes | default("Notes:") }}</strong>
             <ul style="margin:2px 0 0;padding-left:10px;">
               {% for note in day.notes %}<li>{{ note }}</li>{% endfor %}
             </ul>
@@ -759,11 +780,11 @@
         </div>
         <div class="day-meta">
           {% if day.overnight %}
-          <div class="price-sub" style="margin-bottom:2px">Overnight</div>
+          <div class="price-sub" style="margin-bottom:2px">{{ day.label_overnight | default("Overnight") }}</div>
           <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">{{ day.overnight }}</div>
           {% endif %}
           {% if day.meals %}
-          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">Meals</div>
+          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">{{ day.label_meals | default("Meals") }}</div>
           <div style="font-size:11px">{{ day.meals | join(' · ') }}</div>
           {% endif %}
         </div>
@@ -843,8 +864,7 @@
           <small>total package</small><br>
           <small>Per person: {{ opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~ opt.pricePerPerson.currency) }}</small>
           {% else %}
-          <strong>{{ opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~ opt.pricePerPerson.currency) }}</strong><br>
-          <small>Total: {{ opt.totalPrice.displayText or ('{:,.0f}'.format(opt.totalPrice.amount) ~ ' ' ~ opt.totalPrice.currency) }}</small>
+          <strong>{{ opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~ opt.pricePerPerson.currency) }}</strong>
           {% endif %}
           {% if opt.isConfirmedMainOption %}
           <div style="margin-top:8px;font-size:8px;letter-spacing:.14em;color:#d8bd85;font-weight:800">✓ CONFIRMED</div>

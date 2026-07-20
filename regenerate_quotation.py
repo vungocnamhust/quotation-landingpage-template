@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 from main import _build_ctx, templates, TourQuotationPayload, _save_translation_status
 
 async def main():
-    quotation_id = "quo_3e9bcd4f2f85"
+    quotation_id = sys.argv[1] if len(sys.argv) > 1 else "quo_01ece847501d"
     quo_dir = os.path.join("published", quotation_id)
     
     # Load old payload and ctx
@@ -40,6 +40,7 @@ async def main():
     destinations = old_ctx.get("destinations", [])
     hero_image_url = old_ctx.get("img_0", "/assets/vietnam-safar-logo.png")
     lang = payload_data.get("lang", "ar")
+    brand = old_ctx.get("brand", {})
     
     # Re-build context using updated main.py logic
     ctx = _build_ctx(
@@ -48,8 +49,10 @@ async def main():
         hero_image_url=hero_image_url,
         destinations=destinations,
         lang=lang,
-        template_name="vietnam_heritage_luxury.html"
+        template_name="vietnam_heritage_luxury.html",
+        brand=brand
     )
+    ctx["brand"] = brand
     
     # Add translation status/baseline keys
     ctx["baseline_payload"] = payload.model_dump(mode="json")

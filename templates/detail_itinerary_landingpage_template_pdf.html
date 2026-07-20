@@ -579,13 +579,31 @@
           <p class="cover-lede">{{ lede }}</p>
         </div>
         <div class="quote-card">
-          <h2>Booking Snapshot</h2>
-          <div class="qrow"><span>Prepared for</span><strong>{{ customer_name }}</strong></div>
-          <div class="qrow"><span>Travel dates</span><strong>{{ travel_dates }}</strong></div>
-          <div class="qrow"><span>Guests</span><strong>{{ guests_txt }}</strong></div>
-          <div class="qrow"><span>Travel style</span><strong>{{ travel_style }}</strong></div>
-          <div class="qrow"><span>Route</span><strong>{{ route_txt }}</strong></div>
-          <div class="qrow"><span>Booking Ref</span><strong>{{ quotation_number }}</strong></div>
+          <h2>{{ journey_overview_title | default("Booking Snapshot") }}</h2>
+          <div class="qrow">
+            <span>{{ label_prepared_for | default("Prepared for") }}</span>
+            <strong>{{ customer_name }}</strong>
+          </div>
+          <div class="qrow">
+            <span>{{ label_travel_dates | default("Travel dates") }}</span>
+            <strong>{{ travel_dates }}</strong>
+          </div>
+          <div class="qrow">
+            <span>{{ label_guests | default("Guests") }}</span>
+            <strong>{{ guests_txt }}</strong>
+          </div>
+          <div class="qrow">
+            <span>{{ label_style | default("Travel style") }}</span>
+            <strong>{{ travel_style }}</strong>
+          </div>
+          <div class="qrow">
+            <span>{{ label_route | default("Route") }}</span>
+            <strong>{{ route_txt }}</strong>
+          </div>
+          <div class="qrow">
+            <span>{{ label_ref | default("Booking Ref") }}</span>
+            <strong>{{ quotation_number }}</strong>
+          </div>
         </div>
       </div>
       <div class="cover-strip">
@@ -839,8 +857,7 @@
             {% if opt.optionName %}
             <small style="color:rgba(255,255,255,.55);font-size:9px;display:block;margin-top:4px">{{ opt.optionName }}</small>
             {% endif %}
-            <strong>{{ opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~ opt.pricePerPerson.currency) }}</strong><br>
-            <span style="font-size:11px;opacity:.8">Total: {{ opt.totalPrice.displayText or ('{:,.0f}'.format(opt.totalPrice.amount) ~ ' ' ~ opt.totalPrice.currency) }}</span>
+            <strong>{{ opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~ opt.pricePerPerson.currency) }}</strong>
           </div>
           {% endfor %}
         </div>

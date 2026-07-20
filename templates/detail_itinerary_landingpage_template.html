@@ -2416,37 +2416,37 @@
         </div>
 
         <div class="quote-card">
-          <h2 data-editable="true">Trip Summary</h2>
+          <h2 data-editable="journey_overview_title">{{ journey_overview_title | default("Trip Summary") }}</h2>
           <div class="quote-list">
             <div class="quote-row">
-              <span>Prepared for:</span>
-              <strong data-editable="true">{{ customer_name }}</strong>
+              <span data-editable="label_prepared_for">{{ label_prepared_for | default("Prepared for:") }}</span>
+              <strong data-editable="customer_name">{{ customer_name }}</strong>
             </div>
             {% if nationality %}
             <div class="quote-row">
-              <span>Nationality:</span>
-              <strong data-editable="true">{{ nationality }}</strong>
+              <span data-editable="label_nationality">{{ label_nationality | default("Nationality:") }}</span>
+              <strong data-editable="nationality">{{ nationality }}</strong>
             </div>
             {% endif %}
             <div class="quote-row">
-              <span>Dates:</span>
-              <strong data-editable="true">{{ travel_dates }}</strong>
+              <span data-editable="label_travel_dates">{{ label_travel_dates | default("Dates:") }}</span>
+              <strong data-editable="travel_dates">{{ travel_dates }}</strong>
             </div>
             <div class="quote-row">
-              <span>Duration:</span>
-              <strong data-editable="true">{{ duration_label }}</strong>
+              <span data-editable="label_duration">{{ label_duration | default("Duration:") }}</span>
+              <strong data-editable="duration_label">{{ duration_label }}</strong>
             </div>
             <div class="quote-row">
-              <span>Guests:</span>
-              <strong data-editable="true">{{ guests_txt }}</strong>
+              <span data-editable="label_guests">{{ label_guests | default("Guests:") }}</span>
+              <strong data-editable="guests_txt">{{ guests_txt }}</strong>
             </div>
             <div class="quote-row">
-              <span>Travel Style:</span>
-              <strong data-editable="true">{{ travel_style }}</strong>
+              <span data-editable="label_style">{{ label_style | default("Travel Style:") }}</span>
+              <strong data-editable="travel_style">{{ travel_style }}</strong>
             </div>
             <div class="quote-row" style="border-bottom:none">
-              <span>Route:</span>
-              <strong data-editable="true">{{ route_txt }}</strong>
+              <span data-editable="label_route">{{ label_route | default("Route:") }}</span>
+              <strong data-editable="route_txt">{{ route_txt }}</strong>
             </div>
           </div>
         </div>
@@ -2894,10 +2894,7 @@
             {% else %}
             <strong data-editable="true" style="font-size:28px" class="price-per-person-display">{{
               opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~
-              opt.pricePerPerson.currency) }}</strong><br>
-            <span style="font-size:13px;opacity:.8">{{ "Total:" | translate(lang) }} <span class="total-price-display">{{
-                opt.totalPrice.displayText or ('{:,.0f}'.format(opt.totalPrice.amount) ~ ' ' ~ opt.totalPrice.currency)
-                }}</span></span>
+              opt.pricePerPerson.currency) }}</strong>
             {% endif %}
             {% if opt.isConfirmedMainOption %}
             <div style="margin-top:12px;font-size:10px;letter-spacing:.14em;color:#d8bd85;font-weight:800">✓ CONFIRMED

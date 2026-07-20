@@ -2404,26 +2404,48 @@
           </div>
         </div>
         <aside class="quote-card">
-          <h2>{{ "Journey Overview" | translate(lang) }}</h2>
+          <h2 data-editable="journey_overview_title">{{ journey_overview_title | default("Journey Overview" | translate(lang)) }}</h2>
           <div class="quote-list">
-            <div class="quote-row"><span>{{ "Prepared for" | translate(lang) }}</span><strong data-editable="customer_name">{{ customer_name
-                }}</strong></div>
-            <div class="quote-row"><span>{{ "Overview" | translate(lang) }}</span><strong data-editable="overview_heading">{{ overview_heading }}</strong></div>
+            <div class="quote-row">
+              <span data-editable="label_prepared_for">{{ label_prepared_for | default("Prepared for" | translate(lang)) }}</span>
+              <strong data-editable="customer_name">{{ customer_name }}</strong>
+            </div>
+            <div class="quote-row">
+              <span data-editable="label_overview">{{ label_overview | default("Overview" | translate(lang)) }}</span>
+              <strong data-editable="overview_heading">{{ overview_heading }}</strong>
+            </div>
             {% if guests_txt %}
-            <div class="quote-row"><span>{{ "Guests" | translate(lang) }}</span><strong data-editable="guests_txt">{{ guests_txt }}</strong></div>
+            <div class="quote-row">
+              <span data-editable="label_guests">{{ label_guests | default("Guests" | translate(lang)) }}</span>
+              <strong data-editable="guests_txt">{{ guests_txt }}</strong>
+            </div>
             {% endif %}
             {% if travel_dates %}
-            <div class="quote-row"><span>{{ "Travel dates" | translate(lang) }}</span><strong data-editable="travel_dates"><span class="ltr-token">{{ travel_dates }}</span></strong></div>
+            <div class="quote-row">
+              <span data-editable="label_travel_dates">{{ label_travel_dates | default("Travel dates" | translate(lang)) }}</span>
+              <strong data-editable="travel_dates"><span class="ltr-token">{{ travel_dates }}</span></strong>
+            </div>
             {% endif %}
             {% if route_txt %}
-            <div class="quote-row stacked"><span>{{ "Route" | translate(lang) }}</span><strong data-editable="route_txt">{{ route_txt | rtl_mixed(lang) }}</strong></div>
+            <div class="quote-row stacked">
+              <span data-editable="label_route">{{ label_route | default("Route" | translate(lang)) }}</span>
+              <strong data-editable="route_txt">{{ route_txt | rtl_mixed(lang) }}</strong>
+            </div>
             {% endif %}
             {% if travel_style %}
-            <div class="quote-row stacked"><span>{{ "Style" | translate(lang) }}</span><strong data-editable="travel_style">{{ travel_style | rtl_mixed(lang) }}</strong></div>
+            <div class="quote-row stacked">
+              <span data-editable="label_style">{{ label_style | default("Style" | translate(lang)) }}</span>
+              <strong data-editable="travel_style">{{ travel_style | rtl_mixed(lang) }}</strong>
+            </div>
             {% endif %}
-            <div class="quote-row"><span>{{ "Ref." | translate(lang) }}</span><strong data-editable="quotation_number"><span class="ltr-token">{{ quotation_number
-                }}</span></strong></div>
-            <div class="quote-row"><span>{{ "Contact" | translate(lang) }}</span><strong data-editable="contact"><span class="ltr-token">{{ contact }}</span></strong></div>
+            <div class="quote-row">
+              <span data-editable="label_ref">{{ label_ref | default("Ref." | translate(lang)) }}</span>
+              <strong data-editable="quotation_number"><span class="ltr-token">{{ quotation_number }}</span></strong>
+            </div>
+            <div class="quote-row">
+              <span data-editable="label_contact">{{ label_contact | default("Contact" | translate(lang)) }}</span>
+              <strong data-editable="contact"><span class="ltr-token">{{ contact }}</span></strong>
+            </div>
           </div>
         </aside>
       </div>
@@ -2604,24 +2626,23 @@
           {% for day in itinerary %}
           {% set day_idx = loop.index %}
           <article class="day">
-            <div class="day-label">{{ day.dayNumber }}</div>
+            <div class="day-label" data-editable="day_badge_{{ loop.index }}">{{ day.day_badge_text | default(day.dayNumber) }}</div>
             <div>
-              <span class="num" data-editable="day_num_{{ loop.index }}">{{ "DAY" | translate(lang) }} {{ day.dayNumber }}{% if day.date %}
-                &nbsp;&middot;&nbsp; {{ day.date }}{% endif %}</span>
+              <span class="num" data-editable="day_num_{{ loop.index }}">{{ day.day_num_text | default("DAY" | translate(lang) ~ " " ~ day.dayNumber ~ (("&nbsp;&middot;&nbsp; " ~ day.date) if day.date else "")) }}</span>
               <h3 data-editable="day_title_{{ loop.index }}">{{ day.title | rtl_mixed(lang) }}</h3>
               {% for para in day.description %}
               <p data-editable="day_desc_{{ loop.index }}_{{ loop.index0 }}">{{ para | rtl_mixed(lang) }}</p>
               {% endfor %}
               {% if day.activities %}
               <p style="font-size:13px;color:#706a5d;margin-top:8px">
-                <strong style="color:#17412e;letter-spacing:.06em">{{ "Highlights:" | translate(lang) }}</strong>
+                <strong style="color:#17412e;letter-spacing:.06em" data-editable="day_label_highlights_{{ loop.index }}">{{ day.label_highlights | default("Highlights:" | translate(lang)) }}</strong>
                 <span data-editable="day_highlights_{{ loop.index }}">{{ (day.activities | join(' · ')) | rtl_mixed(lang) }}</span>
               </p>
               {% endif %}
               {% if day.notes %}
               <div
                 style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
-                <strong style="color:#b7894b;letter-spacing:.06em">{{ "Notes:" | translate(lang) }}</strong>
+                <strong style="color:#b7894b;letter-spacing:.06em" data-editable="day_label_notes_{{ loop.index }}">{{ day.label_notes | default("Notes:" | translate(lang)) }}</strong>
                 <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
                   {% for note in day.notes %}
                   <li style="margin-bottom: 2px;" data-editable="day_note_{{ day_idx }}_{{ loop.index0 }}">{{ note | rtl_mixed(lang) }}</li>
@@ -2632,11 +2653,11 @@
             </div>
             <div class="day-meta">
               {% if day.overnight %}
-              <span style="font-size:11px;letter-spacing:.12em">{{ "Overnight" | translate(lang) }}</span><br>
+              <span style="font-size:11px;letter-spacing:.12em" data-editable="day_label_overnight_{{ loop.index }}">{{ day.label_overnight | default("Overnight" | translate(lang)) }}</span><br>
               <span style="font-size:15px;font-family:Georgia,serif" data-editable="day_overnight_{{ loop.index }}">{{ day.overnight | rtl_mixed(lang) }}</span><br><br>
               {% endif %}
               {% if day.meals %}
-              <span style="font-size:11px;letter-spacing:.12em">{{ "Meals" | translate(lang) }}</span><br>
+              <span style="font-size:11px;letter-spacing:.12em" data-editable="day_label_meals_{{ loop.index }}">{{ day.label_meals | default("Meals" | translate(lang)) }}</span><br>
               <span style="font-size:13px" data-editable="day_meals_{{ loop.index }}">{{ (day.meals | join(' · ')) | rtl_mixed(lang) }}</span>
               {% endif %}
             </div>
@@ -2771,9 +2792,7 @@
               {% else %}
               <strong data-editable="price_pax_{{ loop.index }}" style="font-size:28px"><span class="ltr-token">{{
                 opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~
-                opt.pricePerPerson.currency) }}</span></strong><br>
-              <span style="font-size:13px;opacity:.8">{{ "Total:" | translate(lang) }} <span class="ltr-token">{{ opt.totalPrice.displayText or
-                ('{:,.0f}'.format(opt.totalPrice.amount) ~ ' ' ~ opt.totalPrice.currency) }}</span></span>
+                opt.pricePerPerson.currency) }}</span></strong>
               {% endif %}
               {% if opt.isConfirmedMainOption %}
               <div style="margin-top:12px;font-size:10px;letter-spacing:.14em;color:#d8bd85;font-weight:800">{{ "✓ CONFIRMED MAIN OPTION" | translate(lang) }}</div>

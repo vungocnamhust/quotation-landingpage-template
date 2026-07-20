@@ -2553,9 +2553,15 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
             p_pax_txt = format_currency_display(price_per_person_amt, currency, lang, per_person=True)
             tot_txt = format_currency_display(total_price_amt, currency, lang)
             
+            cleaned_opt_notes = opt.notes
+            if cleaned_opt_notes:
+                import re
+                pattern = r'^\s*(?:USD|EUR|INR|GBP|VND|[$€₹đ])?\s*[\d,.]+\s*(?:USD|EUR|INR|GBP|VND|[$€₹đ])?\s*(?:per person|per pax|/person|/pax)?\s+on\s+'
+                cleaned_opt_notes = re.sub(pattern, '', cleaned_opt_notes, flags=re.IGNORECASE).strip()
+            
             price_options.append({
                 "hotelCategory": truncate_text(opt.label, 80),
-                "optionName": truncate_text(opt.notes, 150),
+                "optionName": truncate_text(cleaned_opt_notes, 150) if cleaned_opt_notes else "",
                 "pricePerPerson": {
                     "amount": price_per_person_amt,
                     "currency": currency,
@@ -3978,7 +3984,10 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
             'pricing_p', 'muslim_care_text', 'term_deposit', 'term_balance', 
             'term_cancellation', 'term_confirmation', 'cta_h2', 'designer_kicker', 
             'designer_title', 'designer_quote', 'designer_expertise', 
-            'designer_experience', 'designer_signature'
+            'designer_experience', 'designer_signature',
+            'journey_overview_title', 'label_prepared_for', 'label_overview',
+            'label_guests', 'label_travel_dates', 'label_route', 'label_style',
+            'label_ref', 'label_contact', 'label_nationality', 'label_duration'
         ]:
             if key in edited_fields:
                 lang_ctx[key] = edited_fields[key]
@@ -3991,6 +4000,30 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
             if override_text:
                 if t_key in edited_fields:
                     day['title'] = edited_fields[t_key]
+                
+                badge_key = f"day_badge_{idx}"
+                if badge_key in edited_fields:
+                    day['day_badge_text'] = edited_fields[badge_key]
+
+                num_key = f"day_num_{idx}"
+                if num_key in edited_fields:
+                    day['day_num_text'] = edited_fields[num_key]
+
+                lh_key = f"day_label_highlights_{idx}"
+                if lh_key in edited_fields:
+                    day['label_highlights'] = edited_fields[lh_key]
+
+                ln_key = f"day_label_notes_{idx}"
+                if ln_key in edited_fields:
+                    day['label_notes'] = edited_fields[ln_key]
+
+                lo_key = f"day_label_overnight_{idx}"
+                if lo_key in edited_fields:
+                    day['label_overnight'] = edited_fields[lo_key]
+
+                lm_key = f"day_label_meals_{idx}"
+                if lm_key in edited_fields:
+                    day['label_meals'] = edited_fields[lm_key]
                     
                 # Rebuild day description paragraphs
                 any_desc_edited = any(f"day_desc_{idx}_{p}" in edited_fields for p in range(20))
