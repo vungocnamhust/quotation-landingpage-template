@@ -69,9 +69,14 @@ BRANDS = {
     }
 }
 
-def resolve_brand(request: Request, payload_dict: dict = None) -> dict:
+def resolve_brand(request: Optional[Request], payload_dict: dict = None) -> dict:
     """Resolve brand based on query param, seller name, or content match."""
-    brand_id = request.query_params.get("brand")
+    brand_id = None
+    if request is not None:
+        try:
+            brand_id = request.query_params.get("brand")
+        except AttributeError:
+            pass
     if brand_id and brand_id in BRANDS:
         return BRANDS[brand_id]
     
@@ -363,7 +368,7 @@ STATIC_DICTIONARY = {
         "vi": "Điều Phối Halal & Giờ Cầu Nguyện",
         "ar": "تنسيق الحلال والصلاة"
     },
-    "This document is a confidential B2B quotation prepared exclusively for": {
+    "This document is a confidential quotation prepared exclusively for": {
         "vi": "Tài liệu này là báo giá B2B bảo mật được chuẩn bị riêng cho",
         "ar": "هذا عرض سعر سري مخصص حصريًا لـ"
     },
@@ -3727,7 +3732,7 @@ async def create_quotation(request: Request):
             await publish_file_to_github(
                 file_path=f"published/{quotation_id}/v1{sfx}.html",
                 html_content=rendered_html,
-                commit_message=f"Publish B2B quotation {quotation_id} v1{sfx}.html",
+                commit_message=f"Publish quotation {quotation_id} v1{sfx}.html",
             )
             await publish_file_to_github(
                 file_path=f"published/{quotation_id}/pdf{sfx}.html",
@@ -4006,6 +4011,42 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
                         else:
                             break
                     day['description'] = desc_paras
+
+                    # Update Overnight & Meals
+                    o_key = f"day_overnight_{idx}"
+                    if o_key in edited_fields:
+                        day['overnight'] = edited_fields[o_key]
+                    m_key = f"day_meals_{idx}"
+                    if m_key in edited_fields:
+                        import re
+                        day['meals'] = [m.strip() for m in re.split(r'[·•\-,/]', edited_fields[m_key]) if m.strip()]
+
+                    # Update Highlights (activities)
+                    h_key = f"day_highlights_{idx}"
+                    if h_key in edited_fields:
+                        import re
+                        day['activities'] = [h.strip() for h in re.split(r'[·•\-,/]', edited_fields[h_key]) if h.strip()]
+
+                    # Update Notes list
+                    any_notes_edited = any(f"day_note_{idx}_{p}" in edited_fields for p in range(20))
+                    if any_notes_edited:
+                        notes_list = []
+                        p = 0
+                        while True:
+                            n_key = f"day_note_{idx}_{p}"
+                            if n_key in edited_fields:
+                                notes_list.append(edited_fields[n_key])
+                                p += 1
+                            elif n_key in existing_keys:
+                                orig_notes = day.get('notes', [])
+                                if p < len(orig_notes):
+                                    notes_list.append(orig_notes[p])
+                                else:
+                                    notes_list.append("")
+                                p += 1
+                            else:
+                                break
+                        day['notes'] = notes_list
             new_itinerary.append(day)
     lang_ctx['itinerary'] = new_itinerary
     
