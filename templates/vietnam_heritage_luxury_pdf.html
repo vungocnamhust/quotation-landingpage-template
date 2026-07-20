@@ -775,7 +775,7 @@
   </style>
 </head>
 
-<body style="--designer-img: {% if designer_img %}url('{{ designer_img }}'){% else %}url('/assets/dias_team/director.png'){% endif %};">
+<body {% if designer_img or hero_img_custom %}style="{% if designer_img %}--designer-img: url('{{ designer_img }}');{% endif %} {% if hero_img_custom %}--hero-img: url('{{ hero_img_custom }}');{% endif %}"{% endif %}>
 
   <div class="watermark">{{ (brand.name if brand else '') or 'Vietnam Safar' }} · {{ quotation_number }} · {{
     "Confidential" | translate(lang) }}</div>
