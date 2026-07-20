@@ -775,10 +775,10 @@
   </style>
 </head>
 
-<body>
+<body style="--designer-img: {% if designer_img %}url('{{ designer_img }}'){% else %}url('/assets/dias_team/director.png'){% endif %};">
 
   <div class="watermark">{{ (brand.name if brand else '') or 'Vietnam Safar' }} · {{ quotation_number }} · {{
-    "Confidential B2B" | translate(lang) }}</div>
+    "Confidential" | translate(lang) }}</div>
 
   <!-- ═══════════════════ PAGE 1 — Cover ═══════════════════ -->
   <div class="pdf-page">
@@ -788,7 +788,7 @@
         <div>
           <div
             style="font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-2);margin-bottom:10px;font-weight:700;">
-            {{ "Confidential B2B Proposal" | translate(lang) }}</div>
+            {{ "Confidential Proposal" | translate(lang) }}</div>
           <div class="cover-kicker">{{ kicker }}</div>
           <h1>{{ tour_title }}</h1>
           <p class="cover-lede">{{ lede | rtl_mixed(lang) }}</p>
@@ -843,7 +843,7 @@
   <!-- ═══════════════════ PAGE 2 — Glance & Overview ═══════════════════ -->
   <div class="pdf-page">
     <div class="page-header">
-      <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — {{ "B2B Travel Proposal" |
+      <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — {{ "Travel Proposal" |
         translate(lang) }}</span>
       <span class="ref"><span class="ltr-token">{{ quotation_number }} · {{ quotation_date }}</span></span>
     </div>
@@ -861,7 +861,7 @@
   <!-- ═══════════════════ PAGE 3 — Why Works & Gallery ═══════════════════ -->
   <div class="pdf-page">
     <div class="page-header">
-      <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — {{ "B2B Travel Proposal" |
+      <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — {{ "Travel Proposal" |
         translate(lang) }}</span>
       <span class="ref"><span class="ltr-token">{{ quotation_number }} · {{ quotation_date }}</span></span>
     </div>
@@ -975,7 +975,7 @@
   <!-- ═══════════════════ PAGE 5 — Hotel Plan & Pricing ═══════════════════ -->
   <div class="pdf-page">
     <div class="page-header">
-      <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — {{ "B2B Travel Proposal" |
+      <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — {{ "Travel Proposal" |
         translate(lang) }}</span>
       <span class="ref"><span class="ltr-token">{{ quotation_number }} · {{ quotation_date }}</span></span>
     </div>
@@ -1091,7 +1091,7 @@
   <!-- ═══════════════════ PAGE 6 — Inc/Exc & Muslim Care ═══════════════════ -->
   <div class="pdf-page">
     <div class="page-header">
-      <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — {{ "B2B Travel Proposal" |
+      <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — {{ "Travel Proposal" |
         translate(lang) }}</span>
       <span class="ref"><span class="ltr-token">{{ quotation_number }} · {{ quotation_date }}</span></span>
     </div>
@@ -1140,7 +1140,7 @@
   <!-- ═══════════════════ PAGE 8 — Travel Specialist ═══════════════════ -->
   <div class="pdf-page">
     <div class="page-header">
-      <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — {{ "B2B Travel Proposal" |
+      <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — {{ "Travel Proposal" |
         translate(lang) }}</span>
       <span class="ref"><span class="ltr-token">{{ quotation_number }} · {{ quotation_date }}</span></span>
     </div>
@@ -1177,7 +1177,7 @@
   <!-- ═══════════════════ PAGE 9 — Booking Terms & Finalization ═══════════════════ -->
   <div class="pdf-page">
     <div class="page-header">
-      <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — {{ "B2B Travel Proposal" |
+      <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — {{ "Travel Proposal" |
         translate(lang) }}</span>
       <span class="ref"><span class="ltr-token">{{ quotation_number }} · {{ quotation_date }}</span></span>
     </div>

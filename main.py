@@ -4153,6 +4153,17 @@ def filter_and_override_ctx_by_html(lang_ctx: dict, html_content: str, override_
         parse_edited_fields(html_content),
         override_text=override_text,
     )
+    
+    # Extract images from HTML
+    import re
+    hero_match = re.search(r'--hero-img:\s*url\(["\']?(data:image/[^"\']+)["\']?\)', html_content)
+    if hero_match:
+        lang_ctx["hero_image_url"] = hero_match.group(1)
+        
+    designer_match = re.search(r'--designer-img:\s*url\(["\']?(data:image/[^"\']+)["\']?\)', html_content)
+    if designer_match:
+        lang_ctx["designer_img"] = designer_match.group(1)
+        
     lang = lang_ctx.get("lang", "en")
     if lang == "ar":
         lang_ctx.update(canonicalize_place_names_in_data(lang_ctx, lang))
@@ -4173,6 +4184,17 @@ def _save_ctx_html_sync_state(ctx_data: dict, target_lang: str | None, html_cont
     lang_key = _get_lang_sync_key(target_lang, baseline_lang)
     html_sync = ctx_data.setdefault("html_sync", {})
     html_sync[lang_key] = _capture_html_sync_state(html_content)
+    
+    # Extract --hero-img and --designer-img from HTML
+    import re
+    hero_match = re.search(r'--hero-img:\s*url\(["\']?(data:image/[^"\']+)["\']?\)', html_content)
+    if hero_match:
+        ctx_data["img_0"] = hero_match.group(1)
+        
+    designer_match = re.search(r'--designer-img:\s*url\(["\']?(data:image/[^"\']+)["\']?\)', html_content)
+    if designer_match:
+        ctx_data["designer_img"] = designer_match.group(1)
+        
     return lang_key
 
 def _apply_ctx_html_sync(
@@ -4239,6 +4261,7 @@ async def _render_quotation_pdf_from_ctx(ctx_data: dict, quotation_id: str, targ
         brand=brand_config,
     )
     lang_ctx["brand"] = brand_config
+    lang_ctx["designer_img"] = ctx_data.get("designer_img")
 
     lang_ctx["translations"] = ctx_data.get("translations", {})
     lang_ctx["baseline_lang"] = baseline_lang
