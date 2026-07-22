@@ -3755,7 +3755,7 @@ async def create_quotation(request: Request):
     log.debug("[/quotations] Hero image resolved: %s", hero_image_url)
 
     brand_config = resolve_brand(request, payload.model_dump(mode="json"))
-    ctx = _build_ctx(quotation_id, payload, hero_image_url, destinations, lang=lang, template_name="vietnam_luxury_brosure.html", brand=brand_config)
+    ctx = _build_ctx(quotation_id, payload, hero_image_url, destinations, lang=lang, template_name="prototype_itinerary_imagery.html", brand=brand_config)
     ctx["baseline_payload"] = payload.model_dump(mode="json")
     ctx["baseline_lang"] = lang
     ctx["translations"] = {}
@@ -3765,8 +3765,9 @@ async def create_quotation(request: Request):
 
     # ── Render landing page HTML ───────────────────────────────────────────────
     loop = asyncio.get_event_loop()
-    tmpl_lp  = templates.get_template("vietnam_luxury_brosure.html")
-    tmpl_pdf = templates.get_template("vietnam_luxury_brosure_pdf.html")
+    base_tmpl = ctx.get("template_name", "vietnam_luxury_brosure.html")
+    tmpl_lp  = templates.get_template(base_tmpl)
+    tmpl_pdf = templates.get_template(base_tmpl.replace(".html", "_pdf.html"))
 
     rendered_html, rendered_pdf = await asyncio.gather(
         loop.run_in_executor(None, partial(tmpl_lp.render,  **ctx)),
@@ -4298,7 +4299,7 @@ def _apply_ctx_html_sync(
 
     return applied
 
-async def _render_quotation_pdf_from_ctx(ctx_data: dict, quotation_id: str, target_lang: str, request: Request = None) -> tuple[str, str]:
+async def _render_quotation_doc_from_ctx(ctx_data: dict, quotation_id: str, target_lang: str, request: Request = None, is_pdf: bool = True) -> tuple[str, str]:
     baseline_lang = ctx_data.get("baseline_lang", "en")
     effective_lang = target_lang if target_lang in ("en", "vi", "ar") else baseline_lang
     payload_dict = (
@@ -4312,7 +4313,7 @@ async def _render_quotation_pdf_from_ctx(ctx_data: dict, quotation_id: str, targ
 
     payload_obj = TourQuotationPayload.model_validate(payload_dict)
     base_tmpl = ctx_data.get("template_name", "vietnam_luxury_brosure.html")
-    tmpl_name = base_tmpl.replace(".html", "_pdf.html")
+    tmpl_name = base_tmpl.replace(".html", "_pdf.html") if is_pdf else base_tmpl
     tmpl = templates.get_template(tmpl_name)
 
     brand_config = resolve_brand(request, payload_dict)
@@ -4433,7 +4434,7 @@ async def get_quotation_pdf(quotation_id: str, request: Request):
         target_lang = baseline_lang
         
     try:
-        rendered_html, _ = await _render_quotation_pdf_from_ctx(ctx_data, quotation_id, target_lang, request)
+        rendered_html, _ = await _render_quotation_doc_from_ctx(ctx_data, quotation_id, target_lang, request, is_pdf=True)
         return HTMLResponse(content=rendered_html)
     except Exception as err:
         log.exception("[/quotations] Dynamic PDF render failed for %s: %s", quotation_id, err)
@@ -4726,10 +4727,36 @@ async def publish_quotation(quotation_id: str, body: PublishRequest, lang: str =
             ctx_data["template_name"] = body.template_name
         
         _save_ctx_html_sync_state(ctx_data, target_lang, body.html)
-        rendered_pdf, effective_lang = await _render_quotation_pdf_from_ctx(
+        
+        if body.template_name:
+            new_html, _ = await _render_quotation_doc_from_ctx(
+                ctx_data,
+                quotation_id,
+                target_lang or baseline_lang,
+                is_pdf=False
+            )
+            # Strip editor scripts before publishing
+            idx_bar = new_html.find('id="publish-bar"')
+            if idx_bar == -1:
+                idx_bar = new_html.find("id='publish-bar'")
+            if idx_bar != -1:
+                idx_start = new_html.rfind('<div', 0, idx_bar)
+                if idx_start != -1:
+                    idx_scripts = new_html.find('id="editor-scripts"')
+                    if idx_scripts == -1:
+                        idx_scripts = new_html.find("id='editor-scripts'")
+                    if idx_scripts != -1:
+                        idx_end_script = new_html.find('</script>', idx_scripts)
+                        if idx_end_script != -1:
+                            idx_end = idx_end_script + len('</script>')
+                            new_html = new_html[:idx_start] + new_html[idx_end:]
+            body.html = new_html
+
+        rendered_pdf, effective_lang = await _render_quotation_doc_from_ctx(
             ctx_data,
             quotation_id,
             target_lang or baseline_lang,
+            is_pdf=True
         )
 
         if quotation_id in quotations:

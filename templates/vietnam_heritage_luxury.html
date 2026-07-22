@@ -548,7 +548,7 @@
 
     .pricing {
       background: #FAF8F5;
-      color: var(--text);
+      color: #000000;
       border: 1px solid var(--accent-light);
       border-radius: 42px;
       padding: 46px;
@@ -561,11 +561,12 @@
       font-size: clamp(32px, 4vw + 0.5rem, 58px);
       font-weight: 500;
       letter-spacing: -.055em;
-      margin: 0 0 12px
+      margin: 0 0 12px;
+      color: #000000;
     }
 
     .pricing p {
-      color: var(--text-muted);
+      color: #444444;
       margin: 0 0 28px
     }
 
@@ -576,19 +577,22 @@
     }
 
     .price-card {
-      background: rgba(255, 255, 255, .08);
-      border: 1px solid rgba(216, 189, 133, .38);
+      background: #ffffff;
+      border: 1px solid rgba(216, 189, 133, .45);
       border-radius: 28px;
-      padding: 24px
+      padding: 24px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.03);
+      color: #000000;
     }
 
     .price-card.featured {
-      background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 24%, transparent), rgba(255, 255, 255, .08));
-      border-color: var(--accent-light)
+      background: #ffffff;
+      border: 2px solid var(--accent);
+      box-shadow: 0 12px 32px rgba(184, 134, 11, 0.12);
     }
 
     .price-card span {
-      color: var(--accent-light);
+      color: #8c6b23;
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: .16em;
@@ -600,11 +604,12 @@
       font-family: var(--serif);
       font-size: 40px;
       font-weight: 500;
-      margin: 10px 0 0
+      margin: 10px 0 0;
+      color: #000000;
     }
 
     .price-card small {
-      color: rgba(255, 255, 255, .7)
+      color: #555555;
     }
 
     .two-col {
@@ -631,7 +636,7 @@
 
     .cta {
       background: #FAF8F5;
-      color: var(--text);
+      color: #000000;
       border: 1px solid var(--accent-light);
       border-radius: 44px;
       padding: 54px;
@@ -649,7 +654,8 @@
       font-weight: 500;
       letter-spacing: -.06em;
       line-height: .96;
-      margin: 0 0 18px
+      margin: 0 0 18px;
+      color: #000000;
     }
 
     .cta p {
@@ -658,15 +664,16 @@
     }
 
     .contact {
-      background: rgba(255, 255, 255, .08);
-      border: 1px solid rgba(255, 255, 255, .22);
+      background: #ffffff;
+      border: 1px solid rgba(216, 189, 133, 0.4);
       border-radius: 28px;
-      padding: 26px
+      padding: 26px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
     }
 
     .contact label {
       display: block;
-      color: var(--accent-light);
+      color: #8c6b23;
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: .16em;
@@ -681,7 +688,8 @@
     .contact div {
       font-weight: 800;
       font-size: 18px;
-      margin-top: 4px
+      margin-top: 4px;
+      color: #000000;
     }
 
     .footer {
@@ -2880,7 +2888,7 @@
               <span data-editable="price_opt_cat_{{ loop.index }}">{{ opt.hotelCategory }}</span>
               {% if opt.optionName %}
               <small data-editable="price_opt_name_{{ loop.index }}"
-                style="color:rgba(255,255,255,.55);font-size:11px;display:block;margin-top:4px">{{ opt.optionName
+                style="color:#555555;font-size:11px;display:block;margin-top:4px">{{ opt.optionName
                 }}</small>
               {% endif %}
               {% if opt.is_total %}
@@ -2898,11 +2906,11 @@
               {% endif %}
               {% if opt.isConfirmedMainOption %}
               <div
-                style="margin-top:12px;font-size:10px;letter-spacing:.14em;color: var(--accent-light);font-weight:800">
+                style="margin-top:12px;font-size:10px;letter-spacing:.14em;color: #8c6b23;font-weight:800">
                 {{ "✓ CONFIRMED MAIN OPTION" | translate(lang) }}</div>
               {% elif opt.isAlternativeOption %}
               <div
-                style="margin-top:12px;font-size:10px;letter-spacing:.14em;color:rgba(216,189,133,.6);font-weight:700">
+                style="margin-top:12px;font-size:10px;letter-spacing:.14em;color:#8c6b23;font-weight:700">
                 {{ "ALTERNATIVE OPTION" | translate(lang) }}</div>
               {% endif %}
             </div>
@@ -2910,9 +2918,9 @@
           </div>
           {% if price_cond_paras and price_cond_paras[0] %}
           <div
-            style="margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 14px; color: rgba(255,255,255,0.8); line-height: 1.6; text-align: left;">
+            style="margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(0,0,0,0.12); font-size: 14px; color: #333333; line-height: 1.6; text-align: left;">
             <strong
-              style="color: var(--accent-light); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.15em; font-size: 11px; font-weight: 700;">{{
+              style="color: #8c6b23; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.15em; font-size: 11px; font-weight: 700;">{{
               "Important Note" | translate(lang) }}</strong>
             <p style="margin: 0;" data-editable="price_cond_first">{{ price_cond_paras[0] }}</p>
           </div>
@@ -3026,9 +3034,9 @@
             <div class="two-col" style="margin-top: 24px; text-align: left; font-size: 13px;">
               <div>
                 <strong
-                  style="color: var(--accent-light); text-transform: uppercase; font-size: 11px; letter-spacing: 0.1em; display: block; margin-bottom: 8px;">{{
+                  style="color: #8c6b23; text-transform: uppercase; font-size: 11px; letter-spacing: 0.1em; display: block; margin-bottom: 8px;">{{
                   "Final Details Required" | translate(lang) }}</strong>
-                <ul style="margin: 0; padding-left: 16px; display: grid; gap: 6px; color: rgba(255,255,255,0.8);">
+                <ul style="margin: 0; padding-left: 16px; display: grid; gap: 6px; color: #000000;">
                   {% for item in final_req %}
                   <li style="line-height: 1.4;">{{item}}</li>
                   {% endfor %}
@@ -3036,9 +3044,9 @@
               </div>
               <div>
                 <strong
-                  style="color: var(--accent-light); text-transform: uppercase; font-size: 11px; letter-spacing: 0.1em; display: block; margin-bottom: 8px;">{{
+                  style="color: #8c6b23; text-transform: uppercase; font-size: 11px; letter-spacing: 0.1em; display: block; margin-bottom: 8px;">{{
                   "After Confirmation" | translate(lang) }}</strong>
-                <ul style="margin: 0; padding-left: 16px; display: grid; gap: 6px; color: rgba(255,255,255,0.8);">
+                <ul style="margin: 0; padding-left: 16px; display: grid; gap: 6px; color: #000000;">
                   {% for item in final_after %}
                   <li style="line-height: 1.4;">{{item}}</li>
                   {% endfor %}

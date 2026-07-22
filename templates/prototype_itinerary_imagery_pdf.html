@@ -1,0 +1,1611 @@
+<!DOCTYPE html>
+<html lang="{{ lang or 'en' }}" {% if lang=='ar' %}dir="rtl" {% endif %}>
+
+<head>
+  <meta charset="UTF-8" />
+  <!-- Premium Typography Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700&family=Cinzel:wght@400;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap"
+    rel="stylesheet">
+  <title>{{ tour_title }} — {{ "PDF Version" | translate(lang) }}</title>
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <style>
+    :root {
+      --ivory: #f9f6f0;
+      --ink: #11130f;
+      --muted: #706a5d;
+      --emerald: #17412e;
+      --emerald-2: #0e2f22;
+      --gold: #b8860b;
+      --gold-2: #daa520;
+      --line: rgba(183, 137, 75, .28);
+      --card: #fffaf1;
+      --charcoal: #171915;
+      --serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+      --sans: 'Plus Jakarta Sans', Arial, Helvetica, sans-serif;
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.6;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* Screen-only viewer styles */
+    @media screen {
+      body {
+        background: #525659;
+        /* PDF viewer gray */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 40px 0;
+        gap: 20px;
+      }
+    }
+
+    @media print {
+      body {
+        background-color: var(--ivory) !important;
+        padding: 0;
+        display: block;
+      }
+
+      .pdf-page {
+        width: auto !important;
+        min-height: auto !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+      }
+
+      .cover {
+        height: 100vh !important;
+      }
+    }
+
+    /* ── Page wrapper ── */
+    .pdf-page {
+      width: 794px;
+      min-height: 1123px;
+      background: var(--ivory);
+      page-break-after: always;
+      position: relative;
+    }
+
+    .pdf-page:last-of-type {
+      page-break-after: auto;
+    }
+
+    .ltr-token {
+      direction: ltr;
+      unicode-bidi: isolate;
+      display: inline-block;
+      text-align: left;
+    }
+
+    @media screen {
+      .pdf-page {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      }
+    }
+
+    /* ── Page watermark (fixed = repeats on every print page) ── */
+    .watermark {
+      position: fixed;
+      bottom: 10px;
+      right: 20px;
+      font-size: 9px;
+      color: rgba(0, 0, 0, .22);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      font-family: var(--sans);
+    }
+
+    /* ═══════════════════════════════════════════
+       PAGE 1 — Cover
+    ═══════════════════════════════════════════ */
+    .cover {
+      width: 794px;
+      height: 1123px;
+      background: linear-gradient(160deg, rgba(17, 19, 15, .88) 0%, rgba(17, 19, 15, .55) 55%, rgba(17, 19, 15, .18) 100%),
+        center/cover no-repeat;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 0;
+    }
+
+    .cover-body {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 24px;
+      align-items: end;
+      padding: 48px 48px 54px;
+    }
+
+    .cover-kicker {
+      color: var(--gold-2);
+      font-size: 10px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .cover h1 {
+      font-family: var(--serif);
+      font-size: 42px;
+      line-height: 1.15;
+      font-weight: 500;
+      letter-spacing: -.02em;
+      margin-bottom: 16px;
+      max-width: 420px;
+    }
+
+    .cover-lede {
+      font-size: 14px;
+      color: rgba(255, 255, 255, .76);
+      max-width: 380px;
+      line-height: 1.6;
+    }
+
+    /* Quote card on cover */
+    .quote-card {
+      background: rgba(255, 250, 241, .93);
+      color: var(--ink);
+      border-radius: 24px;
+      padding: 22px 24px;
+      border: 1px solid rgba(255, 255, 255, .6);
+    }
+
+    .quote-card h2 {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 14px;
+      color: var(--emerald);
+    }
+
+    .qrow {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(17, 19, 15, .1);
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .qrow:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .qrow strong {
+      color: var(--ink);
+      text-align: right;
+      font-size: 11px;
+    }
+
+    .qrow.stacked {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 3px;
+    }
+
+    .qrow.stacked strong {
+      text-align: left;
+    }
+
+    /* Strip bar at bottom of cover */
+    .cover-strip {
+      background: rgba(23, 65, 46, .92);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      padding: 16px 48px;
+    }
+
+    .strip-item {
+      text-align: center;
+    }
+
+    .strip-item span {
+      display: block;
+      color: var(--gold-2);
+      font-size: 8px;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .strip-item strong {
+      font-family: var(--serif);
+      font-size: 20px;
+      font-weight: 500;
+      color: white;
+      display: block;
+      margin-top: 3px;
+    }
+
+    /* ═══════════════════════════════════════════
+       Shared section styles
+    ═══════════════════════════════════════════ */
+    .page-inner {
+      padding: 44px 48px;
+    }
+
+    .section-label {
+      color: var(--gold);
+      font-size: 9px;
+      letter-spacing: .24em;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .section-h2 {
+      font-family: var(--serif);
+      font-size: 36px;
+      line-height: .98;
+      letter-spacing: -.04em;
+      font-weight: 500;
+      color: var(--emerald);
+      margin-bottom: 8px;
+    }
+
+    .section-p {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 24px;
+    }
+
+    /* ═══════════════════════════════════════════
+       PAGE 2 — Overview + Gallery
+    ═══════════════════════════════════════════ */
+    .experience-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .exp-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .exp-num {
+      color: var(--gold);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .18em;
+    }
+
+    .exp-card h3 {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--emerald);
+      margin: 8px 0 6px;
+      line-height: 1.1;
+    }
+
+    .exp-card p {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* Gallery 2-col for A4 */
+    .gallery {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      grid-auto-rows: 200px;
+      gap: 10px;
+    }
+
+    .img-tile {
+      border-radius: 18px;
+      overflow: hidden;
+      background: center/cover no-repeat;
+      position: relative;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .img-tile.large {
+      grid-row: span 2;
+    }
+
+    .img-tile::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 40%, rgba(17, 19, 15, .7));
+    }
+
+    .img-caption {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 14px;
+      color: white;
+    }
+
+    .img-caption small {
+      display: block;
+      color: var(--gold-2);
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: .18em;
+      font-weight: 700;
+    }
+
+    .img-caption strong {
+      font-family: var(--serif);
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    /* ═══════════════════════════════════════════
+       PAGE 3 — Itinerary
+    ═══════════════════════════════════════════ */
+    .itinerary {
+      display: grid;
+      gap: 10px;
+    }
+
+    .day-card {
+      display: grid;
+      grid-template-columns: 56px 1fr 140px;
+      gap: 16px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      align-items: start;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .day-num {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--emerald);
+      color: white;
+      display: grid;
+      place-items: center;
+      font-family: var(--serif);
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .day-card h3 {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--emerald);
+      margin: 2px 0 5px;
+      line-height: 1.1;
+    }
+
+    .day-badge {
+      font-size: 8px;
+      color: var(--gold);
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .day-card p {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .day-meta {
+      text-align: right;
+      padding-top: 6px;
+    }
+
+    .day-meta .price {
+      font-family: var(--serif);
+      font-size: 22px;
+      color: var(--emerald);
+      font-weight: 500;
+    }
+
+    .day-meta .price-sub {
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .day-meta .qty {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    /* ═══════════════════════════════════════════
+       PAGE 4 — Pricing + Inc/Exc
+    ═══════════════════════════════════════════ */
+    .pricing-block {
+      background: var(--charcoal);
+      border-radius: 24px;
+      padding: 32px;
+      color: white;
+      margin-bottom: 16px;
+      break-inside: avoid;
+    }
+
+    .pricing-block h2 {
+      font-family: var(--serif);
+      font-size: 32px;
+      font-weight: 500;
+      letter-spacing: -.04em;
+      margin-bottom: 8px;
+    }
+
+    .pricing-block .sub {
+      color: rgba(255, 255, 255, .68);
+      font-size: 12px;
+      margin-bottom: 20px;
+    }
+
+    .price-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .price-card {
+      background: rgba(255, 255, 255, .08);
+      border: 1px solid rgba(216, 189, 133, .35);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .price-card.featured {
+      background: linear-gradient(180deg, rgba(183, 137, 75, .25), rgba(255, 255, 255, .06));
+      border-color: var(--gold-2);
+    }
+
+    .price-card span {
+      color: var(--gold-2);
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    .price-card strong {
+      display: block;
+      font-family: var(--serif);
+      font-size: 28px;
+      font-weight: 500;
+      margin: 6px 0 2px;
+    }
+
+    .price-card small {
+      font-size: 10px;
+      color: rgba(255, 255, 255, .65);
+    }
+
+    .price-note {
+      margin-top: 14px;
+      font-size: 11px;
+      color: rgba(255, 255, 255, .55);
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 20px;
+      break-inside: avoid;
+    }
+
+    .panel h3 {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--emerald);
+      margin-bottom: 10px;
+    }
+
+    .panel ul {
+      padding-left: 18px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .panel ul li {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* ═══════════════════════════════════════════
+       PAGE 5 — Terms + CTA + Footer
+    ═══════════════════════════════════════════ */
+    .terms-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .term-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      break-inside: avoid;
+    }
+
+    .term-card .label {
+      font-size: 8px;
+      color: var(--gold);
+      font-weight: 800;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .term-card h3 {
+      font-family: var(--serif);
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--emerald);
+      margin-bottom: 6px;
+    }
+
+    .term-card p {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .cta-block {
+      background: #FAF8F5;
+      color: var(--text);
+      border: 1px solid var(--gold-2);
+      border-radius: 24px;
+      padding: 32px;
+      display: grid;
+      grid-template-columns: 1fr 220px;
+      gap: 28px;
+      align-items: center;
+      break-inside: avoid;
+      margin-bottom: 20px;
+    }
+
+    .cta-block h2 {
+      font-family: var(--serif);
+      font-size: 32px;
+      font-weight: 500;
+      letter-spacing: -.04em;
+      line-height: .96;
+      margin-bottom: 10px;
+    }
+
+    .cta-block p {
+      color: rgba(255, 255, 255, .72);
+      font-size: 13px;
+    }
+
+    .contact-box {
+      background: rgba(255, 255, 255, .09);
+      border: 1px solid rgba(255, 255, 255, .2);
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .contact-box .clabel {
+      display: block;
+      color: var(--gold-2);
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: .16em;
+      font-weight: 800;
+      margin-top: 12px;
+    }
+
+    .contact-box .clabel:first-child {
+      margin-top: 0;
+    }
+
+    .contact-box .cval {
+      font-weight: 700;
+      font-size: 13px;
+      margin-top: 2px;
+    }
+
+    .pdf-footer {
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+      padding: 16px 0 20px;
+      border-top: 1px solid var(--line);
+      margin-top: 8px;
+    }
+
+    /* Page header bar (pages 2-5) */
+    .page-header {
+      background: var(--emerald);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 48px;
+    }
+
+    .page-header .brand {
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .page-header .ref {
+      color: var(--gold-2);
+      font-size: 9px;
+      letter-spacing: .1em;
+    }
+
+    html[dir="rtl"] {
+      direction: rtl;
+      --serif: 'Noto Sans Arabic', 'Amiri', Georgia, serif;
+      --sans: 'Noto Sans Arabic', 'Plus Jakarta Sans', Arial, sans-serif;
+    }
+
+    html[dir="rtl"] body {
+      direction: rtl;
+      text-align: right;
+    }
+
+    html[dir="rtl"] .qrow strong {
+      text-align: left;
+    }
+
+    html[dir="rtl"] .qrow.stacked strong {
+      text-align: right;
+    }
+
+    html[dir="rtl"] .day-meta {
+      text-align: left;
+    }
+
+    html[dir="rtl"] .hotel-pdf-card div[style*="text-align: right"] {
+      text-align: left !important;
+    }
+
+    html[dir="rtl"] table {
+      text-align: right;
+    }
+
+    html[dir="rtl"] th {
+      text-align: right;
+    }
+
+    html[dir="rtl"] .contact-box {
+      text-align: left;
+    }
+
+    /* Custom Leaflet Map Markers & Styling */
+    .custom-marker {
+      position: relative;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .marker-core {
+      width: 24px;
+      height: 24px;
+      background: var(--emerald);
+      border: 2px solid var(--gold-2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 800;
+      font-size: 11px;
+      box-shadow: 0 4px 12px rgba(17, 19, 15, 0.2);
+      z-index: 2;
+    }
+
+    .marker-pulse {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      background: rgba(183, 137, 75, 0.25);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .leaflet-control-attribution {
+      font-size: 8px !important;
+      background: rgba(255, 255, 255, 0.75) !important;
+    }
+
+    /* Clean up Map for Printing */
+    .leaflet-container {
+      background-color: var(--ivory) !important;
+    }
+
+    .leaflet-tile {
+      filter: sepia(0.7) hue-rotate(-10deg) saturate(0.4) contrast(1.05) brightness(0.98) !important;
+    }
+  </style>
+</head>
+
+<body {% if designer_img or hero_img_custom
+  %}style="{% if designer_img %}--designer-img: url('{{ designer_img }}');{% endif %} {% if hero_img_custom %}--hero-img: url('{{ hero_img_custom }}');{% endif %}"
+  {% endif %}>
+
+  <div class="watermark">{{ (brand.name if brand else '') or 'Vietnam Safar' }} · {{ quotation_number }} · {{
+    "Confidential" | translate(lang) }}</div>
+
+  <!-- ═══════════════════ PAGE 1 — Cover ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="cover"
+      style="background-image: linear-gradient(160deg,rgba(17,19,15,.88),rgba(17,19,15,.55) 55%,rgba(17,19,15,.18)), url('{{ img_0 }}');">
+      <div class="cover-body">
+        <div>
+          <div
+            style="font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-2);margin-bottom:10px;font-weight:700;">
+            {{ "Confidential Proposal" | translate(lang) }}</div>
+          <div class="cover-kicker">{{ kicker }}</div>
+          <h1>{{ tour_title }}</h1>
+          <p class="cover-lede">{{ lede | rtl_mixed(lang) }}</p>
+        </div>
+        <div class="quote-card">
+          <h2>{{ journey_overview_title | default("Journey Overview" | translate(lang)) }}</h2>
+          <div class="qrow">
+            <span>{{ label_prepared_for | default("Prepared for" | translate(lang)) }}</span>
+            <strong>{{ customer_name }}</strong>
+          </div>
+          <div class="qrow">
+            <span>{{ label_overview | default("Overview" | translate(lang)) }}</span>
+            <strong>{{ overview_heading }}</strong>
+          </div>
+          {% if guests_txt %}
+          <div class="qrow">
+            <span>{{ label_guests | default("Guests" | translate(lang)) }}</span>
+            <strong>{{ guests_txt }}</strong>
+          </div>
+          {% endif %}
+          {% if travel_dates %}
+          <div class="qrow">
+            <span>{{ label_travel_dates | default("Travel dates" | translate(lang)) }}</span>
+            <strong><span class="ltr-token">{{ travel_dates }}</span></strong>
+          </div>
+          {% endif %}
+          {% if route_txt %}
+          <div class="qrow stacked">
+            <span>{{ label_route | default("Route" | translate(lang)) }}</span>
+            <strong>{{ route_txt | rtl_mixed(lang) }}</strong>
+          </div>
+          {% endif %}
+          {% if travel_style %}
+          <div class="qrow stacked">
+            <span>{{ label_style | default("Style" | translate(lang)) }}</span>
+            <strong>{{ travel_style | rtl_mixed(lang) }}</strong>
+          </div>
+          {% endif %}
+          <div class="qrow">
+            <span>{{ label_ref | default("Ref." | translate(lang)) }}</span>
+            <strong><span class="ltr-token">{{ quotation_number }}</span></strong>
+          </div>
+          <div class="qrow">
+            <span>{{ label_contact | default("Contact" | translate(lang)) }}</span>
+            <strong><span class="ltr-token">{{ contact }}</span></strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ PAGE 2 — Glance & Overview ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="page-header">
+      <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — {{ "Travel Proposal" |
+        translate(lang) }}</span>
+      <span class="ref"><span class="ltr-token">{{ quotation_number }} · {{ quotation_date }}</span></span>
+    </div>
+    <div class="page-inner">
+
+      <div class="section-label" style="margin-top:20px;">{{ "Interactive Route map" | translate(lang) }}</div>
+      <h2 class="section-h2">{{ "Your Journey, Mapped" | translate(lang) }}</h2>
+      <div
+        style="margin-top: 15px; border-radius: 18px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 4px 16px rgba(17,19,15,0.04);">
+        <div id="map" style="width: 100%; height: 420px; display: block; z-index: 1;"></div>
+      </div>
+      <div
+        style="margin-top: 16px; padding: 12px 16px; background: var(--ivory-1); border-radius: 8px; border: 1px solid var(--gold-2); font-size: 12px; color: var(--emerald-2); font-weight: 700; text-align: center;">
+        <span
+          style="color: var(--muted); font-weight: 400; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; display: block; margin-bottom: 4px;">{{
+          "Route Overview" | translate(lang) }}</span>
+        {{ route_txt }}
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ PAGE 3 — Why Works & Gallery ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="page-header">
+      <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — {{ "Travel Proposal" |
+        translate(lang) }}</span>
+      <span class="ref"><span class="ltr-token">{{ quotation_number }} · {{ quotation_date }}</span></span>
+    </div>
+    <div class="page-inner">
+      <div class="section-label">{{ "Behind the Itinerary Curation" | translate(lang) }}</div>
+      <h2 class="section-h2">{{ (['Behind the Itinerary Curation', 'Why This Journey Inspires', 'The Anatomy of the
+        Experience', 'A Perfectly Paced Journey'] | random) | translate(lang) }}</h2>
+      <p class="section-p">{{ "Tailored care, balanced pacing, and seamless logistics designed specifically for your
+        group." | translate(lang) }}</p>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px;">
+        <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
+          <strong
+            style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">{{
+            "Private & Flexible" | translate(lang) }}</strong>
+          <p style="font-size:11px; color:var(--muted); line-height:1.4;">{{ why_private }}</p>
+        </div>
+        <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
+          <strong
+            style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">{{
+            "Comfort & Pacing" | translate(lang) }}</strong>
+          <p style="font-size:11px; color:var(--muted); line-height:1.4;">{{ why_comfort }}</p>
+        </div>
+        <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
+          <strong
+            style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">{{
+            "Dietary & Special Care" | translate(lang) }}</strong>
+          <p style="font-size:11px; color:var(--muted); line-height:1.4;">{{ why_muslim }}</p>
+        </div>
+        <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
+          <strong
+            style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">{{
+            "Balanced Highlights" | translate(lang) }}</strong>
+          <p style="font-size:11px; color:var(--muted); line-height:1.4;">{{ why_balanced }}</p>
+        </div>
+      </div>
+
+      <div class="section-label">{{ "Destination Gallery" | translate(lang) }}</div>
+      <h2 class="section-h2" style="margin-top: 10px; margin-bottom: 6px;">{{ journey_h2 | rtl_mixed(lang) }}</h2>
+      <p class="section-p" style="margin-bottom: 16px;">{{ journey_p | rtl_mixed(lang) }}</p>
+      <div class="gallery" style="margin-top:8px;">
+        {% for dest in destinations %}
+        <div class="img-tile {% if loop.index == 1 %}large{% endif %}"
+          style="background-image:url('{{ dest.image_url or (dest.images[0] if dest.images else '/assets/vietnam-safar-logo.png') }}')">
+          <div class="img-caption">
+            <small>{% if loop.index == 1 %}{{ "Highlight" | translate(lang) }}{% elif loop.index == 3 %}{{ "Experience"
+              | translate(lang) }}{% elif loop.index == 4 %}{{ "Journey" | translate(lang) }}{% else %}{{ "Destination"
+              | translate(lang) }}{% endif %}</small>
+            <strong>{{ dest.name | rtl_mixed(lang) }}</strong>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ PAGE 4 — Itinerary ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="page-header">
+      <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — {{ "Luxury Quotation" |
+        translate(lang) }}</span>
+      <span class="ref"><span class="ltr-token">{{ quotation_number }} · {{ quotation_date }}</span></span>
+    </div>
+    <div class="page-inner">
+      <div class="section-label">{{ "Service Program" | translate(lang) }}</div>
+      <h2>{{ itinerary_h2 }}</h2>
+      <p class="section-p">{{ itinerary_p }}</p>
+
+      <div class="itinerary">
+        {% for day in itinerary %}
+        <div class="day-card">
+          <div class="day-num">{{ day.day_badge_text | default(day.dayNumber) }}</div>
+          <div>
+            <div class="day-badge">{{ day.day_num_text | default("DAY" | translate(lang) ~ " " ~ day.dayNumber ~ (("
+              &middot; " ~ (day.date | format_date)) if day.date else "")) }}</div>
+            <h3>{{ day.title | rtl_mixed(lang) }}</h3>
+            {% for para in day.description %}
+            <p>{{ para | rtl_mixed(lang) }}</p>
+            {% endfor %}
+            {% if day.activities %}
+            <p style="margin-top:6px;font-size:10px;color:#b8860b">
+              <strong>{{ day.label_highlights | default("Highlights:" | translate(lang)) }}</strong> {{ (day.activities
+              | join(' · ')) | rtl_mixed(lang) }}
+            </p>
+            {% endif %}
+            {% if day.notes %}
+            <div
+              style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+              <strong>{{ day.label_notes | default("Notes:" | translate(lang)) }}</strong>
+              <ul style="margin:2px 0 0;padding-left:10px;">
+                {% for note in day.notes %}<li>{{ note | rtl_mixed(lang) }}</li>{% endfor %}
+              </ul>
+            </div>
+            {% endif %}
+          </div>
+          <div class="day-meta">
+            {% if day.overnight %}
+            <div class="price-sub" style="margin-bottom:2px">{{ day.label_overnight | default("Overnight" |
+              translate(lang)) }}</div>
+            <div style="font-family:var(--serif);font-size:14px;color:#17412e">{{ day.overnight | rtl_mixed(lang) }}
+            </div>
+            {% endif %}
+            {% if day.meals %}
+            <div class="price-sub" style="margin-top:8px;margin-bottom:2px">{{ day.label_meals | default("Meals" |
+              translate(lang)) }}</div>
+            <div style="font-size:11px">{{ (day.meals | join(' · ')) | rtl_mixed(lang) }}</div>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ PAGE 5 — Hotel Plan & Pricing ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="page-header">
+      <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — {{ "Travel Proposal" |
+        translate(lang) }}</span>
+      <span class="ref"><span class="ltr-token">{{ quotation_number }} · {{ quotation_date }}</span></span>
+    </div>
+    <div class="page-inner">
+      <div class="section-label">{{ "Selected Hotel Plan" | translate(lang) }}</div>
+      <h2 class="section-h2">{{ "Selected Hotel Plan" | translate(lang) }}</h2>
+      <p class="section-p">{{ "Proposed hotels and luxury cruises selected for your journey. Subject to availability at
+        confirmation." | translate(lang) }}</p>
+
+      {% if hotels %}
+      <div class="hotel-plan-pdf" style="margin-top: 15px;">
+        {% for item in hotels %}
+        <div class="hotel-pdf-card"
+          style="page-break-inside: avoid; border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 20px; {% if loop.last %}border-bottom: none; margin-bottom: 0;{% endif %}">
+          <!-- Header -->
+          <div style="margin-bottom: 10px;">
+            <span
+              style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">{{
+              item.city_country | rtl_mixed(lang) }}</span>
+            <h3
+              style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">
+              {{ item.name | rtl_mixed(lang) }}</h3>
+          </div>
+
+          <!-- Side-by-Side Images -->
+          <div style="margin: 10px 0; font-size: 0; width: 100%;">
+            <div style="width: 38%; display: inline-block; vertical-align: top; margin-right: 2%;">
+              <img src="{{ item.hotel_img }}" alt="{{ item.name }}"
+                style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+            </div>
+            <div style="width: 60%; display: inline-block; vertical-align: top;">
+              <img src="{{ item.room_img }}" alt="{{ item.name }} Room"
+                style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+            </div>
+          </div>
+
+          <!-- Footer Columns (Introduction & Info/Tel) -->
+          <div style="width: 100%; margin-top: 10px;">
+            <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
+              {% if show_hotel_intro and item.introduction %}
+              <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">{{
+                item.introduction | rtl_mixed(lang) }}</p>
+              {% endif %}
+            </div>
+            <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
+              <h4
+                style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">
+                {{ item.name | rtl_mixed(lang) }}</h4>
+              <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;"><span
+                  class="ltr-token">{{ item.date_range }}</span></div>
+              <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">{{ "TEL:" | translate(lang) }} <span
+                  class="ltr-token">{{ item.tel }}</span></div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% if room_notes %}
+      <div
+        style="margin-top: 20px; padding: 10px 14px; background: rgba(183, 137, 75, 0.05); border-radius: 8px; border: 1px dashed var(--gold); font-size: 10px; color: var(--muted); margin-bottom: 24px; page-break-inside: avoid;">
+        <strong>{{ "Room Notes & Special Requests" | translate(lang) }}:</strong> {{ room_notes | rtl_mixed(lang) }}
+      </div>
+      {% endif %}
+      {% else %}
+      <p style="font-size:11px; color:var(--muted); font-style:italic; margin-bottom:24px;">{{ "Hotel arrangements will
+        be tailored and detailed here for your specific travel dates." | translate(lang) }}</p>
+      {% endif %}
+
+      <div class="section-label">{{ "Package Pricing" | translate(lang) }}</div>
+      <div class="pricing-block" style="margin-bottom: 0;">
+        <h2>{{ pricing_h2 }}</h2>
+        <p class="sub">{{ pricing_p }}</p>
+        <div class="price-cards">
+          {% for opt in price_options %}
+          <div class="price-card {% if opt.isConfirmedMainOption %}featured{% endif %}">
+            <span>{{ opt.hotelCategory }}</span>
+            {% if opt.optionName %}
+            <small style="display:block;margin-top:3px;font-size:9px;opacity:.7">{{ opt.optionName }}</small>
+            {% endif %}
+            {% if opt.is_total %}
+            <strong><span class="ltr-token">{{ opt.totalPrice.displayText or ('{:,.0f}'.format(opt.totalPrice.amount) ~
+                ' ' ~ opt.totalPrice.currency) }}</span></strong>
+            <small>{{ "total package" | translate(lang) }}</small><br>
+            <small>{{ "Per person:" | translate(lang) }} <span class="ltr-token">{{ opt.pricePerPerson.displayText or
+                ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~ opt.pricePerPerson.currency) }}</span></small>
+            {% else %}
+            <strong><span class="ltr-token">{{ opt.pricePerPerson.displayText or
+                ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~ opt.pricePerPerson.currency) }}</span></strong>
+            {% endif %}
+            {% if opt.isConfirmedMainOption %}
+            <div style="margin-top:8px;font-size:8px;letter-spacing:.14em;color:#daa520;font-weight:800">{{ "✓ CONFIRMED
+              MAIN OPTION" | translate(lang) }}</div>
+            {% elif opt.isAlternativeOption %}
+            <div style="margin-top:8px;font-size:8px;letter-spacing:.14em;color:rgba(216,189,133,.6);font-weight:700">{{
+              "ALTERNATIVE OPTION" | translate(lang) }}</div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        {% if price_cond_paras and price_cond_paras[0] %}
+        <div
+          style="margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 11px; color: rgba(255,255,255,0.8); line-height: 1.5; text-align: left;">
+          <strong
+            style="color: var(--gold-2); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.1em; font-size: 9px;">{{
+            "Important Note" | translate(lang) }}</strong>
+          <p style="margin: 0;">{{ price_cond_paras[0] }}</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ PAGE 6 — Inc/Exc & Muslim Care ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="page-header">
+      <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — {{ "Travel Proposal" |
+        translate(lang) }}</span>
+      <span class="ref"><span class="ltr-token">{{ quotation_number }} · {{ quotation_date }}</span></span>
+    </div>
+    <div class="page-inner">
+      <div class="section-label">{{ "Package Inclusions & Exclusions" | translate(lang) }}</div>
+      <h2 class="section-h2">{{ inc_exc_h2 or "What Your Journey Includes" | translate(lang) }}</h2>
+
+
+      <div class="two-col" style="margin-bottom: 24px;">
+        <div class="panel">
+          <h3>{{ "Inclusions" | translate(lang) }}</h3>
+          {% if inclusions_lede %}
+          <p style="font-size:10px; color:var(--muted); line-height:1.5; margin-bottom:10px;">{{ inclusions_lede }}</p>
+          {% endif %}
+          <ul style="list-style-type:none; padding-left:0;">
+            {% for item in inclusions %}
+            {% if item is mapping %}
+            <li style="margin-bottom:10px; line-height:1.4;">
+              <strong style="color:var(--emerald); display:block; font-size:11px; margin-bottom:1px;">{{ item.title
+                }}</strong>
+              <span style="font-size:9.5px; color:var(--muted);">{{ item.desc }}</span>
+            </li>
+            {% else %}
+            <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">{{ item }}</li>
+            {% endif %}
+            {% endfor %}
+          </ul>
+        </div>
+        <div class="panel">
+          <h3>{{ exclusions_title | default("Exclusions" | translate(lang)) }}</h3>
+          {% if exclusions_lede %}
+          <p style="font-size:10px; color:var(--muted); line-height:1.5; margin-bottom:10px;">{{ exclusions_lede }}</p>
+          {% endif %}
+          <ul style="list-style-type:disc; padding-left:15px;">
+            {% for item in exclusions %}
+            <li style="margin-bottom:5px; line-height:1.4;">{{ item }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  {% if show_designer_section %}
+  <!-- ═══════════════════ PAGE 8 — Travel Specialist ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="page-header">
+      <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — {{ "Travel Proposal" |
+        translate(lang) }}</span>
+      <span class="ref"><span class="ltr-token">{{ quotation_number }} · {{ quotation_date }}</span></span>
+    </div>
+    <div class="page-inner" style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
+      <div class="section-label">{{ designer_kicker or "Your Dedicated Specialist" | translate(lang) }}</div>
+      <h2 class="section-h2" style="margin-bottom: 24px;">{{ designer_title or "Meet Your Travel Specialist" |
+        translate(lang) }}</h2>
+
+      <div
+        style="display: flex; gap: 28px; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 28px; align-items: center; box-shadow: 0 4px 16px rgba(17,19,15,0.02);">
+        <div
+          style="width: 140px; height: 140px; border-radius: 50%; background-image: var(--designer-img, url('/assets/dias_team/director.png')); background-size: cover; background-position: center; border: 2px solid var(--gold); flex-shrink: 0; box-shadow: 0 8px 24px rgba(23,65,46,0.15);">
+        </div>
+        <div>
+          <p style="font-size: 12px; line-height: 1.6; color: var(--muted); margin: 0 0 16px; font-style: italic;">"{{
+            designer_quote or "I am your dedicated travel specialist. I handpicked every hotel, private transfer, and
+            local guide on this itinerary to ensure you experience the true depth of Vietnam in comfort, privacy, and at
+            your own pace. I will personally oversee your journey from behind the scenes." | translate(lang) }}"</p>
+          <div style="font-size: 11px; color: var(--ink); margin-bottom: 6px;"><strong>{{ "Expertise:" | translate(lang)
+              }}</strong> {{ designer_expertise or "Custom Itineraries, Luxury Travel, Local Experiences" |
+            translate(lang) }}</div>
+          <div style="font-size: 11px; color: var(--ink); margin-bottom: 16px;"><strong>{{ "Experience:" |
+              translate(lang) }}</strong> {{ designer_experience or "Years designing bespoke journeys" | translate(lang)
+            }}</div>
+          <div
+            style="font-family: var(--serif); font-size: 15px; color: var(--emerald); font-weight: 700; letter-spacing: 0.05em;">
+            {{ designer_signature or "Your Travel Specialist" | translate(lang) }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ═══════════════════ PAGE 9 — Booking Terms & Finalization ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="page-header">
+      <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — {{ "Travel Proposal" |
+        translate(lang) }}</span>
+      <span class="ref"><span class="ltr-token">{{ quotation_number }} · {{ quotation_date }}</span></span>
+    </div>
+    <div class="page-inner">
+      <div class="section-label">{{ "Booking Conditions" | translate(lang) }}</div>
+      <h2 class="section-h2">{{ "Booking Terms" | translate(lang) }}</h2>
+      <p class="section-p">{{ "Commercial conditions, deposits, and cancellation policy for this booking." |
+        translate(lang) }}</p>
+
+      <div style="border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 24px;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11px;">
+          <thead>
+            <tr style="background: var(--emerald); color: white;">
+              <th style="padding: 10px 14px; width: 180px;">{{ "Term" | translate(lang) }}</th>
+              <th style="padding: 10px 14px;">{{ "Condition" | translate(lang) }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom: 1px solid var(--line); background: white;">
+              <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">{{ "Deposit" | translate(lang) }}
+              </td>
+              <td style="padding: 10px 14px;">{{ term_deposit }}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--line); background: rgba(183, 137, 75, 0.03);">
+              <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">{{ "Balance" | translate(lang) }}
+              </td>
+              <td style="padding: 10px 14px;">{{ term_balance }}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--line); background: white;">
+              <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">{{ "Cancellation" |
+                translate(lang) }}</td>
+              <td style="padding: 10px 14px;">{{ term_cancellation }}</td>
+            </tr>
+            <tr style="background: rgba(183, 137, 75, 0.03);">
+              <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">{{ "Confirmation" |
+                translate(lang) }}</td>
+              <td style="padding: 10px 14px;">{{ term_confirmation }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section-label">{{ "Next step" | translate(lang) }}</div>
+
+      <div class="cta-block" style="margin-bottom: 10px; padding: 24px; grid-template-columns: 1fr 180px; gap: 14px;">
+        <div>
+          <h2>{{ cta_h2 }}</h2>
+          <div
+            style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; font-size: 10px; margin-top: 14px; text-align: left;">
+            <div>
+              <strong style="color: var(--gold-2); display:block; margin-bottom:4px; text-transform:uppercase;">{{
+                "Final Details Required" | translate(lang) }}</strong>
+              <ul style="padding-left:12px; display:grid; gap:3px; color:rgba(255,255,255,0.85);">
+                {% for item in final_req %}<li>{{ item }}</li>{% endfor %}
+              </ul>
+            </div>
+            <div>
+              <strong style="color: var(--gold-2); display:block; margin-bottom:4px; text-transform:uppercase;">{{
+                "After Confirmation" | translate(lang) }}</strong>
+              <ul style="padding-left:12px; display:grid; gap:3px; color:rgba(255,255,255,0.85);">
+                {% for item in final_after %}<li>{{ item }}</li>{% endfor %}
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="contact-box" style="padding: 12px;">
+          <span class="clabel" style="margin-top:0;">{{ "Prepared by" | translate(lang) }}</span>
+          <div class="cval" style="font-size:11px;">{{ seller_name | rtl_mixed(lang) }}</div>
+          {% if seller_email %}
+          <span class="clabel">{{ "Email" | translate(lang) }}</span>
+          <div class="cval" style="font-size:11px; word-break:break-all;">{{ seller_email }}</div>
+          {% endif %}
+          <span class="clabel">{{ "WhatsApp" | translate(lang) }}</span>
+          <div class="cval" style="font-size:11px;"><span class="ltr-token">{{ contact_phone }}</span></div>
+          <span class="clabel">{{ "Website" | translate(lang) }}</span>
+          <div class="cval" style="font-size:11px;"><span class="ltr-token">{{ contact_web }}</span></div>
+        </div>
+      </div>
+
+      <div class="pdf-footer" style="padding: 10px 0; font-size: 10px;">
+        {{ footer_text | rtl_mixed(lang) }}<br>
+        <span style="color:var(--gold);font-weight:700;">{{ (brand.domain if brand else '') or 'vietnamsafar.vn'
+          }}</span> &nbsp;·&nbsp;
+        {{ "This document is a confidential quotation prepared exclusively for" | translate(lang) }} {{ customer_name
+        }}.
+      </div>
+    </div>
+  </div>
+
+  <script id="itinerary-data" type="application/json">
+  {{ itinerary | tojson | safe }}
+</script>
+  <script id="route-stops-data" type="application/json">
+  {{ route_stops | tojson | safe }}
+</script>
+  <script id="stay-segments-data" type="application/json">
+  {{ stay_segments | tojson | safe }}
+</script>
+
+  <script>
+    window.currentLang = "{{ lang }}";
+
+    // Coordinate resolutions and math helpers copied from landing page
+    const DEST_COORDS = {
+      "hanoi": [21.0285, 105.8542],
+      "ha noi": [21.0285, 105.8542],
+      "ninh binh": [20.2539, 105.9750],
+      "ninhbinh": [20.2539, 105.9750],
+      "ha long": [20.9599, 107.0436],
+      "halong": [20.9599, 107.0436],
+      "ha giang": [22.8233, 104.9836],
+      "hagiang": [22.8233, 104.9836],
+      "sapa": [22.3364, 103.8438],
+      "hue": [16.4637, 107.5909],
+      "da nang": [16.0544, 108.2022],
+      "danang": [16.0544, 108.2022],
+      "hoi an": [15.8801, 108.3380],
+      "hoian": [15.8801, 108.3380],
+      "nha trang": [12.2388, 109.1967],
+      "nhatrang": [12.2388, 109.1967],
+      "da lat": [11.9404, 108.4583],
+      "dalat": [11.9404, 108.4583],
+      "ho chi minh city": [10.8231, 106.6297],
+      "saigon": [10.8231, 106.6297],
+      "sai gon": [10.8231, 106.6297],
+      "mekong": [10.2435, 106.3756],
+      "mekong delta": [10.2435, 106.3756],
+      "ben tre": [10.2401, 106.3768],
+      "bentre": [10.2401, 106.3768],
+      "my tho": [10.3592, 106.3653],
+      "mytho": [10.3592, 106.3653],
+      "phu quoc": [10.2899, 103.9840]
+    };
+
+    const SLUG_COORDS = {
+      "ha-noi": [21.0285, 105.8542],
+      "quang-ninh": [20.9599, 107.0436],
+      "lao-cai": [22.3364, 103.8438],
+      "da-nang": [16.0544, 108.2022],
+      "quang-nam": [15.8801, 108.3380],
+      "lam-dong": [11.9404, 108.4583],
+      "ho-chi-minh": [10.8231, 106.6297],
+      "khanh-hoa": [12.2388, 109.1967],
+      "ninh-binh": [20.2539, 105.9750],
+      "thua-thien-hue": [16.4637, 107.5909],
+      "kien-giang": [10.2899, 103.9840],
+      "binh-thuan": [10.9333, 108.1000],
+      "can-tho": [10.0401, 105.7882],
+      "mekong": [10.2435, 106.3756],
+      "ha-giang": [22.8233, 104.9836],
+      "nghe-an": [18.6736, 105.6811],
+      "quang-binh": [17.4833, 106.6000],
+      "hai-phong": [20.8449, 106.6881],
+      "dak-lak": [12.6667, 108.0500],
+      "gia-lai": [13.9833, 108.0000],
+      "kon-tum": [14.3500, 108.0000],
+      "ba-ria-vung-tau": [10.4114, 107.1363],
+      "thanh-hoa": [19.8075, 105.7764],
+      "phu-yen": [13.0881, 109.3025],
+      "binh-dinh": [13.7753, 109.2294],
+      "dien-bien": [21.3833, 103.0167],
+      "son-la": [21.3333, 103.9167],
+      "lai-chau": [22.4000, 103.4500],
+      "yen-bai": [21.7000, 104.8667],
+      "hoa-binh": [20.8167, 105.3333],
+      "lang-son": [21.8500, 106.7500],
+      "dong-nai": [10.9574, 106.8427],
+      "binh-duong": [11.0000, 106.6667],
+      "tien-giang": [10.3592, 106.3653],
+      "dong-thap": [10.4500, 105.6333],
+      "vinh-long": [10.2500, 105.9667],
+      "an-giang": [10.3833, 105.4333],
+      "cao-bang": [22.6667, 106.2500]
+    };
+
+    function resolveSlugLocally(location) {
+      if (!location) return null;
+      const normalized = location.toLowerCase().trim();
+      const keywordMap = {
+        "hà nội": "ha-noi", "ha noi": "ha-noi", "hanoi": "ha-noi", "hanoï": "ha-noi", "هانوي": "ha-noi",
+        "hồ chí minh": "ho-chi-minh", "ho chi minh": "ho-chi-minh", "hcm": "ho-chi-minh", "saigon": "ho-chi-minh", "sài gòn": "ho-chi-minh", "sai gon": "ho-chi-minh", "tphcm": "ho-chi-minh", "مدينة هو تشي منه": "ho-chi-minh", "هو تشي منه": "ho-chi-minh", "سايغون": "ho-chi-minh",
+        "đà nẵng": "da-nang", "da nang": "da-nang", "danang": "da-nang", "دانانغ": "da-nang", "دا نانغ": "da-nang",
+        "quảng nam": "quang-nam", "quang nam": "quang-nam", "hội an": "quang-nam", "hoi an": "quang-nam", "hoian": "quang-nam", "هوي آن": "quang-nam", "هوي ان": "quang-nam",
+        "quảng ninh": "quang-ninh", "quang ninh": "quang-ninh", "hạ long": "quang-ninh", "ha long": "quang-ninh", "halong": "quang-ninh", "vịnh hạ long": "quang-ninh", "vinh ha long": "quang-ninh", "cat ba": "quang-ninh", "cát bà": "quang-ninh", "خليج هاليغ": "quang-ninh", "هالونغ": "quang-ninh", "خليج هالونج": "quang-ninh",
+        "lào cai": "lao-cai", "lao cai": "lao-cai", "laocai": "lao-cai", "sapa": "lao-cai", "sa pa": "lao-cai", "bắc hà": "lao-cai", "bac ha": "lao-cai", "سابا": "lao-cai",
+        "khánh hoà": "khanh-hoa", "khanh hoa": "khanh-hoa", "nha trang": "khanh-hoa", "nhatrang": "khanh-hoa", "نها ترانغ": "khanh-hoa", "نها ترانج": "khanh-hoa",
+        "lâm đồng": "lam-dong", "lam dong": "lam-dong", "đà lạt": "lam-dong", "da lat": "lam-dong", "dalat": "lam-dong", "دالات": "lam-dong",
+        "thừa thiên huế": "thua-thien-hue", "thua thien hue": "thua-thien-hue", "huế": "thua-thien-hue", "hue": "thua-thien-hue", "lăng cô": "thua-thien-hue", "lang co": "thua-thien-hue",
+        "kiên giang": "kien-giang", "kien giang": "kien-giang", "phú quốc": "kien-giang", "phu quoc": "kien-giang", "phuquoc": "kien-giang",
+        "bình thuận": "binh-thuan", "binh thuan": "binh-thuan", "mũi né": "binh-thuan", "mui ne": "binh-thuan", "phan thiết": "binh-thuan", "phan thiet": "binh-thuan",
+        "cần thơ": "can-tho", "can tho": "can-tho", "cantho": "can-tho", "bến ninh kiều": "can-tho", "ben ninh kieu": "can-tho",
+        "mekong": "mekong", "đồng bằng sông cửu long": "mekong", "dong bang song cuu long": "mekong", "miền tây": "mekong", "mien tay": "mekong", "tây nam bộ": "mekong", "tay nam bo": "mekong",
+        "hà giang": "ha-giang", "ha giang": "ha-giang", "đồng văn": "ha-giang", "dong van": "ha-giang", "mèo vạc": "ha-giang", "meo vac": "ha-giang",
+        "ninh bình": "ninh-binh", "ninh binh": "ninh-binh", "tràng an": "ninh-binh", "trang an": "ninh-binh", "tam cốc": "ninh-binh", "tam coc": "ninh-binh", "bích động": "ninh-binh", "bich dong": "ninh-binh",
+        "nghệ an": "nghe-an", "nghe an": "nghe-an", "cửa lò": "nghe-an", "cua lo": "nghe-an",
+        "quảng bình": "quang-binh", "quang binh": "quang-binh", "phong nha": "quang-binh", "ke bang": "quang-binh",
+        "hải phòng": "hai-phong", "hai phong": "hai-phong", "haiphong": "hai-phong",
+        "đắk lắk": "dak-lak", "dak lak": "dak-lak", "daklak": "dak-lak", "buôn ma thuột": "dak-lak", "buon ma thuot": "dak-lak", "bmt": "dak-lak",
+        "gia lai": "gia-lai", "pleiku": "gia-lai",
+        "kon tum": "kon-tum", "kontum": "kon-tum",
+        "bà rịa": "ba-ria-vung-tau", "ba ria": "ba-ria-vung-tau", "vũng tàu": "ba-ria-vung-tau", "vung tau": "ba-ria-vung-tau", "vungtau": "ba-ria-vung-tau",
+        "thanh hoá": "thanh-hoa", "thanh hoa": "thanh-hoa", "sầm sơn": "thanh-hoa", "sam son": "thanh-hoa",
+        "phú yên": "phu-yen", "phu yen": "phu-yen", "tuy hoà": "phu-yen", "tuy hoa": "phu-yen",
+        "bình định": "binh-dinh", "binh dinh": "binh-dinh", "quy nhơn": "binh-dinh", "quy nhon": "binh-dinh", "quynhon": "binh-dinh"
+      };
+      return keywordMap[normalized] || null;
+    }
+
+    function findCoordinates(destText) {
+      if (!destText) return null;
+      const slug = resolveSlugLocally(destText);
+      if (slug && SLUG_COORDS[slug]) {
+        return SLUG_COORDS[slug];
+      }
+      const norm = destText.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      for (const [key, coords] of Object.entries(DEST_COORDS)) {
+        if (norm.includes(key)) return coords;
+      }
+      return null;
+    }
+
+    function getDistance(c1, c2) {
+      const R = 6371;
+      const dLat = (c2[0] - c1[0]) * Math.PI / 180;
+      const dLon = (c2[1] - c1[1]) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(c1[0] * Math.PI / 180) * Math.cos(c2[0] * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    }
+
+    function getBezierPoints(p1, p2, count = 30) {
+      const midLat = (p1[0] + p2[0]) / 2;
+      const midLng = (p1[1] + p2[1]) / 2;
+      const dx = p2[1] - p1[1];
+      const dy = p2[0] - p1[0];
+      const len = Math.sqrt(dx * dx + dy * dy);
+      const scale = len * 0.15;
+      const ctrlLat = midLat - (dx / len) * scale;
+      const ctrlLng = midLng + (dy / len) * scale;
+      const points = [];
+      for (let i = 0; i <= count; i++) {
+        const t = i / count;
+        const lat = (1 - t) * (1 - t) * p1[0] + 2 * (1 - t) * t * ctrlLat + t * t * p2[0];
+        const lng = (1 - t) * (1 - t) * p1[1] + 2 * (1 - t) * t * ctrlLng + t * t * p2[1];
+        points.push([lat, lng]);
+      }
+      return points;
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const map = L.map('map', {
+        zoomControl: false,
+        scrollWheelZoom: false,
+        doubleClickZoom: false,
+        dragging: false,
+        boxZoom: false
+      });
+
+      L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi', {
+        maxZoom: 18,
+        attribution: '&copy; Google Maps'
+      }).addTo(map);
+
+      const dataEl = document.getElementById('itinerary-data');
+      const routeStopsEl = document.getElementById('route-stops-data');
+      const staySegmentsEl = document.getElementById('stay-segments-data');
+      if (dataEl) {
+        const itineraryDays = JSON.parse(dataEl.textContent);
+        const rawStops = routeStopsEl ? JSON.parse(routeStopsEl.textContent) : [];
+        const rawStaySegments = staySegmentsEl ? JSON.parse(staySegmentsEl.textContent) : [];
+
+        const daysData = Array.isArray(rawStops) && rawStops.length > 0
+          ? rawStops
+          : itineraryDays.map(day => {
+            let dest = "";
+            if (typeof day.overnight === 'string' && day.overnight.trim() !== '') {
+              dest = day.overnight;
+            } else if (Array.isArray(day.destinations) && day.destinations.length > 0) {
+              dest = day.destinations[0];
+            } else if (typeof day.destination === 'string') {
+              dest = day.destination;
+            }
+            return {
+              dayNumber: day.dayNumber,
+              destination: dest,
+              displayName: dest
+            };
+          });
+
+        function buildFallbackStaySegments(stops) {
+          const fallbackSegments = [];
+          let current = null;
+          stops.filter(day => day.showMarker !== false).forEach(day => {
+            const city = day.displayName || day.destination;
+            if (!city) return;
+            if (!current || current.displayName !== city) {
+              current = {
+                segmentId: `fallback-${fallbackSegments.length + 1}`,
+                order: fallbackSegments.length + 1,
+                displayName: city,
+                city,
+                coords: findCoordinates(city)
+              };
+              fallbackSegments.push(current);
+            }
+          });
+          return fallbackSegments;
+        }
+
+        const staySegments = Array.isArray(rawStaySegments) && rawStaySegments.length > 0
+          ? rawStaySegments
+          : buildFallbackStaySegments(daysData);
+
+        const coordPoints = [];
+        const mapSegments = staySegments.map((segment, idx) => ({
+          ...segment,
+          id: segment.segmentId || `stay-${idx + 1}`,
+          coords: Array.isArray(segment.coords) && segment.coords.length === 2 ? segment.coords : findCoordinates(segment.city || segment.displayName),
+          displayCoords: Array.isArray(segment.coords) && segment.coords.length === 2 ? segment.coords : findCoordinates(segment.city || segment.displayName)
+        })).filter(segment => Array.isArray(segment.coords) && segment.coords.length === 2);
+
+        daysData.forEach(day => {
+          const city = day.destination;
+          if (!city) return;
+          const coords = findCoordinates(city);
+          if (coords) {
+            coordPoints.push(coords);
+          }
+        });
+
+        function getOffsetPattern(index) {
+          const pattern = [
+            [0, 0],
+            [20, -14],
+            [-20, 14],
+            [0, 24],
+            [24, 10],
+            [-24, -10]
+          ];
+          return pattern[index] || [0, 0];
+        }
+
+        if (coordPoints.length > 0) {
+          map.fitBounds(L.latLngBounds(coordPoints), {
+            padding: [25, 25],
+            maxZoom: 12
+          });
+        }
+
+        const grouped = new Map();
+        mapSegments.forEach(segment => {
+          const key = `${segment.coords[0]},${segment.coords[1]}`;
+          if (!grouped.has(key)) grouped.set(key, []);
+          grouped.get(key).push(segment);
+        });
+        grouped.forEach(items => {
+          items.forEach((segment, occurrenceIdx) => {
+            const offset = getOffsetPattern(occurrenceIdx);
+            const point = map.project(segment.coords, map.getZoom());
+            const shifted = L.point(point.x + offset[0], point.y + offset[1]);
+            segment.displayCoords = map.unproject(shifted, map.getZoom());
+          });
+        });
+
+        // Draw markers
+        mapSegments.forEach((dest, idx) => {
+          const html = `
+          <div class="custom-marker">
+            <div class="marker-pulse"></div>
+            <div class="marker-core">${idx + 1}</div>
+          </div>
+        `;
+          const customIcon = L.divIcon({
+            html: html,
+            className: '',
+            iconSize: [28, 28],
+            iconAnchor: [14, 14]
+          });
+          L.marker(dest.displayCoords, { icon: customIcon }).addTo(map);
+        });
+
+        // Draw polylines
+        for (let i = 0; i < coordPoints.length - 1; i++) {
+          const p1 = coordPoints[i];
+          const p2 = coordPoints[i + 1];
+          const dist = getDistance(p1, p2);
+          const isFlight = dist > 300;
+
+          let pathPoints;
+          if (isFlight) {
+            pathPoints = getBezierPoints(p1, p2);
+          } else {
+            pathPoints = [p1, p2];
+          }
+
+          const lineOptions = {
+            color: isFlight ? '#b8860b' : '#17412e',
+            weight: 3,
+            opacity: 0.8,
+            dashArray: isFlight ? '6, 8' : 'none'
+          };
+          L.polyline(pathPoints, lineOptions).addTo(map);
+        }
+
+      }
+    });
+
+    // Auto-trigger print dialog after a safe delay to let tiles render
+    window.addEventListener('load', function () {
+      setTimeout(function () { window.print(); }, 1200);
+    });
+  </script>
+</body>
+
+</html>

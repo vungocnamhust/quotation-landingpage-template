@@ -1,38 +1,38 @@
 <!DOCTYPE html>
-<html lang="{{ lang or 'en' }}" {% if lang=='ar' %}dir="rtl" {% endif %}
-  style="--hero-img: url('{{img_0}}'); {% for dest in destinations %} --img-{{ loop.index }}: url('{{ dest.image_url or '/assets/vietnam-safar-logo.png' }}'); {% endfor %}">
+<html lang="ar" dir="rtl" 
+  style="--hero-img: url('/assets/ha-noi/hanoi1.jpg');  --img-1: url('/assets/ha-noi/duongtau.jpg');  --img-2: url('/assets/ninh-binh/tamcoc.jpg');  --img-3: url('/assets/quang-ninh/halong-bay.jpg');  --img-4: url('/assets/lao-cai/fansipan.jpg'); ">
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{{tour_title}} - {{ "Luxury Quotation" | translate(lang) }}</title>
-  {% set font_serif = brand.font_serif | default('Playfair Display') %}
-  {% set font_sans = brand.font_sans | default('Outfit') %}
-  {% set font_accent = brand.font_accent | default(font_serif) %}
+  <title>Anisha&#39;s Family Trip - عرض سعر فاخر</title>
+  
+  
+  
 
-  {% set c_primary = brand.color_primary | default('#17412e') %}
-  {% set c_primary_dark = brand.color_primary_dark | default('#0e2f22') %}
-  {% set c_accent = brand.color_accent | default('#b8860b') %}
-  {% set c_accent_light = brand.color_accent_light | default('#daa520') %}
-  {% set c_bg_main = brand.color_bg_main | default('#f9f6f0') %}
-  {% set c_bg_alt = brand.color_bg_alt | default('#fffaf1') %}
-  {% set c_text_main = brand.color_text_main | default('#11130f') %}
-  {% set c_text_muted = brand.color_text_muted | default('#706a5d') %}
-  {% set c_text_light = brand.color_text_light | default('#ffffff') %}
+  
+  
+  
+  
+  
+  
+  
+  
+  
 
   <script id="brand-data" type="application/json">
-    {{ brand | tojson | safe }}
+    {"domain": "journeys.capellatravel.com", "id": "capella_travel", "logo": "/assets/brands/capella_travel.png", "name": "Capella Travel"}
   </script>
   <!-- Premium Typography Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700&family=Cairo:wght@300;400;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&family={{ font_sans | replace(' ', '+') }}:wght@300;400;500;600;700&family={{ font_serif | replace(' ', '+') }}:ital,wght@0,400;0,500;0,600;0,700;1,400&family={{ font_accent | replace(' ', '+') }}:ital,wght@1,400;1,500;1,600&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700&family=Cairo:wght@300;400;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Playfair+Display:ital,wght@1,400;1,500;1,600&display=swap"
     rel="stylesheet">
 
   <!-- PWA Metadata -->
-  <link rel="manifest" href="/manifest.json?id={{quotation_id}}&type=quotations" />
-  <meta name="theme-color" content="{{c_primary}}" />
+  <link rel="manifest" href="/manifest.json?id=quo_ac7d18dd7459&type=quotations" />
+  <meta name="theme-color" content="#17412e" />
   <link rel="apple-touch-icon" href="/assets/vietnam-safar-logo.png" />
   <!-- Leaflet CSS & JS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -40,42 +40,29 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <style>
-    :root {
-      --primary: {{c_primary}};
-
-      --primary-dark: {{c_primary_dark}};
-
-      --accent: {{c_accent}};
-
-      --accent-light: {{c_accent_light}};
-
-      --bg-main: {{c_bg_main}};
-
-      --bg-alt: {{c_bg_alt}};
-
-      --text-main: {{c_text_main}};
-
-      --text-muted: {{c_text_muted}};
-
-      --text-light: {{c_text_light}};
-      --serif: "{{font_serif}}",
-      "Playfair Display",
-      serif;
-      --sans: "{{font_sans}}",
-      "Outfit",
-      sans-serif;
-      --accent-font: "{{font_accent}}",
-      cursive;
+        :root {
+      --primary: #17412e;
+      --primary-dark: #0e2f22;
+      --accent: #b8860b;
+      --accent-light: #daa520;
+      --bg-main: #f9f6f0;
+      --bg-alt: #fffaf1;
+      --text-main: #11130f;
+      --text-muted: #706a5d;
+      --text-light: #ffffff;
+      --serif: "Playfair Display", "Playfair Display", serif;
+      --sans: "Outfit", "Outfit", sans-serif;
+      --accent-font: "Playfair Display", cursive;
       --shadow: 0 30px 80px rgba(0, 0, 0, 0.08);
-      --serif: '{{font_serif}}',
+      --serif: 'Playfair Display',
       Georgia,
       'Times New Roman',
       serif;
-      --sans: '{{font_sans}}',
+      --sans: 'Outfit',
       Arial,
       Helvetica,
       sans-serif;
-      --font-accent: '{{font_accent}}',
+      --font-accent: 'Playfair Display',
       'Playfair Display',
       serif;
     }
@@ -159,45 +146,12 @@
     }
 
     .nav {
-      /* Mặc định trên hero tối */
-      --nav-bg: transparent;
-      --nav-backdrop: none;
-      --nav-border: transparent;
-      --brand-color: #ffffff;
-      --nav-link-color: #ffffff;
-      --lang-btn-bg: rgba(255, 255, 255, 0.15);
-      --lang-btn-border: rgba(255, 255, 255, 0.3);
-      --lang-btn-color: #ffffff;
-      --lang-btn-hover-bg: rgba(255, 255, 255, 0.25);
-      --noti-btn-bg: transparent;
-      --noti-btn-color: #ffffff;
-      --logo-filter: brightness(0) invert(1);
-
-      position: fixed;
+      position: sticky;
       top: 0;
-      left: 0;
-      width: 100%;
       z-index: 50;
-      background: var(--nav-bg);
-      backdrop-filter: var(--nav-backdrop);
-      -webkit-backdrop-filter: var(--nav-backdrop);
-      border-bottom: 1px solid var(--nav-border);
-      transition: all 0.3s ease;
-    }
-
-    .nav.scrolled {
-      --nav-bg: color-mix(in srgb, var(--bg-main) 92%, transparent);
-      --nav-backdrop: blur(18px);
-      --nav-border: var(--line);
-      --brand-color: var(--primary);
-      --nav-link-color: var(--text-main);
-      --lang-btn-bg: color-mix(in srgb, var(--bg-alt) 45%, transparent);
-      --lang-btn-border: var(--line);
-      --lang-btn-color: var(--primary);
-      --lang-btn-hover-bg: rgba(255, 255, 255, 0.75);
-      --noti-btn-bg: transparent;
-      --noti-btn-color: var(--text-muted);
-      --logo-filter: none;
+      background: rgba(248, 243, 233, .86);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--line)
     }
 
     .nav-inner {
@@ -215,8 +169,7 @@
       letter-spacing: .08em;
       text-transform: uppercase;
       font-size: 12px;
-      color: var(--brand-color);
-      transition: color 0.3s ease;
+      color: var(--primary)
     }
 
     .brand img {
@@ -224,8 +177,7 @@
       height: 44px;
       object-fit: contain;
       border-radius: 50%;
-      filter: var(--logo-filter);
-      transition: filter 0.3s ease;
+      background: white
     }
 
     .nav-links {
@@ -234,8 +186,7 @@
       font-size: 12px;
       text-transform: uppercase;
       letter-spacing: .12em;
-      color: var(--nav-link-color);
-      transition: color 0.3s ease;
+      color: #4e4a41
     }
 
     .nav-actions {
@@ -283,80 +234,60 @@
 
     .hero {
       position: relative;
-      min-height: 100vh;
-      background: linear-gradient(rgba(17, 19, 15, 0.2), rgba(17, 19, 15, 0.2)), var(--hero-img) center/cover no-repeat;
+      min-height: 820px;
+      background: linear-gradient(90deg, rgba(17, 19, 15, .92), rgba(17, 19, 15, .62), rgba(17, 19, 15, .18)), var(--hero-img) center/cover no-repeat;
       color: white;
-      display: flex;
-      align-items: center;
-      overflow: hidden;
+      overflow: hidden
+    }
+
+    .hero:after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0 0;
+      height: 210px;
+      background: linear-gradient(180deg, transparent, var(--bg-main))
     }
 
     .hero-content {
       position: relative;
       z-index: 2;
-      width: 100%;
-      max-width: 1180px;
-      margin: 0 auto;
-      padding: 100px 5% 40px;
-      box-sizing: border-box;
-    }
-
-    .hero-content-inner {
-      width: 70%;
-      max-width: 1000px;
-    }
-
-    @media (max-width: 1200px) {
-      .hero-content-inner {
-        width: 90%;
-      }
-    }
-
-    @media (max-width: 980px) {
-      .hero-content {
-        padding-top: 140px;
-      }
-
-      .hero-content-inner {
-        width: 100%;
-      }
+      padding: 112px 0 128px;
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 54px;
+      align-items: end
     }
 
     .kicker {
-      color: rgba(255, 255, 255, 0.85);
+      color: var(--accent-light);
       letter-spacing: .2em;
       text-transform: uppercase;
-      font-size: 13px;
-      font-weight: 600;
-      margin-bottom: 24px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 22px
     }
 
     .hero h1 {
       font-family: var(--serif);
-      font-size: clamp(36px, 5vw, 64px);
-      line-height: 1.1;
+      font-size: clamp(32px, 4.5vw, 56px);
+      line-height: 1.15;
       font-weight: 500;
-      letter-spacing: -.01em;
+      letter-spacing: -.02em;
       margin: 0 0 24px;
-      color: white;
-      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-      width: 100%;
+      max-width: 850px
     }
 
     .hero-lede {
-      font-size: 18px;
-      color: rgba(255, 255, 255, 0.95);
-      margin: 0 0 30px;
-      line-height: 1.6;
-      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-      width: 100%;
-      max-width: 100%;
+      font-size: 20px;
+      max-width: 65ch;
+      color: rgba(255, 255, 255, .82);
+      margin: 0 0 30px
     }
 
     .hero-actions {
       display: flex;
       flex-wrap: wrap;
-      gap: 16px;
+      gap: 14px
     }
 
     .quote-card {
@@ -617,7 +548,7 @@
 
     .pricing {
       background: #FAF8F5;
-      color: #000000;
+      color: var(--text);
       border: 1px solid var(--accent-light);
       border-radius: 42px;
       padding: 46px;
@@ -630,12 +561,11 @@
       font-size: clamp(32px, 4vw + 0.5rem, 58px);
       font-weight: 500;
       letter-spacing: -.055em;
-      margin: 0 0 12px;
-      color: #000000;
+      margin: 0 0 12px
     }
 
     .pricing p {
-      color: #444444;
+      color: var(--text-muted);
       margin: 0 0 28px
     }
 
@@ -646,22 +576,19 @@
     }
 
     .price-card {
-      background: #ffffff;
-      border: 1px solid rgba(216, 189, 133, .45);
+      background: rgba(255, 255, 255, .08);
+      border: 1px solid rgba(216, 189, 133, .38);
       border-radius: 28px;
-      padding: 24px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.03);
-      color: #000000;
+      padding: 24px
     }
 
     .price-card.featured {
-      background: #ffffff;
-      border: 2px solid var(--accent);
-      box-shadow: 0 12px 32px rgba(184, 134, 11, 0.12);
+      background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 24%, transparent), rgba(255, 255, 255, .08));
+      border-color: var(--accent-light)
     }
 
     .price-card span {
-      color: #8c6b23;
+      color: var(--accent-light);
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: .16em;
@@ -673,12 +600,11 @@
       font-family: var(--serif);
       font-size: 40px;
       font-weight: 500;
-      margin: 10px 0 0;
-      color: #000000;
+      margin: 10px 0 0
     }
 
     .price-card small {
-      color: #555555;
+      color: rgba(255, 255, 255, .7)
     }
 
     .two-col {
@@ -705,7 +631,7 @@
 
     .cta {
       background: #FAF8F5;
-      color: #000000;
+      color: var(--text);
       border: 1px solid var(--accent-light);
       border-radius: 44px;
       padding: 54px;
@@ -723,8 +649,7 @@
       font-weight: 500;
       letter-spacing: -.06em;
       line-height: .96;
-      margin: 0 0 18px;
-      color: #000000;
+      margin: 0 0 18px
     }
 
     .cta p {
@@ -733,16 +658,15 @@
     }
 
     .contact {
-      background: #ffffff;
-      border: 1px solid rgba(216, 189, 133, 0.4);
+      background: rgba(255, 255, 255, .08);
+      border: 1px solid rgba(255, 255, 255, .22);
       border-radius: 28px;
-      padding: 26px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+      padding: 26px
     }
 
     .contact label {
       display: block;
-      color: #8c6b23;
+      color: var(--accent-light);
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: .16em;
@@ -757,8 +681,7 @@
     .contact div {
       font-weight: 800;
       font-size: 18px;
-      margin-top: 4px;
-      color: #000000;
+      margin-top: 4px
     }
 
     .footer {
@@ -1840,9 +1763,9 @@
     }
 
     #nav-notification-btn {
-      color: var(--noti-btn-color);
-      border: 1px solid var(--lang-btn-border);
-      background: var(--noti-btn-bg);
+      color: var(--text-muted);
+      border: 1px solid var(--line);
+      background: transparent;
       padding: 10px;
       border-radius: 50%;
       cursor: pointer;
@@ -2132,11 +2055,11 @@
     }
 
     .lang-switcher-btn {
-      background: var(--lang-btn-bg);
+      background: rgba(255, 255, 255, 0.45);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
-      border: 1px solid var(--lang-btn-border);
-      color: var(--lang-btn-color);
+      border: 1px solid var(--line);
+      color: var(--primary);
       padding: 9px 16px;
       font-size: 11px;
       font-weight: 600;
@@ -2152,13 +2075,9 @@
     }
 
     .lang-switcher-btn:hover {
-      background: var(--lang-btn-hover-bg);
-      border-color: rgba(255, 255, 255, 0.4);
-      transform: translateY(-1px);
-    }
-
-    .nav.scrolled .lang-switcher-btn:hover {
+      background: rgba(255, 255, 255, 0.75);
       border-color: var(--accent);
+      transform: translateY(-1px);
     }
 
     .lang-caret {
@@ -2345,73 +2264,39 @@
 
     @media (max-width: 768px) {
       .container {
-        width: min(1180px, 88%) !important;
+        width: min(1180px, 90%) !important;
       }
 
       .hero {
         min-height: auto !important;
-        background: linear-gradient(180deg, rgba(17, 19, 15, 0.92) 0%, rgba(17, 19, 15, 0.78) 50%, rgba(17, 19, 15, 0.65) 100%), var(--hero-img) center/cover no-repeat !important;
+        background: linear-gradient(180deg, rgba(17, 19, 15, 0.92) 0%, rgba(17, 19, 15, 0.75) 50%, rgba(17, 19, 15, 0.6) 100%), var(--hero-img) center/cover no-repeat !important;
       }
 
       .hero-content {
         grid-template-columns: 1fr !important;
-        padding: 92px 6% 60px !important;
-        gap: 20px !important;
+        padding: 64px 0 80px !important;
+        gap: 28px !important;
       }
 
       .hero h1 {
-        font-size: clamp(22px, 6.5vw, 34px) !important;
-        line-height: 1.25 !important;
+        font-size: clamp(24px, 6vw, 36px) !important;
         margin-bottom: 16px !important;
-        display: block !important;
-        -webkit-line-clamp: unset !important;
-        overflow: visible !important;
       }
 
       .hero-lede {
-        font-size: 15px !important;
-        line-height: 1.55 !important;
-        margin-bottom: 20px !important;
-        display: block !important;
-        -webkit-line-clamp: unset !important;
-        overflow: visible !important;
-      }
-
-      .hero-meta {
+        font-size: 16px !important;
         margin-bottom: 24px !important;
-        padding-top: 16px !important;
-      }
-
-      .hero-meta strong {
-        font-size: 12px !important;
-        letter-spacing: .06em !important;
-        line-height: 1.4 !important;
-        margin-bottom: 8px !important;
-        word-break: break-word !important;
-      }
-
-      .hero-meta span {
-        font-size: 13px !important;
-        letter-spacing: .04em !important;
       }
 
       .hero-actions {
         flex-direction: column !important;
         width: 100% !important;
         gap: 12px !important;
-        margin-bottom: 24px !important;
       }
 
       .hero-actions .btn {
         width: 100% !important;
         justify-content: center !important;
-        padding: 14px 20px !important;
-      }
-
-      .hero-footer {
-        font-size: 11px !important;
-        flex-wrap: wrap !important;
-        gap: 6px !important;
       }
 
       .quote-card {
@@ -2458,30 +2343,21 @@
       }
 
       .nav-inner {
-        height: 56px !important;
-        padding: 8px 0 !important;
+        height: 60px !important;
       }
 
       .nav-actions {
         display: flex !important;
-        gap: 6px !important;
-        align-items: center !important;
-        flex-shrink: 0;
+        gap: 8px !important;
       }
 
       .brand {
-        font-size: 12px !important;
-        gap: 8px !important;
-        max-width: 150px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        font-size: 14px !important;
       }
 
       .brand img {
-        width: 26px !important;
-        height: 26px !important;
-        flex-shrink: 0;
+        width: 24px !important;
+        height: 24px !important;
       }
 
       .lang-switcher-btn .lang-text,
@@ -2490,7 +2366,7 @@
       }
 
       .lang-switcher-btn {
-        padding: 6px !important;
+        padding: 8px !important;
         border-radius: 50% !important;
         width: 32px !important;
         height: 32px !important;
@@ -2504,7 +2380,7 @@
 
       #btn-pdf-view,
       .nav-actions .btn.btn-primary {
-        padding: 6px !important;
+        padding: 8px !important;
         border-radius: 50% !important;
         width: 32px !important;
         height: 32px !important;
@@ -2522,161 +2398,96 @@
       }
     }
   </style>
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const heroImages = [
-        '/assets/brands/hero/elder.png'
-      ];
-      const randomHero = heroImages[Math.floor(Math.random() * heroImages.length)];
-      document.documentElement.style.setProperty('--hero-img', `url(${randomHero})`);
-    });
-  </script>
 </head>
 
 <body>
   <nav class="nav no-print">
     <div class="container nav-inner">
       <a class="brand" href="#top">
-        <img src="{{ (brand.logo if brand else '') or '/assets/vietnam-safar-logo.png' }}"
-          alt="{{ (brand.name if brand else '') or 'Vietnam Safar' }}" />
-        <span>{{ (brand.name if brand else '') or 'Vietnam Safar' }}</span>
+        <img src="/assets/brands/capella_travel.png"
+          alt="Capella Travel" />
+        <span>Capella Travel</span>
       </a>
       <div class="nav-links">
-        <a href="#journey">{{ "Journey" | translate(lang) }}</a>
-        <a href="#route-map">{{ "Route Map" | translate(lang) }}</a>
-        <a href="#itinerary">{{ "Itinerary" | translate(lang) }}</a>
-        <a href="#quotation">{{ "Quotation" | translate(lang) }}</a>
-        <a href="#terms">{{ "Terms" | translate(lang) }}</a>
+        <a href="#journey">الرحلة</a>
+        <a href="#route-map">خريطة المسار</a>
+        <a href="#itinerary">برنامج الرحلة</a>
+        <a href="#quotation">عرض السعر</a>
+        <a href="#terms">الشروط</a>
       </div>
       <div class="nav-actions">
         <div class="lang-switcher">
           <button class="lang-switcher-btn" onclick="toggleLangDropdown(event)">
             <span>🌐</span>
             <span class="lang-text">
-              {% if lang == 'ar' %}{{ client_i18n.language_names.ar }}
-              {% elif lang == 'vi' %}{{ client_i18n.language_names.vi }}
-              {% else %}{{ client_i18n.language_names.en }}
-              {% endif %}
+              العربية
+              
             </span>
             <span class="lang-caret">▼</span>
           </button>
           <div class="lang-dropdown">
-            <div class="lang-option" onclick="switchLanguage('en')">{{ client_i18n.language_names.en }}</div>
-            <div class="lang-option" onclick="switchLanguage('ar')">{{ client_i18n.language_names.ar }}</div>
-            <div class="lang-option" onclick="switchLanguage('vi')">{{ client_i18n.language_names.vi }}</div>
+            <div class="lang-option" onclick="switchLanguage('en')">الإنجليزية</div>
+            <div class="lang-option" onclick="switchLanguage('ar')">العربية</div>
+            <div class="lang-option" onclick="switchLanguage('vi')">الفيتنامية</div>
           </div>
         </div>
-        <button id="nav-notification-btn" title="{{ client_i18n.notification_title }}">
+        <button id="nav-notification-btn" title="تفعيل الإشعارات">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
             <path
               d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z" />
           </svg>
         </button>
-        <a class="btn btn-primary" href="/quotations/{{quotation_id}}/pdf?lang={{lang}}" target="_blank"
-          id="btn-pdf-view">📄 <span class="pdf-btn-text">{{ "PDF Preview" | translate(lang) }}</span></a>
+        <a class="btn btn-primary" href="/quotations/quo_ac7d18dd7459/pdf?lang=ar" target="_blank"
+          id="btn-pdf-view">📄 <span class="pdf-btn-text">معاينة PDF</span></a>
       </div>
     </div>
   </nav>
 
   <main id="top">
     <header class="hero">
-      <div class="hero-content">
-        <div class="hero-content-inner">
-          <h1 data-editable="tour_title">{{tour_title}}</h1>
-          <p class="hero-lede" data-editable="lede">{{ lede | rtl_mixed(lang) }}</p>
-
-          <div class="hero-meta"
-            style="margin-bottom: 40px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.2);">
-            <strong data-editable="hero_meta_1"
-              style="display: block; font-size: 14px; letter-spacing: .15em; text-transform: uppercase; color: rgba(255,255,255,0.95); margin-bottom: 12px; font-weight: 700;">14
-              DAYS &bull; 13 NIGHTS &bull; {{ guests_txt | upper if guests_txt else 'FAMILY VACATION (2 PAX)'
-              }}</strong>
-            <span data-editable="hero_meta_2"
-              style="display: block; font-size: 15px; color: rgba(255,255,255,0.7); letter-spacing: .05em; text-transform: uppercase;">{{
-              travel_dates | upper if travel_dates else '01 APR - 14 APR 2027' }}</span>
-          </div>
-
-          <div class="hero-actions no-print" style="margin-bottom: 40px;">
-            <a class="btn btn-primary" href="#journey"
-              style="padding: 16px 32px; font-size: 13px; letter-spacing: .08em; border-radius: 999px; background: var(--primary); color: white; border: none; font-weight: 700; box-shadow: 0 8px 24px rgba(0,0,0,0.15);">{{
-              "BEGIN THE JOURNEY" | translate(lang) }}</a>
-          </div>
-
-          <div class="hero-footer no-print"
-            style="display: flex; justify-content: space-between; font-size: 12px; letter-spacing: .1em; color: rgba(255,255,255,0.6); text-transform: uppercase; width: 100%;">
-            <div class="hf-left" data-editable="hero_footer">{{ brand.name if brand else 'CAPELLA TRAVEL' }} &bull; {{quotation_number}}</div>
+      <div class="container hero-content">
+        <div>
+          <div class="kicker overline" data-editable="kicker">عرض سعر خاص فاخر ‒ 8 يومًا / 7 ليلة ‒ 30 سبتمبر – 07 أكتوبر 2026</div>
+          <h1 data-editable="tour_title">Anisha&#39;s Family Trip</h1>
+          <p class="hero-lede" data-editable="lede">A premium, personalized 7-day private journey crafted by Capella Travel for our guests. The itinerary showcases the historic soul of <span class="ltr-token">Hanoi</span>, the mystical rivers of <span class="ltr-token">Ninh Binh</span>, an overnight cruise through the magical waters of Ha Long Bay, and the breathtaking terraced mountains of <span class="ltr-token">Sapa</span>. Every detail, from the double and triple room configurations to the carefully curated vegetarian culinary experiences, has been designed for your group of 5 adults to travel in ultimate comfort.</p>
+          <div class="hero-actions no-print">
+            <a class="btn btn-accent" href="#quotation">عرض الأسعار الفاخرة</a>
+            <a class="btn outline" href="#itinerary">استكشف الرحلة</a>
           </div>
         </div>
+
       </div>
     </header>
-    <section class="open-letter-section" style="padding: 100px 0; background: var(--bg-main);">
-      <style>
-        .letter-grid {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 40px;
-        }
-
-        @media (min-width: 992px) {
-          .letter-grid {
-            grid-template-columns: 35% 1fr;
-            gap: 80px;
-            align-items: start;
-          }
-        }
-      </style>
-      <div class="container">
-        <div class="letter-grid">
-          <!-- IMAGE (35%) -->
-          <div class="letter-image" style="display: flex; align-items: center; justify-content: center; padding: 20px;">
-            <img src="/assets/brands/indochine_icon/hoa sen.svg" alt="Cloud Graphic"
-              style="width: 100%; max-width: 320px; height: auto; display: block; opacity: 0.8;" />
-          </div>
-
-          <!-- LETTER (65%) -->
-          <div class="letter-content" style="padding-top: 10px;">
-            <h2 class="font-serif"
-              style="font-size: clamp(32px, 4vw, 48px); color: var(--text-main); margin-bottom: 40px; line-height: 1.2;"
-              data-editable="journey_overview_title">
-              {{ journey_overview_title | default("A Journey Shaped Around Your Family") }}
-            </h2>
-
-            <!-- HIGHLIGHT QUOTE -->
-            <div style="margin-bottom: 40px; padding-left: 24px; border-left: 2px solid var(--accent);">
-              <p class="font-serif"
-                style="font-size: clamp(24px, 3vw, 32px); font-style: italic; color: var(--accent); line-height: 1.4; margin: 0;"
-                data-editable="letter_highlight">
-                {{ letter_highlight | default('"This journey was designed to leave room for both discovery and rest."')
-                }}
-              </p>
-            </div>
-
-            <div class="letter-body" style="font-size: 18px; line-height: 1.85; color: var(--text-muted);">
-              <p style="margin-bottom: 24px;" data-editable="letter_greeting">
-                Dear <strong>{{customer_name}}</strong>,
-              </p>
-              <p style="margin-bottom: 24px;" data-editable="letter_intro">
-                I am delighted to present this exclusively curated itinerary: <strong>{{overview_heading}}</strong>.
-                {% if guests_txt %} Designed carefully for <strong>{{guests_txt}}</strong>,{% endif %}
-                {% if travel_dates %} your journey is planned for <strong>{{travel_dates}}</strong>.{% endif %}
-                {% if route_txt %} The route will take you through <strong>{{route_txt}}</strong>,{% endif %}
-                {% if travel_style %} ensuring a <strong>{{travel_style}}</strong> experience throughout.{% endif %}
-              </p>
-              <p style="margin-bottom: 40px;" data-editable="letter_outro">
-                We have poured our expertise and passion into crafting every detail of this journey, and we cannot wait
-                for you to experience the magic of Vietnam. Please review the details below, and let us know if you
-                would like any refinements. (Ref: <strong>{{quotation_number}}</strong>)
-              </p>
-            </div>
-
-            <!-- SIGNATURE -->
-            <div class="letter-signature">
-              <p style="margin: 0; font-size: 18px; font-weight: 700; color: var(--text-main); letter-spacing: 0.05em; text-transform: uppercase;"
-                data-editable="letter_sign_off">{{ letter_sign_off | default('Anh Nam Le') }}</p>
-              <p style="margin: 4px 0 0 0; font-size: 14px; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase;"
-                data-editable="letter_sender">{{ letter_sender | default('Journey Designer') }}</p>
-              <p style="margin: 4px 0 0 0; font-size: 14px; color: var(--text-muted);" data-editable="contact">{{contact}}</p>
-            </div>
+    <section class="open-letter-section" style="padding: 60px 0; background: var(--bg-main); text-align: center;">
+      <div class="container"
+        style="max-width: 800px; margin: 0 auto; padding: 40px; background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: left; position: relative; margin-top: -80px; z-index: 10;">
+        <h2 class="font-serif" style="font-size: 28px; color: var(--accent-light); margin-bottom: 24px;"
+          data-editable="journey_overview_title">A Personal Note for Your Journey</h2>
+        <p style="font-size: 16px; line-height: 1.8; color: var(--text-muted); margin-bottom: 16px;"
+          data-editable="letter_greeting">
+          Dear <strong>Anisha</strong>,
+        </p>
+        <p style="font-size: 16px; line-height: 1.8; color: var(--text-muted); margin-bottom: 16px;"
+          data-editable="letter_intro">
+          I am delighted to present this exclusively curated itinerary: <strong>نظرة عامة على البرنامج</strong>.
+           Designed carefully for <strong>Anisha</strong>,
+           your journey is planned for <strong>30 سبتمبر – 07 أكتوبر 2026</strong>.
+           The route will take you through <strong>Hanoi – Sapa – Hanoi – Halong Bay</strong>,
+           ensuring a <strong>Fully private tour with dedicated English-speaking guides, private transfers, and curated...</strong> experience throughout.
+        </p>
+        <p style="font-size: 16px; line-height: 1.8; color: var(--text-muted); margin-bottom: 32px;"
+          data-editable="letter_outro">
+          We have poured our expertise and passion into crafting every detail of this journey, and we cannot wait for
+          you to experience the magic of Vietnam. Please review the details below, and let us know if you would like any
+          refinements. (Ref: <strong>QT-2026-CAPELLA-8D7N-IND</strong>)
+        </p>
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <div>
+            <p class="font-serif" style="margin: 0; font-size: 20px; color: var(--accent-light);"
+              data-editable="letter_sign_off">Warm regards,</p>
+            <p style="margin: 4px 0 0 0; font-weight: 500; color: var(--text);" data-editable="letter_sender">Your
+              Travel Specialist</p>
+            <p style="margin: 4px 0 0 0; font-size: 14px; color: var(--text-muted);" data-editable="contact">+84 911 538 738</p>
           </div>
         </div>
       </div>
@@ -2695,26 +2506,26 @@
         <div class="section-head" style="grid-template-columns: 1fr;">
           <h2 data-editable="why_works_title" class="font-serif"
             style="color: var(--text); font-size: clamp(32px, 4vw, 54px); margin: 0 0 10px;">
-            {{ (['Behind the Itinerary Curation', 'Why This Journey Inspires', 'The Anatomy of the Experience', 'A
-            Perfectly Paced Journey'] | random) | translate(lang) }}</h2>
-          <p data-editable="why_works_subtitle" style="color: var(--text-muted); margin: 0;">{{ "Tailored care, balanced
-            pacing, and seamless logistics designed specifically for your group." | translate(lang) }}</p>
+            A
+            Perfectly Paced Journey</h2>
+          <p data-editable="why_works_subtitle" style="color: var(--text-muted); margin: 0;">Tailored care, balanced
+            pacing, and seamless logistics designed specifically for your group.</p>
         </div>
         <div
           style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 18px; margin-top: 32px;">
           <article class="experience"
             style="background: var(--bg-alt); border-color: color-mix(in srgb, var(--accent) 20%, transparent); color: var(--text-main);">
-            <h3 class="font-serif" style="color: var(--accent); font-size: 22px; margin: 12px 0 10px;"
-              data-editable="why_works_title_3">{{ "Dietary & Special Care" | translate(lang) }}</h3>
-            <p style="color: var(--text-main); margin: 0; line-height: 1.6;" data-editable="why_muslim">{{why_muslim}}
+            <h3 style="color: var(--accent); font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;"
+              data-editable="why_works_title_3">الرعاية الغذائية والخاصة</h3>
+            <p style="color: var(--text-main); margin: 0; line-height: 1.6;" data-editable="why_muslim">Your dietary requirements are fully respected. All included meals feature carefully curated Indian vegetarian selections, with eggs permitted and strictly no meat, fish, or seafood. Restaurants and cruise chefs are briefed to prevent...
             </p>
           </article>
           <article class="experience"
             style="background: var(--bg-alt); border-color: color-mix(in srgb, var(--accent) 20%, transparent); color: var(--text-main);">
             <span class="num" style="color: var(--primary);" data-editable="why_works_num_4">04</span>
-            <h3 class="font-serif" style="color: var(--accent); font-size: 22px; margin: 12px 0 10px;"
-              data-editable="why_works_title_4">{{ "Balanced Highlights" | translate(lang) }}</h3>
-            <p style="color: var(--text-main); margin: 0; line-height: 1.6;" data-editable="why_balanced">{{why_balanced}}</p>
+            <h3 style="color: var(--accent); font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;"
+              data-editable="why_works_title_4">أبرز الفعاليات المتوازنة</h3>
+            <p style="color: var(--text-main); margin: 0; line-height: 1.6;" data-editable="why_balanced">A perfect harmony of highland exploration in Sapa, historic culture in Hanoi, and a luxury overnight cruise in Halong Bay, offering a complete northern Vietnam experience in 8 days.</p>
           </article>
         </div>
       </div>
@@ -2723,9 +2534,9 @@
     <section id="route-map" style="padding: 72px 0;">
       <div class="container">
         <div class="section-head">
-          <h2>{{ "Your Journey, Mapped" | translate(lang) }}</h2>
-          <p>{{ "An interactive map showing your curated path through Vietnam's iconic landmarks and luxury stopovers.
-            Click on a destination in the list or the map to explore highlights." | translate(lang) }}</p>
+          <h2>رحلتك على الخريطة</h2>
+          <p>An interactive map showing your curated path through Vietnam&#39;s iconic landmarks and luxury stopovers.
+            Click on a destination in the list or the map to explore highlights.</p>
         </div>
         <div class="map-layout">
           <div style="position: relative; height: 100%; z-index: 1;">
@@ -2733,16 +2544,14 @@
               <div
                 style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg-alt); color: var(--text-muted); font-size: 14px;">
                 <span style="font-size: 24px; margin-bottom: 8px;">🗺️</span>
-                <span>{{ "Loading Interactive Route Map..." | translate(lang) }}</span>
+                <span>جاري تحميل الخريطة التفاعلية...</span>
               </div>
             </div>
             <!-- Map Mode Switcher -->
             <div class="map-mode-toggle no-print"
               style="position: absolute; top: 16px; right: 16px; z-index: 1000; display: flex; gap: 4px; background: rgba(17, 19, 15, 0.75); padding: 4px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
-              <button id="toggle-mode-classic" class="mode-btn active" onclick="switchMapMode('classic')">{{ "Classic" |
-                translate(lang) }}</button>
-              <button id="toggle-mode-image" class="mode-btn" onclick="switchMapMode('image')">{{ "Image" |
-                translate(lang) }}</button>
+              <button id="toggle-mode-classic" class="mode-btn active" onclick="switchMapMode('classic')">كلاسيكي</button>
+              <button id="toggle-mode-image" class="mode-btn" onclick="switchMapMode('image')">صورة</button>
             </div>
           </div>
           <div class="map-sidebar" id="map-sidebar">
@@ -2755,25 +2564,24 @@
     <section id="journey">
       <div class="container">
         <div class="section-head">
-          <h2 data-editable="journey_h2">{{ journey_h2 | rtl_mixed(lang) }}</h2>
-          <p data-editable="journey_p">{{ journey_p | rtl_mixed(lang) }}</p>
+          <h2 data-editable="journey_h2">صور الوجهات منسوجة بعناية داخل عرض السعر.</h2>
+          <p data-editable="journey_p">لوحات وجهة سينمائية تم إعدادها لمقترح سفر متميز.</p>
         </div>
         <div class="gallery">
-          {% for dest in destinations %}
+          
           <div
-            class="image-tile {% if loop.index == 1 %}large{% endif %} {% if destinations|length == 4 and loop.index == 4 %}wide{% endif %}">
+            class="image-tile large ">
             <div class="carousel-inner"
               style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
-              {% if dest.images %}
-              {% for img in dest.images %}
+              
+              
               <div class="carousel-slide"
-                style="flex: 0 0 100%; height: 100%; background: url('{{img}}') center/cover no-repeat;"></div>
-              {% endfor %}
-              {% else %}
+                style="flex: 0 0 100%; height: 100%; background: url('/assets/ha-noi/duongtau.jpg') center/cover no-repeat;"></div>
+              
               <div class="carousel-slide"
-                style="flex: 0 0 100%; height: 100%; background: url('{{ dest.image_url or '/assets/vietnam-safar-logo.png' }}') center/cover no-repeat;">
-              </div>
-              {% endif %}
+                style="flex: 0 0 100%; height: 100%; background: url('/assets/ha-noi/hanoi1.jpg') center/cover no-repeat;"></div>
+              
+              
             </div>
 
             <!-- Gradient Overlay -->
@@ -2782,30 +2590,152 @@
             </div>
 
             <!-- Controls (only show if there is more than 1 image) -->
-            {% if dest.images and dest.images|length > 1 %}
-            <button class="carousel-control prev no-print" aria-label="{{ client_i18n.previous_image }}"
+            
+            <button class="carousel-control prev no-print" aria-label="الصورة السابقة"
               style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); background: rgba(17,19,15,0.4); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 18px; line-height: 1; transition: background 0.2s, opacity 0.2s; backdrop-filter: blur(4px); padding-bottom: 2px;">‹</button>
-            <button class="carousel-control next no-print" aria-label="{{ client_i18n.next_image }}"
+            <button class="carousel-control next no-print" aria-label="الصورة التالية"
               style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); background: rgba(17,19,15,0.4); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 18px; line-height: 1; transition: background 0.2s, opacity 0.2s; backdrop-filter: blur(4px); padding-bottom: 2px;">›</button>
 
             <div class="carousel-dots no-print"
               style="position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3;">
-              {% for img in dest.images %}
-              <button class="carousel-dot {% if loop.first %}active{% endif %}"
-                aria-label="{{ client_i18n.go_to_slide }} {{ loop.index }}"
+              
+              <button class="carousel-dot active"
+                aria-label="الانتقال إلى الشريحة 1"
                 style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
-              {% endfor %}
+              
+              <button class="carousel-dot "
+                aria-label="الانتقال إلى الشريحة 2"
+                style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+              
             </div>
-            {% endif %}
+            
 
             <div class="image-caption" style="z-index: 3;">
-              <small data-editable="gal{{ loop.index }}_label">{% if loop.index == 1 %}{{ "Highlight" | translate(lang)
-                }}{% elif loop.index == 3 %}{{ "Experience" | translate(lang) }}{% elif loop.index == 4 %}{{ "Journey" |
-                translate(lang) }}{% else %}{{ "Destination" | translate(lang) }}{% endif %}</small>
-              <strong data-editable="gal{{ loop.index }}_title">{{ dest.name | rtl_mixed(lang) }}</strong>
+              <small data-editable="gal1_label">أبرز المعالم</small>
+              <strong data-editable="gal1_title"><span class="ltr-token">Hanoi</span></strong>
             </div>
           </div>
-          {% endfor %}
+          
+          <div
+            class="image-tile  ">
+            <div class="carousel-inner"
+              style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
+              
+              
+              <div class="carousel-slide"
+                style="flex: 0 0 100%; height: 100%; background: url('/assets/ninh-binh/tamcoc.jpg') center/cover no-repeat;"></div>
+              
+              <div class="carousel-slide"
+                style="flex: 0 0 100%; height: 100%; background: url('/assets/ninh-binh/trangan.jpg') center/cover no-repeat;"></div>
+              
+              
+            </div>
+
+            <!-- Gradient Overlay -->
+            <div
+              style="position: absolute; inset: 0; background: linear-gradient(180deg, transparent 34%, rgba(17,19,15,0.72)); pointer-events: none; z-index: 2;">
+            </div>
+
+            <!-- Controls (only show if there is more than 1 image) -->
+            
+            <button class="carousel-control prev no-print" aria-label="الصورة السابقة"
+              style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); background: rgba(17,19,15,0.4); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 18px; line-height: 1; transition: background 0.2s, opacity 0.2s; backdrop-filter: blur(4px); padding-bottom: 2px;">‹</button>
+            <button class="carousel-control next no-print" aria-label="الصورة التالية"
+              style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); background: rgba(17,19,15,0.4); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 18px; line-height: 1; transition: background 0.2s, opacity 0.2s; backdrop-filter: blur(4px); padding-bottom: 2px;">›</button>
+
+            <div class="carousel-dots no-print"
+              style="position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3;">
+              
+              <button class="carousel-dot active"
+                aria-label="الانتقال إلى الشريحة 1"
+                style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+              
+              <button class="carousel-dot "
+                aria-label="الانتقال إلى الشريحة 2"
+                style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+              
+            </div>
+            
+
+            <div class="image-caption" style="z-index: 3;">
+              <small data-editable="gal2_label">الوجهة</small>
+              <strong data-editable="gal2_title"><span class="ltr-token">Ninh Binh</span></strong>
+            </div>
+          </div>
+          
+          <div
+            class="image-tile  ">
+            <div class="carousel-inner"
+              style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
+              
+              
+              <div class="carousel-slide"
+                style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-ninh/halong-bay.jpg') center/cover no-repeat;"></div>
+              
+              <div class="carousel-slide"
+                style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-ninh/halong.jpg') center/cover no-repeat;"></div>
+              
+              
+            </div>
+
+            <!-- Gradient Overlay -->
+            <div
+              style="position: absolute; inset: 0; background: linear-gradient(180deg, transparent 34%, rgba(17,19,15,0.72)); pointer-events: none; z-index: 2;">
+            </div>
+
+            <!-- Controls (only show if there is more than 1 image) -->
+            
+            <button class="carousel-control prev no-print" aria-label="الصورة السابقة"
+              style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); background: rgba(17,19,15,0.4); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 18px; line-height: 1; transition: background 0.2s, opacity 0.2s; backdrop-filter: blur(4px); padding-bottom: 2px;">‹</button>
+            <button class="carousel-control next no-print" aria-label="الصورة التالية"
+              style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); background: rgba(17,19,15,0.4); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 18px; line-height: 1; transition: background 0.2s, opacity 0.2s; backdrop-filter: blur(4px); padding-bottom: 2px;">›</button>
+
+            <div class="carousel-dots no-print"
+              style="position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3;">
+              
+              <button class="carousel-dot active"
+                aria-label="الانتقال إلى الشريحة 1"
+                style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+              
+              <button class="carousel-dot "
+                aria-label="الانتقال إلى الشريحة 2"
+                style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+              
+            </div>
+            
+
+            <div class="image-caption" style="z-index: 3;">
+              <small data-editable="gal3_label">التجربة</small>
+              <strong data-editable="gal3_title"><span class="ltr-token">Halong Bay</span></strong>
+            </div>
+          </div>
+          
+          <div
+            class="image-tile  wide">
+            <div class="carousel-inner"
+              style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
+              
+              
+              <div class="carousel-slide"
+                style="flex: 0 0 100%; height: 100%; background: url('/assets/lao-cai/fansipan.jpg') center/cover no-repeat;"></div>
+              
+              
+            </div>
+
+            <!-- Gradient Overlay -->
+            <div
+              style="position: absolute; inset: 0; background: linear-gradient(180deg, transparent 34%, rgba(17,19,15,0.72)); pointer-events: none; z-index: 2;">
+            </div>
+
+            <!-- Controls (only show if there is more than 1 image) -->
+            
+
+            <div class="image-caption" style="z-index: 3;">
+              <small data-editable="gal4_label">الرحلة</small>
+              <strong data-editable="gal4_title"><span class="ltr-token">Sapa</span></strong>
+            </div>
+          </div>
+          
         </div>
       </div>
     </section>
@@ -2865,63 +2795,339 @@
     <section id="itinerary">
       <div class="container">
         <div class="section-head">
-          <h2 data-editable="itinerary_h2">{{itinerary_h2}}</h2>
-          <p data-editable="itinerary_p">{{itinerary_p}}</p>
+          <h2 data-editable="itinerary_h2">برنامج الرحلة يومًا بيوم</h2>
+          <p data-editable="itinerary_p">رحلتك الخاصة 8 يومًا / 7 ليلة — 8 يوماً، تم تصميمها بعناية.</p>
         </div>
         <div class="itinerary">
-          {% for day in itinerary %}
-          {% set day_idx = loop.index %}
+          
+          
           <article class="day">
-            <div class="day-label" data-editable="day_badge_{{ loop.index }}">{{ day.day_badge_text |
-              default(day.dayNumber) }}</div>
+            <div class="day-label" data-editable="day_badge_1">1</div>
             <div>
-              <span class="num" data-editable="day_num_{{ loop.index }}">{{ day.day_num_text | default("DAY" |
-                translate(lang) ~ " " ~ day.dayNumber ~ ((" · " ~ (day.date | format_date)) if day.date else ""))
-                }}</span>
-              <h3 data-editable="day_title_{{ loop.index }}">{{ day.title | rtl_mixed(lang) }}</h3>
-              {% for para in day.description %}
-              <p data-editable="day_desc_{{day_idx}}_{{ loop.index0 }}">{{ para | rtl_mixed(lang) }}</p>
-              {% endfor %}
-              {% if day.activities %}
+              <span class="num" data-editable="day_num_1">يوم 1 · 30 Sep 2026</span>
+              <h3 data-editable="day_title_1">اليوم 1 — <span class="ltr-token">Hanoi</span></h3>
+              
+              <p data-editable="day_desc_1_0">Arrive at Noi Bai International Airport in <span class="ltr-token">Hanoi</span>. Enjoy a warm welcome and breakfast before boarding your private vehicle for a scenic transfer to the mountainous region of <span class="ltr-token">Sapa</span>. Arrive in <span class="ltr-token">Sapa</span>, check in to the beautiful <span class="ltr-token">Sapa</span> Jade Hill, and enjoy a relaxing evening.</p>
+              
+              
               <p style="font-size:13px;color: var(--text-muted);margin-top:8px">
                 <strong style="color: var(--primary);letter-spacing:.06em"
-                  data-editable="day_label_highlights_{{ loop.index }}">{{ day.label_highlights | default("Highlights:"
-                  | translate(lang)) }}</strong>
-                <span data-editable="day_highlights_{{ loop.index }}">{{ (day.activities | join(' · ')) |
-                  rtl_mixed(lang) }}</span>
+                  data-editable="day_label_highlights_1">أبرز الفعاليات:</strong>
+                <span data-editable="day_highlights_1">Airport pick-up, private transfer <span class="ltr-token">Hanoi</span> - <span class="ltr-token">Sapa</span>, Indian vegetarian lunch and dinner.</span>
               </p>
-              {% endif %}
-              {% if day.notes %}
+              
+              
               <div
                 style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--accent);padding-left:10px;background:color-mix(in srgb, var(--accent) 5%, transparent);border-radius:4px;padding-top:4px;padding-bottom:4px;">
                 <strong style="color: var(--accent);letter-spacing:.06em"
-                  data-editable="day_label_notes_{{ loop.index }}">{{ day.label_notes | default("Notes:" |
-                  translate(lang)) }}</strong>
+                  data-editable="day_label_notes_1">ملاحظات:</strong>
                 <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
-                  {% for note in day.notes %}
-                  <li style="margin-bottom: 2px;" data-editable="day_note_{{day_idx}}_{{ loop.index0 }}">{{ note |
-                    rtl_mixed(lang) }}</li>
-                  {% endfor %}
+                  
+                  <li style="margin-bottom: 2px;" data-editable="day_note_1_0">وتيرة السفر: نشطة</li>
+                  
                 </ul>
               </div>
-              {% endif %}
+              
             </div>
             <div class="day-meta">
-              {% if day.overnight %}
-              <span style="font-size:11px;letter-spacing:.12em" data-editable="day_label_overnight_{{ loop.index }}">{{
-                day.label_overnight | default("Overnight" | translate(lang)) }}</span><br>
-              <span class="font-serif" style="font-size:15px;" data-editable="day_overnight_{{ loop.index }}">{{
-                day.overnight | rtl_mixed(lang) }}</span><br><br>
-              {% endif %}
-              {% if day.meals %}
-              <span style="font-size:11px;letter-spacing:.12em" data-editable="day_label_meals_{{ loop.index }}">{{
-                day.label_meals | default("Meals" | translate(lang)) }}</span><br>
-              <span style="font-size:13px" data-editable="day_meals_{{ loop.index }}">{{ (day.meals | join(' · ')) |
-                rtl_mixed(lang) }}</span>
-              {% endif %}
+              
+              <span style="font-size:11px;letter-spacing:.12em" data-editable="day_label_overnight_1">المبيت</span><br>
+              <span class="font-serif" style="font-size:15px;" data-editable="day_overnight_1"><span class="ltr-token">Hanoi</span></span><br><br>
+              
+              
+              <span style="font-size:11px;letter-spacing:.12em" data-editable="day_label_meals_1">الوجبات</span><br>
+              <span style="font-size:13px" data-editable="day_meals_1">Lunch &amp; Indian Vegetarian Dinner</span>
+              
             </div>
           </article>
-          {% endfor %}
+          
+          
+          <article class="day">
+            <div class="day-label" data-editable="day_badge_2">2</div>
+            <div>
+              <span class="num" data-editable="day_num_2">يوم 2 · 01 Oct 2026</span>
+              <h3 data-editable="day_title_2">اليوم 2 — <span class="ltr-token">Sapa</span></h3>
+              
+              <p data-editable="day_desc_2_0">Enjoy a full day exploring <span class="ltr-token">Sapa</span>. Embark on a guided trekking tour to <span class="ltr-token">Cat Cat</span> village or other scenic routes, learning about the local ethnic minority cultures and viewing the stunning terraced rice fields. Savor a local vegetarian lunch and dinner.</p>
+              
+              
+              <p style="font-size:13px;color: var(--text-muted);margin-top:8px">
+                <strong style="color: var(--primary);letter-spacing:.06em"
+                  data-editable="day_label_highlights_2">أبرز الفعاليات:</strong>
+                <span data-editable="day_highlights_2"><span class="ltr-token">Sapa</span> full-day tour with guide and entry tickets, vegetarian lunch and dinner.</span>
+              </p>
+              
+              
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--accent);padding-left:10px;background:color-mix(in srgb, var(--accent) 5%, transparent);border-radius:4px;padding-top:4px;padding-bottom:4px;">
+                <strong style="color: var(--accent);letter-spacing:.06em"
+                  data-editable="day_label_notes_2">ملاحظات:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;" data-editable="day_note_2_0">وتيرة السفر: غامرة</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <div class="day-meta">
+              
+              <span style="font-size:11px;letter-spacing:.12em" data-editable="day_label_overnight_2">المبيت</span><br>
+              <span class="font-serif" style="font-size:15px;" data-editable="day_overnight_2"><span class="ltr-token">Sapa</span></span><br><br>
+              
+              
+              <span style="font-size:11px;letter-spacing:.12em" data-editable="day_label_meals_2">الوجبات</span><br>
+              <span style="font-size:13px" data-editable="day_meals_2">Breakfast, Vegetarian Lunch &amp; Dinner</span>
+              
+            </div>
+          </article>
+          
+          
+          <article class="day">
+            <div class="day-label" data-editable="day_badge_3">3</div>
+            <div>
+              <span class="num" data-editable="day_num_3">يوم 3 · 02 Oct 2026</span>
+              <h3 data-editable="day_title_3">اليوم 3 — <span class="ltr-token">Sapa</span></h3>
+              
+              <p data-editable="day_desc_3_0">Continue your full day tour of <span class="ltr-token">Sapa</span>. Take the <span class="ltr-token">Fansipan</span> cable car to ascend the &#39;Roof of Indochina&#39; at 3,143 meters. Explore the spiritual pagoda complex at the summit. Spend the afternoon visiting local villages or enjoying the resort amenities.</p>
+              
+              
+              <p style="font-size:13px;color: var(--text-muted);margin-top:8px">
+                <strong style="color: var(--primary);letter-spacing:.06em"
+                  data-editable="day_label_highlights_3">أبرز الفعاليات:</strong>
+                <span data-editable="day_highlights_3"><span class="ltr-token">Fansipan</span> cable car tickets, guide, <span class="ltr-token">Sapa</span> transfers.</span>
+              </p>
+              
+              
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--accent);padding-left:10px;background:color-mix(in srgb, var(--accent) 5%, transparent);border-radius:4px;padding-top:4px;padding-bottom:4px;">
+                <strong style="color: var(--accent);letter-spacing:.06em"
+                  data-editable="day_label_notes_3">ملاحظات:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;" data-editable="day_note_3_0">وتيرة السفر: نشطة</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <div class="day-meta">
+              
+              <span style="font-size:11px;letter-spacing:.12em" data-editable="day_label_overnight_3">المبيت</span><br>
+              <span class="font-serif" style="font-size:15px;" data-editable="day_overnight_3"><span class="ltr-token">Sapa</span></span><br><br>
+              
+              
+              <span style="font-size:11px;letter-spacing:.12em" data-editable="day_label_meals_3">الوجبات</span><br>
+              <span style="font-size:13px" data-editable="day_meals_3">Breakfast</span>
+              
+            </div>
+          </article>
+          
+          
+          <article class="day">
+            <div class="day-label" data-editable="day_badge_4">4</div>
+            <div>
+              <span class="num" data-editable="day_num_4">يوم 4 · 03 Oct 2026</span>
+              <h3 data-editable="day_title_4">اليوم 4 — <span class="ltr-token">Hanoi</span></h3>
+              
+              <p data-editable="day_desc_4_0">Enjoy a free day in <span class="ltr-token">Sapa</span> to relax, shop for souvenirs, or simply admire the mountain views from <span class="ltr-token">Sapa</span> Jade Hill. In the late afternoon, transfer to Lao Cai station to board the Chapa Express Train for an overnight journey back to <span class="ltr-token">Hanoi</span>.</p>
+              
+              
+              <p style="font-size:13px;color: var(--text-muted);margin-top:8px">
+                <strong style="color: var(--primary);letter-spacing:.06em"
+                  data-editable="day_label_highlights_4">أبرز الفعاليات:</strong>
+                <span data-editable="day_highlights_4">Station transfer, Chapa Express Train tickets.</span>
+              </p>
+              
+              
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--accent);padding-left:10px;background:color-mix(in srgb, var(--accent) 5%, transparent);border-radius:4px;padding-top:4px;padding-bottom:4px;">
+                <strong style="color: var(--accent);letter-spacing:.06em"
+                  data-editable="day_label_notes_4">ملاحظات:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;" data-editable="day_note_4_0">وتيرة السفر: مريحة</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <div class="day-meta">
+              
+              <span style="font-size:11px;letter-spacing:.12em" data-editable="day_label_overnight_4">المبيت</span><br>
+              <span class="font-serif" style="font-size:15px;" data-editable="day_overnight_4"><span class="ltr-token">Hanoi</span></span><br><br>
+              
+              
+              <span style="font-size:11px;letter-spacing:.12em" data-editable="day_label_meals_4">الوجبات</span><br>
+              <span style="font-size:13px" data-editable="day_meals_4">Breakfast &amp; Private Dinner</span>
+              
+            </div>
+          </article>
+          
+          
+          <article class="day">
+            <div class="day-label" data-editable="day_badge_5">5</div>
+            <div>
+              <span class="num" data-editable="day_num_5">يوم 5 · 04 Oct 2026</span>
+              <h3 data-editable="day_title_5">اليوم 5 — <span class="ltr-token">Hanoi</span></h3>
+              
+              <p data-editable="day_desc_5_0">Arrive in <span class="ltr-token">Hanoi</span> early morning. Transfer to your hotel for early check-in and breakfast. Later, embark on a full-day city tour of <span class="ltr-token">Hanoi</span>, visiting the historic Temple of Literature, Ho Chi Minh Mausoleum complex, and enjoying a cyclo ride through the Old Quarter.</p>
+              
+              
+              <p style="font-size:13px;color: var(--text-muted);margin-top:8px">
+                <strong style="color: var(--primary);letter-spacing:.06em"
+                  data-editable="day_label_highlights_5">أبرز الفعاليات:</strong>
+                <span data-editable="day_highlights_5">Station transfer, <span class="ltr-token">Hanoi</span> full-day tour with guide and entry tickets.</span>
+              </p>
+              
+              
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--accent);padding-left:10px;background:color-mix(in srgb, var(--accent) 5%, transparent);border-radius:4px;padding-top:4px;padding-bottom:4px;">
+                <strong style="color: var(--accent);letter-spacing:.06em"
+                  data-editable="day_label_notes_5">ملاحظات:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;" data-editable="day_note_5_0">وتيرة السفر: نشطة</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <div class="day-meta">
+              
+              <span style="font-size:11px;letter-spacing:.12em" data-editable="day_label_overnight_5">المبيت</span><br>
+              <span class="font-serif" style="font-size:15px;" data-editable="day_overnight_5"><span class="ltr-token">Hanoi</span></span><br><br>
+              
+              
+              <span style="font-size:11px;letter-spacing:.12em" data-editable="day_label_meals_5">الوجبات</span><br>
+              <span style="font-size:13px" data-editable="day_meals_5">Breakfast, Vegetarian Lunch &amp; Dinner</span>
+              
+            </div>
+          </article>
+          
+          
+          <article class="day">
+            <div class="day-label" data-editable="day_badge_6">6</div>
+            <div>
+              <span class="num" data-editable="day_num_6">يوم 6 · 05 Oct 2026</span>
+              <h3 data-editable="day_title_6">اليوم 6 — <span class="ltr-token">Hanoi</span></h3>
+              
+              <p data-editable="day_desc_6_0">Continue your exploration of <span class="ltr-token">Hanoi</span>. Visit the Museum of Ethnology and stroll around the scenic Hoan Kiem Lake. Enjoy free time for shopping in the bustling streets of the capital.</p>
+              
+              
+              <p style="font-size:13px;color: var(--text-muted);margin-top:8px">
+                <strong style="color: var(--primary);letter-spacing:.06em"
+                  data-editable="day_label_highlights_6">أبرز الفعاليات:</strong>
+                <span data-editable="day_highlights_6"><span class="ltr-token">Hanoi</span> full-day tour with guide and entry tickets.</span>
+              </p>
+              
+              
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--accent);padding-left:10px;background:color-mix(in srgb, var(--accent) 5%, transparent);border-radius:4px;padding-top:4px;padding-bottom:4px;">
+                <strong style="color: var(--accent);letter-spacing:.06em"
+                  data-editable="day_label_notes_6">ملاحظات:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;" data-editable="day_note_6_0">وتيرة السفر: نشطة</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <div class="day-meta">
+              
+              <span style="font-size:11px;letter-spacing:.12em" data-editable="day_label_overnight_6">المبيت</span><br>
+              <span class="font-serif" style="font-size:15px;" data-editable="day_overnight_6"><span class="ltr-token">Hanoi</span></span><br><br>
+              
+              
+              <span style="font-size:11px;letter-spacing:.12em" data-editable="day_label_meals_6">الوجبات</span><br>
+              <span style="font-size:13px" data-editable="day_meals_6">Breakfast, Vegetarian Lunch &amp; Dinner</span>
+              
+            </div>
+          </article>
+          
+          
+          <article class="day">
+            <div class="day-label" data-editable="day_badge_7">7</div>
+            <div>
+              <span class="num" data-editable="day_num_7">يوم 7 · 06 Oct 2026</span>
+              <h3 data-editable="day_title_7">اليوم 7 — <span class="ltr-token">Halong Bay</span></h3>
+              
+              <p data-editable="day_desc_7_0">Depart <span class="ltr-token">Hanoi</span> by private vehicle to <span class="ltr-token">Halong Bay</span>. Board the premium Ambassador Signature Cruise. Glide past iconic karst formations and enjoy a delicious vegetarian buffet lunch on board. Participate in cruise activities including a bamboo boat ride or kayaking.</p>
+              
+              
+              <p style="font-size:13px;color: var(--text-muted);margin-top:8px">
+                <strong style="color: var(--primary);letter-spacing:.06em"
+                  data-editable="day_label_highlights_7">أبرز الفعاليات:</strong>
+                <span data-editable="day_highlights_7">Private transfer <span class="ltr-token">Hanoi</span> - <span class="ltr-token">Halong</span>, cabins on Ambassador Signature Cruise, cruise excursions.</span>
+              </p>
+              
+              
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--accent);padding-left:10px;background:color-mix(in srgb, var(--accent) 5%, transparent);border-radius:4px;padding-top:4px;padding-bottom:4px;">
+                <strong style="color: var(--accent);letter-spacing:.06em"
+                  data-editable="day_label_notes_7">ملاحظات:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;" data-editable="day_note_7_0">وتيرة السفر: مريحة</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <div class="day-meta">
+              
+              <span style="font-size:11px;letter-spacing:.12em" data-editable="day_label_overnight_7">المبيت</span><br>
+              <span class="font-serif" style="font-size:15px;" data-editable="day_overnight_7"><span class="ltr-token">Halong Bay</span></span><br><br>
+              
+              
+              <span style="font-size:11px;letter-spacing:.12em" data-editable="day_label_meals_7">الوجبات</span><br>
+              <span style="font-size:13px" data-editable="day_meals_7">Breakfast, Onboard Vegetarian Lunch &amp; Dinner</span>
+              
+            </div>
+          </article>
+          
+          
+          <article class="day">
+            <div class="day-label" data-editable="day_badge_8">8</div>
+            <div>
+              <span class="num" data-editable="day_num_8">يوم 8 · 07 Oct 2026</span>
+              <h3 data-editable="day_title_8">اليوم 8 — <span class="ltr-token">Halong Bay</span></h3>
+              
+              <p data-editable="day_desc_8_0">Greet the sunrise with Tai Chi on the sundeck. After a vegetarian brunch, check out and transfer directly to Noi Bai International Airport for your departure flight.</p>
+              
+              
+              <p style="font-size:13px;color: var(--text-muted);margin-top:8px">
+                <strong style="color: var(--primary);letter-spacing:.06em"
+                  data-editable="day_label_highlights_8">أبرز الفعاليات:</strong>
+                <span data-editable="day_highlights_8">Onboard vegetarian brunch, private transfer <span class="ltr-token">Halong</span> - <span class="ltr-token">Hanoi</span> Airport.</span>
+              </p>
+              
+              
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--accent);padding-left:10px;background:color-mix(in srgb, var(--accent) 5%, transparent);border-radius:4px;padding-top:4px;padding-bottom:4px;">
+                <strong style="color: var(--accent);letter-spacing:.06em"
+                  data-editable="day_label_notes_8">ملاحظات:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;" data-editable="day_note_8_0">وتيرة السفر: مريحة</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <div class="day-meta">
+              
+              <span style="font-size:11px;letter-spacing:.12em" data-editable="day_label_overnight_8">المبيت</span><br>
+              <span class="font-serif" style="font-size:15px;" data-editable="day_overnight_8"><span class="ltr-token">Halong Bay</span></span><br><br>
+              
+              
+              <span style="font-size:11px;letter-spacing:.12em" data-editable="day_label_meals_8">الوجبات</span><br>
+              <span style="font-size:13px" data-editable="day_meals_8">Onboard Vegetarian Brunch</span>
+              
+            </div>
+          </article>
+          
         </div>
       </div>
     </section>
@@ -2932,280 +3138,260 @@
     <section id="hotels"
       style="background: var(--bg-alt); border: 1px solid var(--line); border-radius: 40px; padding: 54px; margin: 40px 0; box-shadow: 0 18px 45px rgba(17,19,15,0.04);">
       <style>
-        /* --- EDITORIAL HOTEL GRID SYSTEM --- */
-        .hotel-plan-container {
+        .hotel-info {
+          width: 280px;
           display: flex;
           flex-direction: column;
-          gap: 56px;
-          margin-top: 40px;
+          justify-content: flex-start;
+          align-items: flex-start;
+          text-align: left;
         }
 
-        .hotel-card-editorial {
-          border-bottom: 1px solid var(--line);
-          padding-bottom: 48px;
-        }
-        .hotel-card-editorial:last-child {
-          border-bottom: none;
-          padding-bottom: 0;
+        html[dir="rtl"] .hotel-info {
+          align-items: flex-end;
+          text-align: right;
         }
 
-        .hotel-editorial-grid {
-          display: grid;
-          gap: 32px;
-          align-items: center;
-        }
-        
-        .hotel-editorial-grid > *, .hotel-images-group > * {
-          min-width: 0; /* Prevents grid blowout from intrinsic image sizes */
-        }
-        
-        .hotel-images-group {
-          display: grid;
-          gap: 16px;
-        }
-
-        /* 1. DESKTOP (≥ 1100px) */
-        @media (min-width: 1100px) {
-          .hotel-editorial-grid.odd-row {
-            grid-template-columns: 2.4fr 1.3fr;
-          }
-          .hotel-editorial-grid.even-row {
-            grid-template-columns: 1.3fr 2.4fr;
+        @media (max-width: 768px) {
+          .hotel-images-grid {
+            grid-template-columns: 1fr !important;
           }
 
-          /* In even row, text is on the left, so we change the order of the text block */
-          .hotel-editorial-grid.even-row .hotel-info-block {
-            order: -1;
+          .hotel-image-wrapper {
+            height: 220px !important;
           }
 
-          .hotel-images-group.odd-group {
-            grid-template-columns: 1.6fr 1fr;
-          }
-          .hotel-images-group.even-group {
-            grid-template-columns: 1fr 1.6fr;
-          }
-          /* In even group, sub image is on the left, main is on the right */
-          .hotel-images-group.even-group .img-wrapper-main {
-            order: 2;
-          }
-          .hotel-images-group.even-group .img-wrapper-sub {
-            order: 1;
-          }
-          
-          .img-wrapper-main, .img-wrapper-sub { height: 320px; }
-        }
-
-        /* 2. TABLET (768px - 1099px) */
-        @media (min-width: 768px) and (max-width: 1099px) {
-          .hotel-editorial-grid.odd-row {
-            grid-template-columns: 1.4fr 1fr;
-          }
-          .hotel-editorial-grid.even-row {
-            grid-template-columns: 1fr 1.4fr;
-          }
-
-          .hotel-editorial-grid.even-row .hotel-info-block {
-            order: -1;
-          }
-
-          .hotel-images-group.odd-group {
-            grid-template-columns: 1.4fr 1fr;
-          }
-          .hotel-images-group.even-group {
-            grid-template-columns: 1fr 1.4fr;
-          }
-          .hotel-images-group.even-group .img-wrapper-main {
-            order: 2;
-          }
-          .hotel-images-group.even-group .img-wrapper-sub {
-            order: 1;
-          }
-
-          .img-wrapper-main, .img-wrapper-sub {
-            height: 240px;
-          }
-        }
-
-        /* 3. MOBILE (< 768px) */
-        @media (max-width: 767px) {
-          .hotel-editorial-grid {
-            display: flex;
+          .hotel-footer-layout {
             flex-direction: column;
-            gap: 16px;
-          }
-          
-          .hotel-header-mobile {
-            order: 1; /* Tiêu đề lên đầu */
-            margin-bottom: 8px;
+            gap: 20px !important;
           }
 
-          .hotel-images-group {
-            order: 2; /* Bộ đôi ảnh ở giữa */
-            grid-template-columns: 1.2fr 1fr;
-            gap: 12px;
-          }
-          /* Even groups on mobile shouldn't swap images to keep consistency */
-          .hotel-images-group.even-group .img-wrapper-main {
-            order: 1;
-          }
-          .hotel-images-group.even-group .img-wrapper-sub {
-            order: 2;
+          .hotel-info {
+            width: 100% !important;
+            align-items: flex-start !important;
+            text-align: left !important;
           }
 
-          .img-wrapper-main, .img-wrapper-sub {
-            height: 180px;
+          html[dir="rtl"] .hotel-info {
+            align-items: flex-end !important;
+            text-align: right !important;
           }
-
-          .hotel-desc-mobile {
-            order: 3; /* Mô tả ở dưới cùng */
-          }
-        }
-
-        /* Common Image Box Styles */
-        .img-wrapper-main, .img-wrapper-sub {
-          border-radius: 6px;
-          overflow: hidden;
-          position: relative;
-          box-shadow: 0 8px 24px rgba(0,0,0,0.06);
-        }
-        .img-wrapper-main img, .img-wrapper-sub img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          display: block;
-        }
-
-        /* Text Block Styling */
-        .hotel-info-block {
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-        }
-        .hotel-header-mobile {
-          margin-bottom: 12px;
-        }
-        .hotel-subtitle {
-          font-size: 11px;
-          font-weight: 700;
-          letter-spacing: 0.15em;
-          text-transform: uppercase;
-          color: var(--text-muted);
-          margin-bottom: 6px;
-        }
-        .hotel-title {
-          font-size: 26px;
-          font-weight: 700;
-          color: var(--text-main);
-          margin: 0;
-          letter-spacing: 0.02em;
-        }
-        .hotel-desc-mobile {
-          display: flex;
-          flex-direction: column;
-        }
-        .hotel-desc {
-          font-size: 14px;
-          line-height: 1.6;
-          color: var(--text-muted);
-          margin: 0;
-          text-align: justify;
-        }
-        .hotel-tags {
-          display: flex;
-          gap: 16px;
-          margin-top: 16px;
-          font-size: 13px;
-          color: var(--text-main);
-          font-weight: 600;
-          flex-wrap: wrap;
-          align-items: center;
-        }
-        .hotel-tags span.tel {
-          color: var(--text-muted);
-          font-size: 12px;
-          font-weight: 400;
         }
       </style>
       <div class="container">
         <div class="section-head" style="grid-template-columns: 1fr;">
           <h2 class="font-serif" style="font-size: clamp(32px, 4vw, 48px); color: var(--primary); margin: 0 0 10px;">
-            {{ "Selected Hotel Plan" | translate(lang) }}</h2>
-          <p style="color: var(--text-muted); margin: 0;">{{ "Proposed hotels and luxury cruises selected for your
-            journey. Subject to availability at confirmation." | translate(lang) }}</p>
+            خطة الفنادق المختارة</h2>
+          <p style="color: var(--text-muted); margin: 0;">Proposed hotels and luxury cruises selected for your
+            journey. Subject to availability at confirmation.</p>
         </div>
 
-        {% if hotels %}
-        <div class="hotel-plan-container">
-          {% set seen_hotel_names = [] %}
-          {% set ns = namespace(count=0) %}
-          {% for item in hotels %}
-          {% if item.name not in seen_hotel_names %}
-          {% set _ = seen_hotel_names.append(item.name) %}
-          {% set is_odd = (ns.count % 2 == 0) %}
-          <div class="hotel-card-editorial">
-            <div class="hotel-editorial-grid {% if is_odd %}odd-row{% else %}even-row{% endif %}">
-              
-              {# Aggregate dates for this hotel #}
-              {% set date_ranges = [] %}
-              {% for h in hotels %}
-                {% if h.name == item.name and h.date_range %}
-                  {% set _ = date_ranges.append(h.date_range) %}
-                {% endif %}
-              {% endfor %}
+        
+        <div class="hotel-plan-container" style="display: flex; flex-direction: column; gap: 48px; margin-top: 40px;">
+          
+          <div class="hotel-card"
+            style="border-bottom: 1px solid var(--line); padding-bottom: 40px; ">
+            <!-- Header (City / Country & Hotel Name) -->
+            <div class="hotel-header" style="margin-bottom: 20px;">
+              <span class="hotel-city"
+                style="display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;"
+                data-editable="hotel_city_1">SAPA, VIETNAM</span>
+              <h3 class="hotel-name font-serif"
+                style="font-size: 26px; font-weight: 700; color: var(--text-main); margin: 0; letter-spacing: 0.02em;"
+                data-editable="hotel_name_1">Aliana Boutique <span class="ltr-token">Sapa</span> Hotel And Spa</h3>
+            </div>
 
-              <!-- Side-by-Side Images -->
-              <div class="hotel-images-group hotel-images-grid {% if is_odd %}odd-group{% else %}even-group{% endif %}">
-                <div class="img-wrapper-main hotel-image-wrapper">
-                  <img src="{{ item.hotel_img }}" alt="{{ item.name }}">
-                </div>
-                <div class="img-wrapper-sub hotel-image-wrapper">
-                  <img src="{{ item.room_img }}" alt="{{ item.name }} Room">
-                </div>
+            <!-- Side-by-Side Images -->
+            <div class="hotel-images-grid"
+              style="display: grid; grid-template-columns: 1fr 1.6fr; gap: 16px; margin: 20px 0;">
+              <div class="hotel-image-wrapper"
+                style="height: 280px; border-radius: 4px; overflow: hidden; position: relative;">
+                <img src="/assets/hotels/sapa/aliana-boutique-sapa-hotel-spa/exterior/exterior_1.jpg" alt="Aliana Boutique Sapa Hotel And Spa"
+                  style="width: 100%; height: 100%; object-fit: cover; display: block;">
               </div>
+              <div class="hotel-image-wrapper"
+                style="height: 280px; border-radius: 4px; overflow: hidden; position: relative;">
+                <img src="/assets/hotels/sapa/aliana-boutique-sapa-hotel-spa/interior/interior_2.jpg" alt="Aliana Boutique Sapa Hotel And Spa Room"
+                  style="width: 100%; height: 100%; object-fit: cover; display: block;">
+              </div>
+            </div>
 
-              <!-- Footer Columns (Introduction & Info/Tel) -->
-              <div class="hotel-info-block">
-                <div class="hotel-header-mobile">
-                  <div class="hotel-subtitle hotel-city" data-editable="hotel_city_{{ loop.index }}">{{ item.city_country | rtl_mixed(lang) }}</div>
-                  <h3 class="hotel-name hotel-title font-serif" data-editable="hotel_name_{{ loop.index }}">{{ item.name | rtl_mixed(lang) }}</h3>
-                </div>
+            <!-- Footer Columns (Introduction & Info/Tel) -->
+            <div class="hotel-footer-layout"
+              style="display: flex; justify-content: space-between; align-items: flex-start; gap: 40px; margin-top: 20px; flex-wrap: wrap;">
+              <div class="hotel-intro" style="flex: 1; min-width: 280px;">
                 
-                <div class="hotel-desc-mobile">
-                  {% if show_hotel_intro and item.introduction %}
-                  <p class="hotel-desc" data-editable="hotel_intro_{{ loop.index }}">{{ item.introduction | rtl_mixed(lang) }}</p>
-                  {% endif %}
-                  
-                  <div class="hotel-tags">
-                    <span data-editable="hotel_date_{{ loop.index }}">
-                      {% for dr in date_ranges %}
-                        <span class="ltr-token">{{ dr }}</span>{% if not loop.last %} &bull; {% endif %}
-                      {% endfor %}
-                    </span>
-                    <span class="tel" data-editable="hotel_tel_{{ loop.index }}">{{ "TEL:" | translate(lang) }} <span class="ltr-token">{{ item.tel }}</span></span>
-                  </div>
-                </div>
+                <p style="font-size: 14px; line-height: 1.6; color: var(--text-muted); margin: 0; text-align: justify;"
+                  data-editable="hotel_intro_1">Located in the scenic mist-covered hills of <span class="ltr-token">Sapa</span>, Aliana Boutique <span class="ltr-token">Sapa</span> Hotel And Spa features stunning panoramic views of <span class="ltr-token">Fansipan</span> mountain and Muong Hoa valley. Designed with local heritage details, the hotel offers comfortable heated rooms, an outdoor pool, and local gourmet dining.</p>
+                
+              </div>
+              <div class="hotel-info">
+                <h4 class="font-serif"
+                  style="font-size: 16px; font-weight: 700; color: var(--primary); margin: 0; letter-spacing: 0.04em; text-transform: uppercase;"
+                  data-editable="hotel_info_name_1">Aliana Boutique <span class="ltr-token">Sapa</span> Hotel And Spa</h4>
+                <span style="font-size: 14px; font-weight: 500; color: var(--text-main); margin-top: 8px;"
+                  data-editable="hotel_date_1"><span class="ltr-token">30 سبتمبر – 03 أكتوبر 2026</span></span>
+                <span style="font-size: 12px; color: var(--text-muted); margin-top: 6px; letter-spacing: 0.05em;"
+                  data-editable="hotel_tel_1">هاتف: <span class="ltr-token">+84 214 377 8888</span></span>
               </div>
             </div>
           </div>
-          {% set ns.count = ns.count + 1 %}
-          {% endif %}
-          {% endfor %}
-        </div>
-        {% else %}
-        <p style="color: var(--text-muted); font-style: italic; margin-top: 20px;">Hotel arrangements will be tailored
-          and detailed here for your specific travel dates.</p>
-        {% endif %}
+          
+          <div class="hotel-card"
+            style="border-bottom: 1px solid var(--line); padding-bottom: 40px; ">
+            <!-- Header (City / Country & Hotel Name) -->
+            <div class="hotel-header" style="margin-bottom: 20px;">
+              <span class="hotel-city"
+                style="display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;"
+                data-editable="hotel_city_2">SAPA, VIETNAM</span>
+              <h3 class="hotel-name font-serif"
+                style="font-size: 26px; font-weight: 700; color: var(--text-main); margin: 0; letter-spacing: 0.02em;"
+                data-editable="hotel_name_2">Chapa Express Train</h3>
+            </div>
 
-        {% if room_notes %}
+            <!-- Side-by-Side Images -->
+            <div class="hotel-images-grid"
+              style="display: grid; grid-template-columns: 1fr 1.6fr; gap: 16px; margin: 20px 0;">
+              <div class="hotel-image-wrapper"
+                style="height: 280px; border-radius: 4px; overflow: hidden; position: relative;">
+                <img src="/assets/hotels/sapa/chapa-express-train/exterior/exterior_2.jpg" alt="Chapa Express Train"
+                  style="width: 100%; height: 100%; object-fit: cover; display: block;">
+              </div>
+              <div class="hotel-image-wrapper"
+                style="height: 280px; border-radius: 4px; overflow: hidden; position: relative;">
+                <img src="/assets/hotels/sapa/chapa-express-train/interior/interior_4.jpg" alt="Chapa Express Train Room"
+                  style="width: 100%; height: 100%; object-fit: cover; display: block;">
+              </div>
+            </div>
+
+            <!-- Footer Columns (Introduction & Info/Tel) -->
+            <div class="hotel-footer-layout"
+              style="display: flex; justify-content: space-between; align-items: flex-start; gap: 40px; margin-top: 20px; flex-wrap: wrap;">
+              <div class="hotel-intro" style="flex: 1; min-width: 280px;">
+                
+                <p style="font-size: 14px; line-height: 1.6; color: var(--text-muted); margin: 0; text-align: justify;"
+                  data-editable="hotel_intro_2">Chapa Express Train offers premium overnight sleeper service between <span class="ltr-token">Hanoi</span> and Lao Cai (<span class="ltr-token">Sapa</span>). Featuring traditional wooden panels, comfortable air-conditioned cabins, clean amenities, and personalized passenger hospitality.</p>
+                
+              </div>
+              <div class="hotel-info">
+                <h4 class="font-serif"
+                  style="font-size: 16px; font-weight: 700; color: var(--primary); margin: 0; letter-spacing: 0.04em; text-transform: uppercase;"
+                  data-editable="hotel_info_name_2">Chapa Express Train</h4>
+                <span style="font-size: 14px; font-weight: 500; color: var(--text-main); margin-top: 8px;"
+                  data-editable="hotel_date_2"><span class="ltr-token">03 أكتوبر – 04 أكتوبر 2026</span></span>
+                <span style="font-size: 12px; color: var(--text-muted); margin-top: 6px; letter-spacing: 0.05em;"
+                  data-editable="hotel_tel_2">هاتف: <span class="ltr-token">+84 24 3999 6868</span></span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="hotel-card"
+            style="border-bottom: 1px solid var(--line); padding-bottom: 40px; ">
+            <!-- Header (City / Country & Hotel Name) -->
+            <div class="hotel-header" style="margin-bottom: 20px;">
+              <span class="hotel-city"
+                style="display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;"
+                data-editable="hotel_city_3">HANOI, VIETNAM</span>
+              <h3 class="hotel-name font-serif"
+                style="font-size: 26px; font-weight: 700; color: var(--text-main); margin: 0; letter-spacing: 0.02em;"
+                data-editable="hotel_name_3"><span class="ltr-token">Hanoi</span> Le Jardin Hotel &amp; Spa</h3>
+            </div>
+
+            <!-- Side-by-Side Images -->
+            <div class="hotel-images-grid"
+              style="display: grid; grid-template-columns: 1fr 1.6fr; gap: 16px; margin: 20px 0;">
+              <div class="hotel-image-wrapper"
+                style="height: 280px; border-radius: 4px; overflow: hidden; position: relative;">
+                <img src="/assets/hotels/hanoi/hanoi-le-jardin-hotel-spa/exterior/exterior_3.jpg" alt="Hanoi Le Jardin Hotel &amp; Spa"
+                  style="width: 100%; height: 100%; object-fit: cover; display: block;">
+              </div>
+              <div class="hotel-image-wrapper"
+                style="height: 280px; border-radius: 4px; overflow: hidden; position: relative;">
+                <img src="/assets/hotels/hanoi/hanoi-le-jardin-hotel-spa/interior/interior_4.jpg" alt="Hanoi Le Jardin Hotel &amp; Spa Room"
+                  style="width: 100%; height: 100%; object-fit: cover; display: block;">
+              </div>
+            </div>
+
+            <!-- Footer Columns (Introduction & Info/Tel) -->
+            <div class="hotel-footer-layout"
+              style="display: flex; justify-content: space-between; align-items: flex-start; gap: 40px; margin-top: 20px; flex-wrap: wrap;">
+              <div class="hotel-intro" style="flex: 1; min-width: 280px;">
+                
+                <p style="font-size: 14px; line-height: 1.6; color: var(--text-muted); margin: 0; text-align: justify;"
+                  data-editable="hotel_intro_3">Nestled in the historic Ba Dinh district, <span class="ltr-token">Hanoi</span> Le Jardin Hotel &amp; Spa blends French colonial charm with modern hospitality. It offers elegant rooms, a rooftop bar with spectacular city views, and a serene spa for a perfect urban retreat.</p>
+                
+              </div>
+              <div class="hotel-info">
+                <h4 class="font-serif"
+                  style="font-size: 16px; font-weight: 700; color: var(--primary); margin: 0; letter-spacing: 0.04em; text-transform: uppercase;"
+                  data-editable="hotel_info_name_3"><span class="ltr-token">Hanoi</span> Le Jardin Hotel &amp; Spa</h4>
+                <span style="font-size: 14px; font-weight: 500; color: var(--text-main); margin-top: 8px;"
+                  data-editable="hotel_date_3"><span class="ltr-token">04 أكتوبر – 06 أكتوبر 2026</span></span>
+                <span style="font-size: 12px; color: var(--text-muted); margin-top: 6px; letter-spacing: 0.05em;"
+                  data-editable="hotel_tel_3">هاتف: <span class="ltr-token">+84 24 3927 5888</span></span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="hotel-card"
+            style="border-bottom: 1px solid var(--line); padding-bottom: 40px; border-bottom: none; padding-bottom: 0;">
+            <!-- Header (City / Country & Hotel Name) -->
+            <div class="hotel-header" style="margin-bottom: 20px;">
+              <span class="hotel-city"
+                style="display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;"
+                data-editable="hotel_city_4">HALONG BAY, VIETNAM</span>
+              <h3 class="hotel-name font-serif"
+                style="font-size: 26px; font-weight: 700; color: var(--text-main); margin: 0; letter-spacing: 0.02em;"
+                data-editable="hotel_name_4">Ambassador Signature Cruise</h3>
+            </div>
+
+            <!-- Side-by-Side Images -->
+            <div class="hotel-images-grid"
+              style="display: grid; grid-template-columns: 1fr 1.6fr; gap: 16px; margin: 20px 0;">
+              <div class="hotel-image-wrapper"
+                style="height: 280px; border-radius: 4px; overflow: hidden; position: relative;">
+                <img src="/assets/hotels/halong/ambassador-signature-cruise/exterior/exterior_4.jpg" alt="Ambassador Signature Cruise"
+                  style="width: 100%; height: 100%; object-fit: cover; display: block;">
+              </div>
+              <div class="hotel-image-wrapper"
+                style="height: 280px; border-radius: 4px; overflow: hidden; position: relative;">
+                <img src="/assets/hotels/halong/ambassador-signature-cruise/interior/interior_1.jpg" alt="Ambassador Signature Cruise Room"
+                  style="width: 100%; height: 100%; object-fit: cover; display: block;">
+              </div>
+            </div>
+
+            <!-- Footer Columns (Introduction & Info/Tel) -->
+            <div class="hotel-footer-layout"
+              style="display: flex; justify-content: space-between; align-items: flex-start; gap: 40px; margin-top: 20px; flex-wrap: wrap;">
+              <div class="hotel-intro" style="flex: 1; min-width: 280px;">
+                
+                <p style="font-size: 14px; line-height: 1.6; color: var(--text-muted); margin: 0; text-align: justify;"
+                  data-editable="hotel_intro_4">A premier 5-star overnight cruise sailing through the mystical waters of <span class="ltr-token">Halong Bay</span> and Lan Ha Bay. The cruise features elegant cabins with private balconies, upscale dining, an outdoor jacuzzi, and immersive itineraries showcasing natural wonders.</p>
+                
+              </div>
+              <div class="hotel-info">
+                <h4 class="font-serif"
+                  style="font-size: 16px; font-weight: 700; color: var(--primary); margin: 0; letter-spacing: 0.04em; text-transform: uppercase;"
+                  data-editable="hotel_info_name_4">Ambassador Signature Cruise</h4>
+                <span style="font-size: 14px; font-weight: 500; color: var(--text-main); margin-top: 8px;"
+                  data-editable="hotel_date_4"><span class="ltr-token">06 أكتوبر – 07 أكتوبر 2026</span></span>
+                <span style="font-size: 12px; color: var(--text-muted); margin-top: 6px; letter-spacing: 0.05em;"
+                  data-editable="hotel_tel_4">هاتف: <span class="ltr-token">+84 90 175 8888</span></span>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+        
+
+        
         <div
           style="margin-top: 32px; padding: 18px; background: color-mix(in srgb, var(--accent) 6%, transparent); border-radius: 14px; border: 1px dashed var(--accent);">
           <strong
-            style="color: var(--accent); text-transform: uppercase; font-size: 11px; letter-spacing: 0.12em; display: block; margin-bottom: 6px;">{{
-            "Room Notes & Special Requests" | translate(lang) }}</strong>
-          <div data-editable="room_notes" style="font-size: 14px; color: var(--text-muted);">{{ room_notes |
-            rtl_mixed(lang) }}</div>
+            style="color: var(--accent); text-transform: uppercase; font-size: 11px; letter-spacing: 0.12em; display: block; margin-bottom: 6px;">ملاحظات الغرفة والطلبات الخاصة</strong>
+          <div data-editable="room_notes" style="font-size: 14px; color: var(--text-muted);">Double + Triple room configurations pre-arranged across all properties. For the overnight train, 2 private 4-berth cabins have been fully booked for 5 guests to ensure complete comfort.</div>
         </div>
-        {% endif %}
+        
       </div>
     </section>
 
@@ -3215,51 +3401,35 @@
     <section id="quotation">
       <div class="container">
         <div class="pricing">
-          <h2 data-editable="pricing_h2">{{pricing_h2}}</h2>
-          <p data-editable="pricing_p">{{pricing_p}}</p>
+          <h2 data-editable="pricing_h2">الاستثمار في الرحلة: 5,456 دولار أمريكي</h2>
+          <p data-editable="pricing_p">الإجمالي: Anisha. العملة: USD. الأسعار النهائية تخضع لإعادة التأكيد.</p>
           <div class="price-grid">
-            {% for opt in price_options %}
-            <div class="price-card {% if opt.isConfirmedMainOption %}featured{% endif %}">
-              <span data-editable="price_opt_cat_{{ loop.index }}">{{ opt.hotelCategory }}</span>
-              {% if opt.optionName %}
-              <small data-editable="price_opt_name_{{ loop.index }}"
-                style="color:#555555;font-size:11px;display:block;margin-top:4px">{{ opt.optionName
-                }}</small>
-              {% endif %}
-              {% if opt.is_total %}
-              <strong data-editable="price_pax_{{ loop.index }}" style="font-size:28px"><span class="ltr-token">{{
-                  opt.totalPrice.displayText or ('{:,.0f}'.format(opt.totalPrice.amount) ~ ' ' ~
-                  opt.totalPrice.currency) }}</span></strong>
-              <small>{{ "total package" | translate(lang) }}</small><br>
-              <span style="font-size:13px;opacity:.8">{{ "Per person:" | translate(lang) }} <span class="ltr-token">{{
-                  opt.pricePerPerson.displayText or
-                  ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~ opt.pricePerPerson.currency) }}</span></span>
-              {% else %}
-              <strong data-editable="price_pax_{{ loop.index }}" style="font-size:28px"><span class="ltr-token">{{
-                  opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~
-                  opt.pricePerPerson.currency) }}</span></strong>
-              {% endif %}
-              {% if opt.isConfirmedMainOption %}
+            
+            <div class="price-card featured">
+              <span data-editable="price_opt_cat_1">Premium Accommodations &amp; Cruise (5 Adults)</span>
+              
+              <small data-editable="price_opt_name_1"
+                style="color:rgba(255,255,255,.55);font-size:11px;display:block;margin-top:4px">Double + Triple sharing basis</small>
+              
+              
+              <strong data-editable="price_pax_1" style="font-size:28px"><span class="ltr-token">1,060 دولار أمريكي للشخص الواحد</span></strong>
+              
+              
               <div
-                style="margin-top:12px;font-size:10px;letter-spacing:.14em;color: #8c6b23;font-weight:800">
-                {{ "✓ CONFIRMED MAIN OPTION" | translate(lang) }}</div>
-              {% elif opt.isAlternativeOption %}
-              <div
-                style="margin-top:12px;font-size:10px;letter-spacing:.14em;color:#8c6b23;font-weight:700">
-                {{ "ALTERNATIVE OPTION" | translate(lang) }}</div>
-              {% endif %}
+                style="margin-top:12px;font-size:10px;letter-spacing:.14em;color: var(--accent-light);font-weight:800">
+                ✓ الخيار المؤكد الرئيسي</div>
+              
             </div>
-            {% endfor %}
+            
           </div>
-          {% if price_cond_paras and price_cond_paras[0] %}
+          
           <div
-            style="margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(0,0,0,0.12); font-size: 14px; color: #333333; line-height: 1.6; text-align: left;">
+            style="margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 14px; color: rgba(255,255,255,0.8); line-height: 1.6; text-align: left;">
             <strong
-              style="color: #8c6b23; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.15em; font-size: 11px; font-weight: 700;">{{
-              "Important Note" | translate(lang) }}</strong>
-            <p style="margin: 0;" data-editable="price_cond_first">{{ price_cond_paras[0] }}</p>
+              style="color: var(--accent-light); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.15em; font-size: 11px; font-weight: 700;">ملاحظة مهمة</strong>
+            <p style="margin: 0;" data-editable="price_cond_first">الأسعار التقديرية الصافية للشركاء التجاريين وتخضع لإعادة التأكيد عند الحجز.</p>
           </div>
-          {% endif %}
+          
         </div>
       </div>
     </section>
@@ -3267,39 +3437,79 @@
     <section>
       <div class="container">
         <div class="section-head" style="grid-template-columns: 1fr; margin-bottom: 32px;">
-          <h2 data-editable="inc_exc_h2">{{ inclusions_title | default("What Your Journey Includes" | translate(lang))
-            }}</h2>
+          <h2 data-editable="inc_exc_h2">ما تشمله برنامج رحلتك</h2>
         </div>
         <div class="two-col">
           <article class="panel">
-            <h3>{{ "Inclusions" | translate(lang) }}</h3>
-            {% if inclusions_lede %}
-            <p style="font-size:14px; color:var(--text-muted); line-height:1.6; margin-bottom:16px; margin-top:-8px;">{{inclusions_lede}}</p>
-            {% endif %}
+            <h3>ما يشمله البرنامج</h3>
+            
+            <p style="font-size:14px; color:var(--text-muted); line-height:1.6; margin-bottom:16px; margin-top:-8px;">لقد تم ترتيب رحلتك بعناية لضمان تجربة سلسة ومريحة طوال الوقت.</p>
+            
             <ul id="inclusions-list" style="list-style-type:none; padding-left:0;">
-              {% for item in inclusions %}
-              {% if item is mapping %}
-              <li style="margin-bottom:16px; line-height:1.6;">
-                <strong style="color:var(--primary); display:block; font-size:15px; margin-bottom:2px;">{{ item.title
-                  }}</strong>
-                <span style="font-size:13px; color:var(--text-muted);">{{ item.desc }}</span>
-              </li>
-              {% else %}
+              
+              
               <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;"
-                data-editable="inc_{{ loop.index }}">{{item}}</li>
-              {% endif %}
-              {% endfor %}
+                data-editable="inc_1">Airport pick-up, private transfer Hanoi - Sapa, Indian vegetarian lunch and dinner.</li>
+              
+              
+              
+              <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;"
+                data-editable="inc_2">Sapa full-day tour with guide and entry tickets, vegetarian lunch and dinner.</li>
+              
+              
+              
+              <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;"
+                data-editable="inc_3">Fansipan cable car tickets, guide, Sapa transfers.</li>
+              
+              
+              
+              <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;"
+                data-editable="inc_4">Station transfer, Chapa Express Train tickets.</li>
+              
+              
+              
+              <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;"
+                data-editable="inc_5">Station transfer, Hanoi full-day tour with guide and entry tickets.</li>
+              
+              
+              
+              <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;"
+                data-editable="inc_6">Hanoi full-day tour with guide and entry tickets.</li>
+              
+              
+              
+              <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;"
+                data-editable="inc_7">Private transfer Hanoi - Halong, cabins on Ambassador Signature Cruise, cruise excursions.</li>
+              
+              
+              
+              <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;"
+                data-editable="inc_8">Onboard vegetarian brunch, private transfer Halong - Hanoi Airport.</li>
+              
+              
             </ul>
           </article>
           <article class="panel">
-            <h3>{{ exclusions_title | default("Exclusions" | translate(lang)) }}</h3>
-            {% if exclusions_lede %}
-            <p style="font-size:14px; color:var(--text-muted); line-height:1.6; margin-bottom:16px; margin-top:-8px;">{{exclusions_lede}}</p>
-            {% endif %}
+            <h3>الخدمات غير المشمولة</h3>
+            
+            <p style="font-size:14px; color:var(--text-muted); line-height:1.6; margin-bottom:16px; margin-top:-8px;">للحفاظ على شفافية ووضوح رحلتك، لا تشمل الرحلة الخدمات التالية ما لم يُنص على خلاف ذلك:</p>
+            
             <ul id="exclusions-list" style="list-style-type:disc; padding-left:20px;">
-              {% for item in exclusions %}
-              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_{{ loop.index }}">{{item}}</li>
-              {% endfor %}
+              
+              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_1">رحلات الطيران الدولية</li>
+              
+              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_2">رسوم التأشيرة ووثائق السفر</li>
+              
+              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_3">التأمين على السفر</li>
+              
+              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_4">المصاريف الشخصية</li>
+              
+              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_5">التجارب الاختيارية غير المحددة في مسار الرحلة</li>
+              
+              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_6">البقشيش والإكراميات</li>
+              
+              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_7">أي خدمات أخرى لم يتم ذكرها صراحة ضمن الخدمات المشمولة</li>
+              
             </ul>
           </article>
         </div>
@@ -3313,39 +3523,35 @@
       <div class="container">
         <div class="section-head" style="grid-template-columns: 1fr;">
           <h2 class="font-serif" style="font-size: clamp(32px, 4vw, 48px); color: var(--primary); margin: 0 0 10px;">
-            {{ "Booking & Payment Terms" | translate(lang) }}</h2>
-          <p style="color: var(--text-muted); margin: 0;">{{ "Commercial conditions, deposits, and cancellation policy
-            for this booking." | translate(lang) }}</p>
+            شروط الحجز والدفع</h2>
+          <p style="color: var(--text-muted); margin: 0;">Commercial conditions, deposits, and cancellation policy
+            for this booking.</p>
         </div>
         <div style="overflow-x: auto; margin-top: 32px; border-radius: 18px; border: 1px solid var(--line);">
           <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
             <thead>
               <tr style="background: var(--primary); color: white;">
-                <th class="term-th" style="padding: 16px 20px; width: 250px;">{{ "Term" | translate(lang) }}</th>
-                <th style="padding: 16px 20px;">{{ "Condition" | translate(lang) }}</th>
+                <th class="term-th" style="padding: 16px 20px; width: 250px;">البند</th>
+                <th style="padding: 16px 20px;">الشرط</th>
               </tr>
             </thead>
             <tbody>
               <tr style="border-bottom: 1px solid var(--line); background: white;">
-                <td style="padding: 16px 20px; font-weight: 700; color: var(--primary);">{{ "Deposit" | translate(lang)
-                  }}</td>
-                <td style="padding: 16px 20px;" data-editable="term_deposit">{{term_deposit}}</td>
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--primary);">الدفعة المقدمة</td>
+                <td style="padding: 16px 20px;" data-editable="term_deposit">A 30% deposit is required at the time of booking to secure hotels, cruise, and train cabins.</td>
               </tr>
               <tr
                 style="border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--accent) 5%, transparent);">
-                <td style="padding: 16px 20px; font-weight: 700; color: var(--primary);">{{ "Balance" | translate(lang)
-                  }}</td>
-                <td style="padding: 16px 20px;" data-editable="term_balance">{{term_balance}}</td>
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--primary);">المبلغ المتبقي</td>
+                <td style="padding: 16px 20px;" data-editable="term_balance">The remaining 70% balance is due 30 days prior to arrival.</td>
               </tr>
               <tr style="border-bottom: 1px solid var(--line); background: white;">
-                <td style="padding: 16px 20px; font-weight: 700; color: var(--primary);">{{ "Cancellation" |
-                  translate(lang) }}</td>
-                <td style="padding: 16px 20px;" data-editable="term_cancellation">{{term_cancellation}}</td>
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--primary);">الإلغاء</td>
+                <td style="padding: 16px 20px;" data-editable="term_cancellation">Free cancellation up to 45 days prior to departure. 50% cancellation fee between 44 and 15 days.</td>
               </tr>
               <tr style="background: color-mix(in srgb, var(--accent) 5%, transparent);">
-                <td style="padding: 16px 20px; font-weight: 700; color: var(--primary);">{{ "Confirmation" |
-                  translate(lang) }}</td>
-                <td style="padding: 16px 20px;" data-editable="term_confirmation">{{term_confirmation}}</td>
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--primary);">التأكيد</td>
+                <td style="padding: 16px 20px;" data-editable="term_confirmation">Subject to availability. Final confirmations will be sent within 24 hours of deposit receipt.</td>
               </tr>
             </tbody>
           </table>
@@ -3356,52 +3562,49 @@
       </div>
     </section>
 
-    {% if show_designer_section %}
+    
 
-    {% endif %}
+    
 
     <section id="contact">
       <div class="container">
         <div class="cta">
           <div>
-            <div class="kicker overline">{{ "Next step" | translate(lang) }}</div>
-            <h2 data-editable="cta_h2">{{cta_h2}}</h2>
+            <div class="kicker overline">الخطوة التالية</div>
+            <h2 data-editable="cta_h2">أكّد التواريخ ثم اضبط مستوى الفخامة.</h2>
             <div class="two-col" style="margin-top: 24px; text-align: left; font-size: 13px;">
               <div>
                 <strong
-                  style="color: #8c6b23; text-transform: uppercase; font-size: 11px; letter-spacing: 0.1em; display: block; margin-bottom: 8px;">{{
-                  "Final Details Required" | translate(lang) }}</strong>
-                <ul style="margin: 0; padding-left: 16px; display: grid; gap: 6px; color: #000000;">
-                  {% for item in final_req %}
-                  <li style="line-height: 1.4;">{{item}}</li>
-                  {% endfor %}
+                  style="color: var(--accent-light); text-transform: uppercase; font-size: 11px; letter-spacing: 0.1em; display: block; margin-bottom: 8px;">التفاصيل النهائية المطلوبة</strong>
+                <ul style="margin: 0; padding-left: 16px; display: grid; gap: 6px; color: rgba(255,255,255,0.8);">
+                  
+                  <li style="line-height: 1.4;">Passport copies valid for at least 6 months and international flight details are required to complete arrangements.</li>
+                  
                 </ul>
               </div>
               <div>
                 <strong
-                  style="color: #8c6b23; text-transform: uppercase; font-size: 11px; letter-spacing: 0.1em; display: block; margin-bottom: 8px;">{{
-                  "After Confirmation" | translate(lang) }}</strong>
-                <ul style="margin: 0; padding-left: 16px; display: grid; gap: 6px; color: #000000;">
-                  {% for item in final_after %}
-                  <li style="line-height: 1.4;">{{item}}</li>
-                  {% endfor %}
+                  style="color: var(--accent-light); text-transform: uppercase; font-size: 11px; letter-spacing: 0.1em; display: block; margin-bottom: 8px;">بعد التأكيد</strong>
+                <ul style="margin: 0; padding-left: 16px; display: grid; gap: 6px; color: rgba(255,255,255,0.8);">
+                  
+                  <li style="line-height: 1.4;">Your dedicated 24/7 travel host details and final service vouchers will be shared 7 days prior to departure.</li>
+                  
                 </ul>
               </div>
             </div>
           </div>
           <div class="contact">
-            <label>{{ "Website" | translate(lang) }}</label>
-            <div data-editable="contact_web"><span class="ltr-token">{{contact_web}}</span></div>
-            <label>{{ "WhatsApp" | translate(lang) }}</label>
-            <div data-editable="contact_phone"><span class="ltr-token">{{contact_phone}}</span></div>
-            <label>{{ "Prepared by" | translate(lang) }}</label>
-            <div data-editable="seller_name2">{{ seller_name | rtl_mixed(lang) }}</div>
-            {% if seller_email %}
+            <label>الموقع الإلكتروني</label>
+            <div data-editable="contact_web"><span class="ltr-token">journeys.capellatravel.com</span></div>
+            <label>واتساب</label>
+            <div data-editable="contact_phone"><span class="ltr-token">+84 911 538 738</span></div>
+            <label>أُعدّ بواسطة</label>
+            <div data-editable="seller_name2">Capella Travel</div>
+            
             <div style="margin-top:24px" class="no-print">
-              <a class="btn btn-accent" href="mailto:{{seller_email}}">{{ "Request final confirmation" |
-                translate(lang) }}</a>
+              <a class="btn btn-accent" href="mailto:sales@capellatravel.com">طلب التأكيد النهائي</a>
             </div>
-            {% endif %}
+            
           </div>
         </div>
       </div>
@@ -3418,20 +3621,17 @@
             </div>
           </div>
           <div class="designer-info">
-            <span data-editable="designer_kicker">{{ "Your Dedicated Specialist" | translate(lang) }}</span>
-            <h2 data-editable="designer_title">{{ "Meet Your Travel Specialist" | translate(lang) }}</h2>
-            <p class="designer-quote" data-editable="designer_quote">"{{ "I am your dedicated travel specialist. I
+            <span data-editable="designer_kicker">مستشارك المتخصص</span>
+            <h2 data-editable="designer_title">تعرّف على مصمم رحلتك</h2>
+            <p class="designer-quote" data-editable="designer_quote">"I am your dedicated travel specialist. I
               handpicked every hotel, private transfer, and local guide on this itinerary to ensure you experience the
               true depth of Vietnam in comfort, privacy, and at your own pace. I will personally oversee your journey
-              from behind the scenes." | translate(lang) }}"</p>
+              from behind the scenes."</p>
             <div class="designer-details">
-              <div><strong>{{ "Expertise:" | translate(lang) }}</strong> <span data-editable="designer_expertise">{{
-                  "Custom Itineraries, Luxury Travel, Local Experiences" | translate(lang) }}</span></div>
-              <div><strong>{{ "Experience:" | translate(lang) }}</strong> <span data-editable="designer_experience">{{
-                  "Years designing bespoke journeys" | translate(lang) }}</span></div>
+              <div><strong>التخصص:</strong> <span data-editable="designer_expertise">مسارات مخصصة، سفر فاخر، تجارب محلية</span></div>
+              <div><strong>الخبرة:</strong> <span data-editable="designer_experience">سنوات من الخبرة في تصميم الرحلات المخصصة</span></div>
             </div>
-            <div class="designer-signature font-accent" data-editable="designer_signature">{{ "Your Travel Specialist" |
-              translate(lang) }}</div>
+            <div class="designer-signature font-accent" data-editable="designer_signature">Anh Son Le</div>
           </div>
         </div>
       </div>
@@ -3439,7 +3639,7 @@
   </main>
 
   <footer class="footer">
-    <div class="container" data-editable="footer_text">{{ footer_text | rtl_mixed(lang) }}</div>
+    <div class="container" data-editable="footer_text">Anisha&#39;s Family Trip — عرض سعر فاخر مُعدّ لصالح Anisha.</div>
   </footer>
 
   <!-- ── Publish Bar ─────────────────────────────────────────── -->
@@ -3447,8 +3647,8 @@
     <div class="pb-left">
       <div class="pb-dot"></div>
       <div class="pb-label">
-        <span class="pb-label-desktop">✏️ {{ client_i18n.editing }} <strong class="ltr-token">{{quotation_id}}</strong></span>
-        <span class="pb-label-mobile">✏️ <strong class="ltr-token">{{quotation_id}}</strong></span>
+        <span class="pb-label-desktop">✏️ قيد التحرير <strong class="ltr-token">quo_ac7d18dd7459</strong></span>
+        <span class="pb-label-mobile">✏️ <strong class="ltr-token">quo_ac7d18dd7459</strong></span>
       </div>
     </div>
     <span id="publish-status"></span>
@@ -3461,16 +3661,15 @@
           <path d="M2 17l10 5 10-5"></path>
           <path d="M2 12l10 5 10-5"></path>
         </svg>
-        <span class="template-text" style="font-weight:600;">{% if template_name == 'vietnam_heritage_luxury.html'
-          %}Heritage Theme{% elif template_name == 'prototype_itinerary_imagery.html' %}Prototype Theme{% else %}Brochure Theme{% endif %}</span>
+        <span class="template-text" style="font-weight:600;">Heritage Theme</span>
       </button>
       <select id="select-domain" class="no-print" style="display: none !important;">
-        <option value="https://{{ (brand.domain if brand else '') or 'journeys.vietnamsafar.vn' }}">Production</option>
+        <option value="https://journeys.capellatravel.com">Production</option>
       </select>
       <button id="btn-select-domain" onclick="openDomainModal(event)" title="Select Brand">
-        <img src="{{ (brand.logo if brand else '') or '/assets/vietnam-safar-logo.png' }}"
+        <img src="/assets/brands/capella_travel.png"
           style="width:16px; height:16px; border-radius:50%; object-fit:contain; background:white; margin-right:4px;" />
-        <span class="domain-text" style="font-weight:600;">{{ (brand.name if brand else '') or 'Vietnam Safar' }}</span>
+        <span class="domain-text" style="font-weight:600;">Capella Travel</span>
       </button>
       <button id="btn-view-live" onclick="redirectToLiveVersion(event)" title="View Live Version">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -3480,7 +3679,7 @@
         </svg>
         <span class="view-text">View Live</span>
       </button>
-      <button id="btn-publish" onclick="publishPage()">🚀 {{ client_i18n.publish_to_web }}</button>
+      <button id="btn-publish" onclick="publishPage()">🚀 نشر على الويب</button>
     </div>
   </div>
 
@@ -3492,30 +3691,56 @@
         <button class="pb-modal-close" onclick="closeDomainModal(event)">&times;</button>
       </div>
       <div class="pb-domain-list">
-        {% set brands_list = [
-        {'id': 'vietnam_safar', 'name': 'Vietnam Safar', 'domain': 'journeys.vietnamsafar.vn', 'logo':
-        '/assets/brands/vietnam_safar.png'},
-        {'id': 'capella_travel', 'name': 'Capella Travel', 'domain': 'journeys.capellatravel.com', 'logo':
-        '/assets/brands/capella_travel.svg'},
-        {'id': 'selvara', 'name': 'Selvara', 'domain': 'my.selvarajourneys.com', 'logo': '/assets/brands/selvara.svg'}
-        ] %}
-        {% for b in brands_list %}
-        {% set is_active = brand and brand.id == b.id %}
-        <div class="pb-domain-item {% if is_active %}active{% endif %}" data-brand="{{ b.id }}"
-          onclick="selectBrandOption('{{ b.id }}')"
+        
+        
+        
+        <div class="pb-domain-item " data-brand="vietnam_safar"
+          onclick="selectBrandOption('vietnam_safar')"
           style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
           <div style="display:flex; align-items:center; gap:12px;">
-            <img src="{{ b.logo }}"
+            <img src="/assets/brands/vietnam_safar.png"
               style="width:28px; height:28px; border-radius:50%; object-fit:contain; background:white; border:1px solid rgba(0,0,0,0.1);" />
             <div class="pb-domain-details">
-              <div class="pb-domain-name" style="font-weight:600; font-size:14px; text-align:left;">{{ b.name }}</div>
-              <div class="pb-domain-badge prod" style="font-size:11px; color:#666;">{{ b.domain }}</div>
+              <div class="pb-domain-name" style="font-weight:600; font-size:14px; text-align:left;">Vietnam Safar</div>
+              <div class="pb-domain-badge prod" style="font-size:11px; color:#666;">journeys.vietnamsafar.vn</div>
             </div>
           </div>
           <span class="pb-domain-check"
-            style="visibility: {% if is_active %}visible{% else %}hidden{% endif %}; color:var(--primary); font-weight:bold;">✓</span>
+            style="visibility: hidden; color:var(--primary); font-weight:bold;">✓</span>
         </div>
-        {% endfor %}
+        
+        
+        <div class="pb-domain-item active" data-brand="capella_travel"
+          onclick="selectBrandOption('capella_travel')"
+          style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <img src="/assets/brands/capella_travel.svg"
+              style="width:28px; height:28px; border-radius:50%; object-fit:contain; background:white; border:1px solid rgba(0,0,0,0.1);" />
+            <div class="pb-domain-details">
+              <div class="pb-domain-name" style="font-weight:600; font-size:14px; text-align:left;">Capella Travel</div>
+              <div class="pb-domain-badge prod" style="font-size:11px; color:#666;">journeys.capellatravel.com</div>
+            </div>
+          </div>
+          <span class="pb-domain-check"
+            style="visibility: visible; color:var(--primary); font-weight:bold;">✓</span>
+        </div>
+        
+        
+        <div class="pb-domain-item " data-brand="selvara"
+          onclick="selectBrandOption('selvara')"
+          style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <img src="/assets/brands/selvara.svg"
+              style="width:28px; height:28px; border-radius:50%; object-fit:contain; background:white; border:1px solid rgba(0,0,0,0.1);" />
+            <div class="pb-domain-details">
+              <div class="pb-domain-name" style="font-weight:600; font-size:14px; text-align:left;">Selvara</div>
+              <div class="pb-domain-badge prod" style="font-size:11px; color:#666;">my.selvarajourneys.com</div>
+            </div>
+          </div>
+          <span class="pb-domain-check"
+            style="visibility: hidden; color:var(--primary); font-weight:bold;">✓</span>
+        </div>
+        
       </div>
     </div>
   </div>
@@ -3528,7 +3753,7 @@
         <button class="pb-modal-close" onclick="closeTemplateModal(event)">&times;</button>
       </div>
       <div class="pb-domain-list">
-        <div class="pb-domain-item {% if template_name == 'vietnam_luxury_brosure.html' %}active{% endif %}"
+        <div class="pb-domain-item "
           onclick="promptSwitchTemplate('vietnam_luxury_brosure.html')"
           style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
           <div style="display:flex; align-items:center; gap:12px;">
@@ -3537,16 +3762,9 @@
               <div class="pb-domain-badge prod" style="font-size:11px; color:#666;">Modern & visual layout</div>
             </div>
           </div>
-          {% if template_name == 'vietnam_luxury_brosure.html' %}
-          <div style="color: #4CAF50;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
-              stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-          </div>
-          {% endif %}
+          
         </div>
-        <div class="pb-domain-item {% if template_name == 'vietnam_heritage_luxury.html' %}active{% endif %}"
+        <div class="pb-domain-item active"
           onclick="promptSwitchTemplate('vietnam_heritage_luxury.html')"
           style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
           <div style="display:flex; align-items:center; gap:12px;">
@@ -3555,16 +3773,16 @@
               <div class="pb-domain-badge prod" style="font-size:11px; color:#666;">Classic & structured layout</div>
             </div>
           </div>
-          {% if template_name == 'vietnam_heritage_luxury.html' %}
+          
           <div style="color: #4CAF50;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
               stroke-linecap="round" stroke-linejoin="round">
               <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
           </div>
-          {% endif %}
+          
         </div>
-        <div class="pb-domain-item {% if template_name == 'prototype_itinerary_imagery.html' %}active{% endif %}"
+        <div class="pb-domain-item "
           onclick="promptSwitchTemplate('prototype_itinerary_imagery.html')"
           style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
           <div style="display:flex; align-items:center; gap:12px;">
@@ -3573,20 +3791,12 @@
               <div class="pb-domain-badge prod" style="font-size:11px; color:#666;">Itinerary with Imagery</div>
             </div>
           </div>
-          {% if template_name == 'prototype_itinerary_imagery.html' %}
-          <div style="color: #4CAF50;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
-              stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-          </div>
-          {% endif %}
+          
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Custom Confirmation Modal for Theme Switch -->
   <div id="template-confirm-modal" class="pb-modal-overlay" onclick="closeTemplateConfirmModal(event)">
     <div class="pb-modal-card" onclick="event.stopPropagation()">
       <div class="pb-modal-header" style="border-bottom:none; padding-bottom:0; justify-content:center;">
@@ -3613,10 +3823,9 @@
         <div class="ring"></div>
         <div class="active-glow"></div>
       </div>
-      <h3>{{ "Translating Journey..." | translate(lang) }}</h3>
-      <p>{{ "Crafting a bespoke luxury narrative in" | translate(lang) }} <span id="loading-lang-name">{{
-          client_i18n.language_names.en }}</span></p>
-      <button class="btn-cancel" onclick="cancelTranslation()">{{ "CANCEL" | translate(lang) }}</button>
+      <h3>جاري ترجمة الرحلة...</h3>
+      <p>جاري صياغة مسار رحلة فاخر مخصص في <span id="loading-lang-name">الإنجليزية</span></p>
+      <button class="btn-cancel" onclick="cancelTranslation()">إلغاء</button>
     </div>
   </div>
 
@@ -3677,8 +3886,8 @@
     })();
 
     let domainModalMode = 'publish';
-    let modalLatestVersion = '{{ latest_version or 1 }}';
-    let modalItemId = '{{quotation_id}}';
+    let modalLatestVersion = '1';
+    let modalItemId = 'quo_ac7d18dd7459';
     let modalItemType = 'quotations';
 
     // Parse path and fetch latest version info on load
@@ -3744,7 +3953,7 @@
     function redirectToLiveVersion(event) {
       if (event) event.stopPropagation();
 
-      const brandDomain = "{{ (brand.domain if brand else '') or 'journeys.vietnamsafar.vn' }}";
+      const brandDomain = "journeys.capellatravel.com";
       const targetOrigin = `https://${brandDomain}`;
 
       if (window.location.pathname.includes('/published/')) {
@@ -3773,10 +3982,10 @@
   </script>
 
   <script id="translation-status" type="application/json">
-    {{ translation_status | tojson | safe }}
+    {"available_langs": ["ar"], "baseline_lang": "ar"}
   </script>
   <script id="client-i18n" type="application/json">
-    {{ client_i18n | tojson | safe }}
+    {"change": "\u062a\u063a\u064a\u064a\u0631", "committing_to_github": "\u062c\u0627\u0631\u064d \u062d\u0641\u0638 \u0627\u0644\u062a\u063a\u064a\u064a\u0631\u0627\u062a \u0639\u0644\u0649 GitHub...", "editing": "\u0642\u064a\u062f \u0627\u0644\u062a\u062d\u0631\u064a\u0631", "enable_notifications_browser": "\u064a\u0631\u062c\u0649 \u062a\u0641\u0639\u064a\u0644 \u0627\u0644\u0625\u0634\u0639\u0627\u0631\u0627\u062a \u0645\u0646 \u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u0645\u062a\u0635\u0641\u062d \u0644\u062a\u0644\u0642\u064a \u0627\u0644\u062a\u062d\u062f\u064a\u062b\u0627\u062a.", "go_to_slide": "\u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0625\u0644\u0649 \u0627\u0644\u0634\u0631\u064a\u062d\u0629", "language_names": {"ar": "\u0627\u0644\u0639\u0631\u0628\u064a\u0629", "en": "\u0627\u0644\u0625\u0646\u062c\u0644\u064a\u0632\u064a\u0629", "vi": "\u0627\u0644\u0641\u064a\u062a\u0646\u0627\u0645\u064a\u0629"}, "next_image": "\u0627\u0644\u0635\u0648\u0631\u0629 \u0627\u0644\u062a\u0627\u0644\u064a\u0629", "notification_title": "\u062a\u0641\u0639\u064a\u0644 \u0627\u0644\u0625\u0634\u0639\u0627\u0631\u0627\u062a", "previous_image": "\u0627\u0644\u0635\u0648\u0631\u0629 \u0627\u0644\u0633\u0627\u0628\u0642\u0629", "publish_to_web": "\u0646\u0634\u0631 \u0639\u0644\u0649 \u0627\u0644\u0648\u064a\u0628", "publishing": "\u062c\u0627\u0631\u064d \u0627\u0644\u0646\u0634\u0631...", "remove_block": "\u0625\u0632\u0627\u0644\u0629 \u0647\u0630\u0627 \u0627\u0644\u0642\u0633\u0645", "remove_block_confirm": "\u0647\u0644 \u062a\u0631\u064a\u062f \u0625\u0632\u0627\u0644\u0629 \u0647\u0630\u0627 \u0627\u0644\u0642\u0633\u0645\u061f \u0644\u0627 \u064a\u0645\u0643\u0646 \u0627\u0644\u062a\u0631\u0627\u062c\u0639 \u0639\u0646 \u0647\u0630\u0627 \u0627\u0644\u0625\u062c\u0631\u0627\u0621.", "test_notification_body": "\u062a\u0645 \u062a\u0639\u064a\u064a\u0646 \u0645\u0631\u0634\u062f\u0643 \u0627\u0644\u062e\u0627\u0635: Mr. Minh (Phone: +84 911 538 738).", "test_notification_title": "\u062a\u062d\u062f\u064a\u062b \u0628\u0631\u0646\u0627\u0645\u062c \u0627\u0644\u0631\u062d\u0644\u0629", "translate_block": "\u062a\u0631\u062c\u0645\u0629 \u0647\u0630\u0627 \u0627\u0644\u0645\u0642\u0637\u0639"}
   </script>
 
   <script id="editor-scripts">
@@ -3816,19 +4025,19 @@
     })();
 
     if (typeof window.QUOTATION_ID === 'undefined') {
-      window.QUOTATION_ID = "{{quotation_id}}";
+      window.QUOTATION_ID = "quo_ac7d18dd7459";
     }
     if (typeof window.CURRENT_LANG === 'undefined') {
-      window.CURRENT_LANG = "{{ lang or 'en' }}";
+      window.CURRENT_LANG = "ar";
     }
     const CLIENT_I18N = JSON.parse(document.getElementById('client-i18n').textContent);
 
     // Set globals for compatibility if not already defined
     if (typeof QUOTATION_ID === 'undefined') {
-      window.QUOTATION_ID = "{{quotation_id}}";
+      window.QUOTATION_ID = "quo_ac7d18dd7459";
     }
     if (typeof CURRENT_LANG === 'undefined') {
-      window.CURRENT_LANG = "{{ lang or 'en' }}";
+      window.CURRENT_LANG = "ar";
     }
 
     // Dynamically inject inline translate button styles to support previously published static pages
@@ -4182,7 +4391,7 @@
     document.addEventListener("DOMContentLoaded", function () {
       const selectDomain = document.getElementById('select-domain');
       if (selectDomain) {
-        selectDomain.value = "https://{{ (brand.domain if brand else '') or 'journeys.vietnamsafar.vn' }}";
+        selectDomain.value = "https://journeys.capellatravel.com";
       }
       try {
         const brandDataEl = document.getElementById('brand-data');
@@ -4214,18 +4423,7 @@
                 span.textContent = brandData.name;
               }
             }
-            // 3. Sync CSS Variables for Brand Colors
-            const root = document.documentElement;
-            if (brandData.color_primary) root.style.setProperty('--primary', brandData.color_primary);
-            if (brandData.color_primary_dark) root.style.setProperty('--primary-dark', brandData.color_primary_dark);
-            if (brandData.color_accent) root.style.setProperty('--accent', brandData.color_accent);
-            if (brandData.color_accent_light) root.style.setProperty('--accent-light', brandData.color_accent_light);
-            if (brandData.color_bg_main) root.style.setProperty('--bg-main', brandData.color_bg_main);
-            if (brandData.color_bg_alt) root.style.setProperty('--bg-alt', brandData.color_bg_alt);
-            if (brandData.color_text_main) root.style.setProperty('--text-main', brandData.color_text_main);
-            if (brandData.color_text_muted) root.style.setProperty('--text-muted', brandData.color_text_muted);
-            if (brandData.color_text_light) root.style.setProperty('--text-light', brandData.color_text_light);
-            // 4. Sync Modal Items
+            // 3. Sync Modal Items
             const modalItems = document.querySelectorAll('.pb-domain-item');
             modalItems.forEach(item => {
               const bId = item.getAttribute('data-brand');
@@ -4372,24 +4570,33 @@
 
   <script id="destination-images" type="application/json">
     {
-      {% for dest in destinations %}
-        "{{ dest.slug }}": "{{ dest.image_url or (dest.images[0] if dest.images else '/assets/vietnam-safar-logo.png') }}"
-        {% if not loop.last %},{% endif %}
-      {% endfor %}
+      
+        "ha-noi": "/assets/ha-noi/duongtau.jpg"
+        ,
+      
+        "ninh-binh": "/assets/ninh-binh/tamcoc.jpg"
+        ,
+      
+        "quang-ninh": "/assets/quang-ninh/halong-bay.jpg"
+        ,
+      
+        "lao-cai": "/assets/lao-cai/fansipan.jpg"
+        
+      
     }
   </script>
 
   <script id="itinerary-data" type="application/json">
-    {{ itinerary | tojson | safe }}
+    [{"activities": ["Airport pick-up, private transfer Hanoi - Sapa, Indian vegetarian lunch and dinner."], "date": "2026-09-30", "dayNumber": 1, "description": ["Arrive at Noi Bai International Airport in Hanoi. Enjoy a warm welcome and breakfast before boarding your private vehicle for a scenic transfer to the mountainous region of Sapa. Arrive in Sapa, check in to the beautiful Sapa Jade Hill, and enjoy a relaxing evening."], "destinations": ["Hanoi"], "lang": "ar", "meals": ["Lunch \u0026 Indian Vegetarian Dinner"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0646\u0634\u0637\u0629"], "overnight": "Hanoi", "title": "\u0627\u0644\u064a\u0648\u0645 1 \u2014 Hanoi"}, {"activities": ["Sapa full-day tour with guide and entry tickets, vegetarian lunch and dinner."], "date": "2026-10-01", "dayNumber": 2, "description": ["Enjoy a full day exploring Sapa. Embark on a guided trekking tour to Cat Cat village or other scenic routes, learning about the local ethnic minority cultures and viewing the stunning terraced rice fields. Savor a local vegetarian lunch and dinner."], "destinations": ["Sapa"], "lang": "ar", "meals": ["Breakfast, Vegetarian Lunch \u0026 Dinner"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u063a\u0627\u0645\u0631\u0629"], "overnight": "Sapa", "title": "\u0627\u0644\u064a\u0648\u0645 2 \u2014 Sapa"}, {"activities": ["Fansipan cable car tickets, guide, Sapa transfers."], "date": "2026-10-02", "dayNumber": 3, "description": ["Continue your full day tour of Sapa. Take the Fansipan cable car to ascend the \u0027Roof of Indochina\u0027 at 3,143 meters. Explore the spiritual pagoda complex at the summit. Spend the afternoon visiting local villages or enjoying the resort amenities."], "destinations": ["Sapa"], "lang": "ar", "meals": ["Breakfast"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0646\u0634\u0637\u0629"], "overnight": "Sapa", "title": "\u0627\u0644\u064a\u0648\u0645 3 \u2014 Sapa"}, {"activities": ["Station transfer, Chapa Express Train tickets."], "date": "2026-10-03", "dayNumber": 4, "description": ["Enjoy a free day in Sapa to relax, shop for souvenirs, or simply admire the mountain views from Sapa Jade Hill. In the late afternoon, transfer to Lao Cai station to board the Chapa Express Train for an overnight journey back to Hanoi."], "destinations": ["Hanoi"], "lang": "ar", "meals": ["Breakfast \u0026 Private Dinner"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0631\u064a\u062d\u0629"], "overnight": "Hanoi", "title": "\u0627\u0644\u064a\u0648\u0645 4 \u2014 Hanoi"}, {"activities": ["Station transfer, Hanoi full-day tour with guide and entry tickets."], "date": "2026-10-04", "dayNumber": 5, "description": ["Arrive in Hanoi early morning. Transfer to your hotel for early check-in and breakfast. Later, embark on a full-day city tour of Hanoi, visiting the historic Temple of Literature, Ho Chi Minh Mausoleum complex, and enjoying a cyclo ride through the Old Quarter."], "destinations": ["Hanoi"], "lang": "ar", "meals": ["Breakfast, Vegetarian Lunch \u0026 Dinner"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0646\u0634\u0637\u0629"], "overnight": "Hanoi", "title": "\u0627\u0644\u064a\u0648\u0645 5 \u2014 Hanoi"}, {"activities": ["Hanoi full-day tour with guide and entry tickets."], "date": "2026-10-05", "dayNumber": 6, "description": ["Continue your exploration of Hanoi. Visit the Museum of Ethnology and stroll around the scenic Hoan Kiem Lake. Enjoy free time for shopping in the bustling streets of the capital."], "destinations": ["Hanoi"], "lang": "ar", "meals": ["Breakfast, Vegetarian Lunch \u0026 Dinner"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0646\u0634\u0637\u0629"], "overnight": "Hanoi", "title": "\u0627\u0644\u064a\u0648\u0645 6 \u2014 Hanoi"}, {"activities": ["Private transfer Hanoi - Halong, cabins on Ambassador Signature Cruise, cruise excursions."], "date": "2026-10-06", "dayNumber": 7, "description": ["Depart Hanoi by private vehicle to Halong Bay. Board the premium Ambassador Signature Cruise. Glide past iconic karst formations and enjoy a delicious vegetarian buffet lunch on board. Participate in cruise activities including a bamboo boat ride or kayaking."], "destinations": ["Halong Bay"], "lang": "ar", "meals": ["Breakfast, Onboard Vegetarian Lunch \u0026 Dinner"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0631\u064a\u062d\u0629"], "overnight": "Halong Bay", "title": "\u0627\u0644\u064a\u0648\u0645 7 \u2014 Halong Bay"}, {"activities": ["Onboard vegetarian brunch, private transfer Halong - Hanoi Airport."], "date": "2026-10-07", "dayNumber": 8, "description": ["Greet the sunrise with Tai Chi on the sundeck. After a vegetarian brunch, check out and transfer directly to Noi Bai International Airport for your departure flight."], "destinations": ["Halong Bay"], "lang": "ar", "meals": ["Onboard Vegetarian Brunch"], "notes": ["\u0648\u062a\u064a\u0631\u0629 \u0627\u0644\u0633\u0641\u0631: \u0645\u0631\u064a\u062d\u0629"], "overnight": "Halong Bay", "title": "\u0627\u0644\u064a\u0648\u0645 8 \u2014 Halong Bay"}]
   </script>
   <script id="route-stops-data" type="application/json">
-    {{ route_stops | tojson | safe }}
+    [{"dayNumber": 1, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 1 \u2014 Hanoi", "showMarker": true, "stopOrder": 1}, {"dayNumber": 2, "destination": "Sapa", "displayName": "Sapa", "kind": "overnight", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 2 \u2014 Sapa", "showMarker": true, "stopOrder": 1}, {"dayNumber": 3, "destination": "Sapa", "displayName": "Sapa", "kind": "overnight", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 3 \u2014 Sapa", "showMarker": true, "stopOrder": 1}, {"dayNumber": 4, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 4 \u2014 Hanoi", "showMarker": true, "stopOrder": 1}, {"dayNumber": 5, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 5 \u2014 Hanoi", "showMarker": true, "stopOrder": 1}, {"dayNumber": 6, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 6 \u2014 Hanoi", "showMarker": true, "stopOrder": 1}, {"dayNumber": 7, "destination": "Halong Bay", "displayName": "Halong Bay", "kind": "overnight", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 7 \u2014 Halong Bay", "showMarker": true, "stopOrder": 1}, {"dayNumber": 8, "destination": "Halong Bay", "displayName": "Halong Bay", "kind": "overnight", "mapTitle": "\u0627\u0644\u064a\u0648\u0645 8 \u2014 Halong Bay", "showMarker": true, "stopOrder": 1}]
   </script>
   <script id="stay-segments-data" type="application/json">
-    {{ stay_segments | tojson | safe }}
+    [{"activityPreviews": [{"dayNumber": 1, "label": "\u0627\u0644\u064a\u0648\u0645 1", "summary": "Arrive at Noi Bai International Airport in Hanoi. Enjoy a warm welcome and breakfast before boarding your private..."}], "city": "Hanoi", "coords": [21.0285, 105.8542], "dayEnd": 1, "dayStart": 1, "daysLabel": "\u0627\u0644\u064a\u0648\u0645 1", "displayName": "Hanoi", "excursions": [], "hotelDateRange": "04 \u0623\u0643\u062a\u0648\u0628\u0631 \u2013 06 \u0623\u0643\u062a\u0648\u0628\u0631 2026", "hotelImage": "/assets/hotels/hanoi/hanoi-le-jardin-hotel-spa/exterior/exterior_3.jpg", "hotelName": "Hanoi Le Jardin Hotel \u0026 Spa", "nights": 1, "nightsLabel": "\u0644\u064a\u0644\u0629 \u0648\u0627\u062d\u062f\u0629", "order": 1, "segmentId": "stay-1", "transportFromPrevious": ""}, {"activityPreviews": [{"dayNumber": 2, "label": "\u0627\u0644\u064a\u0648\u0645 2", "summary": "Enjoy a full day exploring Sapa. Embark on a guided trekking tour to Cat Cat village or other scenic routes, learning..."}, {"dayNumber": 3, "label": "\u0627\u0644\u064a\u0648\u0645 3", "summary": "Continue your full day tour of Sapa. Take the Fansipan cable car to ascend the \u0027Roof of Indochina\u0027 at 3,143 meters...."}], "city": "Sapa", "coords": [22.3364, 103.8438], "dayEnd": 3, "dayStart": 2, "daysLabel": "\u0627\u0644\u0623\u064a\u0627\u0645 2-3", "displayName": "Sapa", "excursions": [], "hotelDateRange": "06 \u0623\u0643\u062a\u0648\u0628\u0631 \u2013 07 \u0623\u0643\u062a\u0648\u0628\u0631 2026", "hotelImage": "/assets/hotels/halong/ambassador-signature-cruise/exterior/exterior_4.jpg", "hotelName": "Ambassador Signature Cruise", "nights": 2, "nightsLabel": "2 \u0644\u064a\u0627\u0644\u064d", "order": 2, "segmentId": "stay-2", "transportFromPrevious": "Hanoi \u2192 Sapa"}, {"activityPreviews": [{"dayNumber": 4, "label": "\u0627\u0644\u064a\u0648\u0645 4", "summary": "Enjoy a free day in Sapa to relax, shop for souvenirs, or simply admire the mountain views from Sapa Jade Hill. In the..."}, {"dayNumber": 5, "label": "\u0627\u0644\u064a\u0648\u0645 5", "summary": "Arrive in Hanoi early morning. Transfer to your hotel for early check-in and breakfast. Later, embark on a full-day..."}, {"dayNumber": 6, "label": "\u0627\u0644\u064a\u0648\u0645 6", "summary": "Continue your exploration of Hanoi. Visit the Museum of Ethnology and stroll around the scenic Hoan Kiem Lake. Enjoy..."}], "city": "Hanoi", "coords": [21.0285, 105.8542], "dayEnd": 6, "dayStart": 4, "daysLabel": "\u0627\u0644\u0623\u064a\u0627\u0645 4-6", "displayName": "Hanoi", "excursions": [], "hotelDateRange": "", "hotelImage": "", "hotelName": "", "nights": 3, "nightsLabel": "3 \u0644\u064a\u0627\u0644\u064d", "order": 3, "segmentId": "stay-3", "transportFromPrevious": "Sapa \u2192 Hanoi"}, {"activityPreviews": [{"dayNumber": 7, "label": "\u0627\u0644\u064a\u0648\u0645 7", "summary": "Depart Hanoi by private vehicle to Halong Bay. Board the premium Ambassador Signature Cruise. Glide past iconic karst..."}, {"dayNumber": 8, "label": "\u0627\u0644\u064a\u0648\u0645 8", "summary": "Greet the sunrise with Tai Chi on the sundeck. After a vegetarian brunch, check out and transfer directly to Noi Bai..."}], "city": "Halong Bay", "coords": [20.9599, 107.0436], "dayEnd": 8, "dayStart": 7, "daysLabel": "\u0627\u0644\u0623\u064a\u0627\u0645 7-8", "displayName": "Halong Bay", "excursions": [], "hotelDateRange": "", "hotelImage": "", "hotelName": "", "nights": 2, "nightsLabel": "2 \u0644\u064a\u0627\u0644\u064d", "order": 4, "segmentId": "stay-4", "transportFromPrevious": "Hanoi \u2192 Halong Bay"}]
   </script>
   <script>
-    window.currentLang = "{{lang}}";
+    window.currentLang = "ar";
     document.addEventListener("DOMContentLoaded", function () {
       const DEST_COORDS = {
         "hanoi": [21.0285, 105.8542],
@@ -4509,21 +4716,7 @@
 
       const dataEl = document.getElementById('itinerary-data');
       if (!dataEl) return;
-      const rtlTokenPhrases = {{ [
-        "Hanoi", "Halong Bay", "Sapa", "Da Nang", "Hoi An", "Dalat", "Ninh Binh",
-        "Ho Chi Minh City", "Mekong Delta", "Nha Trang", "Dong Xuan Market", "Tam Coc",
-        "Hang Mua", "Fansipan", "Cat Cat Village", "Lao Chai", "Ta Van",
-        "Ba Na Hills", "Bay Mau Coconut Forest", "Hoa Phu Thanh", "Lang Biang",
-        "Datanla Waterfall", "Me Linh Coffee", "Cu Chi Tunnels", "Ben Thanh Market",
-        "Tan Son Nhat Airport", "Silver Waterfall", "Egg Coffee", "Train Street Coffee",
-        "Moana Coffee", "Han River Cruise", "Crazy House", "Clay Tunnel",
-        "Fresh Garden", "Elephant Waterfall", "Apartment Coffee", "Central Post Office",
-        "Hoi An Ancient Town", "Minasi Premium Hotel", "La Casta Cruise", "Bora Hotel",
-        "Minh Toan SAFI Ocean Hotel", "CICILIA Rouge Dalat", "Cicilia Saigon Center",
-        "Vietnam Safar", "Discovery Asia Travel Group", "USD", "Traveler", "E-visa", "SIM",
-        "Fast Track", "WhatsApp"
-      ] | tojson | safe
-    }};
+      const rtlTokenPhrases = ["Hanoi", "Halong Bay", "Sapa", "Da Nang", "Hoi An", "Dalat", "Ninh Binh", "Ho Chi Minh City", "Mekong Delta", "Nha Trang", "Dong Xuan Market", "Tam Coc", "Hang Mua", "Fansipan", "Cat Cat Village", "Lao Chai", "Ta Van", "Ba Na Hills", "Bay Mau Coconut Forest", "Hoa Phu Thanh", "Lang Biang", "Datanla Waterfall", "Me Linh Coffee", "Cu Chi Tunnels", "Ben Thanh Market", "Tan Son Nhat Airport", "Silver Waterfall", "Egg Coffee", "Train Street Coffee", "Moana Coffee", "Han River Cruise", "Crazy House", "Clay Tunnel", "Fresh Garden", "Elephant Waterfall", "Apartment Coffee", "Central Post Office", "Hoi An Ancient Town", "Minasi Premium Hotel", "La Casta Cruise", "Bora Hotel", "Minh Toan SAFI Ocean Hotel", "CICILIA Rouge Dalat", "Cicilia Saigon Center", "Vietnam Safar", "Discovery Asia Travel Group", "USD", "Traveler", "E-visa", "SIM", "Fast Track", "WhatsApp"];
 
     function escapeHtml(value) {
       return String(value ?? '')
@@ -4951,17 +5144,16 @@
   <div id="pwa-notification-prompt" class="notification-prompt-card no-print">
     <div class="notification-prompt-header">
       <div class="notification-prompt-title">
-        <span>🔔</span> {{ "Stay Updated" | translate(lang) }}
+        <span>🔔</span> ابق على اطلاع
       </div>
       <button class="notification-prompt-close" id="pwa-notification-close">&times;</button>
     </div>
     <div class="notification-prompt-body">
-      {{ "Enable notifications to get live updates for your itinerary, guide details, and booking status." |
-      translate(lang) }}
+      قم بتمكين الإشعارات للحصول على تحديثات مباشرة لمسار رحلتك وتفاصيل المرشد وحالة الحجز.
     </div>
     <div class="notification-prompt-actions">
-      <button class="notification-btn-later" id="pwa-notification-later">{{ "Later" | translate(lang) }}</button>
-      <button class="notification-btn-allow" id="pwa-notification-allow">{{ "Enable" | translate(lang) }}</button>
+      <button class="notification-btn-later" id="pwa-notification-later">لاحقاً</button>
+      <button class="notification-btn-allow" id="pwa-notification-allow">تمكين</button>
     </div>
   </div>
 
@@ -4969,8 +5161,8 @@
   <div id="pwa-notification-success" class="notification-success-card no-print">
     <div class="notification-success-icon">✓</div>
     <div class="notification-success-text">
-      <h4>{{ "Notifications Active" | translate(lang) }}</h4>
-      <p>{{ "You'll receive live itinerary updates here." | translate(lang) }}</p>
+      <h4>الإشعارات نشطة</h4>
+      <p>ستتلقى تحديثات مباشرة لمسار الرحلة هنا.</p>
     </div>
   </div>
 
@@ -5131,19 +5323,6 @@
           installButtonHero.style.display = 'none';
         }
       });
-    });
-  </script>
-  <script>
-    // Header Scroll Effect
-    window.addEventListener('scroll', () => {
-      const nav = document.querySelector('.nav');
-      if (nav) {
-        if (window.scrollY > 20) {
-          nav.classList.add('scrolled');
-        } else {
-          nav.classList.remove('scrolled');
-        }
-      }
     });
   </script>
 </body>
