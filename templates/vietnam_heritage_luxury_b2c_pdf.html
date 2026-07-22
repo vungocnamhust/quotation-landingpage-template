@@ -1,29 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <title>{{ tour_title }} — PDF Quotation</title>
   <style>
     :root {
-      --ivory: #f8f3e9;
+      --ivory: #f9f6f0;
       --ink: #11130f;
       --muted: #706a5d;
       --emerald: #17412e;
       --emerald-2: #0e2f22;
-      --gold: #b7894b;
-      --gold-2: #d8bd85;
-      --line: rgba(183,137,75,.28);
+      --gold: #b8860b;
+      --gold-2: #daa520;
+      --line: rgba(183, 137, 75, .28);
       --card: #fffaf1;
       --charcoal: #171915;
       --serif: Georgia, 'Times New Roman', serif;
       --sans: Arial, Helvetica, sans-serif;
     }
 
-    @page { size: A4 portrait; margin: 0; }
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-    html, body {
+    html,
+    body {
       color: var(--ink);
       font-family: var(--sans);
       line-height: 1.6;
@@ -34,7 +43,8 @@
     /* Screen-only viewer styles */
     @media screen {
       body {
-        background: #525659; /* PDF viewer gray */
+        background: #525659;
+        /* PDF viewer gray */
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -44,11 +54,12 @@
     }
 
     @media print {
-      body { 
-        background-color: var(--ivory) !important; 
-        padding: 0; 
-        display: block; 
+      body {
+        background-color: var(--ivory) !important;
+        padding: 0;
+        display: block;
       }
+
       .pdf-page {
         width: auto !important;
         min-height: auto !important;
@@ -57,6 +68,7 @@
         page-break-inside: auto !important;
         break-inside: auto !important;
       }
+
       .cover {
         height: 100vh !important;
       }
@@ -70,11 +82,14 @@
       page-break-after: always;
       position: relative;
     }
-    .pdf-page:last-of-type { page-break-after: auto; }
+
+    .pdf-page:last-of-type {
+      page-break-after: auto;
+    }
 
     @media screen {
       .pdf-page {
-        box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
       }
     }
 
@@ -84,7 +99,7 @@
       bottom: 10px;
       right: 20px;
       font-size: 9px;
-      color: rgba(0,0,0,.22);
+      color: rgba(0, 0, 0, .22);
       letter-spacing: .12em;
       text-transform: uppercase;
       font-family: var(--sans);
@@ -96,8 +111,8 @@
     .cover {
       width: 794px;
       height: 1123px;
-      background: linear-gradient(160deg, rgba(17,19,15,.88) 0%, rgba(17,19,15,.55) 55%, rgba(17,19,15,.18) 100%),
-                  center/cover no-repeat;
+      background: linear-gradient(160deg, rgba(17, 19, 15, .88) 0%, rgba(17, 19, 15, .55) 55%, rgba(17, 19, 15, .18) 100%),
+        center/cover no-repeat;
       color: white;
       display: flex;
       flex-direction: column;
@@ -134,18 +149,18 @@
 
     .cover-lede {
       font-size: 14px;
-      color: rgba(255,255,255,.76);
+      color: rgba(255, 255, 255, .76);
       max-width: 380px;
       line-height: 1.6;
     }
 
     /* Quote card on cover */
     .quote-card {
-      background: rgba(255,250,241,.93);
+      background: rgba(255, 250, 241, .93);
       color: var(--ink);
       border-radius: 24px;
       padding: 22px 24px;
-      border: 1px solid rgba(255,255,255,.6);
+      border: 1px solid rgba(255, 255, 255, .6);
     }
 
     .quote-card h2 {
@@ -161,32 +176,46 @@
       justify-content: space-between;
       gap: 12px;
       padding-bottom: 8px;
-      border-bottom: 1px solid rgba(17,19,15,.1);
+      border-bottom: 1px solid rgba(17, 19, 15, .1);
       font-size: 11px;
       color: var(--muted);
       margin-bottom: 8px;
     }
-    .qrow:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-    .qrow strong { color: var(--ink); text-align: right; font-size: 11px; }
+
+    .qrow:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .qrow strong {
+      color: var(--ink);
+      text-align: right;
+      font-size: 11px;
+    }
 
     .qrow.stacked {
       flex-direction: column;
       align-items: flex-start;
       gap: 3px;
     }
+
     .qrow.stacked strong {
       text-align: left;
     }
 
     /* Strip bar at bottom of cover */
     .cover-strip {
-      background: rgba(23,65,46,.92);
+      background: rgba(23, 65, 46, .92);
       display: grid;
-      grid-template-columns: repeat(4,1fr);
+      grid-template-columns: repeat(4, 1fr);
       padding: 16px 48px;
     }
 
-    .strip-item { text-align: center; }
+    .strip-item {
+      text-align: center;
+    }
+
     .strip-item span {
       display: block;
       color: var(--gold-2);
@@ -195,6 +224,7 @@
       text-transform: uppercase;
       font-weight: 700;
     }
+
     .strip-item strong {
       font-family: var(--serif);
       font-size: 20px;
@@ -207,7 +237,9 @@
     /* ═══════════════════════════════════════════
        Shared section styles
     ═══════════════════════════════════════════ */
-    .page-inner { padding: 44px 48px; }
+    .page-inner {
+      padding: 44px 48px;
+    }
 
     .section-label {
       color: var(--gold);
@@ -239,7 +271,7 @@
     ═══════════════════════════════════════════ */
     .experience-grid {
       display: grid;
-      grid-template-columns: repeat(3,1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 12px;
       margin-bottom: 28px;
     }
@@ -269,7 +301,10 @@
       line-height: 1.1;
     }
 
-    .exp-card p { font-size: 12px; color: var(--muted); }
+    .exp-card p {
+      font-size: 12px;
+      color: var(--muted);
+    }
 
     /* Gallery 2-col for A4 */
     .gallery {
@@ -287,13 +322,16 @@
       break-inside: avoid;
       page-break-inside: avoid;
     }
-    .img-tile.large { grid-row: span 2; }
+
+    .img-tile.large {
+      grid-row: span 2;
+    }
 
     .img-tile::before {
       content: "";
       position: absolute;
       inset: 0;
-      background: linear-gradient(180deg, transparent 40%, rgba(17,19,15,.7));
+      background: linear-gradient(180deg, transparent 40%, rgba(17, 19, 15, .7));
     }
 
     .img-caption {
@@ -322,7 +360,10 @@
     /* ═══════════════════════════════════════════
        PAGE 3 — Itinerary
     ═══════════════════════════════════════════ */
-    .itinerary { display: grid; gap: 10px; }
+    .itinerary {
+      display: grid;
+      gap: 10px;
+    }
 
     .day-card {
       display: grid;
@@ -367,7 +408,10 @@
       text-transform: uppercase;
     }
 
-    .day-card p { font-size: 11px; color: var(--muted); }
+    .day-card p {
+      font-size: 11px;
+      color: var(--muted);
+    }
 
     .day-meta {
       text-align: right;
@@ -381,8 +425,16 @@
       font-weight: 500;
     }
 
-    .day-meta .price-sub { font-size: 10px; color: var(--muted); }
-    .day-meta .qty { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+    .day-meta .price-sub {
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .day-meta .qty {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
 
     /* ═══════════════════════════════════════════
        PAGE 4 — Pricing + Inc/Exc
@@ -405,26 +457,26 @@
     }
 
     .pricing-block .sub {
-      color: rgba(255,255,255,.68);
+      color: rgba(255, 255, 255, .68);
       font-size: 12px;
       margin-bottom: 20px;
     }
 
     .price-cards {
       display: grid;
-      grid-template-columns: repeat(3,1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 12px;
     }
 
     .price-card {
-      background: rgba(255,255,255,.08);
-      border: 1px solid rgba(216,189,133,.35);
+      background: rgba(255, 255, 255, .08);
+      border: 1px solid rgba(216, 189, 133, .35);
       border-radius: 16px;
       padding: 16px;
     }
 
     .price-card.featured {
-      background: linear-gradient(180deg,rgba(183,137,75,.25),rgba(255,255,255,.06));
+      background: linear-gradient(180deg, rgba(183, 137, 75, .25), rgba(255, 255, 255, .06));
       border-color: var(--gold-2);
     }
 
@@ -444,15 +496,22 @@
       margin: 6px 0 2px;
     }
 
-    .price-card small { font-size: 10px; color: rgba(255,255,255,.65); }
+    .price-card small {
+      font-size: 10px;
+      color: rgba(255, 255, 255, .65);
+    }
 
     .price-note {
       margin-top: 14px;
       font-size: 11px;
-      color: rgba(255,255,255,.55);
+      color: rgba(255, 255, 255, .55);
     }
 
-    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
 
     .panel {
       background: var(--card);
@@ -476,14 +535,17 @@
       gap: 6px;
     }
 
-    .panel ul li { font-size: 12px; color: var(--muted); }
+    .panel ul li {
+      font-size: 12px;
+      color: var(--muted);
+    }
 
     /* ═══════════════════════════════════════════
        PAGE 5 — Terms + CTA + Footer
     ═══════════════════════════════════════════ */
     .terms-grid {
       display: grid;
-      grid-template-columns: repeat(3,1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 12px;
       margin-bottom: 20px;
     }
@@ -513,11 +575,15 @@
       margin-bottom: 6px;
     }
 
-    .term-card p { font-size: 11px; color: var(--muted); }
+    .term-card p {
+      font-size: 11px;
+      color: var(--muted);
+    }
 
     .cta-block {
-      background: linear-gradient(135deg, var(--emerald-2), #11130f 64%, #332711);
-      color: white;
+      background: #FAF8F5;
+      color: var(--text);
+      border: 1px solid var(--gold-2);
       border-radius: 24px;
       padding: 32px;
       display: grid;
@@ -537,11 +603,14 @@
       margin-bottom: 10px;
     }
 
-    .cta-block p { color: rgba(255,255,255,.72); font-size: 13px; }
+    .cta-block p {
+      color: rgba(255, 255, 255, .72);
+      font-size: 13px;
+    }
 
     .contact-box {
-      background: rgba(255,255,255,.09);
-      border: 1px solid rgba(255,255,255,.2);
+      background: rgba(255, 255, 255, .09);
+      border: 1px solid rgba(255, 255, 255, .2);
       border-radius: 16px;
       padding: 18px;
     }
@@ -556,8 +625,15 @@
       margin-top: 12px;
     }
 
-    .contact-box .clabel:first-child { margin-top: 0; }
-    .contact-box .cval { font-weight: 700; font-size: 13px; margin-top: 2px; }
+    .contact-box .clabel:first-child {
+      margin-top: 0;
+    }
+
+    .contact-box .cval {
+      font-weight: 700;
+      font-size: 13px;
+      margin-top: 2px;
+    }
 
     .pdf-footer {
       text-align: center;
@@ -590,414 +666,492 @@
       font-size: 9px;
       letter-spacing: .1em;
     }
+
+    @media (max-width: 900px) {
+
+      .hotel-intro p,
+      .hotel-info,
+      #hotels p,
+      .hotel-info p {
+        text-align: left !important;
+      }
+    }
   </style>
 </head>
+
 <body>
 
-<div class="watermark">{{ (brand.name if brand else '') or 'Vietnam Safar' }} · {{ quotation_number }} · Luxury Proposal</div>
+  <div class="watermark">{{ (brand.name if brand else '') or 'Vietnam Safar' }} · {{ quotation_number }} · Luxury
+    Proposal</div>
 
-<!-- ═══════════════════ PAGE 1 — Cover ═══════════════════ -->
-<div class="pdf-page">
-  <div class="cover" style="background-image: linear-gradient(160deg,rgba(17,19,15,.88),rgba(17,19,15,.55) 55%,rgba(17,19,15,.18)), url('{{ img_0 }}');">
-    <div class="cover-body">
-      <div>
-        <div style="font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-2);margin-bottom:10px;font-weight:700;">Private Luxury Proposal</div>
-        <div class="cover-kicker">{{ kicker }}</div>
-        <h1>{{ tour_title }}</h1>
-        <p class="cover-lede">{{ lede }}</p>
-      </div>
-      <div class="quote-card">
-        <h2>{{ journey_overview_title | default("Journey Overview") }}</h2>
-        <div class="qrow">
-          <span>{{ label_prepared_for | default("Prepared for") }}</span>
-          <strong>{{ customer_name }}</strong>
-        </div>
-        <div class="qrow">
-          <span>{{ label_overview | default("Overview") }}</span>
-          <strong>{{ overview_heading }}</strong>
-        </div>
-        {% if guests_txt %}
-        <div class="qrow">
-          <span>{{ label_guests | default("Guests") }}</span>
-          <strong>{{ guests_txt }}</strong>
-        </div>
-        {% endif %}
-        {% if travel_dates %}
-        <div class="qrow">
-          <span>{{ label_travel_dates | default("Travel dates") }}</span>
-          <strong>{{ travel_dates }}</strong>
-        </div>
-        {% endif %}
-        {% if route_txt %}
-        <div class="qrow stacked">
-          <span>{{ label_route | default("Route") }}</span>
-          <strong>{{ route_txt }}</strong>
-        </div>
-        {% endif %}
-        <div class="qrow">
-          <span>{{ label_ref | default("Ref.") }}</span>
-          <strong>{{ quotation_number }}</strong>
-        </div>
-        <div class="qrow">
-          <span>{{ label_contact | default("Contact") }}</span>
-          <strong>{{ contact }}</strong>
-        </div>
-      </div>
-    </div>
-    <div class="cover-strip">
-      <div class="strip-item"><span>Duration</span><strong>{{ strip_duration }}</strong></div>
-      <div class="strip-item"><span>Best for</span><strong>{{ strip_best_for }}</strong></div>
-      <div class="strip-item"><span>Travel pace</span><strong>{{ strip_pace }}</strong></div>
-      <div class="strip-item"><span>Service</span><strong>{{ strip_service }}</strong></div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════ PAGE 2 — Glance & Overview ═══════════════════ -->
-<div class="pdf-page">
-  <div class="page-header">
-    <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — Luxury Travel Proposal</span>
-    <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
-  </div>
-  <div class="page-inner">
-    <div class="section-label">Section 1 — Journey at a Glance</div>
-    <h2 class="section-h2">Journey Specifications</h2>
-    <p class="section-p">Core parameters of this Travel proposal.</p>
-    
-    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 28px;">
-      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
-        <span style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Duration</span>
-        <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">{{ duration_label }}</strong>
-      </div>
-      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
-        <span style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Market &amp; Nationality</span>
-        <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">{{ glance_market }}</strong>
-      </div>
-      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
-        <span style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Guest Profile</span>
-        <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">{{ glance_profile }}</strong>
-      </div>
-      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
-        <span style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Hotel Standard</span>
-        <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">{{ glance_standard }}</strong>
-      </div>
-      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
-        <span style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Meal Preference</span>
-        <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">{{ glance_meals }}</strong>
-      </div>
-      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
-        <span style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Tour Type</span>
-        <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">Private Services</strong>
-      </div>
-      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; grid-column: span 3;">
-        <span style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Route Sequence</span>
-        <strong style="display:block; font-size:13px; color:var(--emerald); margin-top:3px; font-family:var(--serif); font-weight:500;">{{ route_txt }}</strong>
-      </div>
-    </div>
-
-
-  </div>
-</div>
-
-<!-- ═══════════════════ PAGE 3 — Why Works & Gallery ═══════════════════ -->
-<div class="pdf-page">
-  <div class="page-header">
-    <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — {{ "Travel Proposal" | translate(lang) }}</span>
-    <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
-  </div>
-  <div class="page-inner">
-    <div class="section-label">Section 2 — {{ ['Behind the Itinerary Curation', 'Why This Journey Inspires', 'The Anatomy of the Experience', 'A Perfectly Paced Journey'] | random }}</div>
-    <h2 class="section-h2">{{ "Journey Specifications" | translate(lang) }}</h2>
-    <p class="section-p">Core features ensuring comfort and alignment with the guests' expectations.</p>
-
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px;">
-      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
-        <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">{{ "Private & Flexible" | translate(lang) }}</strong>
-        <p style="font-size:11px; color:var(--muted); line-height:1.4;">{{ why_private }}</p>
-      </div>
-      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
-        <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">{{ "Comfort & Pacing" | translate(lang) }}</strong>
-        <p style="font-size:11px; color:var(--muted); line-height:1.4;">{{ why_comfort }}</p>
-      </div>
-      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
-        <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">{{ "Dietary & Special Care" | translate(lang) }}</strong>
-        <p style="font-size:11px; color:var(--muted); line-height:1.4;">{{ why_muslim }}</p>
-      </div>
-      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
-        <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">{{ "Balanced Highlights" | translate(lang) }}</strong>
-        <p style="font-size:11px; color:var(--muted); line-height:1.4;">{{ why_balanced }}</p>
-      </div>
-    </div>
-
-    <div class="section-label">{{ "Destination Gallery" | translate(lang) }}</div>
-    <div class="gallery" style="margin-top:8px;">
-      {% for dest in destinations %}
-      <div class="img-tile {% if loop.index == 1 %}large{% endif %}" style="background-image:url('{{ dest.image_url or '/assets/vietnam-safar-logo.png' }}')">
-        <div class="img-caption">
-          <small>{% if loop.index == 1 %}{{ "Highlight" | translate(lang) }}{% elif loop.index == 3 %}{{ "Experience" | translate(lang) }}{% elif loop.index == 4 %}{{ "Journey" | translate(lang) }}{% else %}{{ "Destination" | translate(lang) }}{% endif %}</small>
-          <strong>{{ dest.name }}</strong>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════ PAGE 4 — Itinerary ═══════════════════ -->
-<div class="pdf-page">
-  <div class="page-header">
-    <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — Luxury Quotation</span>
-    <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
-  </div>
-  <div class="page-inner">
-    <div class="section-label">Service Program</div>
-    <h2 class="section-h2">{{ itinerary_h2 }}</h2>
-    <p class="section-p">{{ itinerary_p }}</p>
-
-    <div class="itinerary">
-      {% for day in itinerary %}
-      <div class="day-card">
-        <div class="day-num">{{ day.day_badge_text | default(day.dayNumber) }}</div>
+  <!-- ═══════════════════ PAGE 1 — Cover ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="cover"
+      style="background-image: linear-gradient(160deg,rgba(17,19,15,.88),rgba(17,19,15,.55) 55%,rgba(17,19,15,.18)), url('{{ img_0 }}');">
+      <div class="cover-body">
         <div>
-          <div class="day-badge">{{ day.day_num_text | default("DAY " ~ day.dayNumber ~ ((" &middot; " ~ (day.date | format_date)) if day.date else "")) }}</div>
-          <h3>{{ day.title }}</h3>
-          {% for para in day.description %}
-          <p>{{ para }}</p>
-          {% endfor %}
-          {% if day.activities %}
-          <p style="margin-top:6px;font-size:10px;color:#b7894b">
-            <strong>{{ day.label_highlights | default("Highlights:") }}</strong> {{ day.activities | join(' · ') }}
-          </p>
-          {% endif %}
-          {% if day.notes %}
-          <div style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
-            <strong>{{ day.label_notes | default("Notes:") }}</strong>
-            <ul style="margin:2px 0 0;padding-left:10px;">
-              {% for note in day.notes %}<li>{{ note }}</li>{% endfor %}
-            </ul>
+          <div
+            style="font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-2);margin-bottom:10px;font-weight:700;">
+            Private Luxury Proposal</div>
+          <div class="cover-kicker">{{ kicker }}</div>
+          <h1>{{ tour_title }}</h1>
+          <p class="cover-lede">{{ lede }}</p>
+        </div>
+        <div class="quote-card">
+          <h2>{{ journey_overview_title | default("Journey Overview") }}</h2>
+          <div class="qrow">
+            <span>{{ label_prepared_for | default("Prepared for") }}</span>
+            <strong>{{ customer_name }}</strong>
+          </div>
+          <div class="qrow">
+            <span>{{ label_overview | default("Overview") }}</span>
+            <strong>{{ overview_heading }}</strong>
+          </div>
+          {% if guests_txt %}
+          <div class="qrow">
+            <span>{{ label_guests | default("Guests") }}</span>
+            <strong>{{ guests_txt }}</strong>
           </div>
           {% endif %}
-        </div>
-        <div class="day-meta">
-          {% if day.overnight %}
-          <div class="price-sub" style="margin-bottom:2px">{{ day.label_overnight | default("Overnight") }}</div>
-          <div style="font-family:Georgia,serif;font-size:14px;color:#17412e">{{ day.overnight }}</div>
+          {% if travel_dates %}
+          <div class="qrow">
+            <span>{{ label_travel_dates | default("Travel dates") }}</span>
+            <strong>{{ travel_dates }}</strong>
+          </div>
           {% endif %}
-          {% if day.meals %}
-          <div class="price-sub" style="margin-top:8px;margin-bottom:2px">{{ day.label_meals | default("Meals") }}</div>
-          <div style="font-size:11px">{{ day.meals | join(' · ') }}</div>
+          {% if route_txt %}
+          <div class="qrow stacked">
+            <span>{{ label_route | default("Route") }}</span>
+            <strong>{{ route_txt }}</strong>
+          </div>
           {% endif %}
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════ PAGE 5 — Hotel Plan & Pricing ═══════════════════ -->
-<div class="pdf-page">
-  <div class="page-header">
-    <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — Luxury Travel Proposal</span>
-    <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
-  </div>
-  <div class="page-inner">
-    <div class="section-label">Section 4 — Selected Hotel Plan</div>
-    <h2 class="section-h2">Hotel Arrangement</h2>
-    <p class="section-p">Proposed accommodation plan. Similar options can be requested.</p>
-
-    {% if hotels %}
-    <div class="hotel-plan-pdf" style="margin-top: 15px;">
-      {% for item in hotels %}
-      <div class="hotel-pdf-card" style="page-break-inside: avoid; border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 20px; {% if loop.last %}border-bottom: none; margin-bottom: 0;{% endif %}">
-        <!-- Header -->
-        <div style="margin-bottom: 10px;">
-          <span style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">{{ item.city_country }}</span>
-          <h3 style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">{{ item.name }}</h3>
-        </div>
-        
-        <!-- Side-by-Side Images -->
-        <div style="margin: 10px 0; font-size: 0; width: 100%;">
-          <div style="width: 38%; display: inline-block; vertical-align: top; margin-right: 2%;">
-            <img src="{{ item.hotel_img }}" alt="{{ item.name }}" style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+          <div class="qrow">
+            <span>{{ label_ref | default("Ref.") }}</span>
+            <strong>{{ quotation_number }}</strong>
           </div>
-          <div style="width: 60%; display: inline-block; vertical-align: top;">
-            <img src="{{ item.room_img }}" alt="{{ item.name }} Room" style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
-          </div>
-        </div>
-        
-        <!-- Footer Columns (Introduction & Info/Tel) -->
-        <div style="width: 100%; margin-top: 10px;">
-          <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
-            <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">{{ item.introduction }}</p>
-          </div>
-          <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
-            <h4 style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">{{ item.name }}</h4>
-            <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;">{{ item.date_range }}</div>
-            <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">TEL: {{ item.tel }}</div>
+          <div class="qrow">
+            <span>{{ label_contact | default("Contact") }}</span>
+            <strong>{{ contact }}</strong>
           </div>
         </div>
       </div>
-      {% endfor %}
+      <div class="cover-strip">
+        <div class="strip-item"><span>Duration</span><strong>{{ strip_duration }}</strong></div>
+        <div class="strip-item"><span>Best for</span><strong>{{ strip_best_for }}</strong></div>
+        <div class="strip-item"><span>Travel pace</span><strong>{{ strip_pace }}</strong></div>
+        <div class="strip-item"><span>Service</span><strong>{{ strip_service }}</strong></div>
+      </div>
     </div>
-    {% if room_notes %}
-    <div style="margin-top: 20px; padding: 10px 14px; background: rgba(183, 137, 75, 0.05); border-radius: 8px; border: 1px dashed var(--gold); font-size: 10px; color: var(--muted); margin-bottom: 24px; page-break-inside: avoid;">
-      <strong>Room Notes &amp; Requests:</strong> {{ room_notes }}
-    </div>
-    {% endif %}
-    {% else %}
-    <p style="font-size:11px; color:var(--muted); font-style:italic; margin-bottom:24px;">Hotel arrangements will be tailored and detailed here for your specific travel dates.</p>
-    {% endif %}
+  </div>
 
-    <div class="section-label">Section 5 — Package Pricing</div>
-    <div class="pricing-block" style="margin-bottom: 0;">
-      <h2>{{ pricing_h2 }}</h2>
-      <p class="sub">{{ pricing_p }}</p>
-      <div class="price-cards">
-        {% for opt in price_options %}
-        <div class="price-card {% if opt.isConfirmedMainOption %}featured{% endif %}">
-          <span>{{ opt.hotelCategory }}</span>
-          {% if opt.optionName %}
-          <small style="display:block;margin-top:3px;font-size:9px;opacity:.7">{{ opt.optionName }}</small>
-          {% endif %}
-          {% if opt.is_total %}
-          <strong>{{ opt.totalPrice.displayText or ('{:,.0f}'.format(opt.totalPrice.amount) ~ ' ' ~ opt.totalPrice.currency) }}</strong>
-          <small>total package</small><br>
-          <small>Per person: {{ opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~ opt.pricePerPerson.currency) }}</small>
-          {% else %}
-          <strong>{{ opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~ opt.pricePerPerson.currency) }}</strong>
-          {% endif %}
-          {% if opt.isConfirmedMainOption %}
-          <div style="margin-top:8px;font-size:8px;letter-spacing:.14em;color:#d8bd85;font-weight:800">✓ CONFIRMED</div>
-          {% elif opt.isAlternativeOption %}
-          <div style="margin-top:8px;font-size:8px;letter-spacing:.14em;color:rgba(216,189,133,.6);font-weight:700">ALTERNATIVE</div>
-          {% endif %}
+  <!-- ═══════════════════ PAGE 2 — Glance & Overview ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="page-header">
+      <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — Luxury Travel Proposal</span>
+      <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
+    </div>
+    <div class="page-inner">
+      <div class="section-label">Section 1 — Journey at a Glance</div>
+      <h2 class="section-h2">Journey Specifications</h2>
+      <p class="section-p">Core parameters of this Travel proposal.</p>
+
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 28px;">
+        <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
+          <span
+            style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Duration</span>
+          <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">{{ duration_label
+            }}</strong>
+        </div>
+        <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
+          <span
+            style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Market
+            &amp; Nationality</span>
+          <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">{{ glance_market
+            }}</strong>
+        </div>
+        <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
+          <span
+            style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Guest
+            Profile</span>
+          <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">{{ glance_profile
+            }}</strong>
+        </div>
+        <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
+          <span
+            style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Hotel
+            Standard</span>
+          <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">{{ glance_standard
+            }}</strong>
+        </div>
+        <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
+          <span
+            style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Meal
+            Preference</span>
+          <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">{{ glance_meals
+            }}</strong>
+        </div>
+        <div style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;">
+          <span
+            style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Tour
+            Type</span>
+          <strong style="display:block; font-size:14px; color:var(--emerald); margin-top:3px;">Private Services</strong>
+        </div>
+        <div
+          style="background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; grid-column: span 3;">
+          <span
+            style="display:block; color:var(--gold); font-size:8px; text-transform:uppercase; font-weight:700; letter-spacing:0.1em;">Route
+            Sequence</span>
+          <strong
+            style="display:block; font-size:13px; color:var(--emerald); margin-top:3px; font-family:var(--serif); font-weight:500;">{{
+            route_txt }}</strong>
+        </div>
+      </div>
+
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════ PAGE 3 — Why Works & Gallery ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="page-header">
+      <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — {{ "Travel Proposal" |
+        translate(lang) }}</span>
+      <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
+    </div>
+    <div class="page-inner">
+      <div class="section-label">Section 2 — {{ ['Behind the Itinerary Curation', 'Why This Journey Inspires', 'The
+        Anatomy of the Experience', 'A Perfectly Paced Journey'] | random }}</div>
+      <h2 class="section-h2">{{ "Journey Specifications" | translate(lang) }}</h2>
+      <p class="section-p">Core features ensuring comfort and alignment with the guests' expectations.</p>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px;">
+        <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
+          <strong
+            style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">{{
+            "Private & Flexible" | translate(lang) }}</strong>
+          <p style="font-size:11px; color:var(--muted); line-height:1.4;">{{ why_private }}</p>
+        </div>
+        <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
+          <strong
+            style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">{{
+            "Comfort & Pacing" | translate(lang) }}</strong>
+          <p style="font-size:11px; color:var(--muted); line-height:1.4;">{{ why_comfort }}</p>
+        </div>
+        <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
+          <strong
+            style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">{{
+            "Dietary & Special Care" | translate(lang) }}</strong>
+          <p style="font-size:11px; color:var(--muted); line-height:1.4;">{{ why_muslim }}</p>
+        </div>
+        <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
+          <strong
+            style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">{{
+            "Balanced Highlights" | translate(lang) }}</strong>
+          <p style="font-size:11px; color:var(--muted); line-height:1.4;">{{ why_balanced }}</p>
+        </div>
+      </div>
+
+      <div class="section-label">{{ "Destination Gallery" | translate(lang) }}</div>
+      <div class="gallery" style="margin-top:8px;">
+        {% for dest in destinations %}
+        <div class="img-tile {% if loop.index == 1 %}large{% endif %}"
+          style="background-image:url('{{ dest.image_url or '/assets/vietnam-safar-logo.png' }}')">
+          <div class="img-caption">
+            <small>{% if loop.index == 1 %}{{ "Highlight" | translate(lang) }}{% elif loop.index == 3 %}{{ "Experience"
+              | translate(lang) }}{% elif loop.index == 4 %}{{ "Journey" | translate(lang) }}{% else %}{{ "Destination"
+              | translate(lang) }}{% endif %}</small>
+            <strong>{{ dest.name }}</strong>
+          </div>
         </div>
         {% endfor %}
       </div>
-      {% if price_cond_paras and price_cond_paras[0] %}
-      <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 11px; color: rgba(255,255,255,0.8); line-height: 1.5; text-align: left;">
-        <strong style="color: var(--gold-2); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.1em; font-size: 9px;">Important Note</strong>
-        <p style="margin: 0;">{{ price_cond_paras[0] }}</p>
-      </div>
-      {% endif %}
     </div>
   </div>
-</div>
 
-<!-- ═══════════════════ PAGE 6 — Inc/Exc & Muslim Care ═══════════════════ -->
-<div class="pdf-page">
-  <div class="page-header">
-    <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — Luxury Travel Proposal</span>
-    <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
-  </div>
-  <div class="page-inner">
-    <div class="section-label">Section 6 — Package Inclusions &amp; Exclusions</div>
-    <h2 class="section-h2">What is Included</h2>
-    <p class="section-p">Detailed list of inclusions and exclusions for this proposal.</p>
-
-    <div class="two-col" style="margin-bottom: 24px;">
-      <div class="panel">
-        <h3>Inclusions</h3>
-        <ul>
-          {% for line in inclusions %}<li>{{ line }}</li>{% endfor %}
-        </ul>
-      </div>
-      <div class="panel">
-        <h3>Exclusions</h3>
-        <ul>
-          {% for line in exclusions %}<li>{{ line }}</li>{% endfor %}
-        </ul>
-      </div>
+  <!-- ═══════════════════ PAGE 4 — Itinerary ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="page-header">
+      <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — Luxury Quotation</span>
+      <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
     </div>
+    <div class="page-inner">
+      <div class="section-label">Service Program</div>
+      <h2 class="section-h2">{{ itinerary_h2 }}</h2>
+      <p class="section-p">{{ itinerary_p }}</p>
 
-  </div>
-</div>
-
-
-
-<!-- ═══════════════════ PAGE 8 — Booking Terms & Finalization ═══════════════════ -->
-<div class="pdf-page">
-  <div class="page-header">
-    <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — Luxury Travel Proposal</span>
-    <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
-  </div>
-  <div class="page-inner">
-    <div class="section-label">Section 8 — Booking &amp; Payment Terms</div>
-    <h2 class="section-h2">Booking Terms</h2>
-    <p class="section-p">Commercial conditions and cancellation policies.</p>
-
-    <div style="border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 24px;">
-      <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11px;">
-        <thead>
-          <tr style="background: var(--emerald); color: white;">
-            <th style="padding: 10px 14px; width: 180px;">Term</th>
-            <th style="padding: 10px 14px;">Condition</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr style="border-bottom: 1px solid var(--line); background: white;">
-            <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Deposit</td>
-            <td style="padding: 10px 14px;">{{ term_deposit }}</td>
-          </tr>
-          <tr style="border-bottom: 1px solid var(--line); background: rgba(183, 137, 75, 0.03);">
-            <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Balance</td>
-            <td style="padding: 10px 14px;">{{ term_balance }}</td>
-          </tr>
-          <tr style="border-bottom: 1px solid var(--line); background: white;">
-            <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Cancellation</td>
-            <td style="padding: 10px 14px;">{{ term_cancellation }}</td>
-          </tr>
-          <tr style="background: rgba(183, 137, 75, 0.03);">
-            <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Confirmation</td>
-            <td style="padding: 10px 14px;">{{ term_confirmation }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="section-label">Section 9 — Finalization Checklist</div>
-    
-    <div class="cta-block" style="margin-bottom: 10px; padding: 24px; grid-template-columns: 1fr 180px; gap: 14px;">
-      <div>
-        <h2>{{ cta_h2 }}</h2>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; font-size: 10px; margin-top: 14px; text-align: left;">
+      <div class="itinerary">
+        {% for day in itinerary %}
+        <div class="day-card">
+          <div class="day-num">{{ day.day_badge_text | default(day.dayNumber) }}</div>
           <div>
-            <strong style="color: var(--gold-2); display:block; margin-bottom:4px; text-transform:uppercase;">Details Required</strong>
-            <ul style="padding-left:12px; display:grid; gap:3px; color:rgba(255,255,255,0.85);">
-              {% for item in final_req %}<li>{{ item }}</li>{% endfor %}
-            </ul>
+            <div class="day-badge">{{ day.day_num_text | default("DAY " ~ day.dayNumber ~ ((" &middot; " ~ (day.date |
+              format_date)) if day.date else "")) }}</div>
+            <h3>{{ day.title }}</h3>
+            {% for para in day.description %}
+            <p>{{ para }}</p>
+            {% endfor %}
+            {% if day.activities %}
+            <p style="margin-top:6px;font-size:10px;color:#b8860b">
+              <strong>{{ day.label_highlights | default("Highlights:") }}</strong> {{ day.activities | join(' · ') }}
+            </p>
+            {% endif %}
+            {% if day.notes %}
+            <div
+              style="margin-top:6px;font-size:9px;color:#8a7042;border-left:1px solid var(--gold);padding-left:6px;background:rgba(183,137,75,0.03);">
+              <strong>{{ day.label_notes | default("Notes:") }}</strong>
+              <ul style="margin:2px 0 0;padding-left:10px;">
+                {% for note in day.notes %}<li>{{ note }}</li>{% endfor %}
+              </ul>
+            </div>
+            {% endif %}
           </div>
-          <div>
-            <strong style="color: var(--gold-2); display:block; margin-bottom:4px; text-transform:uppercase;">Next Steps</strong>
-            <ul style="padding-left:12px; display:grid; gap:3px; color:rgba(255,255,255,0.85);">
-              {% for item in final_after %}<li>{{ item }}</li>{% endfor %}
-            </ul>
+          <div class="day-meta">
+            {% if day.overnight %}
+            <div class="price-sub" style="margin-bottom:2px">{{ day.label_overnight | default("Overnight") }}</div>
+            <div style="font-family:var(--serif);font-size:14px;color:#17412e">{{ day.overnight }}</div>
+            {% endif %}
+            {% if day.meals %}
+            <div class="price-sub" style="margin-top:8px;margin-bottom:2px">{{ day.label_meals | default("Meals") }}
+            </div>
+            <div style="font-size:11px">{{ day.meals | join(' · ') }}</div>
+            {% endif %}
           </div>
         </div>
+        {% endfor %}
       </div>
-      <div class="contact-box" style="padding: 12px;">
-        <span class="clabel" style="margin-top:0;">Prepared by</span>
-        <div class="cval" style="font-size:11px;">{{ seller_name }}</div>
-        <span class="clabel">WhatsApp</span>
-        <div class="cval" style="font-size:11px;">{{ contact_phone }}</div>
-        <span class="clabel">Website</span>
-        <div class="cval" style="font-size:11px;">{{ contact_web }}</div>
-      </div>
-    </div>
-
-    <div class="pdf-footer" style="padding: 10px 0; font-size: 10px;">
-      {{ footer_text }}<br>
-      <span style="color:var(--gold);font-weight:700;">{{ (brand.domain if brand else '') or 'vietnamsafar.vn' }}</span> &nbsp;·&nbsp;
-      This document is a private luxury quotation prepared exclusively for {{ customer_name }}.
     </div>
   </div>
-</div>
 
-<script>
-  // Auto-trigger print dialog when opened as PDF view
-  window.addEventListener('load', function() {
-    setTimeout(function() { window.print(); }, 600);
-  });
-</script>
+  <!-- ═══════════════════ PAGE 5 — Hotel Plan & Pricing ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="page-header">
+      <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — Luxury Travel Proposal</span>
+      <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
+    </div>
+    <div class="page-inner">
+      <div class="section-label">Section 4 — Selected Hotel Plan</div>
+      <h2 class="section-h2">Hotel Arrangement</h2>
+      <p class="section-p">Proposed accommodation plan. Similar options can be requested.</p>
+
+      {% if hotels %}
+      <div class="hotel-plan-pdf" style="margin-top: 15px;">
+        {% for item in hotels %}
+        <div class="hotel-pdf-card"
+          style="page-break-inside: avoid; border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 20px; {% if loop.last %}border-bottom: none; margin-bottom: 0;{% endif %}">
+          <!-- Header -->
+          <div style="margin-bottom: 10px;">
+            <span
+              style="font-size: 8px; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase;">{{
+              item.city_country }}</span>
+            <h3
+              style="font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 0;">
+              {{ item.name }}</h3>
+          </div>
+
+          <!-- Side-by-Side Images -->
+          <div style="margin: 10px 0; font-size: 0; width: 100%;">
+            <div style="width: 38%; display: inline-block; vertical-align: top; margin-right: 2%;">
+              <img src="{{ item.hotel_img }}" alt="{{ item.name }}"
+                style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+            </div>
+            <div style="width: 60%; display: inline-block; vertical-align: top;">
+              <img src="{{ item.room_img }}" alt="{{ item.name }} Room"
+                style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+            </div>
+          </div>
+
+          <!-- Footer Columns (Introduction & Info/Tel) -->
+          <div style="width: 100%; margin-top: 10px;">
+            <div style="width: 62%; display: inline-block; vertical-align: top; margin-right: 3%;">
+              <p style="font-size: 11px; line-height: 1.5; color: var(--muted); margin: 0; text-align: justify;">{{
+                item.introduction }}</p>
+            </div>
+            <div style="width: 35%; display: inline-block; vertical-align: top; text-align: right;">
+              <h4
+                style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">
+                {{ item.name }}</h4>
+              <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;">{{ item.date_range }}
+              </div>
+              <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">TEL: {{ item.tel }}</div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% if room_notes %}
+      <div
+        style="margin-top: 20px; padding: 10px 14px; background: rgba(183, 137, 75, 0.05); border-radius: 8px; border: 1px dashed var(--gold); font-size: 10px; color: var(--muted); margin-bottom: 24px; page-break-inside: avoid;">
+        <strong>Room Notes &amp; Requests:</strong> {{ room_notes }}
+      </div>
+      {% endif %}
+      {% else %}
+      <p style="font-size:11px; color:var(--muted); font-style:italic; margin-bottom:24px;">Hotel arrangements will be
+        tailored and detailed here for your specific travel dates.</p>
+      {% endif %}
+
+      <div class="section-label">Section 5 — Package Pricing</div>
+      <div class="pricing-block" style="margin-bottom: 0;">
+        <h2>{{ pricing_h2 }}</h2>
+        <p class="sub">{{ pricing_p }}</p>
+        <div class="price-cards">
+          {% for opt in price_options %}
+          <div class="price-card {% if opt.isConfirmedMainOption %}featured{% endif %}">
+            <span>{{ opt.hotelCategory }}</span>
+            {% if opt.optionName %}
+            <small style="display:block;margin-top:3px;font-size:9px;opacity:.7">{{ opt.optionName }}</small>
+            {% endif %}
+            {% if opt.is_total %}
+            <strong>{{ opt.totalPrice.displayText or ('{:,.0f}'.format(opt.totalPrice.amount) ~ ' ' ~
+              opt.totalPrice.currency) }}</strong>
+            <small>total package</small><br>
+            <small>Per person: {{ opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~
+              opt.pricePerPerson.currency) }}</small>
+            {% else %}
+            <strong>{{ opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~
+              opt.pricePerPerson.currency) }}</strong>
+            {% endif %}
+            {% if opt.isConfirmedMainOption %}
+            <div style="margin-top:8px;font-size:8px;letter-spacing:.14em;color:#daa520;font-weight:800">✓ CONFIRMED
+            </div>
+            {% elif opt.isAlternativeOption %}
+            <div style="margin-top:8px;font-size:8px;letter-spacing:.14em;color:rgba(216,189,133,.6);font-weight:700">
+              ALTERNATIVE</div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        {% if price_cond_paras and price_cond_paras[0] %}
+        <div
+          style="margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 11px; color: rgba(255,255,255,0.8); line-height: 1.5; text-align: left;">
+          <strong
+            style="color: var(--gold-2); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.1em; font-size: 9px;">Important
+            Note</strong>
+          <p style="margin: 0;">{{ price_cond_paras[0] }}</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ PAGE 6 — Inc/Exc & Muslim Care ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="page-header">
+      <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — Luxury Travel Proposal</span>
+      <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
+    </div>
+    <div class="page-inner">
+      <div class="section-label">Section 6 — Package Inclusions &amp; Exclusions</div>
+      <h2 class="section-h2">What is Included</h2>
+      <p class="section-p">Detailed list of inclusions and exclusions for this proposal.</p>
+
+      <div class="two-col" style="margin-bottom: 24px;">
+        <div class="panel">
+          <h3>Inclusions</h3>
+          <ul>
+            {% for line in inclusions %}<li>{{ line }}</li>{% endfor %}
+          </ul>
+        </div>
+        <div class="panel">
+          <h3>Exclusions</h3>
+          <ul>
+            {% for line in exclusions %}<li>{{ line }}</li>{% endfor %}
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+
+  <!-- ═══════════════════ PAGE 8 — Booking Terms & Finalization ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="page-header">
+      <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — Luxury Travel Proposal</span>
+      <span class="ref">{{ quotation_number }} · {{ quotation_date }}</span>
+    </div>
+    <div class="page-inner">
+      <div class="section-label">Section 8 — Booking &amp; Payment Terms</div>
+      <h2 class="section-h2">Booking Terms</h2>
+      <p class="section-p">Commercial conditions and cancellation policies.</p>
+
+      <div style="border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 24px;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11px;">
+          <thead>
+            <tr style="background: var(--emerald); color: white;">
+              <th style="padding: 10px 14px; width: 180px;">Term</th>
+              <th style="padding: 10px 14px;">Condition</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom: 1px solid var(--line); background: white;">
+              <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Deposit</td>
+              <td style="padding: 10px 14px;">{{ term_deposit }}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--line); background: rgba(183, 137, 75, 0.03);">
+              <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Balance</td>
+              <td style="padding: 10px 14px;">{{ term_balance }}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--line); background: white;">
+              <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Cancellation</td>
+              <td style="padding: 10px 14px;">{{ term_cancellation }}</td>
+            </tr>
+            <tr style="background: rgba(183, 137, 75, 0.03);">
+              <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Confirmation</td>
+              <td style="padding: 10px 14px;">{{ term_confirmation }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section-label">Section 9 — Finalization Checklist</div>
+
+      <div class="cta-block" style="margin-bottom: 10px; padding: 24px; grid-template-columns: 1fr 180px; gap: 14px;">
+        <div>
+          <h2>{{ cta_h2 }}</h2>
+          <div
+            style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; font-size: 10px; margin-top: 14px; text-align: left;">
+            <div>
+              <strong style="color: var(--gold-2); display:block; margin-bottom:4px; text-transform:uppercase;">Details
+                Required</strong>
+              <ul style="padding-left:12px; display:grid; gap:3px; color:rgba(255,255,255,0.85);">
+                {% for item in final_req %}<li>{{ item }}</li>{% endfor %}
+              </ul>
+            </div>
+            <div>
+              <strong style="color: var(--gold-2); display:block; margin-bottom:4px; text-transform:uppercase;">Next
+                Steps</strong>
+              <ul style="padding-left:12px; display:grid; gap:3px; color:rgba(255,255,255,0.85);">
+                {% for item in final_after %}<li>{{ item }}</li>{% endfor %}
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="contact-box" style="padding: 12px;">
+          <span class="clabel" style="margin-top:0;">Prepared by</span>
+          <div class="cval" style="font-size:11px;">{{ seller_name }}</div>
+          <span class="clabel">WhatsApp</span>
+          <div class="cval" style="font-size:11px;">{{ contact_phone }}</div>
+          <span class="clabel">Website</span>
+          <div class="cval" style="font-size:11px;">{{ contact_web }}</div>
+        </div>
+      </div>
+
+      <div class="pdf-footer" style="padding: 10px 0; font-size: 10px;">
+        {{ footer_text }}<br>
+        <span style="color:var(--gold);font-weight:700;">{{ (brand.domain if brand else '') or 'vietnamsafar.vn'
+          }}</span> &nbsp;·&nbsp;
+        This document is a private luxury quotation prepared exclusively for {{ customer_name }}.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Auto-trigger print dialog when opened as PDF view
+    window.addEventListener('load', function () {
+      setTimeout(function () { window.print(); }, 600);
+    });
+  </script>
 </body>
+
 </html>

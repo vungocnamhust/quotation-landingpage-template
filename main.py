@@ -53,19 +53,40 @@ BRANDS = {
         "id": "vietnam_safar",
         "name": "Vietnam Safar",
         "domain": "journeys.vietnamsafar.vn",
-        "logo": "/assets/brands/vietnam_safar.png"
+        "logo": "/assets/brands/vietnam_safar.png",
+        "color_primary": "#17412e",
+        "color_primary_dark": "#0e2f22",
+        "color_accent": "#b7894b",
+        "color_accent_light": "#d8bd85",
+        "font_serif": "Cormorant Garamond",
+        "font_sans": "Montserrat",
+        "font_accent": "Allura"
     },
     "capella_travel": {
         "id": "capella_travel",
         "name": "Capella Travel",
         "domain": "journeys.capellatravel.com",
-        "logo": "/assets/brands/capella_travel.png"
+        "logo": "/assets/brands/capella_travel.png",
+        "color_primary": "#CBA135",
+        "color_primary_dark": "#B7894B",
+        "color_accent": "#333333",
+        "color_accent_light": "#4F4F4F",
+        "font_serif": "Cormorant Garamond",
+        "font_sans": "Montserrat",
+        "font_accent": "Cormorant Garamond"
     },
     "selvara": {
         "id": "selvara",
         "name": "Selvara Journeys",
         "domain": "my.selvarajourneys.com",
-        "logo": "/assets/brands/selvara.svg"
+        "logo": "/assets/brands/selvara.svg",
+        "color_primary": "#A98338",
+        "color_primary_dark": "#8C6A29",
+        "color_accent": "#4F5D4E",
+        "color_accent_light": "#6B7A6A",
+        "font_serif": "Cormorant Garamond",
+        "font_sans": "Jost",
+        "font_accent": "Cormorant Garamond"
     }
 }
 
@@ -2493,7 +2514,7 @@ def _build_timeline_days(
 
 # ── Context builder (pure fn — no I/O) ───────────────────────────────────────
 
-def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, destinations: list[dict], lang: str = "en", template_name: str = "vietnam_heritage_luxury.html", brand: dict = None):
+def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, destinations: list[dict], lang: str = "en", template_name: str = "vietnam_luxury_brosure.html", brand: dict = None):
     """Build template context. Shared by /quotations (landingpage) and /quotations/{id}/pdf."""
     default_img = "/assets/vietnam-safar-logo.png"
     manual_override = _load_quotation_manual_override(quotation_id)
@@ -3734,7 +3755,7 @@ async def create_quotation(request: Request):
     log.debug("[/quotations] Hero image resolved: %s", hero_image_url)
 
     brand_config = resolve_brand(request, payload.model_dump(mode="json"))
-    ctx = _build_ctx(quotation_id, payload, hero_image_url, destinations, lang=lang, template_name="vietnam_heritage_luxury.html", brand=brand_config)
+    ctx = _build_ctx(quotation_id, payload, hero_image_url, destinations, lang=lang, template_name="vietnam_luxury_brosure.html", brand=brand_config)
     ctx["baseline_payload"] = payload.model_dump(mode="json")
     ctx["baseline_lang"] = lang
     ctx["translations"] = {}
@@ -3744,8 +3765,8 @@ async def create_quotation(request: Request):
 
     # ── Render landing page HTML ───────────────────────────────────────────────
     loop = asyncio.get_event_loop()
-    tmpl_lp  = templates.get_template("vietnam_heritage_luxury.html")
-    tmpl_pdf = templates.get_template("vietnam_heritage_luxury_pdf.html")
+    tmpl_lp  = templates.get_template("vietnam_luxury_brosure.html")
+    tmpl_pdf = templates.get_template("vietnam_luxury_brosure_pdf.html")
 
     rendered_html, rendered_pdf = await asyncio.gather(
         loop.run_in_executor(None, partial(tmpl_lp.render,  **ctx)),
@@ -4290,7 +4311,7 @@ async def _render_quotation_pdf_from_ctx(ctx_data: dict, quotation_id: str, targ
         effective_lang = baseline_lang
 
     payload_obj = TourQuotationPayload.model_validate(payload_dict)
-    base_tmpl = ctx_data.get("template_name", "vietnam_heritage_luxury.html")
+    base_tmpl = ctx_data.get("template_name", "vietnam_luxury_brosure.html")
     tmpl_name = base_tmpl.replace(".html", "_pdf.html")
     tmpl = templates.get_template(tmpl_name)
 
@@ -4569,7 +4590,7 @@ async def get_quotation(quotation_id: str, request: Request):
         
     try:
         payload_obj = TourQuotationPayload.model_validate(payload_dict)
-        tmpl_name = ctx_data.get("template_name", "vietnam_heritage_luxury.html")
+        tmpl_name = ctx_data.get("template_name", "vietnam_luxury_brosure.html")
         tmpl = templates.get_template(tmpl_name)
         
         # Build clean context for target lang
@@ -4667,6 +4688,7 @@ async def get_quotation(quotation_id: str, request: Request):
 
 class PublishRequest(BaseModel):
     html: str
+    template_name: Optional[str] = None
 
 class ApproveRequest(BaseModel):
     html: str
@@ -4699,6 +4721,9 @@ async def publish_quotation(quotation_id: str, body: PublishRequest, lang: str =
         # Extract custom images and store in ctx_data
         custom_images = _extract_custom_images_from_html(body.html)
         ctx_data.update(custom_images)
+        
+        if body.template_name:
+            ctx_data["template_name"] = body.template_name
         
         _save_ctx_html_sync_state(ctx_data, target_lang, body.html)
         rendered_pdf, effective_lang = await _render_quotation_pdf_from_ctx(
@@ -5771,8 +5796,8 @@ async def privacy_policy():
     :root {
       --ivory: #f8f3e9;
       --emerald: #17412e;
-      --gold: #b7894b;
-      --gold-2: #d8bd85;
+      --gold: #b8860b;
+      --gold-2: #daa520;
       --ink: #11130f;
       --muted: #706a5d;
       --line: rgba(183,137,75,.22);

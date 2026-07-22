@@ -40,19 +40,32 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <style>
-        :root {
+    :root {
       --primary: {{c_primary}};
+
       --primary-dark: {{c_primary_dark}};
+
       --accent: {{c_accent}};
+
       --accent-light: {{c_accent_light}};
+
       --bg-main: {{c_bg_main}};
+
       --bg-alt: {{c_bg_alt}};
+
       --text-main: {{c_text_main}};
+
       --text-muted: {{c_text_muted}};
+
       --text-light: {{c_text_light}};
-      --serif: "{{font_serif}}", "Playfair Display", serif;
-      --sans: "{{font_sans}}", "Outfit", sans-serif;
-      --accent-font: "{{font_accent}}", cursive;
+      --serif: "{{font_serif}}",
+      "Playfair Display",
+      serif;
+      --sans: "{{font_sans}}",
+      "Outfit",
+      sans-serif;
+      --accent-font: "{{font_accent}}",
+      cursive;
       --shadow: 0 30px 80px rgba(0, 0, 0, 0.08);
       --serif: '{{font_serif}}',
       Georgia,
@@ -146,12 +159,45 @@
     }
 
     .nav {
-      position: sticky;
+      /* Mặc định trên hero tối */
+      --nav-bg: transparent;
+      --nav-backdrop: none;
+      --nav-border: transparent;
+      --brand-color: #ffffff;
+      --nav-link-color: #ffffff;
+      --lang-btn-bg: rgba(255, 255, 255, 0.15);
+      --lang-btn-border: rgba(255, 255, 255, 0.3);
+      --lang-btn-color: #ffffff;
+      --lang-btn-hover-bg: rgba(255, 255, 255, 0.25);
+      --noti-btn-bg: transparent;
+      --noti-btn-color: #ffffff;
+      --logo-filter: brightness(0) invert(1);
+
+      position: fixed;
       top: 0;
+      left: 0;
+      width: 100%;
       z-index: 50;
-      background: rgba(248, 243, 233, .86);
-      backdrop-filter: blur(18px);
-      border-bottom: 1px solid var(--line)
+      background: var(--nav-bg);
+      backdrop-filter: var(--nav-backdrop);
+      -webkit-backdrop-filter: var(--nav-backdrop);
+      border-bottom: 1px solid var(--nav-border);
+      transition: all 0.3s ease;
+    }
+
+    .nav.scrolled {
+      --nav-bg: color-mix(in srgb, var(--bg-main) 92%, transparent);
+      --nav-backdrop: blur(18px);
+      --nav-border: var(--line);
+      --brand-color: var(--primary);
+      --nav-link-color: var(--text-main);
+      --lang-btn-bg: color-mix(in srgb, var(--bg-alt) 45%, transparent);
+      --lang-btn-border: var(--line);
+      --lang-btn-color: var(--primary);
+      --lang-btn-hover-bg: rgba(255, 255, 255, 0.75);
+      --noti-btn-bg: transparent;
+      --noti-btn-color: var(--text-muted);
+      --logo-filter: none;
     }
 
     .nav-inner {
@@ -169,7 +215,8 @@
       letter-spacing: .08em;
       text-transform: uppercase;
       font-size: 12px;
-      color: var(--primary)
+      color: var(--brand-color);
+      transition: color 0.3s ease;
     }
 
     .brand img {
@@ -177,7 +224,8 @@
       height: 44px;
       object-fit: contain;
       border-radius: 50%;
-      background: white
+      filter: var(--logo-filter);
+      transition: filter 0.3s ease;
     }
 
     .nav-links {
@@ -186,7 +234,8 @@
       font-size: 12px;
       text-transform: uppercase;
       letter-spacing: .12em;
-      color: #4e4a41
+      color: var(--nav-link-color);
+      transition: color 0.3s ease;
     }
 
     .nav-actions {
@@ -234,60 +283,80 @@
 
     .hero {
       position: relative;
-      min-height: 820px;
-      background: linear-gradient(90deg, rgba(17, 19, 15, .92), rgba(17, 19, 15, .62), rgba(17, 19, 15, .18)), var(--hero-img) center/cover no-repeat;
+      min-height: 100vh;
+      background: linear-gradient(rgba(17, 19, 15, 0.2), rgba(17, 19, 15, 0.2)), var(--hero-img) center/cover no-repeat;
       color: white;
-      overflow: hidden
-    }
-
-    .hero:after {
-      content: "";
-      position: absolute;
-      inset: auto 0 0 0;
-      height: 210px;
-      background: linear-gradient(180deg, transparent, var(--bg-main))
+      display: flex;
+      align-items: center;
+      overflow: hidden;
     }
 
     .hero-content {
       position: relative;
       z-index: 2;
-      padding: 112px 0 128px;
-      display: grid;
-      grid-template-columns: 1.05fr .95fr;
-      gap: 54px;
-      align-items: end
+      width: 100%;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 100px 5% 40px;
+      box-sizing: border-box;
+    }
+
+    .hero-content-inner {
+      width: 70%;
+      max-width: 1000px;
+    }
+
+    @media (max-width: 1200px) {
+      .hero-content-inner {
+        width: 90%;
+      }
+    }
+
+    @media (max-width: 980px) {
+      .hero-content {
+        padding-top: 140px;
+      }
+
+      .hero-content-inner {
+        width: 100%;
+      }
     }
 
     .kicker {
-      color: var(--accent-light);
+      color: rgba(255, 255, 255, 0.85);
       letter-spacing: .2em;
       text-transform: uppercase;
-      font-size: 12px;
-      font-weight: 700;
-      margin-bottom: 22px
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 24px;
     }
 
     .hero h1 {
       font-family: var(--serif);
-      font-size: clamp(32px, 4.5vw, 56px);
-      line-height: 1.15;
+      font-size: clamp(36px, 5vw, 64px);
+      line-height: 1.1;
       font-weight: 500;
-      letter-spacing: -.02em;
+      letter-spacing: -.01em;
       margin: 0 0 24px;
-      max-width: 850px
+      color: white;
+      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      width: 100%;
     }
 
     .hero-lede {
-      font-size: 20px;
-      max-width: 65ch;
-      color: rgba(255, 255, 255, .82);
-      margin: 0 0 30px
+      font-size: 18px;
+      color: rgba(255, 255, 255, 0.95);
+      margin: 0 0 30px;
+      line-height: 1.6;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+      width: 100%;
+      max-width: 100%;
     }
 
     .hero-actions {
       display: flex;
       flex-wrap: wrap;
-      gap: 14px
+      gap: 16px;
     }
 
     .quote-card {
@@ -1763,9 +1832,9 @@
     }
 
     #nav-notification-btn {
-      color: var(--text-muted);
-      border: 1px solid var(--line);
-      background: transparent;
+      color: var(--noti-btn-color);
+      border: 1px solid var(--lang-btn-border);
+      background: var(--noti-btn-bg);
       padding: 10px;
       border-radius: 50%;
       cursor: pointer;
@@ -2055,11 +2124,11 @@
     }
 
     .lang-switcher-btn {
-      background: rgba(255, 255, 255, 0.45);
+      background: var(--lang-btn-bg);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
-      border: 1px solid var(--line);
-      color: var(--primary);
+      border: 1px solid var(--lang-btn-border);
+      color: var(--lang-btn-color);
       padding: 9px 16px;
       font-size: 11px;
       font-weight: 600;
@@ -2075,9 +2144,13 @@
     }
 
     .lang-switcher-btn:hover {
-      background: rgba(255, 255, 255, 0.75);
-      border-color: var(--accent);
+      background: var(--lang-btn-hover-bg);
+      border-color: rgba(255, 255, 255, 0.4);
       transform: translateY(-1px);
+    }
+
+    .nav.scrolled .lang-switcher-btn:hover {
+      border-color: var(--accent);
     }
 
     .lang-caret {
@@ -2264,39 +2337,73 @@
 
     @media (max-width: 768px) {
       .container {
-        width: min(1180px, 90%) !important;
+        width: min(1180px, 88%) !important;
       }
 
       .hero {
         min-height: auto !important;
-        background: linear-gradient(180deg, rgba(17, 19, 15, 0.92) 0%, rgba(17, 19, 15, 0.75) 50%, rgba(17, 19, 15, 0.6) 100%), var(--hero-img) center/cover no-repeat !important;
+        background: linear-gradient(180deg, rgba(17, 19, 15, 0.92) 0%, rgba(17, 19, 15, 0.78) 50%, rgba(17, 19, 15, 0.65) 100%), var(--hero-img) center/cover no-repeat !important;
       }
 
       .hero-content {
         grid-template-columns: 1fr !important;
-        padding: 64px 0 80px !important;
-        gap: 28px !important;
+        padding: 92px 6% 60px !important;
+        gap: 20px !important;
       }
 
       .hero h1 {
-        font-size: clamp(24px, 6vw, 36px) !important;
+        font-size: clamp(22px, 6.5vw, 34px) !important;
+        line-height: 1.25 !important;
         margin-bottom: 16px !important;
+        display: block !important;
+        -webkit-line-clamp: unset !important;
+        overflow: visible !important;
       }
 
       .hero-lede {
-        font-size: 16px !important;
+        font-size: 15px !important;
+        line-height: 1.55 !important;
+        margin-bottom: 20px !important;
+        display: block !important;
+        -webkit-line-clamp: unset !important;
+        overflow: visible !important;
+      }
+
+      .hero-meta {
         margin-bottom: 24px !important;
+        padding-top: 16px !important;
+      }
+
+      .hero-meta strong {
+        font-size: 12px !important;
+        letter-spacing: .06em !important;
+        line-height: 1.4 !important;
+        margin-bottom: 8px !important;
+        word-break: break-word !important;
+      }
+
+      .hero-meta span {
+        font-size: 13px !important;
+        letter-spacing: .04em !important;
       }
 
       .hero-actions {
         flex-direction: column !important;
         width: 100% !important;
         gap: 12px !important;
+        margin-bottom: 24px !important;
       }
 
       .hero-actions .btn {
         width: 100% !important;
         justify-content: center !important;
+        padding: 14px 20px !important;
+      }
+
+      .hero-footer {
+        font-size: 11px !important;
+        flex-wrap: wrap !important;
+        gap: 6px !important;
       }
 
       .quote-card {
@@ -2343,21 +2450,30 @@
       }
 
       .nav-inner {
-        height: 60px !important;
+        height: 56px !important;
+        padding: 8px 0 !important;
       }
 
       .nav-actions {
         display: flex !important;
-        gap: 8px !important;
+        gap: 6px !important;
+        align-items: center !important;
+        flex-shrink: 0;
       }
 
       .brand {
-        font-size: 14px !important;
+        font-size: 12px !important;
+        gap: 8px !important;
+        max-width: 150px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .brand img {
-        width: 24px !important;
-        height: 24px !important;
+        width: 26px !important;
+        height: 26px !important;
+        flex-shrink: 0;
       }
 
       .lang-switcher-btn .lang-text,
@@ -2366,7 +2482,7 @@
       }
 
       .lang-switcher-btn {
-        padding: 8px !important;
+        padding: 6px !important;
         border-radius: 50% !important;
         width: 32px !important;
         height: 32px !important;
@@ -2380,7 +2496,7 @@
 
       #btn-pdf-view,
       .nav-actions .btn.btn-primary {
-        padding: 8px !important;
+        padding: 6px !important;
         border-radius: 50% !important;
         width: 32px !important;
         height: 32px !important;
@@ -2398,6 +2514,15 @@
       }
     }
   </style>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const heroImages = [
+        '/assets/brands/hero/elder.png'
+      ];
+      const randomHero = heroImages[Math.floor(Math.random() * heroImages.length)];
+      document.documentElement.style.setProperty('--hero-img', `url(${randomHero})`);
+    });
+  </script>
 </head>
 
 <body>
@@ -2447,50 +2572,102 @@
 
   <main id="top">
     <header class="hero">
-      <div class="container hero-content">
-        <div>
-          <div class="kicker overline" data-editable="kicker">{{kicker}}</div>
+      <div class="hero-content">
+        <div class="hero-content-inner">
           <h1 data-editable="tour_title">{{tour_title}}</h1>
           <p class="hero-lede" data-editable="lede">{{ lede | rtl_mixed(lang) }}</p>
-          <div class="hero-actions no-print">
-            <a class="btn btn-accent" href="#quotation">{{ "View Luxury Rates" | translate(lang) }}</a>
-            <a class="btn outline" href="#itinerary">{{ "Explore the Journey" | translate(lang) }}</a>
+
+          <div class="hero-meta"
+            style="margin-bottom: 40px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.2);">
+            <strong data-editable="hero_meta_1"
+              style="display: block; font-size: 14px; letter-spacing: .15em; text-transform: uppercase; color: rgba(255,255,255,0.95); margin-bottom: 12px; font-weight: 700;">14
+              DAYS &bull; 13 NIGHTS &bull; {{ guests_txt | upper if guests_txt else 'FAMILY VACATION (2 PAX)'
+              }}</strong>
+            <span data-editable="hero_meta_2"
+              style="display: block; font-size: 15px; color: rgba(255,255,255,0.7); letter-spacing: .05em; text-transform: uppercase;">{{
+              travel_dates | upper if travel_dates else '01 APR - 14 APR 2027' }}</span>
+          </div>
+
+          <div class="hero-actions no-print" style="margin-bottom: 40px;">
+            <a class="btn btn-primary" href="#journey"
+              style="padding: 16px 32px; font-size: 13px; letter-spacing: .08em; border-radius: 999px; background: var(--primary); color: white; border: none; font-weight: 700; box-shadow: 0 8px 24px rgba(0,0,0,0.15);">{{
+              "BEGIN THE JOURNEY" | translate(lang) }}</a>
+          </div>
+
+          <div class="hero-footer no-print"
+            style="display: flex; justify-content: space-between; font-size: 12px; letter-spacing: .1em; color: rgba(255,255,255,0.6); text-transform: uppercase; width: 100%;">
+            <div class="hf-left" data-editable="hero_footer">{{ brand.name if brand else 'CAPELLA TRAVEL' }} &bull; {{quotation_number}}</div>
           </div>
         </div>
-
       </div>
     </header>
-    <section class="open-letter-section" style="padding: 60px 0; background: var(--bg-main); text-align: center;">
-      <div class="container"
-        style="max-width: 800px; margin: 0 auto; padding: 40px; background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: left; position: relative; margin-top: -80px; z-index: 10;">
-        <h2 class="font-serif" style="font-size: 28px; color: var(--accent-light); margin-bottom: 24px;"
-          data-editable="journey_overview_title">{{ journey_overview_title | default("A Personal Note for Your Journey")
-          }}</h2>
-        <p style="font-size: 16px; line-height: 1.8; color: var(--text-muted); margin-bottom: 16px;"
-          data-editable="letter_greeting">
-          Dear <strong>{{customer_name}}</strong>,
-        </p>
-        <p style="font-size: 16px; line-height: 1.8; color: var(--text-muted); margin-bottom: 16px;"
-          data-editable="letter_intro">
-          I am delighted to present this exclusively curated itinerary: <strong>{{overview_heading}}</strong>.
-          {% if guests_txt %} Designed carefully for <strong>{{guests_txt}}</strong>,{% endif %}
-          {% if travel_dates %} your journey is planned for <strong>{{travel_dates}}</strong>.{% endif %}
-          {% if route_txt %} The route will take you through <strong>{{route_txt}}</strong>,{% endif %}
-          {% if travel_style %} ensuring a <strong>{{travel_style}}</strong> experience throughout.{% endif %}
-        </p>
-        <p style="font-size: 16px; line-height: 1.8; color: var(--text-muted); margin-bottom: 32px;"
-          data-editable="letter_outro">
-          We have poured our expertise and passion into crafting every detail of this journey, and we cannot wait for
-          you to experience the magic of Vietnam. Please review the details below, and let us know if you would like any
-          refinements. (Ref: <strong>{{quotation_number}}</strong>)
-        </p>
-        <div style="display: flex; align-items: center; gap: 16px;">
-          <div>
-            <p class="font-serif" style="margin: 0; font-size: 20px; color: var(--accent-light);"
-              data-editable="letter_sign_off">Warm regards,</p>
-            <p style="margin: 4px 0 0 0; font-weight: 500; color: var(--text);" data-editable="letter_sender">Your
-              Travel Specialist</p>
-            <p style="margin: 4px 0 0 0; font-size: 14px; color: var(--text-muted);" data-editable="contact">{{contact}}</p>
+    <section class="open-letter-section" style="padding: 100px 0; background: var(--bg-main);">
+      <style>
+        .letter-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 40px;
+        }
+
+        @media (min-width: 992px) {
+          .letter-grid {
+            grid-template-columns: 35% 1fr;
+            gap: 80px;
+            align-items: start;
+          }
+        }
+      </style>
+      <div class="container">
+        <div class="letter-grid">
+          <!-- IMAGE (35%) -->
+          <div class="letter-image" style="display: flex; align-items: center; justify-content: center; padding: 20px;">
+            <div style="width: 100%; max-width: 320px; aspect-ratio: 506 / 1062; display: block; opacity: 0.8; background-color: var(--primary); -webkit-mask: url('/assets/brands/indochine_icon/hoa%20sen.svg') no-repeat center / contain; mask: url('/assets/brands/indochine_icon/hoa%20sen.svg') no-repeat center / contain;" aria-label="Cloud Graphic"></div>
+          </div>
+
+          <!-- LETTER (65%) -->
+          <div class="letter-content" style="padding-top: 10px;">
+            <h2 class="font-serif"
+              style="font-size: clamp(32px, 4vw, 48px); color: var(--text-main); margin-bottom: 40px; line-height: 1.2;"
+              data-editable="journey_overview_title">
+              {{ journey_overview_title | default("A Journey Shaped Around Your Family") }}
+            </h2>
+
+            <!-- HIGHLIGHT QUOTE -->
+            <div style="margin-bottom: 40px; padding-left: 24px; border-left: 2px solid var(--accent);">
+              <p class="font-serif"
+                style="font-size: clamp(24px, 3vw, 32px); font-style: italic; color: var(--accent); line-height: 1.4; margin: 0;"
+                data-editable="letter_highlight">
+                {{ letter_highlight | default('"This journey was designed to leave room for both discovery and rest."')
+                }}
+              </p>
+            </div>
+
+            <div class="letter-body" style="font-size: 18px; line-height: 1.85; color: var(--text-muted);">
+              <p style="margin-bottom: 24px;" data-editable="letter_greeting">
+                Dear <strong>{{customer_name}}</strong>,
+              </p>
+              <p style="margin-bottom: 24px;" data-editable="letter_intro">
+                I am delighted to present this exclusively curated itinerary: <strong>{{overview_heading}}</strong>.
+                {% if guests_txt %} Designed carefully for <strong>{{guests_txt}}</strong>,{% endif %}
+                {% if travel_dates %} your journey is planned for <strong>{{travel_dates}}</strong>.{% endif %}
+                {% if route_txt %} The route will take you through <strong>{{route_txt}}</strong>,{% endif %}
+                {% if travel_style %} ensuring a <strong>{{travel_style}}</strong> experience throughout.{% endif %}
+              </p>
+              <p style="margin-bottom: 40px;" data-editable="letter_outro">
+                We have poured our expertise and passion into crafting every detail of this journey, and we cannot wait
+                for you to experience the magic of Vietnam. Please review the details below, and let us know if you
+                would like any refinements. (Ref: <strong>{{quotation_number}}</strong>)
+              </p>
+            </div>
+
+            <!-- SIGNATURE -->
+            <div class="letter-signature">
+              <p style="margin: 0; font-size: 18px; font-weight: 700; color: var(--text-main); letter-spacing: 0.05em; text-transform: uppercase;"
+                data-editable="letter_sign_off">{{ letter_sign_off | default('Anh Nam Le') }}</p>
+              <p style="margin: 4px 0 0 0; font-size: 14px; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase;"
+                data-editable="letter_sender">{{ letter_sender | default('Journey Designer') }}</p>
+              <p style="margin: 4px 0 0 0; font-size: 14px; color: var(--text-muted);" data-editable="contact">{{contact}}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -2518,7 +2695,7 @@
           style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 18px; margin-top: 32px;">
           <article class="experience"
             style="background: var(--bg-alt); border-color: color-mix(in srgb, var(--accent) 20%, transparent); color: var(--text-main);">
-            <h3 style="color: var(--accent); font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;"
+            <h3 class="font-serif" style="color: var(--accent); font-size: 22px; margin: 12px 0 10px;"
               data-editable="why_works_title_3">{{ "Dietary & Special Care" | translate(lang) }}</h3>
             <p style="color: var(--text-main); margin: 0; line-height: 1.6;" data-editable="why_muslim">{{why_muslim}}
             </p>
@@ -2526,7 +2703,7 @@
           <article class="experience"
             style="background: var(--bg-alt); border-color: color-mix(in srgb, var(--accent) 20%, transparent); color: var(--text-main);">
             <span class="num" style="color: var(--primary);" data-editable="why_works_num_4">04</span>
-            <h3 style="color: var(--accent); font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;"
+            <h3 class="font-serif" style="color: var(--accent); font-size: 22px; margin: 12px 0 10px;"
               data-editable="why_works_title_4">{{ "Balanced Highlights" | translate(lang) }}</h3>
             <p style="color: var(--text-main); margin: 0; line-height: 1.6;" data-editable="why_balanced">{{why_balanced}}</p>
           </article>
@@ -2746,44 +2923,197 @@
     <section id="hotels"
       style="background: var(--bg-alt); border: 1px solid var(--line); border-radius: 40px; padding: 54px; margin: 40px 0; box-shadow: 0 18px 45px rgba(17,19,15,0.04);">
       <style>
-        .hotel-info {
-          width: 280px;
+        /* --- EDITORIAL HOTEL GRID SYSTEM --- */
+        .hotel-plan-container {
           display: flex;
           flex-direction: column;
-          justify-content: flex-start;
-          align-items: flex-start;
-          text-align: left;
+          gap: 56px;
+          margin-top: 40px;
         }
 
-        html[dir="rtl"] .hotel-info {
-          align-items: flex-end;
-          text-align: right;
+        .hotel-card-editorial {
+          border-bottom: 1px solid var(--line);
+          padding-bottom: 48px;
+        }
+        .hotel-card-editorial:last-child {
+          border-bottom: none;
+          padding-bottom: 0;
         }
 
-        @media (max-width: 768px) {
-          .hotel-images-grid {
-            grid-template-columns: 1fr !important;
+        .hotel-editorial-grid {
+          display: grid;
+          gap: 32px;
+          align-items: center;
+        }
+        
+        .hotel-editorial-grid > *, .hotel-images-group > * {
+          min-width: 0; /* Prevents grid blowout from intrinsic image sizes */
+        }
+        
+        .hotel-images-group {
+          display: grid;
+          gap: 16px;
+          align-items: center;
+        }
+        
+        .img-wrapper-main, .img-wrapper-sub {
+          aspect-ratio: 4 / 3;
+        }
+
+        /* 1. DESKTOP (≥ 1100px) */
+        @media (min-width: 1100px) {
+          .hotel-editorial-grid.odd-row {
+            grid-template-columns: 2.4fr 1.3fr;
+          }
+          .hotel-editorial-grid.even-row {
+            grid-template-columns: 1.3fr 2.4fr;
           }
 
-          .hotel-image-wrapper {
-            height: 220px !important;
+          /* In even row, text is on the left, so we change the order of the text block */
+          .hotel-editorial-grid.even-row .hotel-info-block {
+            order: -1;
           }
 
-          .hotel-footer-layout {
+          .hotel-images-group.odd-group {
+            grid-template-columns: 1.6fr 1fr;
+          }
+          .hotel-images-group.even-group {
+            grid-template-columns: 1fr 1.6fr;
+          }
+          /* In even group, sub image is on the left, main is on the right */
+          .hotel-images-group.even-group .img-wrapper-main {
+            order: 2;
+          }
+          .hotel-images-group.even-group .img-wrapper-sub {
+            order: 1;
+          }
+        }
+
+        /* 2. TABLET (768px - 1099px) */
+        @media (min-width: 768px) and (max-width: 1099px) {
+          .hotel-editorial-grid.odd-row {
+            grid-template-columns: 1.4fr 1fr;
+          }
+          .hotel-editorial-grid.even-row {
+            grid-template-columns: 1fr 1.4fr;
+          }
+
+          .hotel-editorial-grid.even-row .hotel-info-block {
+            order: -1;
+          }
+
+          .hotel-images-group.odd-group {
+            grid-template-columns: 1.4fr 1fr;
+          }
+          .hotel-images-group.even-group {
+            grid-template-columns: 1fr 1.4fr;
+          }
+          .hotel-images-group.even-group .img-wrapper-main {
+            order: 2;
+          }
+          .hotel-images-group.even-group .img-wrapper-sub {
+            order: 1;
+          }
+        }
+
+        /* 3. MOBILE (< 768px) */
+        @media (max-width: 767px) {
+          .hotel-editorial-grid {
+            display: flex;
             flex-direction: column;
-            gap: 20px !important;
+            gap: 16px;
+          }
+          
+          .hotel-header-mobile {
+            order: 1; /* Tiêu đề lên đầu */
+            margin-bottom: 8px;
           }
 
-          .hotel-info {
-            width: 100% !important;
-            align-items: flex-start !important;
-            text-align: left !important;
+          .hotel-images-group {
+            order: 2; /* Bộ đôi ảnh ở giữa */
+            grid-template-columns: 1.2fr 1fr;
+            gap: 12px;
+          }
+          /* Even groups on mobile shouldn't swap images to keep consistency */
+          .hotel-images-group.even-group .img-wrapper-main {
+            order: 1;
+          }
+          .hotel-images-group.even-group .img-wrapper-sub {
+            order: 2;
           }
 
-          html[dir="rtl"] .hotel-info {
-            align-items: flex-end !important;
-            text-align: right !important;
+          .img-wrapper-main, .img-wrapper-sub {
+            height: 180px;
           }
+
+          .hotel-desc-mobile {
+            order: 3; /* Mô tả ở dưới cùng */
+          }
+        }
+
+        /* Common Image Box Styles */
+        .img-wrapper-main, .img-wrapper-sub {
+          border-radius: 6px;
+          overflow: hidden;
+          position: relative;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+        }
+        .img-wrapper-main img, .img-wrapper-sub img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+
+        /* Text Block Styling */
+        .hotel-info-block {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+        }
+        .hotel-header-mobile {
+          margin-bottom: 12px;
+        }
+        .hotel-subtitle {
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.15em;
+          text-transform: uppercase;
+          color: var(--text-muted);
+          margin-bottom: 6px;
+        }
+        .hotel-title {
+          font-size: 26px;
+          font-weight: 700;
+          color: var(--text-main);
+          margin: 0;
+          letter-spacing: 0.02em;
+        }
+        .hotel-desc-mobile {
+          display: flex;
+          flex-direction: column;
+        }
+        .hotel-desc {
+          font-size: 14px;
+          line-height: 1.6;
+          color: var(--text-muted);
+          margin: 0;
+          text-align: justify;
+        }
+        .hotel-tags {
+          display: flex;
+          gap: 16px;
+          margin-top: 16px;
+          font-size: 13px;
+          color: var(--text-main);
+          font-weight: 600;
+          flex-wrap: wrap;
+          align-items: center;
+        }
+        .hotel-tags span.tel {
+          color: var(--text-muted);
+          font-size: 12px;
+          font-weight: 400;
         }
       </style>
       <div class="container">
@@ -2795,57 +3125,60 @@
         </div>
 
         {% if hotels %}
-        <div class="hotel-plan-container" style="display: flex; flex-direction: column; gap: 48px; margin-top: 40px;">
+        <div class="hotel-plan-container">
+          {% set seen_hotel_names = [] %}
+          {% set ns = namespace(count=0) %}
           {% for item in hotels %}
-          <div class="hotel-card"
-            style="border-bottom: 1px solid var(--line); padding-bottom: 40px; {% if loop.last %}border-bottom: none; padding-bottom: 0;{% endif %}">
-            <!-- Header (City / Country & Hotel Name) -->
-            <div class="hotel-header" style="margin-bottom: 20px;">
-              <span class="hotel-city"
-                style="display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;"
-                data-editable="hotel_city_{{ loop.index }}">{{ item.city_country | rtl_mixed(lang) }}</span>
-              <h3 class="hotel-name font-serif"
-                style="font-size: 26px; font-weight: 700; color: var(--text-main); margin: 0; letter-spacing: 0.02em;"
-                data-editable="hotel_name_{{ loop.index }}">{{ item.name | rtl_mixed(lang) }}</h3>
-            </div>
-
-            <!-- Side-by-Side Images -->
-            <div class="hotel-images-grid"
-              style="display: grid; grid-template-columns: 1fr 1.6fr; gap: 16px; margin: 20px 0;">
-              <div class="hotel-image-wrapper"
-                style="height: 280px; border-radius: 4px; overflow: hidden; position: relative;">
-                <img src="{{ item.hotel_img }}" alt="{{ item.name }}"
-                  style="width: 100%; height: 100%; object-fit: cover; display: block;">
-              </div>
-              <div class="hotel-image-wrapper"
-                style="height: 280px; border-radius: 4px; overflow: hidden; position: relative;">
-                <img src="{{ item.room_img }}" alt="{{ item.name }} Room"
-                  style="width: 100%; height: 100%; object-fit: cover; display: block;">
-              </div>
-            </div>
-
-            <!-- Footer Columns (Introduction & Info/Tel) -->
-            <div class="hotel-footer-layout"
-              style="display: flex; justify-content: space-between; align-items: flex-start; gap: 40px; margin-top: 20px; flex-wrap: wrap;">
-              <div class="hotel-intro" style="flex: 1; min-width: 280px;">
-                {% if show_hotel_intro and item.introduction %}
-                <p style="font-size: 14px; line-height: 1.6; color: var(--text-muted); margin: 0; text-align: justify;"
-                  data-editable="hotel_intro_{{ loop.index }}">{{ item.introduction | rtl_mixed(lang) }}</p>
+          {% if item.name not in seen_hotel_names %}
+          {% set _ = seen_hotel_names.append(item.name) %}
+          {% set is_odd = (ns.count % 2 == 0) %}
+          <div class="hotel-card-editorial">
+            <div class="hotel-editorial-grid {% if is_odd %}odd-row{% else %}even-row{% endif %}">
+              
+              {# Aggregate dates for this hotel #}
+              {% set date_ranges = [] %}
+              {% for h in hotels %}
+                {% if h.name == item.name and h.date_range %}
+                  {% set _ = date_ranges.append(h.date_range) %}
                 {% endif %}
+              {% endfor %}
+
+              <!-- Side-by-Side Images -->
+              <div class="hotel-images-group hotel-images-grid {% if is_odd %}odd-group{% else %}even-group{% endif %}">
+                <div class="img-wrapper-main hotel-image-wrapper">
+                  <img src="{{ item.hotel_img }}" alt="{{ item.name }}">
+                </div>
+                <div class="img-wrapper-sub hotel-image-wrapper">
+                  <img src="{{ item.room_img }}" alt="{{ item.name }} Room">
+                </div>
               </div>
-              <div class="hotel-info">
-                <h4 class="font-serif"
-                  style="font-size: 16px; font-weight: 700; color: var(--primary); margin: 0; letter-spacing: 0.04em; text-transform: uppercase;"
-                  data-editable="hotel_info_name_{{ loop.index }}">{{ item.name | rtl_mixed(lang) }}</h4>
-                <span style="font-size: 14px; font-weight: 500; color: var(--text-main); margin-top: 8px;"
-                  data-editable="hotel_date_{{ loop.index }}"><span class="ltr-token">{{ item.date_range
-                    }}</span></span>
-                <span style="font-size: 12px; color: var(--text-muted); margin-top: 6px; letter-spacing: 0.05em;"
-                  data-editable="hotel_tel_{{ loop.index }}">{{ "TEL:" | translate(lang) }} <span class="ltr-token">{{
-                    item.tel }}</span></span>
+
+              <!-- Footer Columns (Introduction & Info/Tel) -->
+              <div class="hotel-info-block">
+                <div class="hotel-header-mobile">
+                  <div class="hotel-subtitle hotel-city" data-editable="hotel_city_{{ loop.index }}">{{ item.city_country | rtl_mixed(lang) }}</div>
+                  <h3 class="hotel-name hotel-title font-serif" data-editable="hotel_name_{{ loop.index }}">{{ item.name | rtl_mixed(lang) }}</h3>
+                </div>
+                
+                <div class="hotel-desc-mobile">
+                  {% if show_hotel_intro and item.introduction %}
+                  <p class="hotel-desc" data-editable="hotel_intro_{{ loop.index }}">{{ item.introduction | rtl_mixed(lang) }}</p>
+                  {% endif %}
+                  
+                  <div class="hotel-tags">
+                    <span data-editable="hotel_date_{{ loop.index }}">
+                      {% for dr in date_ranges %}
+                        <span class="ltr-token">{{ dr }}</span>{% if not loop.last %} &bull; {% endif %}
+                      {% endfor %}
+                    </span>
+                    <span class="tel" data-editable="hotel_tel_{{ loop.index }}">{{ "TEL:" | translate(lang) }} <span class="ltr-token">{{ item.tel }}</span></span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
+          {% set ns.count = ns.count + 1 %}
+          {% endif %}
           {% endfor %}
         </div>
         {% else %}
@@ -3869,7 +4202,18 @@
                 span.textContent = brandData.name;
               }
             }
-            // 3. Sync Modal Items
+            // 3. Sync CSS Variables for Brand Colors
+            const root = document.documentElement;
+            if (brandData.color_primary) root.style.setProperty('--primary', brandData.color_primary);
+            if (brandData.color_primary_dark) root.style.setProperty('--primary-dark', brandData.color_primary_dark);
+            if (brandData.color_accent) root.style.setProperty('--accent', brandData.color_accent);
+            if (brandData.color_accent_light) root.style.setProperty('--accent-light', brandData.color_accent_light);
+            if (brandData.color_bg_main) root.style.setProperty('--bg-main', brandData.color_bg_main);
+            if (brandData.color_bg_alt) root.style.setProperty('--bg-alt', brandData.color_bg_alt);
+            if (brandData.color_text_main) root.style.setProperty('--text-main', brandData.color_text_main);
+            if (brandData.color_text_muted) root.style.setProperty('--text-muted', brandData.color_text_muted);
+            if (brandData.color_text_light) root.style.setProperty('--text-light', brandData.color_text_light);
+            // 4. Sync Modal Items
             const modalItems = document.querySelectorAll('.pb-domain-item');
             modalItems.forEach(item => {
               const bId = item.getAttribute('data-brand');
@@ -4775,6 +5119,19 @@
           installButtonHero.style.display = 'none';
         }
       });
+    });
+  </script>
+  <script>
+    // Header Scroll Effect
+    window.addEventListener('scroll', () => {
+      const nav = document.querySelector('.nav');
+      if (nav) {
+        if (window.scrollY > 20) {
+          nav.classList.add('scrolled');
+        } else {
+          nav.classList.remove('scrolled');
+        }
+      }
     });
   </script>
 </body>

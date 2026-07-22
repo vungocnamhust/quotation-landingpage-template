@@ -1,30 +1,39 @@
 {% set symbol = currency ~ ' ' if currency not in ['USD', 'VND'] else ('đ' if currency == 'VND' else '$') %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <title>{{ tour_title }} — Booking Itinerary</title>
   <style>
     :root {
-      --ivory: #f8f3e9;
+      --ivory: #f9f6f0;
       --ink: #11130f;
       --muted: #706a5d;
       --emerald: #17412e;
       --emerald-2: #0e2f22;
-      --gold: #b7894b;
-      --gold-2: #d8bd85;
-      --line: rgba(183,137,75,.28);
+      --gold: #b8860b;
+      --gold-2: #daa520;
+      --line: rgba(183, 137, 75, .28);
       --card: #fffaf1;
       --charcoal: #171915;
       --serif: Georgia, 'Times New Roman', serif;
       --sans: Arial, Helvetica, sans-serif;
     }
 
-    @page { size: A4 portrait; margin: 0; }
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-    html, body {
+    html,
+    body {
       color: var(--ink);
       font-family: var(--sans);
       line-height: 1.6;
@@ -35,7 +44,8 @@
     /* Screen-only viewer styles */
     @media screen {
       body {
-        background: #525659; /* PDF viewer gray */
+        background: #525659;
+        /* PDF viewer gray */
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -45,11 +55,12 @@
     }
 
     @media print {
-      body { 
-        background-color: var(--ivory) !important; 
-        padding: 0; 
-        display: block; 
+      body {
+        background-color: var(--ivory) !important;
+        padding: 0;
+        display: block;
       }
+
       .pdf-page {
         width: auto !important;
         min-height: auto !important;
@@ -58,6 +69,7 @@
         page-break-inside: auto !important;
         break-inside: auto !important;
       }
+
       .cover {
         height: 100vh !important;
       }
@@ -71,11 +83,14 @@
       page-break-after: always;
       position: relative;
     }
-    .pdf-page:last-of-type { page-break-after: auto; }
+
+    .pdf-page:last-of-type {
+      page-break-after: auto;
+    }
 
     @media screen {
       .pdf-page {
-        box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
       }
     }
 
@@ -85,7 +100,7 @@
       bottom: 10px;
       right: 20px;
       font-size: 9px;
-      color: rgba(0,0,0,.22);
+      color: rgba(0, 0, 0, .22);
       letter-spacing: .12em;
       text-transform: uppercase;
       font-family: var(--sans);
@@ -97,8 +112,8 @@
     .cover {
       width: 794px;
       height: 1123px;
-      background: linear-gradient(160deg, rgba(17,19,15,.88) 0%, rgba(17,19,15,.55) 55%, rgba(17,19,15,.18) 100%),
-                  center/cover no-repeat;
+      background: linear-gradient(160deg, rgba(17, 19, 15, .88) 0%, rgba(17, 19, 15, .55) 55%, rgba(17, 19, 15, .18) 100%),
+        center/cover no-repeat;
       color: white;
       display: flex;
       flex-direction: column;
@@ -135,18 +150,18 @@
 
     .cover-lede {
       font-size: 14px;
-      color: rgba(255,255,255,.76);
+      color: rgba(255, 255, 255, .76);
       max-width: 380px;
       line-height: 1.6;
     }
 
     /* Snapshot card on cover */
     .quote-card {
-      background: rgba(255,250,241,.93);
+      background: rgba(255, 250, 241, .93);
       color: var(--ink);
       border-radius: 24px;
       padding: 22px 24px;
-      border: 1px solid rgba(255,255,255,.6);
+      border: 1px solid rgba(255, 255, 255, .6);
     }
 
     .quote-card h2 {
@@ -162,23 +177,36 @@
       justify-content: space-between;
       gap: 12px;
       padding-bottom: 8px;
-      border-bottom: 1px solid rgba(17,19,15,.1);
+      border-bottom: 1px solid rgba(17, 19, 15, .1);
       font-size: 11px;
       color: var(--muted);
       margin-bottom: 8px;
     }
-    .qrow:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-    .qrow strong { color: var(--ink); text-align: right; font-size: 11px; }
+
+    .qrow:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .qrow strong {
+      color: var(--ink);
+      text-align: right;
+      font-size: 11px;
+    }
 
     /* Strip bar at bottom of cover */
     .cover-strip {
-      background: rgba(23,65,46,.92);
+      background: rgba(23, 65, 46, .92);
       display: grid;
-      grid-template-columns: repeat(4,1fr);
+      grid-template-columns: repeat(4, 1fr);
       padding: 16px 48px;
     }
 
-    .strip-item { text-align: center; }
+    .strip-item {
+      text-align: center;
+    }
+
     .strip-item span {
       display: block;
       color: var(--gold-2);
@@ -187,6 +215,7 @@
       text-transform: uppercase;
       font-weight: 700;
     }
+
     .strip-item strong {
       font-family: var(--serif);
       font-size: 20px;
@@ -219,7 +248,9 @@
       letter-spacing: .1em;
     }
 
-    .page-inner { padding: 44px 48px; }
+    .page-inner {
+      padding: 44px 48px;
+    }
 
     .section-label {
       color: var(--gold);
@@ -246,7 +277,11 @@
       margin-bottom: 24px;
     }
 
-    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
 
     .panel {
       background: var(--card);
@@ -264,7 +299,11 @@
       margin-bottom: 10px;
     }
 
-    .panel p { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+    .panel p {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
 
     .panel ul {
       padding-left: 18px;
@@ -272,7 +311,10 @@
       gap: 6px;
     }
 
-    .panel ul li { font-size: 12px; color: var(--muted); }
+    .panel ul li {
+      font-size: 12px;
+      color: var(--muted);
+    }
 
     /* ── Bookings summary styles ── */
     .overview-grid {
@@ -338,7 +380,10 @@
     }
 
     /* ── Daily Schedule cards ── */
-    .itinerary { display: grid; gap: 10px; }
+    .itinerary {
+      display: grid;
+      gap: 10px;
+    }
 
     .day-card {
       display: grid;
@@ -383,7 +428,10 @@
       text-transform: uppercase;
     }
 
-    .day-card p { font-size: 11px; color: var(--muted); }
+    .day-card p {
+      font-size: 11px;
+      color: var(--muted);
+    }
 
     .day-meta {
       text-align: right;
@@ -500,8 +548,9 @@
     }
 
     .cta-block {
-      background: linear-gradient(135deg, var(--emerald-2), #11130f 64%, #332711);
-      color: white;
+      background: #FAF8F5;
+      color: var(--text);
+      border: 1px solid var(--gold-2);
       border-radius: 24px;
       padding: 32px;
       display: grid;
@@ -521,11 +570,14 @@
       margin-bottom: 10px;
     }
 
-    .cta-block p { color: rgba(255,255,255,.72); font-size: 13px; }
+    .cta-block p {
+      color: rgba(255, 255, 255, .72);
+      font-size: 13px;
+    }
 
     .contact-box {
-      background: rgba(255,255,255,.09);
-      border: 1px solid rgba(255,255,255,.2);
+      background: rgba(255, 255, 255, .09);
+      border: 1px solid rgba(255, 255, 255, .2);
       border-radius: 16px;
       padding: 18px;
     }
@@ -540,8 +592,15 @@
       margin-top: 12px;
     }
 
-    .contact-box .clabel:first-child { margin-top: 0; }
-    .contact-box .cval { font-weight: 700; font-size: 13px; margin-top: 2px; }
+    .contact-box .clabel:first-child {
+      margin-top: 0;
+    }
+
+    .contact-box .cval {
+      font-weight: 700;
+      font-size: 13px;
+      margin-top: 2px;
+    }
 
     .pdf-footer {
       text-align: center;
@@ -552,11 +611,25 @@
       margin-top: 8px;
     }
 
-    .no-print { display: none !important; }
+    .no-print {
+      display: none !important;
+    }
+
+    @media (max-width: 900px) {
+
+      .hotel-intro p,
+      .hotel-info,
+      #hotels p,
+      .hotel-info p {
+        text-align: left !important;
+      }
+    }
   </style>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,400;0,600;0,800;1,400&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,400;0,600;0,800;1,400&display=swap"
+    rel="stylesheet">
   <style>
     :root {
       --serif: 'Playfair Display', Georgia, serif;
@@ -564,16 +637,21 @@
     }
   </style>
 </head>
+
 <body>
 
-  <div class="watermark">{{ (brand.name if brand else '') or 'Vietnam Safar' }} · {{ quotation_number }} · Booking Itinerary</div>
+  <div class="watermark">{{ (brand.name if brand else '') or 'Vietnam Safar' }} · {{ quotation_number }} · Booking
+    Itinerary</div>
 
   <!-- ═══════════════════ PAGE 1 — Cover ═══════════════════ -->
   <div class="pdf-page">
-    <div class="cover" style="background-image: linear-gradient(160deg,rgba(17,19,15,.88),rgba(17,19,15,.55) 55%,rgba(17,19,15,.18)), url('{{ img_0 }}');">
+    <div class="cover"
+      style="background-image: linear-gradient(160deg,rgba(17,19,15,.88),rgba(17,19,15,.55) 55%,rgba(17,19,15,.18)), url('{{ img_0 }}');">
       <div class="cover-body">
         <div>
-          <div style="font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-2);margin-bottom:10px;font-weight:700;">Confidential Booking Document</div>
+          <div
+            style="font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-2);margin-bottom:10px;font-weight:700;">
+            Confidential Booking Document</div>
           <div class="cover-kicker">{{ kicker }}</div>
           <h1>{{ tour_title }}</h1>
           <p class="cover-lede">{{ lede }}</p>
@@ -625,7 +703,7 @@
       <div class="section-label">Section 1 — Overview</div>
       <h2 class="section-h2">{{ overview_heading }}</h2>
       <p class="section-p">{{ prepared_for }} — {{ tour_title }}</p>
-      
+
       <div style="font-size:12px; color:var(--muted); margin-bottom: 24px; line-height: 1.7;">
         {% for para in overview_paras %}
         <p style="margin-bottom: 10px;">{{ para }}</p>
@@ -691,7 +769,8 @@
         <div class="day-card">
           <div class="day-num">{{ day.dayNumber }}</div>
           <div>
-            <div class="day-badge">DAY {{ day.dayNumber }}{% if day.date %} &middot; {{ day.date | format_date }}{% endif %}</div>
+            <div class="day-badge">DAY {{ day.dayNumber }}{% if day.date %} &middot; {{ day.date | format_date }}{%
+              endif %}</div>
             <h3>{{ day.title }}</h3>
             {% for para in day.description %}
             <p style="margin-bottom: 6px;">{{ para }}</p>
@@ -699,127 +778,143 @@
 
             <!-- Hotels -->
             {% if day.booked_hotels %}
-              <div class="booked-services-group">
-                <div class="service-group-title">🏨 Accommodation</div>
-                {% for hotel in day.booked_hotels %}
-                  <div class="service-card">
-                    <div class="service-details">
-                      <div class="service-header">
-                        <h4>{{ hotel.name }}</h4>
-                        <span class="service-status">{{ hotel.status }}</span>
-                      </div>
-                      <div class="service-meta">
-                        <span>⭐ {{ hotel.star }}★ Resort</span>
-                        <span>📍 {{ hotel.destination }}</span>
-                        {% if hotel.pricePerNightUsd %}
-                          <span style="color:var(--emerald);font-weight:600;">💵 1 Rm × {{ hotel.nights or 0 }} Nts × {{ symbol }}{{ '{:,.0f}'.format(hotel.pricePerNightUsd) }} = {{ symbol }}{{ '{:,.0f}'.format(hotel.pricePerNightUsd * hotel.nights) }}</span>
-                        {% elif hotel.pricePerNightVnd %}
-                          <span style="color:var(--emerald);font-weight:600;">💵 1 Rm × {{ hotel.nights or 0 }} Nts × {{ '{:,.0f}'.format(hotel.pricePerNightVnd) }} VND = {{ '{:,.0f}'.format(hotel.pricePerNightVnd * hotel.nights) }} VND</span>
-                        {% endif %}
-                      </div>
-                      <div class="service-dates">
-                        Check-in: <strong>{{ hotel.checkInDate }}</strong> · Check-out: <strong>{{ hotel.checkOutDate }}</strong> ({{ hotel.nights }} Nights)
-                      </div>
-                    </div>
+            <div class="booked-services-group">
+              <div class="service-group-title">🏨 Accommodation</div>
+              {% for hotel in day.booked_hotels %}
+              <div class="service-card">
+                <div class="service-details">
+                  <div class="service-header">
+                    <h4>{{ hotel.name }}</h4>
+                    <span class="service-status">{{ hotel.status }}</span>
                   </div>
-                {% endfor %}
+                  <div class="service-meta">
+                    <span>⭐ {{ hotel.star }}★ Resort</span>
+                    <span>📍 {{ hotel.destination }}</span>
+                    {% if hotel.pricePerNightUsd %}
+                    <span style="color:var(--emerald);font-weight:600;">💵 1 Rm × {{ hotel.nights or 0 }} Nts × {{
+                      symbol }}{{ '{:,.0f}'.format(hotel.pricePerNightUsd) }} = {{ symbol }}{{
+                      '{:,.0f}'.format(hotel.pricePerNightUsd * hotel.nights) }}</span>
+                    {% elif hotel.pricePerNightVnd %}
+                    <span style="color:var(--emerald);font-weight:600;">💵 1 Rm × {{ hotel.nights or 0 }} Nts × {{
+                      '{:,.0f}'.format(hotel.pricePerNightVnd) }} VND = {{ '{:,.0f}'.format(hotel.pricePerNightVnd *
+                      hotel.nights) }} VND</span>
+                    {% endif %}
+                  </div>
+                  <div class="service-dates">
+                    Check-in: <strong>{{ hotel.checkInDate }}</strong> · Check-out: <strong>{{ hotel.checkOutDate
+                      }}</strong> ({{ hotel.nights }} Nights)
+                  </div>
+                </div>
               </div>
+              {% endfor %}
+            </div>
             {% endif %}
 
             <!-- Activities -->
             {% if day.booked_activities %}
-              <div class="booked-services-group">
-                <div class="service-group-title">🛶 Excursions & Activities</div>
-                {% for act in day.booked_activities %}
-                  <div class="service-card">
-                    <div class="service-details">
-                      <div class="service-header">
-                        <h4>{{ act.activityName }}</h4>
-                        <span class="service-status">{{ act.status }}</span>
-                      </div>
-                      <div class="service-meta">
-                        <span>📍 {{ act.area }}</span>
-                        {% if act.durationHours %}<span>⏱️ {{ act.durationHours }} Hours</span>{% endif %}
-                        <span style="color:var(--emerald);font-weight:600;">💵 ({{ guests_adults or 0 }} Ad × {{ symbol }}{{ '{:,.0f}'.format(act.pricePerAdultUsd or 0) }}) + ({{ guests_children or 0 }} Ch × {{ symbol }}{{ '{:,.0f}'.format(act.pricePerChildUsd or 0) }}) = {{ symbol }}{{ '{:,.0f}'.format((act.pricePerAdultUsd or 0) * (guests_adults or 0) + (act.pricePerChildUsd or 0) * (guests_children or 0)) }}</span>
-                      </div>
-                    </div>
+            <div class="booked-services-group">
+              <div class="service-group-title">🛶 Excursions & Activities</div>
+              {% for act in day.booked_activities %}
+              <div class="service-card">
+                <div class="service-details">
+                  <div class="service-header">
+                    <h4>{{ act.activityName }}</h4>
+                    <span class="service-status">{{ act.status }}</span>
                   </div>
-                {% endfor %}
+                  <div class="service-meta">
+                    <span>📍 {{ act.area }}</span>
+                    {% if act.durationHours %}<span>⏱️ {{ act.durationHours }} Hours</span>{% endif %}
+                    <span style="color:var(--emerald);font-weight:600;">💵 ({{ guests_adults or 0 }} Ad × {{ symbol }}{{
+                      '{:,.0f}'.format(act.pricePerAdultUsd or 0) }}) + ({{ guests_children or 0 }} Ch × {{ symbol }}{{
+                      '{:,.0f}'.format(act.pricePerChildUsd or 0) }}) = {{ symbol }}{{
+                      '{:,.0f}'.format((act.pricePerAdultUsd or 0) * (guests_adults or 0) + (act.pricePerChildUsd or 0)
+                      * (guests_children or 0)) }}</span>
+                  </div>
+                </div>
               </div>
+              {% endfor %}
+            </div>
             {% endif %}
 
             <!-- Transfers -->
             {% if day.booked_transfers %}
-              <div class="booked-services-group">
-                <div class="service-group-title">🚗 Transfers & Transport</div>
-                {% for tx in day.booked_transfers %}
-                  <div class="service-card">
-                    <div class="service-details">
-                      <div class="service-header">
-                        <h4>{{ tx.transferType | replace("_", " ") | title }}</h4>
-                        <span class="service-status">{{ tx.status }}</span>
-                      </div>
-                      <div class="service-meta">
-                        <span>Route: <strong>{{ tx.fromLocation }}</strong> ➔ <strong>{{ tx.toLocation }}</strong></span>
-                        <span>Vehicle: <strong>{{ tx.vehicleRequirement }}</strong></span>
-                        {% if tx.priceUsd %}
-                          <span style="color:var(--emerald);font-weight:600;">💵 Base: {{ symbol }}{{ '{:,.0f}'.format(tx.priceUsd) }} + Fees: {{ symbol }}0 = {{ symbol }}{{ '{:,.0f}'.format(tx.priceUsd) }}</span>
-                        {% elif tx.priceVnd %}
-                          <span style="color:var(--emerald);font-weight:600;">💵 Base: {{ '{:,.0f}'.format(tx.priceVnd) }} VND + Fees: 0 = {{ '{:,.0f}'.format(tx.priceVnd) }} VND</span>
-                        {% endif %}
-                      </div>
-                    </div>
+            <div class="booked-services-group">
+              <div class="service-group-title">🚗 Transfers & Transport</div>
+              {% for tx in day.booked_transfers %}
+              <div class="service-card">
+                <div class="service-details">
+                  <div class="service-header">
+                    <h4>{{ tx.transferType | replace("_", " ") | title }}</h4>
+                    <span class="service-status">{{ tx.status }}</span>
                   </div>
-                {% endfor %}
+                  <div class="service-meta">
+                    <span>Route: <strong>{{ tx.fromLocation }}</strong> ➔ <strong>{{ tx.toLocation }}</strong></span>
+                    <span>Vehicle: <strong>{{ tx.vehicleRequirement }}</strong></span>
+                    {% if tx.priceUsd %}
+                    <span style="color:var(--emerald);font-weight:600;">💵 Base: {{ symbol }}{{
+                      '{:,.0f}'.format(tx.priceUsd) }} + Fees: {{ symbol }}0 = {{ symbol }}{{
+                      '{:,.0f}'.format(tx.priceUsd) }}</span>
+                    {% elif tx.priceVnd %}
+                    <span style="color:var(--emerald);font-weight:600;">💵 Base: {{ '{:,.0f}'.format(tx.priceVnd) }} VND
+                      + Fees: 0 = {{ '{:,.0f}'.format(tx.priceVnd) }} VND</span>
+                    {% endif %}
+                  </div>
+                </div>
               </div>
+              {% endfor %}
+            </div>
             {% endif %}
 
             <!-- Flights -->
             {% if day.booked_flights %}
-              <div class="booked-services-group">
-                <div class="service-group-title">✈️ Flights</div>
-                {% for fl in day.booked_flights %}
-                  <div class="service-card">
-                    <div class="service-details">
-                      <div class="service-header">
-                        <h4>{{ fl.airline }} - {{ fl.flightNumber }}</h4>
-                        <span class="service-status">{{ fl.status }}</span>
-                      </div>
-                      <div class="service-meta">
-                        <span>Route: <strong>{{ fl.fromCity }}</strong> ➔ <strong>{{ fl.toCity }}</strong></span>
-                        <span>Time: <strong>{{ fl.departureTime or 'TBD' }} - {{ fl.arrivalTime or 'TBD' }}</strong></span>
-                        {% if fl.priceUsd %}
-                          <span style="color:var(--emerald);font-weight:600;">💵 {{ (guests_adults or 0) + (guests_children or 0) }} Pax × {{ symbol }}{{ '{:,.0f}'.format(fl.priceUsd) }} = {{ symbol }}{{ '{:,.0f}'.format(fl.priceUsd * ((guests_adults or 0) + (guests_children or 0))) }}</span>
-                        {% endif %}
-                      </div>
-                    </div>
+            <div class="booked-services-group">
+              <div class="service-group-title">✈️ Flights</div>
+              {% for fl in day.booked_flights %}
+              <div class="service-card">
+                <div class="service-details">
+                  <div class="service-header">
+                    <h4>{{ fl.airline }} - {{ fl.flightNumber }}</h4>
+                    <span class="service-status">{{ fl.status }}</span>
                   </div>
-                {% endfor %}
+                  <div class="service-meta">
+                    <span>Route: <strong>{{ fl.fromCity }}</strong> ➔ <strong>{{ fl.toCity }}</strong></span>
+                    <span>Time: <strong>{{ fl.departureTime or 'TBD' }} - {{ fl.arrivalTime or 'TBD' }}</strong></span>
+                    {% if fl.priceUsd %}
+                    <span style="color:var(--emerald);font-weight:600;">💵 {{ (guests_adults or 0) + (guests_children or
+                      0) }} Pax × {{ symbol }}{{ '{:,.0f}'.format(fl.priceUsd) }} = {{ symbol }}{{
+                      '{:,.0f}'.format(fl.priceUsd * ((guests_adults or 0) + (guests_children or 0))) }}</span>
+                    {% endif %}
+                  </div>
+                </div>
               </div>
+              {% endfor %}
+            </div>
             {% endif %}
 
             <!-- Guides -->
             {% if day.booked_guides %}
-              <div class="booked-services-group">
-                <div class="service-group-title">🗣️ Local Guides</div>
-                {% for gd in day.booked_guides %}
-                  <div class="service-card">
-                    <div class="service-details">
-                      <div class="service-header">
-                        <h4>Local Guide ({{ gd.language }})</h4>
-                        <span class="service-status">{{ gd.status }}</span>
-                      </div>
-                      <div class="service-meta">
-                        <span>Active in: <strong>{{ gd.destination }}</strong></span>
-                        <span>Duration: <strong>{{ gd.days }} Days</strong></span>
-                        {% if gd.pricePerDayUsd %}
-                          <span style="color:var(--emerald);font-weight:600;">💵 {{ gd.days or 0 }} Days × {{ symbol }}{{ '{:,.0f}'.format(gd.pricePerDayUsd) }} = {{ symbol }}{{ '{:,.0f}'.format(gd.pricePerDayUsd * gd.days) }}</span>
-                        {% endif %}
-                      </div>
-                    </div>
+            <div class="booked-services-group">
+              <div class="service-group-title">🗣️ Local Guides</div>
+              {% for gd in day.booked_guides %}
+              <div class="service-card">
+                <div class="service-details">
+                  <div class="service-header">
+                    <h4>Local Guide ({{ gd.language }})</h4>
+                    <span class="service-status">{{ gd.status }}</span>
                   </div>
-                {% endfor %}
+                  <div class="service-meta">
+                    <span>Active in: <strong>{{ gd.destination }}</strong></span>
+                    <span>Duration: <strong>{{ gd.days }} Days</strong></span>
+                    {% if gd.pricePerDayUsd %}
+                    <span style="color:var(--emerald);font-weight:600;">💵 {{ gd.days or 0 }} Days × {{ symbol }}{{
+                      '{:,.0f}'.format(gd.pricePerDayUsd) }} = {{ symbol }}{{ '{:,.0f}'.format(gd.pricePerDayUsd *
+                      gd.days) }}</span>
+                    {% endif %}
+                  </div>
+                </div>
               </div>
+              {% endfor %}
+            </div>
             {% endif %}
           </div>
           <div class="day-meta">
@@ -855,9 +950,11 @@
           <div class="price-card {% if opt.isConfirmedMainOption %}featured{% endif %}">
             <span>{{ opt.hotelCategory }}</span>
             {% if opt.optionName %}
-            <small style="color:rgba(255,255,255,.55);font-size:9px;display:block;margin-top:4px">{{ opt.optionName }}</small>
+            <small style="color:rgba(255,255,255,.55);font-size:9px;display:block;margin-top:4px">{{ opt.optionName
+              }}</small>
             {% endif %}
-            <strong>{{ opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~ opt.pricePerPerson.currency) }}</strong>
+            <strong>{{ opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~
+              opt.pricePerPerson.currency) }}</strong>
           </div>
           {% endfor %}
         </div>
@@ -910,7 +1007,8 @@
       <div class="cta-block">
         <div>
           <h2>Secured Booking</h2>
-          <p>This itinerary reflects confirmed bookings. If any local timing needs adjusting, please let your travel coordinator know prior to departure.</p>
+          <p>This itinerary reflects confirmed bookings. If any local timing needs adjusting, please let your travel
+            coordinator know prior to departure.</p>
         </div>
         <div class="contact-box">
           <span class="clabel">Vietnam Hotline 24/7</span>
@@ -931,9 +1029,10 @@
   </div>
 
   <script class="no-print">
-    window.onload = function() {
+    window.onload = function () {
       window.print();
     }
   </script>
 </body>
+
 </html>

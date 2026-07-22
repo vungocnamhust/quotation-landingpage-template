@@ -1,6 +1,6 @@
 {% set symbol = currency ~ ' ' if currency not in ['USD', 'VND'] else ('đ' if currency == 'VND' else '$') %}
 <!DOCTYPE html>
-<html lang="{{ lang or 'en' }}" {% if lang == 'ar' %}dir="rtl"{% endif %}
+<html lang="{{ lang or 'en' }}" {% if lang=='ar' %}dir="rtl" {% endif %}
   style="--hero-img: url('{{ img_0 }}'); {% for dest in destinations %} --img-{{ loop.index }}: url('{{ dest.image_url or '/assets/vietnam-safar-logo.png' }}'); {% endfor %}">
 
 <head>
@@ -13,8 +13,10 @@
   <!-- Premium Typography Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700&family=Cairo:wght@300;400;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
-  
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700&family=Cairo:wght@300;400;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400..700;1,400..700&display=swap"
+    rel="stylesheet">
+
   <!-- PWA Metadata -->
   <link rel="manifest" href="/manifest.json?id={{ itinerary_id }}&type=itineraries" />
   <meta name="theme-color" content="#17412e" />
@@ -26,15 +28,15 @@
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <style>
     :root {
-      --ivory: #f8f3e9;
+      --ivory: #f9f6f0;
       --ivory-2: #efe4d1;
       --ink: #11130f;
       --charcoal: #171915;
       --muted: #706a5d;
       --emerald: #17412e;
       --emerald-2: #0e2f22;
-      --gold: #b7894b;
-      --gold-2: #d8bd85;
+      --gold: #b8860b;
+      --gold-2: #daa520;
       --line: rgba(183, 137, 75, .28);
       --card: #fffaf1;
       --shadow: 0 30px 80px rgba(17, 19, 15, .16);
@@ -57,7 +59,20 @@
     }
 
     /* Enforce word wrapping globally to prevent text layout overflow */
-    body, p, h1, h2, h3, h4, h5, h6, li, span, strong, div, td, th {
+    body,
+    p,
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    li,
+    span,
+    strong,
+    div,
+    td,
+    th {
       overflow-wrap: break-word;
       word-wrap: break-word;
       word-break: break-word;
@@ -287,7 +302,8 @@
       border-radius: 26px;
       padding: 22px;
       box-shadow: 0 14px 45px rgba(17, 19, 15, .08);
-      min-width: 0; /* Ensure overflow works on grid items */
+      min-width: 0;
+      /* Ensure overflow works on grid items */
     }
 
     .strip-card span {
@@ -694,8 +710,9 @@
     }
 
     .cta {
-      background: linear-gradient(135deg, var(--emerald-2), #11130f 64%, #332711);
-      color: white;
+      background: #FAF8F5;
+      color: var(--text);
+      border: 1px solid var(--gold-2);
       border-radius: 44px;
       padding: 54px;
       display: grid;
@@ -716,7 +733,7 @@
     }
 
     .cta p {
-      color: rgba(255, 255, 255, .76);
+      color: var(--muted);
       font-size: 17px
     }
 
@@ -917,6 +934,7 @@
         opacity: 0.85;
         stroke-width: 3px;
       }
+
       100% {
         transform: scale(1.35);
         opacity: 0;
@@ -975,6 +993,7 @@
         transform: scale(0.5);
         opacity: 1;
       }
+
       80%,
       100% {
         transform: scale(1.4);
@@ -1027,22 +1046,27 @@
       .container {
         width: min(1180px, 95%);
       }
+
       .hero-content {
         gap: 36px;
       }
+
       .day {
         grid-template-columns: 110px 1fr 140px;
         gap: 16px;
         padding: 20px;
       }
+
       .day-label {
         height: 60px;
         width: 60px;
         font-size: 20px;
       }
+
       .strip-grid {
         gap: 10px;
       }
+
       .strip-card {
         padding: 16px;
       }
@@ -1371,7 +1395,7 @@
     }
 
     #publish-bar .pb-label strong {
-      color: #d8bd85
+      color: #daa520
     }
 
     #publish-status {
@@ -1382,7 +1406,7 @@
     }
 
     #btn-publish {
-      background: linear-gradient(135deg, #b7894b, #d8bd85);
+      background: linear-gradient(135deg, #b8860b, #daa520);
       color: #1c160d;
       border: none;
       border-radius: 999px;
@@ -1427,7 +1451,7 @@
       font-family: inherit;
       outline: none;
     }
-    
+
     #btn-select-domain:hover,
     #btn-view-live:hover {
       background-color: rgba(255, 255, 255, 0.15);
@@ -1435,11 +1459,11 @@
     }
 
     #btn-view-live svg.view-icon {
-      color: #d8bd85;
+      color: #daa520;
       display: inline-block;
       vertical-align: middle;
     }
-    
+
     .pb-modal-overlay {
       position: fixed;
       top: 0;
@@ -1456,11 +1480,11 @@
       padding: 20px;
       box-sizing: border-box;
     }
-    
+
     .pb-modal-overlay.show {
       display: flex;
     }
-    
+
     .pb-modal-card {
       background: rgba(255, 250, 241, 0.98);
       backdrop-filter: blur(20px);
@@ -1474,19 +1498,26 @@
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
       animation: pbModalFadeIn 0.3s ease;
       box-sizing: border-box;
-      
+
       direction: ltr !important;
       text-align: left !important;
-      
+
       display: flex;
       flex-direction: column;
     }
-    
+
     @keyframes pbModalFadeIn {
-      from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
-    
+
     .pb-modal-header {
       display: flex;
       justify-content: space-between;
@@ -1496,7 +1527,7 @@
       padding-bottom: 12px;
       flex-shrink: 0;
     }
-    
+
     .pb-modal-header h3 {
       margin: 0;
       font-size: 18px;
@@ -1504,7 +1535,7 @@
       font-family: var(--serif);
       font-weight: 700;
     }
-    
+
     .pb-modal-close {
       background: none;
       border: none;
@@ -1516,11 +1547,11 @@
       transition: color 0.2s;
       margin-left: auto;
     }
-    
+
     .pb-modal-close:hover {
       color: var(--ink);
     }
-    
+
     .pb-domain-list {
       display: flex;
       flex-direction: column;
@@ -1529,21 +1560,24 @@
       max-height: 320px;
       padding-right: 6px;
     }
-    
+
     .pb-domain-list::-webkit-scrollbar {
       width: 6px;
     }
+
     .pb-domain-list::-webkit-scrollbar-track {
       background: transparent;
     }
+
     .pb-domain-list::-webkit-scrollbar-thumb {
       background: rgba(183, 137, 75, 0.25);
       border-radius: 10px;
     }
+
     .pb-domain-list::-webkit-scrollbar-thumb:hover {
       background: rgba(183, 137, 75, 0.45);
     }
-    
+
     .pb-domain-item {
       display: flex;
       align-items: center;
@@ -1557,22 +1591,22 @@
       box-sizing: border-box;
       width: 100%;
     }
-    
+
     .pb-domain-item:hover {
       background: rgba(183, 137, 75, 0.08);
       border-color: rgba(183, 137, 75, 0.4);
     }
-    
+
     .pb-domain-item.active {
       background: rgba(23, 65, 46, 0.06);
       border-color: var(--emerald);
     }
-    
+
     .pb-domain-icon {
       font-size: 20px;
       flex-shrink: 0;
     }
-    
+
     .pb-domain-details {
       display: flex;
       flex-direction: column;
@@ -1580,14 +1614,14 @@
       text-align: left;
       flex-grow: 1;
     }
-    
+
     .pb-domain-name {
       font-size: 14px;
       font-weight: 600;
       color: var(--ink);
       word-break: break-all;
     }
-    
+
     .pb-domain-badge {
       font-size: 10px;
       font-weight: 700;
@@ -1597,17 +1631,17 @@
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
-    
+
     .pb-domain-badge.dev {
       background: rgba(183, 137, 75, 0.15);
       color: #9d6d2a;
     }
-    
+
     .pb-domain-badge.prod {
       background: rgba(23, 65, 46, 0.1);
       color: var(--emerald);
     }
-    
+
     .pb-domain-check {
       margin-left: auto;
       font-size: 16px;
@@ -1616,7 +1650,7 @@
       display: none;
       flex-shrink: 0;
     }
-    
+
     .pb-domain-item.active .pb-domain-check {
       display: block;
     }
@@ -1837,6 +1871,7 @@
 
     /* Responsive PWA Notifications */
     @media(max-width: 768px) {
+
       .notification-prompt-card,
       .notification-success-card {
         bottom: 24px !important;
@@ -1844,6 +1879,7 @@
         left: 16px !important;
         width: auto !important;
       }
+
       body:has(#publish-bar) .notification-prompt-card,
       body:has(#publish-bar) .notification-success-card {
         bottom: 160px !important;
@@ -1952,12 +1988,17 @@
     }
 
     @keyframes spin-glow {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
     }
 
     #luxury-loading-overlay h3 {
-      font-family: 'Playfair Display', 'Didot', 'Georgia', serif;
+      font-family: var(--serif);
       color: #f7f7f7;
       font-size: 1.25rem;
       letter-spacing: 0.05em;
@@ -2142,7 +2183,9 @@
     }
 
     @keyframes spin {
-      to { transform: rotate(360deg); }
+      to {
+        transform: rotate(360deg);
+      }
     }
 
     .btn-inline-translate.loading {
@@ -2171,12 +2214,12 @@
     html[dir="rtl"] .hero-content {
       grid-template-columns: .95fr 1.05fr;
     }
-    
+
     html[dir="rtl"] .timeline-step::before {
       right: auto;
       left: 0;
     }
-    
+
     html[dir="rtl"] .timeline-step::after {
       right: auto;
       left: -6px;
@@ -2187,88 +2230,104 @@
       margin-right: 48px;
       text-align: right;
     }
-    
+
     html[dir="rtl"] .designer-signature {
       text-align: left;
     }
-    
+
     html[dir="rtl"] .designer-quote-section {
       text-align: left;
     }
-    
+
     html[dir="rtl"] .pricing-breakdown {
       direction: rtl;
     }
-    
+
     html[dir="rtl"] .policy-grid {
       direction: rtl;
     }
-    
+
     @media (max-width: 768px) {
       .container {
         width: min(1180px, 90%) !important;
       }
+
       .hero {
         min-height: auto !important;
         background: linear-gradient(180deg, rgba(17, 19, 15, 0.92) 0%, rgba(17, 19, 15, 0.75) 50%, rgba(17, 19, 15, 0.6) 100%), var(--hero-img) center/cover no-repeat !important;
       }
+
       .hero-content {
         grid-template-columns: 1fr !important;
         padding: 64px 0 80px !important;
         gap: 28px !important;
       }
+
       .hero h1 {
         font-size: clamp(24px, 6vw, 36px) !important;
         margin-bottom: 16px !important;
       }
+
       .hero-lede {
         font-size: 16px !important;
         margin-bottom: 24px !important;
       }
+
       .hero-actions {
         flex-direction: column !important;
         width: 100% !important;
         gap: 12px !important;
       }
+
       .hero-actions .btn {
         width: 100% !important;
         justify-content: center !important;
       }
+
       .quote-card {
         padding: 20px !important;
         border-radius: 24px !important;
       }
+
       .quote-card h2 {
         font-size: 22px !important;
         margin-bottom: 12px !important;
       }
+
       .quote-row {
         flex-direction: column !important;
         align-items: flex-start !important;
         gap: 4px !important;
         padding-bottom: 8px !important;
       }
+
       .quote-row strong {
         text-align: left !important;
       }
+
       .nav-inner {
         height: 60px !important;
       }
+
       .nav-actions {
         display: flex !important;
         gap: 8px !important;
       }
+
       .brand {
         font-size: 14px !important;
       }
+
       .brand img {
         width: 24px !important;
         height: 24px !important;
       }
+
       .lang-switcher-btn .lang-text,
       .lang-switcher-btn .lang-caret {
         display: none !important;
       }
+
       .lang-switcher-btn {
         padding: 8px !important;
         border-radius: 50% !important;
@@ -2276,10 +2335,12 @@
         height: 32px !important;
         justify-content: center !important;
       }
+
       #btn-pdf-view .pdf-btn-text,
       .nav-actions .pdf-btn-text {
         display: none !important;
       }
+
       #btn-pdf-view,
       .nav-actions .btn.dark {
         padding: 8px !important;
@@ -2289,6 +2350,7 @@
         justify-content: center !important;
         font-size: 13px !important;
       }
+
       #nav-notification-btn {
         width: 32px !important;
         height: 32px !important;
@@ -2306,7 +2368,8 @@
     <div class="container">
       <div class="nav-inner">
         <a class="brand" href="/">
-          <img src="{{ (brand.logo if brand else '') or '/assets/vietnam-safar-logo.png' }}" alt="{{ (brand.name if brand else '') or 'Vietnam Safar' }}" />
+          <img src="{{ (brand.logo if brand else '') or '/assets/vietnam-safar-logo.png' }}"
+            alt="{{ (brand.name if brand else '') or 'Vietnam Safar' }}" />
           <span>{{ (brand.name if brand else '') or 'Vietnam Safar' }}</span>
         </a>
         <div class="nav-links">
@@ -2340,7 +2403,8 @@
                 d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z" />
             </svg>
           </button>
-          <button class="btn dark" onclick="window.print()">🖨️ <span class="pdf-btn-text">{{ "PDF Version" | translate(lang) }}</span></button>
+          <button class="btn dark" onclick="window.print()">🖨️ <span class="pdf-btn-text">{{ "PDF Version" |
+              translate(lang) }}</span></button>
         </div>
       </div>
     </div>
@@ -2428,7 +2492,8 @@
     <div class="container">
       <div class="section-head">
         <h2 data-editable="true">{{ overview_heading }}</h2>
-        <p data-editable="true">{{ "A refined booking itinerary mapping confirmed reservations and daily schedule detail." | translate(lang) }}</p>
+        <p data-editable="true">{{ "A refined booking itinerary mapping confirmed reservations and daily schedule
+          detail." | translate(lang) }}</p>
       </div>
 
       <div class="two-col">
@@ -2443,7 +2508,8 @@
 
         <div class="panel">
           <h3 data-editable="true">{{ "Key Program Elements" | translate(lang) }}</h3>
-          <p data-editable="true">{{ "Every service on this program has been checked and verified for premium quality and comfort." | translate(lang) }}</p>
+          <p data-editable="true">{{ "Every service on this program has been checked and verified for premium quality
+            and comfort." | translate(lang) }}</p>
           <ul style="list-style-type: none; padding-left: 0;">
             {% for exp in experiences %}
             <li style="margin-bottom: 14px;">
@@ -2465,7 +2531,8 @@
     <div class="container">
       <div class="section-head">
         <h2 data-editable="true">{{ "BOOKED SERVICES SUMMARY" | translate(lang) }}</h2>
-        <p data-editable="true">{{ "A quick overview of all confirmed reservations for your custom travel program." | translate(lang) }}</p>
+        <p data-editable="true">{{ "A quick overview of all confirmed reservations for your custom travel program." |
+          translate(lang) }}</p>
       </div>
 
       <div class="overview-grid">
@@ -2480,7 +2547,8 @@
                 <strong>{{ hotel.nights }} {{ "Nights" | translate(lang) }}</strong>
               </div>
               <h4 data-editable="true">{{ hotel.name }}</h4>
-              <p class="panel-item-sub">{{ hotel.roomType }} ({{ hotel.checkInDate }} {{ "to" | translate(lang) }} {{ hotel.checkOutDate }})</p>
+              <p class="panel-item-sub">{{ hotel.roomType }} ({{ hotel.checkInDate }} {{ "to" | translate(lang) }} {{
+                hotel.checkOutDate }})</p>
             </div>
             {% endfor %}
           </div>
@@ -2538,7 +2606,8 @@
               else "Local Culture" }}</strong>
           </div>
         </div>
-        <div class="image-tile {% if destinations and destinations|length == 4 %}wide{% endif %}" style="background-image: var(--img-4)">
+        <div class="image-tile {% if destinations and destinations|length == 4 %}wide{% endif %}"
+          style="background-image: var(--img-4)">
           <div class="image-caption">
             <small>{{ (destinations[3].slug | default("Journey") | replace("-", " ") | title) if destinations and
               destinations|length > 3 else ("Journey" | translate(lang)) }}</small>
@@ -2555,7 +2624,8 @@
     <div class="container">
       <div class="section-head">
         <h2>{{ "Your Journey, Mapped" | translate(lang) }}</h2>
-        <p>{{ "An interactive map showing your curated path through Vietnam's iconic landmarks and luxury stopovers. Click on a destination in the list or the map to explore highlights." | translate(lang) }}</p>
+        <p>{{ "An interactive map showing your curated path through Vietnam's iconic landmarks and luxury stopovers.
+          Click on a destination in the list or the map to explore highlights." | translate(lang) }}</p>
       </div>
       <div class="map-layout">
         <div style="position: relative; height: 100%; z-index: 1;">
@@ -2567,7 +2637,8 @@
             </div>
           </div>
           <!-- Map Mode Switcher -->
-          <div class="map-mode-toggle no-print" style="position: absolute; top: 16px; right: 16px; z-index: 1000; display: flex; gap: 4px; background: rgba(17, 19, 15, 0.75); padding: 4px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
+          <div class="map-mode-toggle no-print"
+            style="position: absolute; top: 16px; right: 16px; z-index: 1000; display: flex; gap: 4px; background: rgba(17, 19, 15, 0.75); padding: 4px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
             <button id="toggle-mode-classic" class="mode-btn active" onclick="switchMapMode('classic')">Classic</button>
             <button id="toggle-mode-image" class="mode-btn" onclick="switchMapMode('image')">Image</button>
           </div>
@@ -2584,7 +2655,8 @@
     <div class="container">
       <div class="section-head">
         <h2 data-editable="true">{{ "DAILY SCHEDULE DETAIL" | translate(lang) }}</h2>
-        <p data-editable="true">{{ "Your customized itinerary along with the associated confirmed travel services." | translate(lang) }}</p>
+        <p data-editable="true">{{ "Your customized itinerary along with the associated confirmed travel services." |
+          translate(lang) }}</p>
       </div>
 
       <div class="itinerary">
@@ -2596,10 +2668,14 @@
 
           <div style="width: 100%;">
             <span class="num">
-              {% if day.meals %} {{ "Meals:" | translate(lang) }} {{ day.meals | join(", ") }} {% else %} {{ "Overnight:" | translate(lang) }} {{ day.overnight or "TBD" }}
+              {% if day.meals %} {{ "Meals:" | translate(lang) }} {{ day.meals | join(", ") }} {% else %} {{
+              "Overnight:" | translate(lang) }} {{ day.overnight or "TBD" }}
               {% endif %}
             </span>
-            <div style="font-size: 11px; letter-spacing: 0.1em; color: var(--gold); margin-bottom: 4px; font-weight: 700; text-transform: uppercase;">{{ "DAY" | translate(lang) }} {{ day.dayNumber }}{% if day.date %} · {{ day.date | format_date }}{% endif %}</div>
+            <div
+              style="font-size: 11px; letter-spacing: 0.1em; color: var(--gold); margin-bottom: 4px; font-weight: 700; text-transform: uppercase;">
+              {{ "DAY" | translate(lang) }} {{ day.dayNumber }}{% if day.date %} · {{ day.date | format_date }}{% endif
+              %}</div>
             <h3 data-editable="true">{{ day.title }}</h3>
 
             <div class="day-description-box">
@@ -2629,18 +2705,22 @@
                     <span>📍 {{ hotel.destination }}</span>
                     <span class="price-formula"
                       style="color:var(--emerald);font-weight:600;cursor:pointer;border-bottom:1px dashed var(--emerald)">
-                      💵 <span class="rooms-val">1</span> {{ "Rm" | translate(lang) }} × <span class="nights-val">{{ hotel.nights or 0 }}</span>
-                      {{ "Nts" | translate(lang) }} × {{ symbol }}<span class="price-val">{{ '{:,.0f}'.format(hotel.pricePerNightUsd or 0)
+                      💵 <span class="rooms-val">1</span> {{ "Rm" | translate(lang) }} × <span class="nights-val">{{
+                        hotel.nights or 0 }}</span>
+                      {{ "Nts" | translate(lang) }} × {{ symbol }}<span class="price-val">{{
+                        '{:,.0f}'.format(hotel.pricePerNightUsd or 0)
                         }}</span> = {{ symbol }}<span class="total-val">{{ '{:,.0f}'.format((hotel.pricePerNightUsd or
                         0) * (hotel.nights or 0)) }}</span>
                     </span>
                   </div>
                   <div class="service-dates">
                     <span>{{ "Check-in:" | translate(lang) }} <strong>{{ hotel.checkInDate }}</strong></span>
-                    <span>{{ "Check-out:" | translate(lang) }} <strong>{{ hotel.checkOutDate }}</strong> ({{ hotel.nights }} {{ "Nights" | translate(lang) }})</span>
+                    <span>{{ "Check-out:" | translate(lang) }} <strong>{{ hotel.checkOutDate }}</strong> ({{
+                      hotel.nights }} {{ "Nights" | translate(lang) }})</span>
                   </div>
                   {% if hotel.roomType %}
-                  <div class="service-subtext">{{ "Room:" | translate(lang) }} <strong data-editable="true">{{ hotel.roomType }}</strong></div>
+                  <div class="service-subtext">{{ "Room:" | translate(lang) }} <strong data-editable="true">{{
+                      hotel.roomType }}</strong></div>
                   {% endif %}
                   {% if hotel.notes %}
                   <p class="service-notes" data-editable="true">{{ hotel.notes }}</p>
@@ -2677,16 +2757,18 @@
                     {% endif %}
                     <span class="price-formula"
                       style="color:var(--emerald);font-weight:600;cursor:pointer;border-bottom:1px dashed var(--emerald)">
-                      💵 (<span class="adults-val">{{ guests_adults or 0 }}</span> {{ "Ad" | translate(lang) }} × {{ symbol }}<span
-                        class="price-adult-val">{{ '{:,.0f}'.format(act.pricePerAdultUsd or 0) }}</span>) + (<span
-                        class="children-val">{{ guests_children or 0 }}</span> {{ "Ch" | translate(lang) }} × {{ symbol }}<span
-                        class="price-child-val">{{ '{:,.0f}'.format(act.pricePerChildUsd or 0) }}</span>) = {{ symbol
+                      💵 (<span class="adults-val">{{ guests_adults or 0 }}</span> {{ "Ad" | translate(lang) }} × {{
+                      symbol }}<span class="price-adult-val">{{ '{:,.0f}'.format(act.pricePerAdultUsd or 0) }}</span>) +
+                      (<span class="children-val">{{ guests_children or 0 }}</span> {{ "Ch" | translate(lang) }} × {{
+                      symbol }}<span class="price-child-val">{{ '{:,.0f}'.format(act.pricePerChildUsd or 0) }}</span>) =
+                      {{ symbol
                       }}<span class="total-val">{{ '{:,.0f}'.format((act.pricePerAdultUsd or 0) * (guests_adults or 0) +
                         (act.pricePerChildUsd or 0) * (guests_children or 0)) }}</span>
                     </span>
                   </div>
                   {% if act.operator %}
-                  <div class="service-subtext">{{ "Operator:" | translate(lang) }} <strong data-editable="true">{{ act.operator }}</strong></div>
+                  <div class="service-subtext">{{ "Operator:" | translate(lang) }} <strong data-editable="true">{{
+                      act.operator }}</strong></div>
                   {% endif %}
                   {% if act.notes %}
                   <p class="service-notes" data-editable="true">{{ act.notes }}</p>
@@ -2711,15 +2793,18 @@
                     <span class="service-status {{ tx.status.lower() }}">{{ tx.status }}</span>
                   </div>
                   <div class="service-meta">
-                    <span>{{ "Route:" | translate(lang) }} <strong>{{ tx.fromLocation }}</strong> ➔ <strong>{{ tx.toLocation }}</strong></span>
-                    <span>{{ "Vehicle:" | translate(lang) }} <strong data-editable="true">{{ tx.vehicleRequirement }}</strong></span>
+                    <span>{{ "Route:" | translate(lang) }} <strong>{{ tx.fromLocation }}</strong> ➔ <strong>{{
+                        tx.toLocation }}</strong></span>
+                    <span>{{ "Vehicle:" | translate(lang) }} <strong data-editable="true">{{ tx.vehicleRequirement
+                        }}</strong></span>
                     {% if tx.seats %}
                     <span>({{ tx.seats }} {{ "Seats" | translate(lang) }})</span>
                     {% endif %}
                     <span class="price-formula"
                       style="color:var(--emerald);font-weight:600;cursor:pointer;border-bottom:1px dashed var(--emerald)">
                       💵 Base: {{ symbol }}<span class="base-val">{{ '{:,.0f}'.format(tx.priceUsd or 0) }}</span> +
-                      {{ "Fees:" | translate(lang) }} {{ symbol }}<span class="fees-val">0</span> = {{ symbol }}<span class="total-val">{{
+                      {{ "Fees:" | translate(lang) }} {{ symbol }}<span class="fees-val">0</span> = {{ symbol }}<span
+                        class="total-val">{{
                         '{:,.0f}'.format(tx.priceUsd or 0) }}</span>
                     </span>
                   </div>
@@ -2746,13 +2831,16 @@
                     <span class="service-status {{ fl.status.lower() }}">{{ fl.status }}</span>
                   </div>
                   <div class="service-meta">
-                    <span>{{ "From:" | translate(lang) }} <strong data-editable="true">{{ fl.fromCity }}</strong> ({{ fl.departureTime or 'TBD'
+                    <span>{{ "From:" | translate(lang) }} <strong data-editable="true">{{ fl.fromCity }}</strong> ({{
+                      fl.departureTime or 'TBD'
                       }})</span>
-                    <span>{{ "To:" | translate(lang) }} <strong data-editable="true">{{ fl.toCity }}</strong> ({{ fl.arrivalTime or 'TBD'
+                    <span>{{ "To:" | translate(lang) }} <strong data-editable="true">{{ fl.toCity }}</strong> ({{
+                      fl.arrivalTime or 'TBD'
                       }})</span>
                     <span class="price-formula"
                       style="color:var(--emerald);font-weight:600;cursor:pointer;border-bottom:1px dashed var(--emerald)">
-                      💵 <span class="passengers-val">{{ (guests_adults or 0) + (guests_children or 0) }}</span> {{ "Pax" | translate(lang) }} ×
+                      💵 <span class="passengers-val">{{ (guests_adults or 0) + (guests_children or 0) }}</span> {{
+                      "Pax" | translate(lang) }} ×
                       {{ symbol }}<span class="price-ticket-val">{{ '{:,.0f}'.format(fl.priceUsd or 0) }}</span> = {{
                       symbol }}<span class="total-val">{{ '{:,.0f}'.format((fl.priceUsd or 0) * ((guests_adults or 0) +
                         (guests_children or 0))) }}</span>
@@ -2776,18 +2864,20 @@
                 data-price-day="{{ gd.pricePerDayUsd or 0 }}" data-days="{{ gd.days or 0 }}">
                 <div class="service-details">
                   <div class="service-header">
-                    <h4 data-editable="true">Guide: {{ gd.guideName or (gd.language ~ ' ' ~ ('Speaking Guide' | translate(lang))) }}</h4>
+                    <h4 data-editable="true">Guide: {{ gd.guideName or (gd.language ~ ' ' ~ ('Speaking Guide' |
+                      translate(lang))) }}</h4>
                     <span class="service-status {{ gd.status.lower() }}">{{ gd.status }}</span>
                   </div>
                   <div class="service-meta">
                     <span>{{ "Language:" | translate(lang) }} <strong>{{ gd.language }}</strong></span>
                     <span>{{ "Destination:" | translate(lang) }} <strong>{{ gd.destination }}</strong></span>
-                    <span>{{ "Active duration:" | translate(lang) }} <strong>{{ gd.days }} {{ "Days" | translate(lang) }}</strong></span>
+                    <span>{{ "Active duration:" | translate(lang) }} <strong>{{ gd.days }} {{ "Days" | translate(lang)
+                        }}</strong></span>
                     <span class="price-formula"
                       style="color:var(--emerald);font-weight:600;cursor:pointer;border-bottom:1px dashed var(--emerald)">
-                      💵 <span class="days-val">{{ gd.days or 0 }}</span> {{ "Days" | translate(lang) }} × {{ symbol }}<span
-                        class="price-day-val">{{ '{:,.0f}'.format(gd.pricePerDayUsd or 0) }}</span> = {{ symbol }}<span
-                        class="total-val">{{ '{:,.0f}'.format((gd.pricePerDayUsd or 0) * (gd.days or 0)) }}</span>
+                      💵 <span class="days-val">{{ gd.days or 0 }}</span> {{ "Days" | translate(lang) }} × {{ symbol
+                      }}<span class="price-day-val">{{ '{:,.0f}'.format(gd.pricePerDayUsd or 0) }}</span> = {{ symbol
+                      }}<span class="total-val">{{ '{:,.0f}'.format((gd.pricePerDayUsd or 0) * (gd.days or 0)) }}</span>
                     </span>
                   </div>
                   {% if gd.notes %}
@@ -2825,7 +2915,8 @@
           <div class="price-card {% if opt.isConfirmedMainOption %}featured{% endif %}">
             <span data-editable="price_opt_cat_{{ loop.index }}">{{ opt.hotelCategory }}</span>
             {% if opt.optionName %}
-            <small data-editable="price_opt_name_{{ loop.index }}" style="color:rgba(255,255,255,.55);font-size:11px;display:block;margin-top:4px">{{ opt.optionName
+            <small data-editable="price_opt_name_{{ loop.index }}"
+              style="color:rgba(255,255,255,.55);font-size:11px;display:block;margin-top:4px">{{ opt.optionName
               }}</small>
             {% endif %}
             {% if opt.is_total %}
@@ -2833,8 +2924,10 @@
               opt.totalPrice.displayText or ('{:,.0f}'.format(opt.totalPrice.amount) ~ ' ' ~
               opt.totalPrice.currency) }}</strong>
             <small>{{ "total package" | translate(lang) }}</small><br>
-            <span style="font-size:13px;opacity:.8">{{ "Per person:" | translate(lang) }} <span class="total-price-display">{{
-                opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~ opt.pricePerPerson.currency)
+            <span style="font-size:13px;opacity:.8">{{ "Per person:" | translate(lang) }} <span
+                class="total-price-display">{{
+                opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~
+                opt.pricePerPerson.currency)
                 }}</span></span>
             {% else %}
             <strong data-editable="true" style="font-size:28px" class="price-per-person-display">{{
@@ -2842,7 +2935,7 @@
               opt.pricePerPerson.currency) }}</strong>
             {% endif %}
             {% if opt.isConfirmedMainOption %}
-            <div style="margin-top:12px;font-size:10px;letter-spacing:.14em;color:#d8bd85;font-weight:800">✓ CONFIRMED
+            <div style="margin-top:12px;font-size:10px;letter-spacing:.14em;color:#daa520;font-weight:800">✓ CONFIRMED
               MAIN OPTION</div>
             {% endif %}
           </div>
@@ -2864,14 +2957,16 @@
           {% endif %}
           <ul style="list-style-type:none; padding-left:0;">
             {% for item in inclusions %}
-              {% if item is mapping %}
-                <li style="margin-bottom:12px; line-height:1.5;">
-                  <strong style="color:var(--emerald); display:block; font-size:14px; margin-bottom:2px;">{{ item.title }}</strong>
-                  <span style="font-size:12.5px; color:var(--muted);">{{ item.desc }}</span>
-                </li>
-              {% else %}
-                <li style="margin-bottom:6px; line-height:1.5; list-style-type:disc; margin-left:15px;" data-editable="true">{{ item }}</li>
-              {% endif %}
+            {% if item is mapping %}
+            <li style="margin-bottom:12px; line-height:1.5;">
+              <strong style="color:var(--emerald); display:block; font-size:14px; margin-bottom:2px;">{{ item.title
+                }}</strong>
+              <span style="font-size:12.5px; color:var(--muted);">{{ item.desc }}</span>
+            </li>
+            {% else %}
+            <li style="margin-bottom:6px; line-height:1.5; list-style-type:disc; margin-left:15px;"
+              data-editable="true">{{ item }}</li>
+            {% endif %}
             {% endfor %}
           </ul>
         </div>
@@ -2912,7 +3007,8 @@
       <div class="cta">
         <div>
           <h2 data-editable="true">{{ "Confirm and Prepare for Takeoff" | translate(lang) }}</h2>
-          <p data-editable="true">{{ "Your booking is fully secured. Please review the details above and let your concierge know if any local timing needs adjusting before arrival." | translate(lang) }}</p>
+          <p data-editable="true">{{ "Your booking is fully secured. Please review the details above and let your
+            concierge know if any local timing needs adjusting before arrival." | translate(lang) }}</p>
         </div>
 
         <div class="contact">
@@ -2943,7 +3039,8 @@
     <div class="pb-left">
       <div class="pb-dot"></div>
       <div class="pb-label">
-        <span class="pb-label-desktop">You are viewing the <strong>Live Booking Itinerary</strong>. Click on any text to edit inline.</span>
+        <span class="pb-label-desktop">You are viewing the <strong>Live Booking Itinerary</strong>. Click on any text to
+          edit inline.</span>
         <span class="pb-label-mobile">✏️ Editing Itinerary</span>
       </div>
     </div>
@@ -2954,11 +3051,13 @@
         <option value="https://{{ (brand.domain if brand else '') or 'journeys.vietnamsafar.vn' }}">Production</option>
       </select>
       <button id="btn-select-domain" onclick="openDomainModal(event)" title="Select Brand">
-        <img src="{{ (brand.logo if brand else '') or '/assets/vietnam-safar-logo.png' }}" style="width:16px; height:16px; border-radius:50%; object-fit:contain; background:white; margin-right:4px;" />
+        <img src="{{ (brand.logo if brand else '') or '/assets/vietnam-safar-logo.png' }}"
+          style="width:16px; height:16px; border-radius:50%; object-fit:contain; background:white; margin-right:4px;" />
         <span class="domain-text" style="font-weight:600;">{{ (brand.name if brand else '') or 'Vietnam Safar' }}</span>
       </button>
       <button id="btn-view-live" onclick="redirectToLiveVersion(event)" title="View Live Version">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="view-icon">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round" class="view-icon">
           <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
           <circle cx="12" cy="12" r="3"></circle>
         </svg>
@@ -2978,21 +3077,27 @@
       </div>
       <div class="pb-domain-list">
         {% set brands_list = [
-          {'id': 'vietnam_safar', 'name': 'Vietnam Safar', 'domain': 'journeys.vietnamsafar.vn', 'logo': '/assets/brands/vietnam_safar.png'},
-          {'id': 'capella_travel', 'name': 'Capella Travel', 'domain': 'journeys.capellatravel.com', 'logo': '/assets/brands/capella_travel.svg'},
-          {'id': 'selvara', 'name': 'Selvara', 'domain': 'my.selvarajourneys.com', 'logo': '/assets/brands/selvara.svg'}
+        {'id': 'vietnam_safar', 'name': 'Vietnam Safar', 'domain': 'journeys.vietnamsafar.vn', 'logo':
+        '/assets/brands/vietnam_safar.png'},
+        {'id': 'capella_travel', 'name': 'Capella Travel', 'domain': 'journeys.capellatravel.com', 'logo':
+        '/assets/brands/capella_travel.svg'},
+        {'id': 'selvara', 'name': 'Selvara', 'domain': 'my.selvarajourneys.com', 'logo': '/assets/brands/selvara.svg'}
         ] %}
         {% for b in brands_list %}
         {% set is_active = brand and brand.id == b.id %}
-        <div class="pb-domain-item {% if is_active %}active{% endif %}" data-brand="{{ b.id }}" onclick="selectBrandOption('{{ b.id }}')" style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
+        <div class="pb-domain-item {% if is_active %}active{% endif %}" data-brand="{{ b.id }}"
+          onclick="selectBrandOption('{{ b.id }}')"
+          style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
           <div style="display:flex; align-items:center; gap:12px;">
-            <img src="{{ b.logo }}" style="width:28px; height:28px; border-radius:50%; object-fit:contain; background:white; border:1px solid rgba(0,0,0,0.1);" />
+            <img src="{{ b.logo }}"
+              style="width:28px; height:28px; border-radius:50%; object-fit:contain; background:white; border:1px solid rgba(0,0,0,0.1);" />
             <div class="pb-domain-details">
               <div class="pb-domain-name" style="font-weight:600; font-size:14px; text-align:left;">{{ b.name }}</div>
               <div class="pb-domain-badge prod" style="font-size:11px; color:#666;">{{ b.domain }}</div>
             </div>
           </div>
-          <span class="pb-domain-check" style="visibility: {% if is_active %}visible{% else %}hidden{% endif %}; color:var(--emerald, #17412e); font-weight:bold;">✓</span>
+          <span class="pb-domain-check"
+            style="visibility: {% if is_active %}visible{% else %}hidden{% endif %}; color:var(--emerald, #17412e); font-weight:bold;">✓</span>
         </div>
         {% endfor %}
       </div>
@@ -3117,10 +3222,12 @@
     .removable-block {
       position: relative;
     }
+
     .removable-block:hover {
       outline: 2px dashed rgba(225, 29, 72, 0.5) !important;
       outline-offset: -2px;
     }
+
     .block-delete-btn {
       position: absolute;
       top: 8px;
@@ -3142,25 +3249,30 @@
       box-shadow: 0 4px 10px rgba(225, 29, 72, 0.3);
       border: 1px solid rgba(255, 255, 255, 0.2);
     }
-    .removable-block:hover > .block-delete-btn {
+
+    .removable-block:hover>.block-delete-btn {
       opacity: 1;
       pointer-events: auto;
     }
+
     .block-delete-btn:hover {
       background: #be123c;
       transform: scale(1.1);
     }
+
     /* Special handling for table rows */
     tr.removable-block:hover {
       outline: none !important;
       background: rgba(225, 29, 72, 0.05) !important;
     }
+
     tr.removable-block .block-delete-btn {
       top: 50%;
       right: 4px;
       transform: translateY(-50%);
     }
-    tr.removable-block:hover > td:last-child {
+
+    tr.removable-block:hover>td:last-child {
       position: relative;
     }
   </style>
@@ -3284,7 +3396,7 @@
   <!-- Domain Selector Controls (Persistent Script) -->
   <script>
     // Dynamically inject styles for the bottom bar redirect button
-    (function() {
+    (function () {
       const styleId = 'bottom-bar-btn-styles';
       if (!document.getElementById(styleId)) {
         const style = document.createElement('style');
@@ -3312,7 +3424,7 @@
             border-color: rgba(183, 137, 75, 0.8);
           }
           #btn-view-live svg.view-icon {
-            color: #d8bd85;
+            color: #daa520;
             display: inline-block;
             vertical-align: middle;
           }
@@ -3343,12 +3455,12 @@
     let modalItemType = 'itineraries';
 
     // Parse path and fetch latest version info on load
-    (function() {
+    (function () {
       const pathParts = window.location.pathname.split('/');
       const qIdx = pathParts.indexOf('quotations');
       const iIdx = pathParts.indexOf('itineraries');
       const pIdx = pathParts.indexOf('published');
-      
+
       if (qIdx !== -1 && pathParts[qIdx + 1]) {
         modalItemId = pathParts[qIdx + 1];
         modalItemType = 'quotations';
@@ -3358,7 +3470,7 @@
       } else if (pIdx !== -1 && pathParts[pIdx + 1]) {
         modalItemId = pathParts[pIdx + 1];
         modalItemType = modalItemId.startsWith('iti') ? 'itineraries' : 'quotations';
-        
+
         const filename = pathParts[pathParts.length - 1];
         const match = filename.match(/^v(\d+)/);
         if (match) {
@@ -3404,16 +3516,16 @@
 
     function redirectToLiveVersion(event) {
       if (event) event.stopPropagation();
-      
+
       const brandDomain = "{{ (brand.domain if brand else '') or 'journeys.vietnamsafar.vn' }}";
       const targetOrigin = `https://${brandDomain}`;
-      
+
       if (window.location.pathname.includes('/published/')) {
         window.location.href = targetOrigin + window.location.pathname + window.location.search;
       } else {
         const urlParams = new URLSearchParams(window.location.search);
         const currentLang = urlParams.get('lang') || urlParams.get('language') || 'en';
-        
+
         let baselineLang = 'en';
         const statusEl = document.getElementById('translation-status');
         if (statusEl) {
@@ -3422,9 +3534,9 @@
             if (status && status.baseline_lang) {
               baselineLang = status.baseline_lang;
             }
-          } catch(e) {}
+          } catch (e) { }
         }
-        
+
         const langSuffix = (currentLang && currentLang !== baselineLang) ? `_${currentLang}` : '';
         const filename = `v${modalLatestVersion}${langSuffix}.html`;
         const targetUrl = `${targetOrigin}/published/${modalItemId}/${filename}`;
@@ -3439,7 +3551,7 @@
 
   <script id="editor-scripts" class="no-print">
     // Inject publishing loader styles
-    (function() {
+    (function () {
       const styleId = 'btn-publish-loading-styles';
       if (!document.getElementById(styleId)) {
         const style = document.createElement('style');
@@ -3495,7 +3607,7 @@
     }
 
     // Dynamically inject inline translate button styles to support previously published static pages
-    (function() {
+    (function () {
       const styleId = 'btn-translate-loading-styles';
       if (!document.getElementById(styleId)) {
         const style = document.createElement('style');
@@ -3530,7 +3642,7 @@
     })();
 
     // Sync language dropdown with URL parameters
-    (function() {
+    (function () {
       const urlParams = new URLSearchParams(window.location.search);
       const urlLang = urlParams.get('lang') || urlParams.get('language');
       if (urlLang && urlLang !== CURRENT_LANG) {
@@ -3549,7 +3661,7 @@
 
     function switchLanguage(newLang) {
       if (newLang === CURRENT_LANG) return;
-      
+
       const url = new URL(window.location.href);
       url.searchParams.set('lang', newLang);
 
@@ -3565,7 +3677,7 @@
         window.location.href = url.toString();
         return;
       }
-      
+
       // Show luxury loading overlay
       const overlay = document.getElementById('luxury-loading-overlay');
       const langSpan = document.getElementById('loading-lang-name');
@@ -3574,34 +3686,34 @@
         if (langSpan) langSpan.innerText = langNames[newLang] || newLang.toUpperCase();
         overlay.classList.add('active');
       }
-      
+
       if (activeTranslationController) {
         activeTranslationController.abort();
       }
       activeTranslationController = new AbortController();
-      
+
       const apiEndpoint = `/api/v1/itineraries/${ITINERARY_ID}/translate?lang=${newLang}`;
-      
+
       fetch(apiEndpoint, {
         method: 'POST',
         signal: activeTranslationController.signal
       })
-      .then(res => {
-        if (!res.ok) throw new Error('Translation failed');
-        return res.json();
-      })
-      .then(data => {
-        window.location.href = url.toString();
-      })
-      .catch(err => {
-        if (err.name === 'AbortError') {
-          console.log('Translation aborted by user');
-          return;
-        }
-        console.error(err);
-        alert('Translation took too long or encountered an error. Redirecting anyway...');
-        window.location.href = url.toString();
-      });
+        .then(res => {
+          if (!res.ok) throw new Error('Translation failed');
+          return res.json();
+        })
+        .then(data => {
+          window.location.href = url.toString();
+        })
+        .catch(err => {
+          if (err.name === 'AbortError') {
+            console.log('Translation aborted by user');
+            return;
+          }
+          console.error(err);
+          alert('Translation took too long or encountered an error. Redirecting anyway...');
+          window.location.href = url.toString();
+        });
     }
 
     function cancelTranslation() {
@@ -3631,13 +3743,13 @@
     async function translateBlock(element) {
       const sourceText = element.innerText.trim();
       if (!sourceText) return;
-      
+
       const btn = element.parentNode.querySelector('.btn-inline-translate');
       if (btn) {
         btn.disabled = true;
         btn.classList.add('loading');
       }
-      
+
       try {
         const res = await fetch('/api/v1/translate-block', {
           method: 'POST',
@@ -3666,14 +3778,14 @@
     // Setup editable attributes
     document.querySelectorAll('[data-editable]').forEach(el => {
       el.contentEditable = 'true';
-      
+
       // Wrap it and add translate button if lang is not English
       if (CURRENT_LANG !== 'en') {
         const wrapper = document.createElement('div');
         wrapper.className = 'luxury-editable-wrapper';
         el.parentNode.insertBefore(wrapper, el);
         wrapper.appendChild(el);
-        
+
         const btn = document.createElement('button');
         btn.className = 'btn-inline-translate no-print';
         btn.type = 'button';
@@ -4037,7 +4149,7 @@
     initImageChangers();
     initRemovableBlocks();
 
-    document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", function () {
       const selectDomain = document.getElementById('select-domain');
       if (selectDomain) {
         selectDomain.value = "https://{{ (brand.domain if brand else '') or 'journeys.vietnamsafar.vn' }}";
@@ -4108,7 +4220,7 @@
       // Clean up translation elements for saving
       const transBtns = Array.from(document.querySelectorAll('.btn-inline-translate'));
       transBtns.forEach(el => el.remove());
-      
+
       const wrappers = Array.from(document.querySelectorAll('.luxury-editable-wrapper'));
       wrappers.forEach(el => {
         const parent = el.parentNode;
@@ -4122,15 +4234,15 @@
 
       // Restore DOM state for editing
       bar.style.display = '';
-      document.querySelectorAll('[data-editable]').forEach(el => { 
-        el.contentEditable = 'true'; 
+      document.querySelectorAll('[data-editable]').forEach(el => {
+        el.contentEditable = 'true';
         // Re-wrap and add translate button
         if (CURRENT_LANG !== 'en') {
           const wrapper = document.createElement('div');
           wrapper.className = 'luxury-editable-wrapper';
           el.parentNode.insertBefore(wrapper, el);
           wrapper.appendChild(el);
-          
+
           const btnTranslate = document.createElement('button');
           btnTranslate.className = 'btn-inline-translate no-print';
           btnTranslate.type = 'button';
@@ -4159,7 +4271,7 @@
           body: JSON.stringify({ html })
         });
         const data = await res.json();
-        
+
         // Enforce a minimum delay of 1.2s to show the publishing signal
         const elapsed = Date.now() - startTime;
         if (elapsed < 1200) {
@@ -4180,11 +4292,11 @@
           try {
             const urlObj = new URL(data.published_url);
             finalUrl = selectedDomain + urlObj.pathname + urlObj.search;
-          } catch(e) {
+          } catch (e) {
             finalUrl = data.published_url;
           }
 
-          status.innerHTML = `✅ <a href="${finalUrl}" target="_blank" style="color:#d8bd85">${finalUrl}</a>`;
+          status.innerHTML = `✅ <a href="${finalUrl}" target="_blank" style="color:#daa520">${finalUrl}</a>`;
           btn.textContent = '🔁 Re-publish';
         } else {
           status.textContent = '❌ ' + (data.detail || 'Publish failed');
@@ -4220,7 +4332,7 @@
       // Clean up translation elements for saving
       const transBtns = Array.from(document.querySelectorAll('.btn-inline-translate'));
       transBtns.forEach(el => el.remove());
-      
+
       const wrappers = Array.from(document.querySelectorAll('.luxury-editable-wrapper'));
       wrappers.forEach(el => {
         const parent = el.parentNode;
@@ -4234,15 +4346,15 @@
 
       // Restore DOM state for editing
       bar.style.display = '';
-      document.querySelectorAll('[data-editable]').forEach(el => { 
-        el.contentEditable = 'true'; 
+      document.querySelectorAll('[data-editable]').forEach(el => {
+        el.contentEditable = 'true';
         // Re-wrap and add translate button
         if (CURRENT_LANG !== 'en') {
           const wrapper = document.createElement('div');
           wrapper.className = 'luxury-editable-wrapper';
           el.parentNode.insertBefore(wrapper, el);
           wrapper.appendChild(el);
-          
+
           const btnTranslate = document.createElement('button');
           btnTranslate.className = 'btn-inline-translate no-print';
           btnTranslate.type = 'button';
@@ -4284,10 +4396,10 @@
           try {
             const urlObj = new URL(data.published_url);
             finalUrl = selectedDomain + urlObj.pathname + urlObj.search;
-          } catch(e) {
+          } catch (e) {
             finalUrl = data.published_url;
           }
-          status.innerHTML = `✅ Approved successfully! <a href="${finalUrl}" target="_blank" style="color:#d8bd85">${finalUrl}</a>`;
+          status.innerHTML = `✅ Approved successfully! <a href="${finalUrl}" target="_blank" style="color:#daa520">${finalUrl}</a>`;
           btn.textContent = 'Approved';
           alert('Itinerary approved successfully!');
         } else {
@@ -4450,7 +4562,7 @@
         return bestMatch;
       }
 
-      
+
       function formatDate(dateStr) {
         if (!dateStr) return "";
         const d = new Date(dateStr);
@@ -4531,7 +4643,7 @@
 
       // Thay thế bằng Tile của Google Maps (có hỗ trợ tiếng Việt & hiển thị Hoàng Sa, Trường Sa) 
       // vì URL eKMap cần có API Key thương mại mới hoạt động được.
-      const vietmanMapUrl = 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi'; 
+      const vietmanMapUrl = 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi';
       L.tileLayer(vietmanMapUrl, {
         maxZoom: 18,
         attribution: '&copy; Bản đồ chủ quyền Việt Nam | Dữ liệu bản đồ &copy; Google'
@@ -4633,7 +4745,7 @@
       }
 
       // Expose switchMapMode globally
-      window.switchMapMode = function(mode) {
+      window.switchMapMode = function (mode) {
         if (mode === mapMode) return;
         mapMode = mode;
 

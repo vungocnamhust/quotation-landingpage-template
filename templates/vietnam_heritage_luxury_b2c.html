@@ -20,15 +20,15 @@
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <style>
     :root {
-      --ivory: #f8f3e9;
+      --ivory: #f9f6f0;
       --ivory-2: #efe4d1;
       --ink: #11130f;
       --charcoal: #171915;
       --muted: #706a5d;
       --emerald: #17412e;
       --emerald-2: #0e2f22;
-      --gold: #b7894b;
-      --gold-2: #d8bd85;
+      --gold: #b8860b;
+      --gold-2: #daa520;
       --line: rgba(183, 137, 75, .28);
       --card: #fffaf1;
       --shadow: 0 30px 80px rgba(17, 19, 15, .16);
@@ -490,8 +490,9 @@
     }
 
     .pricing {
-      background: var(--charcoal);
-      color: white;
+      background: #FAF8F5;
+      color: var(--text);
+      border: 1px solid var(--gold-2);
       border-radius: 42px;
       padding: 46px;
       box-shadow: var(--shadow);
@@ -507,7 +508,7 @@
     }
 
     .pricing p {
-      color: rgba(255, 255, 255, .72);
+      color: var(--muted);
       margin: 0 0 28px
     }
 
@@ -572,8 +573,9 @@
     }
 
     .cta {
-      background: linear-gradient(135deg, var(--emerald-2), #11130f 64%, #332711);
-      color: white;
+      background: #FAF8F5;
+      color: var(--text);
+      border: 1px solid var(--gold-2);
       border-radius: 44px;
       padding: 54px;
       display: grid;
@@ -594,7 +596,7 @@
     }
 
     .cta p {
-      color: rgba(255, 255, 255, .76);
+      color: var(--muted);
       font-size: 17px
     }
 
@@ -916,149 +918,155 @@
       cursor: pointer;
       transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       display: flex;
-      justify-content:     /* Custom Marker Giọt Nước Dẹt Tràn Viền */
-    .custom-irregular-marker {
-      width: 80px;
-      height: 80px;
-      position: relative;
-      cursor: pointer;
-      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.5));
+      justify-content:
+
+      /* Custom Marker Giọt Nước Dẹt Tràn Viền */
+      .custom-irregular-marker {
+        width: 80px;
+        height: 80px;
+        position: relative;
+        cursor: pointer;
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.5));
+      }
+
+      .custom-irregular-marker:hover,
+      .custom-irregular-marker.active {
+        transform: scale(1.15) translateY(-4px);
+        z-index: 1000 !important;
+      }
+
+      .marker-svg-container {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      .marker-path {
+        transition: filter 0.3s ease;
+      }
+
+      .custom-irregular-marker:hover .marker-path,
+      .custom-irregular-marker.active .marker-path {
+        filter: brightness(1.08);
+      }
+
+      /* Sóng phát sáng đồng dạng phía sau */
+      .marker-path-radar {
+        fill: none;
+        stroke: var(--gold);
+        stroke-width: 2px;
+        transform-origin: 50px 50px;
+        opacity: 0;
+        pointer-events: none;
+        animation: svgRadarPulse 2.8s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
+      }
+
+      @keyframes svgRadarPulse {
+        0% {
+          transform: scale(0.96);
+          opacity: 0.85;
+          stroke-width: 3px;
+        }
+
+        100% {
+          transform: scale(1.35);
+          opacity: 0;
+          stroke-width: 0.5px;
+        }
+      }
+
+      /* Custom Marker (Classic Mode) */
+      .custom-marker {
+        position: relative;
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .marker-core {
+        width: 24px;
+        height: 24px;
+        background: var(--emerald);
+        border: 2px solid var(--gold-2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 800;
+        font-size: 11px;
+        box-shadow: 0 4px 12px rgba(17, 19, 15, 0.2);
+        transition: all 0.3s ease;
+        z-index: 2;
+      }
+
+      .custom-marker:hover .marker-core,
+      .custom-marker.active .marker-core {
+        background: var(--gold);
+        border-color: var(--ivory);
+        transform: scale(1.15);
+        box-shadow: 0 6px 16px rgba(183, 137, 75, 0.4);
+      }
+
+      .marker-pulse {
+        position: absolute;
+        width: 40px;
+        height: 40px;
+        background: rgba(183, 137, 75, 0.25);
+        border-radius: 50%;
+        animation: pulse-ring 2.2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      @keyframes pulse-ring {
+        0% {
+          transform: scale(0.5);
+          opacity: 1;
+        }
+
+        80%,
+        100% {
+          transform: scale(1.4);
+          opacity: 0;
+        }
+      }
+
+      /* Map Mode Toggle Styles */
+      .map-mode-toggle .mode-btn {
+        border: none;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.6);
+        padding: 6px 14px;
+        border-radius: 16px;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: inherit;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        outline: none;
+      }
+
+      .map-mode-toggle .mode-btn.active {
+        background: var(--gold);
+        color: black !important;
+        box-shadow: 0 2px 8px rgba(183, 137, 75, 0.4);
+      }
     }
 
-    .custom-irregular-marker:hover,
-    .custom-irregular-marker.active {
-      transform: scale(1.15) translateY(-4px);
-      z-index: 1000 !important;
-    }
-
-    .marker-svg-container {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-
-    .marker-path {
-      transition: filter 0.3s ease;
-    }
-
-    .custom-irregular-marker:hover .marker-path,
-    .custom-irregular-marker.active .marker-path {
-      filter: brightness(1.08);
-    }
-
-    /* Sóng phát sáng đồng dạng phía sau */
-    .marker-path-radar {
-      fill: none;
-      stroke: var(--gold);
-      stroke-width: 2px;
-      transform-origin: 50px 50px;
+    100% {
+      transform: scale(1.35);
       opacity: 0;
-      pointer-events: none;
-      animation: svgRadarPulse 2.8s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
+      stroke-width: 0.5px;
     }
-
-    @keyframes svgRadarPulse {
-      0% {
-        transform: scale(0.96);
-        opacity: 0.85;
-        stroke-width: 3px;
-      }
-      100% {
-        transform: scale(1.35);
-        opacity: 0;
-        stroke-width: 0.5px;
-      }
-    }
-
-    /* Custom Marker (Classic Mode) */
-    .custom-marker {
-      position: relative;
-      width: 28px;
-      height: 28px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .marker-core {
-      width: 24px;
-      height: 24px;
-      background: var(--emerald);
-      border: 2px solid var(--gold-2);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: 800;
-      font-size: 11px;
-      box-shadow: 0 4px 12px rgba(17, 19, 15, 0.2);
-      transition: all 0.3s ease;
-      z-index: 2;
-    }
-
-    .custom-marker:hover .marker-core,
-    .custom-marker.active .marker-core {
-      background: var(--gold);
-      border-color: var(--ivory);
-      transform: scale(1.15);
-      box-shadow: 0 6px 16px rgba(183, 137, 75, 0.4);
-    }
-
-    .marker-pulse {
-      position: absolute;
-      width: 40px;
-      height: 40px;
-      background: rgba(183, 137, 75, 0.25);
-      border-radius: 50%;
-      animation: pulse-ring 2.2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
-      pointer-events: none;
-      z-index: 1;
-    }
-
-    @keyframes pulse-ring {
-      0% {
-        transform: scale(0.5);
-        opacity: 1;
-      }
-      80%,
-      100% {
-        transform: scale(1.4);
-        opacity: 0;
-      }
-    }
-
-    /* Map Mode Toggle Styles */
-    .map-mode-toggle .mode-btn {
-      border: none;
-      background: transparent;
-      color: rgba(255, 255, 255, 0.6);
-      padding: 6px 14px;
-      border-radius: 16px;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      font-family: inherit;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      outline: none;
-    }
-
-    .map-mode-toggle .mode-btn.active {
-      background: var(--gold);
-      color: black !important;
-      box-shadow: 0 2px 8px rgba(183, 137, 75, 0.4);
-    }}
-      100% {
-        transform: scale(1.35);
-        opacity: 0;
-        stroke-width: 0.5px;
-      }
     }
 
     /* Sidebar Scrollbar */
@@ -1259,7 +1267,7 @@
     }
 
     #publish-bar .pb-label strong {
-      color: #d8bd85
+      color: #daa520
     }
 
     #publish-status {
@@ -1270,7 +1278,7 @@
     }
 
     #btn-publish {
-      background: linear-gradient(135deg, #b7894b, #d8bd85);
+      background: linear-gradient(135deg, #b8860b, #daa520);
       color: #1c160d;
       border: none;
       border-radius: 999px;
@@ -1316,7 +1324,7 @@
       font-family: inherit;
       outline: none;
     }
-    
+
     #btn-select-domain:hover,
     #btn-view-live:hover {
       background-color: rgba(255, 255, 255, 0.15);
@@ -1324,11 +1332,11 @@
     }
 
     #btn-view-live svg.view-icon {
-      color: #d8bd85;
+      color: #daa520;
       display: inline-block;
       vertical-align: middle;
     }
-    
+
     .pb-modal-overlay {
       position: fixed;
       top: 0;
@@ -1345,11 +1353,11 @@
       padding: 20px;
       box-sizing: border-box;
     }
-    
+
     .pb-modal-overlay.show {
       display: flex;
     }
-    
+
     .pb-modal-card {
       background: rgba(255, 250, 241, 0.98);
       backdrop-filter: blur(20px);
@@ -1363,19 +1371,26 @@
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
       animation: pbModalFadeIn 0.3s ease;
       box-sizing: border-box;
-      
+
       direction: ltr !important;
       text-align: left !important;
-      
+
       display: flex;
       flex-direction: column;
     }
-    
+
     @keyframes pbModalFadeIn {
-      from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
-    
+
     .pb-modal-header {
       display: flex;
       justify-content: space-between;
@@ -1385,7 +1400,7 @@
       padding-bottom: 12px;
       flex-shrink: 0;
     }
-    
+
     .pb-modal-header h3 {
       margin: 0;
       font-size: 18px;
@@ -1393,7 +1408,7 @@
       font-family: var(--serif);
       font-weight: 700;
     }
-    
+
     .pb-modal-close {
       background: none;
       border: none;
@@ -1405,11 +1420,11 @@
       transition: color 0.2s;
       margin-left: auto;
     }
-    
+
     .pb-modal-close:hover {
       color: var(--ink);
     }
-    
+
     .pb-domain-list {
       display: flex;
       flex-direction: column;
@@ -1418,21 +1433,24 @@
       max-height: 320px;
       padding-right: 6px;
     }
-    
+
     .pb-domain-list::-webkit-scrollbar {
       width: 6px;
     }
+
     .pb-domain-list::-webkit-scrollbar-track {
       background: transparent;
     }
+
     .pb-domain-list::-webkit-scrollbar-thumb {
       background: rgba(183, 137, 75, 0.25);
       border-radius: 10px;
     }
+
     .pb-domain-list::-webkit-scrollbar-thumb:hover {
       background: rgba(183, 137, 75, 0.45);
     }
-    
+
     .pb-domain-item {
       display: flex;
       align-items: center;
@@ -1446,22 +1464,22 @@
       box-sizing: border-box;
       width: 100%;
     }
-    
+
     .pb-domain-item:hover {
       background: rgba(183, 137, 75, 0.08);
       border-color: rgba(183, 137, 75, 0.4);
     }
-    
+
     .pb-domain-item.active {
       background: rgba(23, 65, 46, 0.06);
       border-color: var(--emerald);
     }
-    
+
     .pb-domain-icon {
       font-size: 20px;
       flex-shrink: 0;
     }
-    
+
     .pb-domain-details {
       display: flex;
       flex-direction: column;
@@ -1469,14 +1487,14 @@
       text-align: left;
       flex-grow: 1;
     }
-    
+
     .pb-domain-name {
       font-size: 14px;
       font-weight: 600;
       color: var(--ink);
       word-break: break-all;
     }
-    
+
     .pb-domain-badge {
       font-size: 10px;
       font-weight: 700;
@@ -1486,17 +1504,17 @@
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
-    
+
     .pb-domain-badge.dev {
       background: rgba(183, 137, 75, 0.15);
       color: #9d6d2a;
     }
-    
+
     .pb-domain-badge.prod {
       background: rgba(23, 65, 46, 0.1);
       color: var(--emerald);
     }
-    
+
     .pb-domain-check {
       margin-left: auto;
       font-size: 16px;
@@ -1505,7 +1523,7 @@
       display: none;
       flex-shrink: 0;
     }
-    
+
     .pb-domain-item.active .pb-domain-check {
       display: block;
     }
@@ -1679,6 +1697,7 @@
 
     /* Responsive PWA Notifications */
     @media(max-width: 768px) {
+
       .notification-prompt-card,
       .notification-success-card {
         bottom: 24px !important;
@@ -1686,6 +1705,7 @@
         left: 16px !important;
         width: auto !important;
       }
+
       body:has(#publish-bar) .notification-prompt-card,
       body:has(#publish-bar) .notification-success-card {
         bottom: 160px !important;
@@ -1846,7 +1866,7 @@
     }
 
     .designer-signature {
-      font-family: 'Georgia', serif;
+      font-family: var(--serif);
       font-size: 24px;
       color: var(--gold);
       font-style: italic;
@@ -2030,10 +2050,12 @@
     .removable-block {
       position: relative;
     }
+
     .removable-block:hover {
       outline: 2px dashed rgba(225, 29, 72, 0.5) !important;
       outline-offset: -2px;
     }
+
     .block-delete-btn {
       position: absolute;
       top: 8px;
@@ -2055,25 +2077,30 @@
       box-shadow: 0 4px 10px rgba(225, 29, 72, 0.3);
       border: 1px solid rgba(255, 255, 255, 0.2);
     }
-    .removable-block:hover > .block-delete-btn {
+
+    .removable-block:hover>.block-delete-btn {
       opacity: 1;
       pointer-events: auto;
     }
+
     .block-delete-btn:hover {
       background: #be123c;
       transform: scale(1.1);
     }
+
     /* Special handling for table rows */
     tr.removable-block:hover {
       outline: none !important;
       background: rgba(225, 29, 72, 0.05) !important;
     }
+
     tr.removable-block .block-delete-btn {
       top: 50%;
       right: 4px;
       transform: translateY(-50%);
     }
-    tr.removable-block:hover > td:last-child {
+
+    tr.removable-block:hover>td:last-child {
       position: relative;
     }
 
@@ -2081,93 +2108,115 @@
       left: auto !important;
       right: 16px !important;
     }
-    
+
     html[dir="rtl"] .carousel-control.next {
       right: auto !important;
       left: 16px !important;
     }
-    
+
     @media (max-width: 768px) {
       .container {
         width: min(1180px, 90%) !important;
       }
+
       .hero {
         min-height: auto !important;
         background: linear-gradient(180deg, rgba(17, 19, 15, 0.92) 0%, rgba(17, 19, 15, 0.75) 50%, rgba(17, 19, 15, 0.6) 100%), var(--hero-img) center/cover no-repeat !important;
       }
+
       .hero-content {
         grid-template-columns: 1fr !important;
         padding: 64px 0 80px !important;
         gap: 28px !important;
       }
+
       .hero h1 {
         font-size: clamp(24px, 6vw, 36px) !important;
         margin-bottom: 16px !important;
       }
+
       .hero-lede {
         font-size: 16px !important;
         margin-bottom: 24px !important;
       }
+
       .hero-actions {
         flex-direction: column !important;
         width: 100% !important;
         gap: 12px !important;
       }
+
       .hero-actions .btn {
         width: 100% !important;
         justify-content: center !important;
       }
+
       .quote-card {
         padding: 20px !important;
         border-radius: 24px !important;
       }
+
       .quote-card h2 {
         font-size: 22px !important;
         margin-bottom: 12px !important;
       }
+
       .quote-row {
         flex-direction: column !important;
         align-items: flex-start !important;
         gap: 4px !important;
         padding-bottom: 8px !important;
       }
+
       .quote-row strong {
         text-align: left !important;
       }
-      #payment-terms, #hotels {
+
+      #payment-terms,
+      #hotels {
         padding: 32px 20px !important;
         border-radius: 24px !important;
         margin: 24px 0 !important;
       }
-      #why-works, #meet-designer {
+
+      #why-works,
+      #meet-designer {
         padding: 40px 20px !important;
         border-radius: 24px !important;
         margin: 24px 0 !important;
       }
+
       #payment-terms th.term-th {
         width: 130px !important;
       }
+
       #payment-terms table {
         min-width: 480px;
       }
+
       .nav-inner {
         height: 60px !important;
       }
+
       .nav-actions {
         display: flex !important;
         gap: 8px !important;
       }
+
       .brand {
         font-size: 14px !important;
       }
+
       .brand img {
         width: 24px !important;
         height: 24px !important;
       }
+
       .lang-switcher-btn .lang-text,
       .lang-switcher-btn .lang-caret {
         display: none !important;
       }
+
       .lang-switcher-btn {
         padding: 8px !important;
         border-radius: 50% !important;
@@ -2175,10 +2224,12 @@
         height: 32px !important;
         justify-content: center !important;
       }
+
       #btn-pdf-view .pdf-btn-text,
       .nav-actions .pdf-btn-text {
         display: none !important;
       }
+
       #btn-pdf-view,
       .nav-actions .btn.dark {
         padding: 8px !important;
@@ -2188,6 +2239,7 @@
         justify-content: center !important;
         font-size: 13px !important;
       }
+
       #nav-notification-btn {
         width: 32px !important;
         height: 32px !important;
@@ -2204,12 +2256,13 @@
   <nav class="nav no-print">
     <div class="container nav-inner">
       <a class="brand" href="#top">
-        <img src="{{ (brand.logo if brand else '') or '/assets/vietnam-safar-logo.png' }}" alt="{{ (brand.name if brand else '') or 'Vietnam Safar' }}" />
+        <img src="{{ (brand.logo if brand else '') or '/assets/vietnam-safar-logo.png' }}"
+          alt="{{ (brand.name if brand else '') or 'Vietnam Safar' }}" />
         <span>{{ (brand.name if brand else '') or 'Vietnam Safar' }}</span>
       </a>
       <div class="nav-links">
-        <a href="#route-map">Route Map</a><a href="#journey">Journey</a><a
-          href="#itinerary">Itinerary</a><a href="#quotation">Quotation</a><a href="#terms">Terms</a>
+        <a href="#route-map">Route Map</a><a href="#journey">Journey</a><a href="#itinerary">Itinerary</a><a
+          href="#quotation">Quotation</a><a href="#terms">Terms</a>
       </div>
       <div class="nav-actions">
         <button id="nav-notification-btn" title="Enable Notifications">
@@ -2218,7 +2271,8 @@
               d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z" />
           </svg>
         </button>
-        <a class="btn dark" href="/quotations/{{ quotation_id }}/pdf" target="_blank" id="btn-pdf-view">📄 <span class="pdf-btn-text">PDF Preview</span></a>
+        <a class="btn dark" href="/quotations/{{ quotation_id }}/pdf" target="_blank" id="btn-pdf-view">📄 <span
+            class="pdf-btn-text">PDF Preview</span></a>
       </div>
     </div>
   </nav>
@@ -2236,9 +2290,7 @@
           </div>
           <div class="inline-social-proof no-print">
             <div class="avatars">
-              <div class="avatar-circle"><img
-                  src="/assets/dias_team/director.png"
-                  alt="Kim Quy"></div>
+              <div class="avatar-circle"><img src="/assets/dias_team/director.png" alt="Kim Quy"></div>
               <div class="avatar-circle"><img
                   src="https://images.unsplash.com/photo-1589156280159-27698a70f29e?auto=format&fit=crop&q=80&w=100&h=100"
                   alt="Fatima"></div>
@@ -2252,63 +2304,102 @@
             <span>Rated 4.9/5★ by 1,200+ luxury travelers</span>
           </div>
         </div>
-        <aside class="quote-card">
-          <h2 data-editable="journey_overview_title">{{ journey_overview_title | default("Journey Overview") }}</h2>
-          <div class="quote-list">
-            <div class="quote-row">
-              <span data-editable="label_prepared_for">{{ label_prepared_for | default("Prepared for") }}</span>
-              <strong data-editable="customer_name">{{ customer_name }}</strong>
-            </div>
-            <div class="quote-row">
-              <span data-editable="label_overview">{{ label_overview | default("Overview") }}</span>
-              <strong data-editable="overview_heading">{{ overview_heading }}</strong>
-            </div>
-            {% if guests_txt %}
-            <div class="quote-row">
-              <span data-editable="label_guests">{{ label_guests | default("Guests") }}</span>
-              <strong data-editable="guests_txt">{{ guests_txt }}</strong>
-            </div>
-            {% endif %}
-            {% if travel_dates %}
-            <div class="quote-row">
-              <span data-editable="label_travel_dates">{{ label_travel_dates | default("Travel dates") }}</span>
-              <strong data-editable="travel_dates">{{ travel_dates }}</strong>
-            </div>
-            {% endif %}
-            {% if route_txt %}
-            <div class="quote-row stacked">
-              <span data-editable="label_route">{{ label_route | default("Route") }}</span>
-              <strong data-editable="route_txt">{{ route_txt }}</strong>
-            </div>
-            {% endif %}
-            {% if travel_style %}
-            <div class="quote-row stacked">
-              <span data-editable="label_style">{{ label_style | default("Style") }}</span>
-              <strong data-editable="travel_style">{{ travel_style }}</strong>
-            </div>
-            {% endif %}
-            <div class="quote-row">
-              <span data-editable="label_ref">{{ label_ref | default("Ref.") }}</span>
-              <strong data-editable="quotation_number">{{ quotation_number }}</strong>
-            </div>
-            <div class="quote-row">
-              <span data-editable="label_contact">{{ label_contact | default("Contact") }}</span>
-              <strong data-editable="contact">{{ contact }}</strong>
-            </div>
-          </div>
-        </aside>
+
       </div>
     </header>
+    <section class="open-letter-section" style="padding: 60px 0; background: var(--ivory-1); text-align: center;">
+      <div class="container"
+        style="max-width: 800px; margin: 0 auto; padding: 40px; background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: left; position: relative; margin-top: -80px; z-index: 10;">
+        <h2 style="font-family: var(--serif); font-size: 28px; color: var(--gold-2); margin-bottom: 24px;"
+          data-editable="journey_overview_title">{{ journey_overview_title | default("A Personal Note for Your Journey")
+          }}</h2>
+        <p style="font-size: 16px; line-height: 1.8; color: var(--muted); margin-bottom: 16px;">
+          Dear <strong data-editable="customer_name">{{ customer_name }}</strong>,
+        </p>
+        <p style="font-size: 16px; line-height: 1.8; color: var(--muted); margin-bottom: 16px;">
+          I am delighted to present this exclusively curated itinerary: <strong data-editable="overview_heading">{{
+            overview_heading }}</strong>.
+          {% if guests_txt %} Designed carefully for <strong>{{ guests_txt }}</strong>,{% endif %}
+          {% if travel_dates %} your journey is planned for <strong>{{ travel_dates }}</strong>.{% endif %}
+          {% if route_txt %} The route will take you through <strong>{{ route_txt }}</strong>,{% endif %}
+          {% if travel_style %} ensuring a <strong>{{ travel_style }}</strong> experience throughout.{% endif %}
+        </p>
+        <p style="font-size: 16px; line-height: 1.8; color: var(--muted); margin-bottom: 32px;">
+          We have poured our expertise and passion into crafting every detail of this journey, and we cannot wait for
+          you to experience the magic of Vietnam. Please review the details below, and let us know if you would like any
+          refinements. (Ref: <strong data-editable="quotation_number">{{ quotation_number }}</strong>)
+        </p>
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <div>
+            <p style="margin: 0; font-family: var(--serif); font-size: 20px; color: var(--gold-2);">Warm regards,</p>
+            <p style="margin: 4px 0 0 0; font-weight: 500; color: var(--text);">Your Travel Specialist</p>
+            <p style="margin: 4px 0 0 0; font-size: 14px; color: var(--muted);" data-editable="contact">{{ contact }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
 
 
 
 
+
+
+
+
+
+
+    <section id="why-works"
+      style="background: var(--ivory-1); color: var(--text); border: 1px solid var(--gold-2); padding: 72px 0; border-radius: 40px; margin: 40px 0; box-shadow: var(--shadow);">
+      <div class="container">
+        <div class="section-head" style="grid-template-columns: 1fr;">
+          <h2
+            style="color: var(--gold-2); font-family: var(--serif); font-size: clamp(32px, 4vw, 54px); margin: 0 0 10px;">
+            {{ ['Behind the Itinerary Curation', 'Why This Journey Inspires', 'The Anatomy of the Experience', 'A
+            Perfectly Paced Journey'] | random }}</h2>
+          <p style="color: var(--muted); margin: 0;">Tailored care, balanced pacing, and seamless logistics
+            designed specifically for your group.</p>
+        </div>
+        <div
+          style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 18px; margin-top: 32px;">
+          <article class="experience"
+            style="background: white; border-color: rgba(216, 189, 133, 0.5); color: var(--text);">
+            <span class="num" style="color: var(--gold-2);">01</span>
+            <h3 style="color: var(--text); font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">{{ "Private
+              & Flexible" | translate(lang) }}</h3>
+            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_private">{{ why_private }}</p>
+          </article>
+          <article class="experience"
+            style="background: white; border-color: rgba(216, 189, 133, 0.5); color: var(--text);">
+            <span class="num" style="color: var(--gold-2);">02</span>
+            <h3 style="color: var(--text); font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">{{ "Comfort
+              & Pacing" | translate(lang) }}</h3>
+            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_comfort">{{ why_comfort }}</p>
+          </article>
+          <article class="experience"
+            style="background: white; border-color: rgba(216, 189, 133, 0.5); color: var(--text);">
+            <span class="num" style="color: var(--gold-2);">03</span>
+            <h3 style="color: var(--text); font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">{{ "Dietary
+              & Special Care" | translate(lang) }}</h3>
+            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_muslim">{{ why_muslim }}</p>
+          </article>
+          <article class="experience"
+            style="background: white; border-color: rgba(216, 189, 133, 0.5); color: var(--text);">
+            <span class="num" style="color: var(--gold-2);">04</span>
+            <h3 style="color: var(--text); font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">{{
+              "Balanced Highlights" | translate(lang) }}</h3>
+            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_balanced">{{ why_balanced }}</p>
+          </article>
+        </div>
+      </div>
+    </section>
 
     <section id="route-map" class="no-print" style="padding: 72px 0;">
       <div class="container">
         <div class="section-head">
           <h2>{{ "Your Journey, Mapped" | translate(lang) }}</h2>
-          <p>{{ "An interactive map showing your curated path through Vietnam's iconic landmarks and luxury stopovers. Click on a destination in the list or the map to explore highlights." | translate(lang) }}</p>
+          <p>{{ "An interactive map showing your curated path through Vietnam's iconic landmarks and luxury stopovers.
+            Click on a destination in the list or the map to explore highlights." | translate(lang) }}</p>
         </div>
         <div class="map-layout">
           <div style="position: relative; height: 100%; z-index: 1;">
@@ -2320,9 +2411,12 @@
               </div>
             </div>
             <!-- Map Mode Switcher -->
-            <div class="map-mode-toggle no-print" style="position: absolute; top: 16px; right: 16px; z-index: 1000; display: flex; gap: 4px; background: rgba(17, 19, 15, 0.75); padding: 4px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
-              <button id="toggle-mode-classic" class="mode-btn active" onclick="switchMapMode('classic')">{{ "Classic" | translate(lang) }}</button>
-              <button id="toggle-mode-image" class="mode-btn" onclick="switchMapMode('image')">{{ "Image" | translate(lang) }}</button>
+            <div class="map-mode-toggle no-print"
+              style="position: absolute; top: 16px; right: 16px; z-index: 1000; display: flex; gap: 4px; background: rgba(17, 19, 15, 0.75); padding: 4px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
+              <button id="toggle-mode-classic" class="mode-btn active" onclick="switchMapMode('classic')">{{ "Classic" |
+                translate(lang) }}</button>
+              <button id="toggle-mode-image" class="mode-btn" onclick="switchMapMode('image')">{{ "Image" |
+                translate(lang) }}</button>
             </div>
           </div>
           <div class="map-sidebar" id="map-sidebar">
@@ -2332,82 +2426,57 @@
       </div>
     </section>
 
-    <section id="why-works"
-      style="background: var(--emerald-2); color: white; padding: 72px 0; border-radius: 40px; margin: 40px 0; box-shadow: var(--shadow);">
-      <div class="container">
-        <div class="section-head" style="grid-template-columns: 1fr;">
-          <h2
-            style="color: var(--gold-2); font-family: var(--serif); font-size: clamp(32px, 4vw, 54px); margin: 0 0 10px;">
-            {{ ['Behind the Itinerary Curation', 'Why This Journey Inspires', 'The Anatomy of the Experience', 'A Perfectly Paced Journey'] | random }}</h2>
-          <p style="color: rgba(255, 255, 255, 0.72); margin: 0;">Tailored care, balanced pacing, and seamless logistics
-            designed specifically for your group.</p>
-        </div>
-        <div
-          style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 18px; margin-top: 32px;">
-          <article class="experience"
-            style="background: rgba(255, 255, 255, 0.05); border-color: rgba(216, 189, 133, 0.25); color: white;">
-            <span class="num" style="color: var(--gold-2);">01</span>
-            <h3 style="color: white; font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">{{ "Private & Flexible" | translate(lang) }}</h3>
-            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_private">{{ why_private }}</p>
-          </article>
-          <article class="experience"
-            style="background: rgba(255, 255, 255, 0.05); border-color: rgba(216, 189, 133, 0.25); color: white;">
-            <span class="num" style="color: var(--gold-2);">02</span>
-            <h3 style="color: white; font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">{{ "Comfort & Pacing" | translate(lang) }}</h3>
-            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_comfort">{{ why_comfort }}</p>
-          </article>
-          <article class="experience"
-            style="background: rgba(255, 255, 255, 0.05); border-color: rgba(216, 189, 133, 0.25); color: white;">
-            <span class="num" style="color: var(--gold-2);">03</span>
-            <h3 style="color: white; font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">{{ "Dietary & Special Care" | translate(lang) }}</h3>
-            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_muslim">{{ why_muslim }}</p>
-          </article>
-          <article class="experience"
-            style="background: rgba(255, 255, 255, 0.05); border-color: rgba(216, 189, 133, 0.25); color: white;">
-            <span class="num" style="color: var(--gold-2);">04</span>
-            <h3 style="color: white; font-size: 22px; font-family: var(--serif); margin: 12px 0 10px;">{{ "Balanced Highlights" | translate(lang) }}</h3>
-            <p style="color: rgba(255, 255, 255, 0.7); margin: 0;" data-editable="why_balanced">{{ why_balanced }}</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
     <section id="journey">
       <div class="container">
         <div class="section-head">
-          <h2 data-editable="journey_h2">{{ (['The cities in frames', 'Through Local Eyes', 'The city collection'] | random) | translate(lang) }}</h2>
+          <h2 data-editable="journey_h2">{{ (['The cities in frames', 'Through Local Eyes', 'The city collection'] |
+            random) | translate(lang) }}</h2>
           <p data-editable="journey_p">{{ journey_p }}</p>
         </div>
         <div class="gallery">
           {% for dest in destinations %}
-          <div class="image-tile {% if loop.index == 1 %}large{% endif %} {% if destinations|length == 4 and loop.index == 4 %}wide{% endif %}">
-            <div class="carousel-inner" style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
+          <div
+            class="image-tile {% if loop.index == 1 %}large{% endif %} {% if destinations|length == 4 and loop.index == 4 %}wide{% endif %}">
+            <div class="carousel-inner"
+              style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
               {% if dest.images %}
-                {% for img in dest.images %}
-                <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('{{ img }}') center/cover no-repeat;"></div>
-                {% endfor %}
+              {% for img in dest.images %}
+              <div class="carousel-slide"
+                style="flex: 0 0 100%; height: 100%; background: url('{{ img }}') center/cover no-repeat;"></div>
+              {% endfor %}
               {% else %}
-                <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('{{ dest.image_url or '/assets/vietnam-safar-logo.png' }}') center/cover no-repeat;"></div>
+              <div class="carousel-slide"
+                style="flex: 0 0 100%; height: 100%; background: url('{{ dest.image_url or '/assets/vietnam-safar-logo.png' }}') center/cover no-repeat;">
+              </div>
               {% endif %}
             </div>
-            
+
             <!-- Gradient Overlay -->
-            <div style="position: absolute; inset: 0; background: linear-gradient(180deg, transparent 34%, rgba(17,19,15,0.72)); pointer-events: none; z-index: 2;"></div>
+            <div
+              style="position: absolute; inset: 0; background: linear-gradient(180deg, transparent 34%, rgba(17,19,15,0.72)); pointer-events: none; z-index: 2;">
+            </div>
 
             <!-- Controls (only show if there is more than 1 image) -->
             {% if dest.images and dest.images|length > 1 %}
-            <button class="carousel-control prev no-print" aria-label="Previous image" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); background: rgba(17,19,15,0.4); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 18px; line-height: 1; transition: background 0.2s, opacity 0.2s; backdrop-filter: blur(4px); padding-bottom: 2px;">‹</button>
-            <button class="carousel-control next no-print" aria-label="Next image" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); background: rgba(17,19,15,0.4); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 18px; line-height: 1; transition: background 0.2s, opacity 0.2s; backdrop-filter: blur(4px); padding-bottom: 2px;">›</button>
-            
-            <div class="carousel-dots no-print" style="position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3;">
+            <button class="carousel-control prev no-print" aria-label="Previous image"
+              style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); background: rgba(17,19,15,0.4); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 18px; line-height: 1; transition: background 0.2s, opacity 0.2s; backdrop-filter: blur(4px); padding-bottom: 2px;">‹</button>
+            <button class="carousel-control next no-print" aria-label="Next image"
+              style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); background: rgba(17,19,15,0.4); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 18px; line-height: 1; transition: background 0.2s, opacity 0.2s; backdrop-filter: blur(4px); padding-bottom: 2px;">›</button>
+
+            <div class="carousel-dots no-print"
+              style="position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3;">
               {% for img in dest.images %}
-              <button class="carousel-dot {% if loop.first %}active{% endif %}" aria-label="Go to slide {{ loop.index }}" style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+              <button class="carousel-dot {% if loop.first %}active{% endif %}"
+                aria-label="Go to slide {{ loop.index }}"
+                style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
               {% endfor %}
             </div>
             {% endif %}
-            
+
             <div class="image-caption" style="z-index: 3;">
-              <small data-editable="gal{{ loop.index }}_label">{% if loop.index == 1 %}{{ "Highlight" | translate(lang) }}{% elif loop.index == 3 %}{{ "Experience" | translate(lang) }}{% elif loop.index == 4 %}{{ "Journey" | translate(lang) }}{% else %}{{ "Destination" | translate(lang) }}{% endif %}</small>
+              <small data-editable="gal{{ loop.index }}_label">{% if loop.index == 1 %}{{ "Highlight" | translate(lang)
+                }}{% elif loop.index == 3 %}{{ "Experience" | translate(lang) }}{% elif loop.index == 4 %}{{ "Journey" |
+                translate(lang) }}{% else %}{{ "Destination" | translate(lang) }}{% endif %}</small>
               <strong data-editable="gal{{ loop.index }}_title">{{ dest.name }}</strong>
             </div>
           </div>
@@ -2422,12 +2491,12 @@
           const inner = tile.querySelector('.carousel-inner');
           if (!inner) return;
           const slides = tile.querySelectorAll('.carousel-slide');
-          
+
           let currentIndex = 0;
           tile.dataset.currentIndex = currentIndex;
-          
+
           if (slides.length <= 1) return;
-          
+
           const updateCarousel = () => {
             tile.dataset.currentIndex = currentIndex;
             const isRTL = document.documentElement.getAttribute('dir') === 'rtl';
@@ -2437,10 +2506,10 @@
               dot.classList.toggle('active', idx === currentIndex);
             });
           };
-          
+
           const prevBtn = tile.querySelector('.carousel-control.prev');
           const nextBtn = tile.querySelector('.carousel-control.next');
-          
+
           if (prevBtn) {
             prevBtn.addEventListener('click', (e) => {
               e.stopPropagation();
@@ -2448,7 +2517,7 @@
               updateCarousel();
             });
           }
-          
+
           if (nextBtn) {
             nextBtn.addEventListener('click', (e) => {
               e.stopPropagation();
@@ -2456,7 +2525,7 @@
               updateCarousel();
             });
           }
-          
+
           tile.querySelectorAll('.carousel-dot').forEach((dot, idx) => {
             dot.addEventListener('click', (e) => {
               e.stopPropagation();
@@ -2478,26 +2547,34 @@
           {% for day in itinerary %}
           {% set day_idx = loop.index %}
           <article class="day">
-            <div class="day-label" data-editable="day_badge_{{ loop.index }}">{{ day.day_badge_text | default(day.dayNumber) }}</div>
+            <div class="day-label" data-editable="day_badge_{{ loop.index }}">{{ day.day_badge_text |
+              default(day.dayNumber) }}</div>
             <div>
-              <span class="num" data-editable="day_num_{{ loop.index }}">{{ day.day_num_text | default("DAY" | translate(lang) ~ " " ~ day.dayNumber ~ ((" · " ~ (day.date | format_date)) if day.date else "")) }}</span>
+              <span class="num" data-editable="day_num_{{ loop.index }}">{{ day.day_num_text | default("DAY" |
+                translate(lang) ~ " " ~ day.dayNumber ~ ((" · " ~ (day.date | format_date)) if day.date else ""))
+                }}</span>
               <h3 data-editable="day_title_{{ loop.index }}">{{ day.title }}</h3>
               {% for para in day.description %}
               <p data-editable="day_desc_{{ day_idx }}_{{ loop.index0 }}">{{ para }}</p>
               {% endfor %}
               {% if day.activities %}
               <p style="font-size:13px;color:#706a5d;margin-top:8px">
-                <strong style="color:#17412e;letter-spacing:.06em" data-editable="day_label_highlights_{{ loop.index }}">{{ day.label_highlights | default("Highlights:") }}</strong>
-                <span data-editable="day_highlights_{{ loop.index }}">{{ day.activities | join(' &nbsp;·&nbsp; ') }}</span>
+                <strong style="color:#17412e;letter-spacing:.06em"
+                  data-editable="day_label_highlights_{{ loop.index }}">{{ day.label_highlights | default("Highlights:")
+                  }}</strong>
+                <span data-editable="day_highlights_{{ loop.index }}">{{ day.activities | join(' &nbsp;·&nbsp; ')
+                  }}</span>
               </p>
               {% endif %}
               {% if day.notes %}
               <div
                 style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--gold);padding-left:10px;background:rgba(183,137,75,0.04);border-radius:4px;padding-top:4px;padding-bottom:4px;">
-                <strong style="color:#b7894b;letter-spacing:.06em" data-editable="day_label_notes_{{ loop.index }}">{{ day.label_notes | default("Notes:") }}</strong>
+                <strong style="color:#b8860b;letter-spacing:.06em" data-editable="day_label_notes_{{ loop.index }}">{{
+                  day.label_notes | default("Notes:") }}</strong>
                 <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
                   {% for note in day.notes %}
-                  <li style="margin-bottom: 2px;" data-editable="day_note_{{ day_idx }}_{{ loop.index0 }}">{{ note }}</li>
+                  <li style="margin-bottom: 2px;" data-editable="day_note_{{ day_idx }}_{{ loop.index0 }}">{{ note }}
+                  </li>
                   {% endfor %}
                 </ul>
               </div>
@@ -2505,12 +2582,16 @@
             </div>
             <div class="day-meta">
               {% if day.overnight %}
-              <span style="font-size:11px;letter-spacing:.12em" data-editable="day_label_overnight_{{ loop.index }}">{{ day.label_overnight | default("Overnight") }}</span><br>
-              <span style="font-size:15px;font-family:Georgia,serif" data-editable="day_overnight_{{ loop.index }}">{{ day.overnight }}</span><br><br>
+              <span style="font-size:11px;letter-spacing:.12em" data-editable="day_label_overnight_{{ loop.index }}">{{
+                day.label_overnight | default("Overnight") }}</span><br>
+              <span style="font-size:15px;font-family:var(--serif)" data-editable="day_overnight_{{ loop.index }}">{{
+                day.overnight }}</span><br><br>
               {% endif %}
               {% if day.meals %}
-              <span style="font-size:11px;letter-spacing:.12em" data-editable="day_label_meals_{{ loop.index }}">{{ day.label_meals | default("Meals") }}</span><br>
-              <span style="font-size:13px" data-editable="day_meals_{{ loop.index }}">{{ day.meals | join(' · ') }}</span>
+              <span style="font-size:11px;letter-spacing:.12em" data-editable="day_label_meals_{{ loop.index }}">{{
+                day.label_meals | default("Meals") }}</span><br>
+              <span style="font-size:13px" data-editable="day_meals_{{ loop.index }}">{{ day.meals | join(' · ')
+                }}</span>
               {% endif %}
             </div>
           </article>
@@ -2530,26 +2611,32 @@
           align-items: flex-start;
           text-align: left;
         }
+
         html[dir="rtl"] .hotel-info {
           align-items: flex-end;
           text-align: right;
         }
+
         @media (max-width: 768px) {
           .hotel-images-grid {
             grid-template-columns: 1fr !important;
           }
+
           .hotel-image-wrapper {
             height: 220px !important;
           }
+
           .hotel-footer-layout {
             flex-direction: column;
             gap: 20px !important;
           }
+
           .hotel-info {
             width: 100% !important;
             align-items: flex-start !important;
             text-align: left !important;
           }
+
           html[dir="rtl"] .hotel-info {
             align-items: flex-end !important;
             text-align: right !important;
@@ -2568,39 +2655,56 @@
         {% if hotels %}
         <div class="hotel-plan-container" style="display: flex; flex-direction: column; gap: 48px; margin-top: 40px;">
           {% for item in hotels %}
-          <div class="hotel-card" style="border-bottom: 1px solid var(--line); padding-bottom: 40px; {% if loop.last %}border-bottom: none; padding-bottom: 0;{% endif %}">
+          <div class="hotel-card"
+            style="border-bottom: 1px solid var(--line); padding-bottom: 40px; {% if loop.last %}border-bottom: none; padding-bottom: 0;{% endif %}">
             <!-- Header (City / Country & Hotel Name) -->
             <div class="hotel-header" style="margin-bottom: 20px;">
-              <span class="hotel-city" style="display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--muted); text-transform: uppercase; margin-bottom: 4px;" data-editable="hotel_city_{{ loop.index }}">{{ item.city_country }}</span>
-              <h3 class="hotel-name" style="font-family: var(--serif); font-size: 26px; font-weight: 700; color: var(--ink); margin: 0; letter-spacing: 0.02em;" data-editable="hotel_name_{{ loop.index }}">{{ item.name }}</h3>
+              <span class="hotel-city"
+                style="display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--muted); text-transform: uppercase; margin-bottom: 4px;"
+                data-editable="hotel_city_{{ loop.index }}">{{ item.city_country }}</span>
+              <h3 class="hotel-name"
+                style="font-family: var(--serif); font-size: 26px; font-weight: 700; color: var(--ink); margin: 0; letter-spacing: 0.02em;"
+                data-editable="hotel_name_{{ loop.index }}">{{ item.name }}</h3>
             </div>
-            
+
             <!-- Side-by-Side Images -->
-            <div class="hotel-images-grid" style="display: grid; grid-template-columns: 1fr 1.6fr; gap: 16px; margin: 20px 0;">
-              <div class="hotel-image-wrapper" style="height: 280px; border-radius: 4px; overflow: hidden; position: relative;">
-                <img src="{{ item.hotel_img }}" alt="{{ item.name }}" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+            <div class="hotel-images-grid"
+              style="display: grid; grid-template-columns: 1fr 1.6fr; gap: 16px; margin: 20px 0;">
+              <div class="hotel-image-wrapper"
+                style="height: 280px; border-radius: 4px; overflow: hidden; position: relative;">
+                <img src="{{ item.hotel_img }}" alt="{{ item.name }}"
+                  style="width: 100%; height: 100%; object-fit: cover; display: block;">
               </div>
-              <div class="hotel-image-wrapper" style="height: 280px; border-radius: 4px; overflow: hidden; position: relative;">
-                <img src="{{ item.room_img }}" alt="{{ item.name }} Room" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+              <div class="hotel-image-wrapper"
+                style="height: 280px; border-radius: 4px; overflow: hidden; position: relative;">
+                <img src="{{ item.room_img }}" alt="{{ item.name }} Room"
+                  style="width: 100%; height: 100%; object-fit: cover; display: block;">
               </div>
             </div>
-            
+
             <!-- Footer Columns (Introduction & Info/Tel) -->
-            <div class="hotel-footer-layout" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 40px; margin-top: 20px; flex-wrap: wrap;">
+            <div class="hotel-footer-layout"
+              style="display: flex; justify-content: space-between; align-items: flex-start; gap: 40px; margin-top: 20px; flex-wrap: wrap;">
               <div class="hotel-intro" style="flex: 1; min-width: 280px;">
-                <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;" data-editable="hotel_intro_{{ loop.index }}">{{ item.introduction }}</p>
+                <p style="font-size: 14px; line-height: 1.6; color: var(--muted); margin: 0; text-align: justify;"
+                  data-editable="hotel_intro_{{ loop.index }}">{{ item.introduction }}</p>
               </div>
               <div class="hotel-info">
-                <h4 style="font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--emerald); margin: 0; letter-spacing: 0.04em; text-transform: uppercase;" data-editable="hotel_info_name_{{ loop.index }}">{{ item.name }}</h4>
-                <span style="font-size: 14px; font-weight: 500; color: var(--ink); margin-top: 8px;" data-editable="hotel_date_{{ loop.index }}">{{ item.date_range }}</span>
-                <span style="font-size: 12px; color: var(--muted); margin-top: 6px; letter-spacing: 0.05em;" data-editable="hotel_tel_{{ loop.index }}">TEL: {{ item.tel }}</span>
+                <h4
+                  style="font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--emerald); margin: 0; letter-spacing: 0.04em; text-transform: uppercase;"
+                  data-editable="hotel_info_name_{{ loop.index }}">{{ item.name }}</h4>
+                <span style="font-size: 14px; font-weight: 500; color: var(--ink); margin-top: 8px;"
+                  data-editable="hotel_date_{{ loop.index }}">{{ item.date_range }}</span>
+                <span style="font-size: 12px; color: var(--muted); margin-top: 6px; letter-spacing: 0.05em;"
+                  data-editable="hotel_tel_{{ loop.index }}">TEL: {{ item.tel }}</span>
               </div>
             </div>
           </div>
           {% endfor %}
         </div>
         {% else %}
-        <p style="color: var(--muted); font-style: italic; margin-top: 20px;">Hotel arrangements will be tailored and detailed here for your specific travel dates.</p>
+        <p style="color: var(--muted); font-style: italic; margin-top: 20px;">Hotel arrangements will be tailored and
+          detailed here for your specific travel dates.</p>
         {% endif %}
 
         {% if room_notes %}
@@ -2627,7 +2731,8 @@
             <div class="price-card {% if opt.isConfirmedMainOption %}featured{% endif %}">
               <span data-editable="price_opt_cat_{{ loop.index }}">{{ opt.hotelCategory }}</span>
               {% if opt.optionName %}
-              <small data-editable="price_opt_name_{{ loop.index }}" style="color:rgba(255,255,255,.55);font-size:11px;display:block;margin-top:4px">{{ opt.optionName
+              <small data-editable="price_opt_name_{{ loop.index }}"
+                style="color:rgba(255,255,255,.55);font-size:11px;display:block;margin-top:4px">{{ opt.optionName
                 }}</small>
               {% endif %}
               {% if opt.is_total %}
@@ -2643,7 +2748,7 @@
                 opt.pricePerPerson.currency) }}</strong>
               {% endif %}
               {% if opt.isConfirmedMainOption %}
-              <div style="margin-top:12px;font-size:10px;letter-spacing:.14em;color:#d8bd85;font-weight:800">✓ CONFIRMED
+              <div style="margin-top:12px;font-size:10px;letter-spacing:.14em;color:#daa520;font-weight:800">✓ CONFIRMED
                 MAIN OPTION</div>
               {% elif opt.isAlternativeOption %}
               <div
@@ -2654,8 +2759,11 @@
             {% endfor %}
           </div>
           {% if price_cond_paras and price_cond_paras[0] %}
-          <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 14px; color: rgba(255,255,255,0.8); line-height: 1.6; text-align: left;">
-            <strong style="color: var(--gold-2); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.15em; font-size: 11px; font-weight: 700;">Important Note</strong>
+          <div
+            style="margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 14px; color: rgba(255,255,255,0.8); line-height: 1.6; text-align: left;">
+            <strong
+              style="color: var(--gold-2); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.15em; font-size: 11px; font-weight: 700;">Important
+              Note</strong>
             <p style="margin: 0;" data-editable="price_cond_first">{{ price_cond_paras[0] }}</p>
           </div>
           {% endif %}
@@ -2666,31 +2774,36 @@
     <section>
       <div class="container">
         <div class="section-head" style="grid-template-columns: 1fr; margin-bottom: 32px;">
-          <h2 data-editable="inc_exc_h2">{{ inclusions_title | default("What Your Journey Includes" | translate(lang)) }}</h2>
+          <h2 data-editable="inc_exc_h2">{{ inclusions_title | default("What Your Journey Includes" | translate(lang))
+            }}</h2>
         </div>
         <div class="two-col">
           <article class="panel">
             <h3>{{ "Inclusions" | translate(lang) }}</h3>
             {% if inclusions_lede %}
-            <p style="font-size:14px; color:var(--muted); line-height:1.6; margin-bottom:16px; margin-top:-8px;">{{ inclusions_lede }}</p>
+            <p style="font-size:14px; color:var(--muted); line-height:1.6; margin-bottom:16px; margin-top:-8px;">{{
+              inclusions_lede }}</p>
             {% endif %}
             <ul id="inclusions-list" style="list-style-type:none; padding-left:0;">
               {% for item in inclusions %}
-                {% if item is mapping %}
-                  <li style="margin-bottom:16px; line-height:1.6;">
-                    <strong style="color:var(--emerald); display:block; font-size:15px; margin-bottom:2px;">{{ item.title }}</strong>
-                    <span style="font-size:13px; color:var(--muted);">{{ item.desc }}</span>
-                  </li>
-                {% else %}
-                  <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;" data-editable="inc_{{ loop.index }}">{{ item }}</li>
-                {% endif %}
+              {% if item is mapping %}
+              <li style="margin-bottom:16px; line-height:1.6;">
+                <strong style="color:var(--emerald); display:block; font-size:15px; margin-bottom:2px;">{{ item.title
+                  }}</strong>
+                <span style="font-size:13px; color:var(--muted);">{{ item.desc }}</span>
+              </li>
+              {% else %}
+              <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;"
+                data-editable="inc_{{ loop.index }}">{{ item }}</li>
+              {% endif %}
               {% endfor %}
             </ul>
           </article>
           <article class="panel">
             <h3>{{ exclusions_title | default("Exclusions" | translate(lang)) }}</h3>
             {% if exclusions_lede %}
-            <p style="font-size:14px; color:var(--muted); line-height:1.6; margin-bottom:16px; margin-top:-8px;">{{ exclusions_lede }}</p>
+            <p style="font-size:14px; color:var(--muted); line-height:1.6; margin-bottom:16px; margin-top:-8px;">{{
+              exclusions_lede }}</p>
             {% endif %}
             <ul id="exclusions-list" style="list-style-type:disc; padding-left:20px;">
               {% for item in exclusions %}
@@ -2711,7 +2824,8 @@
           <h2
             style="font-family: var(--serif); font-size: clamp(32px, 4vw, 48px); color: var(--emerald); margin: 0 0 10px;">
             {{ "Booking & Payment Terms" | translate(lang) }}</h2>
-          <p style="color: var(--muted); margin: 0;">{{ "Commercial conditions, deposits, and cancellation policy for this booking." | translate(lang) }}</p>
+          <p style="color: var(--muted); margin: 0;">{{ "Commercial conditions, deposits, and cancellation policy for
+            this booking." | translate(lang) }}</p>
         </div>
         <div style="overflow-x: auto; margin-top: 32px; border-radius: 18px; border: 1px solid var(--line);">
           <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
@@ -2723,48 +2837,35 @@
             </thead>
             <tbody>
               <tr style="border-bottom: 1px solid var(--line); background: white;">
-                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">{{ "Deposit" | translate(lang) }}</td>
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">{{ "Deposit" | translate(lang)
+                  }}</td>
                 <td style="padding: 16px 20px;" data-editable="term_deposit">{{ term_deposit }}</td>
               </tr>
               <tr style="border-bottom: 1px solid var(--line); background: rgba(183, 137, 75, 0.03);">
-                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">{{ "Balance" | translate(lang) }}</td>
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">{{ "Balance" | translate(lang)
+                  }}</td>
                 <td style="padding: 16px 20px;" data-editable="term_balance">{{ term_balance }}</td>
               </tr>
               <tr style="border-bottom: 1px solid var(--line); background: white;">
-                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">{{ "Cancellation" | translate(lang) }}</td>
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">{{ "Cancellation" |
+                  translate(lang) }}</td>
                 <td style="padding: 16px 20px;" data-editable="term_cancellation">{{ term_cancellation }}</td>
               </tr>
               <tr style="background: rgba(183, 137, 75, 0.03);">
-                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">{{ "Confirmation" | translate(lang) }}</td>
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--emerald);">{{ "Confirmation" |
+                  translate(lang) }}</td>
                 <td style="padding: 16px 20px;" data-editable="term_confirmation">{{ term_confirmation }}</td>
               </tr>
             </tbody>
           </table>
         </div>
+
+        <div style="text-align: center; margin-top: 40px; margin-bottom: 20px;"><a class="btn gold"
+            href="#contact">Approve & Book Now</a></div>
       </div>
     </section>
 
-    <section id="meet-designer" class="no-print"
-      style="background: var(--ivory-2); padding: 72px 0; border-radius: 40px; margin: 40px 0;">
-      <div class="container designer-container">
-        <div class="designer-card">
-          <div class="designer-img-container" id="designer-avatar-container">
-            <div class="designer-avatar-large" style="background-image: var(--designer-img, url('/assets/dias_team/director.png')); background-size: cover; background-position: center;">
-            </div>
-          </div>
-          <div class="designer-info">
-            <span data-editable="designer_kicker">{{ "Your Dedicated Specialist" | translate(lang) }}</span>
-            <h2 data-editable="designer_title">{{ "Meet Your Travel Specialist" | translate(lang) }}</h2>
-            <p class="designer-quote" data-editable="designer_quote">"{{ "I am your dedicated travel specialist. I handpicked every hotel, private transfer, and local guide on this itinerary to ensure you experience the true depth of Vietnam in comfort, privacy, and at your own pace. I will personally oversee your journey from behind the scenes." | translate(lang) }}"</p>
-            <div class="designer-details">
-              <div><strong>{{ "Expertise:" | translate(lang) }}</strong> <span data-editable="designer_expertise">{{ "Custom Itineraries, Luxury Travel, Local Experiences" | translate(lang) }}</span></div>
-              <div><strong>{{ "Experience:" | translate(lang) }}</strong> <span data-editable="designer_experience">{{ "Years designing bespoke journeys" | translate(lang) }}</span></div>
-            </div>
-            <div class="designer-signature" data-editable="designer_signature">{{ "Your Travel Specialist" | translate(lang) }}</div>
-          </div>
-        </div>
-      </div>
-    </section>
+
 
     <section id="contact">
       <div class="container">
@@ -2813,6 +2914,34 @@
     </section>
 
 
+    <section id="meet-designer" class="no-print"
+      style="background: var(--ivory-2); padding: 72px 0; border-radius: 40px; margin: 40px 0;">
+      <div class="container designer-container">
+        <div class="designer-card">
+          <div class="designer-img-container" id="designer-avatar-container">
+            <div class="designer-avatar-large"
+              style="background-image: var(--designer-img, url('/assets/dias_team/director.png')); background-size: cover; background-position: center;">
+            </div>
+          </div>
+          <div class="designer-info">
+            <span data-editable="designer_kicker">{{ "Your Dedicated Specialist" | translate(lang) }}</span>
+            <h2 data-editable="designer_title">{{ "Meet Your Travel Specialist" | translate(lang) }}</h2>
+            <p class="designer-quote" data-editable="designer_quote">"{{ "I am your dedicated travel specialist. I
+              handpicked every hotel, private transfer, and local guide on this itinerary to ensure you experience the
+              true depth of Vietnam in comfort, privacy, and at your own pace. I will personally oversee your journey
+              from behind the scenes." | translate(lang) }}"</p>
+            <div class="designer-details">
+              <div><strong>{{ "Expertise:" | translate(lang) }}</strong> <span data-editable="designer_expertise">{{
+                  "Custom Itineraries, Luxury Travel, Local Experiences" | translate(lang) }}</span></div>
+              <div><strong>{{ "Experience:" | translate(lang) }}</strong> <span data-editable="designer_experience">{{
+                  "Years designing bespoke journeys" | translate(lang) }}</span></div>
+            </div>
+            <div class="designer-signature" data-editable="designer_signature">{{ "Your Travel Specialist" |
+              translate(lang) }}</div>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer class="footer">
@@ -2835,11 +2964,13 @@
         <option value="https://{{ (brand.domain if brand else '') or 'journeys.vietnamsafar.vn' }}">Production</option>
       </select>
       <button id="btn-select-domain" onclick="openDomainModal(event)" title="Select Brand">
-        <img src="{{ (brand.logo if brand else '') or '/assets/vietnam-safar-logo.png' }}" style="width:16px; height:16px; border-radius:50%; object-fit:contain; background:white; margin-right:4px;" />
+        <img src="{{ (brand.logo if brand else '') or '/assets/vietnam-safar-logo.png' }}"
+          style="width:16px; height:16px; border-radius:50%; object-fit:contain; background:white; margin-right:4px;" />
         <span class="domain-text" style="font-weight:600;">{{ (brand.name if brand else '') or 'Vietnam Safar' }}</span>
       </button>
       <button id="btn-view-live" onclick="redirectToLiveVersion(event)" title="View Live Version">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="view-icon">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round" class="view-icon">
           <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
           <circle cx="12" cy="12" r="3"></circle>
         </svg>
@@ -2858,21 +2989,27 @@
       </div>
       <div class="pb-domain-list">
         {% set brands_list = [
-          {'id': 'vietnam_safar', 'name': 'Vietnam Safar', 'domain': 'journeys.vietnamsafar.vn', 'logo': '/assets/brands/vietnam_safar.png'},
-          {'id': 'capella_travel', 'name': 'Capella Travel', 'domain': 'journeys.capellatravel.com', 'logo': '/assets/brands/capella_travel.svg'},
-          {'id': 'selvara', 'name': 'Selvara', 'domain': 'my.selvarajourneys.com', 'logo': '/assets/brands/selvara.svg'}
+        {'id': 'vietnam_safar', 'name': 'Vietnam Safar', 'domain': 'journeys.vietnamsafar.vn', 'logo':
+        '/assets/brands/vietnam_safar.png'},
+        {'id': 'capella_travel', 'name': 'Capella Travel', 'domain': 'journeys.capellatravel.com', 'logo':
+        '/assets/brands/capella_travel.svg'},
+        {'id': 'selvara', 'name': 'Selvara', 'domain': 'my.selvarajourneys.com', 'logo': '/assets/brands/selvara.svg'}
         ] %}
         {% for b in brands_list %}
         {% set is_active = brand and brand.id == b.id %}
-        <div class="pb-domain-item {% if is_active %}active{% endif %}" data-brand="{{ b.id }}" onclick="selectBrandOption('{{ b.id }}')" style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
+        <div class="pb-domain-item {% if is_active %}active{% endif %}" data-brand="{{ b.id }}"
+          onclick="selectBrandOption('{{ b.id }}')"
+          style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
           <div style="display:flex; align-items:center; gap:12px;">
-            <img src="{{ b.logo }}" style="width:28px; height:28px; border-radius:50%; object-fit:contain; background:white; border:1px solid rgba(0,0,0,0.1);" />
+            <img src="{{ b.logo }}"
+              style="width:28px; height:28px; border-radius:50%; object-fit:contain; background:white; border:1px solid rgba(0,0,0,0.1);" />
             <div class="pb-domain-details">
               <div class="pb-domain-name" style="font-weight:600; font-size:14px; text-align:left;">{{ b.name }}</div>
               <div class="pb-domain-badge prod" style="font-size:11px; color:#666;">{{ b.domain }}</div>
             </div>
           </div>
-          <span class="pb-domain-check" style="visibility: {% if is_active %}visible{% else %}hidden{% endif %}; color:var(--emerald, #17412e); font-weight:bold;">✓</span>
+          <span class="pb-domain-check"
+            style="visibility: {% if is_active %}visible{% else %}hidden{% endif %}; color:var(--emerald, #17412e); font-weight:bold;">✓</span>
         </div>
         {% endfor %}
       </div>
@@ -2882,7 +3019,7 @@
   <!-- Domain Selector Controls (Persistent Script) -->
   <script>
     // Dynamically inject styles for the bottom bar redirect button
-    (function() {
+    (function () {
       const styleId = 'bottom-bar-btn-styles';
       if (!document.getElementById(styleId)) {
         const style = document.createElement('style');
@@ -2910,7 +3047,7 @@
             border-color: rgba(183, 137, 75, 0.8);
           }
           #btn-view-live svg.view-icon {
-            color: #d8bd85;
+            color: #daa520;
             display: inline-block;
             vertical-align: middle;
           }
@@ -2941,12 +3078,12 @@
     let modalItemType = 'quotations';
 
     // Parse path and fetch latest version info on load
-    (function() {
+    (function () {
       const pathParts = window.location.pathname.split('/');
       const qIdx = pathParts.indexOf('quotations');
       const iIdx = pathParts.indexOf('itineraries');
       const pIdx = pathParts.indexOf('published');
-      
+
       if (qIdx !== -1 && pathParts[qIdx + 1]) {
         modalItemId = pathParts[qIdx + 1];
         modalItemType = 'quotations';
@@ -2956,7 +3093,7 @@
       } else if (pIdx !== -1 && pathParts[pIdx + 1]) {
         modalItemId = pathParts[pIdx + 1];
         modalItemType = modalItemId.startsWith('iti') ? 'itineraries' : 'quotations';
-        
+
         const filename = pathParts[pathParts.length - 1];
         const match = filename.match(/^v(\d+)/);
         if (match) {
@@ -3002,16 +3139,16 @@
 
     function redirectToLiveVersion(event) {
       if (event) event.stopPropagation();
-      
+
       const brandDomain = "{{ (brand.domain if brand else '') or 'journeys.vietnamsafar.vn' }}";
       const targetOrigin = `https://${brandDomain}`;
-      
+
       if (window.location.pathname.includes('/published/')) {
         window.location.href = targetOrigin + window.location.pathname + window.location.search;
       } else {
         const urlParams = new URLSearchParams(window.location.search);
         const currentLang = urlParams.get('lang') || urlParams.get('language') || 'en';
-        
+
         let baselineLang = 'en';
         const statusEl = document.getElementById('translation-status');
         if (statusEl) {
@@ -3020,9 +3157,9 @@
             if (status && status.baseline_lang) {
               baselineLang = status.baseline_lang;
             }
-          } catch(e) {}
+          } catch (e) { }
         }
-        
+
         const langSuffix = (currentLang && currentLang !== baselineLang) ? `_${currentLang}` : '';
         const filename = `v${modalLatestVersion}${langSuffix}.html`;
         const targetUrl = `${targetOrigin}/published/${modalItemId}/${filename}`;
@@ -3033,7 +3170,7 @@
 
   <script id="editor-scripts">
     // Inject publishing loader styles
-    (function() {
+    (function () {
       const styleId = 'btn-publish-loading-styles';
       if (!document.getElementById(styleId)) {
         const style = document.createElement('style');
@@ -3103,7 +3240,7 @@
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
           const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-          
+
           if (typeof currentImageTarget === 'string') {
             document.documentElement.style.setProperty(currentImageTarget, `url('${dataUrl}')`);
           } else if (currentImageTarget instanceof HTMLImageElement) {
@@ -3209,7 +3346,7 @@
     initImageChangers();
     initRemovableBlocks();
 
-    document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", function () {
       const selectDomain = document.getElementById('select-domain');
       if (selectDomain) {
         selectDomain.value = "https://{{ (brand.domain if brand else '') or 'journeys.vietnamsafar.vn' }}";
@@ -3244,7 +3381,18 @@
                 span.textContent = brandData.name;
               }
             }
-            // 3. Sync Modal Items
+            // 3. Sync CSS Variables for Brand Colors
+            const root = document.documentElement;
+            if (brandData.color_primary) root.style.setProperty('--primary', brandData.color_primary);
+            if (brandData.color_primary_dark) root.style.setProperty('--primary-dark', brandData.color_primary_dark);
+            if (brandData.color_accent) root.style.setProperty('--accent', brandData.color_accent);
+            if (brandData.color_accent_light) root.style.setProperty('--accent-light', brandData.color_accent_light);
+            if (brandData.color_bg_main) root.style.setProperty('--bg-main', brandData.color_bg_main);
+            if (brandData.color_bg_alt) root.style.setProperty('--bg-alt', brandData.color_bg_alt);
+            if (brandData.color_text_main) root.style.setProperty('--text-main', brandData.color_text_main);
+            if (brandData.color_text_muted) root.style.setProperty('--text-muted', brandData.color_text_muted);
+            if (brandData.color_text_light) root.style.setProperty('--text-light', brandData.color_text_light);
+            // 4. Sync Modal Items
             const modalItems = document.querySelectorAll('.pb-domain-item');
             modalItems.forEach(item => {
               const bId = item.getAttribute('data-brand');
@@ -3296,7 +3444,7 @@
           body: JSON.stringify({ html })
         });
         const data = await res.json();
-        
+
         // Enforce a minimum delay of 1.2s to show the publishing signal
         const elapsed = Date.now() - startTime;
         if (elapsed < 1200) {
@@ -3317,11 +3465,11 @@
           try {
             const urlObj = new URL(data.published_url);
             finalUrl = selectedDomain + urlObj.pathname + urlObj.search;
-          } catch(e) {
+          } catch (e) {
             finalUrl = data.published_url;
           }
 
-          status.innerHTML = `✅ <a href="${finalUrl}" target="_blank" style="color:#d8bd85">${finalUrl}</a>`;
+          status.innerHTML = `✅ <a href="${finalUrl}" target="_blank" style="color:#daa520">${finalUrl}</a>`;
           btn.textContent = '🔁 Re-publish';
         } else {
           status.textContent = '❌ ' + (data.detail || 'Publish failed');
@@ -3710,7 +3858,7 @@
       }
 
       // Expose switchMapMode globally
-      window.switchMapMode = function(mode) {
+      window.switchMapMode = function (mode) {
         if (mode === mapMode) return;
         mapMode = mode;
 
@@ -3790,7 +3938,8 @@
       <button class="notification-prompt-close" id="pwa-notification-close">&times;</button>
     </div>
     <div class="notification-prompt-body">
-      {{ "Enable notifications to get live updates for your itinerary, guide details, and booking status." | translate(lang) }}
+      {{ "Enable notifications to get live updates for your itinerary, guide details, and booking status." |
+      translate(lang) }}
     </div>
     <div class="notification-prompt-actions">
       <button class="notification-btn-later" id="pwa-notification-later">{{ "Later" | translate(lang) }}</button>
