@@ -3931,12 +3931,32 @@
 
     document.getElementById('btn-confirm-switch').addEventListener('click', async function () {
       if (pendingTemplateSwitch) {
+        const targetTemplate = pendingTemplateSwitch;
         closeTemplateConfirmModal();
-        await publishPage(pendingTemplateSwitch);
+        await publishPage(targetTemplate);
       }
     });
 
     async function publishPage(newTemplate = null) {
+      // Save map segment descriptions back to JSON so they persist on refresh
+      const staySegmentsEl = document.getElementById('stay-segments-data');
+      if (staySegmentsEl) {
+        try {
+          let rawSegments = JSON.parse(staySegmentsEl.textContent);
+          if (Array.isArray(rawSegments)) {
+            rawSegments.forEach((seg, idx) => {
+              const editedEl = document.querySelector(`.timeline-item [data-editable="map_segment_desc_${idx}"]`);
+              if (editedEl) {
+                seg.mapSegmentDesc = editedEl.innerHTML;
+              }
+            });
+            staySegmentsEl.textContent = JSON.stringify(rawSegments);
+          }
+        } catch (e) {
+          console.error("Error saving map segments", e);
+        }
+      }
+
       const btn = document.getElementById('btn-publish');
       const status = document.getElementById('publish-status');
 

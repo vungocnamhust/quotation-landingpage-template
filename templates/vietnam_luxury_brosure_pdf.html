@@ -3,11 +3,26 @@
 
 <head>
   <meta charset="UTF-8" />
-  <!-- Premium Typography Fonts -->
+
+  {# ── Brand tokens (mirrors landing page logic) ── #}
+  {% set font_serif = brand.font_serif | default('Playfair Display') %}
+  {% set font_sans  = brand.font_sans  | default('Plus Jakarta Sans') %}
+  {% set font_accent = brand.font_accent | default(font_serif) %}
+  {% set c_primary       = brand.color_primary       | default('#17412e') %}
+  {% set c_primary_dark  = brand.color_primary_dark  | default('#0e2f22') %}
+  {% set c_accent        = brand.color_accent        | default('#b8860b') %}
+  {% set c_accent_light  = brand.color_accent_light  | default('#daa520') %}
+  {% set c_bg_main       = brand.color_bg_main       | default('#f9f6f0') %}
+  {% set c_bg_alt        = brand.color_bg_alt        | default('#fffaf1') %}
+  {% set c_text_main     = brand.color_text_main     | default('#11130f') %}
+  {% set c_text_muted    = brand.color_text_muted    | default('#706a5d') %}
+  {% set c_text_light    = brand.color_text_light    | default('#ffffff') %}
+
+  <!-- Premium Typography Fonts (dynamic, same as landing page) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700&family=Cinzel:wght@400;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700&family=Cairo:wght@300;400;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&family={{ font_sans | replace(' ', '+') }}:wght@300;400;500;600;700&family={{ font_serif | replace(' ', '+') }}:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
     rel="stylesheet">
   <title>{{ tour_title }} — {{ "PDF Version" | translate(lang) }}</title>
   <!-- Leaflet CSS & JS -->
@@ -17,18 +32,19 @@
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <style>
     :root {
-      --ivory: #f9f6f0;
-      --ink: #11130f;
-      --muted: #706a5d;
-      --emerald: #17412e;
-      --emerald-2: #0e2f22;
-      --gold: #b8860b;
-      --gold-2: #daa520;
-      --line: rgba(183, 137, 75, .28);
-      --card: #fffaf1;
-      --charcoal: #171915;
-      --serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
-      --sans: 'Plus Jakarta Sans', Arial, Helvetica, sans-serif;
+      /* ── Dynamic brand tokens — injected from brand object ── */
+      --ivory:      {{c_bg_main}};
+      --ink:        {{c_text_main}};
+      --muted:      {{c_text_muted}};
+      --emerald:    {{c_primary}};
+      --emerald-2:  {{c_primary_dark}};
+      --gold:       {{c_accent}};
+      --gold-2:     {{c_accent_light}};
+      --line:       color-mix(in srgb, {{c_accent}} 28%, transparent);
+      --card:       {{c_bg_alt}};
+      --charcoal:   #171915; /* kept dark for pricing block contrast */
+      --serif: '{{font_serif}}', Georgia, 'Times New Roman', serif;
+      --sans:  '{{font_sans}}', Arial, Helvetica, sans-serif;
     }
 
     @page {
@@ -176,7 +192,7 @@
     .quote-card {
       background: rgba(255, 250, 241, .93);
       color: var(--ink);
-      border-radius: 24px;
+      border-radius: 0;
       padding: 22px 24px;
       border: 1px solid rgba(255, 255, 255, .6);
     }
@@ -297,7 +313,7 @@
     .exp-card {
       background: var(--card);
       border: 1px solid var(--line);
-      border-radius: 18px;
+      border-radius: 0;
       padding: 18px;
       break-inside: avoid;
       page-break-inside: avoid;
@@ -333,7 +349,7 @@
     }
 
     .img-tile {
-      border-radius: 18px;
+      border-radius: 0;
       overflow: hidden;
       background: center/cover no-repeat;
       position: relative;
@@ -389,7 +405,7 @@
       gap: 16px;
       background: var(--card);
       border: 1px solid var(--line);
-      border-radius: 18px;
+      border-radius: 0;
       padding: 16px;
       align-items: start;
       break-inside: avoid;
@@ -459,7 +475,7 @@
     ═══════════════════════════════════════════ */
     .pricing-block {
       background: var(--charcoal);
-      border-radius: 24px;
+      border-radius: 0;
       padding: 32px;
       color: white;
       margin-bottom: 16px;
@@ -489,7 +505,7 @@
     .price-card {
       background: rgba(255, 255, 255, .08);
       border: 1px solid rgba(216, 189, 133, .35);
-      border-radius: 16px;
+      border-radius: 0;
       padding: 16px;
     }
 
@@ -534,7 +550,7 @@
     .panel {
       background: var(--card);
       border: 1px solid var(--line);
-      border-radius: 18px;
+      border-radius: 0;
       padding: 20px;
       break-inside: avoid;
     }
@@ -571,7 +587,7 @@
     .term-card {
       background: var(--card);
       border: 1px solid var(--line);
-      border-radius: 18px;
+      border-radius: 0;
       padding: 18px;
       break-inside: avoid;
     }
@@ -602,7 +618,7 @@
       background: #FAF8F5;
       color: var(--text);
       border: 1px solid var(--gold-2);
-      border-radius: 24px;
+      border-radius: 0;
       padding: 32px;
       display: grid;
       grid-template-columns: 1fr 220px;
@@ -622,14 +638,14 @@
     }
 
     .cta-block p {
-      color: rgba(255, 255, 255, .72);
+      color: var(--muted);
       font-size: 13px;
     }
 
     .contact-box {
       background: rgba(255, 255, 255, .09);
       border: 1px solid rgba(255, 255, 255, .2);
-      border-radius: 16px;
+      border-radius: 0;
       padding: 18px;
     }
 
@@ -724,40 +740,126 @@
       text-align: left;
     }
 
-    /* Custom Leaflet Map Markers & Styling */
-    .custom-marker {
+    /* Custom Leaflet Map Markers & Timeline */
+    .luxury-marker-wrapper {
       position: relative;
+    }
+    .luxury-marker {
       width: 28px;
       height: 28px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .marker-core {
-      width: 24px;
-      height: 24px;
-      background: var(--emerald);
-      border: 2px solid var(--gold-2);
+      background: var(--primary);
       border-radius: 50%;
+      border: 2px solid #fff;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: white;
-      font-weight: 800;
-      font-size: 11px;
-      box-shadow: 0 4px 12px rgba(17, 19, 15, 0.2);
-      z-index: 2;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: var(--sans);
     }
-
-    .marker-pulse {
+    
+    .luxury-marker-label {
       position: absolute;
-      width: 40px;
-      height: 40px;
-      background: rgba(183, 137, 75, 0.25);
+      left: 38px;
+      top: 3px;
+      font-family: var(--serif);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-main);
+      white-space: nowrap;
+      text-shadow: 0 0 4px var(--bg-main), 0 0 4px var(--bg-main), 0 0 4px var(--bg-main);
+    }
+
+    .timeline {
+      position: relative;
+      padding-left: 20px;
+      page-break-inside: auto;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      top: 10px; /* Offset to align with first dot */
+      bottom: 20px; /* Offset to align with last dot */
+      left: 0;
+      width: 1px;
+      background: var(--accent); /* Solid line connecting dots */
+      opacity: 0.5;
+    }
+
+    .timeline-item {
+      position: relative;
+      padding-left: 20px;
+      margin-bottom: 30px;
+      page-break-inside: avoid;
+    }
+
+    /* Outer ring for all timeline items */
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -25px; /* Center it on the 1px line which is at left: 0 relative to .timeline */
+      top: 4px;
+      width: 11px;
+      height: 11px;
+      border: 1.5px solid var(--accent);
       border-radius: 50%;
-      pointer-events: none;
-      z-index: 1;
+      background: var(--bg-main); /* Cover the line behind it */
+      z-index: 2;
+      box-sizing: border-box;
+    }
+
+    /* Inner solid circle (hidden by default) */
+    .timeline-item::after {
+      content: '';
+      position: absolute;
+      left: -21.5px; /* Center within the 11px ring */
+      top: 7.5px; 
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: transparent;
+      z-index: 3;
+    }
+
+    .item-duration {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .item-title {
+      font-family: var(--serif);
+      font-size: 20px;
+      color: var(--primary);
+      margin: 0 0 4px 0;
+    }
+
+    .item-hotel {
+      font-size: 13px;
+      color: var(--text-main);
+      font-weight: 600;
+      margin: 0 0 8px 0;
+    }
+
+    .item-content {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .item-sub {
+      color: var(--text-main);
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .item-desc {
+      color: var(--text-muted);
     }
 
     .leaflet-control-attribution {
@@ -767,11 +869,92 @@
 
     /* Clean up Map for Printing */
     .leaflet-container {
-      background-color: var(--ivory) !important;
+      background: var(--bg-main) !important;
+    }
+    
+    .leaflet-tile-pane {
+      mix-blend-mode: multiply;
+      filter: sepia(0.2);
     }
 
-    .leaflet-tile {
-      filter: sepia(0.7) hue-rotate(-10deg) saturate(0.4) contrast(1.05) brightness(0.98) !important;
+    .leaflet-tile-container {
+      filter: saturate(0.9) contrast(1) brightness(1) !important;
+    }
+
+    /* ── PDF Chapter Divider Page ─────────────────────── */
+    .pdf-chapter-divider {
+      width: 794px;
+      height: 1123px;
+      position: relative;
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      color: white;
+      page-break-after: always;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+      box-sizing: border-box;
+    }
+    .pdf-chapter-divider::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(17,19,15,0.45) 0%, rgba(17,19,15,0.15) 40%, rgba(17,19,15,0.65) 100%);
+      pointer-events: none;
+    }
+    .pdf-chapter-divider-top {
+      position: relative;
+      z-index: 2;
+      padding: 64px 54px 0;
+      max-width: 640px;
+    }
+    .pdf-chapter-divider-bottom {
+      position: relative;
+      z-index: 2;
+      padding: 0 54px 72px;
+      max-width: 580px;
+    }
+    .pdf-chapter-divider-kicker {
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.85);
+      font-weight: 700;
+      margin-bottom: 18px;
+    }
+    .pdf-chapter-divider-title {
+      font-family: var(--serif);
+      font-size: 50px;
+      font-weight: 400;
+      line-height: 1.05;
+      letter-spacing: -0.01em;
+      margin: 0;
+      color: #ffffff;
+    }
+    .pdf-chapter-divider-tagline {
+      font-family: var(--serif);
+      font-size: 20px;
+      line-height: 1.45;
+      color: rgba(255,255,255,0.92);
+      margin: 0;
+    }
+    .pdf-chapter-divider-footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 3;
+      background: rgba(23,65,46,0.85);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 48px;
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #ffffff;
     }
   </style>
 </head>
@@ -843,7 +1026,59 @@
     </div>
   </div>
 
-  <!-- ═══════════════════ PAGE 2 — Glance & Overview ═══════════════════ -->
+  <!-- ═══════════════════ PAGE 2 — Open Letter ═══════════════════ -->
+  <div class="pdf-page">
+    <div class="page-header">
+      <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — {{ "Travel Proposal" | translate(lang) }}</span>
+      <span class="ref"><span class="ltr-token">{{ quotation_number }} · {{ quotation_date }}</span></span>
+    </div>
+    <div class="page-inner" style="display: flex; flex-direction: column; height: 100%;">
+
+      <!-- Kicker + Title -->
+      <div style="margin-top: 28px; margin-bottom: 28px;">
+        <div style="font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold); font-weight: 700; margin-bottom: 12px;">{{ chapter_kicker | default('CHAPTER 01 — THE INVITATION') }}</div>
+        <h2 style="font-family: var(--serif); font-size: 36px; font-weight: 400; color: var(--emerald); line-height: 1.1; letter-spacing: -0.01em; margin: 0 0 16px;">{{ journey_overview_title | default('A Journey Shaped Around You') }}</h2>
+        <hr style="border: 0; border-top: 1px solid var(--line); margin: 0 0 20px;">
+        <p style="font-family: var(--serif); font-style: italic; font-size: 18px; line-height: 1.45; color: var(--gold); margin: 0;">{{ letter_highlight | default('This journey was designed to leave room for both discovery and rest.') }}</p>
+      </div>
+
+      <!-- Two-column: Decorative left + Letter right -->
+      <div style="display: grid; grid-template-columns: 160px 1fr; gap: 40px; flex: 1; align-items: start;">
+
+        <!-- Left: Decorative accent block -->
+        <div style="padding-top: 8px; display: flex; flex-direction: column; gap: 20px;">
+          <img src="/assets/brands/indochine_icon/ruong_bac_thang.svg"
+            alt="Indochine motif"
+            style="width: 100%; max-width: 150px; opacity: 0.8; display: block;"
+            onerror="this.style.display='none'">
+          <!-- Thin gold rule -->
+          <div style="width: 1px; height: 120px; background: linear-gradient(to bottom, var(--gold), transparent); margin: 0 auto;"></div>
+        </div>
+
+        <!-- Right: Letter body -->
+        <div style="font-family: var(--sans); display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
+          <div>
+            <p style="font-size: 13px; line-height: 1.75; color: #383838; margin: 0 0 16px;">Dear <strong style="color: #111;">{{ customer_name | default('Valued Guest') }}</strong>,</p>
+            <p style="font-size: 13px; line-height: 1.75; color: #383838; margin: 0 0 16px;">{{ letter_intro | default('I am delighted to present this privately arranged journey, created especially for you.') }}</p>
+            <p style="font-size: 13px; line-height: 1.75; color: #383838; margin: 0 0 16px;">{{ letter_body_p2 | default('The programme has been considered around a gentler rhythm: private guiding, carefully chosen transfers, and enough space between active days to pause and enjoy.') }}</p>
+            <p style="font-size: 13px; line-height: 1.75; color: #383838; margin: 0;">{{ letter_outro | default('Please review the journey as a starting point for a personal conversation. Every detail can be refined around your pace and priorities.') }}</p>
+          </div>
+
+          <!-- Signature -->
+          <div style="margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--line);">
+            <div style="font-family: var(--serif); font-size: 26px; font-weight: 500; color: var(--emerald); line-height: 1.15; margin-bottom: 6px;">{{ letter_sign_off | default('Your Journey Designer') }}</div>
+            <div style="font-size: 12px; color: var(--muted); display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+              <span>{{ letter_sender | default('Journey Designer') }}</span>
+              {% if contact %}<span style="color: var(--line);">·</span><span class="ltr-token">{{ contact }}</span>{% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════ PAGE 3 — Glance & Overview ═══════════════════ -->
   <div class="pdf-page">
     <div class="page-header">
       <span class="brand">{{ (brand.name if brand else '') or 'Vietnam Safar' }} — {{ "Travel Proposal" |
@@ -852,19 +1087,47 @@
     </div>
     <div class="page-inner">
 
-      <div class="section-label" style="margin-top:20px;">{{ "Interactive Route map" | translate(lang) }}</div>
-      <h2 class="section-h2">{{ "Your Journey, Mapped" | translate(lang) }}</h2>
-      <div
-        style="margin-top: 15px; border-radius: 18px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 4px 16px rgba(17,19,15,0.04);">
-        <div id="map" style="width: 100%; height: 420px; display: block; z-index: 1;"></div>
+      <div class="section-label" style="margin-top:20px;">{{ route_map_label | default("Your Journey, Mapped" | translate(lang)) }}</div>
+      <h2 class="section-h2">{{ route_map_h2 | default("Your Journey, Mapped" | translate(lang)) }}</h2>
+      {% if route_map_p %}
+      <p class="section-p" style="margin-bottom: 14px;">{{ route_map_p }}</p>
+      {% endif %}
+
+      <!-- Map + Destination sidebar — 2-column magazine layout for A4 -->
+      <div style="display: grid; grid-template-columns: 55% 45%; gap: 0; margin-top: 14px; border: 1px solid var(--line); overflow: hidden; box-shadow: 0 4px 16px rgba(17,19,15,0.04);">
+        <!-- Left: Leaflet map -->
+        <div style="border-right: 1px solid var(--line);">
+          <div id="map" style="width: 100%; height: 400px; display: block; z-index: 1;"></div>
+        </div>
+        <!-- Right: Destination list sidebar -->
+        <div style="background: var(--card); padding: 20px 18px; overflow: hidden;">
+          <div style="font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); font-weight: 700; margin-bottom: 12px;">{{ "Route Overview" | translate(lang) }}</div>
+          <div class="timeline" id="map-timeline" style="padding: 0;">
+            <!-- Destination list rendered via JS -->
+          </div>
+        </div>
       </div>
-      <div
-        style="margin-top: 16px; padding: 12px 16px; background: var(--ivory-1); border-radius: 8px; border: 1px solid var(--gold-2); font-size: 12px; color: var(--emerald-2); font-weight: 700; text-align: center;">
-        <span
-          style="color: var(--muted); font-weight: 400; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; display: block; margin-bottom: 4px;">{{
-          "Route Overview" | translate(lang) }}</span>
-        {{ route_txt }}
+
+      <!-- 4-col stats strip (fills bottom of A4 page) -->
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--line); border-top: none; background: var(--emerald);">
+        <div style="padding: 12px 14px; border-right: 1px solid rgba(255,255,255,0.12); text-align: center;">
+          <div style="font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold-2); font-weight: 700;">{{ label_duration | default("Duration" | translate(lang)) }}</div>
+          <div style="font-family: var(--serif); font-size: 18px; color: #fff; font-weight: 500; margin-top: 3px;">{{ strip_days | default(duration) }}</div>
+        </div>
+        <div style="padding: 12px 14px; border-right: 1px solid rgba(255,255,255,0.12); text-align: center;">
+          <div style="font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold-2); font-weight: 700;">{{ label_route | default("Route" | translate(lang)) }}</div>
+          <div style="font-family: var(--serif); font-size: 11px; color: #fff; font-weight: 500; margin-top: 3px; line-height: 1.3;">{{ route_txt | truncate(28, true, '…') }}</div>
+        </div>
+        <div style="padding: 12px 14px; border-right: 1px solid rgba(255,255,255,0.12); text-align: center;">
+          <div style="font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold-2); font-weight: 700;">{{ label_guests | default("Guests" | translate(lang)) }}</div>
+          <div style="font-family: var(--serif); font-size: 14px; color: #fff; font-weight: 500; margin-top: 3px;">{{ guests_txt }}</div>
+        </div>
+        <div style="padding: 12px 14px; text-align: center;">
+          <div style="font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold-2); font-weight: 700;">{{ label_style | default("Style" | translate(lang)) }}</div>
+          <div style="font-family: var(--serif); font-size: 11px; color: #fff; font-weight: 500; margin-top: 3px; line-height: 1.3;">{{ travel_style | default("Luxury Private") | truncate(20, true, '…') }}</div>
+        </div>
       </div>
+
     </div>
   </div>
 
@@ -876,55 +1139,53 @@
       <span class="ref"><span class="ltr-token">{{ quotation_number }} · {{ quotation_date }}</span></span>
     </div>
     <div class="page-inner">
-      <div class="section-label">{{ "Behind the Itinerary Curation" | translate(lang) }}</div>
-      <h2 class="section-h2">{{ (['Behind the Itinerary Curation', 'Why This Journey Inspires', 'The Anatomy of the
-        Experience', 'A Perfectly Paced Journey'] | random) | translate(lang) }}</h2>
-      <p class="section-p">{{ "Tailored care, balanced pacing, and seamless logistics designed specifically for your
-        group." | translate(lang) }}</p>
+      <div class="section-label">{{ "Section 02 — Journey Rhythm" | translate(lang) }}</div>
+      <h2 class="section-h2">{{ why_works_title | default("Thoughtfully Paced, From North to South" | translate(lang)) }}</h2>
+      <p class="section-p">{{ why_works_subtitle | default("Each destination was chosen not only for what it offers, but for where it sits within the rhythm of the whole." | translate(lang)) }}</p>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px;">
-        <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
+        <div style="background: var(--card); border: 1px solid var(--line); border-radius: 0; padding: 14px;">
           <strong
-            style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">{{
-            "Private & Flexible" | translate(lang) }}</strong>
+            style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">{{ "Private &amp; Flexible" | translate(lang) }}</strong>
           <p style="font-size:11px; color:var(--muted); line-height:1.4;">{{ why_private }}</p>
         </div>
-        <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
-          <strong
-            style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">{{
-            "Comfort & Pacing" | translate(lang) }}</strong>
+        <div style="background: var(--card); border: 1px solid var(--line); border-radius: 0; padding: 14px;">
+          <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">{{ "Comfort &amp; Pacing" | translate(lang) }}</strong>
           <p style="font-size:11px; color:var(--muted); line-height:1.4;">{{ why_comfort }}</p>
         </div>
-        <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
-          <strong
-            style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">{{
-            "Dietary & Special Care" | translate(lang) }}</strong>
-          <p style="font-size:11px; color:var(--muted); line-height:1.4;">{{ why_muslim }}</p>
+        <div style="background: var(--card); border: 1px solid var(--line); border-radius: 0; padding: 14px;">
+          <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">{{ "Personal care" | translate(lang) }}</strong>
+          <p style="font-size:11px; color:var(--muted); line-height:1.4;">{{ why_muslim or ("Dietary needs, room choices and family priorities considered throughout." | translate(lang)) }}</p>
         </div>
-        <div style="background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;">
-          <strong
-            style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">{{
-            "Balanced Highlights" | translate(lang) }}</strong>
-          <p style="font-size:11px; color:var(--muted); line-height:1.4;">{{ why_balanced }}</p>
+        <div style="background: var(--card); border: 1px solid var(--line); border-radius: 0; padding: 14px;">
+          <strong style="display:block; font-family:var(--serif); font-size:14px; color:var(--emerald); margin-bottom:4px;">{{ "Balanced pacing" | translate(lang) }}</strong>
+          <p style="font-size:11px; color:var(--muted); line-height:1.4;">{{ why_balanced or ("Active days are followed by lighter transitions or quieter evenings." | translate(lang)) }}</p>
         </div>
       </div>
 
-      <div class="section-label">{{ "Destination Gallery" | translate(lang) }}</div>
-      <h2 class="section-h2" style="margin-top: 10px; margin-bottom: 6px;">{{ journey_h2 | rtl_mixed(lang) }}</h2>
-      <p class="section-p" style="margin-bottom: 16px;">{{ journey_p | rtl_mixed(lang) }}</p>
-      <div class="gallery" style="margin-top:8px;">
-        {% for dest in destinations %}
-        <div class="img-tile {% if loop.index == 1 %}large{% endif %}"
-          style="background-image:url('{{ dest.image_url or (dest.images[0] if dest.images else '/assets/vietnam-safar-logo.png') }}')">
-          <div class="img-caption">
-            <small>{% if loop.index == 1 %}{{ "Highlight" | translate(lang) }}{% elif loop.index == 3 %}{{ "Experience"
-              | translate(lang) }}{% elif loop.index == 4 %}{{ "Journey" | translate(lang) }}{% else %}{{ "Destination"
-              | translate(lang) }}{% endif %}</small>
-            <strong>{{ dest.name | rtl_mixed(lang) }}</strong>
-          </div>
-        </div>
-        {% endfor %}
+
+    </div>
+  </div>
+
+  <!-- ── PDF: Chapter Divider — THE JOURNEY ─── -->
+  <div class="pdf-page pdf-chapter-divider"
+       style="background-image: url('{{ img_itinerary_divider or img_1 or img_0 }}');">
+    <div class="pdf-chapter-divider-top">
+      <div class="pdf-chapter-divider-kicker">
+        {{ divider_itinerary_kicker | default('CHAPTER 02 — THE JOURNEY') }}
       </div>
+      <h2 class="pdf-chapter-divider-title">
+        {{ divider_itinerary_title | default(tour_title) }}
+      </h2>
+    </div>
+    <div class="pdf-chapter-divider-bottom">
+      <p class="pdf-chapter-divider-tagline">
+        {{ divider_itinerary_tagline | default('A sequence of places, textures and quiet transitions — composed to be experienced rather than rushed.') }}
+      </p>
+    </div>
+    <div class="pdf-chapter-divider-footer">
+      <span>{{ (brand.name if brand else '') or 'Vietnam Safar' }} · {{ quotation_number }}</span>
+      <span>{{ divider_itinerary_kicker | default('THE JOURNEY') }}</span>
     </div>
   </div>
 
@@ -986,6 +1247,28 @@
     </div>
   </div>
 
+  <!-- ── PDF: Chapter Divider — THE STAYS ─── -->
+  <div class="pdf-page pdf-chapter-divider"
+       style="background-image: url('{{ img_hotel_divider or img_2 or img_0 }}');">
+    <div class="pdf-chapter-divider-top">
+      <div class="pdf-chapter-divider-kicker">
+        {{ divider_hotel_kicker | default('CHAPTER 03 — THE STAYS') }}
+      </div>
+      <h2 class="pdf-chapter-divider-title">
+        {{ divider_hotel_title | default('Where You Rest') }}
+      </h2>
+    </div>
+    <div class="pdf-chapter-divider-bottom">
+      <p class="pdf-chapter-divider-tagline">
+        {{ divider_hotel_tagline | default('Each property was chosen not for its amenities alone, but for the feeling it creates at the end of a day well spent.') }}
+      </p>
+    </div>
+    <div class="pdf-chapter-divider-footer">
+      <span>{{ (brand.name if brand else '') or 'Vietnam Safar' }} · {{ quotation_number }}</span>
+      <span>{{ divider_hotel_kicker | default('THE STAYS') }}</span>
+    </div>
+  </div>
+
   <!-- ═══════════════════ PAGE 5 — Hotel Plan & Pricing ═══════════════════ -->
   <div class="pdf-page">
     <div class="page-header">
@@ -1001,7 +1284,18 @@
 
       {% if hotels %}
       <div class="hotel-plan-pdf" style="margin-top: 15px;">
+        {# Deduplicate hotels — same logic as landing page #}
+        {% set seen_hotel_names = [] %}
         {% for item in hotels %}
+        {% if item.name not in seen_hotel_names %}
+        {% set _ = seen_hotel_names.append(item.name) %}
+        {# Aggregate all date_range values for this hotel #}
+        {% set date_ranges = [] %}
+        {% for h in hotels %}
+          {% if h.name == item.name and h.date_range %}
+            {% set _ = date_ranges.append(h.date_range) %}
+          {% endif %}
+        {% endfor %}
         <div class="hotel-pdf-card"
           style="page-break-inside: avoid; border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 20px; {% if loop.last %}border-bottom: none; margin-bottom: 0;{% endif %}">
           <!-- Header -->
@@ -1018,11 +1312,11 @@
           <div style="margin: 10px 0; font-size: 0; width: 100%;">
             <div style="width: 38%; display: inline-block; vertical-align: top; margin-right: 2%;">
               <img src="{{ item.hotel_img }}" alt="{{ item.name }}"
-                style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+                style="width: 100%; height: 160px; object-fit: cover; border-radius: 0; display: block;">
             </div>
             <div style="width: 60%; display: inline-block; vertical-align: top;">
               <img src="{{ item.room_img }}" alt="{{ item.name }} Room"
-                style="width: 100%; height: 160px; object-fit: cover; border-radius: 4px; display: block;">
+                style="width: 100%; height: 160px; object-fit: cover; border-radius: 0; display: block;">
             </div>
           </div>
 
@@ -1038,18 +1332,21 @@
               <h4
                 style="font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--emerald); margin: 0; text-transform: uppercase;">
                 {{ item.name | rtl_mixed(lang) }}</h4>
-              <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;"><span
-                  class="ltr-token">{{ item.date_range }}</span></div>
+              <div style="font-size: 11px; font-weight: 500; color: var(--ink); margin-top: 6px;">
+                {% for dr in date_ranges %}<span class="ltr-token">{{ dr }}</span>{% if not loop.last %} &bull; {% endif %}{% endfor %}
+              </div>
               <div style="font-size: 9px; color: var(--muted); margin-top: 4px;">{{ "TEL:" | translate(lang) }} <span
                   class="ltr-token">{{ item.tel }}</span></div>
             </div>
           </div>
         </div>
+        {% endif %}
         {% endfor %}
       </div>
+
       {% if room_notes %}
       <div
-        style="margin-top: 20px; padding: 10px 14px; background: rgba(183, 137, 75, 0.05); border-radius: 8px; border: 1px dashed var(--gold); font-size: 10px; color: var(--muted); margin-bottom: 24px; page-break-inside: avoid;">
+        style="margin-top: 20px; padding: 10px 14px; background: rgba(183, 137, 75, 0.05); border-radius: 0; border: 1px dashed var(--gold); font-size: 10px; color: var(--muted); margin-bottom: 24px; page-break-inside: avoid;">
         <strong>{{ "Room Notes & Special Requests" | translate(lang) }}:</strong> {{ room_notes | rtl_mixed(lang) }}
       </div>
       {% endif %}
@@ -1164,7 +1461,7 @@
         translate(lang) }}</h2>
 
       <div
-        style="display: flex; gap: 28px; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 28px; align-items: center; box-shadow: 0 4px 16px rgba(17,19,15,0.02);">
+        style="display: flex; gap: 28px; background: var(--card); border: 1px solid var(--line); border-radius: 0; padding: 28px; align-items: center; box-shadow: 0 4px 16px rgba(17,19,15,0.02);">
         <div
           style="width: 140px; height: 140px; border-radius: 50%; background-image: var(--designer-img, url('/assets/dias_team/director.png')); background-size: cover; background-position: center; border: 2px solid var(--gold); flex-shrink: 0; box-shadow: 0 8px 24px rgba(23,65,46,0.15);">
         </div>
@@ -1201,7 +1498,7 @@
       <p class="section-p">{{ "Commercial conditions, deposits, and cancellation policy for this booking." |
         translate(lang) }}</p>
 
-      <div style="border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 24px;">
+      <div style="border: 1px solid var(--line); border-radius: 0; overflow: hidden; margin-bottom: 24px;">
         <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11px;">
           <thead>
             <tr style="background: var(--emerald); color: white;">
@@ -1559,20 +1856,50 @@
         });
 
         // Draw markers
+        const timelineContainer = document.getElementById('map-timeline');
         mapSegments.forEach((dest, idx) => {
-          const html = `
-          <div class="custom-marker">
-            <div class="marker-pulse"></div>
-            <div class="marker-core">${idx + 1}</div>
+          const dayRangeStr = dest.daysLabel || '';
+          const markerHtml = `
+          <div class="luxury-marker-wrapper" id="marker-wrapper-${idx}">
+            <div class="luxury-marker">${idx + 1}</div>
+            <div class="luxury-marker-label">${dest.displayName}</div>
           </div>
         `;
           const customIcon = L.divIcon({
-            html: html,
+            html: markerHtml,
             className: '',
             iconSize: [28, 28],
             iconAnchor: [14, 14]
           });
           L.marker(dest.displayCoords, { icon: customIcon }).addTo(map);
+
+          // Build compact sidebar item (fits 45% width)
+          let nightsBadge = '';
+          if (dest.nightsLabel) {
+            nightsBadge = `<span style="font-size:9px;color:var(--muted);font-weight:400;"> · ${dest.nightsLabel}</span>`;
+          } else if (dayRangeStr) {
+            nightsBadge = `<span style="font-size:9px;color:var(--muted);font-weight:400;"> · ${dayRangeStr}</span>`;
+          }
+
+          let hotelBadge = '';
+          if (dest.hotelName) {
+            hotelBadge = `<div style="font-size:9px;color:var(--muted);margin-top:2px;padding-left:24px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${dest.hotelName}</div>`;
+          }
+
+          const itemDiv = document.createElement('div');
+          itemDiv.style.cssText = 'display:flex;flex-direction:column;margin-bottom:10px;';
+          itemDiv.innerHTML = `
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:18px;height:18px;border-radius:50%;background:var(--emerald);color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;">${idx + 1}</div>
+              <div style="min-width:0;">
+                <span style="font-family:var(--serif);font-size:13px;font-weight:500;color:var(--emerald);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;">${dest.displayName}${nightsBadge}</span>
+                ${hotelBadge}
+              </div>
+            </div>
+          `;
+          itemDiv.className = 'timeline-item';
+
+          if (timelineContainer) timelineContainer.appendChild(itemDiv);
         });
 
         // Draw polylines

@@ -121,13 +121,13 @@ class JourneyGlance(FrozenModel):
         if not isinstance(data, dict):
             return data
         defaults = {
-            "market": "B2B",
+            "market": "International",
             "guestProfile": "Standard Group",
             "hotelStandard": "5-star (Luxury)",
             "mealPreference": "Standard",
             "priceType": "Indicative",
             "tourCode": "TBD",
-            "domesticFlights": "Not included",
+            "domesticFlights": "Not Included",
             "priceBasis": "Twin/Double Sharing Basis",
             "partnerNote": "",
             "validity": "Subject to availability and confirmation",
@@ -324,7 +324,7 @@ class TourQuotationPayload(FrozenModel):
     quotationNarrative: str = pydantic_Field(
         description=(
             "Luxury cinematic narrative overview of the quoted journey, "
-            "styled for B2B landingpage, evoking an elegant and "
+            "styled for quotation landingpage, evoking an elegant and "
             "emotionally resonant travel experience."
         )
     )
@@ -402,9 +402,9 @@ class TourQuotationPayload(FrozenModel):
                     if "currency" not in pricing or pricing["currency"] is None:
                         pricing["currency"] = "USD"
                     if "pricingTitle" not in pricing or pricing["pricingTitle"] is None:
-                        pricing["pricingTitle"] = "PRICE QUOTATION – B2B NET INDICATIVE"
+                        pricing["pricingTitle"] = "PRICE QUOTATION – INDICATIVE"
                     if "basis" not in pricing or pricing["basis"] is None:
-                        pricing["basis"] = "B2B net indicative"
+                        pricing["basis"] = "Indicative basis"
                     if "priceOptions" not in pricing or pricing["priceOptions"] is None:
                         pricing["priceOptions"] = []
 

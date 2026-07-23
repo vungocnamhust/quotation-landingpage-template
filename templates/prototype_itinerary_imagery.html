@@ -2770,15 +2770,15 @@
             <div class="day-gallery" style="display: flex; gap: 24px; height: 65vh; min-height: 500px; max-height: 800px;">
               <!-- Main Image -->
               <div style="flex: 7; border-radius: 32px; overflow: hidden; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.1);">
-                <img src="{{ day.images[0] if day.images and day.images|length > 0 else 'https://images.unsplash.com/photo-1528127269322-539801943592?q=80&w=2070' }}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.7s ease;" class="hover-zoom" alt="Main destination image">
+                <img src="{{ day.images[0] if day.images and day.images|length > 0 else '' }}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.7s ease;" class="hover-zoom" alt="Main destination image">
               </div>
               <!-- Detail Images -->
               <div style="flex: 3; display: flex; flex-direction: column; gap: 24px;">
                 <div style="flex: 1; border-radius: 32px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.08);">
-                  <img src="{{ day.images[1] if day.images and day.images|length > 1 else 'https://images.unsplash.com/photo-1557750255-c76072a7aad1?q=80&w=2070' }}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.7s ease;" class="hover-zoom" alt="Detail 1">
+                  <img src="{{ day.images[1] if day.images and day.images|length > 1 else '' }}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.7s ease;" class="hover-zoom" alt="Detail 1">
                 </div>
                 <div style="flex: 1; border-radius: 32px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.08);">
-                  <img src="{{ day.images[2] if day.images and day.images|length > 2 else 'https://images.unsplash.com/photo-1583417319070-4a69db38a482?q=80&w=2070' }}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.7s ease;" class="hover-zoom" alt="Detail 2">
+                  <img src="{{ day.images[2] if day.images and day.images|length > 2 else '' }}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.7s ease;" class="hover-zoom" alt="Detail 2">
                 </div>
               </div>
             </div>
@@ -2891,6 +2891,11 @@
         .hotel-images-group {
           display: grid;
           gap: 16px;
+          align-items: center;
+        }
+        
+        .img-wrapper-main, .img-wrapper-sub {
+          aspect-ratio: 4 / 3;
         }
 
         /* 1. DESKTOP (≥ 1100px) */
@@ -2920,8 +2925,6 @@
           .hotel-images-group.even-group .img-wrapper-sub {
             order: 1;
           }
-          
-          .img-wrapper-main, .img-wrapper-sub { height: 320px; }
         }
 
         /* 2. TABLET (768px - 1099px) */
@@ -2948,10 +2951,6 @@
           }
           .hotel-images-group.even-group .img-wrapper-sub {
             order: 1;
-          }
-
-          .img-wrapper-main, .img-wrapper-sub {
-            height: 240px;
           }
         }
 
@@ -4206,12 +4205,32 @@
 
     document.getElementById('btn-confirm-switch').addEventListener('click', async function () {
       if (pendingTemplateSwitch) {
+        const targetTemplate = pendingTemplateSwitch;
         closeTemplateConfirmModal();
-        await publishPage(pendingTemplateSwitch);
+        await publishPage(targetTemplate);
       }
     });
 
     async function publishPage(newTemplate = null) {
+      // Save map segment descriptions back to JSON so they persist on refresh
+      const staySegmentsEl = document.getElementById('stay-segments-data');
+      if (staySegmentsEl) {
+        try {
+          let rawSegments = JSON.parse(staySegmentsEl.textContent);
+          if (Array.isArray(rawSegments)) {
+            rawSegments.forEach((seg, idx) => {
+              const editedEl = document.querySelector(`.timeline-item [data-editable="map_segment_desc_${idx}"]`);
+              if (editedEl) {
+                seg.mapSegmentDesc = editedEl.innerHTML;
+              }
+            });
+            staySegmentsEl.textContent = JSON.stringify(rawSegments);
+          }
+        } catch (e) {
+          console.error("Error saving map segments", e);
+        }
+      }
+
       const btn = document.getElementById('btn-publish');
       const status = document.getElementById('publish-status');
 
@@ -4251,7 +4270,15 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-        const data = await res.json();
+        
+        console.log("Publish response status:", res.status, res.statusText);
+        let data;
+        try {
+            data = await res.json();
+            console.log("Publish response data:", data);
+        } catch(e) {
+            console.error("Failed to parse json", e);
+        }
 
         // Enforce a minimum delay of 1.2s to show the publishing signal
         const elapsed = Date.now() - startTime;

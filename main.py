@@ -18,6 +18,7 @@ from typing import List, Optional
 from datetime import date
 from github_publish import publish_to_github, publish_file_to_github
 from image_selector import select_landing_image
+from destination_profiles import get_profile, get_layout_images_for_destination, get_available_images_for_destination, SOFT_TRANSITIONS
 
 load_dotenv()
 
@@ -274,16 +275,16 @@ STATIC_DICTIONARY = {
         "ar": "الجدول الزمني"
     },
     "Vietnam Safar": {
-        "vi": "Vietnam Safar — Đề Xuất Hành Trình B2B",
-        "ar": "Vietnam Safar — مقترح سفر للشركاء التجاريين"
+        "vi": "Vietnam Safar — Đề Xuất Hành Trình",
+        "ar": "Vietnam Safar — مقترح سفر"
     },
     "Journey Specifications": {
         "vi": "Thông Số Hành Trình",
         "ar": "مواصفات الرحلة"
     },
     "Core parameters of this B2B travel proposal.": {
-        "vi": "Các thông số cơ bản của đề xuất hành trình B2B này.",
-        "ar": "المعايير الأساسية لمقترح السفر المخصص للشركاء التجاريين."
+        "vi": "Các thông số cơ bản của đề xuất hành trình này.",
+        "ar": "المعايير الأساسية لمقترح السفر."
     },
     "Market & Nationality": {
         "vi": "Thị Trường & Quốc Tịch",
@@ -330,12 +331,12 @@ STATIC_DICTIONARY = {
         "ar": "برنامج الخدمة"
     },
     "B2B Package Pricing": {
-        "vi": "Giá Trực Tiếp B2B",
-        "ar": "أسعار باقة B2B"
+        "vi": "Bảng Giá Chi Tiết",
+        "ar": "أسعار الباقة"
     },
     "Package Inclusions & Exclusions": {
         "vi": "Danh Mục Dịch Vụ Bao Gồm & Loại Trừ",
-        "ar": "الخدمات المشمولة والمستثناة من الباقة B2B"
+        "ar": "الخدمات المشمولة والمستثناة من الباقة"
     },
     "Destination Gallery": {
         "vi": "Bộ Sưu Tập Hình Ảnh",
@@ -362,8 +363,8 @@ STATIC_DICTIONARY = {
         "ar": "الخدمة"
     },
     "B2B Partners": {
-        "vi": "Đối Tác B2B",
-        "ar": "الشركاء التجاريون"
+        "vi": "Đối Tác & Khách Hàng",
+        "ar": "الشركاء والضيوف"
     },
     "Relaxed": {
         "vi": "Thư Thái",
@@ -390,16 +391,16 @@ STATIC_DICTIONARY = {
         "ar": "تنسيق الحلال والصلاة"
     },
     "This document is a confidential quotation prepared exclusively for": {
-        "vi": "Tài liệu này là báo giá B2B bảo mật được chuẩn bị riêng cho",
-        "ar": "هذا عرض سعر سري مخصص حصريًا لـ"
+        "vi": "Tài liệu này là báo giá bảo mật được chuẩn bị cho",
+        "ar": "هذا عرض سعر سري مخصص لـ"
     },
     "Confidential B2B": {
-        "vi": "Báo Giá B2B Bảo Mật",
+        "vi": "Báo Giá Bảo Mật",
         "ar": "عرض سعر سري"
     },
     "Confidential B2B Proposal": {
-        "vi": "Đề Xuất Báo Giá B2B Bảo Mật",
-        "ar": "مقترح سري للشركاء التجاريين"
+        "vi": "Đề Xuất Báo Giá Bảo Mật",
+        "ar": "مقترح سفر سري"
     },
     "Vietnam Safar can assist with halal-friendly meal planning where available, no-pork meal notes, seafood or vegetarian alternatives where halal-certified restaurants are limited, and flexible prayer stops during touring days where practical. Halal-certified restaurants are more available in major cities such as Hanoi, Da Nang and Ho Chi Minh City. In mountain, cruise or countryside destinations, suitable seafood, vegetarian or no-pork meals may be recommended.": {
         "vi": "Vietnam Safar có thể hỗ trợ lên kế hoạch cho các bữa ăn thân thiện với người Hồi giáo khi có sẵn, lưu ý không thịt lợn, các giải pháp thay thế bằng hải sản hoặc đồ chay tại những nơi hạn chế nhà hàng chứng nhận Halal, và các điểm dừng cầu nguyện linh hoạt trong những ngày tham quan khi thực tế cho phép. Các nhà hàng được chứng nhận Halal có sẵn nhiều hơn ở các thành phố lớn như Hà Nội, Đà Nẵng và Thành phố Hồ Chí Minh. Tại các điểm đến vùng núi, du thuyền hoặc vùng nông thôn, các bữa ăn hải sản, đồ chay hoặc không thịt lợn phù hợp có thể được khuyên dùng.",
@@ -461,7 +462,7 @@ STATIC_DICTIONARY = {
         "vi": "Tùy thuộc vào tình trạng sẵn có và xác nhận",
         "ar": "خاضع للتوافر والتأكيد"
     },
-    "Not included": {
+    "Not Included": {
         "vi": "Không bao gồm",
         "ar": "غير مشمول"
     },
@@ -553,6 +554,7 @@ STATIC_DICTIONARY = {
     "Notes:": { "ar": "ملاحظات:", "vi": "Ghi Chú:" },
     "Overnight": { "ar": "المبيت", "vi": "Qua Đêm" },
     "Meals": { "ar": "الوجبات", "vi": "Bữa Ăn" },
+
     # Inclusions, Exclusions new structured formats
     "What Your Journey Includes": {
         "vi": "Những Gì Hành Trình Bao Gồm",
@@ -610,7 +612,7 @@ STATIC_DICTIONARY = {
         "vi": "Các chuyến bay nội địa, hành trình đường sắt, phà hoặc phương tiện vận chuyển khác được bao gồm khi được ghi rõ trong lịch trình.",
         "ar": "رحلات الطيران الداخلية، أو السكك الحديدية، أو العبّارات، أو غيرها من وسائل النقل المشمولة عند ذكرها بوضوح في مسار الرحلة."
     },
-    "Not Included": {
+    "What Your Journey Excludes": {
         "vi": "Những Gì Không Bao Gồm",
         "ar": "الخدمات غير المشمولة"
     },
@@ -692,8 +694,8 @@ STATIC_DICTIONARY = {
         "ar": "الأنشطة الاختيارية غير المذكورة في البرنامج"
     },
     "Rates are B2B net indicative and subject to reconfirmation at the time of booking.": {
-        "vi": "Giá đề xuất net B2B mang tính chất tham khảo và sẽ được xác nhận lại khi đặt dịch vụ.",
-        "ar": "الأسعار التقديرية الصافية للشركاء التجاريين وتخضع لإعادة التأكيد عند الحجز."
+        "vi": "Giá đề xuất mang tính chất tham khảo và sẽ được xác nhận lại khi đặt dịch vụ.",
+        "ar": "الأسعار التقديرية وتخضع لإعادة التأكيد عند الحجز."
     },
     "Final price may vary depending on hotel availability, resort category, cruise selection, domestic flight fare, rooming arrangement, child policy, and final travel services confirmed.": {
         "vi": "Giá cuối cùng có thể thay đổi tùy thuộc vào tình trạng phòng khách sạn, hạng phòng, lựa chọn du thuyền, giá vé máy bay nội địa, cách sắp xếp phòng, chính sách trẻ em và các dịch vụ du lịch được xác nhận cuối cùng.",
@@ -903,12 +905,12 @@ STATIC_DICTIONARY = {
         "vi": "Báo giá cao cấp"
     },
     "B2B Travel Proposal": {
-        "ar": "مقترح سفر للشركاء التجاريين",
-        "vi": "Đề xuất du lịch B2B"
+        "ar": "مقترح سفر",
+        "vi": "Đề xuất du lịch"
     },
     "Confidential B2B Proposal": {
-        "ar": "مقترح سري للشركاء التجاريين",
-        "vi": "Đề xuất B2B bảo mật"
+        "ar": "مقترح سفر سري",
+        "vi": "Đề xuất báo giá bảo mật"
     },
     "Enable Notifications": {
         "ar": "تفعيل الإشعارات",
@@ -2512,6 +2514,163 @@ def _build_timeline_days(
 
     return timeline_days
 
+def _classify_day(day_num: int, total_days: int, day_index_in_chapter: int, chapter_len: int, archetype: str, rest_bias: float, prev_dest_slug: str, curr_dest_slug: str) -> str:
+    if day_num == 1:
+        return "arrival"
+    if day_num == total_days:
+        return "departure"
+    
+    transition_key = f"{prev_dest_slug}→{curr_dest_slug}"
+    is_soft_transition = transition_key in SOFT_TRANSITIONS
+    is_chapter_start = day_index_in_chapter == 0
+    is_chapter_end = day_index_in_chapter == chapter_len - 1
+    
+    if chapter_len == 1 and archetype in ["scenic", "nature"]:
+        return "scenic"
+        
+    if is_chapter_start and not is_soft_transition:
+        return "transition"
+        
+    if is_chapter_end and chapter_len >= 2 and rest_bias >= 0.6:
+        return "leisure"
+        
+    if archetype in ["scenic", "nature"]:
+        return "scenic"
+    if archetype == "heritage":
+        return "cultural"
+    if archetype == "coastal":
+        return "exploration" if day_index_in_chapter == 0 else "leisure"
+        
+    return "exploration"
+
+def _build_itinerary_chapters(timeline_days: list[dict], stay_segments: list[dict], lang: str, manual_override: dict = None) -> list[dict]:
+    chapters = []
+    day_map = {d["dayNumber"]: d for d in timeline_days}
+    total_days = len(timeline_days)
+    edited = (manual_override or {}).get("edited_fields", {})
+    
+    for idx, seg in enumerate(stay_segments, start=1):
+        seg_days = []
+        city = seg.get("city", "Vietnam")
+        slug = _normalize_location_slug(city) or "default"
+        profile = get_profile(slug)
+        
+        for day_num in range(seg["dayStart"], seg["dayEnd"] + 1):
+            if day_num in day_map:
+                seg_days.append(day_map[day_num])
+                
+        chapter_len = len(seg_days)
+        chapter_days_with_layout = []
+        
+        # Deduplicated sequential image selection per chapter
+        available_imgs = get_available_images_for_destination(slug)
+        n_imgs = len(available_imgs)
+        img_cursor = (idx - 1) % n_imgs if n_imgs > 0 else 0
+        
+        # 1. Pick chapter_image
+        if n_imgs > 0:
+            chapter_image = available_imgs[img_cursor % n_imgs]
+            img_cursor += 1
+        else:
+            chapter_image = ""
+            
+        prev_day_hero = ""
+        
+        for i, day_data in enumerate(seg_days):
+            curr_dest_slug = slug
+            prev_dest_slug = ""
+            if day_data["dayNumber"] > 1 and (day_data["dayNumber"] - 1) in day_map:
+                prev_day = day_map[day_data["dayNumber"] - 1]
+                prev_city = prev_day.get("overnight") or (prev_day.get("destinations") or [None])[-1] or "Vietnam"
+                prev_dest_slug = _normalize_location_slug(prev_city) or "default"
+                
+            layout_type = _classify_day(
+                day_num=day_data["dayNumber"],
+                total_days=total_days,
+                day_index_in_chapter=i,
+                chapter_len=chapter_len,
+                archetype=profile["archetype"],
+                rest_bias=profile["restBias"],
+                prev_dest_slug=prev_dest_slug,
+                curr_dest_slug=curr_dest_slug,
+            )
+            
+            day_num = day_data["dayNumber"]
+            
+            if n_imgs > 0:
+                # Pick hero image, avoiding collision with chapter_image and prev_day_hero if n_imgs > 1
+                hero_cand = available_imgs[img_cursor % n_imgs]
+                if n_imgs > 1:
+                    attempts = 0
+                    while (hero_cand == chapter_image or hero_cand == prev_day_hero) and attempts < n_imgs:
+                        img_cursor += 1
+                        hero_cand = available_imgs[img_cursor % n_imgs]
+                        attempts += 1
+                hero_img = hero_cand
+                img_cursor += 1
+                prev_day_hero = hero_img
+                
+                # Pick small-1 image
+                s1_cand = available_imgs[img_cursor % n_imgs]
+                if n_imgs > 1:
+                    attempts = 0
+                    while s1_cand == hero_img and attempts < n_imgs:
+                        img_cursor += 1
+                        s1_cand = available_imgs[img_cursor % n_imgs]
+                        attempts += 1
+                s1_img = s1_cand
+                img_cursor += 1
+                
+                # Pick small-2 image
+                s2_cand = available_imgs[img_cursor % n_imgs]
+                if n_imgs > 2:
+                    attempts = 0
+                    while (s2_cand == hero_img or s2_cand == s1_img) and attempts < n_imgs:
+                        img_cursor += 1
+                        s2_cand = available_imgs[img_cursor % n_imgs]
+                        attempts += 1
+                elif n_imgs == 2:
+                    if s2_cand == hero_img:
+                        s2_cand = s1_img
+                s2_img = s2_cand
+                img_cursor += 1
+                
+                layout_images = {
+                    "hero": hero_img,
+                    "small-1": s1_img,
+                    "small-2": s2_img,
+                }
+            else:
+                layout_images = {"hero": "", "small-1": "", "small-2": ""}
+            
+            # Apply user image overrides if present
+            if f"day_img_hero_{day_num}" in edited:
+                layout_images["hero"] = edited[f"day_img_hero_{day_num}"]
+            if f"day_img_small1_{day_num}" in edited:
+                layout_images["small-1"] = edited[f"day_img_small1_{day_num}"]
+            if f"day_img_small2_{day_num}" in edited:
+                layout_images["small-2"] = edited[f"day_img_small2_{day_num}"]
+            
+            day_with_layout = {**day_data, "layout_type": layout_type, "layout_images": layout_images}
+            chapter_days_with_layout.append(day_with_layout)
+            
+        chapter = {
+            "chapterIndex": idx,
+            "chapterNumberStr": f"{idx:02d}",
+            "destination": seg["displayName"],
+            "slug": slug,
+            "profile": profile,
+            "nights": seg["nights"],
+            "nightsLabel": seg["nightsLabel"],
+            "daysLabel": seg["daysLabel"],
+            "hotelName": seg.get("hotelName", ""),
+            "chapter_image": chapter_image,
+            "days": chapter_days_with_layout
+        }
+        chapters.append(chapter)
+        
+    return chapters
+
 # ── Context builder (pure fn — no I/O) ───────────────────────────────────────
 
 def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, destinations: list[dict], lang: str = "en", template_name: str = "vietnam_luxury_brosure.html", brand: dict = None):
@@ -2689,7 +2848,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
 
     inclusions_title = translate_filter("What Your Journey Includes", lang)
     inclusions_lede = translate_filter("Your journey has been thoughtfully arranged to ensure a seamless and comfortable experience throughout.", lang)
-    exclusions_title = translate_filter("Not Included", lang)
+    exclusions_title = translate_filter("Exclusions", lang)
     exclusions_lede = translate_filter("To keep your journey transparent and clearly defined, the following are not included unless specifically stated otherwise:", lang)
 
     # Overview paragraphs
@@ -2854,6 +3013,58 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
     img_3 = _d_img(2)
     img_4 = _d_img(3)
 
+    # ── Deduplicated Chapter Divider Images ─────────────────────────────────
+    used_divider_imgs = {img_0, img_1}
+
+    # Collect all available real destination images
+    all_dest_images = []
+    for d in destinations:
+        for im in d.get("images", []):
+            if im and im != default_img and im not in all_dest_images:
+                all_dest_images.append(im)
+    for d in destinations:
+        s = d.get("slug")
+        if s:
+            p_imgs = _find_all_real_images_for_province(s, default_img)
+            for im in p_imgs:
+                if im and im != default_img and im not in all_dest_images:
+                    all_dest_images.append(im)
+
+    # 1. Pick img_itinerary_divider (landscape hero image, prefer 2nd destination or unused image)
+    img_itinerary_divider = ""
+    if len(destinations) > 1 and destinations[1].get("images"):
+        cand = [im for im in destinations[1]["images"] if im not in used_divider_imgs]
+        if cand:
+            img_itinerary_divider = cand[0]
+    if not img_itinerary_divider:
+        cand = [im for im in all_dest_images if im not in used_divider_imgs]
+        if cand:
+            img_itinerary_divider = cand[0]
+        else:
+            img_itinerary_divider = img_1 or img_0
+    used_divider_imgs.add(img_itinerary_divider)
+
+    # 2. Pick img_hotel_divider (sanctuary/nature hero image, prefer 3rd destination or unused image)
+    img_hotel_divider = ""
+    if len(destinations) > 2 and destinations[2].get("images"):
+        cand = [im for im in destinations[2]["images"] if im not in used_divider_imgs]
+        if cand:
+            img_hotel_divider = cand[0]
+    if not img_hotel_divider:
+        cand = [im for im in all_dest_images if im not in used_divider_imgs]
+        if cand:
+            img_hotel_divider = cand[0]
+        else:
+            img_hotel_divider = img_2 or img_0
+    used_divider_imgs.add(img_hotel_divider)
+
+    # User edit overrides
+    edited_fields = manual_override.get("edited_fields", {}) if manual_override else {}
+    if edited_fields.get("img_itinerary_divider"):
+        img_itinerary_divider = edited_fields["img_itinerary_divider"]
+    if edited_fields.get("img_hotel_divider"):
+        img_hotel_divider = edited_fields["img_hotel_divider"]
+
     # Highlight experiences — first 3 itinerary days
     experiences = [
         {"num": f"{i+1:02d}", "title": truncate_text(f"{translate_filter('Day', lang)} {day.dayNumber}: {localize_place_name(day.destination, lang)}", 80),
@@ -2866,7 +3077,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
 
     # Price conditions note
     price_cond_paras = [
-        "Rates are B2B net indicative and subject to reconfirmation at the time of booking.",
+        "Rates are indicative and subject to reconfirmation at the time of booking.",
         "Final price may vary depending on hotel availability, resort category, cruise selection, domestic flight fare, rooming arrangement, child policy, and final travel services confirmed."
     ]
     price_cond_paras = [translate_filter(truncate_text(x, 250), lang) for x in price_cond_paras]
@@ -3034,6 +3245,8 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         "quotation_id":   quotation_id,
         "static_map_url": static_map_url,
         "img_0": img_0, "img_1": img_1, "img_2": img_2, "img_3": img_3, "img_4": img_4,
+        "img_itinerary_divider": img_itinerary_divider,
+        "img_hotel_divider":     img_hotel_divider,
         "destinations":   destinations,
         # Hero / header
         "quotation_title": truncate_text(payload.landingpageContent.heroSection.headline, 100),
@@ -3074,6 +3287,8 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         # Experiences (first 3 days)
         "experiences":      experiences,
         # Gallery section
+        "route_map_h2": translate_filter(lang_override.get("route_map_h2") or "Your Journey, Mapped", lang),
+        "route_map_p":  translate_filter(lang_override.get("route_map_p") or "An interactive map showing your curated path through Vietnam's iconic landmarks and luxury stopovers. Click on a destination in the list or the map to explore highlights.", lang),
         "journey_h2":   translate_filter(lang_override.get("journey_h2") or "Destination imagery woven into the quotation.", lang),
         "journey_p":    translate_filter(lang_override.get("journey_p") or "Cinematic destination panels crafted for a premium travel proposal.", lang),
         "gal1_label":   translate_filter("Highlight", lang) if len(destinations) > 0 else translate_filter("Destination", lang),
@@ -3086,6 +3301,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         "timeline_days": mapped_itinerary,
         "route_stops": route_stops,
         "stay_segments": stay_segments,
+        "chapters": _build_itinerary_chapters(mapped_itinerary, stay_segments, lang, manual_override),
         # Pricing section
         "currency":       currency,
         "pricing_title":  translate_filter("Journey Investment", lang),
@@ -3145,6 +3361,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         "show_designer_section": not lang_override.get("hide_designer_section", False),
         "lang": lang,
         "template_name": template_name,
+        "brand": brand or BRANDS["vietnam_safar"],
         "translation_status": _load_translation_status(quotation_id, default_lang=lang),
         "client_i18n": client_i18n,
     }
@@ -3276,7 +3493,7 @@ def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, her
 
     inclusions_title = translate_filter("What Your Journey Includes", lang)
     inclusions_lede = translate_filter("Your journey has been thoughtfully arranged to ensure a seamless and comfortable experience throughout.", lang)
-    exclusions_title = translate_filter("Not Included", lang)
+    exclusions_title = translate_filter("Exclusions", lang)
     exclusions_lede = translate_filter("To keep your journey transparent and clearly defined, the following are not included unless specifically stated otherwise:", lang)
 
     # Pricing fields from payload
@@ -3485,7 +3702,7 @@ def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, her
         # Pricing section
         "currency":       currency,
         "pricing_title":  translate_filter(truncate_text(payload.pricing.pricingTitle or "Journey Investment" if payload.pricing else "", 100), lang),
-        "pricing_basis":  translate_filter(truncate_text(payload.pricing.basis or "B2B net indicative" if payload.pricing else "", 80), lang),
+        "pricing_basis":  translate_filter(truncate_text(payload.pricing.basis or "Indicative basis" if payload.pricing else "", 80), lang),
         "price_options":  [
             {
                 **o.model_dump(mode="json"),
@@ -3755,7 +3972,7 @@ async def create_quotation(request: Request):
     log.debug("[/quotations] Hero image resolved: %s", hero_image_url)
 
     brand_config = resolve_brand(request, payload.model_dump(mode="json"))
-    ctx = _build_ctx(quotation_id, payload, hero_image_url, destinations, lang=lang, template_name="prototype_itinerary_imagery.html", brand=brand_config)
+    ctx = _build_ctx(quotation_id, payload, hero_image_url, destinations, lang=lang, template_name="vietnam_luxury_brosure.html", brand=brand_config)
     ctx["baseline_payload"] = payload.model_dump(mode="json")
     ctx["baseline_lang"] = lang
     ctx["translations"] = {}
@@ -3926,29 +4143,61 @@ async def get_published_file(file_path: str):
 
 from html.parser import HTMLParser
 
+VOID_TAGS = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"}
+
 class EditableFieldsParser(HTMLParser):
     def __init__(self):
         super().__init__()
         self.edited_fields = {}
-        self.current_field = None
-        self.current_data = []
+        self.stack = []
 
     def handle_starttag(self, tag, attrs):
+        tag_lower = tag.lower()
         attrs_dict = dict(attrs)
-        if "data-editable" in attrs_dict:
-            self.current_field = attrs_dict["data-editable"]
-            self.current_data = []
+        is_void = tag_lower in VOID_TAGS
+
+        attr_str = "".join([f' {k}="{v}"' if v is not None else f' {k}' for k, v in attrs])
+        for item in self.stack:
+            if is_void:
+                item['acc'].append(f"<{tag}{attr_str} />")
+            else:
+                item['acc'].append(f"<{tag}{attr_str}>")
+                item['depth'] += 1
+
+        if "data-editable" in attrs_dict and not is_void:
+            field_name = attrs_dict["data-editable"]
+            self.stack.append({
+                'field': field_name,
+                'tag': tag_lower,
+                'depth': 1,
+                'acc': []
+            })
+
+    def handle_startendtag(self, tag, attrs):
+        tag_lower = tag.lower()
+        attr_str = "".join([f' {k}="{v}"' if v is not None else f' {k}' for k, v in attrs])
+        for item in self.stack:
+            item['acc'].append(f"<{tag}{attr_str} />")
 
     def handle_data(self, data):
-        if self.current_field is not None:
-            self.current_data.append(data)
+        for item in self.stack:
+            item['acc'].append(data)
 
     def handle_endtag(self, tag):
-        if self.current_field is not None:
-            val = "".join(self.current_data).strip()
-            self.edited_fields[self.current_field] = val
-            self.current_field = None
-            self.current_data = []
+        tag_lower = tag.lower()
+        if tag_lower in VOID_TAGS:
+            return
+
+        new_stack = []
+        for item in self.stack:
+            item['depth'] -= 1
+            if item['depth'] == 0 and item['tag'] == tag_lower:
+                val = "".join(item['acc']).strip()
+                self.edited_fields[item['field']] = val
+            else:
+                item['acc'].append(f"</{tag}>")
+                new_stack.append(item)
+        self.stack = new_stack
 
 def parse_edited_fields(html_content: str) -> dict:
     parser = EditableFieldsParser()
@@ -4046,6 +4295,7 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
             'guests_txt', 'travel_dates', 'route_txt', 'travel_style', 
             'quotation_number', 'contact', 'why_private', 'why_comfort', 
             'why_muslim', 'why_balanced', 'journey_h2', 'journey_p', 
+            'route_map_h2', 'route_map_p',
             'itinerary_h2', 'itinerary_p', 'room_notes', 'pricing_h2', 
             'pricing_p', 'muslim_care_text', 'term_deposit', 'term_balance', 
             'term_cancellation', 'term_confirmation', 'cta_h2', 'designer_kicker', 
@@ -4150,6 +4400,19 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
             new_itinerary.append(day)
     lang_ctx['itinerary'] = new_itinerary
     
+    # 1b. Update chapter layout images if edited_fields contains day_img_*
+    for chapter in lang_ctx.get('chapters', []):
+        for day in chapter.get('days', []):
+            d_num = day.get('dayNumber')
+            if d_num:
+                layout_imgs = day.setdefault('layout_images', {})
+                if f"day_img_hero_{d_num}" in edited_fields:
+                    layout_imgs['hero'] = edited_fields[f"day_img_hero_{d_num}"]
+                if f"day_img_small1_{d_num}" in edited_fields:
+                    layout_imgs['small-1'] = edited_fields[f"day_img_small1_{d_num}"]
+                if f"day_img_small2_{d_num}" in edited_fields:
+                    layout_imgs['small-2'] = edited_fields[f"day_img_small2_{d_num}"]
+    
     # 2. Filter and update hotels
     new_hotels = []
     for h_idx, hotel in enumerate(lang_ctx.get('hotels', []), 1):
@@ -4215,6 +4478,16 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
                     opt['optionName'] = edited_fields[key_name]
             new_price_options.append(opt)
     lang_ctx['price_options'] = new_price_options
+    
+    # 6. Filter and update map segment descriptions
+    if "stay_segments" in lang_ctx:
+        new_stay_segments = []
+        for s_idx, segment in enumerate(lang_ctx["stay_segments"]):
+            key = f"map_segment_desc_{s_idx}"
+            if key in edited_fields and override_text:
+                segment["mapSegmentDesc"] = edited_fields[key]
+            new_stay_segments.append(segment)
+        lang_ctx["stay_segments"] = new_stay_segments
 
 def filter_and_override_ctx_by_html(lang_ctx: dict, html_content: str, override_text: bool = True):
     """
@@ -4299,7 +4572,14 @@ def _apply_ctx_html_sync(
 
     return applied
 
-async def _render_quotation_doc_from_ctx(ctx_data: dict, quotation_id: str, target_lang: str, request: Request = None, is_pdf: bool = True) -> tuple[str, str]:
+async def _render_quotation_doc_from_ctx(
+    ctx_data: dict,
+    quotation_id: str,
+    target_lang: str,
+    request: Request = None,
+    is_pdf: bool = True,
+    ignore_published_html: bool = False,
+) -> tuple[str, str]:
     baseline_lang = ctx_data.get("baseline_lang", "en")
     effective_lang = target_lang if target_lang in ("en", "vi", "ar") else baseline_lang
     payload_dict = (
@@ -4337,15 +4617,16 @@ async def _render_quotation_doc_from_ctx(ctx_data: dict, quotation_id: str, targ
         {"baseline_lang": baseline_lang, "available_langs": [baseline_lang]},
     )
 
-    if not _apply_ctx_html_sync(lang_ctx, ctx_data, effective_lang, baseline_lang):
-        latest_lang = None if effective_lang == baseline_lang else effective_lang
-        html_content = await _get_latest_published_html(quotation_id, lang=latest_lang, fallback=False)
-        if html_content:
-            filter_and_override_ctx_by_html(lang_ctx, html_content, override_text=True)
-        elif effective_lang != baseline_lang:
-            baseline_html = await _get_latest_published_html(quotation_id, lang=None, fallback=False)
-            if baseline_html:
-                filter_and_override_ctx_by_html(lang_ctx, baseline_html, override_text=False)
+    if not ignore_published_html:
+        if not _apply_ctx_html_sync(lang_ctx, ctx_data, effective_lang, baseline_lang):
+            latest_lang = None if effective_lang == baseline_lang else effective_lang
+            html_content = await _get_latest_published_html(quotation_id, lang=latest_lang, fallback=False)
+            if html_content:
+                filter_and_override_ctx_by_html(lang_ctx, html_content, override_text=True)
+            elif effective_lang != baseline_lang:
+                baseline_html = await _get_latest_published_html(quotation_id, lang=None, fallback=False)
+                if baseline_html:
+                    filter_and_override_ctx_by_html(lang_ctx, baseline_html, override_text=False)
 
     rendered_html = tmpl.render(**lang_ctx)
     return rendered_html, effective_lang
@@ -4696,7 +4977,7 @@ class ApproveRequest(BaseModel):
     token: str
 
 @app.post("/quotations/{quotation_id}/publish")
-async def publish_quotation(quotation_id: str, body: PublishRequest, lang: str = None, language: str = None):
+async def publish_quotation(quotation_id: str, body: PublishRequest, request: Request, lang: str = None, language: str = None):
     """
     Commit the edited HTML (sent from browser) to GitHub published/ folder.
     Does NOT require the in-memory store — quotation_id + html come from the request.
@@ -4705,6 +4986,8 @@ async def publish_quotation(quotation_id: str, body: PublishRequest, lang: str =
     target_lang = lang or language
     if target_lang not in ("en", "vi", "ar"):
         target_lang = None
+
+    log.info("[publish] Received publish for quotation_id=%s, template_name=%s, target_lang=%s", quotation_id, body.template_name, target_lang)
 
     # Fetch the next version from GitHub directly to ensure it works across serverless instances
     from github_publish import get_next_version, publish_to_github
@@ -4723,18 +5006,18 @@ async def publish_quotation(quotation_id: str, body: PublishRequest, lang: str =
         custom_images = _extract_custom_images_from_html(body.html)
         ctx_data.update(custom_images)
         
-        if body.template_name:
+        if body.template_name and ctx_data.get("template_name") != body.template_name:
             ctx_data["template_name"] = body.template_name
-        
-        _save_ctx_html_sync_state(ctx_data, target_lang, body.html)
-        
-        if body.template_name:
+            ctx_data["html_sync"] = {}
             new_html, _ = await _render_quotation_doc_from_ctx(
                 ctx_data,
                 quotation_id,
                 target_lang or baseline_lang,
-                is_pdf=False
+                request=request,
+                is_pdf=False,
+                ignore_published_html=True,
             )
+            _save_ctx_html_sync_state(ctx_data, target_lang, new_html)
             # Strip editor scripts before publishing
             idx_bar = new_html.find('id="publish-bar"')
             if idx_bar == -1:
@@ -4751,12 +5034,16 @@ async def publish_quotation(quotation_id: str, body: PublishRequest, lang: str =
                             idx_end = idx_end_script + len('</script>')
                             new_html = new_html[:idx_start] + new_html[idx_end:]
             body.html = new_html
+        else:
+            _save_ctx_html_sync_state(ctx_data, target_lang, body.html)
 
         rendered_pdf, effective_lang = await _render_quotation_doc_from_ctx(
             ctx_data,
             quotation_id,
             target_lang or baseline_lang,
-            is_pdf=True
+            request=request,
+            is_pdf=True,
+            ignore_published_html=bool(body.template_name),
         )
 
         if quotation_id in quotations:
@@ -5374,7 +5661,7 @@ async def publish_itinerary(itinerary_id: str, body: PublishRequest, lang: str =
             if main_option:
                 ctx["total_price"] = main_option["totalPrice"]["displayText"]
                 ctx["price_per_pax"] = main_option["pricePerPerson"]["displayText"]
-                ctx["pricing_h2"] = f"B2B Net Price: {ctx['total_price']}"
+                ctx["pricing_h2"] = f"Indicative Price: {ctx['total_price']}"
                 ctx["pricing_p"] = f"Grand total for {ctx['guests_txt']}. Currency: {ctx['currency']}."
 
         loop = asyncio.get_event_loop()
@@ -5572,7 +5859,7 @@ async def approve_itinerary(itinerary_id: str, body: ApproveRequest):
             if main_option:
                 ctx["total_price"] = main_option["totalPrice"]["displayText"]
                 ctx["price_per_pax"] = main_option["pricePerPerson"]["displayText"]
-                ctx["pricing_h2"] = f"B2B Net Price: {ctx['total_price']}"
+                ctx["pricing_h2"] = f"Indicative Price: {ctx['total_price']}"
                 ctx["pricing_p"] = f"Grand total for {ctx['guests_txt']}. Currency: {ctx['currency']}."
 
         loop = asyncio.get_event_loop()

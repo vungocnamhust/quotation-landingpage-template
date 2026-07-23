@@ -43,7 +43,7 @@ Dưới đây là cấu trúc dữ liệu JSON đầy đủ dùng để gửi l�
     "tourCode": "VS-2026-N12",
     "domesticFlights": "Không bao gồm (Quý khách tự túc hoặc báo giá riêng)",
     "priceBasis": "Cơ sở phòng đôi / gia đình (Twin/Double/Family Sharing)",
-    "partnerNote": "Báo giá ròng B2B NET dành riêng cho đối tác",
+    "partnerNote": "Báo giá tham khảo dành cho chuyến đi",
     "validity": "Giá trị tham khảo cho đến khi dịch vụ được xác nhận chính thức"
   },
   "whyWorks": {

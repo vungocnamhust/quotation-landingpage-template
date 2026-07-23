@@ -282,12 +282,12 @@ payload = {
     },
     "pricing": {
         "currency": "USD",
-        "pricingTitle": "PRICE QUOTATION – B2B NET INDICATIVE",
+        "pricingTitle": "PRICE QUOTATION – INDICATIVE",
         "basis": "Twin-sharing basis (2 Pax)",
         "priceOptions": [
             {
                 "label": "Sara 2pax Package",
-                "notes": "B2B Net Indicative Price per person",
+                "notes": "Indicative Price per person",
                 "amount": 4250.0
             }
         ],
@@ -361,7 +361,8 @@ payload = {
         "Travel insurance.",
         "Personal expenses (laundry, beverages, minibar, etc.).",
         "Tips and gratuities for guides and drivers."
-    ]
+    ],
+    "template": "vietnam_luxury_brosure.html"
 }
 
 print("POST /quotations?lang=en&brand=capella_travel ...")
