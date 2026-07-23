@@ -3536,22 +3536,75 @@
     </section>
 
     <!-- ── Chapter Divider: THE STAYS ───────────────────── -->
-    <section class="chapter-divider-section chapter-divider-section--secondary no-print"
-         id="divider-hotels"
-         style="background-image: url('{{ img_hotel_divider or img_2 or img_0 }}');">
-      <div class="chapter-divider-container">
-        <div class="chapter-divider-top">
-          <div class="chapter-divider-kicker" data-editable="divider_hotel_kicker">
-            {{ divider_hotel_kicker | default('CHAPTER 03 — THE STAYS') }}
+    <section id="divider-hotels" class="stays-intro-section no-print" style="background: var(--bg-main); padding: 0 0 var(--section-padding) 0; position: relative; overflow: hidden;">
+      <style>
+        .stays-intro-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 48px;
+          align-items: center;
+          position: relative;
+          z-index: 2;
+          padding-top: 80px;
+        }
+        
+        @media (min-width: 981px) {
+          .stays-intro-grid {
+            grid-template-columns: 55% 1fr;
+            gap: 8%;
+          }
+        }
+        
+        .stays-journey-line {
+          position: absolute;
+          top: 0;
+          left: 50%;
+          width: 1px;
+          height: 80px;
+          background: var(--line);
+          z-index: 1;
+        }
+        
+        @media (min-width: 981px) {
+          .stays-journey-line {
+            left: 81%; /* 55% + 8% gap + 18% (half of remaining 37%) = 81% */
+          }
+        }
+      </style>
+      
+      <div class="container" style="max-width: 1400px; margin: 0 auto; padding: 0 5%; position: relative;">
+        <div class="stays-journey-line"></div>
+        
+        <div class="stays-intro-grid">
+          
+          <!-- LEFT: 55% Image -->
+          <div class="stays-intro-image">
+            <div style="aspect-ratio: 4/5; overflow: hidden; position: relative;">
+              <img src="{{ img_hotel_divider or img_2 or img_0 }}" alt="Selected Stays" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
           </div>
-          <h2 class="chapter-divider-title" data-editable="divider_hotel_title">
-            {{ divider_hotel_title | default('Where You Rest') }}
-          </h2>
-        </div>
-        <div class="chapter-divider-bottom">
-          <p class="chapter-divider-tagline" data-editable="divider_hotel_tagline">
-            {{ divider_hotel_tagline | default('Each property was chosen not for its amenities alone, but for the feeling it creates at the end of a day well spent.') }}
-          </p>
+          
+          <!-- RIGHT: 45% Text -->
+          <div class="stays-intro-content" style="padding: 20px 0;">
+            <div style="margin-bottom: 32px;">
+              <span style="font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; color: var(--accent); text-transform: uppercase;" data-editable="divider_hotel_kicker">
+                {{ divider_hotel_kicker | default('THE PLACES IN BETWEEN') }}
+              </span>
+            </div>
+            
+            <h2 style="font-family: var(--font-heading); font-size: clamp(36px, 4vw, 56px); line-height: 1.1; font-weight: 400; color: var(--text-main); margin-bottom: 40px;" data-editable="divider_hotel_title">
+              {{ divider_hotel_title | default('Where Each Day Comes to Rest') }}
+            </h2>
+            
+            <p style="font-size: 16px; line-height: 1.7; color: var(--text-muted); margin-bottom: 32px; max-width: 480px;" data-editable="divider_hotel_tagline">
+              {{ divider_hotel_tagline | default('Along the journey, each stay has been chosen not only for comfort, but for the way it supports the pace, character and atmosphere of its destination.') }}
+            </p>
+            
+            <p style="font-size: 16px; line-height: 1.7; color: var(--text-main); font-style: italic; max-width: 480px;" data-editable="divider_hotel_closing">
+              {{ divider_hotel_closing | default('Places to pause, restore and feel more deeply connected to where you are.') }}
+            </p>
+          </div>
+          
         </div>
       </div>
     </section>
