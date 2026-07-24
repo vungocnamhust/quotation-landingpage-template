@@ -7,7 +7,6 @@ __pycache__/
 *.zip
 *.pt
 *.pth
-.git/
 node_modules/
 _renders/
 _responsive_screenshots/
