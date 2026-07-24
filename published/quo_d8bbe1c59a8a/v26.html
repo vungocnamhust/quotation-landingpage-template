@@ -14,6 +14,9 @@
     (function() {
       const CURRENT_VERSION = 26;
       const QUO_ID = "quo_d8bbe1c59a8a";
+      window.addEventListener('pageshow', function(e) {
+        if (e.persisted) window.location.reload();
+      });
       if (window.location.search.includes('_r=')) return;
       fetch('/published/' + QUO_ID + '/version?t=' + Date.now(), { cache: 'no-store' })
         .then(function(res) { return res.json(); })
