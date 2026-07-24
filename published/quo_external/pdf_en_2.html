@@ -151,23 +151,40 @@
     }
 
     @media print {
-      body {
+      @page {
+        size: A4 portrait;
+        margin: 0;
+      }
+
+      html, body {
+        width: 100% !important;
+        height: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
         background-color: var(--ivory) !important;
-        padding: 0;
-        display: block;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
       }
 
       .pdf-page {
-        width: auto !important;
-        min-height: auto !important;
+        width: 100% !important;
+        max-width: 100% !important;
         box-shadow: none !important;
-        background: transparent !important;
-        page-break-inside: auto !important;
-        break-inside: auto !important;
+        background: var(--ivory) !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
       }
 
       .cover {
-        height: 100vh !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 1123px !important;
+        min-height: 100vh !important;
+        background-size: cover !important;
+        background-position: center !important;
+        box-sizing: border-box !important;
       }
     }
 
@@ -227,7 +244,8 @@
        PAGE 1 — Cover
     ═══════════════════════════════════════════ */
     .cover {
-      width: 794px;
+      width: 100%;
+      max-width: 100%;
       height: 1123px;
       background: linear-gradient(160deg, rgba(17, 19, 15, .88) 0%, rgba(17, 19, 15, .55) 55%, rgba(17, 19, 15, .18) 100%),
         center/cover no-repeat;
@@ -866,6 +884,38 @@
       order: 1;
     }
 
+    
+    .hotel-plan-container,
+    .hotel-card-editorial,
+    .hotel-editorial-grid,
+    .hotel-images-group {
+      width: 100% !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+      overflow: hidden !important;
+      min-width: 0 !important;
+    }
+
+    .img-wrapper-main,
+    .img-wrapper-sub,
+    .hotel-image-wrapper {
+      width: 100% !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+      overflow: hidden !important;
+      position: relative !important;
+    }
+
+    .img-wrapper-main img,
+    .img-wrapper-sub img,
+    .hotel-image-wrapper img {
+      width: 100% !important;
+      height: 100% !important;
+      max-width: 100% !important;
+      object-fit: cover !important;
+      display: block !important;
+    }
+
     .img-wrapper-main,
     .img-wrapper-sub {
       aspect-ratio: 4 / 3;
@@ -1158,14 +1208,14 @@
   </style>
 </head>
 
-<body style="--designer-img: url('/assets/dias_team/hieu.jpg'); --hero-img: url('/assets/brands/hero/elder.png');">
+<body style="--designer-img: url('/assets/dias_team/hieu.jpg'); --hero-img: url('/assets/brands/hero/elder.png?v=27');">
 
   <div class="watermark">Capella Travel · VN-2027-LUX · Confidential</div>
 
   <!-- ═══════════════════ PAGE 1 — Cover ═══════════════════ -->
   <div class="pdf-page">
     <div class="cover"
-      style="background-image: linear-gradient(160deg,rgba(17,19,15,.88),rgba(17,19,15,.55) 55%,rgba(17,19,15,.18)), url('/assets/brands/hero/elder.png');">
+      style="background-image: linear-gradient(160deg,rgba(17,19,15,.88),rgba(17,19,15,.55) 55%,rgba(17,19,15,.18)), url('/assets/brands/hero/elder.png?v=27');">
       <div class="cover-body">
         <div class="cover-top">
           <div class="cover-kicker">A Privately Arranged Journey</div>
@@ -1234,7 +1284,7 @@
                 Ho Chi Minh City</strong>.
             </p>
             <p style="font-size: 13px; line-height: 1.7; color: #383838; margin: 0 0 14px;">The programme has been
-              considered around a gentler family rhythm: early
+              considered around a gentler friendlyrhythm: early
               check-in in Hanoi, private guiding and transfers, a luxury overnight cruise, and enough space
               between active days to pause. Dining, room arrangements and transitions have been planned with care,
               without adding unnecessary movement.</p>
@@ -1316,7 +1366,7 @@
 
   <!-- ── PDF: Chapter Divider — THE JOURNEY ─── -->
   <div class="pdf-page pdf-chapter-divider"
-    style="display: none !important; background-image: url('/assets/quang-nam/hoian1.jpg');">
+    style="display: none !important; background-image: url('/assets/quang-nam/thuyen-thung.jpg');">
     <div class="pdf-chapter-divider-top">
       <div class="pdf-chapter-divider-kicker">
         The journey, day by day
@@ -1433,7 +1483,7 @@
           <div class="day-media" style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
 
             <div
-              style="flex: 1; background: url('/assets/ha-noi/hero/hero2.webp') center/cover no-repeat; border-radius: 4px;">
+              style="flex: 1; background: url('/assets/brands/hero/elder.png?v=27') center/cover no-repeat; border-radius: 4px;">
             </div>
             <div
               style="flex: 1; background: url('/assets/ha-noi/hero/hero1.jpg') center/cover no-repeat; border-radius: 4px;">
@@ -1668,14 +1718,14 @@
           <div class="day-media" style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
 
             <div
-              style="flex: 2; background: url('/assets/quang-ninh/hero/hero4.jpg') center/cover no-repeat; border-radius: 4px;">
+              style="flex: 2; background: url('/assets/quang-ninh/hero/hero5.jpg') center/cover no-repeat; border-radius: 4px;">
             </div>
             <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
               <div
-                style="background: url('/assets/quang-ninh/hero/hero3.jpg') center/cover no-repeat; border-radius: 4px;">
+                style="background: url('/assets/quang-ninh/hero/hero2.jpg') center/cover no-repeat; border-radius: 4px;">
               </div>
               <div
-                style="background: url('/assets/quang-ninh/hero/hero5.jpg') center/cover no-repeat; border-radius: 4px;">
+                style="background: url('/assets/quang-ninh/hero/hero1.jpg') center/cover no-repeat; border-radius: 4px;">
               </div>
             </div>
 
@@ -1754,7 +1804,7 @@
               style="flex: 1; background: url('/assets/quang-nam/hero/hero1.jpg') center/cover no-repeat; border-radius: 4px;">
             </div>
             <div
-              style="flex: 1; background: url('/assets/quang-nam/hoian2.jpg') center/cover no-repeat; border-radius: 4px;">
+              style="flex: 1; background: url('/assets/hotels/saigon/the-reverie-saigon-hotel/exterior/exterior_1.jpg') center/cover no-repeat; border-radius: 4px;">
             </div>
 
           </div>
@@ -1829,10 +1879,10 @@
           <div class="day-media" style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
 
             <div
-              style="flex: 1; background: url('/assets/quang-nam/hero/hero2.jpg') center/cover no-repeat; border-radius: 4px;">
+              style="flex: 1; background: url('/assets/quang-nam/myson.jpg') center/cover no-repeat; border-radius: 4px;">
             </div>
             <div
-              style="flex: 1; background: url('/assets/quang-nam/hoian1.jpg') center/cover no-repeat; border-radius: 4px;">
+              style="flex: 1; background: url('/assets/quang-nam/thuyen-thung.jpg') center/cover no-repeat; border-radius: 4px;">
             </div>
 
           </div>
@@ -1855,7 +1905,7 @@
 
 
               <p style="margin-bottom: 8px;">The morning features a specialized photography tour, designed to capture
-                professional portraits of the family against the iconic, lantern backdrop of Hoi An. The afternoon is
+                professional portraits of the friendlyagainst the iconic, lantern backdrop of Hoi An. The afternoon is
                 reserved for leisure, allowing guests to fully enjoy the premium amenities and tranquil environment of
                 the Anantara Resort.</p>
 
@@ -1932,11 +1982,7 @@
               style="flex: 1; font-size: 11px; color: var(--muted); line-height: 1.5; overflow: hidden;">
 
 
-              <p style="margin-bottom: 8px;">The journey continues with a transfer to the coastal city of Da Nang, while
-                some of the members say goodbye to Vietnam, the other continue their journey, coupled with a curated
-                half-day city tour highlighting local cultural landmarks. You will then check into two spectacular
-                3-Bedroom Beach Front Pool Villas at the Hyatt Regency Danang Resort and Spa, providing an unparalleled
-                standard of privacy and comfort.</p>
+              <p style="margin-bottom: 8px;">The journey continues with a transfer to the coastal city of Da Nang, while some of the members say goodbye to Vietnam, the other continue their journey. Enjoy the afternoon at your own leisure to experience the city at your personal pace. Whether you prefer quiet moments of tranquility or spontaneous exploration, this time is entirely yours to shape as you wish.</p>
 
 
 
@@ -2107,7 +2153,7 @@
 
               <p style="font-size: 10px; color: var(--text-muted); margin-top: 8px;">
                 <strong style="color: var(--emerald); letter-spacing: 0.06em;">Highlights:</strong>
-                <span>Private guide · Citadel ticket.</span>
+                <span>Imperial Citadel, architecture of the Nguyen Dynasty.</span>
               </p>
 
 
@@ -2157,7 +2203,7 @@
                 style="background: url('/assets/thua-thien-hue/hero/hero1.jpg') center/cover no-repeat; border-radius: 4px;">
               </div>
               <div
-                style="background: url('/assets/thua-thien-hue/hue2.jpg') center/cover no-repeat; border-radius: 4px;">
+                style="background: url('/assets/thua-thien-hue/hue1.jpg') center/cover no-repeat; border-radius: 4px;">
               </div>
             </div>
 
@@ -2233,10 +2279,10 @@
           <div class="day-media" style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
 
             <div
-              style="flex: 1; background: url('/assets/da-nang/hero/hero2.jpg') center/cover no-repeat; border-radius: 4px;">
+              style="flex: 1; background: url('/assets/da-nang/dn-beach1.jpg') center/cover no-repeat; border-radius: 4px;">
             </div>
             <div
-              style="flex: 1; background: url('/assets/da-nang/hero/hero5.jpg') center/cover no-repeat; border-radius: 4px;">
+              style="flex: 1; background: url('/assets/da-nang/hyatt-regency-danang-resort-spa-3.jpg') center/cover no-repeat; border-radius: 4px;">
             </div>
 
           </div>
@@ -2389,14 +2435,8 @@
           </div>
 
           <div class="day-media" style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
-
-            <div
-              style="flex: 1; background: url('/assets/ho-chi-minh/hero/hero3.jpg') center/cover no-repeat; border-radius: 4px;">
-            </div>
-            <div
-              style="flex: 1; background: url('/assets/ho-chi-minh/hero/hero1.jpg') center/cover no-repeat; border-radius: 4px;">
-            </div>
-
+            <div style="flex: 1; background: url('/assets/mekong/pexels-quang-nguyen-vinh-222549-6347098.jpg') center/cover no-repeat; border-radius: 4px;"></div>
+            <div style="flex: 1; background: url('/assets/mekong/pexels-quang-nguyen-vinh-222549-8280885.jpg') center/cover no-repeat; border-radius: 4px;"></div>
           </div>
         </div>
 
@@ -2467,7 +2507,7 @@
           </div>
 
           <div class="day-media" style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
-
+            <div style="flex: 1; background: url('/assets/ho-chi-minh/hero/hero1.jpg') center/cover no-repeat; border-radius: 4px;"></div>
           </div>
         </div>
 
@@ -2481,7 +2521,7 @@
     style="height: 1123px; padding: 0; background: var(--bg-main); display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;">
     <!-- Top 58% Full-bleed Hero Image -->
     <div style="width: 100%; height: 58%; flex: 0 0 58%; position: relative; overflow: hidden;">
-      <img src="/assets/hotels/hanoi/peridot-grand-luxury-boutique-hotel/interior/interior_1.jpg"
+      <img src="/assets/hotels/saigon/the-reverie-saigon-hotel/exterior/exterior_1.jpg"
         alt="Selected Accommodations" style="width: 100%; height: 100%; object-fit: cover; display: block;"
         data-editable="img_stays_divider">
       <!-- Subtle Overlay Gradient for smooth visual transition -->
@@ -2570,7 +2610,7 @@
                   alt="Peridot Grand Luxury Boutique Hotel">
               </div>
               <div class="img-wrapper-sub"
-                style="height: auto !important; aspect-ratio: auto !important; box-shadow: none; border-radius: 0; background: transparent; overflow: visible !important;">
+                style="height: auto !important; aspect-ratio: auto !important; box-shadow: none; border-radius: 0; background: transparent; overflow: hidden !important; max-width: 100%;">
                 <div class="hotel-image-wrapper"
                   style="aspect-ratio: 4/3; position: relative; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.06);">
                   <img src="/assets/hotels/hanoi/peridot-grand-luxury-boutique-hotel/interior/interior_1.jpg"
@@ -2641,7 +2681,7 @@
                   alt="Celina Of The Sea Cruise">
               </div>
               <div class="img-wrapper-sub"
-                style="height: auto !important; aspect-ratio: auto !important; box-shadow: none; border-radius: 0; background: transparent; overflow: visible !important;">
+                style="height: auto !important; aspect-ratio: auto !important; box-shadow: none; border-radius: 0; background: transparent; overflow: hidden !important; max-width: 100%;">
                 <div class="hotel-image-wrapper"
                   style="aspect-ratio: 4/3; position: relative; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.06);">
                   <img src="/assets/hotels/halong/celina-of-the-sea-cruise/interior/interior_1.jpg"
@@ -2709,7 +2749,7 @@
                   alt="Anantara Hoi An Resort">
               </div>
               <div class="img-wrapper-sub"
-                style="height: auto !important; aspect-ratio: auto !important; box-shadow: none; border-radius: 0; background: transparent; overflow: visible !important;">
+                style="height: auto !important; aspect-ratio: auto !important; box-shadow: none; border-radius: 0; background: transparent; overflow: hidden !important; max-width: 100%;">
                 <div class="hotel-image-wrapper"
                   style="aspect-ratio: 4/3; position: relative; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.06);">
                   <img src="/assets/hotels/quang-nam/anantara-hoi-an-resort/interior/interior_1.jpg"
@@ -2778,7 +2818,7 @@
                   alt="Hyatt Regency Danang Resort and Spa">
               </div>
               <div class="img-wrapper-sub"
-                style="height: auto !important; aspect-ratio: auto !important; box-shadow: none; border-radius: 0; background: transparent; overflow: visible !important;">
+                style="height: auto !important; aspect-ratio: auto !important; box-shadow: none; border-radius: 0; background: transparent; overflow: hidden !important; max-width: 100%;">
                 <div class="hotel-image-wrapper"
                   style="aspect-ratio: 4/3; position: relative; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.06);">
                   <img src="/assets/hotels/danang/hyatt-regency-danang-resort-and-spa/interior/interior_1.jpg"
@@ -2849,7 +2889,7 @@
                   alt="The Reverie Saigon Hotel">
               </div>
               <div class="img-wrapper-sub"
-                style="height: auto !important; aspect-ratio: auto !important; box-shadow: none; border-radius: 0; background: transparent; overflow: visible !important;">
+                style="height: auto !important; aspect-ratio: auto !important; box-shadow: none; border-radius: 0; background: transparent; overflow: hidden !important; max-width: 100%;">
                 <div class="hotel-image-wrapper"
                   style="aspect-ratio: 4/3; position: relative; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.06);">
                   <img src="/assets/hotels/saigon/the-reverie-saigon-hotel/interior/interior_1.jpg"
@@ -2906,7 +2946,7 @@
     style="height: 1123px; padding: 0; background: var(--bg-main); display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;">
     <!-- Top 58% Full-bleed Hero Image -->
     <div style="width: 100%; height: 58%; flex: 0 0 58%; position: relative; overflow: hidden;">
-      <img src="/assets/quang-nam/hoian2.jpg" alt="Considered in Full"
+      <img src="/assets/hotels/saigon/the-reverie-saigon-hotel/exterior/exterior_1.jpg" alt="Considered in Full"
         style="width: 100%; height: 100%; object-fit: cover; display: block;" data-editable="img_hotel_divider">
       <!-- Subtle Overlay Gradient for smooth visual transition -->
       <div
@@ -3078,38 +3118,12 @@
             thoughtfully arranged to ensure a seamless and comfortable experience throughout.
           </p>
 
-          <ul style="list-style-type:none; padding-left:0;">
-
-
-            <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">Private airport
-              transfer, International arrival fast-track assistance and Vietnam visa services</li>
-
-
-
-            <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">All private transfer
-              with english-speaking guides mentioned in the itinerary</li>
-
-
-
-            <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">Experiences,
-              admission fee, and exclusive arrangements throughout the journey of Hanoi, Ninh Binh, Ha Long, Hoi An, Da
-              Nang, Hue, Ho Chi Minh City</li>
-
-
-
-            <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">All meals mentioned
-              in the itinerary</li>
-
-
-
-            <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">Domestic flights
-            </li>
-
-
-
-            <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;"></li>
-
-
+          <ul style="list-style-type:disc; padding-left:15px;">
+            <li style="margin-bottom:6px; line-height:1.4;">Private airport transfer, International arrival fast-track assistance and Vietnam visa services</li>
+            <li style="margin-bottom:6px; line-height:1.4;">All private transfer with english-speaking guides mentioned in the itinerary</li>
+            <li style="margin-bottom:6px; line-height:1.4;">Experiences, admission fee, and exclusive arrangements throughout the journey of Hanoi, Ninh Binh, Ha Long, Hoi An, Da Nang, Hue, Ho Chi Minh City</li>
+            <li style="margin-bottom:6px; line-height:1.4;">All meals mentioned in the itinerary</li>
+            <li style="margin-bottom:6px; line-height:1.4;">Domestic flights</li>
           </ul>
         </div>
         <div class="panel">
@@ -3120,19 +3134,12 @@
           </p>
 
           <ul style="list-style-type:disc; padding-left:15px;">
-
-            <li style="margin-bottom:5px; line-height:1.4;">International flights</li>
-
-            <li style="margin-bottom:5px; line-height:1.4;">Travel insurance</li>
-
-            <li style="margin-bottom:5px; line-height:1.4;">Personal expenses</li>
-
-            <li style="margin-bottom:5px; line-height:1.4;">Optional experiences not specified in the itinerary</li>
-
-            <li style="margin-bottom:5px; line-height:1.4;">Tips and gratuities</li>
-
-            <li style="margin-bottom:5px; line-height:1.4;">Any services not expressly listed as included</li>
-
+            <li style="margin-bottom:6px; line-height:1.4;">International flights</li>
+            <li style="margin-bottom:6px; line-height:1.4;">Travel insurance</li>
+            <li style="margin-bottom:6px; line-height:1.4;">Personal expenses</li>
+            <li style="margin-bottom:6px; line-height:1.4;">Optional experiences not specified in the itinerary</li>
+            <li style="margin-bottom:6px; line-height:1.4;">Tips and gratuities</li>
+            <li style="margin-bottom:6px; line-height:1.4;">Any services not expressly listed as included</li>
           </ul>
         </div>
       </div>
@@ -3164,37 +3171,45 @@
         <div style="display: flex; flex-direction: column;">
           <!-- Deposit -->
           <div
-            style="display: grid; grid-template-columns: 100px 1fr; gap: 20px; padding: 16px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
+            style="display: grid; grid-template-columns: 100px 1fr; gap: 20px; padding: 14px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
             <div class="font-serif" style="font-size: 14px; color: var(--emerald);">Deposit</div>
-            <div style="color: var(--text-muted); font-size: 11px; line-height: 1.6;">
-              30% deposit upon confirmation.
+            <div style="color: var(--text-muted); font-size: 11px; line-height: 1.5;">
+              A deposit of 30% of the total tour cost is required upon confirmation of the booking. This deposit is non-refundable.<br>
+              <span style="display: block; margin-top: 4px;">For bookings confirmed within 60 days of arrival, full payment of 100% of the total tour cost is required at the time of confirmation.</span>
             </div>
           </div>
 
           <!-- Balance -->
           <div
-            style="display: grid; grid-template-columns: 100px 1fr; gap: 20px; padding: 16px 0; border-bottom: 1px solid var(--line);">
+            style="display: grid; grid-template-columns: 100px 1fr; gap: 20px; padding: 14px 0; border-bottom: 1px solid var(--line);">
             <div class="font-serif" style="font-size: 14px; color: var(--emerald);">Balance</div>
-            <div style="color: var(--text-muted); font-size: 11px; line-height: 1.6;">
-              Balance due 45 days prior to arrival.
+            <div style="color: var(--text-muted); font-size: 11px; line-height: 1.5;">
+              The remaining 70% balance must be paid no later than 60 days prior to the scheduled arrival date.
             </div>
           </div>
 
           <!-- Cancellation -->
           <div
-            style="display: grid; grid-template-columns: 100px 1fr; gap: 20px; padding: 16px 0; border-bottom: 1px solid var(--line);">
+            style="display: grid; grid-template-columns: 100px 1fr; gap: 20px; padding: 14px 0; border-bottom: 1px solid var(--line);">
             <div class="font-serif" style="font-size: 14px; color: var(--emerald);">Cancellation</div>
-            <div style="color: var(--text-muted); font-size: 11px; line-height: 1.6;">
-              Free cancellation up to 60 days before.
+            <div style="color: var(--text-muted); font-size: 11px; line-height: 1.5;">
+              Written notice required. Cancellation fees apply based on arrival date:<br>
+              <ul style="margin: 4px 0 0 14px; padding: 0; display: flex; flex-direction: column; gap: 2px;">
+                <li><strong>&gt; 45 days prior:</strong> Deposit forfeited (30%)</li>
+                <li><strong>45 – 31 days prior:</strong> 50% of total tour cost</li>
+                <li><strong>30 – 20 days prior:</strong> 75% of total tour cost</li>
+                <li><strong>&lt; 20 days prior:</strong> 100% of total tour cost</li>
+              </ul>
+              <p style="margin-top: 6px; font-size: 10px; opacity: 0.9; margin-bottom: 0;">Any non-refundable payments, cancellation charges or penalties imposed by hotels, airlines, cruise operators and other service providers may also apply in addition to the cancellation fees stated above.</p>
             </div>
           </div>
 
           <!-- Confirmation -->
           <div
-            style="display: grid; grid-template-columns: 100px 1fr; gap: 20px; padding: 16px 0; border-bottom: 1px solid var(--line);">
+            style="display: grid; grid-template-columns: 100px 1fr; gap: 20px; padding: 14px 0; border-bottom: 1px solid var(--line);">
             <div class="font-serif" style="font-size: 14px; color: var(--emerald);">Confirmation</div>
-            <div style="color: var(--text-muted); font-size: 11px; line-height: 1.6;">
-              Instant confirmation on deposit receipt.
+            <div style="color: var(--text-muted); font-size: 11px; line-height: 1.5;">
+              The booking will only be considered confirmed once the required payment has been received.
             </div>
           </div>
         </div>
@@ -3202,7 +3217,7 @@
 
       <div class="pdf-footer" style="padding: 10px 0; font-size: 10px;">
         Capella Travel - Tina’s Vietnam Birthday Escape<br>
-        <span style="color:var(--gold);font-weight:700;">journeys.vietnamsafar.vn</span> &nbsp;·&nbsp;
+        <span style="color:var(--gold);font-weight:700;">journeys.capellatravel.com</span> &nbsp;·&nbsp;
         This document is a confidential quotation prepared exclusively for Tina &amp; Friends.
       </div>
     </div>
@@ -3311,7 +3326,7 @@
               <div
                 style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--gold); display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: white; padding: 8px;">
                 <img src="/assets/brands/indochine_icon/button_icon/mountain.png" alt="icon"
-                  style="width: 100%; height: 100%; object-fit: contain;">
+                  style="width: 100%; height: 100%; object-fit: cover;">
               </div>
               <div>
                 <div
@@ -3332,7 +3347,7 @@
               <div
                 style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--gold); display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: white; padding: 8px;">
                 <img src="/assets/brands/indochine_icon/button_icon/vien.png" alt="icon"
-                  style="width: 100%; height: 100%; object-fit: contain;">
+                  style="width: 100%; height: 100%; object-fit: cover;">
               </div>
               <div>
                 <div
@@ -3356,13 +3371,13 @@
 
 
   <script id="itinerary-data" type="application/json">
-  [{"activities": ["Private airport pickup", "Welcome Dinner."], "date": "2027-03-27", "dayNumber": 1, "description": ["Upon arrival at Noi Bai International Airport, you are warmly received by our dedicated concierge member and escorted via luxury private transfer to the Peridot Grand Luxury Boutique Hotel. The evening features a curated welcome dinner, offering a sophisticated introduction to Northern Vietnamese culinary traditions in a refined setting."], "destinations": ["Hanoi"], "label_highlights": "Highlights:", "label_notes": "Notes:", "lang": "en", "meals": ["Dinner", "Lunch subjects to arrival time"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Hanoi", "title": "Day 1 \u2014 Hanoi"}, {"activities": ["Private guide", "sightseeing entries."], "date": "2027-03-28", "dayNumber": 2, "description": ["The day is devoted to a comprehensive exploration of Hanoi\u2019s rich heritage. Accompanied by a private historian guide, the itinerary includes exclusive visits to the city\u0027s most significant cultural landmarks. The pace is deliberately unhurried, ensuring an immersive and private experience away from standard tourist routes."], "destinations": ["Hanoi"], "label_highlights": "Highlights:", "label_notes": "Notes:", "lang": "en", "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Immersive"], "overnight": "Hanoi", "title": "Day 2 \u2014 Hanoi"}, {"activities": ["Private transfer", "boat trip."], "date": "2027-03-29", "dayNumber": 3, "description": ["Depart Hanoi for the spectacular landscapes of Ninh Binh. The program features a private sampan excursion through the tranquil waterways and majestic limestone karsts of Trang An. This meticulously arranged day trip offers a profound connection with Vietnam\u0027s natural beauty with the utmost privacy."], "destinations": ["Ninh Binh"], "label_highlights": "Highlights:", "label_notes": "Notes:", "lang": "en", "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Moderate"], "overnight": "Hanoi", "title": "Day 3 \u2014 Ninh Binh"}, {"activities": ["Luxury cruise", "Birthday arrangement."], "date": "2027-03-30", "dayNumber": 4, "description": ["A private transfer conveys guests to the coastal city of Ha Long to board the distinguished Celina Of The Sea Cruise. After checking into the Executive Balcony suite, the afternoon is spent cruising through the UNESCO World Heritage seascape."], "destinations": ["Halong Bay"], "label_highlights": "Highlights:", "label_notes": "Notes:", "lang": "en", "meals": ["Breakfast", "Lunch", "Dinner on board"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Halong Bay", "title": "Day 4 \u2014 Halong Bay"}, {"activities": ["Domestic flight", "private transfer", "tailoring."], "date": "2027-03-31", "dayNumber": 5, "description": ["Following a leisurely morning on the cruise, guests disembark and are transferred for a short domestic flight to Da Nang. Upon arrival, a private chauffeur provides a seamless transfer to the Anantara Hoi An Resort. The afternoon includes a premium bespoke tailoring consultation, a hallmark experience of this historic trading port."], "destinations": ["Hoi An"], "label_highlights": "Highlights:", "label_notes": "Notes:", "lang": "en", "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Moderate"], "overnight": "Hoi An", "title": "Day 5 \u2014 Hoi An"}, {"activities": ["Private guide", "ancient town ticket."], "date": "2027-04-01", "dayNumber": 6, "description": ["A full-day guided exploration of the beautifully preserved Hoi An Ancient Town. The private tour delves into the architectural marvels and rich trading history of the area. The evening concludes with a refined dining experience, showcasing the intricate flavors of Central Vietnamese cuisine."], "destinations": ["Hoi An"], "label_highlights": "Highlights:", "label_notes": "Notes:", "lang": "en", "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Immersive"], "overnight": "Hoi An", "title": "Day 6 \u2014 Hoi An"}, {"activities": ["Private guide", "photo tour."], "date": "2027-04-02", "dayNumber": 7, "description": ["The morning features a specialized photography tour, designed to capture professional portraits of the family against the iconic, lantern backdrop of Hoi An. The afternoon is reserved for leisure, allowing guests to fully enjoy the premium amenities and tranquil environment of the Anantara Resort."], "destinations": ["Hoi An"], "label_highlights": "Highlights:", "label_notes": "Notes:", "lang": "en", "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Hoi An", "title": "Day 7 \u2014 Hoi An"}, {"activities": ["Private guide", "city tour."], "date": "2027-04-03", "dayNumber": 8, "description": ["The journey continues with a transfer to the coastal city of Da Nang, while some of the members say goodbye to Vietnam, the other continue their journey, coupled with a curated half-day city tour highlighting local cultural landmarks. You will then check into two spectacular 3-Bedroom Beach Front Pool Villas at the Hyatt Regency Danang Resort and Spa, providing an unparalleled standard of privacy and comfort."], "destinations": ["Da Nang"], "label_highlights": "Highlights:", "label_notes": "Notes:", "lang": "en", "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Moderate"], "overnight": "Da Nang", "title": "Day 8 \u2014 Da Nang"}, {"activities": ["Private transfer", "Ba Na Hills ticket."], "date": "2027-04-04", "dayNumber": 9, "description": ["A premium excursion to the elevated resort of Ba Na Hills. The itinerary includes priority access to the cable car system and a guided walk across the architectural masterpiece, the Golden Bridge. Guests will explore the French Village before returning to the sanctuary of their beachfront villa."], "destinations": ["Da Nang"], "label_highlights": "Highlights:", "label_notes": "Notes:", "lang": "en", "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Active"], "overnight": "Da Nang", "title": "Day 9 \u2014 Da Nang"}, {"activities": ["Private guide", "Citadel ticket."], "date": "2027-04-05", "dayNumber": 10, "description": ["A full-day excursion to the former imperial capital of Hue. The privately guided itinerary encompasses the majestic Imperial Citadel and the opulent royal mausoleums, offering an in-depth perspective on Vietnam\u0027s regal history and architectural grandeur under the Nguyen Dynasty."], "destinations": ["Hue"], "label_highlights": "Highlights:", "label_notes": "Notes:", "lang": "en", "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Immersive"], "overnight": "Da Nang", "title": "Day 10 \u2014 Hue"}, {"activities": ["Beach villa stay", "Birthday arrangement."], "date": "2027-04-06", "dayNumber": 11, "description": ["A day allocated entirely for leisure at the beachfront villa, allowing guests to relax by their private pool or partake in the resort\u0027s luxury wellness offerings. The evening is highlighted by a second, meticulously planned surprise, an exclusive dining experience orchestrated by the resort\u2019s culinary team."], "destinations": ["Da Nang"], "label_highlights": "Highlights:", "label_notes": "Notes:", "lang": "en", "meals": ["Breakfast", "Lunch", "Dinner"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Da Nang", "title": "Day 11 \u2014 Da Nang"}, {"activities": ["Domestic flight", "Cu Chi ticket."], "date": "2027-04-07", "dayNumber": 12, "description": ["Following a seamless domestic flight to Ho Chi Minh City, guests embark on a privately guided tour of the historic Cu Chi Tunnels, gaining insight into this remarkable underground network, meeting exclusively with a war veteran. The day concludes with check-in at The Reverie Saigon, an establishment renowned for its opulent Italian design and world-class service."], "destinations": ["Ho Chi Minh City"], "label_highlights": "Highlights:", "label_notes": "Notes:", "lang": "en", "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Moderate"], "overnight": "Ho Chi Minh City", "title": "Day 12 \u2014 Ho Chi Minh City"}, {"activities": ["Private guide", "boat trip."], "date": "2027-04-08", "dayNumber": 13, "description": ["An immersive full-day journey into the Mekong Delta. Traveling aboard a private river vessel, guests observe the vibrant riverine culture and visit local artisanal workshops. This carefully curated excursion provides a sophisticated and comfortable approach to exploring one of Vietnam\u0027s most vital agricultural regions."], "destinations": ["Ho Chi Minh City"], "label_highlights": "Highlights:", "label_notes": "Notes:", "lang": "en", "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Active"], "overnight": "Ho Chi Minh City", "title": "Day 13 \u2014 Mekong Delta"}, {"activities": ["Private airport transfer."], "date": "2027-04-09", "dayNumber": 14, "description": ["The final morning is at the guests\u0027 leisure to enjoy the premium facilities of The Reverie Saigon. At the appropriate time, a private chauffeur will provide a seamless transfer to Tan Son Nhat International Airport for the departing flight, concluding a flawlessly executed luxury journey."], "destinations": ["Departure"], "label_highlights": "Highlights:", "label_notes": "Notes:", "lang": "en", "meals": ["Breakfast"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Departure", "title": "Day 14 \u2014 Departure"}]
+  [{"activities": ["Private airport pickup", "Welcome Dinner."], "date": "2027-03-27", "dayNumber": 1, "description": ["Upon arrival at Noi Bai International Airport, you are warmly received by our dedicated concierge member and escorted via luxury private transfer to the Peridot Grand Luxury Boutique Hotel. The evening features a curated welcome dinner, offering a sophisticated introduction to Northern Vietnamese culinary traditions in a refined setting."], "destinations": ["Hanoi"], "label_highlights": "Highlights:", "label_notes": "Notes:", "lang": "en", "meals": ["Dinner", "Lunch subjects to arrival time"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Hanoi", "title": "Day 1 \u2014 Hanoi"}, {"activities": ["Private guide", "sightseeing entries."], "date": "2027-03-28", "dayNumber": 2, "description": ["The day is devoted to a comprehensive exploration of Hanoi\u2019s rich heritage. Accompanied by a private historian guide, the itinerary includes exclusive visits to the city\u0027s most significant cultural landmarks. The pace is deliberately unhurried, ensuring an immersive and private experience away from standard tourist routes."], "destinations": ["Hanoi"], "label_highlights": "Highlights:", "label_notes": "Notes:", "lang": "en", "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Immersive"], "overnight": "Hanoi", "title": "Day 2 \u2014 Hanoi"}, {"activities": ["Private transfer", "boat trip."], "date": "2027-03-29", "dayNumber": 3, "description": ["Depart Hanoi for the spectacular landscapes of Ninh Binh. The program features a private sampan excursion through the tranquil waterways and majestic limestone karsts of Trang An. This meticulously arranged day trip offers a profound connection with Vietnam\u0027s natural beauty with the utmost privacy."], "destinations": ["Ninh Binh"], "label_highlights": "Highlights:", "label_notes": "Notes:", "lang": "en", "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Moderate"], "overnight": "Hanoi", "title": "Day 3 \u2014 Ninh Binh"}, {"activities": ["Luxury cruise", "Birthday arrangement."], "date": "2027-03-30", "dayNumber": 4, "description": ["A private transfer conveys guests to the coastal city of Ha Long to board the distinguished Celina Of The Sea Cruise. After checking into the Executive Balcony suite, the afternoon is spent cruising through the UNESCO World Heritage seascape."], "destinations": ["Halong Bay"], "label_highlights": "Highlights:", "label_notes": "Notes:", "lang": "en", "meals": ["Breakfast", "Lunch", "Dinner on board"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Halong Bay", "title": "Day 4 \u2014 Halong Bay"}, {"activities": ["Domestic flight", "private transfer", "tailoring."], "date": "2027-03-31", "dayNumber": 5, "description": ["Following a leisurely morning on the cruise, guests disembark and are transferred for a short domestic flight to Da Nang. Upon arrival, a private chauffeur provides a seamless transfer to the Anantara Hoi An Resort. The afternoon includes a premium bespoke tailoring consultation, a hallmark experience of this historic trading port."], "destinations": ["Hoi An"], "label_highlights": "Highlights:", "label_notes": "Notes:", "lang": "en", "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Moderate"], "overnight": "Hoi An", "title": "Day 5 \u2014 Hoi An"}, {"activities": ["Private guide", "ancient town ticket."], "date": "2027-04-01", "dayNumber": 6, "description": ["A full-day guided exploration of the beautifully preserved Hoi An Ancient Town. The private tour delves into the architectural marvels and rich trading history of the area. The evening concludes with a refined dining experience, showcasing the intricate flavors of Central Vietnamese cuisine."], "destinations": ["Hoi An"], "label_highlights": "Highlights:", "label_notes": "Notes:", "lang": "en", "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Immersive"], "overnight": "Hoi An", "title": "Day 6 \u2014 Hoi An"}, {"activities": ["Private guide", "photo tour."], "date": "2027-04-02", "dayNumber": 7, "description": ["The morning features a specialized photography tour, designed to capture professional portraits of the family against the iconic, lantern backdrop of Hoi An. The afternoon is reserved for leisure, allowing guests to fully enjoy the premium amenities and tranquil environment of the Anantara Resort."], "destinations": ["Hoi An"], "label_highlights": "Highlights:", "label_notes": "Notes:", "lang": "en", "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Hoi An", "title": "Day 7 \u2014 Hoi An"}, {"activities": ["Private guide", "city tour."], "date": "2027-04-03", "dayNumber": 8, "description": ["The journey continues with a transfer to the coastal city of Da Nang, while some of the members say goodbye to Vietnam, the other continue their journey. Enjoy the afternoon at your own leisure to experience the city at your personal pace. Whether you prefer quiet moments of tranquility or spontaneous exploration, this time is entirely yours to shape as you wish."], "destinations": ["Da Nang"], "label_highlights": "Highlights:", "label_notes": "Notes:", "lang": "en", "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Moderate"], "overnight": "Da Nang", "title": "Day 8 \u2014 Da Nang"}, {"activities": ["Private transfer", "Ba Na Hills ticket."], "date": "2027-04-04", "dayNumber": 9, "description": ["A premium excursion to the elevated resort of Ba Na Hills. The itinerary includes priority access to the cable car system and a guided walk across the architectural masterpiece, the Golden Bridge. Guests will explore the French Village before returning to the sanctuary of their beachfront villa."], "destinations": ["Da Nang"], "label_highlights": "Highlights:", "label_notes": "Notes:", "lang": "en", "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Active"], "overnight": "Da Nang", "title": "Day 9 \u2014 Da Nang"}, {"activities": ["Private guide", "Citadel ticket."], "date": "2027-04-05", "dayNumber": 10, "description": ["A full-day excursion to the former imperial capital of Hue. The privately guided itinerary encompasses the majestic Imperial Citadel and the opulent royal mausoleums, offering an in-depth perspective on Vietnam\u0027s regal history and architectural grandeur under the Nguyen Dynasty."], "destinations": ["Hue"], "label_highlights": "Highlights:", "label_notes": "Notes:", "lang": "en", "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Immersive"], "overnight": "Da Nang", "title": "Day 10 \u2014 Hue"}, {"activities": ["Beach villa stay", "Birthday arrangement."], "date": "2027-04-06", "dayNumber": 11, "description": ["A day allocated entirely for leisure at the beachfront villa, allowing guests to relax by their private pool or partake in the resort\u0027s luxury wellness offerings. The evening is highlighted by a second, meticulously planned surprise, an exclusive dining experience orchestrated by the resort\u2019s culinary team."], "destinations": ["Da Nang"], "label_highlights": "Highlights:", "label_notes": "Notes:", "lang": "en", "meals": ["Breakfast", "Lunch", "Dinner"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Da Nang", "title": "Day 11 \u2014 Da Nang"}, {"activities": ["Domestic flight", "Cu Chi ticket."], "date": "2027-04-07", "dayNumber": 12, "description": ["Following a seamless domestic flight to Ho Chi Minh City, guests embark on a privately guided tour of the historic Cu Chi Tunnels, gaining insight into this remarkable underground network, meeting exclusively with a war veteran. The day concludes with check-in at The Reverie Saigon, an establishment renowned for its opulent Italian design and world-class service."], "destinations": ["Ho Chi Minh City"], "label_highlights": "Highlights:", "label_notes": "Notes:", "lang": "en", "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Moderate"], "overnight": "Ho Chi Minh City", "title": "Day 12 \u2014 Ho Chi Minh City"}, {"activities": ["Private guide", "boat trip."], "date": "2027-04-08", "dayNumber": 13, "description": ["An immersive full-day journey into the Mekong Delta. Traveling aboard a private river vessel, guests observe the vibrant riverine culture and visit local artisanal workshops. This carefully curated excursion provides a sophisticated and comfortable approach to exploring one of Vietnam\u0027s most vital agricultural regions."], "destinations": ["Ho Chi Minh City"], "label_highlights": "Highlights:", "label_notes": "Notes:", "lang": "en", "meals": ["Breakfast", "Lunch"], "notes": ["Sense of Pace: Active"], "overnight": "Ho Chi Minh City", "title": "Day 13 \u2014 Mekong Delta"}, {"activities": ["Private airport transfer."], "date": "2027-04-09", "dayNumber": 14, "description": ["The final morning is at the guests\u0027 leisure to enjoy the premium facilities of The Reverie Saigon. At the appropriate time, a private chauffeur will provide a seamless transfer to Tan Son Nhat International Airport for the departing flight, concluding a flawlessly executed luxury journey."], "destinations": ["Departure"], "label_highlights": "Highlights:", "label_notes": "Notes:", "lang": "en", "meals": ["Breakfast"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Departure", "title": "Day 14 \u2014 Departure"}]
 </script>
   <script id="route-stops-data" type="application/json">
   [{"dayNumber": 1, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "Day 1 \u2014 Hanoi", "showMarker": true, "stopOrder": 1}, {"dayNumber": 2, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "Day 2 \u2014 Hanoi", "showMarker": true, "stopOrder": 1}, {"dayNumber": 3, "destination": "Ninh Binh", "displayName": "Ninh Binh", "kind": "overnight", "mapTitle": "Day 3 \u2014 Ninh Binh", "showMarker": true, "stopOrder": 1}, {"dayNumber": 4, "destination": "Halong Bay", "displayName": "Halong Bay", "kind": "overnight", "mapTitle": "Day 4 \u2014 Halong Bay", "showMarker": true, "stopOrder": 1}, {"dayNumber": 5, "destination": "Hoi An", "displayName": "Hoi An", "kind": "overnight", "mapTitle": "Day 5 \u2014 Hoi An", "showMarker": true, "stopOrder": 1}, {"dayNumber": 6, "destination": "Hoi An", "displayName": "Hoi An", "kind": "overnight", "mapTitle": "Day 6 \u2014 Hoi An", "showMarker": true, "stopOrder": 1}, {"dayNumber": 7, "destination": "Hoi An", "displayName": "Hoi An", "kind": "overnight", "mapTitle": "Day 7 \u2014 Hoi An", "showMarker": true, "stopOrder": 1}, {"dayNumber": 8, "destination": "Da Nang", "displayName": "Da Nang", "kind": "overnight", "mapTitle": "Day 8 \u2014 Da Nang", "showMarker": true, "stopOrder": 1}, {"dayNumber": 9, "destination": "Da Nang", "displayName": "Da Nang", "kind": "overnight", "mapTitle": "Day 9 \u2014 Da Nang", "showMarker": true, "stopOrder": 1}, {"dayNumber": 10, "destination": "Hue", "displayName": "Hue", "kind": "overnight", "mapTitle": "Day 10 \u2014 Hue", "showMarker": true, "stopOrder": 1}, {"dayNumber": 11, "destination": "Da Nang", "displayName": "Da Nang", "kind": "overnight", "mapTitle": "Day 11 \u2014 Da Nang", "showMarker": true, "stopOrder": 1}, {"dayNumber": 12, "destination": "Ho Chi Minh City", "displayName": "Ho Chi Minh City", "kind": "overnight", "mapTitle": "Day 12 \u2014 Ho Chi Minh City", "showMarker": true, "stopOrder": 1}, {"dayNumber": 13, "destination": "Ho Chi Minh City", "displayName": "Ho Chi Minh City", "kind": "overnight", "mapTitle": "Day 13 \u2014 Ho Chi Minh City", "showMarker": true, "stopOrder": 1}, {"dayNumber": 14, "destination": "Departure", "displayName": "Departure", "kind": "overnight", "mapTitle": "Day 14 \u2014 Departure", "showMarker": true, "stopOrder": 1}]
 </script>
   <script id="stay-segments-data" type="application/json">
-  [{"activityPreviews": [{"dayNumber": 1, "label": "Day 1", "summary": "Upon arrival at Noi Bai International Airport, guests are warmly received by our dedicated concierge team and escorted..."}, {"dayNumber": 2, "label": "Day 2", "summary": "The day is devoted to a comprehensive exploration of Hanoi\u2019s rich heritage. Accompanied by a private historian guide,..."}], "city": "Hanoi", "coords": [21.0285, 105.8542], "dayEnd": 2, "dayStart": 1, "daysLabel": "Days 1-2", "displayName": "Hanoi", "excursions": [], "hotelDateRange": "27 Mar \u2013 30 Mar 2027", "hotelImage": "/assets/hotels/hanoi/peridot-grand-luxury-boutique-hotel/interior/interior_1.jpg", "hotelName": "Peridot Grand Luxury Boutique Hotel", "mapSegmentDesc": "", "nights": 2, "nightsLabel": "3 nights", "order": 1, "segmentId": "stay-1", "transportFromPrevious": ""}, {"activityPreviews": [{"dayNumber": 3, "label": "Day 3", "summary": "Guests depart Hanoi for the spectacular landscapes of Ninh Binh. The program features a private sampan excursion..."}], "city": "Ninh Binh", "coords": [20.2539, 105.975], "dayEnd": 3, "dayStart": 3, "daysLabel": "Day 3", "displayName": "Ninh Binh", "excursions": [], "hotelDateRange": "30 Mar \u2013 31 Mar 2027", "hotelImage": "/assets/hotels/halong/celina-of-the-sea-cruise/exterior/image_2.webp", "hotelName": "Celina Of The Sea Cruise", "mapSegmentDesc": "", "nights": 1, "nightsLabel": "1 night", "order": 2, "segmentId": "stay-2", "transportFromPrevious": "Hanoi \u2192 Ninh Binh"}, {"activityPreviews": [{"dayNumber": 4, "label": "Day 4", "summary": "A private transfer conveys guests to the coastal city of Ha Long to board the distinguished Celina Of The Sea Cruise...."}], "city": "Halong Bay", "coords": [20.9599, 107.0436], "dayEnd": 4, "dayStart": 4, "daysLabel": "Day 4", "displayName": "Halong Bay", "excursions": [], "hotelDateRange": "31 Mar \u2013 03 Apr 2027", "hotelImage": "", "hotelName": "Anantara Hoi An Resort", "mapSegmentDesc": "", "nights": 1, "nightsLabel": "1 night", "order": 3, "segmentId": "stay-3", "transportFromPrevious": "Ninh Binh \u2192 Halong Bay"}, {"activityPreviews": [{"dayNumber": 5, "label": "Day 5", "summary": "Following a leisurely morning on the cruise, guests disembark and are transferred for a short domestic flight to Da..."}, {"dayNumber": 6, "label": "Day 6", "summary": "A full-day guided exploration of the beautifully preserved Hoi An Ancient Town. The private tour delves into the..."}, {"dayNumber": 7, "label": "Day 7", "summary": "The morning features a specialized photography tour, designed to capture professional portraits of the family against..."}], "city": "Hoi An", "coords": [15.8801, 108.338], "dayEnd": 7, "dayStart": 5, "daysLabel": "Days 5-7", "displayName": "Hoi An", "excursions": [], "hotelDateRange": "03 Apr \u2013 07 Apr 2027", "hotelImage": "", "hotelName": "Hyatt Regency Danang Resort and Spa", "mapSegmentDesc": "", "nights": 3, "nightsLabel": "3 nights", "order": 4, "segmentId": "stay-4", "transportFromPrevious": "Halong Bay \u2192 Hoi An"}, {"activityPreviews": [{"dayNumber": 8, "label": "Day 8", "summary": "The journey continues with a transfer to the coastal city of Da Nang, coupled with a curated half-day city tour..."}, {"dayNumber": 9, "label": "Day 9", "summary": "A premium excursion to the elevated resort of Ba Na Hills. The itinerary includes priority access to the cable car..."}], "city": "Da Nang", "coords": [16.0544, 108.2022], "dayEnd": 9, "dayStart": 8, "daysLabel": "Days 8-9", "displayName": "Da Nang", "excursions": [], "hotelDateRange": "07 Apr \u2013 09 Apr 2027", "hotelImage": "/assets/hotels/saigon/the-reverie-saigon-hotel/exterior/image_2.jpg", "hotelName": "The Reverie Saigon Hotel", "mapSegmentDesc": "", "nights": 2, "nightsLabel": "2 nights", "order": 5, "segmentId": "stay-5", "transportFromPrevious": "Hoi An \u2192 Da Nang"}, {"activityPreviews": [{"dayNumber": 10, "label": "Day 10", "summary": "A full-day excursion to the former imperial capital of Hue. The privately guided itinerary encompasses the majestic..."}], "city": "Hue", "coords": [16.4637, 107.5909], "dayEnd": 10, "dayStart": 10, "daysLabel": "Day 10", "displayName": "Hue", "excursions": [], "hotelDateRange": "", "hotelImage": "", "hotelName": "", "mapSegmentDesc": "", "nights": 1, "nightsLabel": "1 night", "order": 6, "segmentId": "stay-6", "transportFromPrevious": "Da Nang \u2192 Hue"}, {"activityPreviews": [{"dayNumber": 11, "label": "Day 11", "summary": "A day allocated entirely for leisure at the beachfront villa, allowing guests to relax by their private pool or partake..."}], "city": "Da Nang", "coords": [16.0544, 108.2022], "dayEnd": 11, "dayStart": 11, "daysLabel": "Day 11", "displayName": "Da Nang", "excursions": [], "hotelDateRange": "", "hotelImage": "", "hotelName": "", "mapSegmentDesc": "", "nights": 1, "nightsLabel": "1 night", "order": 7, "segmentId": "stay-7", "transportFromPrevious": "Hue \u2192 Da Nang"}, {"activityPreviews": [{"dayNumber": 12, "label": "Day 12", "summary": "Following a seamless domestic flight to Ho Chi Minh City, guests embark on a privately guided tour of the historic Cu..."}, {"dayNumber": 13, "label": "Day 13", "summary": "An immersive full-day journey into the Mekong Delta. Traveling aboard a private luxury river vessel, guests observe the..."}], "city": "Ho Chi Minh City", "coords": [10.8231, 106.6297], "dayEnd": 13, "dayStart": 12, "daysLabel": "Days 12-13", "displayName": "Ho Chi Minh City", "excursions": [], "hotelDateRange": "", "hotelImage": "", "hotelName": "", "mapSegmentDesc": "", "nights": 2, "nightsLabel": "2 nights", "order": 8, "segmentId": "stay-8", "transportFromPrevious": "Da Nang \u2192 Ho Chi Minh City"}, {"activityPreviews": [{"dayNumber": 14, "label": "Day 14", "summary": "The final morning is at the guests\u0027 leisure to enjoy the premium facilities of The Reverie Saigon. At the appropriate..."}], "city": "Departure", "coords": null, "dayEnd": 14, "dayStart": 14, "daysLabel": "Day 14", "displayName": "Departure", "excursions": [], "hotelDateRange": "", "hotelImage": "", "hotelName": "", "nights": 1, "nightsLabel": "1 night", "order": 9, "segmentId": "stay-9", "transportFromPrevious": "Ho Chi Minh City \u2192 Departure"}]
+  [{"activityPreviews": [{"dayNumber": 1, "label": "Day 1", "summary": "Upon arrival at Noi Bai International Airport, guests are warmly received by our dedicated concierge team and escorted..."}, {"dayNumber": 2, "label": "Day 2", "summary": "The day is devoted to a comprehensive exploration of Hanoi\u2019s rich heritage. Accompanied by a private historian guide,..."}], "city": "Hanoi", "coords": [21.0285, 105.8542], "dayEnd": 2, "dayStart": 1, "daysLabel": "Days 1-2", "displayName": "Hanoi", "excursions": [], "hotelDateRange": "27 Mar \u2013 30 Mar 2027", "hotelImage": "/assets/hotels/hanoi/peridot-grand-luxury-boutique-hotel/exterior/exterior_1.jpg", "hotelName": "Peridot Grand Luxury Boutique Hotel", "mapSegmentDesc": "", "nights": 2, "nightsLabel": "3 nights", "order": 1, "segmentId": "stay-1", "transportFromPrevious": ""}, {"activityPreviews": [{"dayNumber": 3, "label": "Day 3", "summary": "Guests depart Hanoi for the spectacular landscapes of Ninh Binh. The program features a private sampan excursion..."}], "city": "Ninh Binh", "coords": [20.2539, 105.975], "dayEnd": 3, "dayStart": 3, "daysLabel": "Day 3", "displayName": "Ninh Binh", "excursions": [], "hotelDateRange": "30 Mar \u2013 31 Mar 2027", "hotelImage": "/assets/hotels/halong/celina-of-the-sea-cruise/exterior/exterior_1.jpg", "hotelName": "Celina Of The Sea Cruise", "mapSegmentDesc": "", "nights": 1, "nightsLabel": "1 night", "order": 2, "segmentId": "stay-2", "transportFromPrevious": "Hanoi \u2192 Ninh Binh"}, {"activityPreviews": [{"dayNumber": 4, "label": "Day 4", "summary": "A private transfer conveys guests to the coastal city of Ha Long to board the distinguished Celina Of The Sea Cruise...."}], "city": "Halong Bay", "coords": [20.9599, 107.0436], "dayEnd": 4, "dayStart": 4, "daysLabel": "Day 4", "displayName": "Halong Bay", "excursions": [], "hotelDateRange": "31 Mar \u2013 03 Apr 2027", "hotelImage": "", "hotelName": "Anantara Hoi An Resort", "mapSegmentDesc": "", "nights": 1, "nightsLabel": "1 night", "order": 3, "segmentId": "stay-3", "transportFromPrevious": "Ninh Binh \u2192 Halong Bay"}, {"activityPreviews": [{"dayNumber": 5, "label": "Day 5", "summary": "Following a leisurely morning on the cruise, guests disembark and are transferred for a short domestic flight to Da..."}, {"dayNumber": 6, "label": "Day 6", "summary": "A full-day guided exploration of the beautifully preserved Hoi An Ancient Town. The private tour delves into the..."}, {"dayNumber": 7, "label": "Day 7", "summary": "The morning features a specialized photography tour, designed to capture professional portraits of the family against..."}], "city": "Hoi An", "coords": [15.8801, 108.338], "dayEnd": 7, "dayStart": 5, "daysLabel": "Days 5-7", "displayName": "Hoi An", "excursions": [], "hotelDateRange": "03 Apr \u2013 07 Apr 2027", "hotelImage": "", "hotelName": "Hyatt Regency Danang Resort and Spa", "mapSegmentDesc": "", "nights": 3, "nightsLabel": "3 nights", "order": 4, "segmentId": "stay-4", "transportFromPrevious": "Halong Bay \u2192 Hoi An"}, {"activityPreviews": [{"dayNumber": 8, "label": "Day 8", "summary": "The journey continues with a transfer to the coastal city of Da Nang, while some of the members say goodbye to Vietnam, the other continue their journey. Enjoy the afternoon at your own leisure to experience the city at your personal pace. Whether you prefer quiet moments of tranquility or spontaneous exploration, this time is entirely yours to shape as you wish. half-day city tour..."}, {"dayNumber": 9, "label": "Day 9", "summary": "A premium excursion to the elevated resort of Ba Na Hills. The itinerary includes priority access to the cable car..."}], "city": "Da Nang", "coords": [16.0544, 108.2022], "dayEnd": 9, "dayStart": 8, "daysLabel": "Days 8-9", "displayName": "Da Nang", "excursions": [], "hotelDateRange": "07 Apr \u2013 09 Apr 2027", "hotelImage": "/assets/hotels/saigon/the-reverie-saigon-hotel/exterior/exterior_1.jpg", "hotelName": "The Reverie Saigon Hotel", "mapSegmentDesc": "", "nights": 2, "nightsLabel": "2 nights", "order": 5, "segmentId": "stay-5", "transportFromPrevious": "Hoi An \u2192 Da Nang"}, {"activityPreviews": [{"dayNumber": 10, "label": "Day 10", "summary": "A full-day excursion to the former imperial capital of Hue. The privately guided itinerary encompasses the majestic..."}], "city": "Hue", "coords": [16.4637, 107.5909], "dayEnd": 10, "dayStart": 10, "daysLabel": "Day 10", "displayName": "Hue", "excursions": [], "hotelDateRange": "", "hotelImage": "", "hotelName": "", "mapSegmentDesc": "", "nights": 1, "nightsLabel": "1 night", "order": 6, "segmentId": "stay-6", "transportFromPrevious": "Da Nang \u2192 Hue"}, {"activityPreviews": [{"dayNumber": 11, "label": "Day 11", "summary": "A day allocated entirely for leisure at the beachfront villa, allowing guests to relax by their private pool or partake..."}], "city": "Da Nang", "coords": [16.0544, 108.2022], "dayEnd": 11, "dayStart": 11, "daysLabel": "Day 11", "displayName": "Da Nang", "excursions": [], "hotelDateRange": "", "hotelImage": "", "hotelName": "", "mapSegmentDesc": "", "nights": 1, "nightsLabel": "1 night", "order": 7, "segmentId": "stay-7", "transportFromPrevious": "Hue \u2192 Da Nang"}, {"activityPreviews": [{"dayNumber": 12, "label": "Day 12", "summary": "Following a seamless domestic flight to Ho Chi Minh City, guests embark on a privately guided tour of the historic Cu..."}, {"dayNumber": 13, "label": "Day 13", "summary": "An immersive full-day journey into the Mekong Delta. Traveling aboard a private luxury river vessel, guests observe the..."}], "city": "Ho Chi Minh City", "coords": [10.8231, 106.6297], "dayEnd": 13, "dayStart": 12, "daysLabel": "Days 12-13", "displayName": "Ho Chi Minh City", "excursions": [], "hotelDateRange": "", "hotelImage": "", "hotelName": "", "mapSegmentDesc": "", "nights": 2, "nightsLabel": "2 nights", "order": 8, "segmentId": "stay-8", "transportFromPrevious": "Da Nang \u2192 Ho Chi Minh City"}, {"activityPreviews": [{"dayNumber": 14, "label": "Day 14", "summary": "The final morning is at the guests\u0027 leisure to enjoy the premium facilities of The Reverie Saigon. At the appropriate..."}], "city": "Departure", "coords": null, "dayEnd": 14, "dayStart": 14, "daysLabel": "Day 14", "displayName": "Departure", "excursions": [], "hotelDateRange": "", "hotelImage": "", "hotelName": "", "nights": 1, "nightsLabel": "1 night", "order": 9, "segmentId": "stay-9", "transportFromPrevious": "Ho Chi Minh City \u2192 Departure"}]
 </script>
 
   <script>
