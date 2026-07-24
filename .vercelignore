@@ -1,0 +1,14 @@
+.venv/
+venv/
+env/
+__pycache__/
+.pytest_cache/
+*.mp4
+*.zip
+*.pt
+*.pth
+.git/
+node_modules/
+_renders/
+_responsive_screenshots/
+assets/
