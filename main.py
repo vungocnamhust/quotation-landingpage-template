@@ -4078,6 +4078,51 @@ async def create_quotation(request: Request):
     }
 
 
+# ── GET /published/{quotation_id}/version & /latest — Dynamic version & redirect ──
+
+@app.get("/published/{quotation_id}/version")
+async def get_published_version(quotation_id: str):
+    from github_publish import get_next_version
+    try:
+        next_ver = await get_next_version(quotation_id)
+        latest_ver = max(1, next_ver - 1)
+    except Exception:
+        latest_ver = 1
+    no_cache_headers = {
+        "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0, s-maxage=0",
+        "Pragma": "no-cache",
+        "Expires": "0"
+    }
+    return JSONResponse(
+        content={
+            "version": latest_ver, 
+            "latest_url": f"/published/{quotation_id}/v{latest_ver}.html"
+        },
+        headers=no_cache_headers
+    )
+
+@app.get("/published/{quotation_id}")
+@app.get("/published/{quotation_id}/latest")
+async def redirect_to_latest_published(quotation_id: str):
+    from fastapi.responses import RedirectResponse
+    from github_publish import get_next_version
+    try:
+        next_ver = await get_next_version(quotation_id)
+        latest_ver = max(1, next_ver - 1)
+    except Exception:
+        latest_ver = 1
+    no_cache_headers = {
+        "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0, s-maxage=0",
+        "Pragma": "no-cache",
+        "Expires": "0"
+    }
+    return RedirectResponse(
+        url=f"/published/{quotation_id}/v{latest_ver}.html",
+        status_code=307,
+        headers=no_cache_headers
+    )
+
+
 # ── GET /published/{file_path:path} — Dynamic static files ────────────────────
 
 @app.get("/published/{file_path:path}")

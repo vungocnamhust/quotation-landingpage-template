@@ -7,6 +7,22 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>14 Days 13 Nights - Tailor-made for VIP Guests - Luxury Quotation</title>
+  <script id="auto-version-checker">
+    (function() {
+      const CURRENT_VERSION = 25;
+      const QUO_ID = "quo_d8bbe1c59a8a";
+      if (window.location.search.includes('_r=')) return;
+      fetch('/published/' + QUO_ID + '/version?t=' + Date.now(), { cache: 'no-store' })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data && data.version && data.version > CURRENT_VERSION) {
+            var nextUrl = data.latest_url || ('/published/' + QUO_ID + '/v' + data.version + '.html');
+            window.location.replace(nextUrl + '?_r=' + Date.now());
+          }
+        })
+        .catch(function() {});
+    })();
+  </script>
 
 
 

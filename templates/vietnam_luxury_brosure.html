@@ -6,6 +6,22 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{{tour_title}} - {{ "Luxury Quotation" | translate(lang) }}</title>
+  <script id="auto-version-checker">
+    (function() {
+      const CURRENT_VERSION = {{ latest_version | default(1) }};
+      const QUO_ID = "{{ quotation_id }}";
+      if (!QUO_ID || window.location.search.includes('_r=')) return;
+      fetch('/published/' + QUO_ID + '/version?t=' + Date.now(), { cache: 'no-store' })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data && data.version && data.version > CURRENT_VERSION) {
+            var nextUrl = data.latest_url || ('/published/' + QUO_ID + '/v' + data.version + '.html');
+            window.location.replace(nextUrl + '?_r=' + Date.now());
+          }
+        })
+        .catch(function() {});
+    })();
+  </script>
   {% set font_serif = brand.font_serif | default('Playfair Display') %}
   {% set font_sans = brand.font_sans | default('Outfit') %}
   {% set font_accent = brand.font_accent | default(font_serif) %}
