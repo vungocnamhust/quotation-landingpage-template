@@ -10,3 +10,11 @@ __pycache__/
 node_modules/
 _renders/
 _responsive_screenshots/
+landing_page_documentation/
+conflict_*.txt
+*.log
+test*.html
+output_quotation.html
+landing_raw.html
+pdf_raw.html
+pdf_test.html
