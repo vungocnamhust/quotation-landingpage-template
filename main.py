@@ -3745,6 +3745,9 @@ async def create_quotation_b2c(request: Request):
     ctx["available_langs"] = [lang]
     ctx["translation_status"] = {"baseline_lang": lang, "available_langs": [lang]}
 
+    if "designer_img" in data:
+        ctx["designer_img"] = data["designer_img"]
+
     # ── Render landing page HTML ───────────────────────────────────────────────
     loop = asyncio.get_event_loop()
     tmpl_lp  = templates.get_template("vietnam_heritage_luxury_b2c.html")
@@ -3925,6 +3928,9 @@ async def create_quotation(request: Request):
     ctx["available_langs"] = [lang]
     ctx["translation_status"] = {"baseline_lang": lang, "available_langs": [lang]}
     ctx["brand"] = brand_config
+
+    if "designer_img" in data:
+        ctx["designer_img"] = data["designer_img"]
 
     # ── Render landing page HTML ───────────────────────────────────────────────
     loop = asyncio.get_event_loop()

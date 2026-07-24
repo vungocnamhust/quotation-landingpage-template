@@ -1,0 +1,18 @@
+{
+  "name": "The Reverie Saigon Hotel",
+  "location": "Ho Chi Minh City",
+  "images": {
+    "interior": [
+      "assets/hotels/saigon/the-reverie-saigon-hotel/interior/image_1.jpg",
+      "assets/hotels/saigon/the-reverie-saigon-hotel/interior/image_2.jpg",
+      "assets/hotels/saigon/the-reverie-saigon-hotel/interior/image_3.jpg"
+    ],
+    "exterior": [
+      "assets/hotels/saigon/the-reverie-saigon-hotel/exterior/image_1.jpg",
+      "assets/hotels/saigon/the-reverie-saigon-hotel/exterior/image_2.jpg",
+      "assets/hotels/saigon/the-reverie-saigon-hotel/exterior/image_3.jpg"
+    ]
+  },
+  "website": "https://www.thereveriesaigon.com/",
+  "introduction": "The Reverie Saigon is an ultra-luxury hotel in Ho Chi Minh City, showcasing spectacular Italian design, opulent interiors, and unparalleled views of the Saigon River."
+}

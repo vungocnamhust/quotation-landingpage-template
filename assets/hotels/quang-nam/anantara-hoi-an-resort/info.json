@@ -1,0 +1,18 @@
+{
+  "name": "Anantara Hoi An Resort",
+  "location": "Hoi An",
+  "images": {
+    "interior": [
+      "assets/hotels/quang-nam/anantara-hoi-an-resort/interior/image_1.jpg",
+      "assets/hotels/quang-nam/anantara-hoi-an-resort/interior/image_2.jpg",
+      "assets/hotels/quang-nam/anantara-hoi-an-resort/interior/image_3.jpg"
+    ],
+    "exterior": [
+      "assets/hotels/quang-nam/anantara-hoi-an-resort/exterior/image_1.jpg",
+      "assets/hotels/quang-nam/anantara-hoi-an-resort/exterior/image_2.jpg",
+      "assets/hotels/quang-nam/anantara-hoi-an-resort/exterior/image_3.jpg"
+    ]
+  },
+  "website": "https://www.anantara.com/en/hoi-an",
+  "introduction": "Anantara Hoi An Resort is a boutique retreat on the banks of the Thu Bon River, offering elegant French colonial architecture and seamless access to the historic old town."
+}

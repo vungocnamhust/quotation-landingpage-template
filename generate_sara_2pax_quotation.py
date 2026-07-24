@@ -382,7 +382,7 @@ try:
             html_content = get_res.text
             
             # Replace designer avatar with Hieu's avatar
-            html_content = html_content.replace("/assets/dias_team/director.png", "/assets/dias_team/hieu.jpg")
+            html_content = html_content.replace("/assets/dias_team/hieu.jpg", "/assets/dias_team/hieu.jpg")
             
             # Update memory cache in application
             from main import quotations
@@ -407,7 +407,7 @@ try:
             pdf_content = get_pdf_res.text
             
             # Replace designer avatar with Hieu's avatar
-            pdf_content = pdf_content.replace("/assets/dias_team/director.png", "/assets/dias_team/hieu.jpg")
+            pdf_content = pdf_content.replace("/assets/dias_team/hieu.jpg", "/assets/dias_team/hieu.jpg")
             
             # Save updated PDF view to published cache directory
             with open(os.path.join(new_quo_dir, "pdf.html"), "w", encoding="utf-8") as f:

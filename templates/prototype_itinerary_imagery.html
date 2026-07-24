@@ -41,23 +41,77 @@
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <style>
     :root {
-      --primary: {{c_primary}};
+      --primary: {
+          {
+          c_primary
+        }
+      }
 
-      --primary-dark: {{c_primary_dark}};
+      ;
 
-      --accent: {{c_accent}};
+      --primary-dark: {
+          {
+          c_primary_dark
+        }
+      }
 
-      --accent-light: {{c_accent_light}};
+      ;
 
-      --bg-main: {{c_bg_main}};
+      --accent: {
+          {
+          c_accent
+        }
+      }
 
-      --bg-alt: {{c_bg_alt}};
+      ;
 
-      --text-main: {{c_text_main}};
+      --accent-light: {
+          {
+          c_accent_light
+        }
+      }
 
-      --text-muted: {{c_text_muted}};
+      ;
 
-      --text-light: {{c_text_light}};
+      --bg-main: {
+          {
+          c_bg_main
+        }
+      }
+
+      ;
+
+      --bg-alt: {
+          {
+          c_bg_alt
+        }
+      }
+
+      ;
+
+      --text-main: {
+          {
+          c_text_main
+        }
+      }
+
+      ;
+
+      --text-muted: {
+          {
+          c_text_muted
+        }
+      }
+
+      ;
+
+      --text-light: {
+          {
+          c_text_light
+        }
+      }
+
+      ;
       --serif: "{{font_serif}}",
       "Playfair Display",
       serif;
@@ -1932,7 +1986,7 @@
       width: 200px;
       height: 200px;
       border-radius: 50%;
-      background: var(--designer-img, url('/assets/dias_team/director.png')) center/cover no-repeat;
+      background: var(--designer-img, url('/assets/dias_team/hieu.jpg')) center/cover no-repeat;
       box-shadow: 0 16px 40px rgba(23, 65, 46, 0.2);
       border: 3px solid var(--accent);
       overflow: hidden;
@@ -2596,7 +2650,8 @@
 
           <div class="hero-footer no-print"
             style="display: flex; justify-content: space-between; font-size: 12px; letter-spacing: .1em; color: rgba(255,255,255,0.6); text-transform: uppercase; width: 100%;">
-            <div class="hf-left" data-editable="hero_footer">{{ brand.name if brand else 'CAPELLA TRAVEL' }} &bull; {{quotation_number}}</div>
+            <div class="hf-left" data-editable="hero_footer">{{ brand.name if brand else 'CAPELLA TRAVEL' }} &bull;
+              {{quotation_number}}</div>
           </div>
         </div>
       </div>
@@ -2667,7 +2722,8 @@
                 data-editable="letter_sign_off">{{ letter_sign_off | default('Anh Nam Le') }}</p>
               <p style="margin: 4px 0 0 0; font-size: 14px; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase;"
                 data-editable="letter_sender">{{ letter_sender | default('Journey Designer') }}</p>
-              <p style="margin: 4px 0 0 0; font-size: 14px; color: var(--text-muted);" data-editable="contact">{{contact}}</p>
+              <p style="margin: 4px 0 0 0; font-size: 14px; color: var(--text-muted);" data-editable="contact">
+                {{contact}}</p>
             </div>
           </div>
         </div>
@@ -2706,7 +2762,8 @@
             <span class="num" style="color: var(--primary);" data-editable="why_works_num_4">04</span>
             <h3 class="font-serif" style="color: var(--accent); font-size: 22px; margin: 12px 0 10px;"
               data-editable="why_works_title_4">{{ "Balanced Highlights" | translate(lang) }}</h3>
-            <p style="color: var(--text-main); margin: 0; line-height: 1.6;" data-editable="why_balanced">{{why_balanced}}</p>
+            <p style="color: var(--text-main); margin: 0; line-height: 1.6;" data-editable="why_balanced">
+              {{why_balanced}}</p>
           </article>
         </div>
       </div>
@@ -2744,89 +2801,124 @@
       </div>
     </section>
 
-    
+
     <section id="journey-itinerary" style="padding: 100px 0; background: var(--bg-main);">
       <div class="container">
-        <div class="section-head" style="margin-bottom: 80px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; grid-template-columns: 1fr;">
-          <h2 data-editable="journey_itinerary_h2" style="font-size: clamp(40px, 5vw, 72px); max-width: 800px; margin: 0 auto 24px;">Destination imagery woven into the itinerary.</h2>
-          <p data-editable="journey_itinerary_p" style="font-size: 18px; max-width: 600px; margin: 0 auto;">Immerse yourself in each day's experience with cinematic visuals and detailed plans.</p>
+        <div class="section-head"
+          style="margin-bottom: 80px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; grid-template-columns: 1fr;">
+          <h2 data-editable="journey_itinerary_h2"
+            style="font-size: clamp(40px, 5vw, 72px); max-width: 800px; margin: 0 auto 24px;">Destination imagery woven
+            into the itinerary.</h2>
+          <p data-editable="journey_itinerary_p" style="font-size: 18px; max-width: 600px; margin: 0 auto;">Immerse
+            yourself in each day's experience with cinematic visuals and detailed plans.</p>
         </div>
 
         <div class="itinerary-woven">
           {% for day in itinerary %}
           {% set day_idx = loop.index %}
-          <article class="day-woven" style="display: flex; flex-direction: column; gap: 48px; margin-bottom: 160px; position: relative;">
-            
+          <article class="day-woven"
+            style="display: flex; flex-direction: column; gap: 48px; margin-bottom: 160px; position: relative;">
+
             <!-- Day Header -->
             <div style="display: flex; gap: 24px; align-items: center;">
-              <div class="day-label" data-editable="day_badge_{{ loop.index }}" style="height: 80px; width: 80px; border-radius: 50%; background: var(--primary); color: white; display: grid; place-items: center; font-family: var(--serif); font-size: 28px; box-shadow: 0 10px 30px rgba(23, 65, 46, 0.2);">{{ day.day_badge_text | default(day.dayNumber) }}</div>
+              <div class="day-label" data-editable="day_badge_{{ loop.index }}"
+                style="height: 80px; width: 80px; border-radius: 50%; background: var(--primary); color: white; display: grid; place-items: center; font-family: var(--serif); font-size: 28px; box-shadow: 0 10px 30px rgba(23, 65, 46, 0.2);">
+                {{ day.day_badge_text | default(day.dayNumber) }}</div>
               <div>
-                <span class="num" data-editable="day_num_{{ loop.index }}" style="color: var(--accent); font-weight: 800; letter-spacing: .2em; font-size: 13px; text-transform: uppercase;">{{ day.day_num_text | default("DAY" | translate(lang) ~ " " ~ day.dayNumber ~ ((" · " ~ (day.date | format_date)) if day.date else "")) }}</span>
-                <h3 data-editable="day_title_{{ loop.index }}" style="font-family: var(--serif); font-size: 36px; font-weight: 500; margin: 8px 0 0; color: var(--primary);">{{ day.title | rtl_mixed(lang) }}</h3>
+                <span class="num" data-editable="day_num_{{ loop.index }}"
+                  style="color: var(--accent); font-weight: 800; letter-spacing: .2em; font-size: 13px; text-transform: uppercase;">{{
+                  day.day_num_text | default("DAY" | translate(lang) ~ " " ~ day.dayNumber ~ ((" · " ~ (day.date |
+                  format_date)) if day.date else "")) }}</span>
+                <h3 data-editable="day_title_{{ loop.index }}"
+                  style="font-family: var(--serif); font-size: 36px; font-weight: 500; margin: 8px 0 0; color: var(--primary);">
+                  {{ day.title | rtl_mixed(lang) }}</h3>
               </div>
             </div>
 
             <!-- Image Gallery (70% / 30% split) -->
-            <div class="day-gallery" style="display: flex; gap: 24px; height: 65vh; min-height: 500px; max-height: 800px;">
+            <div class="day-gallery"
+              style="display: flex; gap: 24px; height: 65vh; min-height: 500px; max-height: 800px;">
               <!-- Main Image -->
-              <div style="flex: 7; border-radius: 32px; overflow: hidden; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.1);">
-                <img src="{{ day.images[0] if day.images and day.images|length > 0 else '' }}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.7s ease;" class="hover-zoom" alt="Main destination image">
+              <div
+                style="flex: 7; border-radius: 32px; overflow: hidden; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.1);">
+                <img src="{{ day.images[0] if day.images and day.images|length > 0 else '' }}"
+                  style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.7s ease;"
+                  class="hover-zoom" alt="Main destination image">
               </div>
               <!-- Detail Images -->
               <div style="flex: 3; display: flex; flex-direction: column; gap: 24px;">
                 <div style="flex: 1; border-radius: 32px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.08);">
-                  <img src="{{ day.images[1] if day.images and day.images|length > 1 else '' }}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.7s ease;" class="hover-zoom" alt="Detail 1">
+                  <img src="{{ day.images[1] if day.images and day.images|length > 1 else '' }}"
+                    style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.7s ease;"
+                    class="hover-zoom" alt="Detail 1">
                 </div>
                 <div style="flex: 1; border-radius: 32px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.08);">
-                  <img src="{{ day.images[2] if day.images and day.images|length > 2 else '' }}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.7s ease;" class="hover-zoom" alt="Detail 2">
+                  <img src="{{ day.images[2] if day.images and day.images|length > 2 else '' }}"
+                    style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.7s ease;"
+                    class="hover-zoom" alt="Detail 2">
                 </div>
               </div>
             </div>
 
             <!-- Caption -->
-            <div class="image-caption-text" style="font-size: 14px; color: var(--text-muted); text-align: right; margin-top: -32px; padding-right: 20px; font-style: italic;">
+            <div class="image-caption-text"
+              style="font-size: 14px; color: var(--text-muted); text-align: right; margin-top: -32px; padding-right: 20px; font-style: italic;">
               Immersive experiences waiting for you.
             </div>
 
             <!-- Content & Quote -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 80px; margin-top: 20px; align-items: start;">
+            <div
+              style="display: grid; grid-template-columns: 1fr 1fr; gap: 80px; margin-top: 20px; align-items: start;">
               <!-- Itinerary Text -->
               <div style="font-size: 17px; line-height: 1.8; color: var(--text-main);">
                 {% for para in day.description %}
-                <p data-editable="day_desc_{{day_idx}}_{{ loop.index0 }}" style="margin-bottom: 20px; color: var(--text-muted);">{{ para | rtl_mixed(lang) }}</p>
+                <p data-editable="day_desc_{{day_idx}}_{{ loop.index0 }}"
+                  style="margin-bottom: 20px; color: var(--text-muted);">{{ para | rtl_mixed(lang) }}</p>
                 {% endfor %}
-                
+
                 {% if day.activities %}
                 <div style="margin-top: 24px;">
-                  <strong style="color: var(--primary); letter-spacing: .06em; font-size: 14px; text-transform: uppercase;">Highlights:</strong>
-                  <span style="color: var(--text-muted); font-size: 15px; margin-left: 8px;">{{ day.activities | join(' · ') }}</span>
+                  <strong
+                    style="color: var(--primary); letter-spacing: .06em; font-size: 14px; text-transform: uppercase;">Highlights:</strong>
+                  <span style="color: var(--text-muted); font-size: 15px; margin-left: 8px;">{{ day.activities | join('
+                    · ') }}</span>
                 </div>
                 {% endif %}
 
                 <!-- Metadata -->
-                <div style="margin-top: 40px; padding: 32px; background: var(--bg-alt); border-radius: 24px; border: 1px solid var(--line); display: inline-flex; gap: 48px; box-shadow: 0 10px 30px rgba(17,19,15,0.03);">
+                <div
+                  style="margin-top: 40px; padding: 32px; background: var(--bg-alt); border-radius: 24px; border: 1px solid var(--line); display: inline-flex; gap: 48px; box-shadow: 0 10px 30px rgba(17,19,15,0.03);">
                   {% if day.overnight %}
                   <div>
-                    <span style="font-size:11px;letter-spacing:.16em; color: var(--accent); font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 8px;">Overnight</span>
-                    <span class="font-serif" style="font-size:18px; color: var(--primary); font-weight: 500;">{{ day.overnight }}</span>
+                    <span
+                      style="font-size:11px;letter-spacing:.16em; color: var(--accent); font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 8px;">Overnight</span>
+                    <span class="font-serif" style="font-size:18px; color: var(--primary); font-weight: 500;">{{
+                      day.overnight }}</span>
                   </div>
                   {% endif %}
                   {% if day.meals %}
                   <div>
-                    <span style="font-size:11px;letter-spacing:.16em; color: var(--accent); font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 8px;">Meals</span>
+                    <span
+                      style="font-size:11px;letter-spacing:.16em; color: var(--accent); font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 8px;">Meals</span>
                     <span style="font-size:15px; color: var(--text-main);">{{ day.meals | join(' · ') }}</span>
                   </div>
                   {% endif %}
                 </div>
               </div>
-              
+
               <!-- Pull Quote -->
-              <div style="display: flex; align-items: center; padding: 40px 60px; background: rgba(255, 250, 241, 0.5); border-radius: 32px; position: sticky; top: 120px;">
-                <blockquote style="margin: 0; font-family: var(--serif); font-size: clamp(28px, 3vw, 40px); line-height: 1.3; color: var(--primary); text-align: center; position: relative;">
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: -30px; left: -30px; opacity: 0.1; color: var(--accent); width: 80px; height: 80px;">
-                    <path d="M14.417 21H19.043C20.672 21 22 19.672 22 18.043V13.826C22 12.197 20.672 10.87 19.043 10.87H16.435C16.435 7.522 18.261 5.957 20.522 5.565V3C16.87 3.522 14.417 6.13 14.417 10.87V21ZM2.417 21H7.043C8.672 21 10 19.672 10 18.043V13.826C10 12.197 8.672 10.87 7.043 10.87H4.435C4.435 7.522 6.261 5.957 8.522 5.565V3C4.87 3.522 2.417 6.13 2.417 10.87V21Z" fill="currentColor"/>
+              <div
+                style="display: flex; align-items: center; padding: 40px 60px; background: rgba(255, 250, 241, 0.5); border-radius: 32px; position: sticky; top: 120px;">
+                <blockquote
+                  style="margin: 0; font-family: var(--serif); font-size: clamp(28px, 3vw, 40px); line-height: 1.3; color: var(--primary); text-align: center; position: relative;">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                    style="position: absolute; top: -30px; left: -30px; opacity: 0.1; color: var(--accent); width: 80px; height: 80px;">
+                    <path
+                      d="M14.417 21H19.043C20.672 21 22 19.672 22 18.043V13.826C22 12.197 20.672 10.87 19.043 10.87H16.435C16.435 7.522 18.261 5.957 20.522 5.565V3C16.87 3.522 14.417 6.13 14.417 10.87V21ZM2.417 21H7.043C8.672 21 10 19.672 10 18.043V13.826C10 12.197 8.672 10.87 7.043 10.87H4.435C4.435 7.522 6.261 5.957 8.522 5.565V3C4.87 3.522 2.417 6.13 2.417 10.87V21Z"
+                      fill="currentColor" />
                   </svg>
-                  <span data-editable="day_quote_{{ loop.index }}">{{ day.quote | default("An unforgettable day filled with moments that will stay with you long after the journey ends.") }}</span>
+                  <span data-editable="day_quote_{{ loop.index }}">{{ day.quote | default("An unforgettable day filled
+                    with moments that will stay with you long after the journey ends.") }}</span>
                 </blockquote>
               </div>
             </div>
@@ -2838,16 +2930,19 @@
         .hover-zoom:hover {
           transform: scale(1.03);
         }
+
         @media (max-width: 980px) {
           .day-gallery {
             flex-direction: column;
             height: auto !important;
           }
-          .day-woven > div:last-child {
+
+          .day-woven>div:last-child {
             grid-template-columns: 1fr;
             gap: 40px;
           }
-          .day-gallery > div {
+
+          .day-gallery>div {
             height: 300px;
           }
         }
@@ -2873,6 +2968,7 @@
           border-bottom: 1px solid var(--line);
           padding-bottom: 48px;
         }
+
         .hotel-card-editorial:last-child {
           border-bottom: none;
           padding-bottom: 0;
@@ -2883,18 +2979,21 @@
           gap: 32px;
           align-items: center;
         }
-        
-        .hotel-editorial-grid > *, .hotel-images-group > * {
-          min-width: 0; /* Prevents grid blowout from intrinsic image sizes */
+
+        .hotel-editorial-grid>*,
+        .hotel-images-group>* {
+          min-width: 0;
+          /* Prevents grid blowout from intrinsic image sizes */
         }
-        
+
         .hotel-images-group {
           display: grid;
           gap: 16px;
           align-items: center;
         }
-        
-        .img-wrapper-main, .img-wrapper-sub {
+
+        .img-wrapper-main,
+        .img-wrapper-sub {
           aspect-ratio: 4 / 3;
         }
 
@@ -2903,6 +3002,7 @@
           .hotel-editorial-grid.odd-row {
             grid-template-columns: 2.4fr 1.3fr;
           }
+
           .hotel-editorial-grid.even-row {
             grid-template-columns: 1.3fr 2.4fr;
           }
@@ -2915,13 +3015,16 @@
           .hotel-images-group.odd-group {
             grid-template-columns: 1.6fr 1fr;
           }
+
           .hotel-images-group.even-group {
             grid-template-columns: 1fr 1.6fr;
           }
+
           /* In even group, sub image is on the left, main is on the right */
           .hotel-images-group.even-group .img-wrapper-main {
             order: 2;
           }
+
           .hotel-images-group.even-group .img-wrapper-sub {
             order: 1;
           }
@@ -2932,6 +3035,7 @@
           .hotel-editorial-grid.odd-row {
             grid-template-columns: 1.4fr 1fr;
           }
+
           .hotel-editorial-grid.even-row {
             grid-template-columns: 1fr 1.4fr;
           }
@@ -2943,12 +3047,15 @@
           .hotel-images-group.odd-group {
             grid-template-columns: 1.4fr 1fr;
           }
+
           .hotel-images-group.even-group {
             grid-template-columns: 1fr 1.4fr;
           }
+
           .hotel-images-group.even-group .img-wrapper-main {
             order: 2;
           }
+
           .hotel-images-group.even-group .img-wrapper-sub {
             order: 1;
           }
@@ -2961,42 +3068,51 @@
             flex-direction: column;
             gap: 16px;
           }
-          
+
           .hotel-header-mobile {
-            order: 1; /* Tiêu đề lên đầu */
+            order: 1;
+            /* Tiêu đề lên đầu */
             margin-bottom: 8px;
           }
 
           .hotel-images-group {
-            order: 2; /* Bộ đôi ảnh ở giữa */
+            order: 2;
+            /* Bộ đôi ảnh ở giữa */
             grid-template-columns: 1.2fr 1fr;
             gap: 12px;
           }
+
           /* Even groups on mobile shouldn't swap images to keep consistency */
           .hotel-images-group.even-group .img-wrapper-main {
             order: 1;
           }
+
           .hotel-images-group.even-group .img-wrapper-sub {
             order: 2;
           }
 
-          .img-wrapper-main, .img-wrapper-sub {
+          .img-wrapper-main,
+          .img-wrapper-sub {
             height: 180px;
           }
 
           .hotel-desc-mobile {
-            order: 3; /* Mô tả ở dưới cùng */
+            order: 3;
+            /* Mô tả ở dưới cùng */
           }
         }
 
         /* Common Image Box Styles */
-        .img-wrapper-main, .img-wrapper-sub {
+        .img-wrapper-main,
+        .img-wrapper-sub {
           border-radius: 6px;
           overflow: hidden;
           position: relative;
-          box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
         }
-        .img-wrapper-main img, .img-wrapper-sub img {
+
+        .img-wrapper-main img,
+        .img-wrapper-sub img {
           width: 100%;
           height: 100%;
           object-fit: cover;
@@ -3009,9 +3125,11 @@
           flex-direction: column;
           justify-content: center;
         }
+
         .hotel-header-mobile {
           margin-bottom: 12px;
         }
+
         .hotel-subtitle {
           font-size: 11px;
           font-weight: 700;
@@ -3020,6 +3138,7 @@
           color: var(--text-muted);
           margin-bottom: 6px;
         }
+
         .hotel-title {
           font-size: 26px;
           font-weight: 700;
@@ -3027,10 +3146,12 @@
           margin: 0;
           letter-spacing: 0.02em;
         }
+
         .hotel-desc-mobile {
           display: flex;
           flex-direction: column;
         }
+
         .hotel-desc {
           font-size: 14px;
           line-height: 1.6;
@@ -3038,6 +3159,7 @@
           margin: 0;
           text-align: justify;
         }
+
         .hotel-tags {
           display: flex;
           gap: 16px;
@@ -3048,6 +3170,7 @@
           flex-wrap: wrap;
           align-items: center;
         }
+
         .hotel-tags span.tel {
           color: var(--text-muted);
           font-size: 12px;
@@ -3072,13 +3195,13 @@
           {% set is_odd = (ns.count % 2 == 0) %}
           <div class="hotel-card-editorial">
             <div class="hotel-editorial-grid {% if is_odd %}odd-row{% else %}even-row{% endif %}">
-              
+
               {# Aggregate dates for this hotel #}
               {% set date_ranges = [] %}
               {% for h in hotels %}
-                {% if h.name == item.name and h.date_range %}
-                  {% set _ = date_ranges.append(h.date_range) %}
-                {% endif %}
+              {% if h.name == item.name and h.date_range %}
+              {% set _ = date_ranges.append(h.date_range) %}
+              {% endif %}
               {% endfor %}
 
               <!-- Side-by-Side Images -->
@@ -3094,22 +3217,26 @@
               <!-- Footer Columns (Introduction & Info/Tel) -->
               <div class="hotel-info-block">
                 <div class="hotel-header-mobile">
-                  <div class="hotel-subtitle hotel-city" data-editable="hotel_city_{{ loop.index }}">{{ item.city_country | rtl_mixed(lang) }}</div>
-                  <h3 class="hotel-name hotel-title font-serif" data-editable="hotel_name_{{ loop.index }}">{{ item.name | rtl_mixed(lang) }}</h3>
+                  <div class="hotel-subtitle hotel-city" data-editable="hotel_city_{{ loop.index }}">{{
+                    item.city_country | rtl_mixed(lang) }}</div>
+                  <h3 class="hotel-name hotel-title font-serif" data-editable="hotel_name_{{ loop.index }}">{{ item.name
+                    | rtl_mixed(lang) }}</h3>
                 </div>
-                
+
                 <div class="hotel-desc-mobile">
                   {% if show_hotel_intro and item.introduction %}
-                  <p class="hotel-desc" data-editable="hotel_intro_{{ loop.index }}">{{ item.introduction | rtl_mixed(lang) }}</p>
+                  <p class="hotel-desc" data-editable="hotel_intro_{{ loop.index }}">{{ item.introduction |
+                    rtl_mixed(lang) }}</p>
                   {% endif %}
-                  
+
                   <div class="hotel-tags">
                     <span data-editable="hotel_date_{{ loop.index }}">
                       {% for dr in date_ranges %}
-                        <span class="ltr-token">{{ dr }}</span>{% if not loop.last %} &bull; {% endif %}
+                      <span class="ltr-token">{{ dr }}</span>{% if not loop.last %} &bull; {% endif %}
                       {% endfor %}
                     </span>
-                    <span class="tel" data-editable="hotel_tel_{{ loop.index }}">{{ "TEL:" | translate(lang) }} <span class="ltr-token">{{ item.tel }}</span></span>
+                    <span class="tel" data-editable="hotel_tel_{{ loop.index }}">{{ "TEL:" | translate(lang) }} <span
+                        class="ltr-token">{{ item.tel }}</span></span>
                   </div>
                 </div>
               </div>
@@ -3202,7 +3329,8 @@
           <article class="panel">
             <h3>{{ "Inclusions" | translate(lang) }}</h3>
             {% if inclusions_lede %}
-            <p style="font-size:14px; color:var(--text-muted); line-height:1.6; margin-bottom:16px; margin-top:-8px;">{{inclusions_lede}}</p>
+            <p style="font-size:14px; color:var(--text-muted); line-height:1.6; margin-bottom:16px; margin-top:-8px;">
+              {{inclusions_lede}}</p>
             {% endif %}
             <ul id="inclusions-list" style="list-style-type:none; padding-left:0;">
               {% for item in inclusions %}
@@ -3222,7 +3350,8 @@
           <article class="panel">
             <h3>{{ exclusions_title | default("Exclusions" | translate(lang)) }}</h3>
             {% if exclusions_lede %}
-            <p style="font-size:14px; color:var(--text-muted); line-height:1.6; margin-bottom:16px; margin-top:-8px;">{{exclusions_lede}}</p>
+            <p style="font-size:14px; color:var(--text-muted); line-height:1.6; margin-bottom:16px; margin-top:-8px;">
+              {{exclusions_lede}}</p>
             {% endif %}
             <ul id="exclusions-list" style="list-style-type:disc; padding-left:20px;">
               {% for item in exclusions %}
@@ -3342,7 +3471,7 @@
         <div class="designer-card">
           <div class="designer-img-container" id="designer-avatar-container">
             <div class="designer-avatar-large"
-              style="background-image: var(--designer-img, url('/assets/dias_team/director.png')); background-size: cover; background-position: center;">
+              style="background-image: var(--designer-img, url('/assets/dias_team/hieu.jpg')); background-size: cover; background-position: center;">
             </div>
           </div>
           <div class="designer-info">
@@ -3375,7 +3504,8 @@
     <div class="pb-left">
       <div class="pb-dot"></div>
       <div class="pb-label">
-        <span class="pb-label-desktop">✏️ {{ client_i18n.editing }} <strong class="ltr-token">{{quotation_id}}</strong></span>
+        <span class="pb-label-desktop">✏️ {{ client_i18n.editing }} <strong
+            class="ltr-token">{{quotation_id}}</strong></span>
         <span class="pb-label-mobile">✏️ <strong class="ltr-token">{{quotation_id}}</strong></span>
       </div>
     </div>
@@ -3389,7 +3519,9 @@
           <path d="M2 17l10 5 10-5"></path>
           <path d="M2 12l10 5 10-5"></path>
         </svg>
-        <span class="template-text" style="font-weight:600;">{% if template_name == 'vietnam_heritage_luxury.html' %}Heritage Theme{% elif template_name == 'prototype_itinerary_imagery.html' %}Prototype Theme{% else %}Brochure Theme{% endif %}</span>
+        <span class="template-text" style="font-weight:600;">{% if template_name == 'vietnam_heritage_luxury.html'
+          %}Heritage Theme{% elif template_name == 'prototype_itinerary_imagery.html' %}Prototype Theme{% else
+          %}Brochure Theme{% endif %}</span>
       </button>
       <select id="select-domain" class="no-print" style="display: none !important;">
         <option value="https://{{ (brand.domain if brand else '') or 'journeys.vietnamsafar.vn' }}">Production</option>
@@ -3496,7 +3628,8 @@
           style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
           <div style="display:flex; align-items:center; gap:12px;">
             <div class="pb-domain-details">
-              <div class="pb-domain-name" style="font-weight:600; font-size:14px; text-align:left;">Prototype Theme</div>
+              <div class="pb-domain-name" style="font-weight:600; font-size:14px; text-align:left;">Prototype Theme
+              </div>
               <div class="pb-domain-badge prod" style="font-size:11px; color:#666;">Itinerary with Imagery</div>
             </div>
           </div>
@@ -4270,14 +4403,14 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-        
+
         console.log("Publish response status:", res.status, res.statusText);
         let data;
         try {
-            data = await res.json();
-            console.log("Publish response data:", data);
-        } catch(e) {
-            console.error("Failed to parse json", e);
+          data = await res.json();
+          console.log("Publish response data:", data);
+        } catch (e) {
+          console.error("Failed to parse json", e);
         }
 
         // Enforce a minimum delay of 1.2s to show the publishing signal
