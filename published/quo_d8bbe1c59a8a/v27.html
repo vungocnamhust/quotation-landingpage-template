@@ -6276,11 +6276,7 @@
             <h4 class="day-title" data-editable="day_title_8" spellcheck="false">Day 8 — Da Nang</h4>
             <div class="day-copy" style="margin-top:24px;">
 
-              <p data-editable="day_desc_8_0" spellcheck="false">The journey continues with a transfer to the coastal
-                city of Da Nang, while some of the members say goodbye to Vietnam, the other continue their journey,
-                coupled with a curated half-day city tour highlighting local cultural landmarks. You will then check
-                into two spectacular 3-Bedroom Beach Front Pool Villas at the Hyatt Regency Danang Resort and Spa,
-                providing an unparalleled standard of privacy and comfort.</p>
+              <p data-editable="day_desc_8_0" spellcheck="false">The journey continues with a transfer to the coastal city of Da Nang, while some of the members say goodbye to Vietnam, the other continue their journey. Enjoy the afternoon at your own leisure to experience the city at your personal pace. Whether you prefer quiet moments of tranquility or spontaneous exploration, this time is entirely yours to shape as you wish.</p>
 
 
               <p style="font-size:13px;color: var(--text-muted);margin-top:8px" data-deletable="day_activities_8">
@@ -8486,7 +8482,8 @@
 
       const map = L.map('map', {
         zoomControl: true,
-        scrollWheelZoom: false
+        scrollWheelZoom: false,
+        tap: false
       });
 
       // Thay thế bằng Tile của Google Maps (có hỗ trợ tiếng Việt & hiển thị Hoàng Sa, Trường Sa) 
@@ -8648,7 +8645,7 @@
             itemDiv.innerHTML = htmlContent;
 
             itemDiv.addEventListener('click', () => {
-              selectDestination(idx);
+              selectDestination(idx, { fromTimeline: true });
             });
 
             sidebarContainer.appendChild(itemDiv);
@@ -8716,14 +8713,18 @@
         }
       });
 
-      function selectDestination(index) {
+      function selectDestination(index, options = {}) {
         const dest = mapSegments[index];
         map.setView(dest.displayCoords, Math.max(map.getZoom(), 8), { animate: true });
         markers[index].openPopup();
 
         document.querySelectorAll('.timeline-item').forEach(c => c.classList.remove('active'));
         dest.cardEl.classList.add('active');
-        dest.cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+        const isMobileDevice = window.innerWidth <= 768;
+        if (!isMobileDevice || options.fromTimeline) {
+          dest.cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
 
         document.querySelectorAll('.luxury-marker, .custom-irregular-marker').forEach(m => m.classList.remove('active'));
         const wrapperEl = document.getElementById(`marker-wrapper-${index}`);
@@ -8736,7 +8737,7 @@
 
       markers.forEach((marker, idx) => {
         marker.on('click', () => {
-          selectDestination(idx);
+          selectDestination(idx, { fromMarker: true });
         });
       });
     });
