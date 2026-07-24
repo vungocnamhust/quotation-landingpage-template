@@ -359,7 +359,7 @@ try:
                 # Replace designer avatar to Hieu's avatar if signature matches Hieu/Eddie
                 sig_val = edited.get("designer_signature", "")
                 if "Eddie" in sig_val or "Hieu" in sig_val:
-                    html_content = html_content.replace("/assets/dias_team/director.png", "/assets/dias_team/hieu.jpg")
+                    html_content = html_content.replace("/assets/dias_team/hieu.jpg", "/assets/dias_team/hieu.jpg")
             
             # Save updated HTML to disk as v1.html for permanent cache
             with open(os.path.join(new_quo_dir, "v1.html"), "w", encoding="utf-8") as f:
@@ -396,7 +396,7 @@ try:
                 # Replace designer avatar in PDF as well
                 sig_val = edited.get("designer_signature", "")
                 if "Eddie" in sig_val or "Hieu" in sig_val:
-                    pdf_content = pdf_content.replace("/assets/dias_team/director.png", "/assets/dias_team/hieu.jpg")
+                    pdf_content = pdf_content.replace("/assets/dias_team/hieu.jpg", "/assets/dias_team/hieu.jpg")
             
             # Save to disk as pdf.html / pdf_en.html
             with open(os.path.join(new_quo_dir, "pdf.html"), "w", encoding="utf-8") as f:

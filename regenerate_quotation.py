@@ -39,7 +39,14 @@ async def main():
     # Extract destinations and hero image from old ctx
     destinations = old_ctx.get("destinations", [])
     hero_image_url = old_ctx.get("img_0", "/assets/vietnam-safar-logo.png")
-    lang = payload_data.get("lang", "ar")
+    if hero_image_url == "/assets/vietnam-safar-logo.png":
+        for day in old_ctx.get("itinerary_days", []) or old_ctx.get("itinerary", []):
+            day_hero = day.get("layout_images", {}).get("hero")
+            if day_hero:
+                hero_image_url = day_hero
+                break
+
+    lang = payload_data.get("lang", "en")
     brand = old_ctx.get("brand", {})
     
     # Re-build context using updated main.py logic
@@ -49,9 +56,12 @@ async def main():
         hero_image_url=hero_image_url,
         destinations=destinations,
         lang=lang,
-        template_name="vietnam_heritage_luxury.html",
+        template_name="vietnam_luxury_brosure.html",
         brand=brand
     )
+    print("DEBUG in regenerate: passed hero_image_url:", hero_image_url)
+    print("DEBUG in regenerate: ctx['img_0']:", ctx.get('img_0'))
+    print("DEBUG in regenerate: ctx['hero_img_custom']:", ctx.get('hero_img_custom'))
     ctx["brand"] = brand
     
     # Add translation status/baseline keys
@@ -61,10 +71,15 @@ async def main():
     ctx["available_langs"] = [lang]
     ctx["translation_status"] = {"baseline_lang": lang, "available_langs": [lang]}
     
+    # Preserve manual keys from old_ctx
+    for manual_key in ["designer_img", "seller_name2", "designer_signature"]:
+        if manual_key in old_ctx:
+            ctx[manual_key] = old_ctx[manual_key]
+    
     # Render templates
     loop = asyncio.get_event_loop()
-    tmpl_lp  = templates.get_template("vietnam_heritage_luxury.html")
-    tmpl_pdf = templates.get_template("vietnam_heritage_luxury_pdf.html")
+    tmpl_lp  = templates.get_template("vietnam_luxury_brosure.html")
+    tmpl_pdf = templates.get_template("vietnam_luxury_brosure_pdf.html")
 
     rendered_html, rendered_pdf = await asyncio.gather(
         loop.run_in_executor(None, partial(tmpl_lp.render,  **ctx)),

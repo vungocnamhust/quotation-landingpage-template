@@ -111,8 +111,8 @@ paths:
                         - Train Street coffee experience
                   pricing:
                     currency: SAR
-                    pricingTitle: PRICE QUOTATION – B2B NET INDICATIVE
-                    basis: B2B net indicative
+                    pricingTitle: PRICE QUOTATION – INDICATIVE
+                    basis: Indicative basis
                     totalGuests: 8
                     priceOptions:
                       - hotelCategory: 4★ Premium
@@ -164,7 +164,7 @@ paths:
                   priceConditions:
                     heading: PRICE CONDITIONS
                     paragraphs:
-                      - Rates are B2B net indicative and subject to reconfirmation at the time of booking.
+                      - Rates are indicative and subject to reconfirmation at the time of booking.
                       - Final price may vary depending on hotel availability, resort category, cruise selection, domestic flight fare, rooming arrangement, child policy, and final travel services confirmed.
                       - Child rates may be adjusted after confirming the room setup, bed sharing, extra bed requirements, and hotel/cruise child policies.
                   notes:
@@ -677,11 +677,11 @@ components:
           example: SAR
         pricingTitle:
           type: string
-          example: PRICE QUOTATION – B2B NET INDICATIVE
+          example: PRICE QUOTATION – INDICATIVE
         basis:
           type: string
           description: Pricing basis.
-          example: B2B net indicative
+          example: Indicative basis
         totalGuests:
           type: integer
           minimum: 1
@@ -842,7 +842,7 @@ components:
           example: Halal-friendly
         priceType:
           type: string
-          example: B2B Net Rate
+          example: Indicative Rate
         tourCode:
           type: string
           example: VS-2026-01
@@ -854,7 +854,7 @@ components:
           example: Twin/double sharing
         partnerNote:
           type: string
-          example: B2B Net Rate
+          example: Indicative Rate
         validity:
           type: string
           example: 2026-12-31

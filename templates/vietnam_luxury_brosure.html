@@ -2955,15 +2955,6 @@
       }
     }
   </style>
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const heroImages = [
-        '/assets/brands/hero/elder.png'
-      ];
-      const randomHero = heroImages[Math.floor(Math.random() * heroImages.length)];
-      document.documentElement.style.setProperty('--hero-img', `url(${randomHero})`);
-    });
-  </script>
 </head>
 
 <body>
@@ -5331,6 +5322,11 @@
 
         el.contentEditable = 'true';
         el.spellcheck = false;
+        
+        // Prevent click bubbling so clicking text to edit doesn't trigger parent click listeners (e.g., timeline map zoom)
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+        });
 
         // Wrap it and add translate button if lang is not English
         if (CURRENT_LANG !== 'en') {
@@ -5620,6 +5616,24 @@
               const editedEl = document.querySelector(`.timeline-item [data-editable="map_segment_desc_${idx}"]`);
               if (editedEl) {
                 seg.mapSegmentDesc = editedEl.innerHTML;
+              }
+              const durEl = document.querySelector(`.timeline-item [data-editable="map_segment_duration_${idx}"]`);
+              if (durEl) {
+                const parts = durEl.innerText.split(' • ');
+                seg.daysLabel = parts[0].trim();
+                if (parts.length > 1) {
+                  seg.nightsLabel = parts.slice(1).join(' • ').trim();
+                } else {
+                  seg.nightsLabel = '';
+                }
+              }
+              const titleEl = document.querySelector(`.timeline-item [data-editable="map_segment_title_${idx}"]`);
+              if (titleEl) {
+                seg.displayName = titleEl.innerText;
+              }
+              const hotelEl = document.querySelector(`.timeline-item [data-editable="map_segment_hotel_${idx}"]`);
+              if (hotelEl) {
+                seg.hotelName = hotelEl.innerText;
               }
             });
             staySegmentsEl.textContent = JSON.stringify(rawSegments);
@@ -6209,20 +6223,22 @@
           const itemDiv = document.createElement('div');
           itemDiv.className = `timeline-item ${idx === 0 ? 'active' : ''}`;
 
-          let durationHtml = '';
-          if (dayRangeStr && dest.nightsLabel) {
-            durationHtml = `${dayRangeStr} &bull; ${dest.nightsLabel}`;
-          } else {
-            durationHtml = `${dayRangeStr || dest.nightsLabel || ''}`;
+          let durationHtml = dest.mapSegmentDuration;
+          if (!durationHtml) {
+            if (dayRangeStr && dest.nightsLabel) {
+              durationHtml = `${dayRangeStr} &bull; ${dest.nightsLabel}`;
+            } else {
+              durationHtml = `${dayRangeStr || dest.nightsLabel || ''}`;
+            }
           }
 
           let htmlContent = `
-              <div class="item-duration">${durationHtml}</div>
-              <h3 class="item-title">${formatMixedContent(dest.displayName)}</h3>
+              <div class="item-duration" data-editable="map_segment_duration_${idx}">${durationHtml}</div>
+              <h3 class="item-title" data-editable="map_segment_title_${idx}">${formatMixedContent(dest.displayName)}</h3>
           `;
 
           if (dest.hotelName) {
-            htmlContent += `<div class="item-hotel">${formatMixedContent(dest.hotelName)}</div>`;
+            htmlContent += `<div class="item-hotel" data-editable="map_segment_hotel_${idx}">${formatMixedContent(dest.hotelName)}</div>`;
           }
 
           let timelineDefaultHtml = '';

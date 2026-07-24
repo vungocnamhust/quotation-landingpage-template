@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" 
-  style="--hero-img: url('/assets/vietnam-safar-logo.png');  --img-1: url('/assets/vietnam-safar-logo.png');  --img-2: url('/assets/vietnam-safar-logo.png');  --img-3: url('/assets/vietnam-safar-logo.png');  --img-4: url('/assets/quang-nam/hoian3.jpg');  --img-5: url('/assets/da-nang/danang1.jpg');  --img-6: url('/assets/thua-thien-hue/hue2.jpg');  --img-7: url('/assets/vietnam-safar-logo.png'); ">
+  style="--hero-img: url('/assets/ha-noi/hero/hero2.webp');  --img-1: url('/assets/vietnam-safar-logo.png');  --img-2: url('/assets/vietnam-safar-logo.png');  --img-3: url('/assets/vietnam-safar-logo.png');  --img-4: url('/assets/quang-nam/hoian3.jpg');  --img-5: url('/assets/da-nang/danang1.jpg');  --img-6: url('/assets/thua-thien-hue/hue2.jpg');  --img-7: url('/assets/vietnam-safar-logo.png'); ">
 
 <head>
   <meta charset="UTF-8" />
@@ -2955,15 +2955,6 @@
       }
     }
   </style>
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const heroImages = [
-        '/assets/brands/hero/elder.png'
-      ];
-      const randomHero = heroImages[Math.floor(Math.random() * heroImages.length)];
-      document.documentElement.style.setProperty('--hero-img', `url(${randomHero})`);
-    });
-  </script>
 </head>
 
 <body>
@@ -5230,10 +5221,10 @@
               <!-- Side-by-Side Images -->
               <div class="hotel-images-group hotel-images-grid odd-group">
                 <div class="img-wrapper-main hotel-image-wrapper">
-                  <img src="/assets/hotels/hanoi/peridot-grand-luxury-boutique-hotel/exterior/image_1.jpg" alt="Peridot Grand Luxury Boutique Hotel">
+                  <img src="/assets/hotels/hanoi/peridot-grand-luxury-boutique-hotel/interior/image_1.jpg" alt="Peridot Grand Luxury Boutique Hotel">
                 </div>
                 <div class="img-wrapper-sub hotel-image-wrapper">
-                  <img src="/assets/hotels/hanoi/peridot-grand-luxury-boutique-hotel/interior/image_2.jpg" alt="Peridot Grand Luxury Boutique Hotel Room">
+                  <img src="/assets/hotels/hanoi/peridot-grand-luxury-boutique-hotel/interior/image_1.jpg" alt="Peridot Grand Luxury Boutique Hotel Room">
                 </div>
               </div>
 
@@ -5293,7 +5284,7 @@
                   <img src="/assets/hotels/halong/celina-of-the-sea-cruise/exterior/image_2.webp" alt="Celina Of The Sea Cruise">
                 </div>
                 <div class="img-wrapper-sub hotel-image-wrapper">
-                  <img src="/assets/hotels/halong/celina-of-the-sea-cruise/interior/image_3.jpg" alt="Celina Of The Sea Cruise Room">
+                  <img src="/assets/hotels/halong/celina-of-the-sea-cruise/exterior/image_2.webp" alt="Celina Of The Sea Cruise Room">
                 </div>
               </div>
 
@@ -5350,10 +5341,10 @@
               <!-- Side-by-Side Images -->
               <div class="hotel-images-group hotel-images-grid odd-group">
                 <div class="img-wrapper-main hotel-image-wrapper">
-                  <img src="/assets/hotels/quang-nam/anantara-hoi-an-resort/exterior/image_3.jpg" alt="Anantara Hoi An Resort">
+                  <img src="" alt="Anantara Hoi An Resort">
                 </div>
                 <div class="img-wrapper-sub hotel-image-wrapper">
-                  <img src="/assets/hotels/quang-nam/anantara-hoi-an-resort/interior/image_1.jpg" alt="Anantara Hoi An Resort Room">
+                  <img src="" alt="Anantara Hoi An Resort Room">
                 </div>
               </div>
 
@@ -5410,10 +5401,10 @@
               <!-- Side-by-Side Images -->
               <div class="hotel-images-group hotel-images-grid even-group">
                 <div class="img-wrapper-main hotel-image-wrapper">
-                  <img src="/assets/hotels/danang/hyatt-regency-danang-resort-and-spa/exterior/image_1.jpg" alt="Hyatt Regency Danang Resort and Spa">
+                  <img src="" alt="Hyatt Regency Danang Resort and Spa">
                 </div>
                 <div class="img-wrapper-sub hotel-image-wrapper">
-                  <img src="/assets/hotels/danang/hyatt-regency-danang-resort-and-spa/interior/image_2.jpg" alt="Hyatt Regency Danang Resort and Spa Room">
+                  <img src="" alt="Hyatt Regency Danang Resort and Spa Room">
                 </div>
               </div>
 
@@ -6050,7 +6041,7 @@
                 <div
                   style="width: 54px; height: 54px; border-radius: 50%; border: 1px solid var(--gold, #c5a059); display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: white; padding: 10px;">
                   <img
-                    src="/assets/brands/indochine_icon/button_icon/mountain.png"
+                    src="/assets/brands/indochine_icon/button_icon/human.png"
                     alt="icon" style="width: 100%; height: 100%; object-fit: contain;">
                 </div>
                 <div>
@@ -6072,7 +6063,7 @@
                 <div
                   style="width: 54px; height: 54px; border-radius: 50%; border: 1px solid var(--gold, #c5a059); display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: white; padding: 10px;">
                   <img
-                    src="/assets/brands/indochine_icon/button_icon/mountain.png"
+                    src="/assets/brands/indochine_icon/button_icon/human.png"
                     alt="icon" style="width: 100%; height: 100%; object-fit: contain;">
                 </div>
                 <div>
@@ -6756,6 +6747,11 @@
 
         el.contentEditable = 'true';
         el.spellcheck = false;
+        
+        // Prevent click bubbling so clicking text to edit doesn't trigger parent click listeners (e.g., timeline map zoom)
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+        });
 
         // Wrap it and add translate button if lang is not English
         if (CURRENT_LANG !== 'en') {
@@ -7173,7 +7169,7 @@
     [{"dayNumber": 1, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "Day 1 \u2014 Hanoi", "showMarker": true, "stopOrder": 1}, {"dayNumber": 2, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "Day 2 \u2014 Hanoi", "showMarker": true, "stopOrder": 1}, {"dayNumber": 3, "destination": "Ninh Binh", "displayName": "Ninh Binh", "kind": "overnight", "mapTitle": "Day 3 \u2014 Ninh Binh", "showMarker": true, "stopOrder": 1}, {"dayNumber": 4, "destination": "Halong Bay", "displayName": "Halong Bay", "kind": "overnight", "mapTitle": "Day 4 \u2014 Halong Bay", "showMarker": true, "stopOrder": 1}, {"dayNumber": 5, "destination": "Hoi An", "displayName": "Hoi An", "kind": "overnight", "mapTitle": "Day 5 \u2014 Hoi An", "showMarker": true, "stopOrder": 1}, {"dayNumber": 6, "destination": "Hoi An", "displayName": "Hoi An", "kind": "overnight", "mapTitle": "Day 6 \u2014 Hoi An", "showMarker": true, "stopOrder": 1}, {"dayNumber": 7, "destination": "Hoi An", "displayName": "Hoi An", "kind": "overnight", "mapTitle": "Day 7 \u2014 Hoi An", "showMarker": true, "stopOrder": 1}, {"dayNumber": 8, "destination": "Da Nang", "displayName": "Da Nang", "kind": "overnight", "mapTitle": "Day 8 \u2014 Da Nang", "showMarker": true, "stopOrder": 1}, {"dayNumber": 9, "destination": "Da Nang", "displayName": "Da Nang", "kind": "overnight", "mapTitle": "Day 9 \u2014 Da Nang", "showMarker": true, "stopOrder": 1}, {"dayNumber": 10, "destination": "Hue", "displayName": "Hue", "kind": "overnight", "mapTitle": "Day 10 \u2014 Hue", "showMarker": true, "stopOrder": 1}, {"dayNumber": 11, "destination": "Da Nang", "displayName": "Da Nang", "kind": "overnight", "mapTitle": "Day 11 \u2014 Da Nang", "showMarker": true, "stopOrder": 1}, {"dayNumber": 12, "destination": "Ho Chi Minh City", "displayName": "Ho Chi Minh City", "kind": "overnight", "mapTitle": "Day 12 \u2014 Ho Chi Minh City", "showMarker": true, "stopOrder": 1}, {"dayNumber": 13, "destination": "Ho Chi Minh City", "displayName": "Ho Chi Minh City", "kind": "overnight", "mapTitle": "Day 13 \u2014 Ho Chi Minh City", "showMarker": true, "stopOrder": 1}, {"dayNumber": 14, "destination": "Departure", "displayName": "Departure", "kind": "overnight", "mapTitle": "Day 14 \u2014 Departure", "showMarker": true, "stopOrder": 1}]
   </script>
   <script id="stay-segments-data" type="application/json">
-    [{"activityPreviews": [{"dayNumber": 1, "label": "Day 1", "summary": "Upon arrival at Noi Bai International Airport, guests are warmly received by our dedicated concierge team and escorted..."}, {"dayNumber": 2, "label": "Day 2", "summary": "The day is devoted to a comprehensive exploration of Hanoi\u2019s rich heritage. Accompanied by a private historian guide,..."}], "city": "Hanoi", "coords": [21.0285, 105.8542], "dayEnd": 2, "dayStart": 1, "daysLabel": "Days 1-2", "displayName": "Hanoi", "excursions": [], "hotelDateRange": "27 Mar \u2013 30 Mar 2027", "hotelImage": "/assets/hotels/hanoi/peridot-grand-luxury-boutique-hotel/exterior/image_1.jpg", "hotelName": "Peridot Grand Luxury Boutique Hotel", "nights": 2, "nightsLabel": "2 nights", "order": 1, "segmentId": "stay-1", "transportFromPrevious": ""}, {"activityPreviews": [{"dayNumber": 3, "label": "Day 3", "summary": "Guests depart Hanoi for the spectacular landscapes of Ninh Binh. The program features a private sampan excursion..."}], "city": "Ninh Binh", "coords": [20.2539, 105.975], "dayEnd": 3, "dayStart": 3, "daysLabel": "Day 3", "displayName": "Ninh Binh", "excursions": [], "hotelDateRange": "30 Mar \u2013 31 Mar 2027", "hotelImage": "/assets/hotels/halong/celina-of-the-sea-cruise/exterior/image_2.webp", "hotelName": "Celina Of The Sea Cruise", "nights": 1, "nightsLabel": "1 night", "order": 2, "segmentId": "stay-2", "transportFromPrevious": "Hanoi \u2192 Ninh Binh"}, {"activityPreviews": [{"dayNumber": 4, "label": "Day 4", "summary": "A private transfer conveys guests to the coastal city of Ha Long to board the distinguished Celina Of The Sea Cruise...."}], "city": "Halong Bay", "coords": [20.9599, 107.0436], "dayEnd": 4, "dayStart": 4, "daysLabel": "Day 4", "displayName": "Halong Bay", "excursions": [], "hotelDateRange": "31 Mar \u2013 03 Apr 2027", "hotelImage": "/assets/hotels/quang-nam/anantara-hoi-an-resort/exterior/image_3.jpg", "hotelName": "Anantara Hoi An Resort", "nights": 1, "nightsLabel": "1 night", "order": 3, "segmentId": "stay-3", "transportFromPrevious": "Ninh Binh \u2192 Halong Bay"}, {"activityPreviews": [{"dayNumber": 5, "label": "Day 5", "summary": "Following a leisurely morning on the cruise, guests disembark and are transferred for a short domestic flight to Da..."}, {"dayNumber": 6, "label": "Day 6", "summary": "A full-day guided exploration of the beautifully preserved Hoi An Ancient Town. The private tour delves into the..."}, {"dayNumber": 7, "label": "Day 7", "summary": "The morning features a specialized photography tour, designed to capture professional portraits of the family against..."}], "city": "Hoi An", "coords": [15.8801, 108.338], "dayEnd": 7, "dayStart": 5, "daysLabel": "Days 5-7", "displayName": "Hoi An", "excursions": [], "hotelDateRange": "03 Apr \u2013 07 Apr 2027", "hotelImage": "/assets/hotels/danang/hyatt-regency-danang-resort-and-spa/exterior/image_1.jpg", "hotelName": "Hyatt Regency Danang Resort and Spa", "nights": 3, "nightsLabel": "3 nights", "order": 4, "segmentId": "stay-4", "transportFromPrevious": "Halong Bay \u2192 Hoi An"}, {"activityPreviews": [{"dayNumber": 8, "label": "Day 8", "summary": "The journey continues with a transfer to the coastal city of Da Nang, coupled with a curated half-day city tour..."}, {"dayNumber": 9, "label": "Day 9", "summary": "A premium excursion to the elevated resort of Ba Na Hills. The itinerary includes priority access to the cable car..."}], "city": "Da Nang", "coords": [16.0544, 108.2022], "dayEnd": 9, "dayStart": 8, "daysLabel": "Days 8-9", "displayName": "Da Nang", "excursions": [], "hotelDateRange": "07 Apr \u2013 09 Apr 2027", "hotelImage": "/assets/hotels/saigon/the-reverie-saigon-hotel/exterior/image_2.jpg", "hotelName": "The Reverie Saigon Hotel", "nights": 2, "nightsLabel": "2 nights", "order": 5, "segmentId": "stay-5", "transportFromPrevious": "Hoi An \u2192 Da Nang"}, {"activityPreviews": [{"dayNumber": 10, "label": "Day 10", "summary": "A full-day excursion to the former imperial capital of Hue. The privately guided itinerary encompasses the majestic..."}], "city": "Hue", "coords": [16.4637, 107.5909], "dayEnd": 10, "dayStart": 10, "daysLabel": "Day 10", "displayName": "Hue", "excursions": [], "hotelDateRange": "", "hotelImage": "", "hotelName": "", "nights": 1, "nightsLabel": "1 night", "order": 6, "segmentId": "stay-6", "transportFromPrevious": "Da Nang \u2192 Hue"}, {"activityPreviews": [{"dayNumber": 11, "label": "Day 11", "summary": "A day allocated entirely for leisure at the beachfront villa, allowing guests to relax by their private pool or partake..."}], "city": "Da Nang", "coords": [16.0544, 108.2022], "dayEnd": 11, "dayStart": 11, "daysLabel": "Day 11", "displayName": "Da Nang", "excursions": [], "hotelDateRange": "", "hotelImage": "", "hotelName": "", "nights": 1, "nightsLabel": "1 night", "order": 7, "segmentId": "stay-7", "transportFromPrevious": "Hue \u2192 Da Nang"}, {"activityPreviews": [{"dayNumber": 12, "label": "Day 12", "summary": "Following a seamless domestic flight to Ho Chi Minh City, guests embark on a privately guided tour of the historic Cu..."}, {"dayNumber": 13, "label": "Day 13", "summary": "An immersive full-day journey into the Mekong Delta. Traveling aboard a private luxury river vessel, guests observe the..."}], "city": "Ho Chi Minh City", "coords": [10.8231, 106.6297], "dayEnd": 13, "dayStart": 12, "daysLabel": "Days 12-13", "displayName": "Ho Chi Minh City", "excursions": [], "hotelDateRange": "", "hotelImage": "", "hotelName": "", "nights": 2, "nightsLabel": "2 nights", "order": 8, "segmentId": "stay-8", "transportFromPrevious": "Da Nang \u2192 Ho Chi Minh City"}, {"activityPreviews": [{"dayNumber": 14, "label": "Day 14", "summary": "The final morning is at the guests\u0027 leisure to enjoy the premium facilities of The Reverie Saigon. At the appropriate..."}], "city": "Departure", "coords": null, "dayEnd": 14, "dayStart": 14, "daysLabel": "Day 14", "displayName": "Departure", "excursions": [], "hotelDateRange": "", "hotelImage": "", "hotelName": "", "nights": 1, "nightsLabel": "1 night", "order": 9, "segmentId": "stay-9", "transportFromPrevious": "Ho Chi Minh City \u2192 Departure"}]
+    [{"activityPreviews": [{"dayNumber": 1, "label": "Day 1", "summary": "Upon arrival at Noi Bai International Airport, guests are warmly received by our dedicated concierge team and escorted..."}, {"dayNumber": 2, "label": "Day 2", "summary": "The day is devoted to a comprehensive exploration of Hanoi\u2019s rich heritage. Accompanied by a private historian guide,..."}], "city": "Hanoi", "coords": [21.0285, 105.8542], "dayEnd": 2, "dayStart": 1, "daysLabel": "Days 1-2", "displayName": "Hanoi", "excursions": [], "hotelDateRange": "27 Mar \u2013 30 Mar 2027", "hotelImage": "/assets/hotels/hanoi/peridot-grand-luxury-boutique-hotel/interior/image_1.jpg", "hotelName": "Peridot Grand Luxury Boutique Hotel", "nights": 2, "nightsLabel": "2 nights", "order": 1, "segmentId": "stay-1", "transportFromPrevious": ""}, {"activityPreviews": [{"dayNumber": 3, "label": "Day 3", "summary": "Guests depart Hanoi for the spectacular landscapes of Ninh Binh. The program features a private sampan excursion..."}], "city": "Ninh Binh", "coords": [20.2539, 105.975], "dayEnd": 3, "dayStart": 3, "daysLabel": "Day 3", "displayName": "Ninh Binh", "excursions": [], "hotelDateRange": "30 Mar \u2013 31 Mar 2027", "hotelImage": "/assets/hotels/halong/celina-of-the-sea-cruise/exterior/image_2.webp", "hotelName": "Celina Of The Sea Cruise", "nights": 1, "nightsLabel": "1 night", "order": 2, "segmentId": "stay-2", "transportFromPrevious": "Hanoi \u2192 Ninh Binh"}, {"activityPreviews": [{"dayNumber": 4, "label": "Day 4", "summary": "A private transfer conveys guests to the coastal city of Ha Long to board the distinguished Celina Of The Sea Cruise...."}], "city": "Halong Bay", "coords": [20.9599, 107.0436], "dayEnd": 4, "dayStart": 4, "daysLabel": "Day 4", "displayName": "Halong Bay", "excursions": [], "hotelDateRange": "31 Mar \u2013 03 Apr 2027", "hotelImage": "", "hotelName": "Anantara Hoi An Resort", "nights": 1, "nightsLabel": "1 night", "order": 3, "segmentId": "stay-3", "transportFromPrevious": "Ninh Binh \u2192 Halong Bay"}, {"activityPreviews": [{"dayNumber": 5, "label": "Day 5", "summary": "Following a leisurely morning on the cruise, guests disembark and are transferred for a short domestic flight to Da..."}, {"dayNumber": 6, "label": "Day 6", "summary": "A full-day guided exploration of the beautifully preserved Hoi An Ancient Town. The private tour delves into the..."}, {"dayNumber": 7, "label": "Day 7", "summary": "The morning features a specialized photography tour, designed to capture professional portraits of the family against..."}], "city": "Hoi An", "coords": [15.8801, 108.338], "dayEnd": 7, "dayStart": 5, "daysLabel": "Days 5-7", "displayName": "Hoi An", "excursions": [], "hotelDateRange": "03 Apr \u2013 07 Apr 2027", "hotelImage": "", "hotelName": "Hyatt Regency Danang Resort and Spa", "nights": 3, "nightsLabel": "3 nights", "order": 4, "segmentId": "stay-4", "transportFromPrevious": "Halong Bay \u2192 Hoi An"}, {"activityPreviews": [{"dayNumber": 8, "label": "Day 8", "summary": "The journey continues with a transfer to the coastal city of Da Nang, coupled with a curated half-day city tour..."}, {"dayNumber": 9, "label": "Day 9", "summary": "A premium excursion to the elevated resort of Ba Na Hills. The itinerary includes priority access to the cable car..."}], "city": "Da Nang", "coords": [16.0544, 108.2022], "dayEnd": 9, "dayStart": 8, "daysLabel": "Days 8-9", "displayName": "Da Nang", "excursions": [], "hotelDateRange": "07 Apr \u2013 09 Apr 2027", "hotelImage": "/assets/hotels/saigon/the-reverie-saigon-hotel/exterior/image_2.jpg", "hotelName": "The Reverie Saigon Hotel", "nights": 2, "nightsLabel": "2 nights", "order": 5, "segmentId": "stay-5", "transportFromPrevious": "Hoi An \u2192 Da Nang"}, {"activityPreviews": [{"dayNumber": 10, "label": "Day 10", "summary": "A full-day excursion to the former imperial capital of Hue. The privately guided itinerary encompasses the majestic..."}], "city": "Hue", "coords": [16.4637, 107.5909], "dayEnd": 10, "dayStart": 10, "daysLabel": "Day 10", "displayName": "Hue", "excursions": [], "hotelDateRange": "", "hotelImage": "", "hotelName": "", "nights": 1, "nightsLabel": "1 night", "order": 6, "segmentId": "stay-6", "transportFromPrevious": "Da Nang \u2192 Hue"}, {"activityPreviews": [{"dayNumber": 11, "label": "Day 11", "summary": "A day allocated entirely for leisure at the beachfront villa, allowing guests to relax by their private pool or partake..."}], "city": "Da Nang", "coords": [16.0544, 108.2022], "dayEnd": 11, "dayStart": 11, "daysLabel": "Day 11", "displayName": "Da Nang", "excursions": [], "hotelDateRange": "", "hotelImage": "", "hotelName": "", "nights": 1, "nightsLabel": "1 night", "order": 7, "segmentId": "stay-7", "transportFromPrevious": "Hue \u2192 Da Nang"}, {"activityPreviews": [{"dayNumber": 12, "label": "Day 12", "summary": "Following a seamless domestic flight to Ho Chi Minh City, guests embark on a privately guided tour of the historic Cu..."}, {"dayNumber": 13, "label": "Day 13", "summary": "An immersive full-day journey into the Mekong Delta. Traveling aboard a private luxury river vessel, guests observe the..."}], "city": "Ho Chi Minh City", "coords": [10.8231, 106.6297], "dayEnd": 13, "dayStart": 12, "daysLabel": "Days 12-13", "displayName": "Ho Chi Minh City", "excursions": [], "hotelDateRange": "", "hotelImage": "", "hotelName": "", "nights": 2, "nightsLabel": "2 nights", "order": 8, "segmentId": "stay-8", "transportFromPrevious": "Da Nang \u2192 Ho Chi Minh City"}, {"activityPreviews": [{"dayNumber": 14, "label": "Day 14", "summary": "The final morning is at the guests\u0027 leisure to enjoy the premium facilities of The Reverie Saigon. At the appropriate..."}], "city": "Departure", "coords": null, "dayEnd": 14, "dayStart": 14, "daysLabel": "Day 14", "displayName": "Departure", "excursions": [], "hotelDateRange": "", "hotelImage": "", "hotelName": "", "nights": 1, "nightsLabel": "1 night", "order": 9, "segmentId": "stay-9", "transportFromPrevious": "Ho Chi Minh City \u2192 Departure"}]
   </script>
   <script>
     window.currentLang = "en";
@@ -7638,20 +7634,22 @@
           const itemDiv = document.createElement('div');
           itemDiv.className = `timeline-item ${idx === 0 ? 'active' : ''}`;
 
-          let durationHtml = '';
-          if (dayRangeStr && dest.nightsLabel) {
-            durationHtml = `${dayRangeStr} &bull; ${dest.nightsLabel}`;
-          } else {
-            durationHtml = `${dayRangeStr || dest.nightsLabel || ''}`;
+          let durationHtml = dest.mapSegmentDuration;
+          if (!durationHtml) {
+            if (dayRangeStr && dest.nightsLabel) {
+              durationHtml = `${dayRangeStr} &bull; ${dest.nightsLabel}`;
+            } else {
+              durationHtml = `${dayRangeStr || dest.nightsLabel || ''}`;
+            }
           }
 
           let htmlContent = `
-              <div class="item-duration">${durationHtml}</div>
-              <h3 class="item-title">${formatMixedContent(dest.displayName)}</h3>
+              <div class="item-duration" data-editable="map_segment_duration_${idx}">${durationHtml}</div>
+              <h3 class="item-title" data-editable="map_segment_title_${idx}">${formatMixedContent(dest.displayName)}</h3>
           `;
 
           if (dest.hotelName) {
-            htmlContent += `<div class="item-hotel">${formatMixedContent(dest.hotelName)}</div>`;
+            htmlContent += `<div class="item-hotel" data-editable="map_segment_hotel_${idx}">${formatMixedContent(dest.hotelName)}</div>`;
           }
 
           let timelineDefaultHtml = '';

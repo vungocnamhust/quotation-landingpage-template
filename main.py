@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import asyncio
+import copy
 import re
 from functools import partial
 from dotenv import load_dotenv
@@ -3186,6 +3187,25 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         ),
     }
 
+    hero_meta_1 = lang_override.get("hero_meta_1") or f"{days_count} DAYS • {nights_count} NIGHTS • {guests_txt.upper() if guests_txt else 'FAMILY VACATION'}"
+    letter_greeting = lang_override.get("letter_greeting") or f"Dear {prepared_for},"
+    letter_intro = lang_override.get("letter_intro") or (
+        f"I am delighted to present this privately arranged journey: {overview_heading}, created for "
+        f"{guests_txt or 'two guests'} travelling from {travel_dates}. The route unfolds from {route_txt}."
+    )
+    letter_body_p2 = lang_override.get("letter_body_p2") or (
+        "The programme has been considered around a gentler family rhythm: early check-in in Hanoi, "
+        "private guiding and transfers, a premium overnight train cabin, and enough space between active days "
+        "to pause. Dining, room arrangements and transitions have been planned with care, without adding "
+        "unnecessary movement."
+    )
+    letter_outro = lang_override.get("letter_outro") or (
+        "Please review the journey as a starting point for a personal conversation. Every final detail can be "
+        "refined around your preferred pace, room choices and family priorities."
+    )
+    letter_sign_off = lang_override.get("letter_sign_off") or "Anh Son Le"
+    letter_sender = lang_override.get("letter_sender") or "Your Journey Designer"
+
     return {
         # IDs & images
         "quotation_id":   quotation_id,
@@ -3215,6 +3235,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         "contact":        seller_phone,
         "contact_web":    brand.get("domain") if brand else "www.vietnamsafar.vn",
         "contact_phone":  seller_phone,
+        "hero_meta_1":    hero_meta_1,
         # Quotation ref
         "quotation_number": payload.quotationNumber or quotation_id,
         "quotation_date":   quotation_start_date or travel_dates,
@@ -3271,6 +3292,12 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         "price_cond_paras": [] if lang_override.get("hide_price_conditions") else price_cond_paras,
         "payment_terms":    translate_filter("Refer to Booking & Payment terms below.", lang),
         "terms_p":          price_cond_paras[0] if price_cond_paras else "",
+        "letter_greeting":  letter_greeting,
+        "letter_intro":     letter_intro,
+        "letter_body_p2":   letter_body_p2,
+        "letter_outro":     letter_outro,
+        "letter_sign_off":  letter_sign_off,
+        "letter_sender":    letter_sender,
         # CTA
         "cta_h2": lang_override.get("cta_h2", translate_filter("Confirm dates, then refine the luxury layer.", lang)),
         "cta_p":  translate_filter("Share travel dates, preferred hotel tier, rooming list and any dietary or mobility requirements. We will reconfirm availability and return a finalized quotation.", lang),
@@ -3757,7 +3784,9 @@ async def create_quotation_b2c(request: Request):
         loop.run_in_executor(None, partial(tmpl_lp.render,  **ctx)),
         loop.run_in_executor(None, partial(tmpl_pdf.render, **ctx)),
     )
-    ctx.setdefault("html_sync", {})[lang] = _capture_html_sync_state(rendered_html)
+    initial_html_sync = _capture_html_sync_state(rendered_html)
+    initial_html_sync["captured_from_version"] = 1
+    ctx.setdefault("html_sync", {})[lang] = initial_html_sync
 
     # ── Update in-memory store ────────────────────────────────────────────
     quotations[quotation_id] = {
@@ -3942,7 +3971,9 @@ async def create_quotation(request: Request):
         loop.run_in_executor(None, partial(tmpl_lp.render,  **ctx)),
         loop.run_in_executor(None, partial(tmpl_pdf.render, **ctx)),
     )
-    ctx.setdefault("html_sync", {})[lang] = _capture_html_sync_state(rendered_html)
+    initial_html_sync = _capture_html_sync_state(rendered_html)
+    initial_html_sync["captured_from_version"] = 1
+    ctx.setdefault("html_sync", {})[lang] = initial_html_sync
 
     # ── Update in-memory store ────────────────────────────────────────────
     quotations[quotation_id] = {
@@ -4169,6 +4200,109 @@ def parse_edited_fields(html_content: str) -> dict:
     parser.feed(html_content)
     return parser.edited_fields
 
+def _normalize_visible_text(value: str) -> str:
+    if not value:
+        return ""
+    value = re.sub(r'<\s*br\s*/?>', '\n', value, flags=re.IGNORECASE)
+    value = re.sub(r'</\s*(div|p|li|h[1-6])\s*>', '\n', value, flags=re.IGNORECASE)
+    value = re.sub(r'<[^>]*>', '', value)
+    value = value.replace("\xa0", " ")
+    lines = [" ".join(line.split()) for line in value.splitlines()]
+    lines = [line for line in lines if line]
+    return "\n".join(lines).strip()
+
+def _extract_editable_inner_html(html_content: str, field_name: str) -> str:
+    pattern = rf'<(?P<tag>[a-zA-Z0-9]+)(?P<attrs>[^>]*?)data-editable=["\']{re.escape(field_name)}["\'](?P<attrs2>[^>]*)>(?P<body>.*?)</(?P=tag)>'
+    match = re.search(pattern, html_content, flags=re.DOTALL)
+    if match:
+        return match.group("body").strip()
+    return ""
+
+def _extract_letter_intro_parts(letter_intro_text: str) -> dict:
+    parts = {}
+    if not letter_intro_text:
+        return parts
+
+    guest_match = re.search(r'created for\s+(.*?)\s+travelling from', letter_intro_text, flags=re.IGNORECASE | re.DOTALL)
+    if guest_match:
+        parts["guests_txt"] = " ".join(guest_match.group(1).split())
+
+    route_match = re.search(r'The route unfolds from\s+(.*?)(?:\.|$)', letter_intro_text, flags=re.IGNORECASE | re.DOTALL)
+    if route_match:
+        parts["route_txt"] = " ".join(route_match.group(1).split())
+
+    title_match = re.search(r'journey:\s+(.*?),\s+created for', letter_intro_text, flags=re.IGNORECASE | re.DOTALL)
+    if title_match:
+        parts["overview_heading"] = " ".join(title_match.group(1).split())
+
+    return parts
+
+def _capture_composite_sync_state(html_content: str) -> dict:
+    edited_fields = parse_edited_fields(html_content)
+    composite = {
+        "top_level": {},
+        "hotels": {},
+    }
+
+    top_fields = [
+        "hero_meta_1",
+        "letter_greeting",
+        "letter_intro",
+        "letter_body_p2",
+        "letter_outro",
+        "letter_sign_off",
+        "letter_sender",
+        "contact",
+        "seller_email",
+        "contact_phone",
+        "footer_text",
+    ]
+    for field_name in top_fields:
+        value = edited_fields.get(field_name)
+        if value:
+            composite["top_level"][field_name] = value
+
+    letter_greeting = composite["top_level"].get("letter_greeting", "")
+    greeting_match = re.match(r'^Dear\s+(.*?)(?:,)?$', letter_greeting, flags=re.IGNORECASE | re.DOTALL)
+    if greeting_match:
+        composite["top_level"]["customer_name"] = " ".join(greeting_match.group(1).split())
+
+    composite["top_level"].update(_extract_letter_intro_parts(composite["top_level"].get("letter_intro", "")))
+
+    hotel_indexes = sorted({int(idx) for idx in re.findall(r'data-editable=["\']hotel_intro_(\d+)["\']', html_content)})
+    room_type_label = re.compile(r'Room\s*type\s*:?\s*', flags=re.IGNORECASE)
+    for idx in hotel_indexes:
+        hotel_intro_html = _extract_editable_inner_html(html_content, f"hotel_intro_{idx}")
+        hotel_intro_text = _normalize_visible_text(hotel_intro_html)
+        room_type = ""
+
+        room_match = room_type_label.search(hotel_intro_text)
+        if room_match:
+            intro_text = hotel_intro_text[:room_match.start()].strip()
+            room_type_text = hotel_intro_text[room_match.end():].strip()
+            if "\n" in room_type_text:
+                room_type_text = room_type_text.split("\n", 1)[0].strip()
+            hotel_intro_text = intro_text
+            room_type = room_type_text
+
+        explicit_room_type = edited_fields.get(f"hotel_room_type_{idx}")
+        if explicit_room_type:
+            room_type = explicit_room_type.strip()
+
+        hotel_entry = {}
+        if hotel_intro_text:
+            hotel_entry["hotel_intro"] = hotel_intro_text
+        if room_type:
+            hotel_entry["room_type"] = room_type
+        if hotel_entry:
+            composite["hotels"][str(idx)] = hotel_entry
+
+    if not composite["top_level"]:
+        composite.pop("top_level")
+    if not composite["hotels"]:
+        composite.pop("hotels")
+    return composite
+
 def get_existing_editable_keys(html_content: str) -> set[str]:
     import re
     return set(re.findall(r'data-editable=["\']([^"\']+)["\']', html_content))
@@ -4268,7 +4402,10 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
             'designer_experience', 'designer_signature',
             'journey_overview_title', 'label_prepared_for', 'label_overview',
             'label_guests', 'label_travel_dates', 'label_route', 'label_style',
-            'label_ref', 'label_contact', 'label_nationality', 'label_duration'
+            'label_ref', 'label_contact', 'label_nationality', 'label_duration',
+            'hero_meta_1', 'hero_meta_2', 'footer_text', 'seller_email',
+            'contact_phone', 'letter_greeting', 'letter_intro', 'letter_body_p2',
+            'letter_outro', 'letter_sign_off', 'letter_sender', 'letter_highlight'
         ]:
             if key in edited_fields:
                 lang_ctx[key] = edited_fields[key]
@@ -4327,41 +4464,39 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
                             break
                     day['description'] = desc_paras
 
-                    # Update Overnight & Meals
-                    o_key = f"day_overnight_{idx}"
-                    if o_key in edited_fields:
-                        day['overnight'] = edited_fields[o_key]
-                    m_key = f"day_meals_{idx}"
-                    if m_key in edited_fields:
-                        import re
-                        day['meals'] = [m.strip() for m in re.split(r'[·•\-,/]', edited_fields[m_key]) if m.strip()]
+                # Update Overnight & Meals even if description itself was unchanged.
+                o_key = f"day_overnight_{idx}"
+                if o_key in edited_fields:
+                    day['overnight'] = edited_fields[o_key]
+                m_key = f"day_meals_{idx}"
+                if m_key in edited_fields:
+                    day['meals'] = [m.strip() for m in re.split(r'[·•\-,/]', edited_fields[m_key]) if m.strip()]
 
-                    # Update Highlights (activities)
-                    h_key = f"day_highlights_{idx}"
-                    if h_key in edited_fields:
-                        import re
-                        day['activities'] = [h.strip() for h in re.split(r'[·•\-,/]', edited_fields[h_key]) if h.strip()]
+                # Update Highlights (activities)
+                h_key = f"day_highlights_{idx}"
+                if h_key in edited_fields:
+                    day['activities'] = [h.strip() for h in re.split(r'[·•\-,/]', edited_fields[h_key]) if h.strip()]
 
-                    # Update Notes list
-                    any_notes_edited = any(f"day_note_{idx}_{p}" in edited_fields for p in range(20))
-                    if any_notes_edited:
-                        notes_list = []
-                        p = 0
-                        while True:
-                            n_key = f"day_note_{idx}_{p}"
-                            if n_key in edited_fields:
-                                notes_list.append(edited_fields[n_key])
-                                p += 1
-                            elif n_key in existing_keys:
-                                orig_notes = day.get('notes', [])
-                                if p < len(orig_notes):
-                                    notes_list.append(orig_notes[p])
-                                else:
-                                    notes_list.append("")
-                                p += 1
+                # Update Notes list
+                any_notes_edited = any(f"day_note_{idx}_{p}" in edited_fields for p in range(20))
+                if any_notes_edited:
+                    notes_list = []
+                    p = 0
+                    while True:
+                        n_key = f"day_note_{idx}_{p}"
+                        if n_key in edited_fields:
+                            notes_list.append(edited_fields[n_key])
+                            p += 1
+                        elif n_key in existing_keys:
+                            orig_notes = day.get('notes', [])
+                            if p < len(orig_notes):
+                                notes_list.append(orig_notes[p])
                             else:
-                                break
-                        day['notes'] = notes_list
+                                notes_list.append("")
+                            p += 1
+                        else:
+                            break
+                    day['notes'] = notes_list
             new_itinerary.append(day)
     lang_ctx['itinerary'] = new_itinerary
     
@@ -4402,6 +4537,7 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
                     hotel['hotel_intro'] = edited_fields[intro_key]
                 if info_key in edited_fields:
                     hotel['room_name'] = edited_fields[info_key]
+                    hotel['room_type'] = edited_fields[info_key]
             new_hotels.append(hotel)
     lang_ctx['hotels'] = new_hotels
     
@@ -4464,15 +4600,70 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
             new_price_options.append(opt)
     lang_ctx['price_options'] = new_price_options
     
-    # 6. Filter and update map segment descriptions
+    # 6. Filter and update map segment descriptions and sidebar fields
     if "stay_segments" in lang_ctx:
         new_stay_segments = []
         for s_idx, segment in enumerate(lang_ctx["stay_segments"]):
-            key = f"map_segment_desc_{s_idx}"
-            if key in edited_fields and override_text:
-                segment["mapSegmentDesc"] = edited_fields[key]
+            desc_key = f"map_segment_desc_{s_idx}"
+            duration_key = f"map_segment_duration_{s_idx}"
+            title_key = f"map_segment_title_{s_idx}"
+            hotel_key = f"map_segment_hotel_{s_idx}"
+            
+            if desc_key in edited_fields and override_text:
+                segment["mapSegmentDesc"] = edited_fields[desc_key]
+            
+            # The JS uses dest.daysLabel, dest.nightsLabel for durationHtml. We can override daysLabel for now.
+            if duration_key in edited_fields and override_text:
+                # We save it into mapSegmentDuration so JS can use it instead of computing durationHtml
+                segment["mapSegmentDuration"] = edited_fields[duration_key]
+                
+            if title_key in edited_fields and override_text:
+                segment["displayName"] = edited_fields[title_key]
+                
+            if hotel_key in edited_fields and override_text:
+                segment["hotelName"] = edited_fields[hotel_key]
+                
             new_stay_segments.append(segment)
         lang_ctx["stay_segments"] = new_stay_segments
+
+    if "itinerary_days" in lang_ctx and "itinerary" in lang_ctx:
+        existing_flat_days = {
+            day.get("dayNumber"): day
+            for day in lang_ctx.get("itinerary_days", [])
+            if day.get("dayNumber")
+        }
+        rebuilt_flat_days = []
+        for flat_idx, timeline_day in enumerate(lang_ctx.get("itinerary", [])):
+            day_number = timeline_day.get("dayNumber")
+            flat_day = copy.deepcopy(existing_flat_days.get(day_number, {}))
+            if not flat_day:
+                flat_day = {
+                    "dayNumber": day_number,
+                    "layout_type": "single",
+                    "layout_images": {},
+                    "is_alternate": bool(flat_idx % 2),
+                }
+            flat_day.update({
+                "dayNumber": day_number,
+                "date": timeline_day.get("date"),
+                "lang": timeline_day.get("lang", lang_ctx.get("lang", "en")),
+                "title": timeline_day.get("title", ""),
+                "description": copy.deepcopy(timeline_day.get("description", [])),
+                "overnight": timeline_day.get("overnight", ""),
+                "meals": copy.deepcopy(timeline_day.get("meals", [])),
+                "activities": copy.deepcopy(timeline_day.get("activities", [])),
+                "notes": copy.deepcopy(timeline_day.get("notes", [])),
+                "destinations": copy.deepcopy(timeline_day.get("destinations", [])),
+                "label_highlights": timeline_day.get("label_highlights"),
+                "label_notes": timeline_day.get("label_notes"),
+                "label_overnight": timeline_day.get("label_overnight"),
+                "label_meals": timeline_day.get("label_meals"),
+            })
+            if not flat_day.get("segment_city"):
+                destinations = timeline_day.get("destinations") or []
+                flat_day["segment_city"] = destinations[0] if destinations else timeline_day.get("overnight", "Vietnam")
+            rebuilt_flat_days.append(flat_day)
+        lang_ctx["itinerary_days"] = rebuilt_flat_days
 
 def filter_and_override_ctx_by_html(lang_ctx: dict, html_content: str, override_text: bool = True):
     """
@@ -4526,14 +4717,40 @@ def _capture_html_sync_state(html_content: str) -> dict:
     return {
         "existing_keys": sorted(get_existing_editable_keys(html_content)),
         "edited_fields": parse_edited_fields(html_content),
+        "composite_fields": _capture_composite_sync_state(html_content),
     }
 
-def _save_ctx_html_sync_state(ctx_data: dict, target_lang: str | None, html_content: str) -> str:
+def _save_ctx_html_sync_state(ctx_data: dict, target_lang: str | None, html_content: str, captured_from_version: int | None = None) -> str:
     baseline_lang = ctx_data.get("baseline_lang", "en")
     lang_key = _get_lang_sync_key(target_lang, baseline_lang)
     html_sync = ctx_data.setdefault("html_sync", {})
-    html_sync[lang_key] = _capture_html_sync_state(html_content)
+    html_sync_state = _capture_html_sync_state(html_content)
+    if captured_from_version is not None:
+        html_sync_state["captured_from_version"] = captured_from_version
+    html_sync[lang_key] = html_sync_state
     return lang_key
+
+def _apply_composite_html_sync(lang_ctx: dict, composite_fields: dict):
+    if not composite_fields:
+        return
+
+    top_level = composite_fields.get("top_level", {})
+    for key, value in top_level.items():
+        if value:
+            lang_ctx[key] = value
+
+    hotels = composite_fields.get("hotels", {})
+    if hotels:
+        for idx, hotel in enumerate(lang_ctx.get("hotels", []), 1):
+            hotel_sync = hotels.get(str(idx))
+            if not hotel_sync:
+                continue
+            if hotel_sync.get("hotel_intro"):
+                hotel["introduction"] = hotel_sync["hotel_intro"]
+                hotel["hotel_intro"] = hotel_sync["hotel_intro"]
+            if hotel_sync.get("room_type"):
+                hotel["room_type"] = hotel_sync["room_type"]
+                hotel["room_name"] = hotel_sync["room_type"]
 
 def _apply_ctx_html_sync(
     lang_ctx: dict,
@@ -4552,6 +4769,7 @@ def _apply_ctx_html_sync(
             lang_sync.get("edited_fields", {}),
             override_text=True,
         )
+        _apply_composite_html_sync(lang_ctx, lang_sync.get("composite_fields", {}))
         if target_lang == "ar":
             lang_ctx.update(canonicalize_place_names_in_data(lang_ctx, target_lang))
         return True
@@ -4565,6 +4783,7 @@ def _apply_ctx_html_sync(
                 {},
                 override_text=False,
             )
+            _apply_composite_html_sync(lang_ctx, baseline_sync.get("composite_fields", {}))
             if target_lang == "ar":
                 lang_ctx.update(canonicalize_place_names_in_data(lang_ctx, target_lang))
             applied = True
@@ -4596,10 +4815,18 @@ async def _render_quotation_doc_from_ctx(
     tmpl = templates.get_template(tmpl_name)
 
     brand_config = resolve_brand(request, payload_dict)
+    hero_image_url = ctx_data.get("img_0", "/assets/vietnam-safar-logo.png")
+    if hero_image_url == "/assets/vietnam-safar-logo.png":
+        for day in ctx_data.get("itinerary_days", []) or ctx_data.get("itinerary", []):
+            day_hero = day.get("layout_images", {}).get("hero")
+            if day_hero:
+                hero_image_url = day_hero
+                break
+
     lang_ctx = _build_ctx(
         quotation_id=quotation_id,
         payload=payload_obj,
-        hero_image_url=ctx_data.get("img_0", "/assets/vietnam-safar-logo.png"),
+        hero_image_url=hero_image_url,
         destinations=ctx_data.get("destinations", []),
         lang=effective_lang,
         template_name=base_tmpl,
@@ -4608,8 +4835,11 @@ async def _render_quotation_doc_from_ctx(
     lang_ctx["brand"] = brand_config
     if ctx_data.get("designer_img"):
         lang_ctx["designer_img"] = ctx_data.get("designer_img")
+    
     if ctx_data.get("hero_img"):
         lang_ctx["hero_img_custom"] = ctx_data.get("hero_img")
+    elif hero_image_url != "/assets/vietnam-safar-logo.png":
+        lang_ctx["hero_img_custom"] = hero_image_url
 
     lang_ctx["translations"] = ctx_data.get("translations", {})
     lang_ctx["baseline_lang"] = baseline_lang
@@ -5018,7 +5248,7 @@ async def publish_quotation(quotation_id: str, body: PublishRequest, request: Re
                 is_pdf=False,
                 ignore_published_html=True,
             )
-            _save_ctx_html_sync_state(ctx_data, target_lang, new_html)
+            _save_ctx_html_sync_state(ctx_data, target_lang, new_html, captured_from_version=version)
             # Strip editor scripts before publishing
             idx_bar = new_html.find('id="publish-bar"')
             if idx_bar == -1:
@@ -5036,7 +5266,7 @@ async def publish_quotation(quotation_id: str, body: PublishRequest, request: Re
                             new_html = new_html[:idx_start] + new_html[idx_end:]
             body.html = new_html
         else:
-            _save_ctx_html_sync_state(ctx_data, target_lang, body.html)
+            _save_ctx_html_sync_state(ctx_data, target_lang, body.html, captured_from_version=version)
 
         rendered_pdf, effective_lang = await _render_quotation_doc_from_ctx(
             ctx_data,
@@ -6906,6 +7136,10 @@ def get_luxury_hotel_details(hotel_name_or_arr: str, destination: str, checkin: 
             room_type = parts[1]
         if len(parts) > 2:
             notes = " - ".join(parts[2:])
+        if not room_type:
+            paren_match = re.search(r'\(([^()]+)\)\s*$', hotel_name_or_arr)
+            if paren_match:
+                room_type = paren_match.group(1).strip()
             
     name = raw_name.split("(")[0].strip() if raw_name else "Luxury Hotel"
     tel = "+84 28 3933 3226"
@@ -6955,6 +7189,9 @@ def get_luxury_hotel_details(hotel_name_or_arr: str, destination: str, checkin: 
         "introduction": intro,
         "hotel_img": hotel_img,
         "room_img": room_img,
+        "room_type": room_type,
+        "room_name": room_type,
+        "notes": notes,
         "date_range": date_range,
         "tel": tel,
         "destination": destination,
