@@ -4091,8 +4091,13 @@ async def get_published_file(file_path: str):
     from fastapi.responses import Response, FileResponse
 
     local_path = os.path.join("published", file_path)
+    no_cache_headers = {
+        "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0, s-maxage=0",
+        "Pragma": "no-cache",
+        "Expires": "0"
+    }
     if os.path.isfile(local_path):
-        return FileResponse(local_path)
+        return FileResponse(local_path, headers=no_cache_headers)
         
     # File not found locally - if we are on Vercel, try fetching from GitHub
     ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
@@ -4116,7 +4121,7 @@ async def get_published_file(file_path: str):
                     mt, _ = mimetypes.guess_type(file_path)
                     if not mt:
                         mt = "application/octet-stream"
-                    return Response(content=resp.content, media_type=mt)
+                    return Response(content=resp.content, media_type=mt, headers=no_cache_headers)
                     
     raise HTTPException(status_code=404, detail=f"File {file_path} not found.")
 
@@ -5180,7 +5185,7 @@ async def get_quotation(quotation_id: str, request: Request):
                     html_content = html_content[:idx_body] + editor_block + html_content[idx_body:]
                 else:
                     html_content += editor_block
-            return HTMLResponse(content=html_content)
+            return HTMLResponse(content=html_content, headers=no_cache_headers)
             
         # If language-specific published HTML is missing, check if baseline published HTML exists
         # so we can filter out deleted blocks and override baseline edits when rendering fallback JINJA2
@@ -5190,7 +5195,7 @@ async def get_quotation(quotation_id: str, request: Request):
                 filter_and_override_ctx_by_html(lang_ctx, baseline_html, override_text=False)
                 
         rendered_html = tmpl.render(**lang_ctx)
-        return HTMLResponse(content=rendered_html)
+        return HTMLResponse(content=rendered_html, headers=no_cache_headers)
     except Exception as err:
         log.exception("[/quotations] Dynamic HTML render failed for %s: %s", quotation_id, err)
         raise HTTPException(status_code=500, detail=f"Render error: {err}")
