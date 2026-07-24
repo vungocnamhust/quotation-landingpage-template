@@ -1454,7 +1454,7 @@
 
       L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi', {
         maxZoom: 18,
-        attribution: '&copy; Google Maps'
+        attribution: '&copy; Bản đồ chủ quyền Việt Nam | Dữ liệu bản đồ &copy; Google'
       }).addTo(map);
 
       const dataEl = document.getElementById('itinerary-data');
@@ -1536,13 +1536,6 @@
           return pattern[index] || [0, 0];
         }
 
-        if (coordPoints.length > 0) {
-          map.fitBounds(L.latLngBounds(coordPoints), {
-            padding: [25, 25],
-            maxZoom: 12
-          });
-        }
-
         const grouped = new Map();
         mapSegments.forEach(segment => {
           const key = `${segment.coords[0]},${segment.coords[1]}`;
@@ -1551,17 +1544,23 @@
         });
         grouped.forEach(items => {
           items.forEach((segment, occurrenceIdx) => {
-            const offset = getOffsetPattern(occurrenceIdx);
-            const point = map.project(segment.coords, map.getZoom());
-            const shifted = L.point(point.x + offset[0], point.y + offset[1]);
-            segment.displayCoords = map.unproject(shifted, map.getZoom());
+            segment.offsetPattern = getOffsetPattern(occurrenceIdx);
+            segment.displayCoords = segment.coords;
           });
         });
 
+        if (coordPoints.length > 0) {
+          map.fitBounds(L.latLngBounds(coordPoints), {
+            padding: [30, 30],
+            maxZoom: 12
+          });
+        }
+
         // Draw markers
         mapSegments.forEach((dest, idx) => {
+          const off = dest.offsetPattern || [0, 0];
           const html = `
-          <div class="custom-marker">
+          <div class="custom-marker" style="transform: translate(${off[0]}px, ${off[1]}px);">
             <div class="marker-pulse"></div>
             <div class="marker-core">${idx + 1}</div>
           </div>
@@ -1589,14 +1588,33 @@
             pathPoints = [p1, p2];
           }
 
+          // Casing line (white background outline for contrast against terrain)
+          L.polyline(pathPoints, {
+            color: '#ffffff',
+            weight: 6,
+            opacity: 0.95,
+            dashArray: isFlight ? '6, 8' : 'none'
+          }).addTo(map);
+
+          // Main route line
           const lineOptions = {
             color: isFlight ? '#b8860b' : '#17412e',
-            weight: 3,
-            opacity: 0.8,
+            weight: 3.5,
+            opacity: 1,
             dashArray: isFlight ? '6, 8' : 'none'
           };
           L.polyline(pathPoints, lineOptions).addTo(map);
         }
+
+        setTimeout(function () {
+          map.invalidateSize();
+          if (coordPoints.length > 0) {
+            map.fitBounds(L.latLngBounds(coordPoints), {
+              padding: [30, 30],
+              maxZoom: 12
+            });
+          }
+        }, 300);
 
       }
     });

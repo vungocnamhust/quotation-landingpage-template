@@ -2514,162 +2514,108 @@ def _build_timeline_days(
 
     return timeline_days
 
-def _classify_day(day_num: int, total_days: int, day_index_in_chapter: int, chapter_len: int, archetype: str, rest_bias: float, prev_dest_slug: str, curr_dest_slug: str) -> str:
-    if day_num == 1:
-        return "arrival"
-    if day_num == total_days:
-        return "departure"
-    
-    transition_key = f"{prev_dest_slug}→{curr_dest_slug}"
-    is_soft_transition = transition_key in SOFT_TRANSITIONS
-    is_chapter_start = day_index_in_chapter == 0
-    is_chapter_end = day_index_in_chapter == chapter_len - 1
-    
-    if chapter_len == 1 and archetype in ["scenic", "nature"]:
-        return "scenic"
-        
-    if is_chapter_start and not is_soft_transition:
-        return "transition"
-        
-    if is_chapter_end and chapter_len >= 2 and rest_bias >= 0.6:
-        return "leisure"
-        
-    if archetype in ["scenic", "nature"]:
-        return "scenic"
-    if archetype == "heritage":
-        return "cultural"
-    if archetype == "coastal":
-        return "exploration" if day_index_in_chapter == 0 else "leisure"
-        
-    return "exploration"
-
-def _build_itinerary_chapters(timeline_days: list[dict], stay_segments: list[dict], lang: str, manual_override: dict = None) -> list[dict]:
-    chapters = []
-    day_map = {d["dayNumber"]: d for d in timeline_days}
-    total_days = len(timeline_days)
-    edited = (manual_override or {}).get("edited_fields", {})
-    
-    for idx, seg in enumerate(stay_segments, start=1):
-        seg_days = []
+def _build_itinerary_days_flat(timeline_days: list[dict], stay_segments: list[dict], lang: str, manual_override: dict = None) -> list[dict]:
+    day_slugs = {}
+    day_cities = {}
+    for seg in stay_segments:
         city = seg.get("city", "Vietnam")
         slug = _normalize_location_slug(city) or "default"
-        profile = get_profile(slug)
-        
         for day_num in range(seg["dayStart"], seg["dayEnd"] + 1):
-            if day_num in day_map:
-                seg_days.append(day_map[day_num])
-                
-        chapter_len = len(seg_days)
-        chapter_days_with_layout = []
-        
-        # Deduplicated sequential image selection per chapter
-        available_imgs = get_available_images_for_destination(slug)
-        n_imgs = len(available_imgs)
-        img_cursor = (idx - 1) % n_imgs if n_imgs > 0 else 0
-        
-        # 1. Pick chapter_image
-        if n_imgs > 0:
-            chapter_image = available_imgs[img_cursor % n_imgs]
-            img_cursor += 1
-        else:
-            chapter_image = ""
+            day_slugs[day_num] = slug
+            day_cities[day_num] = seg.get("displayName") or city
             
-        prev_day_hero = ""
+    edited = (manual_override or {}).get("edited_fields", {})
+    
+    # Pre-calculate random image pools partitioned across days for each destination
+    import hashlib
+    import random
+    
+    dest_day_counts = {}
+    for d in timeline_days:
+        d_num = d["dayNumber"]
+        d_slug = day_slugs.get(d_num, "default")
+        dest_day_counts[d_slug] = dest_day_counts.get(d_slug, 0) + 1
         
-        for i, day_data in enumerate(seg_days):
-            curr_dest_slug = slug
-            prev_dest_slug = ""
-            if day_data["dayNumber"] > 1 and (day_data["dayNumber"] - 1) in day_map:
-                prev_day = day_map[day_data["dayNumber"] - 1]
-                prev_city = prev_day.get("overnight") or (prev_day.get("destinations") or [None])[-1] or "Vietnam"
-                prev_dest_slug = _normalize_location_slug(prev_city) or "default"
-                
-            layout_type = _classify_day(
-                day_num=day_data["dayNumber"],
-                total_days=total_days,
-                day_index_in_chapter=i,
-                chapter_len=chapter_len,
-                archetype=profile["archetype"],
-                rest_bias=profile["restBias"],
-                prev_dest_slug=prev_dest_slug,
-                curr_dest_slug=curr_dest_slug,
-            )
+    dest_image_pools = {}
+    for d_slug in dest_day_counts:
+        imgs = get_available_images_for_destination(d_slug)
+        if imgs:
+            seed_val = int(hashlib.md5(d_slug.encode()).hexdigest(), 16)
+            rng = random.Random(seed_val)
+            rng.shuffle(imgs)
+        dest_image_pools[d_slug] = imgs
+        
+    dest_day_indices = {}
+    flat_days = []
+    
+    for i, day_data in enumerate(timeline_days):
+        day_num = day_data["dayNumber"]
+        slug = day_slugs.get(day_num, "default")
+        city = day_cities.get(day_num, "Vietnam")
+        
+        imgs = dest_image_pools.get(slug, [])
+        day_idx = dest_day_indices.get(slug, 0)
+        
+        if len(imgs) > 0:
+            num_days = dest_day_counts.get(slug, 1)
+            num_imgs = len(imgs)
             
-            day_num = day_data["dayNumber"]
-            
-            if n_imgs > 0:
-                # Pick hero image, avoiding collision with chapter_image and prev_day_hero if n_imgs > 1
-                hero_cand = available_imgs[img_cursor % n_imgs]
-                if n_imgs > 1:
-                    attempts = 0
-                    while (hero_cand == chapter_image or hero_cand == prev_day_hero) and attempts < n_imgs:
-                        img_cursor += 1
-                        hero_cand = available_imgs[img_cursor % n_imgs]
-                        attempts += 1
-                hero_img = hero_cand
-                img_cursor += 1
-                prev_day_hero = hero_img
-                
-                # Pick small-1 image
-                s1_cand = available_imgs[img_cursor % n_imgs]
-                if n_imgs > 1:
-                    attempts = 0
-                    while s1_cand == hero_img and attempts < n_imgs:
-                        img_cursor += 1
-                        s1_cand = available_imgs[img_cursor % n_imgs]
-                        attempts += 1
-                s1_img = s1_cand
-                img_cursor += 1
-                
-                # Pick small-2 image
-                s2_cand = available_imgs[img_cursor % n_imgs]
-                if n_imgs > 2:
-                    attempts = 0
-                    while (s2_cand == hero_img or s2_cand == s1_img) and attempts < n_imgs:
-                        img_cursor += 1
-                        s2_cand = available_imgs[img_cursor % n_imgs]
-                        attempts += 1
-                elif n_imgs == 2:
-                    if s2_cand == hero_img:
-                        s2_cand = s1_img
-                s2_img = s2_cand
-                img_cursor += 1
-                
-                layout_images = {
-                    "hero": hero_img,
-                    "small-1": s1_img,
-                    "small-2": s2_img,
-                }
+            # Partition imgs across days without overlap
+            if num_imgs >= num_days:
+                base_count = num_imgs // num_days
+                extra = num_imgs % num_days
+                chunk_size = base_count + (1 if day_idx < extra else 0)
+                start_idx = day_idx * base_count + min(day_idx, extra)
+                end_idx = start_idx + chunk_size
+                day_imgs = imgs[start_idx:end_idx]
             else:
-                layout_images = {"hero": "", "small-1": "", "small-2": ""}
+                # If there are fewer images than days, we must repeat to avoid empty images
+                # but we try to give 1 image per day by repeating the pool
+                day_imgs = [imgs[day_idx % num_imgs]]
+
+            hero_img = day_imgs[0]
+            carousel_imgs = day_imgs if len(day_imgs) > 1 else []
+            s1_img = day_imgs[1] if len(day_imgs) > 1 else ""
+            s2_img = day_imgs[2] if len(day_imgs) > 2 else ""
+        else:
+            hero_img = ""
+            carousel_imgs = []
+            s1_img = ""
+            s2_img = ""
             
-            # Apply user image overrides if present
-            if f"day_img_hero_{day_num}" in edited:
-                layout_images["hero"] = edited[f"day_img_hero_{day_num}"]
-            if f"day_img_small1_{day_num}" in edited:
-                layout_images["small-1"] = edited[f"day_img_small1_{day_num}"]
-            if f"day_img_small2_{day_num}" in edited:
-                layout_images["small-2"] = edited[f"day_img_small2_{day_num}"]
-            
-            day_with_layout = {**day_data, "layout_type": layout_type, "layout_images": layout_images}
-            chapter_days_with_layout.append(day_with_layout)
-            
-        chapter = {
-            "chapterIndex": idx,
-            "chapterNumberStr": f"{idx:02d}",
-            "destination": seg["displayName"],
-            "slug": slug,
-            "profile": profile,
-            "nights": seg["nights"],
-            "nightsLabel": seg["nightsLabel"],
-            "daysLabel": seg["daysLabel"],
-            "hotelName": seg.get("hotelName", ""),
-            "chapter_image": chapter_image,
-            "days": chapter_days_with_layout
-        }
-        chapters.append(chapter)
+        dest_day_indices[slug] = day_idx + 1
         
-    return chapters
+        # Always use single layout for itinerary as requested
+        layout_type = "single"
+
+
+        layout_images = {
+            "hero": hero_img,
+            "small-1": s1_img,
+            "small-2": s2_img,
+            "carousel": carousel_imgs
+        }
+        
+        # Apply user image overrides if present
+        if f"day_img_hero_{day_num}" in edited:
+            layout_images["hero"] = edited[f"day_img_hero_{day_num}"]
+        if f"day_img_small1_{day_num}" in edited:
+            layout_images["small-1"] = edited[f"day_img_small1_{day_num}"]
+        if f"day_img_small2_{day_num}" in edited:
+            layout_images["small-2"] = edited[f"day_img_small2_{day_num}"]
+            
+        is_alternate = (i % 2 != 0)
+        
+        day_with_layout = {
+            **day_data, 
+            "layout_type": layout_type, 
+            "layout_images": layout_images,
+            "is_alternate": is_alternate,
+            "segment_city": city
+        }
+        flat_days.append(day_with_layout)
+        
+    return flat_days
 
 # ── Context builder (pure fn — no I/O) ───────────────────────────────────────
 
@@ -3301,7 +3247,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         "timeline_days": mapped_itinerary,
         "route_stops": route_stops,
         "stay_segments": stay_segments,
-        "chapters": _build_itinerary_chapters(mapped_itinerary, stay_segments, lang, manual_override),
+        "itinerary_days": _build_itinerary_days_flat(mapped_itinerary, stay_segments, lang, manual_override),
         # Pricing section
         "currency":       currency,
         "pricing_title":  translate_filter("Journey Investment", lang),
@@ -4166,11 +4112,20 @@ class EditableFieldsParser(HTMLParser):
 
         if "data-editable" in attrs_dict and not is_void:
             field_name = attrs_dict["data-editable"]
+            img_url = ""
+            if "style" in attrs_dict:
+                match = re.search(r'url\((["\']?)(.*?)\1\)', attrs_dict["style"])
+                if match:
+                    img_url = match.group(2)
+            elif "src" in attrs_dict:
+                img_url = attrs_dict["src"]
+
             self.stack.append({
                 'field': field_name,
                 'tag': tag_lower,
                 'depth': 1,
-                'acc': []
+                'acc': [],
+                'img_url': img_url
             })
 
     def handle_startendtag(self, tag, attrs):
@@ -4193,6 +4148,10 @@ class EditableFieldsParser(HTMLParser):
             item['depth'] -= 1
             if item['depth'] == 0 and item['tag'] == tag_lower:
                 val = "".join(item['acc']).strip()
+                if not val and item.get('img_url'):
+                    val = item['img_url']
+                elif not item['field'].startswith("day_img_") and not item['field'].startswith("img_"):
+                    val = re.sub(r'<[^>]*>', '', str(val)).strip()
                 self.edited_fields[item['field']] = val
             else:
                 item['acc'].append(f"</{tag}>")
@@ -4297,7 +4256,7 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
             'why_muslim', 'why_balanced', 'journey_h2', 'journey_p', 
             'route_map_h2', 'route_map_p',
             'itinerary_h2', 'itinerary_p', 'room_notes', 'pricing_h2', 
-            'pricing_p', 'muslim_care_text', 'term_deposit', 'term_balance', 
+            'pricing_p', 'pricing_kicker', 'muslim_care_text', 'term_deposit', 'term_balance', 
             'term_cancellation', 'term_confirmation', 'cta_h2', 'designer_kicker', 
             'designer_title', 'designer_quote', 'designer_expertise', 
             'designer_experience', 'designer_signature',
@@ -4406,11 +4365,11 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
             d_num = day.get('dayNumber')
             if d_num:
                 layout_imgs = day.setdefault('layout_images', {})
-                if f"day_img_hero_{d_num}" in edited_fields:
+                if edited_fields.get(f"day_img_hero_{d_num}"):
                     layout_imgs['hero'] = edited_fields[f"day_img_hero_{d_num}"]
-                if f"day_img_small1_{d_num}" in edited_fields:
+                if edited_fields.get(f"day_img_small1_{d_num}"):
                     layout_imgs['small-1'] = edited_fields[f"day_img_small1_{d_num}"]
-                if f"day_img_small2_{d_num}" in edited_fields:
+                if edited_fields.get(f"day_img_small2_{d_num}"):
                     layout_imgs['small-2'] = edited_fields[f"day_img_small2_{d_num}"]
     
     # 2. Filter and update hotels
@@ -4466,16 +4425,36 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
     new_price_options = []
     for p_idx, opt in enumerate(lang_ctx.get('price_options', []), 1):
         key = f"price_pax_{p_idx}"
+        key_total = f"price_total_{p_idx}"
         key_cat = f"price_opt_cat_{p_idx}"
         key_name = f"price_opt_name_{p_idx}"
-        if key in existing_keys or key_cat in existing_keys or key_name in existing_keys:
+        if key in existing_keys or key_total in existing_keys or key_cat in existing_keys or key_name in existing_keys:
             if override_text:
                 if key in edited_fields:
-                    opt['pricePerPerson']['displayText'] = edited_fields[key]
+                    clean_val = re.sub(r'<[^>]*>', '', str(edited_fields[key])).strip()
+                    if 'pricePerPerson' in opt and isinstance(opt['pricePerPerson'], dict):
+                        opt['pricePerPerson']['displayText'] = clean_val
+                if key_total in edited_fields:
+                    clean_val = re.sub(r'<[^>]*>', '', str(edited_fields[key_total])).strip()
+                    if 'totalPrice' in opt and isinstance(opt['totalPrice'], dict):
+                        opt['totalPrice']['displayText'] = clean_val
                 if key_cat in edited_fields:
-                    opt['hotelCategory'] = edited_fields[key_cat]
+                    clean_val = re.sub(r'<[^>]*>', '', str(edited_fields[key_cat])).strip()
+                    opt['hotelCategory'] = clean_val
                 if key_name in edited_fields:
-                    opt['optionName'] = edited_fields[key_name]
+                    clean_val = re.sub(r'<[^>]*>', '', str(edited_fields[key_name])).strip()
+                    opt['optionName'] = clean_val
+
+            # Guarantee sanitization of existing displayText values
+            if 'pricePerPerson' in opt and isinstance(opt['pricePerPerson'], dict) and opt['pricePerPerson'].get('displayText'):
+                opt['pricePerPerson']['displayText'] = re.sub(r'<[^>]*>', '', str(opt['pricePerPerson']['displayText'])).strip()
+            if 'totalPrice' in opt and isinstance(opt['totalPrice'], dict) and opt['totalPrice'].get('displayText'):
+                opt['totalPrice']['displayText'] = re.sub(r'<[^>]*>', '', str(opt['totalPrice']['displayText'])).strip()
+            if opt.get('hotelCategory'):
+                opt['hotelCategory'] = re.sub(r'<[^>]*>', '', str(opt['hotelCategory'])).strip()
+            if opt.get('optionName'):
+                opt['optionName'] = re.sub(r'<[^>]*>', '', str(opt['optionName'])).strip()
+
             new_price_options.append(opt)
     lang_ctx['price_options'] = new_price_options
     
@@ -4512,14 +4491,28 @@ def _extract_custom_images_from_html(html_content: str) -> dict:
     extracted = {}
     
     # Extract --designer-img
-    designer_match = re.search(r'--designer-img:\s*url\((["\']?)(data:image/[^;"\']*;base64,[^"\']+)\1\)', html_content)
+    designer_match = re.search(r'--designer-img:\s*url\((["\']?)(.*?)\1\)', html_content)
     if designer_match:
         extracted["designer_img"] = designer_match.group(2)
         
     # Extract --hero-img
-    hero_match = re.search(r'--hero-img:\s*url\((["\']?)(data:image/[^;"\']*;base64,[^"\']+)\1\)', html_content)
+    hero_match = re.search(r'--hero-img:\s*url\((["\']?)(.*?)\1\)', html_content)
     if hero_match:
         extracted["hero_img"] = hero_match.group(2)
+
+    # Extract img_hotel_divider
+    hotel_div_match = re.search(r'data-editable=["\']img_hotel_divider["\'][^>]*src=["\']([^"\']+)["\']', html_content)
+    if not hotel_div_match:
+        hotel_div_match = re.search(r'src=["\']([^"\']+)["\'][^>]*data-editable=["\']img_hotel_divider["\']', html_content)
+    if hotel_div_match:
+        extracted["img_hotel_divider"] = hotel_div_match.group(1)
+
+    # Extract img_itinerary_divider
+    iti_div_match = re.search(r'data-editable=["\']img_itinerary_divider["\'][^>]*url\((["\']?)(.*?)\1\)', html_content)
+    if not iti_div_match:
+        iti_div_match = re.search(r'data-editable=["\']img_itinerary_divider["\'][^>]*src=["\']([^"\']+)["\']', html_content)
+    if iti_div_match:
+        extracted["img_itinerary_divider"] = iti_div_match.group(2 if len(iti_div_match.groups()) > 1 else 1)
         
     return extracted
 
@@ -4607,8 +4600,10 @@ async def _render_quotation_doc_from_ctx(
         brand=brand_config,
     )
     lang_ctx["brand"] = brand_config
-    lang_ctx["designer_img"] = ctx_data.get("designer_img")
-    lang_ctx["hero_img_custom"] = ctx_data.get("hero_img")
+    if ctx_data.get("designer_img"):
+        lang_ctx["designer_img"] = ctx_data.get("designer_img")
+    if ctx_data.get("hero_img"):
+        lang_ctx["hero_img_custom"] = ctx_data.get("hero_img")
 
     lang_ctx["translations"] = ctx_data.get("translations", {})
     lang_ctx["baseline_lang"] = baseline_lang

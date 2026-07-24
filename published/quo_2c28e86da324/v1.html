@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" 
-  style="--hero-img: url('/assets/quang-nam/hoian2.jpg');  --img-1: url('/assets/vietnam-safar-logo.png');  --img-2: url('/assets/vietnam-safar-logo.png');  --img-3: url('/assets/vietnam-safar-logo.png');  --img-4: url('/assets/lao-cai/ve-dep-sapa_1_.jpg');  --img-5: url('/assets/da-nang/danang3.jpg');  --img-6: url('/assets/quang-nam/hoian2.jpg');  --img-7: url('/assets/vietnam-safar-logo.png'); ">
+  style="--hero-img: url('/assets/quang-nam/hoian1.jpg');  --img-1: url('/assets/vietnam-safar-logo.png');  --img-2: url('/assets/vietnam-safar-logo.png');  --img-3: url('/assets/vietnam-safar-logo.png');  --img-4: url('/assets/lao-cai/ve-dep-sapa_1_.jpg');  --img-5: url('/assets/da-nang/danang3.jpg');  --img-6: url('/assets/quang-nam/hoian1.jpg');  --img-7: url('/assets/vietnam-safar-logo.png'); ">
 
 <head>
   <meta charset="UTF-8" />
@@ -29,7 +29,7 @@
     rel="stylesheet">
 
   <!-- PWA Metadata -->
-  <link rel="manifest" href="/manifest.json?id=quo_6fde3ced7cfb&type=quotations" />
+  <link rel="manifest" href="/manifest.json?id=quo_2c28e86da324&type=quotations" />
   <meta name="theme-color" content="#CBA135" />
   <link rel="apple-touch-icon" href="/assets/vietnam-safar-logo.png" />
   <!-- Leaflet CSS & JS -->
@@ -2955,7 +2955,7 @@
               d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z" />
           </svg>
         </button>
-        <a class="btn btn-primary" href="/quotations/quo_6fde3ced7cfb/pdf?lang=en" target="_blank"
+        <a class="btn btn-primary" href="/quotations/quo_2c28e86da324/pdf?lang=en" target="_blank"
           id="btn-pdf-view">📄 <span class="pdf-btn-text">PDF Preview</span></a>
       </div>
     </div>
@@ -2965,7 +2965,6 @@
     <header class="hero">
       <div class="hero-content">
         <div class="hero-content-inner">
-          <div class="kicker" data-editable="cover_kicker">A Privately Arranged Journey</div>
           <h1 data-editable="tour_title">A Privately Arranged Family Journey from Hanoi to Ho Chi Minh City</h1>
           <p class="hero-lede" data-editable="lede">A privately arranged family journey following a graceful north-to-south rhythm through Vietnam. Combining historic Hanoi, the limestone landscapes of Ninh Binh, an overnight cruise in Ha Long Bay, the mountain air of Sapa, the beaches and heritage towns of Central Vietnam, and a meaningful final chapter in Ho Chi Minh City.</p>
 
@@ -3257,6 +3256,8 @@
       .day-detail dd { margin: 0; }
       .logic-chip { display: none; width: max-content; margin-top: 18px; padding: 5px 9px; color: #24382f; border: 1px solid #aebdb8; border-radius: 0; background: rgba(174, 189, 184, 0.12); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
       
+      .itinerary-intro-grid { display: grid; grid-template-columns: 1.2fr 2.5fr; gap: 6vw; }
+      
       .layout-single { display: grid; grid-template-columns: 1fr 1.25fr; gap: 6vw; align-items: center; }
       .layout-single.is-alternate { grid-template-columns: 1.25fr 1fr; }
       .layout-single .day-image-col { order: 1; }
@@ -3281,6 +3282,7 @@
 
       @media (max-width: 980px) {
         .chapter-days { width: min(calc(100% - 48px), 1380px); }
+        .itinerary-intro-grid { grid-template-columns: 1fr; gap: 32px; }
         .layout-single, .layout-single.is-alternate { grid-template-columns: 1fr; }
         .layout-single .day-image-col, .layout-single.is-alternate .day-image-col { order: 1; }
         .layout-single .day-copy-wrap, .layout-single.is-alternate .day-copy-wrap { order: 2; padding: 30px 0; }
@@ -3342,12 +3344,18 @@
       </style>
       
       <div class="chapter-days">
-        <div class="itinerary-intro" style="padding-bottom: 70px;">
-          <div class="day-kicker" style="margin-bottom: 16px;" data-editable="itinerary_kicker">CHAPTER 02 · DAY-BY-DAY ITINERARY</div>
-          <h2 class="day-title" style="margin: 0 0 20px;" data-editable="itinerary_h2">Day-by-Day Journey Program</h2>
-          <p style="color: #4a4a4a; font-size: 16px; line-height: 1.8; max-width: 100%; margin: 0;" data-editable="itinerary_p">
-            Your private 14D13N journey — 14 days, carefully crafted.
-          </p>
+        <div class="itinerary-intro" style="padding-bottom: 120px;">
+          <div class="day-kicker" style="margin-bottom: 24px;" data-editable="itinerary_intro_kicker">CHAPTER 01 · THE INVITATION</div>
+          <h2 class="day-title" style="margin: 0 0 70px;" data-editable="itinerary_intro_title">A Journey Shaped Around Your Family</h2>
+          <div class="itinerary-intro-grid">
+            <div style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: clamp(20px, 2.5vw, 24px); font-style: italic; color: #a38f6b; line-height: 1.4;" data-editable="itinerary_intro_quote">
+              This journey was designed to leave room for both discovery and rest.
+            </div>
+            <div style="color: #4a4a4a; font-size: 15px; line-height: 1.8; max-width: 720px;">
+              <p style="margin-bottom: 20px;" data-editable="itinerary_intro_p1">Dear <strong style="font-weight: 600; color: #17251f;">Family Vacation</strong>,</p>
+              <p data-editable="itinerary_intro_p2">I am delighted to present this privately arranged journey: <strong style="font-weight: 600; color: #17251f;">A Privately Arranged Family Journey from Hanoi to Ho Chi Minh City</strong>, created for <strong style="font-weight: 600; color: #17251f;">Family Vacation</strong> travelling from <strong style="font-weight: 600; color: #17251f;">01 Apr – 14 Apr 2027</strong>. The route unfolds from <strong style="font-weight: 600; color: #17251f;">Hanoi – Ninh Binh – Hanoi – Halong Bay – Hanoi – Sapa – Da Nang – Hoi An – Ho Chi Minh City</strong>.</p>
+            </div>
+          </div>
         </div>
 
         
@@ -3359,7 +3367,7 @@
           
             <div class="day-image-col" style="position: relative;">
               
-              <div class="day-image hero-image" style="--image: url('/assets/ha-noi/hero/hero2.webp')" data-editable="day_img_hero_1" data-img-type="hero"></div>
+              <div class="day-image hero-image" style="--image: url('/assets/ha-noi/hero/hero3.jpg')" data-editable="day_img_hero_1" data-img-type="hero"></div>
               
             </div>
             <div class="day-copy-wrap">
@@ -3420,15 +3428,13 @@
               <div class="day-image hero-image carousel-container" style="position: relative; overflow: hidden; border-radius: 4px;" data-editable="day_img_carousel_2">
                 <div class="carousel-inner" style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
                   
-                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/ninh-binh/hero/hero5.jpg') center/cover no-repeat;"></div>
-                  
                   <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/ninh-binh/hero/hero4.jpg') center/cover no-repeat;"></div>
                   
-                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/ninh-binh/hero/hero1.jpg') center/cover no-repeat;"></div>
+                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/ninh-binh/hero/hero2.jpg') center/cover no-repeat;"></div>
+                  
+                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/ninh-binh/hero/hero5.jpg') center/cover no-repeat;"></div>
                   
                   <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/ninh-binh/hero/hero3.jpg') center/cover no-repeat;"></div>
-                  
-                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/ninh-binh/hero/hero2.jpg') center/cover no-repeat;"></div>
                   
                 </div>
                 <div class="carousel-dots no-print" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3;">
@@ -3440,8 +3446,6 @@
                   <button class="carousel-dot " aria-label="Go to slide 3" style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
                   
                   <button class="carousel-dot " aria-label="Go to slide 4" style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
-                  
-                  <button class="carousel-dot " aria-label="Go to slide 5" style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
                   
                 </div>
               </div>
@@ -3506,7 +3510,7 @@ Upon arrival, check...</p>
           
             <div class="day-image-col" style="position: relative;">
               
-              <div class="day-image hero-image" style="--image: url('/assets/ha-noi/hero/hero1.jpg')" data-editable="day_img_hero_3" data-img-type="hero"></div>
+              <div class="day-image hero-image" style="--image: url('/assets/ha-noi/hero/hero2.webp')" data-editable="day_img_hero_3" data-img-type="hero"></div>
               
             </div>
             <div class="day-copy-wrap">
@@ -3569,15 +3573,13 @@ The...</p>
               <div class="day-image hero-image carousel-container" style="position: relative; overflow: hidden; border-radius: 4px;" data-editable="day_img_carousel_4">
                 <div class="carousel-inner" style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
                   
-                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-ninh/hero/hero4.jpg') center/cover no-repeat;"></div>
-                  
                   <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-ninh/hero/hero3.jpg') center/cover no-repeat;"></div>
                   
                   <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-ninh/hero/hero5.jpg') center/cover no-repeat;"></div>
                   
-                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-ninh/hero/hero2.jpg') center/cover no-repeat;"></div>
+                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-ninh/hero/hero4.jpg') center/cover no-repeat;"></div>
                   
-                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-ninh/hero/hero1.jpg') center/cover no-repeat;"></div>
+                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-ninh/hero/hero2.jpg') center/cover no-repeat;"></div>
                   
                 </div>
                 <div class="carousel-dots no-print" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3;">
@@ -3589,8 +3591,6 @@ The...</p>
                   <button class="carousel-dot " aria-label="Go to slide 3" style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
                   
                   <button class="carousel-dot " aria-label="Go to slide 4" style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
-                  
-                  <button class="carousel-dot " aria-label="Go to slide 5" style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
                   
                 </div>
               </div>
@@ -3718,13 +3718,13 @@ After breakfast or brunch onboard, disembark...</p>
               <div class="day-image hero-image carousel-container" style="position: relative; overflow: hidden; border-radius: 4px;" data-editable="day_img_carousel_6">
                 <div class="carousel-inner" style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
                   
-                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/lao-cai/hero/hero3.jpg') center/cover no-repeat;"></div>
+                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/lao-cai/hero/hero4.jpg') center/cover no-repeat;"></div>
                   
                   <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/lao-cai/ve-dep-sapa_1_.jpg') center/cover no-repeat;"></div>
                   
-                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/lao-cai/hero/hero6.jpg') center/cover no-repeat;"></div>
+                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/lao-cai/tau-tren-cao.webp') center/cover no-repeat;"></div>
                   
-                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/lao-cai/hero/hero2.webp') center/cover no-repeat;"></div>
+                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/lao-cai/hero/hero3.jpg') center/cover no-repeat;"></div>
                   
                 </div>
                 <div class="carousel-dots no-print" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3;">
@@ -3801,13 +3801,11 @@ After breakfast or brunch onboard, disembark...</p>
               <div class="day-image hero-image carousel-container" style="position: relative; overflow: hidden; border-radius: 4px;" data-editable="day_img_carousel_7">
                 <div class="carousel-inner" style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
                   
+                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/lao-cai/hero/hero6.jpg') center/cover no-repeat;"></div>
+                  
                   <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/lao-cai/hero/hero5.jpg') center/cover no-repeat;"></div>
                   
-                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/lao-cai/hero/hero4.jpg') center/cover no-repeat;"></div>
-                  
-                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/lao-cai/tau-tren-cao.webp') center/cover no-repeat;"></div>
-                  
-                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/lao-cai/hero/hero1.jpg') center/cover no-repeat;"></div>
+                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/lao-cai/hero/hero2.webp') center/cover no-repeat;"></div>
                   
                 </div>
                 <div class="carousel-dots no-print" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3;">
@@ -3817,8 +3815,6 @@ After breakfast or brunch onboard, disembark...</p>
                   <button class="carousel-dot " aria-label="Go to slide 2" style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
                   
                   <button class="carousel-dot " aria-label="Go to slide 3" style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
-                  
-                  <button class="carousel-dot " aria-label="Go to slide 4" style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
                   
                 </div>
               </div>
@@ -3886,11 +3882,11 @@ The...</p>
               <div class="day-image hero-image carousel-container" style="position: relative; overflow: hidden; border-radius: 4px;" data-editable="day_img_carousel_8">
                 <div class="carousel-inner" style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
                   
-                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/da-nang/hero/hero3.jpg') center/cover no-repeat;"></div>
+                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/da-nang/danang3.jpg') center/cover no-repeat;"></div>
                   
-                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/da-nang/hero/hero4.jpg') center/cover no-repeat;"></div>
+                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/da-nang/hero/hero5.jpg') center/cover no-repeat;"></div>
                   
-                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/da-nang/hero/hero1.jpg') center/cover no-repeat;"></div>
+                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/da-nang/hero/hero2.jpg') center/cover no-repeat;"></div>
                   
                 </div>
                 <div class="carousel-dots no-print" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3;">
@@ -3965,11 +3961,9 @@ The...</p>
               <div class="day-image hero-image carousel-container" style="position: relative; overflow: hidden; border-radius: 4px;" data-editable="day_img_carousel_9">
                 <div class="carousel-inner" style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
                   
-                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/da-nang/danang2.jpg') center/cover no-repeat;"></div>
-                  
-                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/da-nang/danang3.jpg') center/cover no-repeat;"></div>
-                  
                   <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/da-nang/danang1.jpg') center/cover no-repeat;"></div>
+                  
+                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/da-nang/hero/hero3.jpg') center/cover no-repeat;"></div>
                   
                 </div>
                 <div class="carousel-dots no-print" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3;">
@@ -3977,8 +3971,6 @@ The...</p>
                   <button class="carousel-dot active" aria-label="Go to slide 1" style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
                   
                   <button class="carousel-dot " aria-label="Go to slide 2" style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
-                  
-                  <button class="carousel-dot " aria-label="Go to slide 3" style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
                   
                 </div>
               </div>
@@ -4046,9 +4038,9 @@ Continue toward Cam...</p>
               <div class="day-image hero-image carousel-container" style="position: relative; overflow: hidden; border-radius: 4px;" data-editable="day_img_carousel_10">
                 <div class="carousel-inner" style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
                   
-                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/da-nang/hero/hero2.jpg') center/cover no-repeat;"></div>
+                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/da-nang/hero/hero4.jpg') center/cover no-repeat;"></div>
                   
-                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/da-nang/hero/hero5.jpg') center/cover no-repeat;"></div>
+                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/da-nang/danang2.jpg') center/cover no-repeat;"></div>
                   
                 </div>
                 <div class="carousel-dots no-print" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3;">
@@ -4121,17 +4113,15 @@ Continue toward Cam...</p>
               <div class="day-image hero-image carousel-container" style="position: relative; overflow: hidden; border-radius: 4px;" data-editable="day_img_carousel_11">
                 <div class="carousel-inner" style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
                   
-                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-nam/hero/hero1.jpg') center/cover no-repeat;"></div>
+                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-nam/hero/hero2.jpg') center/cover no-repeat;"></div>
+                  
+                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-nam/hero/hero3.jpg') center/cover no-repeat;"></div>
                   
                   <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-nam/hoian2.jpg') center/cover no-repeat;"></div>
                   
-                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-nam/hero/hero2.jpg') center/cover no-repeat;"></div>
-                  
-                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-nam/hoian1.jpg') center/cover no-repeat;"></div>
-                  
                   <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-nam/hoian3.jpg') center/cover no-repeat;"></div>
                   
-                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-nam/hero/hero3.jpg') center/cover no-repeat;"></div>
+                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-nam/hoian1.jpg') center/cover no-repeat;"></div>
                   
                 </div>
                 <div class="carousel-dots no-print" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3;">
@@ -4145,8 +4135,6 @@ Continue toward Cam...</p>
                   <button class="carousel-dot " aria-label="Go to slide 4" style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
                   
                   <button class="carousel-dot " aria-label="Go to slide 5" style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
-                  
-                  <button class="carousel-dot " aria-label="Go to slide 6" style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
                   
                 </div>
               </div>
@@ -4211,24 +4199,7 @@ Lunch is included at a...</p>
           
             <div class="day-image-col" style="position: relative;">
               
-              <div class="day-image hero-image carousel-container" style="position: relative; overflow: hidden; border-radius: 4px;" data-editable="day_img_carousel_12">
-                <div class="carousel-inner" style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
-                  
-                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/ho-chi-minh/hero/hero2.jpg') center/cover no-repeat;"></div>
-                  
-                  <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/ho-chi-minh/hero/hero4.jpg') center/cover no-repeat;"></div>
-                  
-                </div>
-                <div class="carousel-dots no-print" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3;">
-                  
-                  <button class="carousel-dot active" aria-label="Go to slide 1" style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
-                  
-                  <button class="carousel-dot " aria-label="Go to slide 2" style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
-                  
-                </div>
-              </div>
-              <button class="carousel-control prev no-print" aria-label="Previous image" style="position: absolute; left: -20px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.06); background: #ffffff; color: #333; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 20px; line-height: 1; transition: background 0.2s, opacity 0.2s; box-shadow: 0 4px 14px rgba(0,0,0,0.1); padding-bottom: 2px;">‹</button>
-              <button class="carousel-control next no-print" aria-label="Next image" style="position: absolute; right: -20px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.06); background: #ffffff; color: #333; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 20px; line-height: 1; transition: background 0.2s, opacity 0.2s; box-shadow: 0 4px 14px rgba(0,0,0,0.1); padding-bottom: 2px;">›</button>
+              <div class="day-image hero-image" style="--image: url('/assets/ho-chi-minh/hero/hero3.jpg')" data-editable="day_img_hero_12" data-img-type="hero"></div>
               
             </div>
             <div class="day-copy-wrap">
@@ -4288,7 +4259,7 @@ In the evening, enjoy a Saigon by...</p>
           
             <div class="day-image-col" style="position: relative;">
               
-              <div class="day-image hero-image" style="--image: url('/assets/ho-chi-minh/hero/hero3.jpg')" data-editable="day_img_hero_13" data-img-type="hero"></div>
+              <div class="day-image hero-image" style="--image: url('/assets/ho-chi-minh/hero/hero4.jpg')" data-editable="day_img_hero_13" data-img-type="hero"></div>
               
             </div>
             <div class="day-copy-wrap">
@@ -4346,7 +4317,7 @@ In the evening, enjoy a Saigon by...</p>
           
             <div class="day-image-col" style="position: relative;">
               
-              <div class="day-image hero-image" style="--image: url('/assets/ho-chi-minh/hero/hero1.jpg')" data-editable="day_img_hero_14" data-img-type="hero"></div>
+              <div class="day-image hero-image" style="--image: url('/assets/ho-chi-minh/hero/hero2.jpg')" data-editable="day_img_hero_14" data-img-type="hero"></div>
               
             </div>
             <div class="day-copy-wrap">
@@ -5238,7 +5209,7 @@ Lunch is included subject to the departure timing. Your private driver will...</
           <!-- LEFT: 55% Image -->
           <div class="stays-intro-image">
             <div style="aspect-ratio: 4/5; overflow: hidden; position: relative;">
-              <img src="/assets/lao-cai/ve-dep-sapa_1_.jpg" alt="Selected Stays" style="width: 100%; height: 100%; object-fit: cover;" data-editable="img_hotel_divider">
+              <img src="/assets/lao-cai/ve-dep-sapa_1_.jpg" alt="Selected Stays" style="width: 100%; height: 100%; object-fit: cover;">
             </div>
           </div>
           
@@ -5441,94 +5412,47 @@ Lunch is included subject to the departure timing. Your private driver will...</
 
 
 
-    <section id="payment-terms" style="background: var(--bg-main); padding: var(--section-padding) 0; margin: 40px 0;">
-      <style>
-        .payment-layout {
-          display: grid;
-          grid-template-columns: 1fr 1.5fr;
-          gap: clamp(40px, 6vw, 80px);
-        }
-        .term-row {
-          display: grid;
-          grid-template-columns: 140px 1fr;
-          gap: 32px;
-          padding: 24px 0;
-          border-bottom: 1px solid color-mix(in srgb, var(--primary) 15%, transparent);
-        }
-        .term-row:first-child {
-          border-top: 1px solid color-mix(in srgb, var(--primary) 15%, transparent);
-        }
-        @media (max-width: 992px) {
-          .payment-layout {
-            grid-template-columns: 1fr;
-          }
-        }
-        @media (max-width: 576px) {
-          .term-row {
-            grid-template-columns: 1fr;
-            gap: 12px;
-            padding: 20px 0;
-          }
-        }
-      </style>
+    <section id="payment-terms"
+      style="background: var(--bg-alt); border: 1px solid var(--line); border-radius: 0; padding: var(--section-padding) 0; margin: 40px 0; box-shadow: 0 18px 45px rgba(17,19,15,0.04);">
       <div class="container">
-        <div class="payment-layout">
-          <!-- Left side -->
-          <div>
-            <div class="kicker overline" data-editable="payment_kicker" style="color: var(--accent); margin-bottom: 16px;">Important Notes</div>
-            <h2 class="font-serif" data-editable="payment_title" style="font-size: clamp(36px, 4vw, 56px); color: var(--primary); line-height: 1.1; margin: 0 0 24px;">
-              Booking &amp; Payment Terms
-            </h2>
-            <p data-editable="payment_desc" style="color: var(--text-muted); font-size: 16px; line-height: 1.6; margin-bottom: 40px; max-width: 90%;">
-              Commercial conditions, deposits, and cancellation policy for this booking.
-            </p>
-            <a href="#contact" style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--text-main); text-decoration: none; border-bottom: 1px solid var(--text-main); padding-bottom: 4px; transition: opacity 0.2s ease;">
-              <span data-editable="payment_cta">Approve &amp; Book Now</span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M7 7l10 10M17 7v10H7"/>
-              </svg>
-            </a>
-          </div>
-
-          <!-- Right side -->
-          <div style="display: flex; flex-direction: column;">
-            <div class="term-row">
-              <div data-editable="payment_label_deposit" style="font-family: var(--serif); font-size: 20px; color: var(--text-muted);">Deposit</div>
-              <div>
-                <div data-editable="term_deposit" style="color: var(--text-muted); font-size: 15px; line-height: 1.6;">
-                  30% deposit upon booking confirmation to secure accommodations.
-                </div>
-              </div>
-            </div>
-
-            <div class="term-row">
-              <div data-editable="payment_label_balance" style="font-family: var(--serif); font-size: 20px; color: var(--text-muted);">Balance</div>
-              <div>
-                <div data-editable="term_balance" style="color: var(--text-muted); font-size: 15px; line-height: 1.6;">
-                  70% balance due 45 days prior to arrival date.
-                </div>
-              </div>
-            </div>
-
-            <div class="term-row">
-              <div data-editable="payment_label_cancellation" style="font-family: var(--serif); font-size: 20px; color: var(--text-muted);">Cancellation</div>
-              <div>
-                <div data-editable="term_cancellation" style="color: var(--text-muted); font-size: 15px; line-height: 1.6;">
-                  Free cancellation up to 60 days prior to arrival. 50% cancellation fee between 59 and 30 days. 100% within 30 days.
-                </div>
-              </div>
-            </div>
-
-            <div class="term-row">
-              <div data-editable="payment_label_confirmation" style="font-family: var(--serif); font-size: 20px; color: var(--text-muted);">Confirmation</div>
-              <div>
-                <div data-editable="term_confirmation" style="color: var(--text-muted); font-size: 15px; line-height: 1.6;">
-                  Reservations are subject to availability. Confirmation vouchers are issued within 3 working days after deposit is verified.
-                </div>
-              </div>
-            </div>
-          </div>
+        <div class="section-head" style="grid-template-columns: 1fr;">
+          <h2 class="font-serif" style="font-size: clamp(32px, 4vw, 48px); color: var(--primary); margin: 0 0 10px;">
+            Booking &amp; Payment Terms</h2>
+          <p style="color: var(--text-muted); margin: 0;">Commercial conditions, deposits, and cancellation policy
+            for this booking.</p>
         </div>
+        <div style="width: 100%; max-width: 100%; overflow-x: auto; margin-top: 32px; border-radius: 0; border: 1px solid var(--line);">
+          <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
+            <thead>
+              <tr style="background: var(--primary); color: white;">
+                <th class="term-th" style="padding: 16px 20px; width: 250px;">Term</th>
+                <th style="padding: 16px 20px;">Condition</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom: 1px solid var(--line); background: white;">
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--primary);">Deposit</td>
+                <td style="padding: 16px 20px;" data-editable="term_deposit">30% deposit upon booking confirmation to secure accommodations.</td>
+              </tr>
+              <tr
+                style="border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--accent) 5%, transparent);">
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--primary);">Balance</td>
+                <td style="padding: 16px 20px;" data-editable="term_balance">70% balance due 45 days prior to arrival date.</td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--line); background: white;">
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--primary);">Cancellation</td>
+                <td style="padding: 16px 20px;" data-editable="term_cancellation">Free cancellation up to 60 days prior to arrival. 50% cancellation fee between 59 and 30 days. 100% within 30 days.</td>
+              </tr>
+              <tr style="background: color-mix(in srgb, var(--accent) 5%, transparent);">
+                <td style="padding: 16px 20px; font-weight: 700; color: var(--primary);">Confirmation</td>
+                <td style="padding: 16px 20px;" data-editable="term_confirmation">Reservations are subject to availability. Confirmation vouchers are issued within 3 working days after deposit is verified.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="text-align: center; margin-top: 40px; margin-bottom: 20px;"><a class="btn btn-accent"
+            href="#contact">Approve & Book Now</a></div>
       </div>
     </section>
 
@@ -5633,7 +5557,7 @@ Lunch is included subject to the departure timing. Your private driver will...</
         "da-nang": "/assets/da-nang/danang3.jpg"
         ,
       
-        "quang-nam": "/assets/quang-nam/hoian2.jpg"
+        "quang-nam": "/assets/quang-nam/hoian1.jpg"
         ,
       
         "ho-chi-minh": "/assets/vietnam-safar-logo.png"
@@ -6489,8 +6413,8 @@ Lunch is included subject to the departure timing. Your private driver will...</
     <div class="pb-left">
       <div class="pb-dot"></div>
       <div class="pb-label">
-        <span class="pb-label-desktop">✏️ Editing <strong class="ltr-token">quo_6fde3ced7cfb</strong></span>
-        <span class="pb-label-mobile">✏️ <strong class="ltr-token">quo_6fde3ced7cfb</strong></span>
+        <span class="pb-label-desktop">✏️ Editing <strong class="ltr-token">quo_2c28e86da324</strong></span>
+        <span class="pb-label-mobile">✏️ <strong class="ltr-token">quo_2c28e86da324</strong></span>
       </div>
     </div>
     <span id="publish-status"></span>
@@ -6730,7 +6654,7 @@ Lunch is included subject to the departure timing. Your private driver will...</
 
     let domainModalMode = 'publish';
     let modalLatestVersion = '1';
-    let modalItemId = 'quo_6fde3ced7cfb';
+    let modalItemId = 'quo_2c28e86da324';
     let modalItemType = 'quotations';
 
     // Parse path and fetch latest version info on load
@@ -6868,7 +6792,7 @@ Lunch is included subject to the departure timing. Your private driver will...</
     })();
 
     if (typeof window.QUOTATION_ID === 'undefined') {
-      window.QUOTATION_ID = "quo_6fde3ced7cfb";
+      window.QUOTATION_ID = "quo_2c28e86da324";
     }
     if (typeof window.CURRENT_LANG === 'undefined') {
       window.CURRENT_LANG = "en";
@@ -6877,7 +6801,7 @@ Lunch is included subject to the departure timing. Your private driver will...</
 
     // Set globals for compatibility if not already defined
     if (typeof QUOTATION_ID === 'undefined') {
-      window.QUOTATION_ID = "quo_6fde3ced7cfb";
+      window.QUOTATION_ID = "quo_2c28e86da324";
     }
     if (typeof CURRENT_LANG === 'undefined') {
       window.CURRENT_LANG = "en";

@@ -405,34 +405,34 @@
        PAGE 3 — Itinerary
     ═══════════════════════════════════════════ */
     .itinerary {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
+      display: grid;
+      gap: 10px;
     }
 
     .day-card {
       display: grid;
-      grid-template-columns: 1fr 260px; /* text on left, image on right */
-      gap: 20px;
+      grid-template-columns: 56px 1fr 140px;
+      gap: 16px;
       background: var(--card);
       border: 1px solid var(--line);
-      border-radius: 4px;
-      padding: 18px;
-      align-items: stretch;
+      border-radius: 0;
+      padding: 16px;
+      align-items: start;
+      break-inside: avoid;
       page-break-inside: avoid;
-      height: 310px; /* Approx 1/3 of page to fit 3 per page exactly */
-      overflow: hidden;
     }
-
-    .day-card.is-alternate {
-      grid-template-columns: 260px 1fr;
-    }
-    
-    .day-card.is-alternate .day-content { order: 2; }
-    .day-card.is-alternate .day-media { order: 1; }
 
     .day-num {
-      display: none;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--emerald);
+      color: white;
+      display: grid;
+      place-items: center;
+      font-family: var(--serif);
+      font-size: 20px;
+      flex-shrink: 0;
     }
 
     .day-card h3 {
@@ -1165,8 +1165,8 @@
         <p class="section-p" style="margin-bottom: 24px;">An interactive map showing your curated path through Vietnam&#39;s iconic landmarks and luxury stopovers. Click on a destination in the list or the map to explore highlights.</p>
         
         
-        <div style="flex: 1; border: 1px solid var(--line); border-bottom: none; overflow: hidden; position: relative; min-height: 420px;">
-          <div id="map" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block; z-index: 1;"></div>
+        <div style="flex: 1; border: 1px solid var(--line); border-bottom: none; overflow: hidden; position: relative;">
+          <div id="map" style="width: 100%; height: 100%; display: block; z-index: 1;"></div>
         </div>
       </div>
 
@@ -1179,14 +1179,30 @@
       </div>
 
       <!-- Quarter 4: Footer ~ 25% -->
-      <div style="flex: 0 0 25%; background: var(--emerald); padding: 40px 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: white; position: relative;">
-        <div style="width: 40px; height: 1px; background: var(--gold-2); opacity: 0.5; margin-bottom: 22px;"></div>
-        <blockquote style="margin: 0; padding: 0; max-width: 580px;">
-          <p style="font-family: var(--serif); font-size: 20px; font-style: italic; font-weight: 400; color: #ffffff; line-height: 1.65; letter-spacing: 0.015em; margin: 0;">
-            “Private journeys through Vietnam and Indochina, shaped around living heritage, quiet landscapes and the luxury of time.”
-          </p>
-        </blockquote>
-        <div style="width: 40px; height: 1px; background: var(--gold-2); opacity: 0.5; margin-top: 22px;"></div>
+      <div style="flex: 0 0 25%; background: var(--emerald); padding: 32px 64px; display: flex; flex-direction: column; justify-content: center; color: white;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; gap: 36px 24px;">
+          
+          <div style="padding-right: 24px; border-right: 1px solid rgba(255,255,255,0.15);">
+            <div style="font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold-2); font-weight: 700; margin-bottom: 6px;">Duration</div>
+            <div style="font-family: var(--serif); font-size: 26px; font-weight: 500; color: #fff;"></div>
+          </div>
+          
+          <div style="padding-left: 12px;">
+            <div style="font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold-2); font-weight: 700; margin-bottom: 6px;">Guests</div>
+            <div style="font-family: var(--serif); font-size: 20px; font-weight: 500; color: #fff;">Family Vacation (2 Pax)</div>
+          </div>
+          
+          <div style="padding-right: 24px; border-right: 1px solid rgba(255,255,255,0.15);">
+            <div style="font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold-2); font-weight: 700; margin-bottom: 6px;">Route</div>
+            <div style="font-family: var(--serif); font-size: 15px; font-weight: 500; line-height: 1.4; color: #fff;">Hanoi – Ninh Binh – Hanoi – Halong Bay – Hanoi – Sapa – Da Nang – Hoi An – Ho Chi Minh City</div>
+          </div>
+          
+          <div style="padding-left: 12px;">
+            <div style="font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold-2); font-weight: 700; margin-bottom: 6px;">Style</div>
+            <div style="font-family: var(--serif); font-size: 15px; font-weight: 500; line-height: 1.4; color: #fff;">Early check-in in Hanoi included. Private guide and driver, premium overnight train cabin.</div>
+          </div>
+
+        </div>
       </div>
 
     </div>
@@ -1236,894 +1252,6 @@
       <p class="section-p">Your private 14D13N journey — 14 days, carefully crafted.</p>
 
       <div class="itinerary">
-        
-        
-        <div class="day-card ">
-          <div class="day-content" style="display: flex; flex-direction: column; height: 100%;">
-            <div class="day-kicker" style="font-size: 9px; letter-spacing: 0.15em; color: var(--gold); font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">
-              <span class="destination" style="color: var(--muted); margin-right: 6px;">Hanoi</span>
-              <span>DAY 1</span>
-            </div>
-            <h3 class="day-title" style="font-family: var(--serif); font-size: 18px; font-weight: 500; color: var(--emerald); margin: 0 0 12px; line-height: 1.25;">Day 1 — Hanoi</h3>
-            
-            <div class="day-copy" style="flex: 1; font-size: 11px; color: var(--muted); line-height: 1.5; overflow: hidden;">
-              
-              
-              <p style="margin-bottom: 8px;">Upon arrival in Hanoi, meet your private airport representative and transfer smoothly to Pullman Hanoi, where early check-in will be booked in advance. This is especially important because the majority of flights from Belgium arrive in the morning, allowing the family to rest, shower and refresh immediately after the long journey instead of...</p>
-              
-              
-
-              
-              <p style="font-size: 10px; color: var(--text-muted); margin-top: 8px;">
-                <strong style="color: var(--emerald); letter-spacing: 0.06em;">Highlights:</strong>
-                <span>Private airport welcome, early check-in, lunch, welcome dinner, private airport transfer.</span>
-              </p>
-              
-              
-              
-              <div style="font-size: 10px; color: #8a7042; margin-top: 8px; border-left: 2px solid var(--gold); padding-left: 10px; background: rgba(183,137,75,0.05); border-radius: 2px; padding-top: 4px; padding-bottom: 4px;">
-                <strong style="color: var(--gold); letter-spacing: 0.06em;">Notes:</strong>
-                <ul style="margin: 4px 0 0; padding-left: 12px; list-style-type: disc;">
-                  
-                  
-                  <li style="margin-bottom: 2px;">Sense of Pace: Relaxed</li>
-                  
-                  
-                </ul>
-              </div>
-              
-            </div>
-
-            <div class="day-detail-list" style="display: flex; gap: 24px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line);">
-              
-              <div class="day-detail">
-                <div style="font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px;">Overnight</div>
-                <div style="font-family: var(--serif); font-size: 13px; color: var(--emerald); margin: 0;">Hanoi</div>
-              </div>
-              
-              
-              <div class="day-detail">
-                <div style="font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px;">Meals</div>
-                <div style="font-size: 11px; color: var(--text); margin: 0;">Lunch, Dinner</div>
-              </div>
-              
-            </div>
-          </div>
-
-          <div class="day-media" style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
-            
-            <div style="flex: 1; background: url('/assets/ha-noi/hero/hero2.webp') center/cover no-repeat; border-radius: 4px;"></div>
-            
-          </div>
-        </div>
-        
-        
-        <div class="day-card is-alternate">
-          <div class="day-content" style="display: flex; flex-direction: column; height: 100%;">
-            <div class="day-kicker" style="font-size: 9px; letter-spacing: 0.15em; color: var(--gold); font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">
-              <span class="destination" style="color: var(--muted); margin-right: 6px;">Ninh Binh</span>
-              <span>DAY 2</span>
-            </div>
-            <h3 class="day-title" style="font-family: var(--serif); font-size: 18px; font-weight: 500; color: var(--emerald); margin: 0 0 12px; line-height: 1.25;">Day 2 — Ninh Binh</h3>
-            
-            <div class="day-copy" style="flex: 1; font-size: 11px; color: var(--muted); line-height: 1.5; overflow: hidden;">
-              
-              
-              <p style="margin-bottom: 8px;">After breakfast, leave Hanoi by private vehicle and travel south toward Ninh Binh, where limestone peaks, rice fields and village lanes create a softer countryside atmosphere. The drive takes approximately two hours, making this a comfortable transition from the capital into one of northern Vietnam’s most scenic rural regions.
-
-Upon arrival, check...</p>
-              
-              
-
-              
-              <p style="font-size: 10px; color: var(--text-muted); margin-top: 8px;">
-                <strong style="color: var(--emerald); letter-spacing: 0.06em;">Highlights:</strong>
-                <span>Private AC transfer, resort check-in, lunch, Deluxe Garden View Double room.</span>
-              </p>
-              
-              
-              
-              <div style="font-size: 10px; color: #8a7042; margin-top: 8px; border-left: 2px solid var(--gold); padding-left: 10px; background: rgba(183,137,75,0.05); border-radius: 2px; padding-top: 4px; padding-bottom: 4px;">
-                <strong style="color: var(--gold); letter-spacing: 0.06em;">Notes:</strong>
-                <ul style="margin: 4px 0 0; padding-left: 12px; list-style-type: disc;">
-                  
-                  
-                  <li style="margin-bottom: 2px;">Sense of Pace: Relaxed</li>
-                  
-                  
-                </ul>
-              </div>
-              
-            </div>
-
-            <div class="day-detail-list" style="display: flex; gap: 24px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line);">
-              
-              <div class="day-detail">
-                <div style="font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px;">Overnight</div>
-                <div style="font-family: var(--serif); font-size: 13px; color: var(--emerald); margin: 0;">Ninh Binh</div>
-              </div>
-              
-              
-              <div class="day-detail">
-                <div style="font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px;">Meals</div>
-                <div style="font-size: 11px; color: var(--text); margin: 0;">Breakfast, Lunch</div>
-              </div>
-              
-            </div>
-          </div>
-
-          <div class="day-media" style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
-            
-            <div style="flex: 2; background: url('/assets/ninh-binh/hero/hero5.jpg') center/cover no-repeat; border-radius: 4px;"></div>
-            <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-              <div style="background: url('/assets/ninh-binh/hero/hero4.jpg') center/cover no-repeat; border-radius: 4px;"></div>
-              <div style="background: url('/assets/ninh-binh/hero/hero1.jpg') center/cover no-repeat; border-radius: 4px;"></div>
-            </div>
-            
-          </div>
-        </div>
-        
-        
-        <div class="day-card ">
-          <div class="day-content" style="display: flex; flex-direction: column; height: 100%;">
-            <div class="day-kicker" style="font-size: 9px; letter-spacing: 0.15em; color: var(--gold); font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">
-              <span class="destination" style="color: var(--muted); margin-right: 6px;">Hanoi</span>
-              <span>DAY 3</span>
-            </div>
-            <h3 class="day-title" style="font-family: var(--serif); font-size: 18px; font-weight: 500; color: var(--emerald); margin: 0 0 12px; line-height: 1.25;">Day 3 — Hanoi</h3>
-            
-            <div class="day-copy" style="flex: 1; font-size: 11px; color: var(--muted); line-height: 1.5; overflow: hidden;">
-              
-              
-              <p style="margin-bottom: 8px;">Begin the day with a gentle countryside programme in Ninh Binh, moving at a comfortable family pace. Depending on weather and local conditions, enjoy easy cycling through village lanes and rice-field scenery, with time to observe rural life, limestone backdrops and the quieter rhythm that makes this region feel so different from Hanoi.
-
-The...</p>
-              
-              
-
-              
-              <p style="font-size: 10px; color: var(--text-muted); margin-top: 8px;">
-                <strong style="color: var(--emerald); letter-spacing: 0.06em;">Highlights:</strong>
-                <span>Bicycle rental, Trang An boat tour tickets, private transport, lunch.</span>
-              </p>
-              
-              
-              
-              <div style="font-size: 10px; color: #8a7042; margin-top: 8px; border-left: 2px solid var(--gold); padding-left: 10px; background: rgba(183,137,75,0.05); border-radius: 2px; padding-top: 4px; padding-bottom: 4px;">
-                <strong style="color: var(--gold); letter-spacing: 0.06em;">Notes:</strong>
-                <ul style="margin: 4px 0 0; padding-left: 12px; list-style-type: disc;">
-                  
-                  
-                  <li style="margin-bottom: 2px;">Sense of Pace: Moderate</li>
-                  
-                  
-                </ul>
-              </div>
-              
-            </div>
-
-            <div class="day-detail-list" style="display: flex; gap: 24px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line);">
-              
-              <div class="day-detail">
-                <div style="font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px;">Overnight</div>
-                <div style="font-family: var(--serif); font-size: 13px; color: var(--emerald); margin: 0;">Hanoi</div>
-              </div>
-              
-              
-              <div class="day-detail">
-                <div style="font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px;">Meals</div>
-                <div style="font-size: 11px; color: var(--text); margin: 0;">Breakfast, Lunch</div>
-              </div>
-              
-            </div>
-          </div>
-
-          <div class="day-media" style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
-            
-            <div style="flex: 1; background: url('/assets/ha-noi/hero/hero1.jpg') center/cover no-repeat; border-radius: 4px;"></div>
-            
-          </div>
-        </div>
-        
-        
-        <div class="day-card is-alternate">
-          <div class="day-content" style="display: flex; flex-direction: column; height: 100%;">
-            <div class="day-kicker" style="font-size: 9px; letter-spacing: 0.15em; color: var(--gold); font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">
-              <span class="destination" style="color: var(--muted); margin-right: 6px;">Halong Bay</span>
-              <span>DAY 4</span>
-            </div>
-            <h3 class="day-title" style="font-family: var(--serif); font-size: 18px; font-weight: 500; color: var(--emerald); margin: 0 0 12px; line-height: 1.25;">Day 4 — Halong Bay</h3>
-            
-            <div class="day-copy" style="flex: 1; font-size: 11px; color: var(--muted); line-height: 1.5; overflow: hidden;">
-              
-              
-              <p style="margin-bottom: 8px;">After breakfast, travel privately from Hanoi to Ha Long Bay for the overnight cruise experience. Upon arrival at the marina, complete check-in procedures and board La Casta Cruise, where the day transitions from road travel to a slower rhythm on the water among limestone islands and open bay scenery.
-
-Lunch is served onboard as the cruise begins...</p>
-              
-              
-
-              
-              <p style="font-size: 10px; color: var(--text-muted); margin-top: 8px;">
-                <strong style="color: var(--emerald); letter-spacing: 0.06em;">Highlights:</strong>
-                <span>Private transfer to bay, cruise tickets, onboard activities, lunch, dinner.</span>
-              </p>
-              
-              
-              
-              <div style="font-size: 10px; color: #8a7042; margin-top: 8px; border-left: 2px solid var(--gold); padding-left: 10px; background: rgba(183,137,75,0.05); border-radius: 2px; padding-top: 4px; padding-bottom: 4px;">
-                <strong style="color: var(--gold); letter-spacing: 0.06em;">Notes:</strong>
-                <ul style="margin: 4px 0 0; padding-left: 12px; list-style-type: disc;">
-                  
-                  
-                  <li style="margin-bottom: 2px;">Sense of Pace: Relaxed</li>
-                  
-                  
-                </ul>
-              </div>
-              
-            </div>
-
-            <div class="day-detail-list" style="display: flex; gap: 24px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line);">
-              
-              <div class="day-detail">
-                <div style="font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px;">Overnight</div>
-                <div style="font-family: var(--serif); font-size: 13px; color: var(--emerald); margin: 0;">Halong Bay</div>
-              </div>
-              
-              
-              <div class="day-detail">
-                <div style="font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px;">Meals</div>
-                <div style="font-size: 11px; color: var(--text); margin: 0;">Breakfast, Lunch, Dinner onboard</div>
-              </div>
-              
-            </div>
-          </div>
-
-          <div class="day-media" style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
-            
-            <div style="flex: 2; background: url('/assets/quang-ninh/hero/hero4.jpg') center/cover no-repeat; border-radius: 4px;"></div>
-            <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-              <div style="background: url('/assets/quang-ninh/hero/hero3.jpg') center/cover no-repeat; border-radius: 4px;"></div>
-              <div style="background: url('/assets/quang-ninh/hero/hero5.jpg') center/cover no-repeat; border-radius: 4px;"></div>
-            </div>
-            
-          </div>
-        </div>
-        
-        
-        <div class="day-card ">
-          <div class="day-content" style="display: flex; flex-direction: column; height: 100%;">
-            <div class="day-kicker" style="font-size: 9px; letter-spacing: 0.15em; color: var(--gold); font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">
-              <span class="destination" style="color: var(--muted); margin-right: 6px;">Hanoi</span>
-              <span>DAY 5</span>
-            </div>
-            <h3 class="day-title" style="font-family: var(--serif); font-size: 18px; font-weight: 500; color: var(--emerald); margin: 0 0 12px; line-height: 1.25;">Day 5 — Hanoi</h3>
-            
-            <div class="day-copy" style="flex: 1; font-size: 11px; color: var(--muted); line-height: 1.5; overflow: hidden;">
-              
-              
-              <p style="margin-bottom: 8px;">Wake to the calm morning atmosphere of the bay, when the limestone formations are often softened by mist and early light. The cruise programme may include a short morning activity, tai chi on deck or a final scenic passage, depending on the confirmed route, operating conditions and weather on the day.
-
-After breakfast or brunch onboard, disembark...</p>
-              
-              
-
-              
-              <p style="font-size: 10px; color: var(--text-muted); margin-top: 8px;">
-                <strong style="color: var(--emerald); letter-spacing: 0.06em;">Highlights:</strong>
-                <span>Onboard breakfast/brunch, private return transfer to Hanoi.</span>
-              </p>
-              
-              
-              
-              <div style="font-size: 10px; color: #8a7042; margin-top: 8px; border-left: 2px solid var(--gold); padding-left: 10px; background: rgba(183,137,75,0.05); border-radius: 2px; padding-top: 4px; padding-bottom: 4px;">
-                <strong style="color: var(--gold); letter-spacing: 0.06em;">Notes:</strong>
-                <ul style="margin: 4px 0 0; padding-left: 12px; list-style-type: disc;">
-                  
-                  
-                  <li style="margin-bottom: 2px;">Sense of Pace: Relaxed</li>
-                  
-                  
-                </ul>
-              </div>
-              
-            </div>
-
-            <div class="day-detail-list" style="display: flex; gap: 24px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line);">
-              
-              <div class="day-detail">
-                <div style="font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px;">Overnight</div>
-                <div style="font-family: var(--serif); font-size: 13px; color: var(--emerald); margin: 0;">Hanoi</div>
-              </div>
-              
-              
-              <div class="day-detail">
-                <div style="font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px;">Meals</div>
-                <div style="font-size: 11px; color: var(--text); margin: 0;">Breakfast, Lunch</div>
-              </div>
-              
-            </div>
-          </div>
-
-          <div class="day-media" style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
-            
-            <div style="flex: 1; background: url('/assets/ha-noi/hero/hero3.jpg') center/cover no-repeat; border-radius: 4px;"></div>
-            
-          </div>
-        </div>
-        
-        
-        <div class="day-card is-alternate">
-          <div class="day-content" style="display: flex; flex-direction: column; height: 100%;">
-            <div class="day-kicker" style="font-size: 9px; letter-spacing: 0.15em; color: var(--gold); font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">
-              <span class="destination" style="color: var(--muted); margin-right: 6px;">Sapa</span>
-              <span>DAY 6</span>
-            </div>
-            <h3 class="day-title" style="font-family: var(--serif); font-size: 18px; font-weight: 500; color: var(--emerald); margin: 0 0 12px; line-height: 1.25;">Day 6 — Sapa</h3>
-            
-            <div class="day-copy" style="flex: 1; font-size: 11px; color: var(--muted); line-height: 1.5; overflow: hidden;">
-              
-              
-              <p style="margin-bottom: 8px;">After breakfast, begin a privately guided Hanoi discovery focused on history, local atmosphere and family-friendly pacing. Visit Hoa Lo Prison Relic, a powerful but well-presented site that introduces an important chapter of Vietnam’s modern history. Continue with time around the Old Quarter, local streets and selected cafe stops, with the route...</p>
-              
-              
-
-              
-              <p style="font-size: 10px; color: var(--text-muted); margin-top: 8px;">
-                <strong style="color: var(--emerald); letter-spacing: 0.06em;">Highlights:</strong>
-                <span>Hanoi city tour guide, entries, private transfers, Chapa Express sleeper ticket.</span>
-              </p>
-              
-              
-              
-              <div style="font-size: 10px; color: #8a7042; margin-top: 8px; border-left: 2px solid var(--gold); padding-left: 10px; background: rgba(183,137,75,0.05); border-radius: 2px; padding-top: 4px; padding-bottom: 4px;">
-                <strong style="color: var(--gold); letter-spacing: 0.06em;">Notes:</strong>
-                <ul style="margin: 4px 0 0; padding-left: 12px; list-style-type: disc;">
-                  
-                  
-                  <li style="margin-bottom: 2px;">Sense of Pace: Immersive</li>
-                  
-                  
-                </ul>
-              </div>
-              
-            </div>
-
-            <div class="day-detail-list" style="display: flex; gap: 24px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line);">
-              
-              <div class="day-detail">
-                <div style="font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px;">Overnight</div>
-                <div style="font-family: var(--serif); font-size: 13px; color: var(--emerald); margin: 0;">Sapa</div>
-              </div>
-              
-              
-              <div class="day-detail">
-                <div style="font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px;">Meals</div>
-                <div style="font-size: 11px; color: var(--text); margin: 0;">Breakfast, Lunch</div>
-              </div>
-              
-            </div>
-          </div>
-
-          <div class="day-media" style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
-            
-            <div style="flex: 2; background: url('/assets/lao-cai/hero/hero3.jpg') center/cover no-repeat; border-radius: 4px;"></div>
-            <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-              <div style="background: url('/assets/lao-cai/ve-dep-sapa_1_.jpg') center/cover no-repeat; border-radius: 4px;"></div>
-              <div style="background: url('/assets/lao-cai/hero/hero6.jpg') center/cover no-repeat; border-radius: 4px;"></div>
-            </div>
-            
-          </div>
-        </div>
-        
-        
-        <div class="day-card ">
-          <div class="day-content" style="display: flex; flex-direction: column; height: 100%;">
-            <div class="day-kicker" style="font-size: 9px; letter-spacing: 0.15em; color: var(--gold); font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">
-              <span class="destination" style="color: var(--muted); margin-right: 6px;">Sapa</span>
-              <span>DAY 7</span>
-            </div>
-            <h3 class="day-title" style="font-family: var(--serif); font-size: 18px; font-weight: 500; color: var(--emerald); margin: 0 0 12px; line-height: 1.25;">Day 7 — Sapa</h3>
-            
-            <div class="day-copy" style="flex: 1; font-size: 11px; color: var(--muted); line-height: 1.5; overflow: hidden;">
-              
-              
-              <p style="margin-bottom: 8px;">Arrive early in Lao Cai and continue by private transfer up to Sapa, where cooler air, mountain views and terraced valleys mark a clear change in landscape. After time to freshen up, begin a soft trekking programme designed around comfort rather than intensity, allowing the family to enjoy scenery and local culture without a demanding pace.
-
-The...</p>
-              
-              
-
-              
-              <p style="font-size: 10px; color: var(--text-muted); margin-top: 8px;">
-                <strong style="color: var(--emerald); letter-spacing: 0.06em;">Highlights:</strong>
-                <span>Private transfer Lao Cai to Sapa, trekking guide, lunch, Silk Path Sapa check-in.</span>
-              </p>
-              
-              
-              
-              <div style="font-size: 10px; color: #8a7042; margin-top: 8px; border-left: 2px solid var(--gold); padding-left: 10px; background: rgba(183,137,75,0.05); border-radius: 2px; padding-top: 4px; padding-bottom: 4px;">
-                <strong style="color: var(--gold); letter-spacing: 0.06em;">Notes:</strong>
-                <ul style="margin: 4px 0 0; padding-left: 12px; list-style-type: disc;">
-                  
-                  
-                  <li style="margin-bottom: 2px;">Sense of Pace: Relaxed</li>
-                  
-                  
-                </ul>
-              </div>
-              
-            </div>
-
-            <div class="day-detail-list" style="display: flex; gap: 24px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line);">
-              
-              <div class="day-detail">
-                <div style="font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px;">Overnight</div>
-                <div style="font-family: var(--serif); font-size: 13px; color: var(--emerald); margin: 0;">Sapa</div>
-              </div>
-              
-              
-              <div class="day-detail">
-                <div style="font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px;">Meals</div>
-                <div style="font-size: 11px; color: var(--text); margin: 0;">Breakfast, Lunch</div>
-              </div>
-              
-            </div>
-          </div>
-
-          <div class="day-media" style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
-            
-            <div style="flex: 2; background: url('/assets/lao-cai/hero/hero5.jpg') center/cover no-repeat; border-radius: 4px;"></div>
-            <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-              <div style="background: url('/assets/lao-cai/hero/hero4.jpg') center/cover no-repeat; border-radius: 4px;"></div>
-              <div style="background: url('/assets/lao-cai/tau-tren-cao.webp') center/cover no-repeat; border-radius: 4px;"></div>
-            </div>
-            
-          </div>
-        </div>
-        
-        
-        <div class="day-card is-alternate">
-          <div class="day-content" style="display: flex; flex-direction: column; height: 100%;">
-            <div class="day-kicker" style="font-size: 9px; letter-spacing: 0.15em; color: var(--gold); font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">
-              <span class="destination" style="color: var(--muted); margin-right: 6px;">Da Nang</span>
-              <span>DAY 8</span>
-            </div>
-            <h3 class="day-title" style="font-family: var(--serif); font-size: 18px; font-weight: 500; color: var(--emerald); margin: 0 0 12px; line-height: 1.25;">Day 8 — Da Nang</h3>
-            
-            <div class="day-copy" style="flex: 1; font-size: 11px; color: var(--muted); line-height: 1.5; overflow: hidden;">
-              
-              
-              <p style="margin-bottom: 8px;">Enjoy a slower morning in Sapa before departing by private transfer toward the airport for the flight to Da Nang. The timing of this day will depend on the confirmed domestic flight schedule, so the programme is intentionally arranged with flexibility to protect comfort and avoid unnecessary pressure during the long transition from mountains to...</p>
-              
-              
-
-              
-              <p style="font-size: 10px; color: var(--text-muted); margin-top: 8px;">
-                <strong style="color: var(--emerald); letter-spacing: 0.06em;">Highlights:</strong>
-                <span>Private airport transfer, flight Sapa-Da Nang, arrival transfer, Radisson RED Danang check-in.</span>
-              </p>
-              
-              
-              
-              <div style="font-size: 10px; color: #8a7042; margin-top: 8px; border-left: 2px solid var(--gold); padding-left: 10px; background: rgba(183,137,75,0.05); border-radius: 2px; padding-top: 4px; padding-bottom: 4px;">
-                <strong style="color: var(--gold); letter-spacing: 0.06em;">Notes:</strong>
-                <ul style="margin: 4px 0 0; padding-left: 12px; list-style-type: disc;">
-                  
-                  
-                  <li style="margin-bottom: 2px;">Sense of Pace: Relaxed</li>
-                  
-                  
-                </ul>
-              </div>
-              
-            </div>
-
-            <div class="day-detail-list" style="display: flex; gap: 24px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line);">
-              
-              <div class="day-detail">
-                <div style="font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px;">Overnight</div>
-                <div style="font-family: var(--serif); font-size: 13px; color: var(--emerald); margin: 0;">Da Nang</div>
-              </div>
-              
-              
-              <div class="day-detail">
-                <div style="font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px;">Meals</div>
-                <div style="font-size: 11px; color: var(--text); margin: 0;">Breakfast, Lunch</div>
-              </div>
-              
-            </div>
-          </div>
-
-          <div class="day-media" style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
-            
-            <div style="flex: 2; background: url('/assets/da-nang/hero/hero3.jpg') center/cover no-repeat; border-radius: 4px;"></div>
-            <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-              <div style="background: url('/assets/da-nang/hero/hero4.jpg') center/cover no-repeat; border-radius: 4px;"></div>
-              <div style="background: url('/assets/da-nang/hero/hero1.jpg') center/cover no-repeat; border-radius: 4px;"></div>
-            </div>
-            
-          </div>
-        </div>
-        
-        
-        <div class="day-card ">
-          <div class="day-content" style="display: flex; flex-direction: column; height: 100%;">
-            <div class="day-kicker" style="font-size: 9px; letter-spacing: 0.15em; color: var(--gold); font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">
-              <span class="destination" style="color: var(--muted); margin-right: 6px;">Da Nang</span>
-              <span>DAY 9</span>
-            </div>
-            <h3 class="day-title" style="font-family: var(--serif); font-size: 18px; font-weight: 500; color: var(--emerald); margin: 0 0 12px; line-height: 1.25;">Day 9 — Da Nang</h3>
-            
-            <div class="day-copy" style="flex: 1; font-size: 11px; color: var(--muted); line-height: 1.5; overflow: hidden;">
-              
-              
-              <p style="margin-bottom: 8px;">After breakfast, begin a privately guided day combining Da Nang’s coastal landmarks with Hoi An’s heritage atmosphere. Visit Marble Mountains, where caves, pagodas and viewpoints reveal one of the city’s most recognisable natural sites. The visit can be adjusted with elevators and gentle routing to keep the pace comfortable.
-
-Continue toward Cam...</p>
-              
-              
-
-              
-              <p style="font-size: 10px; color: var(--text-muted); margin-top: 8px;">
-                <strong style="color: var(--emerald); letter-spacing: 0.06em;">Highlights:</strong>
-                <span>Guide, Marble Mountain entry, basket boat ticket, Hoi An walking tour.</span>
-              </p>
-              
-              
-              
-              <div style="font-size: 10px; color: #8a7042; margin-top: 8px; border-left: 2px solid var(--gold); padding-left: 10px; background: rgba(183,137,75,0.05); border-radius: 2px; padding-top: 4px; padding-bottom: 4px;">
-                <strong style="color: var(--gold); letter-spacing: 0.06em;">Notes:</strong>
-                <ul style="margin: 4px 0 0; padding-left: 12px; list-style-type: disc;">
-                  
-                  
-                  <li style="margin-bottom: 2px;">Sense of Pace: Immersive</li>
-                  
-                  
-                </ul>
-              </div>
-              
-            </div>
-
-            <div class="day-detail-list" style="display: flex; gap: 24px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line);">
-              
-              <div class="day-detail">
-                <div style="font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px;">Overnight</div>
-                <div style="font-family: var(--serif); font-size: 13px; color: var(--emerald); margin: 0;">Da Nang</div>
-              </div>
-              
-              
-              <div class="day-detail">
-                <div style="font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px;">Meals</div>
-                <div style="font-size: 11px; color: var(--text); margin: 0;">Breakfast, Lunch</div>
-              </div>
-              
-            </div>
-          </div>
-
-          <div class="day-media" style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
-            
-            <div style="flex: 2; background: url('/assets/da-nang/danang2.jpg') center/cover no-repeat; border-radius: 4px;"></div>
-            <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-              <div style="background: url('/assets/da-nang/danang3.jpg') center/cover no-repeat; border-radius: 4px;"></div>
-              <div style="background: url('/assets/da-nang/danang1.jpg') center/cover no-repeat; border-radius: 4px;"></div>
-            </div>
-            
-          </div>
-        </div>
-        
-        
-        <div class="day-card is-alternate">
-          <div class="day-content" style="display: flex; flex-direction: column; height: 100%;">
-            <div class="day-kicker" style="font-size: 9px; letter-spacing: 0.15em; color: var(--gold); font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">
-              <span class="destination" style="color: var(--muted); margin-right: 6px;">Da Nang</span>
-              <span>DAY 10</span>
-            </div>
-            <h3 class="day-title" style="font-family: var(--serif); font-size: 18px; font-weight: 500; color: var(--emerald); margin: 0 0 12px; line-height: 1.25;">Day 10 — Da Nang</h3>
-            
-            <div class="day-copy" style="flex: 1; font-size: 11px; color: var(--muted); line-height: 1.5; overflow: hidden;">
-              
-              
-              <p style="margin-bottom: 8px;">Today moves beyond the most familiar coastal route to introduce Central Vietnam’s layered history and quieter heritage sites. Depending on confirmed routing, visit selected Cham tower remains or cultural stops that reflect the region’s ancient Champa legacy, adding a historical dimension to the beach and old-town experiences of previous...</p>
-              
-              
-
-              
-              <p style="font-size: 10px; color: var(--text-muted); margin-top: 8px;">
-                <strong style="color: var(--emerald); letter-spacing: 0.06em;">Highlights:</strong>
-                <span>Cham towers entry, Ky Anh tunnel tour, guide, transport, lunch.</span>
-              </p>
-              
-              
-              
-              <div style="font-size: 10px; color: #8a7042; margin-top: 8px; border-left: 2px solid var(--gold); padding-left: 10px; background: rgba(183,137,75,0.05); border-radius: 2px; padding-top: 4px; padding-bottom: 4px;">
-                <strong style="color: var(--gold); letter-spacing: 0.06em;">Notes:</strong>
-                <ul style="margin: 4px 0 0; padding-left: 12px; list-style-type: disc;">
-                  
-                  
-                  <li style="margin-bottom: 2px;">Sense of Pace: Moderate</li>
-                  
-                  
-                </ul>
-              </div>
-              
-            </div>
-
-            <div class="day-detail-list" style="display: flex; gap: 24px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line);">
-              
-              <div class="day-detail">
-                <div style="font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px;">Overnight</div>
-                <div style="font-family: var(--serif); font-size: 13px; color: var(--emerald); margin: 0;">Da Nang</div>
-              </div>
-              
-              
-              <div class="day-detail">
-                <div style="font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px;">Meals</div>
-                <div style="font-size: 11px; color: var(--text); margin: 0;">Breakfast, Lunch</div>
-              </div>
-              
-            </div>
-          </div>
-
-          <div class="day-media" style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
-            
-            <div style="flex: 1; background: url('/assets/da-nang/hero/hero2.jpg') center/cover no-repeat; border-radius: 4px;"></div>
-            <div style="flex: 1; background: url('/assets/da-nang/hero/hero5.jpg') center/cover no-repeat; border-radius: 4px;"></div>
-            
-          </div>
-        </div>
-        
-        
-        <div class="day-card ">
-          <div class="day-content" style="display: flex; flex-direction: column; height: 100%;">
-            <div class="day-kicker" style="font-size: 9px; letter-spacing: 0.15em; color: var(--gold); font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">
-              <span class="destination" style="color: var(--muted); margin-right: 6px;">Hoi An</span>
-              <span>DAY 11</span>
-            </div>
-            <h3 class="day-title" style="font-family: var(--serif); font-size: 18px; font-weight: 500; color: var(--emerald); margin: 0 0 12px; line-height: 1.25;">Day 11 — Hoi An</h3>
-            
-            <div class="day-copy" style="flex: 1; font-size: 11px; color: var(--muted); line-height: 1.5; overflow: hidden;">
-              
-              
-              <p style="margin-bottom: 8px;">After breakfast, check out from Da Nang and transfer privately toward Hoi An for a relaxed countryside and local-life programme. Begin with gentle cycling or a soft countryside visit through flat village lanes, rice fields and small farms, with stops adapted to the family’s comfort level and interest in local daily life.
-
-Lunch is included at a...</p>
-              
-              
-
-              
-              <p style="font-size: 10px; color: var(--text-muted); margin-top: 8px;">
-                <strong style="color: var(--emerald); letter-spacing: 0.06em;">Highlights:</strong>
-                <span>Bicycle rental, Tra Que entry, resort transfer, Hoiana Resort check-in.</span>
-              </p>
-              
-              
-              
-              <div style="font-size: 10px; color: #8a7042; margin-top: 8px; border-left: 2px solid var(--gold); padding-left: 10px; background: rgba(183,137,75,0.05); border-radius: 2px; padding-top: 4px; padding-bottom: 4px;">
-                <strong style="color: var(--gold); letter-spacing: 0.06em;">Notes:</strong>
-                <ul style="margin: 4px 0 0; padding-left: 12px; list-style-type: disc;">
-                  
-                  
-                  <li style="margin-bottom: 2px;">Sense of Pace: Relaxed</li>
-                  
-                  
-                </ul>
-              </div>
-              
-            </div>
-
-            <div class="day-detail-list" style="display: flex; gap: 24px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line);">
-              
-              <div class="day-detail">
-                <div style="font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px;">Overnight</div>
-                <div style="font-family: var(--serif); font-size: 13px; color: var(--emerald); margin: 0;">Hoi An</div>
-              </div>
-              
-              
-              <div class="day-detail">
-                <div style="font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px;">Meals</div>
-                <div style="font-size: 11px; color: var(--text); margin: 0;">Breakfast, Lunch</div>
-              </div>
-              
-            </div>
-          </div>
-
-          <div class="day-media" style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
-            
-            <div style="flex: 2; background: url('/assets/quang-nam/hero/hero1.jpg') center/cover no-repeat; border-radius: 4px;"></div>
-            <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-              <div style="background: url('/assets/quang-nam/hoian2.jpg') center/cover no-repeat; border-radius: 4px;"></div>
-              <div style="background: url('/assets/quang-nam/hero/hero2.jpg') center/cover no-repeat; border-radius: 4px;"></div>
-            </div>
-            
-          </div>
-        </div>
-        
-        
-        <div class="day-card is-alternate">
-          <div class="day-content" style="display: flex; flex-direction: column; height: 100%;">
-            <div class="day-kicker" style="font-size: 9px; letter-spacing: 0.15em; color: var(--gold); font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">
-              <span class="destination" style="color: var(--muted); margin-right: 6px;">Ho Chi Minh City</span>
-              <span>DAY 12</span>
-            </div>
-            <h3 class="day-title" style="font-family: var(--serif); font-size: 18px; font-weight: 500; color: var(--emerald); margin: 0 0 12px; line-height: 1.25;">Day 12 — Ho Chi Minh City</h3>
-            
-            <div class="day-copy" style="flex: 1; font-size: 11px; color: var(--muted); line-height: 1.5; overflow: hidden;">
-              
-              
-              <p style="margin-bottom: 8px;">After breakfast, transfer from Hoiana to Da Nang Airport for the domestic flight to Ho Chi Minh City. Upon arrival, meet your private driver and continue to Liberty Central Saigon Riverside Hotel for check-in. The afternoon is kept flexible for rest, unpacking or a short independent walk along the riverfront.
-
-In the evening, enjoy a Saigon by...</p>
-              
-              
-
-              
-              <p style="font-size: 10px; color: var(--text-muted); margin-top: 8px;">
-                <strong style="color: var(--emerald); letter-spacing: 0.06em;">Highlights:</strong>
-                <span>Airport transfers, flight Da Nang-Saigon, Saigon by Night tour with dinner.</span>
-              </p>
-              
-              
-              
-              <div style="font-size: 10px; color: #8a7042; margin-top: 8px; border-left: 2px solid var(--gold); padding-left: 10px; background: rgba(183,137,75,0.05); border-radius: 2px; padding-top: 4px; padding-bottom: 4px;">
-                <strong style="color: var(--gold); letter-spacing: 0.06em;">Notes:</strong>
-                <ul style="margin: 4px 0 0; padding-left: 12px; list-style-type: disc;">
-                  
-                  
-                  <li style="margin-bottom: 2px;">Sense of Pace: Active</li>
-                  
-                  
-                </ul>
-              </div>
-              
-            </div>
-
-            <div class="day-detail-list" style="display: flex; gap: 24px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line);">
-              
-              <div class="day-detail">
-                <div style="font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px;">Overnight</div>
-                <div style="font-family: var(--serif); font-size: 13px; color: var(--emerald); margin: 0;">Ho Chi Minh City</div>
-              </div>
-              
-              
-              <div class="day-detail">
-                <div style="font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px;">Meals</div>
-                <div style="font-size: 11px; color: var(--text); margin: 0;">Breakfast, Lunch, Dinner</div>
-              </div>
-              
-            </div>
-          </div>
-
-          <div class="day-media" style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
-            
-            <div style="flex: 1; background: url('/assets/ho-chi-minh/hero/hero2.jpg') center/cover no-repeat; border-radius: 4px;"></div>
-            <div style="flex: 1; background: url('/assets/ho-chi-minh/hero/hero4.jpg') center/cover no-repeat; border-radius: 4px;"></div>
-            
-          </div>
-        </div>
-        
-        
-        <div class="day-card ">
-          <div class="day-content" style="display: flex; flex-direction: column; height: 100%;">
-            <div class="day-kicker" style="font-size: 9px; letter-spacing: 0.15em; color: var(--gold); font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">
-              <span class="destination" style="color: var(--muted); margin-right: 6px;">Ho Chi Minh City</span>
-              <span>DAY 13</span>
-            </div>
-            <h3 class="day-title" style="font-family: var(--serif); font-size: 18px; font-weight: 500; color: var(--emerald); margin: 0 0 12px; line-height: 1.25;">Day 13 — Ho Chi Minh City</h3>
-            
-            <div class="day-copy" style="flex: 1; font-size: 11px; color: var(--muted); line-height: 1.5; overflow: hidden;">
-              
-              
-              <p style="margin-bottom: 8px;">Depart Ho Chi Minh City after breakfast for a privately guided excursion to the Cu Chi Tunnels, one of the most important wartime sites in southern Vietnam. With your guide, explore selected tunnel sections, reconstructed living areas, hidden entrances and interpretive displays that explain how underground networks supported communication, shelter...</p>
-              
-              
-
-              
-              <p style="font-size: 10px; color: var(--text-muted); margin-top: 8px;">
-                <strong style="color: var(--emerald); letter-spacing: 0.06em;">Highlights:</strong>
-                <span>Cu Chi Tunnels entry, guide, transport, lunch.</span>
-              </p>
-              
-              
-              
-              <div style="font-size: 10px; color: #8a7042; margin-top: 8px; border-left: 2px solid var(--gold); padding-left: 10px; background: rgba(183,137,75,0.05); border-radius: 2px; padding-top: 4px; padding-bottom: 4px;">
-                <strong style="color: var(--gold); letter-spacing: 0.06em;">Notes:</strong>
-                <ul style="margin: 4px 0 0; padding-left: 12px; list-style-type: disc;">
-                  
-                  
-                  <li style="margin-bottom: 2px;">Sense of Pace: Immersive</li>
-                  
-                  
-                </ul>
-              </div>
-              
-            </div>
-
-            <div class="day-detail-list" style="display: flex; gap: 24px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line);">
-              
-              <div class="day-detail">
-                <div style="font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px;">Overnight</div>
-                <div style="font-family: var(--serif); font-size: 13px; color: var(--emerald); margin: 0;">Ho Chi Minh City</div>
-              </div>
-              
-              
-              <div class="day-detail">
-                <div style="font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px;">Meals</div>
-                <div style="font-size: 11px; color: var(--text); margin: 0;">Breakfast, Lunch</div>
-              </div>
-              
-            </div>
-          </div>
-
-          <div class="day-media" style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
-            
-            <div style="flex: 1; background: url('/assets/ho-chi-minh/hero/hero3.jpg') center/cover no-repeat; border-radius: 4px;"></div>
-            
-          </div>
-        </div>
-        
-        
-        <div class="day-card is-alternate">
-          <div class="day-content" style="display: flex; flex-direction: column; height: 100%;">
-            <div class="day-kicker" style="font-size: 9px; letter-spacing: 0.15em; color: var(--gold); font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">
-              <span class="destination" style="color: var(--muted); margin-right: 6px;">Ho Chi Minh City</span>
-              <span>DAY 14</span>
-            </div>
-            <h3 class="day-title" style="font-family: var(--serif); font-size: 18px; font-weight: 500; color: var(--emerald); margin: 0 0 12px; line-height: 1.25;">Day 14 — Ho Chi Minh City</h3>
-            
-            <div class="day-copy" style="flex: 1; font-size: 11px; color: var(--muted); line-height: 1.5; overflow: hidden;">
-              
-              
-              <p style="margin-bottom: 8px;">Enjoy the final morning in Ho Chi Minh City at a relaxed pace. Depending on the confirmed flight schedule, there may be time for a short walk near the hotel, last-minute shopping, coffee by the river or simply a calm breakfast before preparing for the airport transfer.
-
-Lunch is included subject to the departure timing. Your private driver will...</p>
-              
-              
-
-              
-              <p style="font-size: 10px; color: var(--text-muted); margin-top: 8px;">
-                <strong style="color: var(--emerald); letter-spacing: 0.06em;">Highlights:</strong>
-                <span>Private airport departure transfer, lunch (depending on flight timing).</span>
-              </p>
-              
-              
-              
-              <div style="font-size: 10px; color: #8a7042; margin-top: 8px; border-left: 2px solid var(--gold); padding-left: 10px; background: rgba(183,137,75,0.05); border-radius: 2px; padding-top: 4px; padding-bottom: 4px;">
-                <strong style="color: var(--gold); letter-spacing: 0.06em;">Notes:</strong>
-                <ul style="margin: 4px 0 0; padding-left: 12px; list-style-type: disc;">
-                  
-                  
-                  <li style="margin-bottom: 2px;">Sense of Pace: Relaxed</li>
-                  
-                  
-                </ul>
-              </div>
-              
-            </div>
-
-            <div class="day-detail-list" style="display: flex; gap: 24px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line);">
-              
-              <div class="day-detail">
-                <div style="font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px;">Overnight</div>
-                <div style="font-family: var(--serif); font-size: 13px; color: var(--emerald); margin: 0;">Ho Chi Minh City</div>
-              </div>
-              
-              
-              <div class="day-detail">
-                <div style="font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px;">Meals</div>
-                <div style="font-size: 11px; color: var(--text); margin: 0;">Breakfast, Lunch</div>
-              </div>
-              
-            </div>
-          </div>
-
-          <div class="day-media" style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
-            
-            <div style="flex: 1; background: url('/assets/ho-chi-minh/hero/hero1.jpg') center/cover no-repeat; border-radius: 4px;"></div>
-            
-          </div>
-        </div>
         
       </div>
     </div>
@@ -2918,52 +2046,39 @@ Lunch is included subject to the departure timing. Your private driver will...</
       <span class="ref"><span class="ltr-token">QT-2027-SARA-2PAX · 2027-04-01</span></span>
     </div>
     <div class="page-inner">
-      <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 40px; margin-bottom: 24px;">
-        <!-- Left side -->
-        <div>
-          <div class="section-label">Booking Conditions</div>
-          <h2 class="section-h2" style="font-size: 32px; line-height: 1.1; margin: 0 0 16px;">
-            Booking Terms
-          </h2>
-          <p class="section-p" style="margin-bottom: 0;">
-            Commercial conditions, deposits, and cancellation policy for this booking.
-          </p>
-        </div>
+      <div class="section-label">Booking Conditions</div>
+      <h2 class="section-h2">Booking Terms</h2>
+      <p class="section-p">Commercial conditions, deposits, and cancellation policy for this booking.</p>
 
-        <!-- Right side -->
-        <div style="display: flex; flex-direction: column;">
-          <!-- Deposit -->
-          <div style="display: grid; grid-template-columns: 100px 1fr; gap: 20px; padding: 16px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
-            <div style="font-family: var(--serif); font-size: 14px; color: var(--emerald);">Deposit</div>
-            <div style="color: var(--text-muted); font-size: 11px; line-height: 1.6;">
-              30% deposit upon booking confirmation to secure accommodations.
-            </div>
-          </div>
-
-          <!-- Balance -->
-          <div style="display: grid; grid-template-columns: 100px 1fr; gap: 20px; padding: 16px 0; border-bottom: 1px solid var(--line);">
-            <div style="font-family: var(--serif); font-size: 14px; color: var(--emerald);">Balance</div>
-            <div style="color: var(--text-muted); font-size: 11px; line-height: 1.6;">
-              70% balance due 45 days prior to arrival date.
-            </div>
-          </div>
-
-          <!-- Cancellation -->
-          <div style="display: grid; grid-template-columns: 100px 1fr; gap: 20px; padding: 16px 0; border-bottom: 1px solid var(--line);">
-            <div style="font-family: var(--serif); font-size: 14px; color: var(--emerald);">Cancellation</div>
-            <div style="color: var(--text-muted); font-size: 11px; line-height: 1.6;">
-              Free cancellation up to 60 days prior to arrival. 50% cancellation fee between 59 and 30 days. 100% within 30 days.
-            </div>
-          </div>
-
-          <!-- Confirmation -->
-          <div style="display: grid; grid-template-columns: 100px 1fr; gap: 20px; padding: 16px 0; border-bottom: 1px solid var(--line);">
-            <div style="font-family: var(--serif); font-size: 14px; color: var(--emerald);">Confirmation</div>
-            <div style="color: var(--text-muted); font-size: 11px; line-height: 1.6;">
-              Reservations are subject to availability. Confirmation vouchers are issued within 3 working days after deposit is verified.
-            </div>
-          </div>
-        </div>
+      <div style="border: 1px solid var(--line); border-radius: 0; overflow: hidden; margin-bottom: 24px;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11px;">
+          <thead>
+            <tr style="background: var(--emerald); color: white;">
+              <th style="padding: 10px 14px; width: 180px;">Term</th>
+              <th style="padding: 10px 14px;">Condition</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom: 1px solid var(--line); background: white;">
+              <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Deposit
+              </td>
+              <td style="padding: 10px 14px;">30% deposit upon booking confirmation to secure accommodations.</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--line); background: rgba(183, 137, 75, 0.03);">
+              <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Balance
+              </td>
+              <td style="padding: 10px 14px;">70% balance due 45 days prior to arrival date.</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--line); background: white;">
+              <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Cancellation</td>
+              <td style="padding: 10px 14px;">Free cancellation up to 60 days prior to arrival. 50% cancellation fee between 59 and 30 days. 100% within 30 days.</td>
+            </tr>
+            <tr style="background: rgba(183, 137, 75, 0.03);">
+              <td style="padding: 10px 14px; font-weight: 700; color: var(--emerald);">Confirmation</td>
+              <td style="padding: 10px 14px;">Reservations are subject to availability. Confirmation vouchers are issued within 3 working days after deposit is verified.</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       <div class="section-label">Next step</div>

@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{ lang or 'en' }}" {% if lang=='ar' %}dir="rtl" {% endif %}
-  style="--hero-img: url('{{img_0}}'); {% for dest in destinations %} --img-{{ loop.index }}: url('{{ dest.image_url or '/assets/vietnam-safar-logo.png' }}'); {% endfor %}">
+  style="--hero-img: url('{{img_0}}'); {% if designer_img %}--designer-img: url('{{ designer_img }}');{% endif %} {% for dest in destinations %} --img-{{ loop.index }}: url('{{ dest.image_url or '/assets/vietnam-safar-logo.png' }}'); {% endfor %}">
 
 <head>
   <meta charset="UTF-8" />
@@ -2973,6 +2973,31 @@
 
 
 
+    {% if show_designer_section %}
+    <section id="meet-designer"
+      style="background: var(--bg-alt); padding: 72px 0; border-radius: 40px; margin: 40px 0;">
+      <div class="container designer-container">
+        <div class="designer-card">
+          <div class="designer-img-container" id="designer-avatar-container">
+            <div class="designer-avatar-large"
+              style="background-image: {% if designer_img %}url('{{ designer_img }}'){% else %}var(--designer-img, url('/assets/dias_team/director.png')){% endif %}; background-size: cover; background-position: center;">
+            </div>
+          </div>
+          <div class="designer-info">
+            <span data-editable="designer_kicker">{{ designer_kicker or "Your Dedicated Specialist" | translate(lang) }}</span>
+            <h2 data-editable="designer_title">{{ designer_title or "Meet Your Travel Specialist" | translate(lang) }}</h2>
+            <p class="designer-quote" data-editable="designer_quote">"{{ designer_quote or "I am your dedicated travel specialist. I handpicked every hotel, private transfer, and local guide on this itinerary to ensure you experience the true depth of Vietnam in comfort, privacy, and at your own pace. I will personally oversee your journey from behind the scenes." | translate(lang) }}"</p>
+            <div class="designer-details">
+              <div><strong>{{ "Expertise:" | translate(lang) }}</strong> <span data-editable="designer_expertise">{{ designer_expertise or "Custom Itineraries, Luxury Travel, Local Experiences" | translate(lang) }}</span></div>
+              <div><strong>{{ "Experience:" | translate(lang) }}</strong> <span data-editable="designer_experience">{{ designer_experience or "Years designing bespoke journeys" | translate(lang) }}</span></div>
+            </div>
+            <div class="designer-signature font-accent" data-editable="designer_signature">{{ designer_signature or "Your Travel Specialist" | translate(lang) }}</div>
+          </div>
+        </div>
+      </div>
+    </section>
+    {% endif %}
+
     <section id="payment-terms"
       style="background: var(--bg-alt); border: 1px solid var(--line); border-radius: 40px; padding: 54px; margin: 40px 0; box-shadow: 0 18px 45px rgba(17,19,15,0.04);">
       <div class="container">
@@ -3021,10 +3046,6 @@
       </div>
     </section>
 
-    {% if show_designer_section %}
-
-    {% endif %}
-
     <section id="contact">
       <div class="container">
         <div class="cta">
@@ -3067,36 +3088,6 @@
                 translate(lang) }}</a>
             </div>
             {% endif %}
-          </div>
-        </div>
-      </div>
-    </section>
-
-
-    <section id="meet-designer" class="no-print"
-      style="background: var(--bg-alt); padding: 72px 0; border-radius: 40px; margin: 40px 0;">
-      <div class="container designer-container">
-        <div class="designer-card">
-          <div class="designer-img-container" id="designer-avatar-container">
-            <div class="designer-avatar-large"
-              style="background-image: var(--designer-img, url('/assets/dias_team/director.png')); background-size: cover; background-position: center;">
-            </div>
-          </div>
-          <div class="designer-info">
-            <span data-editable="designer_kicker">{{ "Your Dedicated Specialist" | translate(lang) }}</span>
-            <h2 data-editable="designer_title">{{ "Meet Your Travel Specialist" | translate(lang) }}</h2>
-            <p class="designer-quote" data-editable="designer_quote">"{{ "I am your dedicated travel specialist. I
-              handpicked every hotel, private transfer, and local guide on this itinerary to ensure you experience the
-              true depth of Vietnam in comfort, privacy, and at your own pace. I will personally oversee your journey
-              from behind the scenes." | translate(lang) }}"</p>
-            <div class="designer-details">
-              <div><strong>{{ "Expertise:" | translate(lang) }}</strong> <span data-editable="designer_expertise">{{
-                  "Custom Itineraries, Luxury Travel, Local Experiences" | translate(lang) }}</span></div>
-              <div><strong>{{ "Experience:" | translate(lang) }}</strong> <span data-editable="designer_experience">{{
-                  "Years designing bespoke journeys" | translate(lang) }}</span></div>
-            </div>
-            <div class="designer-signature font-accent" data-editable="designer_signature">{{ "Your Travel Specialist" |
-              translate(lang) }}</div>
           </div>
         </div>
       </div>
