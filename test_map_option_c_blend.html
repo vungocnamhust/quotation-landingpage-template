@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Option C: Google Maps + Timeline</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #F5F1EA;
+            --text-main: #555;
+            --gold: #B7894B;
+            --line-color: #C0A07C;
+            --title-color: #2C3E33;
+            --sub-color: #9F5943;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg-color);
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden; 
+            display: flex;
+            height: 100vh;
+        }
+        
+        /* Layout */
+        .map-section {
+            width: 60%;
+            height: 100%;
+            position: relative;
+        }
+        .timeline-section {
+            width: 40%;
+            height: 100%;
+            overflow-y: auto;
+            padding: 60px 40px 60px 60px;
+            box-sizing: border-box;
+            background: var(--bg-color);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.02);
+            z-index: 10;
+        }
+        
+        /* Full Screen Map */
+        #map {
+            width: 100%;
+            height: 100%;
+            background: transparent !important;
+        }
+        
+        /* Blend Google Maps into the background */
+        .leaflet-tile-pane {
+            mix-blend-mode: multiply;
+            filter: sepia(0.8) hue-rotate(-20deg) saturate(0.8) opacity(0.6);
+        }
+        
+        /* Custom markers */
+        .luxury-marker-wrapper {
+            position: relative;
+        }
+        .luxury-marker {
+            width: 12px;
+            height: 12px;
+            background: var(--bg-color);
+            border-radius: 50%;
+            border: 2px solid var(--gold);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .luxury-marker.active {
+            background: var(--gold);
+            transform: scale(1.5);
+            box-shadow: 0 0 0 4px rgba(183, 137, 75, 0.2);
+        }
+        .luxury-marker-label {
+            position: absolute;
+            left: 20px;
+            top: -5px;
+            font-family: 'Playfair Display', serif;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--title-color);
+            white-space: nowrap;
+            text-shadow: 0 0 4px var(--bg-color), 0 0 4px var(--bg-color), 0 0 4px var(--bg-color);
+            pointer-events: none;
+            transition: color 0.3s;
+        }
+        .luxury-marker.active + .luxury-marker-label {
+            color: var(--gold);
+        }
+        
+        /* Timeline */
+        .timeline {
+            position: relative;
+        }
+        /* Vertical Line */
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 6px;
+            bottom: 30px;
+            left: 7px;
+            width: 1px;
+            background: var(--line-color);
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-left: 40px;
+            padding-bottom: 45px;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+        
+        /* Circle nodes */
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 4px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--bg-color);
+            border: 2px solid var(--line-color);
+            z-index: 2;
+            transition: all 0.3s;
+            box-sizing: border-box;
+        }
+        
+        .timeline-item:not(.active) {
+            opacity: 0.5;
+        }
+        .timeline-item:hover:not(.active) {
+            opacity: 0.8;
+        }
+        
+        .timeline-item.active::before {
+            background: var(--bg-color);
+            border-width: 3px;
+            border-color: var(--title-color);
+        }
+        
+        /* Content Styling */
+        .item-duration {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--gold);
+            letter-spacing: 1.5px;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+        .item-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            color: var(--title-color);
+            margin: 0 0 16px 0;
+            font-weight: 600;
+        }
+        .item-content {
+            display: flex;
+            gap: 20px;
+        }
+        .item-sub {
+            flex: 0 0 35%;
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            color: var(--sub-color);
+            font-size: 14.5px;
+            line-height: 1.4;
+        }
+        .item-desc {
+            flex: 1;
+            font-size: 14px;
+            color: var(--text-main);
+            line-height: 1.5;
+            margin: 0;
+        }
+        
+        /* Scrollbar customization */
+        .timeline-section::-webkit-scrollbar {
+            width: 6px;
+        }
+        .timeline-section::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .timeline-section::-webkit-scrollbar-thumb {
+            background: rgba(183, 137, 75, 0.3);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Map Section (60%) -->
+    <div class="map-section">
+        <div id="map"></div>
+    </div>
+
+    <!-- Timeline Section (40%) -->
+    <div class="timeline-section" id="timeline-container">
+        <div class="timeline" id="timeline">
+            <!-- Items injected by JS -->
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const map = L.map('map', {
+            zoomControl: false,
+            attributionControl: false
+        }).setView([16.5, 106.0], 6);
+
+        L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi', {
+            maxZoom: 19
+        }).addTo(map);
+
+        const items = [
+            { id: 'hanoi', name: "Hanoi", nights: "3 NIGHTS", sub: "Arrive • recover • discover", desc: "A gentle beginning through food, architecture and the quieter life of the capital.", coords: [21.0285, 105.8542] },
+            { id: 'ninhbinh', name: "Ninh Binh", nights: "1 NIGHT", sub: "Pause", desc: "Rivers, fields and limestone landscapes create the first slowing of pace.", coords: [20.2539, 105.9745] },
+            { id: 'halong', name: "Ha Long Bay", nights: "1 NIGHT", sub: "Drift", desc: "A night held between water, sky and stone.", coords: [20.9101, 107.1839] },
+            { id: 'sapa', name: "Sapa", nights: "2 NIGHTS", sub: "Deepen", desc: "Mountain air, terraced valleys and local life, with comfort protected.", coords: [22.3364, 103.8438] },
+            { id: 'danang', name: "Da Nang", nights: "3 NIGHTS", sub: "Transition • discover", desc: "A coastal base for heritage, culture and time to breathe.", coords: [16.0471, 108.2068] },
+            { id: 'hoian', name: "Hoi An", nights: "1 NIGHT", sub: "Settle", desc: "Countryside rhythms before the journey turns south.", coords: [15.8801, 108.3380] },
+            { id: 'hcmc', name: "Ho Chi Minh City", nights: "2 NIGHTS", sub: "Conclude", desc: "A final chapter shaped by history, river life and a calm departure.", coords: [10.8231, 106.6297] }
+        ];
+
+        const latlngs = items.map(d => d.coords);
+        L.polyline(latlngs, { color: '#B7894B', weight: 1.5, dashArray: '4, 4' }).addTo(map);
+
+        const timelineEl = document.getElementById('timeline');
+        
+        items.forEach((item, index) => {
+            // Create Map Marker
+            const iconHtml = `<div class="luxury-marker" id="marker-${item.id}"></div><div class="luxury-marker-label">${item.name}</div>`;
+            const icon = L.divIcon({ html: iconHtml, className: 'luxury-marker-wrapper', iconSize: [12, 12], iconAnchor: [6, 6] });
+            const marker = L.marker(item.coords, { icon: icon }).addTo(map);
+            
+            marker.on('click', () => selectItem(index));
+
+            // Create Timeline Item
+            const tItem = document.createElement('div');
+            tItem.className = 'timeline-item';
+            tItem.id = `titem-${item.id}`;
+            tItem.onclick = () => selectItem(index);
+            
+            tItem.innerHTML = `
+                <div class="item-duration">${item.nights}</div>
+                <h3 class="item-title">${item.name}</h3>
+                <div class="item-content">
+                    <div class="item-sub">${item.sub}</div>
+                    <div class="item-desc">${item.desc}</div>
+                </div>
+            `;
+            timelineEl.appendChild(tItem);
+        });
+
+        let currentIndex = 0;
+        function selectItem(index) {
+            currentIndex = index;
+            const item = items[index];
+            
+            // Highlight Timeline
+            document.querySelectorAll('.timeline-item').forEach((el, i) => {
+                el.classList.toggle('active', i === index);
+            });
+            
+            // Highlight Marker
+            document.querySelectorAll('.luxury-marker').forEach((el) => {
+                el.classList.remove('active');
+            });
+            const markerEl = document.getElementById(`marker-${item.id}`);
+            if (markerEl) markerEl.classList.add('active');
+            
+            // Pan Map - Use offset to keep marker in the center of the 60% map section
+            map.flyTo(item.coords, 7, { animate: true, duration: 0.8 });
+            
+            // Scroll Timeline smoothly
+            const activeTItem = document.getElementById(`titem-${item.id}`);
+            activeTItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // Initialize first item
+        setTimeout(() => selectItem(0), 500);
+
+    </script>
+</body>
+</html>
