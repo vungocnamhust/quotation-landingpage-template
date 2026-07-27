@@ -223,15 +223,33 @@
     .cover {
       width: 794px;
       height: 1123px;
-      background: linear-gradient(160deg, rgba(17, 19, 15, .88) 0%, rgba(17, 19, 15, .55) 55%, rgba(17, 19, 15, .18) 100%),
-        center/cover no-repeat;
+      position: relative;
+      overflow: hidden;
       color: white;
       display: flex;
       flex-direction: column;
       padding: 0;
     }
 
+    .cover-media {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+    }
+
+    .cover-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(160deg, rgba(17, 19, 15, .88) 0%, rgba(17, 19, 15, .55) 55%, rgba(17, 19, 15, .18) 100%);
+      z-index: 1;
+    }
+
     .cover-body {
+      position: relative;
+      z-index: 2;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -1161,8 +1179,10 @@
 
   <!-- ═══════════════════ PAGE 1 — Cover ═══════════════════ -->
   <div class="pdf-page">
-    <div class="cover"
-      style="background-image: linear-gradient(160deg,rgba(17,19,15,.88),rgba(17,19,15,.55) 55%,rgba(17,19,15,.18)), url('{{ hero_img_custom | default(img_0 | default('/assets/vietnam-safar-logo.png')) }}');">
+    <div class="cover">
+      <img class="cover-media" src="{{ hero_img_custom | default(img_0 | default('/assets/vietnam-safar-logo.png')) }}"
+        alt="">
+      <div class="cover-overlay"></div>
       <div class="cover-body">
         <div class="cover-top">
           <div class="cover-kicker" data-editable="cover_kicker">{{ cover_kicker | default("A Privately Arranged
