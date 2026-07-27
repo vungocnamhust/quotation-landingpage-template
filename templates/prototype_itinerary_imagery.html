@@ -11,7 +11,7 @@
       const CURRENT_VERSION = {{ latest_version | default (1)
     }};
     const QUO_ID = "{{ quotation_id }}";
-    if (!QUO_ID || window.location.search.includes('_r=')) return;
+    if (!QUO_ID || window.location.search.includes('_r=') || window.location.pathname.includes('/quotations/')) return;
     fetch('/published/' + QUO_ID + '/version?t=' + Date.now(), { cache: 'no-store' })
       .then(function (res) { return res.json(); })
       .then(function (data) {
@@ -4123,10 +4123,10 @@
               <!-- Side-by-Side Images -->
               <div class="hotel-images-group hotel-images-grid {% if is_odd %}odd-group{% else %}even-group{% endif %}">
                 <div class="img-wrapper-main hotel-image-wrapper">
-                  <img src="{{ item.hotel_img }}" alt="{{ item.name }}">
+                  <img src="{{ item.hotel_img }}" alt="{{ item.name }}" data-editable="hotel_img_{{ loop.index }}">
                 </div>
                 <div class="img-wrapper-sub hotel-image-wrapper">
-                  <img src="{{ item.room_img }}" alt="{{ item.name }} Room">
+                  <img src="{{ item.room_img }}" alt="{{ item.name }} Room" data-editable="hotel_room_img_{{ loop.index }}">
                 </div>
               </div>
 

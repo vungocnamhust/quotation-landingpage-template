@@ -5,11 +5,11 @@ import os
 import asyncio
 import copy
 import re
+import html
 from functools import partial
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, HTTPException, UploadFile, File, Form
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
-from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.templating import Jinja2Templates
 from fastapi.exceptions import RequestValidationError
@@ -41,11 +41,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount static directories
-app.mount("/assets", StaticFiles(directory="assets"), name="assets")
-# Removed: app.mount("/published", StaticFiles(directory="published"), name="published")
-# We now use a dynamic route below to handle /published to allow GitHub API fallback on Vercel
-
 # Jinja2 templates
 templates = Jinja2Templates(directory="templates")
 
@@ -55,6 +50,8 @@ NO_CACHE_HEADERS = {
     "Expires": "0"
 }
 no_cache_headers = NO_CACHE_HEADERS
+
+ASSETS_ROOT = os.path.abspath("assets")
 
 BRAND_OWNED_CTX_FIELDS = frozenset({
     "seller_name",
@@ -4921,6 +4918,7 @@ def _normalize_visible_text(value: str) -> str:
     value = re.sub(r'<\s*br\s*/?>', '\n', value, flags=re.IGNORECASE)
     value = re.sub(r'</\s*(div|p|li|h[1-6])\s*>', '\n', value, flags=re.IGNORECASE)
     value = re.sub(r'<[^>]*>', '', value)
+    value = html.unescape(value)
     value = value.replace("\xa0", " ")
     lines = [" ".join(line.split()) for line in value.splitlines()]
     lines = [line for line in lines if line]
@@ -4932,6 +4930,88 @@ def _extract_editable_inner_html(html_content: str, field_name: str) -> str:
     if match:
         return match.group("body").strip()
     return ""
+
+def _extract_image_refs(value: str) -> list[str]:
+    if not value:
+        return []
+
+    refs: list[str] = []
+    for pattern, group_idx in (
+        (r'url\((["\']?)(.*?)\1\)', 2),
+        (r'src=["\']([^"\']+)["\']', 1),
+    ):
+        for match in re.finditer(pattern, value, flags=re.IGNORECASE | re.DOTALL):
+            ref = (match.group(group_idx) or "").strip()
+            ref = ref.strip("\\").strip().strip("\"'")
+            if ref and ref not in refs:
+                refs.append(ref)
+
+    stripped = value.strip()
+    if not refs and stripped and "<" not in stripped:
+        refs.append(stripped)
+
+    return refs
+
+def _extract_hotel_image_refs(html_content: str, hotel_indexes: list[int]) -> dict[str, dict[str, str]]:
+    if not hotel_indexes:
+        return {}
+
+    main_matches = re.findall(
+        r'<div[^>]*class=["\'][^"\']*\bimg-wrapper-main\b[^"\']*\bhotel-image-wrapper\b[^"\']*["\'][^>]*>.*?<img[^>]+src=["\']([^"\']+)["\']',
+        html_content,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    room_matches = re.findall(
+        r'<div[^>]*class=["\'][^"\']*\bimg-wrapper-sub\b[^"\']*\bhotel-image-wrapper\b[^"\']*["\'][^>]*>.*?<img[^>]+src=["\']([^"\']+)["\']',
+        html_content,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+
+    hotel_refs: dict[str, dict[str, str]] = {}
+    for pos, idx in enumerate(hotel_indexes):
+        hotel_entry: dict[str, str] = {}
+        if pos < len(main_matches) and main_matches[pos]:
+            hotel_entry["hotel_img"] = main_matches[pos].strip()
+        if pos < len(room_matches) and room_matches[pos]:
+            hotel_entry["room_img"] = room_matches[pos].strip()
+        if hotel_entry:
+            hotel_refs[str(idx)] = hotel_entry
+    return hotel_refs
+
+def _extract_itinerary_image_refs(edited_fields: dict, html_content: str) -> dict[str, dict[str, Any]]:
+    day_numbers = sorted({
+        int(idx)
+        for idx in re.findall(r'data-editable=["\']day_img_(?:hero|small1|small2|carousel)_(\d+)["\']', html_content)
+    })
+    if not day_numbers:
+        return {}
+
+    itinerary_refs: dict[str, dict[str, Any]] = {}
+    field_map = {
+        "hero": "hero",
+        "small1": "small-1",
+        "small2": "small-2",
+    }
+    for day_num in day_numbers:
+        entry: dict[str, Any] = {}
+        for field_suffix, target_key in field_map.items():
+            refs = _extract_image_refs(edited_fields.get(f"day_img_{field_suffix}_{day_num}", ""))
+            if refs:
+                entry[target_key] = refs[0]
+
+        carousel_refs = _extract_image_refs(edited_fields.get(f"day_img_carousel_{day_num}", ""))
+        if carousel_refs:
+            entry["carousel"] = carousel_refs
+            entry.setdefault("hero", carousel_refs[0])
+            if len(carousel_refs) > 1:
+                entry.setdefault("small-1", carousel_refs[1])
+            if len(carousel_refs) > 2:
+                entry.setdefault("small-2", carousel_refs[2])
+
+        if entry:
+            itinerary_refs[str(day_num)] = entry
+
+    return itinerary_refs
 
 def _extract_letter_intro_parts(letter_intro_text: str) -> dict:
     parts = {}
@@ -4958,6 +5038,7 @@ def _capture_composite_sync_state(html_content: str) -> dict:
     composite = {
         "top_level": {},
         "hotels": {},
+        "itinerary_days": {},
     }
 
     top_fields = [
@@ -5010,10 +5091,19 @@ def _capture_composite_sync_state(html_content: str) -> dict:
         if hotel_entry:
             composite["hotels"][str(idx)] = hotel_entry
 
+    for hotel_idx, image_entry in _extract_hotel_image_refs(html_content, hotel_indexes).items():
+        composite["hotels"].setdefault(hotel_idx, {}).update(image_entry)
+
+    itinerary_image_refs = _extract_itinerary_image_refs(edited_fields, html_content)
+    if itinerary_image_refs:
+        composite["itinerary_days"].update(itinerary_image_refs)
+
     if not composite["top_level"]:
         composite.pop("top_level")
     if not composite["hotels"]:
         composite.pop("hotels")
+    if not composite["itinerary_days"]:
+        composite.pop("itinerary_days")
     return composite
 
 def get_existing_editable_keys(html_content: str) -> set[str]:
@@ -5227,12 +5317,25 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
                 if edited_fields.get(f"day_img_small2_{d_num}"):
                     layout_imgs['small-2'] = edited_fields[f"day_img_small2_{d_num}"]
     
+    visible_hotel_names = {
+        hotel.get("name")
+        for idx, hotel in enumerate(lang_ctx.get("hotels", []), 1)
+        if f"hotel_name_{idx}" in existing_keys
+    }
+
     # 2. Filter and update hotels
     new_hotels = []
     for h_idx, hotel in enumerate(lang_ctx.get('hotels', []), 1):
         name_key = f"hotel_name_{h_idx}"
-        if name_key in existing_keys:
-            if override_text:
+        keep_hidden_duplicate = (
+            name_key not in existing_keys
+            and hotel.get("name")
+            and hotel.get("name") in visible_hotel_names
+        )
+        if name_key in existing_keys or keep_hidden_duplicate:
+            # Preserve the original HTML-backed hotel index after dedup/filtering.
+            hotel["_html_sync_index"] = h_idx
+            if override_text and name_key in existing_keys:
                 city_key = f"hotel_city_{h_idx}"
                 date_key = f"hotel_date_{h_idx}"
                 tel_key = f"hotel_tel_{h_idx}"
@@ -5240,14 +5343,18 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
                 info_key = f"hotel_info_name_{h_idx}"
                 
                 if name_key in edited_fields:
+                    hotel['name'] = edited_fields[name_key]
                     hotel['hotel_name'] = edited_fields[name_key]
                 if city_key in edited_fields:
                     hotel['city_country'] = edited_fields[city_key]
                 if date_key in edited_fields:
                     hotel['check_in_out'] = edited_fields[date_key]
                 if tel_key in edited_fields:
-                    hotel['telephone'] = edited_fields[tel_key]
+                    tel_value = re.sub(r'^\s*TEL:\s*', '', edited_fields[tel_key], flags=re.IGNORECASE)
+                    hotel['tel'] = tel_value
+                    hotel['telephone'] = tel_value
                 if intro_key in edited_fields:
+                    hotel['introduction'] = edited_fields[intro_key]
                     hotel['hotel_intro'] = edited_fields[intro_key]
                 if info_key in edited_fields:
                     hotel['room_name'] = edited_fields[info_key]
@@ -5385,13 +5492,15 @@ def filter_and_override_ctx_by_html(lang_ctx: dict, html_content: str, override_
     """
     existing_keys = get_existing_editable_keys(html_content)
     edited_fields = parse_edited_fields(html_content)
-    existing_keys, edited_fields, _ = _sanitize_html_sync_payload(existing_keys, edited_fields)
+    composite_fields = _capture_composite_sync_state(html_content)
+    existing_keys, edited_fields, composite_fields = _sanitize_html_sync_payload(existing_keys, edited_fields, composite_fields)
     filter_and_override_ctx(
         lang_ctx,
         existing_keys,
         edited_fields,
         override_text=override_text,
     )
+    _apply_composite_html_sync(lang_ctx, composite_fields)
     lang = lang_ctx.get("lang", "en")
     if lang == "ar":
         lang_ctx.update(canonicalize_place_names_in_data(lang_ctx, lang))
@@ -5466,15 +5575,46 @@ def _apply_composite_html_sync(lang_ctx: dict, composite_fields: dict):
     hotels = composite_fields.get("hotels", {})
     if hotels:
         for idx, hotel in enumerate(lang_ctx.get("hotels", []), 1):
-            hotel_sync = hotels.get(str(idx))
+            source_idx = hotel.get("_html_sync_index", idx)
+            hotel_sync = hotels.get(str(source_idx))
             if not hotel_sync:
                 continue
             if hotel_sync.get("hotel_intro"):
-                hotel["introduction"] = hotel_sync["hotel_intro"]
-                hotel["hotel_intro"] = hotel_sync["hotel_intro"]
+                intro_text = html.unescape(hotel_sync["hotel_intro"])
+                hotel["introduction"] = intro_text
+                hotel["hotel_intro"] = intro_text
             if hotel_sync.get("room_type"):
-                hotel["room_type"] = hotel_sync["room_type"]
-                hotel["room_name"] = hotel_sync["room_type"]
+                room_type = html.unescape(hotel_sync["room_type"])
+                hotel["room_type"] = room_type
+                hotel["room_name"] = room_type
+            if hotel_sync.get("hotel_img"):
+                hotel["hotel_img"] = hotel_sync["hotel_img"]
+            if hotel_sync.get("room_img"):
+                hotel["room_img"] = hotel_sync["room_img"]
+
+    itinerary_days = composite_fields.get("itinerary_days", {})
+    if itinerary_days:
+        def apply_day_sync(day_entry: dict):
+            day_number = day_entry.get("dayNumber")
+            if not day_number:
+                return
+            day_sync = itinerary_days.get(str(day_number))
+            if not day_sync:
+                return
+            layout_images = copy.deepcopy(day_entry.get("layout_images") or {})
+            for key in ("hero", "small-1", "small-2"):
+                if day_sync.get(key):
+                    layout_images[key] = day_sync[key]
+            if day_sync.get("carousel"):
+                layout_images["carousel"] = copy.deepcopy(day_sync["carousel"])
+            day_entry["layout_images"] = layout_images
+
+        for day in lang_ctx.get("itinerary_days", []):
+            apply_day_sync(day)
+
+        for chapter in lang_ctx.get("chapters", []):
+            for day in chapter.get("days", []):
+                apply_day_sync(day)
 
 def _apply_ctx_html_sync(
     lang_ctx: dict,
@@ -6104,6 +6244,13 @@ async def get_quotation(quotation_id: str, request: Request):
                 import re
                 html_content = re.sub(
                     r'<script[^>]*>(?:(?!<\/script>).)*translateBlock(?:(?!<\/script>).)*<\/script>',
+                    '',
+                    html_content,
+                    flags=re.DOTALL
+                )
+                # Strip auto-version-checker from editor mode
+                html_content = re.sub(
+                    r'<script[^>]*id=["\']auto-version-checker["\'][^>]*>.*?</script>',
                     '',
                     html_content,
                     flags=re.DOTALL
@@ -7218,11 +7365,21 @@ async def favicon():
     return FileResponse("assets/vietnam-safar-logo.png", media_type="image/png")
 
 
+@app.get("/assets/{file_path:path}", include_in_schema=False)
+async def serve_asset(file_path: str):
+    asset_path = os.path.abspath(os.path.join(ASSETS_ROOT, file_path))
+    if not asset_path.startswith(ASSETS_ROOT + os.sep) and asset_path != ASSETS_ROOT:
+        raise HTTPException(status_code=404, detail="Asset not found")
+    if not os.path.isfile(asset_path):
+        raise HTTPException(status_code=404, detail="Asset not found")
+    return FileResponse(asset_path, headers=NO_CACHE_HEADERS)
+
+
 @app.get("/sw.js", include_in_schema=False)
 async def service_worker():
     from fastapi.responses import Response
     content = """// Service Worker for Vietnam Safar PWA
-const CACHE_NAME = 'vietnam-safar-v2';
+const CACHE_NAME = 'vietnam-safar-v3';
 const ASSETS = [
   '/',
   '/favicon.ico',
@@ -7252,7 +7409,14 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  if (!event.request.url.startsWith('http')) return;
+  if (!event.request.url.startsWith('http') || event.request.method !== 'GET') return;
+
+  const url = new URL(event.request.url);
+  const isSameOrigin = url.origin === self.location.origin;
+  const isLocalAsset = isSameOrigin && url.pathname.startsWith('/assets/');
+  const isExternalStatic =
+    url.hostname === 'unpkg.com' ||
+    url.hostname === 'basemaps.cartocdn.com';
 
   if (event.request.mode === 'navigate') {
     event.respondWith(
@@ -7262,23 +7426,45 @@ self.addEventListener('fetch', event => {
     );
     return;
   }
-  
-  event.respondWith(
-    caches.match(event.request).then(cachedResponse => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request).then(networkResponse => {
-        if (networkResponse && networkResponse.status === 200 && (event.request.url.includes('/assets/') || event.request.url.includes('unpkg.com') || event.request.url.includes('basemaps.cartocdn.com'))) {
+
+  if (isLocalAsset) {
+    event.respondWith(
+      fetch(event.request).then(networkResponse => {
+        if (networkResponse && networkResponse.status === 200) {
           const cacheCopy = networkResponse.clone();
           caches.open(CACHE_NAME).then(cache => {
             cache.put(event.request, cacheCopy);
           });
         }
         return networkResponse;
-      }).catch(() => {});
-    })
-  );
+      }).catch(() => {
+        return caches.match(event.request);
+      })
+    );
+    return;
+  }
+
+  if (isExternalStatic) {
+    event.respondWith(
+      caches.match(event.request).then(cachedResponse => {
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        return fetch(event.request).then(networkResponse => {
+          if (networkResponse && networkResponse.status === 200) {
+            const cacheCopy = networkResponse.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(event.request, cacheCopy);
+            });
+          }
+          return networkResponse;
+        });
+      })
+    );
+    return;
+  }
+
+  event.respondWith(fetch(event.request));
 });
 
 self.addEventListener('notificationclick', event => {
@@ -7299,7 +7485,7 @@ self.addEventListener('notificationclick', event => {
   );
 });
 """
-    return Response(content=content, media_type="application/javascript")
+    return Response(content=content, media_type="application/javascript", headers=NO_CACHE_HEADERS)
 
 
 @app.get("/manifest.json", include_in_schema=False)
