@@ -1,16 +1,15 @@
 <!DOCTYPE html>
-<html lang="{{ lang or 'en' }}" {% if lang=='ar' %}dir="rtl" {% endif %}
-  style="--hero-img: url('{{img_0}}'); {% for dest in destinations %} --img-{{ loop.index }}: url('{{ dest.image_url or ((brand.logo if brand else '') or '/assets/vietnam-safar-logo.png') }}'); {% endfor %}">
+<html lang="en" 
+  style="--hero-img: url('/assets/da-nang/hero/hero2.jpg');  --img-1: url('/assets/ha-noi/hero/hero1.jpg');  --img-2: url('/assets/ho-chi-minh/hero/hero2.jpg');  --img-3: url('/assets/da-nang/hero/hero2.jpg');  --img-4: url('/assets/quang-nam/myson.jpg');  --img-5: url('/assets/quang-ninh/hero/hero1.jpg');  --img-6: url('/assets/lao-cai/hero/hero6.jpg');  --img-7: url('/assets/mekong/traodoihanghoa.jpg');  --img-8: url('/assets/ninh-binh/hero/hero1.jpg'); ">
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{{tour_title}} - {{ "Luxury Quotation" | translate(lang) }}</title>
+  <title>14 Days 13 Nights - Tailor-made for Sara - Luxury Quotation</title>
   <script id="auto-version-checker">
     (function () {
-      const CURRENT_VERSION = {{ latest_version | default (1)
-    }};
-    const QUO_ID = "{{ quotation_id }}";
+      const CURRENT_VERSION = 1;
+    const QUO_ID = "quo_2fe22ee6b227";
     if (!QUO_ID || window.location.search.includes('_r=') || window.location.pathname.includes('/quotations/')) return;
     fetch('/published/' + QUO_ID + '/version?t=' + Date.now(), { cache: 'no-store' })
       .then(function (res) { return res.json(); })
@@ -23,35 +22,35 @@
       .catch(function () { });
     }) ();
   </script>
-  {% set font_serif = brand.font_serif | default('Playfair Display') %}
-  {% set font_sans = brand.font_sans | default('Outfit') %}
-  {% set font_accent = brand.font_accent | default(font_serif) %}
+  
+  
+  
 
-  {% set c_primary = brand.color_primary | default('#17412e') %}
-  {% set c_primary_dark = brand.color_primary_dark | default('#0e2f22') %}
-  {% set c_accent = brand.color_accent | default('#b8860b') %}
-  {% set c_accent_light = brand.color_accent_light | default('#daa520') %}
-  {% set c_bg_main = brand.color_bg_main | default('#f9f6f0') %}
-  {% set c_bg_alt = brand.color_bg_alt | default('#fffaf1') %}
-  {% set c_text_main = brand.color_text_main | default('#11130f') %}
-  {% set c_text_muted = brand.color_text_muted | default('#706a5d') %}
-  {% set c_text_light = brand.color_text_light | default('#ffffff') %}
+  
+  
+  
+  
+  
+  
+  
+  
+  
 
   <script id="brand-data" type="application/json">
-    {{ brand | tojson | safe }}
+    {"color_accent": "#b7894b", "color_accent_light": "#d8bd85", "color_primary": "#17412e", "color_primary_dark": "#0e2f22", "domain": "journeys.vietnamsafar.vn", "font_accent": "Allura", "font_sans": "Montserrat", "font_serif": "Cormorant Garamond", "id": "vietnam_safar", "logo": "/assets/brands/vietnam_safar.png", "name": "Vietnam Safar"}
   </script>
   <!-- Premium Typography Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700&family=Cairo:wght@300;400;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&family={{ font_sans | replace(' ', '+') }}:wght@300;400;500;600;700&family={{ font_serif | replace(' ', '+') }}:ital,wght@0,400;0,500;0,600;0,700;1,400&family={{ font_accent | replace(' ', '+') }}:ital,wght@1,400;1,500;1,600&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700&family=Cairo:wght@300;400;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Allura:ital,wght@1,400;1,500;1,600&display=swap"
     rel="stylesheet">
 
   <!-- PWA Metadata -->
   <link rel="manifest"
-    href="/manifest.json?id={{quotation_id}}&type=quotations{% if brand %}&brand={{brand.id}}{% endif %}" />
-  <meta name="theme-color" content="{{c_primary}}" />
-  <link rel="apple-touch-icon" href="{{ (brand.logo if brand else '') or '/assets/vietnam-safar-logo.png' }}" />
+    href="/manifest.json?id=quo_2fe22ee6b227&type=quotations&brand=vietnam_safar" />
+  <meta name="theme-color" content="#17412e" />
+  <link rel="apple-touch-icon" href="/assets/brands/vietnam_safar.png" />
   <!-- Leaflet CSS & JS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
@@ -59,33 +58,33 @@
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <style>
     :root {
-      --primary: {{ c_primary }};
-      --primary-dark: {{ c_primary_dark }};
-      --accent: {{ c_accent }};
-      --accent-light: {{ c_accent_light }};
-      --bg-main: {{ c_bg_main }};
-      --bg-alt: {{ c_bg_alt }};
-      --text-main: {{ c_text_main }};
-      --text-muted: {{ c_text_muted }};
-      --text-light: {{ c_text_light }};
-      --serif: "{{font_serif}}",
+      --primary: #17412e;
+      --primary-dark: #0e2f22;
+      --accent: #b7894b;
+      --accent-light: #d8bd85;
+      --bg-main: #f9f6f0;
+      --bg-alt: #fffaf1;
+      --text-main: #11130f;
+      --text-muted: #706a5d;
+      --text-light: #ffffff;
+      --serif: "Cormorant Garamond",
       "Playfair Display",
       serif;
-      --sans: "{{font_sans}}",
+      --sans: "Montserrat",
       "Outfit",
       sans-serif;
-      --accent-font: "{{font_accent}}",
+      --accent-font: "Allura",
       cursive;
       --shadow: 0 30px 80px rgba(0, 0, 0, 0.08);
-      --serif: '{{font_serif}}',
+      --serif: 'Cormorant Garamond',
       Georgia,
       'Times New Roman',
       serif;
-      --sans: '{{font_sans}}',
+      --sans: 'Montserrat',
       Arial,
       Helvetica,
       sans-serif;
-      --font-accent: '{{font_accent}}',
+      --font-accent: 'Allura',
       'Playfair Display',
       serif;
       --section-padding: clamp(40px, 6vw, 72px);
@@ -2979,44 +2978,41 @@
   <nav class="nav no-print">
     <div class="container nav-inner">
       <a class="brand" href="#top">
-        <img src="{{ (brand.logo if brand else '') or '/assets/vietnam-safar-logo.png' }}"
-          alt="{{ (brand.name if brand else '') or 'Vietnam Safar' }}" />
-        <span>{{ (brand.name if brand else '') or 'Vietnam Safar' }}</span>
+        <img src="/assets/brands/vietnam_safar.png"
+          alt="Vietnam Safar" />
+        <span>Vietnam Safar</span>
       </a>
       <div class="nav-links">
-        <a href="#route-map">{{ "Route Map" | translate(lang) }}</a>
-        <a href="#itinerary">{{ "Itinerary" | translate(lang) }}</a>
-        <a href="#quotation">{{ "Quotation" | translate(lang) }}</a>
-        <a href="#terms">{{ "Terms" | translate(lang) }}</a>
+        <a href="#route-map">Route Map</a>
+        <a href="#itinerary">Itinerary</a>
+        <a href="#quotation">Quotation</a>
+        <a href="#terms">Terms</a>
       </div>
       <div class="nav-actions">
         <div class="lang-switcher">
           <button class="lang-switcher-btn" onclick="toggleLangDropdown(event)">
             <span>🌐</span>
             <span class="lang-text">
-              {% if lang == 'ar' %}{{ client_i18n.language_names.ar }}
-              {% elif lang == 'vi' %}{{ client_i18n.language_names.vi }}
-              {% else %}{{ client_i18n.language_names.en }}
-              {% endif %}
+              English
+              
             </span>
             <span class="lang-caret">▼</span>
           </button>
           <div class="lang-dropdown">
-            <div class="lang-option" onclick="switchLanguage('en')">{{ client_i18n.language_names.en }}</div>
-            <div class="lang-option" onclick="switchLanguage('ar')">{{ client_i18n.language_names.ar }}</div>
-            <div class="lang-option" onclick="switchLanguage('vi')">{{ client_i18n.language_names.vi }}</div>
+            <div class="lang-option" onclick="switchLanguage('en')">English</div>
+            <div class="lang-option" onclick="switchLanguage('ar')">Arabic</div>
+            <div class="lang-option" onclick="switchLanguage('vi')">Vietnamese</div>
           </div>
         </div>
-        <button id="nav-notification-btn" title="{{ client_i18n.notification_title }}">
+        <button id="nav-notification-btn" title="Enable Notifications">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
             <path
               d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z" />
           </svg>
         </button>
         <a class="btn btn-primary"
-          href="/quotations/{{quotation_id}}/pdf?lang={{lang}}{% if brand %}&brand={{brand.id}}{% endif %}"
-          target="_blank" id="btn-pdf-view">📄 <span class="pdf-btn-text">{{ "PDF Download" | translate(lang)
-            }}</span></a>
+          href="/quotations/quo_2fe22ee6b227/pdf?lang=en&brand=vietnam_safar"
+          target="_blank" id="btn-pdf-view">📄 <span class="pdf-btn-text">PDF Download</span></a>
       </div>
     </div>
   </nav>
@@ -3025,32 +3021,27 @@
     <header class="hero">
       <div class="hero-content">
         <div class="hero-content-inner">
-          <div class="kicker" data-editable="cover_kicker">{{ cover_kicker | default("A Privately Arranged Journey" |
-            translate(lang)) }}</div>
-          <h1 data-editable="tour_title">{{tour_title}}</h1>
-          <p class="hero-lede" data-editable="lede">{{ lede | rtl_mixed(lang) }}</p>
+          <div class="kicker" data-editable="cover_kicker">A Privately Arranged Journey</div>
+          <h1 data-editable="tour_title">14 Days 13 Nights - Tailor-made for Sara</h1>
+          <p class="hero-lede" data-editable="lede">This 14-day grand journey is tailored to capture the full cultural and natural essence of Vietnam from North to South.</p>
 
           <div class="hero-meta"
             style="margin-bottom: 40px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.2);">
             <strong data-editable="hero_meta_1"
-              style="display: block; font-size: 14px; letter-spacing: .15em; text-transform: uppercase; color: rgba(255,255,255,0.95); margin-bottom: 12px; font-weight: 700;">{{
-              hero_meta_1 | default("14 DAYS • 13 NIGHTS • " ~ (guests_txt | upper if guests_txt else 'FAMILY VACATION
-              (2 PAX)')) }}</strong>
+              style="display: block; font-size: 14px; letter-spacing: .15em; text-transform: uppercase; color: rgba(255,255,255,0.95); margin-bottom: 12px; font-weight: 700;">14 DAYS • 13 NIGHTS • SARA (2 PAX)</strong>
             <span data-editable="hero_meta_2"
-              style="display: block; font-size: 15px; color: rgba(255,255,255,0.7); letter-spacing: .05em; text-transform: uppercase;">{{
-              hero_meta_2 | default(travel_dates | upper if travel_dates else '01 APR - 14 APR 2027') }}</span>
+              style="display: block; font-size: 15px; color: rgba(255,255,255,0.7); letter-spacing: .05em; text-transform: uppercase;">30 MAR – 12 APR 2027</span>
           </div>
 
           <div class="hero-actions no-print" style="margin-bottom: 40px;">
             <a class="btn btn-primary" href="#route-map"
-              style="padding: 16px 32px; font-size: 13px; letter-spacing: .08em; border-radius: 0; background: var(--primary); color: white; border: none; font-weight: 700; box-shadow: 0 8px 24px rgba(0,0,0,0.15);">{{
-              "BEGIN THE JOURNEY" | translate(lang) }}</a>
+              style="padding: 16px 32px; font-size: 13px; letter-spacing: .08em; border-radius: 0; background: var(--primary); color: white; border: none; font-weight: 700; box-shadow: 0 8px 24px rgba(0,0,0,0.15);">BEGIN THE JOURNEY</a>
           </div>
 
           <div class="hero-footer no-print"
             style="display: flex; justify-content: space-between; font-size: 12px; letter-spacing: .1em; color: rgba(255,255,255,0.6); text-transform: uppercase; width: 100%;">
-            <div class="hf-left" data-editable="hero_footer">{{ brand.name if brand else 'CAPELLA TRAVEL' }} •
-              {{quotation_number}}</div>
+            <div class="hf-left" data-editable="hero_footer">Vietnam Safar •
+              QT-2027-SARA</div>
           </div>
         </div>
 
@@ -3166,10 +3157,10 @@
       <div class="letter-container">
         <div class="letter-header">
           <div class="letter-kicker" data-editable="chapter_kicker">
-            {{ chapter_kicker | default('CHAPTER 01 - THE INVITATION') }}
+            CHAPTER 01 - THE INVITATION
           </div>
           <h2 class="letter-title" data-editable="journey_overview_title">
-            {{ journey_overview_title | default("A Journey Shaped Around Your Family") }}
+            A Journey Shaped Around Your Family
           </h2>
         </div>
 
@@ -3177,7 +3168,7 @@
           <!-- LEFT DECORATION (Ruong bac thang SVG graphic) -->
           <div class="letter-decor-col">
             <p class="letter-highlight-text" data-editable="letter_highlight">
-              {{ letter_highlight | default('This journey was designed to leave room for both discovery and rest.') }}
+              This journey was designed to leave room for both discovery and rest.
             </p>
             <img src="/assets/brands/indochine_icon/ruong_bac_thang.svg" alt="Ruong Bac Thang Graphic"
               style="width: 100%; max-width: 220px; height: auto; display: block; opacity: 0.85;" />
@@ -3186,42 +3177,27 @@
           <!-- RIGHT CONTENT -->
           <div class="letter-content-main">
             <div class="letter-text">
-              <p data-editable="letter_greeting">{{ letter_greeting | default("Dear " ~ (customer_name | default('Family
-                Vacation')) ~ ",") | rtl_mixed(lang) }}</p>
-              <p data-editable="letter_intro">{{ letter_intro | default(
-                "I am delighted to present this privately arranged journey"
-                ~ (": " ~ overview_heading if overview_heading else "")
-                ~ ", created for "
-                ~ (guests_txt if guests_txt else "two guests")
-                ~ (" travelling from " ~ travel_dates if travel_dates else "")
-                ~ ". The route unfolds from "
-                ~ (route_txt if route_txt else "Hanoi through Ninh Binh, Ha Long Bay and Sapa, before continuing to Da
-                Nang, Hoi An and Ho Chi Minh City")
-                ~ "."
-                ) | rtl_mixed(lang) }}</p>
+              <p data-editable="letter_greeting">Dear Sara (2 Pax),</p>
+              <p data-editable="letter_intro">I am delighted to present this privately arranged journey: PROGRAM OVERVIEW, created for Sara (2 Pax) travelling from 30 Mar – 12 Apr 2027. The route unfolds from Hanoi – Halong Bay – Hanoi – Sapa – Da Nang – Hoi An – Ho Chi Minh City.</p>
               <p data-editable="letter_body_p2">
-                {{ letter_body_p2 | default('The programme has been considered around a gentler family rhythm: early
-                check-in in Hanoi, private guiding and transfers, a premium overnight train cabin, and enough space
-                between active days to pause. Dining, room arrangements and transitions have been planned with care,
-                without adding unnecessary movement.') }}
+                The programme has been considered around a gentler family rhythm: early check-in in Hanoi, private guiding and transfers, a premium overnight train cabin, and enough space between active days to pause. Dining, room arrangements and transitions have been planned with care, without adding unnecessary movement.
               </p>
               <p data-editable="letter_outro">
-                {{ letter_outro | default('Please review the journey as a starting point for a personal conversation.
-                Every final detail can be refined around your preferred pace, room choices and family priorities.') }}
+                Please review the journey as a starting point for a personal conversation. Every final detail can be refined around your preferred pace, room choices and family priorities.
               </p>
             </div>
 
             <!-- SIGNATURE -->
             <div class="letter-signature-block">
               <h3 class="letter-sig-name" data-editable="letter_sign_off">
-                {{ letter_sign_off | default('Anh Son Le') }}
+                Anh Son Le
               </h3>
               <div class="letter-sig-details">
-                <span data-editable="letter_sender">{{ letter_sender | default('Your Journey Designer') }}</span>
-                {% if contact %}
+                <span data-editable="letter_sender">Your Journey Designer</span>
+                
                 <span>&middot;</span>
-                <span>{{ contact | default('+84 911 538 738') }}</span>
-                {% endif %}
+                <span>+84 913 393 119</span>
+                
               </div>
             </div>
           </div>
@@ -3241,8 +3217,8 @@
     <section id="route-map" style="padding: var(--section-padding) 0;">
       <div class="container">
         <div class="section-head">
-          <h2 data-editable="route_map_h2">{{ route_map_h2 | rtl_mixed(lang) }}</h2>
-          <p data-editable="route_map_p">{{ route_map_p | rtl_mixed(lang) }}</p>
+          <h2 data-editable="route_map_h2">Your Journey, Mapped</h2>
+          <p data-editable="route_map_p">An interactive map showing your curated path through Vietnam&#39;s iconic landmarks and luxury stopovers. Click on a destination in the list or the map to explore highlights.</p>
         </div>
         <div class="map-layout-new">
           <div class="map-section">
@@ -3250,16 +3226,14 @@
               <div
                 style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg-alt); color: var(--text-muted); font-size: 14px;">
                 <span style="font-size: 24px; margin-bottom: 8px;">🗺️</span>
-                <span>{{ "Loading Interactive Route Map..." | translate(lang) }}</span>
+                <span>Loading Interactive Route Map...</span>
               </div>
             </div>
             <!-- Map Mode Switcher -->
             <div class="map-mode-toggle no-print"
               style="position: absolute; top: 16px; right: 16px; z-index: 1000; display: flex; gap: 4px; background: rgba(17, 19, 15, 0.75); padding: 4px; border-radius: 0; border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
-              <button id="toggle-mode-classic" class="mode-btn active" onclick="switchMapMode('classic')">{{ "Classic" |
-                translate(lang) }}</button>
-              <button id="toggle-mode-image" class="mode-btn" onclick="switchMapMode('image')">{{ "Image" |
-                translate(lang) }}</button>
+              <button id="toggle-mode-classic" class="mode-btn active" onclick="switchMapMode('classic')">Classic</button>
+              <button id="toggle-mode-image" class="mode-btn" onclick="switchMapMode('image')">Image</button>
             </div>
           </div>
           <div class="timeline-section" id="timeline-container">
@@ -3274,7 +3248,7 @@
 
     <!-- ── Divider: ITINERARY TRANSITION ─────────────────── -->
     <section class="chapter-divider-section no-print" id="divider-itinerary"
-      style="display: none !important; background-image: url('{{ img_itinerary_divider or img_1 or img_0 }}'); text-align: left;">
+      style="display: none !important; background-image: url('/assets/ho-chi-minh/hero/hero1.jpg'); text-align: left;">
       <div class="chapter-divider-container"
         style="justify-content: space-between; align-items: flex-start; padding: 80px 0; width: min(1180px, 92%); margin: 0 auto; box-sizing: border-box;">
         <div class="chapter-divider-top" style="max-width: 800px; margin-bottom: 40px;">
@@ -3291,8 +3265,8 @@
         <div class="chapter-divider-bottom" style="max-width: 680px; display: flex; flex-direction: column; gap: 40px;">
           <p class="chapter-divider-tagline" data-editable="divider_itinerary_tagline"
             style="font-size: clamp(20px, 2.5vw, 28px); color: rgba(255,255,255,0.9); font-style: italic; line-height: 1.4;">
-            {{ tour_description or divider_itinerary_tagline | default('A sequence of places, textures and quiet
-            transitions — composed to be experienced rather than rushed.') }}
+            A sequence of places, textures and quiet
+            transitions — composed to be experienced rather than rushed.
           </p>
 
           <div
@@ -3300,13 +3274,12 @@
             <div>
               <span
                 style="display: block; font-size: 11px; color: rgba(255,255,255,0.6); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.15em;">Duration</span>
-              {% if duration_nights %}{{ duration_nights + 1 }} Days / {{ duration_nights }} Nights{% elif duration_txt
-              %}{{ duration_txt }}{% else %}14 Days / 13 Nights{% endif %}
+              14 Days / 13 Nights
             </div>
             <div>
               <span
                 style="display: block; font-size: 11px; color: rgba(255,255,255,0.6); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.15em;">Route</span>
-              {{ route_txt | default('Hanoi — Halong Bay — Hue — Hoi An — Saigon') }}
+              Hanoi – Halong Bay – Hanoi – Sapa – Da Nang – Hoi An – Ho Chi Minh City
             </div>
           </div>
         </div>
@@ -3325,9 +3298,8 @@
     <!-- Print-only version (simplified, no full-bleed) -->
     <div class="no-screen chapter-divider-print"
       style="display: none !important; padding: 32px 0 16px; border-bottom: 2px solid var(--accent);">
-      <div class="chapter-divider-kicker">{{ divider_itinerary_kicker | default('DAY-BY-DAY ITINERARY') }}</div>
-      <h2 style="font-family:var(--serif);font-size:clamp(28px,4vw,48px);margin:8px 0 0;color:var(--primary);">{{
-        divider_itinerary_title | default(tour_title) }}</h2>
+      <div class="chapter-divider-kicker">DAY-BY-DAY ITINERARY</div>
+      <h2 style="font-family:var(--serif);font-size:clamp(28px,4vw,48px);margin:8px 0 0;color:var(--primary);">14 Days 13 Nights - Tailor-made for Sara</h2>
     </div>
 
     <section id="itinerary">
@@ -3673,194 +3645,1253 @@
         <div class="itinerary-intro" style="padding-bottom: 70px;">
           <div class="day-kicker" style="margin-bottom: 16px;" data-editable="itinerary_kicker">CHAPTER 02 · DAY-BY-DAY
             ITINERARY</div>
-          <h2 class="day-title" style="margin: 0 0 20px;" data-editable="itinerary_h2">{{ itinerary_h2 |
-            default('Day-by-Day Journey Program') }}</h2>
+          <h2 class="day-title" style="margin: 0 0 20px;" data-editable="itinerary_h2">Day-by-Day Journey Program</h2>
           <p style="color: #4a4a4a; font-size: 16px; line-height: 1.8; max-width: 100%; margin: 0;"
             data-editable="itinerary_p">
-            {{ itinerary_p | default('Your private journey — carefully crafted day by day.') }}
+            Your private 14D13N journey — 14 days, carefully crafted.
           </p>
         </div>
 
-        {% for day in itinerary_days %}
-        {% set layout = day.layout_type %}
-        {% set imgs = day.layout_images %}
-        {% set day_idx_global = day.dayNumber %}
+        
+        
+        
+        
 
-        <article class="day layout-{{ layout }} {% if day.is_alternate %}is-alternate{% endif %}">
-          {% if layout == 'single' %}
+        <article class="day layout-single ">
+          
           <div class="day-image-col" style="position: relative;">
-            {% if imgs.carousel and imgs.carousel|length > 1 %}
+            
+            <div class="day-image hero-image" style="--image: url('/assets/ha-noi/hero/hero2.webp')"
+              data-editable="day_img_hero_1" data-img-type="hero"></div>
+            
+          </div>
+          <div class="day-copy-wrap">
+            <div class="day-kicker">
+              <span class="destination">Hanoi</span>
+              <span>DAY 1</span>
+            </div>
+            <h4 class="day-title" data-editable="day_title_1">Day 1 — Hanoi</h4>
+            <div class="day-copy" style="margin-top:24px;">
+              
+              <p data-editable="day_desc_1_0">Arrival in Hanoi by CX741. Enjoy pre-booked Early Check-in at Hanoi Le Jardin Hotel &amp; Spa and rest for half a day. In the evening, gather for a Welcome Dinner followed by an Evening Hanoi Short Walking Tour to ease into the local rhythm.</p>
+              
+              
+              <p style="font-size:13px;color: var(--text-muted);margin-top:8px"
+                data-deletable="day_activities_1">
+                <strong style="color: var(--primary);letter-spacing:.06em"
+                  data-editable="day_label_highlights_1">Highlights:</strong>
+                <span data-editable="day_highlights_1">Airport transfer, Early check-in, Welcome Dinner, Evening Walking Tour.</span>
+              </p>
+              
+              
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--accent);padding-left:10px;background:color-mix(in srgb, var(--accent) 5%, transparent);border-radius:4px;padding-top:4px;padding-bottom:4px;"
+                data-deletable="day_notes_container_1">
+                <strong style="color: var(--accent);letter-spacing:.06em"
+                  data-editable="day_label_notes_1">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;" data-editable="day_note_1_0">Sense of Pace: Relaxed</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <dl class="day-detail-list">
+              
+              <div class="day-detail">
+                <dt>Overnight</dt>
+                <dd data-editable="day_overnight_1">Hanoi</dd>
+              </div>
+              
+              
+              <div class="day-detail">
+                <dt>Meals</dt>
+                <dd data-editable="day_meals_1">Dinner</dd>
+              </div>
+              
+            </dl>
+            <div class="logic-chip">single</div>
+          </div>
+
+          
+        </article>
+        
+        
+        
+        
+
+        <article class="day layout-single is-alternate">
+          
+          <div class="day-image-col" style="position: relative;">
+            
+            <div class="day-image hero-image" style="--image: url('/assets/ha-noi/hero/hero1.jpg')"
+              data-editable="day_img_hero_2" data-img-type="hero"></div>
+            
+          </div>
+          <div class="day-copy-wrap">
+            <div class="day-kicker">
+              <span class="destination">Hanoi</span>
+              <span>DAY 2</span>
+            </div>
+            <h4 class="day-title" data-editable="day_title_2">Day 2 — Hanoi</h4>
+            <div class="day-copy" style="margin-top:24px;">
+              
+              <p data-editable="day_desc_2_0">Full Day Ninh Binh Tour from Hanoi. Discover the historic ancient capital of Hoa Lu, the grand Bai Dinh Pagoda, serene sampan boat ride through Trang An landscape, and panoramic views from Mua Cave.</p>
+              
+              
+              <p style="font-size:13px;color: var(--text-muted);margin-top:8px"
+                data-deletable="day_activities_2">
+                <strong style="color: var(--primary);letter-spacing:.06em"
+                  data-editable="day_label_highlights_2">Highlights:</strong>
+                <span data-editable="day_highlights_2">Private AC transfer, guide, entrance tickets, Trang An boat tour, Lunch.</span>
+              </p>
+              
+              
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--accent);padding-left:10px;background:color-mix(in srgb, var(--accent) 5%, transparent);border-radius:4px;padding-top:4px;padding-bottom:4px;"
+                data-deletable="day_notes_container_2">
+                <strong style="color: var(--accent);letter-spacing:.06em"
+                  data-editable="day_label_notes_2">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;" data-editable="day_note_2_0">Sense of Pace: Moderate</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <dl class="day-detail-list">
+              
+              <div class="day-detail">
+                <dt>Overnight</dt>
+                <dd data-editable="day_overnight_2">Hanoi</dd>
+              </div>
+              
+              
+              <div class="day-detail">
+                <dt>Meals</dt>
+                <dd data-editable="day_meals_2">Breakfast, Lunch</dd>
+              </div>
+              
+            </dl>
+            <div class="logic-chip">single</div>
+          </div>
+
+          
+        </article>
+        
+        
+        
+        
+
+        <article class="day layout-single ">
+          
+          <div class="day-image-col" style="position: relative;">
+            
             <div class="day-image hero-image carousel-container"
               style="position: relative; overflow: hidden; border-radius: 4px;"
-              data-editable="day_img_carousel_{{ day_idx_global }}">
+              data-editable="day_img_carousel_3">
               <div class="carousel-inner"
                 style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
-                {% for c_img in imgs.carousel %}
+                
                 <div class="carousel-slide"
-                  style="flex: 0 0 100%; height: 100%; background: url('{{ c_img }}') center/cover no-repeat;"></div>
-                {% endfor %}
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-ninh/hero/hero4.jpg') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-ninh/hero/hero3.jpg') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-ninh/hero/hero5.jpg') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-ninh/hero/hero2.jpg') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-ninh/hero/hero1.jpg') center/cover no-repeat;"></div>
+                
               </div>
               <div class="carousel-dots no-print"
                 style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3;">
-                {% for c_img in imgs.carousel %}
-                <button class="carousel-dot {% if loop.index0 == 0 %}active{% endif %}"
-                  aria-label="Go to slide {{ loop.index }}"
+                
+                <button class="carousel-dot active"
+                  aria-label="Go to slide 1"
                   style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
-                {% endfor %}
+                
+                <button class="carousel-dot "
+                  aria-label="Go to slide 2"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                
+                <button class="carousel-dot "
+                  aria-label="Go to slide 3"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                
+                <button class="carousel-dot "
+                  aria-label="Go to slide 4"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                
+                <button class="carousel-dot "
+                  aria-label="Go to slide 5"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                
               </div>
             </div>
             <button class="carousel-control prev no-print" aria-label="Previous image"
               style="position: absolute; left: -20px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.06); background: #ffffff; color: #333; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 20px; line-height: 1; transition: background 0.2s, opacity 0.2s; box-shadow: 0 4px 14px rgba(0,0,0,0.1); padding-bottom: 2px;">‹</button>
             <button class="carousel-control next no-print" aria-label="Next image"
               style="position: absolute; right: -20px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.06); background: #ffffff; color: #333; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 20px; line-height: 1; transition: background 0.2s, opacity 0.2s; box-shadow: 0 4px 14px rgba(0,0,0,0.1); padding-bottom: 2px;">›</button>
-            {% else %}
-            <div class="day-image hero-image" style="--image: url('{{ imgs.hero }}')"
-              data-editable="day_img_hero_{{ day_idx_global }}" data-img-type="hero"></div>
-            {% endif %}
+            
           </div>
           <div class="day-copy-wrap">
             <div class="day-kicker">
-              <span class="destination">{{ day.segment_city }}</span>
-              <span>{{ "DAY" | translate(lang) }} {{ day.dayNumber }}</span>
+              <span class="destination">Halong Bay</span>
+              <span>DAY 3</span>
             </div>
-            <h4 class="day-title" data-editable="day_title_{{ day_idx_global }}">{{ day.title | rtl_mixed(lang) }}</h4>
+            <h4 class="day-title" data-editable="day_title_3">Day 3 — Halong Bay</h4>
             <div class="day-copy" style="margin-top:24px;">
-              {% for para in day.description %}
-              <p data-editable="day_desc_{{ day_idx_global }}_{{ loop.index0 }}">{{ para | rtl_mixed(lang) }}</p>
-              {% endfor %}
-              {% if day.activities %}
+              
+              <p data-editable="day_desc_3_0">Morning transfer to Ha Long Bay. Embark on the Emeraude Classic Cruise and check into the Captain Suite. Enjoy afternoon cruise activities, kayaking, swimming, and an overnight stay amidst UNESCO karst waters.</p>
+              
+              
               <p style="font-size:13px;color: var(--text-muted);margin-top:8px"
-                data-deletable="day_activities_{{ day_idx_global }}">
+                data-deletable="day_activities_3">
                 <strong style="color: var(--primary);letter-spacing:.06em"
-                  data-editable="day_label_highlights_{{ day_idx_global }}">{{ day.label_highlights |
-                  default("Highlights:" | translate(lang)) }}</strong>
-                <span data-editable="day_highlights_{{ day_idx_global }}">{{ (day.activities | join(' · ')) |
-                  rtl_mixed(lang) }}</span>
+                  data-editable="day_label_highlights_3">Highlights:</strong>
+                <span data-editable="day_highlights_3">Private transfer, Emeraude Cruise, Captain Suite, Lunch, Dinner.</span>
               </p>
-              {% endif %}
-              {% if day.notes %}
+              
+              
               <div
                 style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--accent);padding-left:10px;background:color-mix(in srgb, var(--accent) 5%, transparent);border-radius:4px;padding-top:4px;padding-bottom:4px;"
-                data-deletable="day_notes_container_{{ day_idx_global }}">
+                data-deletable="day_notes_container_3">
                 <strong style="color: var(--accent);letter-spacing:.06em"
-                  data-editable="day_label_notes_{{ day_idx_global }}">{{ day.label_notes | default("Notes:" |
-                  translate(lang)) }}</strong>
+                  data-editable="day_label_notes_3">Notes:</strong>
                 <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
-                  {% for note in day.notes %}
-                  <li style="margin-bottom: 2px;" data-editable="day_note_{{ day_idx_global }}_{{ loop.index0 }}">{{
-                    note | rtl_mixed(lang) }}</li>
-                  {% endfor %}
+                  
+                  <li style="margin-bottom: 2px;" data-editable="day_note_3_0">Sense of Pace: Relaxed</li>
+                  
                 </ul>
               </div>
-              {% endif %}
+              
             </div>
             <dl class="day-detail-list">
-              {% if day.overnight %}
+              
               <div class="day-detail">
-                <dt>{{ "Overnight" | translate(lang) }}</dt>
-                <dd data-editable="day_overnight_{{ day_idx_global }}">{{ day.overnight | rtl_mixed(lang) }}</dd>
+                <dt>Overnight</dt>
+                <dd data-editable="day_overnight_3">Halong Bay</dd>
               </div>
-              {% endif %}
-              {% if day.meals %}
+              
+              
               <div class="day-detail">
-                <dt>{{ "Meals" | translate(lang) }}</dt>
-                <dd data-editable="day_meals_{{ day_idx_global }}">{{ (day.meals | join(' &middot; ')) | rtl_mixed(lang)
-                  }}</dd>
+                <dt>Meals</dt>
+                <dd data-editable="day_meals_3">Breakfast, Lunch, Dinner</dd>
               </div>
-              {% endif %}
+              
             </dl>
-            <div class="logic-chip">{{ layout }}</div>
+            <div class="logic-chip">single</div>
           </div>
 
-          {% elif layout == 'multi' %}
+          
+        </article>
+        
+        
+        
+        
+
+        <article class="day layout-single is-alternate">
+          
+          <div class="day-image-col" style="position: relative;">
+            
+            <div class="day-image hero-image" style="--image: url('/assets/ha-noi/hero/hero3.jpg')"
+              data-editable="day_img_hero_4" data-img-type="hero"></div>
+            
+          </div>
           <div class="day-copy-wrap">
             <div class="day-kicker">
-              <span class="destination">{{ day.segment_city }}</span>
-              <span>{{ "DAY" | translate(lang) }} {{ day.dayNumber }}</span>
+              <span class="destination">Hanoi</span>
+              <span>DAY 4</span>
             </div>
-            <h4 class="day-title" data-editable="day_title_{{ day_idx_global }}">{{ day.title | rtl_mixed(lang) }}</h4>
-            <dl class="day-detail-list" style="margin-top:40px;">
-              {% if day.overnight %}
-              <div class="day-detail">
-                <dt>{{ "Overnight" | translate(lang) }}</dt>
-                <dd data-editable="day_overnight_{{ day_idx_global }}">{{ day.overnight | rtl_mixed(lang) }}</dd>
+            <h4 class="day-title" data-editable="day_title_4">Day 4 — Hanoi</h4>
+            <div class="day-copy" style="margin-top:24px;">
+              
+              <p data-editable="day_desc_4_0">Morning cruise activities on Ha Long Bay including Tai Chi and cave visits. Enjoy brunch on board before disembarking and transferring back to Hanoi Le Jardin Hotel &amp; Spa for relaxation.</p>
+              
+              
+              <p style="font-size:13px;color: var(--text-muted);margin-top:8px"
+                data-deletable="day_activities_4">
+                <strong style="color: var(--primary);letter-spacing:.06em"
+                  data-editable="day_label_highlights_4">Highlights:</strong>
+                <span data-editable="day_highlights_4">Morning cruise activity, transfer back to Hanoi, hotel stay.</span>
+              </p>
+              
+              
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--accent);padding-left:10px;background:color-mix(in srgb, var(--accent) 5%, transparent);border-radius:4px;padding-top:4px;padding-bottom:4px;"
+                data-deletable="day_notes_container_4">
+                <strong style="color: var(--accent);letter-spacing:.06em"
+                  data-editable="day_label_notes_4">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;" data-editable="day_note_4_0">Sense of Pace: Relaxed</li>
+                  
+                </ul>
               </div>
-              {% endif %}
-              {% if day.meals %}
+              
+            </div>
+            <dl class="day-detail-list">
+              
               <div class="day-detail">
-                <dt>{{ "Meals" | translate(lang) }}</dt>
-                <dd data-editable="day_meals_{{ day_idx_global }}">{{ (day.meals | join(' &middot; ')) | rtl_mixed(lang)
-                  }}</dd>
+                <dt>Overnight</dt>
+                <dd data-editable="day_overnight_4">Hanoi</dd>
               </div>
-              {% endif %}
+              
+              
+              <div class="day-detail">
+                <dt>Meals</dt>
+                <dd data-editable="day_meals_4">Breakfast, Lunch</dd>
+              </div>
+              
             </dl>
-            <div class="logic-chip">{{ layout }}</div>
+            <div class="logic-chip">single</div>
           </div>
-          <div class="editorial-copy day-copy">
-            {% for para in day.description %}
-            <p data-editable="day_desc_{{ day_idx_global }}_{{ loop.index0 }}">{{ para | rtl_mixed(lang) }}</p>
-            {% endfor %}
-            {% if day.activities %}
-            <p style="font-size:13px;color: var(--text-muted);margin-top:8px"
-              data-deletable="day_activities_{{ day_idx_global }}">
-              <strong style="color: var(--primary);letter-spacing:.06em"
-                data-editable="day_label_highlights_{{ day_idx_global }}">{{ day.label_highlights |
-                default("Highlights:" | translate(lang)) }}</strong>
-              <span data-editable="day_highlights_{{ day_idx_global }}">{{ (day.activities | join(' · ')) |
-                rtl_mixed(lang) }}</span>
-            </p>
-            {% endif %}
-            {% if day.notes %}
-            <div
-              style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--accent);padding-left:10px;background:color-mix(in srgb, var(--accent) 5%, transparent);border-radius:4px;padding-top:4px;padding-bottom:4px;"
-              data-deletable="day_notes_container_{{ day_idx_global }}">
-              <strong style="color: var(--accent);letter-spacing:.06em"
-                data-editable="day_label_notes_{{ day_idx_global }}">{{ day.label_notes | default("Notes:" |
-                translate(lang)) }}</strong>
-              <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
-                {% for note in day.notes %}
-                <li style="margin-bottom: 2px;" data-editable="day_note_{{ day_idx_global }}_{{ loop.index0 }}">{{ note
-                  | rtl_mixed(lang) }}</li>
-                {% endfor %}
-              </ul>
+
+          
+        </article>
+        
+        
+        
+        
+
+        <article class="day layout-single ">
+          
+          <div class="day-image-col" style="position: relative;">
+            
+            <div class="day-image hero-image" style="--image: url('/assets/ha-noi/hero/hero2.webp')"
+              data-editable="day_img_hero_5" data-img-type="hero"></div>
+            
+          </div>
+          <div class="day-copy-wrap">
+            <div class="day-kicker">
+              <span class="destination">Hanoi</span>
+              <span>DAY 5</span>
             </div>
-            {% endif %}
+            <h4 class="day-title" data-editable="day_title_5">Day 5 — Hanoi</h4>
+            <div class="day-copy" style="margin-top:24px;">
+              
+              <p data-editable="day_desc_5_0">Full Day Hanoi City Tour exploring historic landmarks such as Ho Chi Minh Mausoleum, One Pillar Pagoda, Temple of Literature, and the vibrant Old Quarter.</p>
+              
+              
+              <p style="font-size:13px;color: var(--text-muted);margin-top:8px"
+                data-deletable="day_activities_5">
+                <strong style="color: var(--primary);letter-spacing:.06em"
+                  data-editable="day_label_highlights_5">Highlights:</strong>
+                <span data-editable="day_highlights_5">Private guide, entrance fees, city tour, Lunch.</span>
+              </p>
+              
+              
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--accent);padding-left:10px;background:color-mix(in srgb, var(--accent) 5%, transparent);border-radius:4px;padding-top:4px;padding-bottom:4px;"
+                data-deletable="day_notes_container_5">
+                <strong style="color: var(--accent);letter-spacing:.06em"
+                  data-editable="day_label_notes_5">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;" data-editable="day_note_5_0">Sense of Pace: Immersive</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <dl class="day-detail-list">
+              
+              <div class="day-detail">
+                <dt>Overnight</dt>
+                <dd data-editable="day_overnight_5">Hanoi</dd>
+              </div>
+              
+              
+              <div class="day-detail">
+                <dt>Meals</dt>
+                <dd data-editable="day_meals_5">Breakfast, Lunch</dd>
+              </div>
+              
+            </dl>
+            <div class="logic-chip">single</div>
           </div>
-          <div class="supporting-images">
-            <div class="day-image hero-image carousel-container" style="position: relative; overflow: hidden;"
-              data-editable="day_img_carousel_{{ day_idx_global }}">
+
+          
+        </article>
+        
+        
+        
+        
+
+        <article class="day layout-single is-alternate">
+          
+          <div class="day-image-col" style="position: relative;">
+            
+            <div class="day-image hero-image" style="--image: url('/assets/ha-noi/hero/hero1.jpg')"
+              data-editable="day_img_hero_6" data-img-type="hero"></div>
+            
+          </div>
+          <div class="day-copy-wrap">
+            <div class="day-kicker">
+              <span class="destination">Hanoi</span>
+              <span>DAY 6</span>
+            </div>
+            <h4 class="day-title" data-editable="day_title_6">Day 6 — Hanoi</h4>
+            <div class="day-copy" style="margin-top:24px;">
+              
+              <p data-editable="day_desc_6_0">Hat Village &amp; Incense Village Half Day Tour from Hanoi. Free afternoon in Hanoi for leisure and exploration. In the evening, transfer to Hanoi Railway Station to board the overnight Chapa Express Train to Sapa in a Suite Queen Cabin.</p>
+              
+              
+              <p style="font-size:13px;color: var(--text-muted);margin-top:8px"
+                data-deletable="day_activities_6">
+                <strong style="color: var(--primary);letter-spacing:.06em"
+                  data-editable="day_label_highlights_6">Highlights:</strong>
+                <span data-editable="day_highlights_6">Incense &amp; Hat village tour, transfer to Hanoi station, Chapa Express Suite Cabin, Lunch.</span>
+              </p>
+              
+              
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--accent);padding-left:10px;background:color-mix(in srgb, var(--accent) 5%, transparent);border-radius:4px;padding-top:4px;padding-bottom:4px;"
+                data-deletable="day_notes_container_6">
+                <strong style="color: var(--accent);letter-spacing:.06em"
+                  data-editable="day_label_notes_6">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;" data-editable="day_note_6_0">Sense of Pace: Moderate</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <dl class="day-detail-list">
+              
+              <div class="day-detail">
+                <dt>Overnight</dt>
+                <dd data-editable="day_overnight_6">Hanoi</dd>
+              </div>
+              
+              
+              <div class="day-detail">
+                <dt>Meals</dt>
+                <dd data-editable="day_meals_6">Breakfast, Lunch</dd>
+              </div>
+              
+            </dl>
+            <div class="logic-chip">single</div>
+          </div>
+
+          
+        </article>
+        
+        
+        
+        
+
+        <article class="day layout-single ">
+          
+          <div class="day-image-col" style="position: relative;">
+            
+            <div class="day-image hero-image carousel-container"
+              style="position: relative; overflow: hidden; border-radius: 4px;"
+              data-editable="day_img_carousel_7">
               <div class="carousel-inner"
                 style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
-                {% for c_img in imgs.carousel %}
+                
                 <div class="carousel-slide"
-                  style="flex: 0 0 100%; height: 100%; background: url('{{ c_img }}') center/cover no-repeat;"></div>
-                {% endfor %}
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/lao-cai/hero/hero3.jpg') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/lao-cai/ve-dep-sapa_1_.jpg') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/lao-cai/hero/hero6.jpg') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/lao-cai/hero/hero2.webp') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/lao-cai/hero/hero5.jpg') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/lao-cai/hero/hero4.jpg') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/lao-cai/tau-tren-cao.webp') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/lao-cai/hero/hero1.jpg') center/cover no-repeat;"></div>
+                
               </div>
-              {% if imgs.carousel|length > 1 %}
-              <button class="carousel-control prev no-print" aria-label="Previous image"
-                style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); background: rgba(17,19,15,0.4); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 18px; line-height: 1; transition: background 0.2s, opacity 0.2s; backdrop-filter: blur(4px); padding-bottom: 2px;">‹</button>
-              <button class="carousel-control next no-print" aria-label="Next image"
-                style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); background: rgba(17,19,15,0.4); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 18px; line-height: 1; transition: background 0.2s, opacity 0.2s; backdrop-filter: blur(4px); padding-bottom: 2px;">›</button>
               <div class="carousel-dots no-print"
                 style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3;">
-                {% for c_img in imgs.carousel %}
-                <button class="carousel-dot {% if loop.index0 == 0 %}active{% endif %}"
-                  aria-label="Go to slide {{ loop.index }}"
+                
+                <button class="carousel-dot active"
+                  aria-label="Go to slide 1"
                   style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
-                {% endfor %}
+                
+                <button class="carousel-dot "
+                  aria-label="Go to slide 2"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                
+                <button class="carousel-dot "
+                  aria-label="Go to slide 3"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                
+                <button class="carousel-dot "
+                  aria-label="Go to slide 4"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                
+                <button class="carousel-dot "
+                  aria-label="Go to slide 5"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                
+                <button class="carousel-dot "
+                  aria-label="Go to slide 6"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                
+                <button class="carousel-dot "
+                  aria-label="Go to slide 7"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                
+                <button class="carousel-dot "
+                  aria-label="Go to slide 8"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                
               </div>
-              {% endif %}
             </div>
-            <div class="small-images-col">
-              <div class="day-image small-image" style="--image: url('{{ imgs['small-1'] }}')"
-                data-editable="day_img_small1_{{ day_idx_global }}" data-img-type="small-1"></div>
-              <div class="day-image small-image" style="--image: url('{{ imgs['small-2'] }}')"
-                data-editable="day_img_small2_{{ day_idx_global }}" data-img-type="small-2"></div>
-            </div>
+            <button class="carousel-control prev no-print" aria-label="Previous image"
+              style="position: absolute; left: -20px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.06); background: #ffffff; color: #333; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 20px; line-height: 1; transition: background 0.2s, opacity 0.2s; box-shadow: 0 4px 14px rgba(0,0,0,0.1); padding-bottom: 2px;">‹</button>
+            <button class="carousel-control next no-print" aria-label="Next image"
+              style="position: absolute; right: -20px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.06); background: #ffffff; color: #333; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 20px; line-height: 1; transition: background 0.2s, opacity 0.2s; box-shadow: 0 4px 14px rgba(0,0,0,0.1); padding-bottom: 2px;">›</button>
+            
           </div>
-          {% endif %}
+          <div class="day-copy-wrap">
+            <div class="day-kicker">
+              <span class="destination">Sapa</span>
+              <span>DAY 7</span>
+            </div>
+            <h4 class="day-title" data-editable="day_title_7">Day 7 — Sapa</h4>
+            <div class="day-copy" style="margin-top:24px;">
+              
+              <p data-editable="day_desc_7_0">Arrival in Lao Cai/Sapa. Embark on a Full Day Sapa Tour exploring lush rice terraces, local hill-tribe villages, and check in at Sapa Jade Hill Resort (Mountain View Bungalow).</p>
+              
+              
+              <p style="font-size:13px;color: var(--text-muted);margin-top:8px"
+                data-deletable="day_activities_7">
+                <strong style="color: var(--primary);letter-spacing:.06em"
+                  data-editable="day_label_highlights_7">Highlights:</strong>
+                <span data-editable="day_highlights_7">Station pickup, guided Sapa tour, bungalow stay, Lunch, Dinner.</span>
+              </p>
+              
+              
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--accent);padding-left:10px;background:color-mix(in srgb, var(--accent) 5%, transparent);border-radius:4px;padding-top:4px;padding-bottom:4px;"
+                data-deletable="day_notes_container_7">
+                <strong style="color: var(--accent);letter-spacing:.06em"
+                  data-editable="day_label_notes_7">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;" data-editable="day_note_7_0">Sense of Pace: Immersive</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <dl class="day-detail-list">
+              
+              <div class="day-detail">
+                <dt>Overnight</dt>
+                <dd data-editable="day_overnight_7">Sapa</dd>
+              </div>
+              
+              
+              <div class="day-detail">
+                <dt>Meals</dt>
+                <dd data-editable="day_meals_7">Breakfast, Lunch, Dinner</dd>
+              </div>
+              
+            </dl>
+            <div class="logic-chip">single</div>
+          </div>
+
+          
         </article>
-        {% endfor %}
+        
+        
+        
+        
+
+        <article class="day layout-single is-alternate">
+          
+          <div class="day-image-col" style="position: relative;">
+            
+            <div class="day-image hero-image carousel-container"
+              style="position: relative; overflow: hidden; border-radius: 4px;"
+              data-editable="day_img_carousel_8">
+              <div class="carousel-inner"
+                style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
+                
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/da-nang/danang1.jpg') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/da-nang/hyatt-regency-danang-resort-spa-3.jpg') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/da-nang/danang2.jpg') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/da-nang/hero/hero1.jpg') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/da-nang/danang3.jpg') center/cover no-repeat;"></div>
+                
+              </div>
+              <div class="carousel-dots no-print"
+                style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3;">
+                
+                <button class="carousel-dot active"
+                  aria-label="Go to slide 1"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                
+                <button class="carousel-dot "
+                  aria-label="Go to slide 2"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                
+                <button class="carousel-dot "
+                  aria-label="Go to slide 3"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                
+                <button class="carousel-dot "
+                  aria-label="Go to slide 4"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                
+                <button class="carousel-dot "
+                  aria-label="Go to slide 5"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                
+              </div>
+            </div>
+            <button class="carousel-control prev no-print" aria-label="Previous image"
+              style="position: absolute; left: -20px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.06); background: #ffffff; color: #333; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 20px; line-height: 1; transition: background 0.2s, opacity 0.2s; box-shadow: 0 4px 14px rgba(0,0,0,0.1); padding-bottom: 2px;">‹</button>
+            <button class="carousel-control next no-print" aria-label="Next image"
+              style="position: absolute; right: -20px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.06); background: #ffffff; color: #333; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 20px; line-height: 1; transition: background 0.2s, opacity 0.2s; box-shadow: 0 4px 14px rgba(0,0,0,0.1); padding-bottom: 2px;">›</button>
+            
+          </div>
+          <div class="day-copy-wrap">
+            <div class="day-kicker">
+              <span class="destination">Da Nang</span>
+              <span>DAY 8</span>
+            </div>
+            <h4 class="day-title" data-editable="day_title_8">Day 8 — Da Nang</h4>
+            <div class="day-copy" style="margin-top:24px;">
+              
+              <p data-editable="day_desc_8_0">Enjoy a free morning in Sapa. After lunch, transfer to the airport for a domestic flight to Da Nang. Upon arrival, private transfer to Radisson RED Danang Hotel.</p>
+              
+              
+              <p style="font-size:13px;color: var(--text-muted);margin-top:8px"
+                data-deletable="day_activities_8">
+                <strong style="color: var(--primary);letter-spacing:.06em"
+                  data-editable="day_label_highlights_8">Highlights:</strong>
+                <span data-editable="day_highlights_8">Airport transfer, domestic flight, Da Nang pickup &amp; hotel stay, Lunch.</span>
+              </p>
+              
+              
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--accent);padding-left:10px;background:color-mix(in srgb, var(--accent) 5%, transparent);border-radius:4px;padding-top:4px;padding-bottom:4px;"
+                data-deletable="day_notes_container_8">
+                <strong style="color: var(--accent);letter-spacing:.06em"
+                  data-editable="day_label_notes_8">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;" data-editable="day_note_8_0">Sense of Pace: Relaxed</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <dl class="day-detail-list">
+              
+              <div class="day-detail">
+                <dt>Overnight</dt>
+                <dd data-editable="day_overnight_8">Da Nang</dd>
+              </div>
+              
+              
+              <div class="day-detail">
+                <dt>Meals</dt>
+                <dd data-editable="day_meals_8">Breakfast, Lunch</dd>
+              </div>
+              
+            </dl>
+            <div class="logic-chip">single</div>
+          </div>
+
+          
+        </article>
+        
+        
+        
+        
+
+        <article class="day layout-single ">
+          
+          <div class="day-image-col" style="position: relative;">
+            
+            <div class="day-image hero-image carousel-container"
+              style="position: relative; overflow: hidden; border-radius: 4px;"
+              data-editable="day_img_carousel_9">
+              <div class="carousel-inner"
+                style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
+                
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/da-nang/dn-beach1.jpg') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/da-nang/hero/hero2.jpg') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/da-nang/hero/hero3.jpg') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/da-nang/hero/hero4.jpg') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/da-nang/hero/hero5.jpg') center/cover no-repeat;"></div>
+                
+              </div>
+              <div class="carousel-dots no-print"
+                style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3;">
+                
+                <button class="carousel-dot active"
+                  aria-label="Go to slide 1"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                
+                <button class="carousel-dot "
+                  aria-label="Go to slide 2"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                
+                <button class="carousel-dot "
+                  aria-label="Go to slide 3"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                
+                <button class="carousel-dot "
+                  aria-label="Go to slide 4"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                
+                <button class="carousel-dot "
+                  aria-label="Go to slide 5"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                
+              </div>
+            </div>
+            <button class="carousel-control prev no-print" aria-label="Previous image"
+              style="position: absolute; left: -20px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.06); background: #ffffff; color: #333; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 20px; line-height: 1; transition: background 0.2s, opacity 0.2s; box-shadow: 0 4px 14px rgba(0,0,0,0.1); padding-bottom: 2px;">‹</button>
+            <button class="carousel-control next no-print" aria-label="Next image"
+              style="position: absolute; right: -20px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.06); background: #ffffff; color: #333; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 20px; line-height: 1; transition: background 0.2s, opacity 0.2s; box-shadow: 0 4px 14px rgba(0,0,0,0.1); padding-bottom: 2px;">›</button>
+            
+          </div>
+          <div class="day-copy-wrap">
+            <div class="day-kicker">
+              <span class="destination">Da Nang</span>
+              <span>DAY 9</span>
+            </div>
+            <h4 class="day-title" data-editable="day_title_9">Day 9 — Da Nang</h4>
+            <div class="day-copy" style="margin-top:24px;">
+              
+              <p data-editable="day_desc_9_0">Full Day Da Nang City Tour highlighting Marble Mountains, Son Tra Peninsula (Linh Ung Pagoda), Dragon Bridge, and local cultural spots.</p>
+              
+              
+              <p style="font-size:13px;color: var(--text-muted);margin-top:8px"
+                data-deletable="day_activities_9">
+                <strong style="color: var(--primary);letter-spacing:.06em"
+                  data-editable="day_label_highlights_9">Highlights:</strong>
+                <span data-editable="day_highlights_9">Private guide &amp; vehicle, entrance tickets, Lunch.</span>
+              </p>
+              
+              
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--accent);padding-left:10px;background:color-mix(in srgb, var(--accent) 5%, transparent);border-radius:4px;padding-top:4px;padding-bottom:4px;"
+                data-deletable="day_notes_container_9">
+                <strong style="color: var(--accent);letter-spacing:.06em"
+                  data-editable="day_label_notes_9">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;" data-editable="day_note_9_0">Sense of Pace: Moderate</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <dl class="day-detail-list">
+              
+              <div class="day-detail">
+                <dt>Overnight</dt>
+                <dd data-editable="day_overnight_9">Da Nang</dd>
+              </div>
+              
+              
+              <div class="day-detail">
+                <dt>Meals</dt>
+                <dd data-editable="day_meals_9">Breakfast, Lunch</dd>
+              </div>
+              
+            </dl>
+            <div class="logic-chip">single</div>
+          </div>
+
+          
+        </article>
+        
+        
+        
+        
+
+        <article class="day layout-single is-alternate">
+          
+          <div class="day-image-col" style="position: relative;">
+            
+            <div class="day-image hero-image carousel-container"
+              style="position: relative; overflow: hidden; border-radius: 4px;"
+              data-editable="day_img_carousel_10">
+              <div class="carousel-inner"
+                style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
+                
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-nam/xe-dap-hoi-an.jpg') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-nam/hero/hero1.jpg') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-nam/hero/hero2.jpg') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-nam/thuyen-thung.jpg') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-nam/hoian1.jpg') center/cover no-repeat;"></div>
+                
+              </div>
+              <div class="carousel-dots no-print"
+                style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3;">
+                
+                <button class="carousel-dot active"
+                  aria-label="Go to slide 1"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                
+                <button class="carousel-dot "
+                  aria-label="Go to slide 2"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                
+                <button class="carousel-dot "
+                  aria-label="Go to slide 3"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                
+                <button class="carousel-dot "
+                  aria-label="Go to slide 4"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                
+                <button class="carousel-dot "
+                  aria-label="Go to slide 5"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                
+              </div>
+            </div>
+            <button class="carousel-control prev no-print" aria-label="Previous image"
+              style="position: absolute; left: -20px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.06); background: #ffffff; color: #333; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 20px; line-height: 1; transition: background 0.2s, opacity 0.2s; box-shadow: 0 4px 14px rgba(0,0,0,0.1); padding-bottom: 2px;">‹</button>
+            <button class="carousel-control next no-print" aria-label="Next image"
+              style="position: absolute; right: -20px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.06); background: #ffffff; color: #333; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 20px; line-height: 1; transition: background 0.2s, opacity 0.2s; box-shadow: 0 4px 14px rgba(0,0,0,0.1); padding-bottom: 2px;">›</button>
+            
+          </div>
+          <div class="day-copy-wrap">
+            <div class="day-kicker">
+              <span class="destination">Hoi An</span>
+              <span>DAY 10</span>
+            </div>
+            <h4 class="day-title" data-editable="day_title_10">Day 10 — Hoi An</h4>
+            <div class="day-copy" style="margin-top:24px;">
+              
+              <p data-editable="day_desc_10_0">Full Day Hoi An Tour. Transfer to Hoi An Ancient Town, explore lantern-lit streets, Japanese Covered Bridge, and stay at La Siesta Hoi An Resort &amp; Spa (Deluxe Balcony Queen Classic Wing).</p>
+              
+              
+              <p style="font-size:13px;color: var(--text-muted);margin-top:8px"
+                data-deletable="day_activities_10">
+                <strong style="color: var(--primary);letter-spacing:.06em"
+                  data-editable="day_label_highlights_10">Highlights:</strong>
+                <span data-editable="day_highlights_10">Transfer to Hoi An, guided walking tour, resort check-in, Lunch, Dinner.</span>
+              </p>
+              
+              
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--accent);padding-left:10px;background:color-mix(in srgb, var(--accent) 5%, transparent);border-radius:4px;padding-top:4px;padding-bottom:4px;"
+                data-deletable="day_notes_container_10">
+                <strong style="color: var(--accent);letter-spacing:.06em"
+                  data-editable="day_label_notes_10">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;" data-editable="day_note_10_0">Sense of Pace: Immersive</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <dl class="day-detail-list">
+              
+              <div class="day-detail">
+                <dt>Overnight</dt>
+                <dd data-editable="day_overnight_10">Hoi An</dd>
+              </div>
+              
+              
+              <div class="day-detail">
+                <dt>Meals</dt>
+                <dd data-editable="day_meals_10">Breakfast, Lunch, Dinner</dd>
+              </div>
+              
+            </dl>
+            <div class="logic-chip">single</div>
+          </div>
+
+          
+        </article>
+        
+        
+        
+        
+
+        <article class="day layout-single ">
+          
+          <div class="day-image-col" style="position: relative;">
+            
+            <div class="day-image hero-image carousel-container"
+              style="position: relative; overflow: hidden; border-radius: 4px;"
+              data-editable="day_img_carousel_11">
+              <div class="carousel-inner"
+                style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
+                
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-nam/myson.jpg') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-nam/hero/hero3.jpg') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-nam/hoian4.jpg') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-nam/hoian2.jpg') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/quang-nam/hoian3.jpg') center/cover no-repeat;"></div>
+                
+              </div>
+              <div class="carousel-dots no-print"
+                style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3;">
+                
+                <button class="carousel-dot active"
+                  aria-label="Go to slide 1"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                
+                <button class="carousel-dot "
+                  aria-label="Go to slide 2"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                
+                <button class="carousel-dot "
+                  aria-label="Go to slide 3"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                
+                <button class="carousel-dot "
+                  aria-label="Go to slide 4"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                
+                <button class="carousel-dot "
+                  aria-label="Go to slide 5"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                
+              </div>
+            </div>
+            <button class="carousel-control prev no-print" aria-label="Previous image"
+              style="position: absolute; left: -20px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.06); background: #ffffff; color: #333; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 20px; line-height: 1; transition: background 0.2s, opacity 0.2s; box-shadow: 0 4px 14px rgba(0,0,0,0.1); padding-bottom: 2px;">‹</button>
+            <button class="carousel-control next no-print" aria-label="Next image"
+              style="position: absolute; right: -20px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.06); background: #ffffff; color: #333; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 20px; line-height: 1; transition: background 0.2s, opacity 0.2s; box-shadow: 0 4px 14px rgba(0,0,0,0.1); padding-bottom: 2px;">›</button>
+            
+          </div>
+          <div class="day-copy-wrap">
+            <div class="day-kicker">
+              <span class="destination">Hoi An</span>
+              <span>DAY 11</span>
+            </div>
+            <h4 class="day-title" data-editable="day_title_11">Day 11 — Hoi An</h4>
+            <div class="day-copy" style="margin-top:24px;">
+              
+              <p data-editable="day_desc_11_0">Morning Hoi An Countryside Cycling Tour through peaceful villages and organic gardens. Free afternoon in Hoi An Ancient Town with custom tailoring recommendations.</p>
+              
+              
+              <p style="font-size:13px;color: var(--text-muted);margin-top:8px"
+                data-deletable="day_activities_11">
+                <strong style="color: var(--primary);letter-spacing:.06em"
+                  data-editable="day_label_highlights_11">Highlights:</strong>
+                <span data-editable="day_highlights_11">Countryside cycling tour, guide, tailoring recommendation, Lunch.</span>
+              </p>
+              
+              
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--accent);padding-left:10px;background:color-mix(in srgb, var(--accent) 5%, transparent);border-radius:4px;padding-top:4px;padding-bottom:4px;"
+                data-deletable="day_notes_container_11">
+                <strong style="color: var(--accent);letter-spacing:.06em"
+                  data-editable="day_label_notes_11">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;" data-editable="day_note_11_0">Sense of Pace: Relaxed</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <dl class="day-detail-list">
+              
+              <div class="day-detail">
+                <dt>Overnight</dt>
+                <dd data-editable="day_overnight_11">Hoi An</dd>
+              </div>
+              
+              
+              <div class="day-detail">
+                <dt>Meals</dt>
+                <dd data-editable="day_meals_11">Breakfast, Lunch</dd>
+              </div>
+              
+            </dl>
+            <div class="logic-chip">single</div>
+          </div>
+
+          
+        </article>
+        
+        
+        
+        
+
+        <article class="day layout-single is-alternate">
+          
+          <div class="day-image-col" style="position: relative;">
+            
+            <div class="day-image hero-image carousel-container"
+              style="position: relative; overflow: hidden; border-radius: 4px;"
+              data-editable="day_img_carousel_12">
+              <div class="carousel-inner"
+                style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
+                
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/ho-chi-minh/hero/hero2.jpg') center/cover no-repeat;"></div>
+                
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('/assets/ho-chi-minh/hero/hero4.jpg') center/cover no-repeat;"></div>
+                
+              </div>
+              <div class="carousel-dots no-print"
+                style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3;">
+                
+                <button class="carousel-dot active"
+                  aria-label="Go to slide 1"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                
+                <button class="carousel-dot "
+                  aria-label="Go to slide 2"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                
+              </div>
+            </div>
+            <button class="carousel-control prev no-print" aria-label="Previous image"
+              style="position: absolute; left: -20px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.06); background: #ffffff; color: #333; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 20px; line-height: 1; transition: background 0.2s, opacity 0.2s; box-shadow: 0 4px 14px rgba(0,0,0,0.1); padding-bottom: 2px;">‹</button>
+            <button class="carousel-control next no-print" aria-label="Next image"
+              style="position: absolute; right: -20px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.06); background: #ffffff; color: #333; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 20px; line-height: 1; transition: background 0.2s, opacity 0.2s; box-shadow: 0 4px 14px rgba(0,0,0,0.1); padding-bottom: 2px;">›</button>
+            
+          </div>
+          <div class="day-copy-wrap">
+            <div class="day-kicker">
+              <span class="destination">Ho Chi Minh City</span>
+              <span>DAY 12</span>
+            </div>
+            <h4 class="day-title" data-editable="day_title_12">Day 12 — Ho Chi Minh City</h4>
+            <div class="day-copy" style="margin-top:24px;">
+              
+              <p data-editable="day_desc_12_0">Transfer to Da Nang Airport and fly to Ho Chi Minh City. In the afternoon, take a guided tour of the historic Cu Chi Tunnels before checking in at Mai House (Premium King Room).</p>
+              
+              
+              <p style="font-size:13px;color: var(--text-muted);margin-top:8px"
+                data-deletable="day_activities_12">
+                <strong style="color: var(--primary);letter-spacing:.06em"
+                  data-editable="day_label_highlights_12">Highlights:</strong>
+                <span data-editable="day_highlights_12">Airport transfers, domestic flight, Cu Chi Tunnels entry &amp; tour, Lunch.</span>
+              </p>
+              
+              
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--accent);padding-left:10px;background:color-mix(in srgb, var(--accent) 5%, transparent);border-radius:4px;padding-top:4px;padding-bottom:4px;"
+                data-deletable="day_notes_container_12">
+                <strong style="color: var(--accent);letter-spacing:.06em"
+                  data-editable="day_label_notes_12">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;" data-editable="day_note_12_0">Sense of Pace: Moderate</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <dl class="day-detail-list">
+              
+              <div class="day-detail">
+                <dt>Overnight</dt>
+                <dd data-editable="day_overnight_12">Ho Chi Minh City</dd>
+              </div>
+              
+              
+              <div class="day-detail">
+                <dt>Meals</dt>
+                <dd data-editable="day_meals_12">Breakfast, Lunch</dd>
+              </div>
+              
+            </dl>
+            <div class="logic-chip">single</div>
+          </div>
+
+          
+        </article>
+        
+        
+        
+        
+
+        <article class="day layout-single ">
+          
+          <div class="day-image-col" style="position: relative;">
+            
+            <div class="day-image hero-image" style="--image: url('/assets/ho-chi-minh/hero/hero3.jpg')"
+              data-editable="day_img_hero_13" data-img-type="hero"></div>
+            
+          </div>
+          <div class="day-copy-wrap">
+            <div class="day-kicker">
+              <span class="destination">Ho Chi Minh City</span>
+              <span>DAY 13</span>
+            </div>
+            <h4 class="day-title" data-editable="day_title_13">Day 13 — Ho Chi Minh City</h4>
+            <div class="day-copy" style="margin-top:24px;">
+              
+              <p data-editable="day_desc_13_0">Full Day Mekong Delta Tour. Cruise down peaceful waterways, visit local artisanal workshops, taste tropical fruits, and experience southern river life.</p>
+              
+              
+              <p style="font-size:13px;color: var(--text-muted);margin-top:8px"
+                data-deletable="day_activities_13">
+                <strong style="color: var(--primary);letter-spacing:.06em"
+                  data-editable="day_label_highlights_13">Highlights:</strong>
+                <span data-editable="day_highlights_13">Private Mekong excursion, boat trip, guide, Lunch.</span>
+              </p>
+              
+              
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--accent);padding-left:10px;background:color-mix(in srgb, var(--accent) 5%, transparent);border-radius:4px;padding-top:4px;padding-bottom:4px;"
+                data-deletable="day_notes_container_13">
+                <strong style="color: var(--accent);letter-spacing:.06em"
+                  data-editable="day_label_notes_13">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;" data-editable="day_note_13_0">Sense of Pace: Active</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <dl class="day-detail-list">
+              
+              <div class="day-detail">
+                <dt>Overnight</dt>
+                <dd data-editable="day_overnight_13">Ho Chi Minh City</dd>
+              </div>
+              
+              
+              <div class="day-detail">
+                <dt>Meals</dt>
+                <dd data-editable="day_meals_13">Breakfast, Lunch</dd>
+              </div>
+              
+            </dl>
+            <div class="logic-chip">single</div>
+          </div>
+
+          
+        </article>
+        
+        
+        
+        
+
+        <article class="day layout-single is-alternate">
+          
+          <div class="day-image-col" style="position: relative;">
+            
+            <div class="day-image hero-image" style="--image: url('/assets/ho-chi-minh/hero/hero1.jpg')"
+              data-editable="day_img_hero_14" data-img-type="hero"></div>
+            
+          </div>
+          <div class="day-copy-wrap">
+            <div class="day-kicker">
+              <span class="destination">Ho Chi Minh City</span>
+              <span>DAY 14</span>
+            </div>
+            <h4 class="day-title" data-editable="day_title_14">Day 14 — Ho Chi Minh City</h4>
+            <div class="day-copy" style="margin-top:24px;">
+              
+              <p data-editable="day_desc_14_0">Half Day Ho Chi Minh City Tour exploring Saigon Notre-Dame Basilica, Central Post Office, and War Remnants Museum. Relax before private transfer to the airport for departure flight.</p>
+              
+              
+              <p style="font-size:13px;color: var(--text-muted);margin-top:8px"
+                data-deletable="day_activities_14">
+                <strong style="color: var(--primary);letter-spacing:.06em"
+                  data-editable="day_label_highlights_14">Highlights:</strong>
+                <span data-editable="day_highlights_14">Half day city tour, airport departure transfer, Dinner.</span>
+              </p>
+              
+              
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--accent);padding-left:10px;background:color-mix(in srgb, var(--accent) 5%, transparent);border-radius:4px;padding-top:4px;padding-bottom:4px;"
+                data-deletable="day_notes_container_14">
+                <strong style="color: var(--accent);letter-spacing:.06em"
+                  data-editable="day_label_notes_14">Notes:</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  
+                  <li style="margin-bottom: 2px;" data-editable="day_note_14_0">Sense of Pace: Relaxed</li>
+                  
+                </ul>
+              </div>
+              
+            </div>
+            <dl class="day-detail-list">
+              
+              <div class="day-detail">
+                <dt>Overnight</dt>
+                <dd data-editable="day_overnight_14">Ho Chi Minh City</dd>
+              </div>
+              
+              
+              <div class="day-detail">
+                <dt>Meals</dt>
+                <dd data-editable="day_meals_14">Breakfast, Dinner</dd>
+              </div>
+              
+            </dl>
+            <div class="logic-chip">single</div>
+          </div>
+
+          
+        </article>
+        
       </div>
     </section>
 
@@ -4096,96 +5127,551 @@
       <div class="container">
         <div class="section-head" style="grid-template-columns: 1fr;">
           <h2 class="font-serif" style="font-size: clamp(32px, 4vw, 48px); color: var(--primary); margin: 0 0 10px;">
-            {{ "Selected Hotel Plan" | translate(lang) }}</h2>
-          <p style="color: var(--text-muted); margin: 0;">{{ "Proposed hotels and luxury cruises selected for your
-            journey. Subject to availability at confirmation." | translate(lang) }}</p>
+            Selected Hotel Plan</h2>
+          <p style="color: var(--text-muted); margin: 0;">Proposed hotels and luxury cruises selected for your
+            journey. Subject to availability at confirmation.</p>
         </div>
 
-        {% if hotels %}
+        
         <div class="hotel-plan-container">
-          {% set seen_hotel_names = [] %}
-          {% set ns = namespace(count=0) %}
-          {% for item in hotels %}
-          {% if item.name not in seen_hotel_names %}
-          {% set _ = seen_hotel_names.append(item.name) %}
-          {% set is_odd = (ns.count % 2 == 0) %}
+          
+          
+          
+          
+          
+          
           <div class="hotel-card-editorial">
-            <div class="hotel-editorial-grid {% if is_odd %}odd-row{% else %}even-row{% endif %}">
+            <div class="hotel-editorial-grid odd-row">
 
-              {# Aggregate dates for this hotel #}
-              {% set date_ranges = [] %}
-              {% for h in hotels %}
-              {% if h.name == item.name and h.date_range %}
-              {% set _ = date_ranges.append(h.date_range) %}
-              {% endif %}
-              {% endfor %}
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
 
               <!-- Side-by-Side Images -->
-              <div class="hotel-images-group hotel-images-grid {% if is_odd %}odd-group{% else %}even-group{% endif %}">
+              <div class="hotel-images-group hotel-images-grid odd-group">
                 <div class="img-wrapper-main hotel-image-wrapper">
-                  <img src="{{ item.hotel_img }}" alt="{{ item.name }}" data-editable="hotel_img_{{ loop.index }}">
+                  <img src="/assets/hotels/hanoi/hanoi-le-jardin-hotel-spa/exterior/exterior_1.jpg" alt="Hanoi Le Jardin Hotel &amp; Spa" data-editable="hotel_img_1">
                 </div>
                 <div class="img-wrapper-sub"
                   style="height: auto !important; aspect-ratio: auto !important; box-shadow: none; border-radius: 0; background: transparent; overflow: visible !important;">
                   <div class="hotel-image-wrapper"
                     style="aspect-ratio: 4/3; position: relative; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.06);">
-                    <img src="{{ item.room_img }}" alt="{{ item.name }} Room" data-editable="hotel_room_img_{{ loop.index }}"
+                    <img src="/assets/hotels/hanoi/hanoi-le-jardin-hotel-spa/interior/interior_2.jpg" alt="Hanoi Le Jardin Hotel &amp; Spa Room" data-editable="hotel_room_img_1"
                       style="width: 100%; height: 100%; object-fit: cover;">
                   </div>
                   <div class="hotel-room-type"
                     style="margin-top: 8px; font-size: 13px; font-weight: 500; color: var(--text-muted, #7a7367) !important; text-align: left; padding-left: 4px; display: block;"
-                    data-editable="hotel_room_type_{{ loop.index }}">{{ item.room_type or item.room_name or item.roomType
-                    or 'Deluxe Room' }}</div>
+                    data-editable="hotel_room_type_1">Deluxe City View Double Room</div>
                 </div>
               </div>
 
               <!-- Footer Columns (Introduction & Info/Tel) -->
               <div class="hotel-info-block">
                 <div class="hotel-header-mobile">
-                  <div class="hotel-subtitle hotel-city" data-editable="hotel_city_{{ loop.index }}">{{
-                    item.city_country | rtl_mixed(lang) }}</div>
-                  <h3 class="hotel-name hotel-title font-serif" data-editable="hotel_name_{{ loop.index }}">{{ item.name
-                    | rtl_mixed(lang) }}</h3>
+                  <div class="hotel-subtitle hotel-city" data-editable="hotel_city_1">HANOI, VIETNAM</div>
+                  <h3 class="hotel-name hotel-title font-serif" data-editable="hotel_name_1">Hanoi Le Jardin Hotel &amp; Spa</h3>
                 </div>
 
                 <div class="hotel-desc-mobile">
-                  {% if show_hotel_intro and item.introduction %}
-                  <p class="hotel-desc" data-editable="hotel_intro_{{ loop.index }}">{{ item.introduction |
-                    rtl_mixed(lang) }}</p>
-                  {% endif %}
+                  
+                  <p class="hotel-desc" data-editable="hotel_intro_1">Nestled in the historic Ba Dinh district, Hanoi Le Jardin Hotel &amp; Spa blends French colonial charm with modern hospitality. It offers elegant rooms, a rooftop bar with spectacular city views, and a serene spa for a perfect urban retreat.</p>
+                  
 
                   <div class="hotel-tags">
-                    <span data-editable="hotel_date_{{ loop.index }}">
-                      {% for dr in date_ranges %}
-                      <span class="ltr-token">{{ dr }}</span>{% if not loop.last %} &bull; {% endif %}
-                      {% endfor %}
+                    <span data-editable="hotel_date_1">
+                      
+                      <span class="ltr-token">30 Mar – 01 Apr 2027</span> &bull; 
+                      
+                      <span class="ltr-token">02 Apr – 04 Apr 2027</span>
+                      
                     </span>
-                    <span class="tel" data-editable="hotel_tel_{{ loop.index }}">{{ "TEL:" | translate(lang) }} <span
-                        class="ltr-token">{{ item.tel }}</span></span>
+                    <span class="tel" data-editable="hotel_tel_1">TEL: <span
+                        class="ltr-token">+84 28 3933 3226</span></span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          {% set ns.count = ns.count + 1 %}
-          {% endif %}
-          {% endfor %}
-        </div>
-        {% else %}
-        <p style="color: var(--text-muted); font-style: italic; margin-top: 20px;">Hotel arrangements will be tailored
-          and detailed here for your specific travel dates.</p>
-        {% endif %}
+          
+          
+          
+          
+          
+          
+          <div class="hotel-card-editorial">
+            <div class="hotel-editorial-grid even-row">
 
-        {% if room_notes %}
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+
+              <!-- Side-by-Side Images -->
+              <div class="hotel-images-group hotel-images-grid even-group">
+                <div class="img-wrapper-main hotel-image-wrapper">
+                  <img src="/assets/hotels/halong/emeraude-classic-cruise/exterior/exterior_1.jpg" alt="Emeraude Classic Cruise" data-editable="hotel_img_2">
+                </div>
+                <div class="img-wrapper-sub"
+                  style="height: auto !important; aspect-ratio: auto !important; box-shadow: none; border-radius: 0; background: transparent; overflow: visible !important;">
+                  <div class="hotel-image-wrapper"
+                    style="aspect-ratio: 4/3; position: relative; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.06);">
+                    <img src="/assets/hotels/halong/emeraude-classic-cruise/interior/interior_1.jpg" alt="Emeraude Classic Cruise Room" data-editable="hotel_room_img_2"
+                      style="width: 100%; height: 100%; object-fit: cover;">
+                  </div>
+                  <div class="hotel-room-type"
+                    style="margin-top: 8px; font-size: 13px; font-weight: 500; color: var(--text-muted, #7a7367) !important; text-align: left; padding-left: 4px; display: block;"
+                    data-editable="hotel_room_type_2">Captain Suite</div>
+                </div>
+              </div>
+
+              <!-- Footer Columns (Introduction & Info/Tel) -->
+              <div class="hotel-info-block">
+                <div class="hotel-header-mobile">
+                  <div class="hotel-subtitle hotel-city" data-editable="hotel_city_2">HA LONG, VIETNAM</div>
+                  <h3 class="hotel-name hotel-title font-serif" data-editable="hotel_name_2">Emeraude Classic Cruise</h3>
+                </div>
+
+                <div class="hotel-desc-mobile">
+                  
+                  <p class="hotel-desc" data-editable="hotel_intro_2">Emeraude Cruises is a premier luxury cruise line operating in Ha Long Bay, managed by Thien Minh Group (TMG). Inspired by the legendary 1906 French paddle steamer, Emeraude offers a refined journey blending Indochine vintage charm with modern elegance and top-tier safety standards.</p>
+                  
+
+                  <div class="hotel-tags">
+                    <span data-editable="hotel_date_2">
+                      
+                      <span class="ltr-token">01 Apr – 02 Apr 2027</span>
+                      
+                    </span>
+                    <span class="tel" data-editable="hotel_tel_2">TEL: <span
+                        class="ltr-token">+84 28 3933 3226</span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          
+          
+          
+          
+          
+          
+          
+          <div class="hotel-card-editorial">
+            <div class="hotel-editorial-grid odd-row">
+
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+
+              <!-- Side-by-Side Images -->
+              <div class="hotel-images-group hotel-images-grid odd-group">
+                <div class="img-wrapper-main hotel-image-wrapper">
+                  <img src="/assets/hotels/lao-cai/chapa-express-train/exterior/exterior_4.jpg" alt="Chapa Express Train" data-editable="hotel_img_4">
+                </div>
+                <div class="img-wrapper-sub"
+                  style="height: auto !important; aspect-ratio: auto !important; box-shadow: none; border-radius: 0; background: transparent; overflow: visible !important;">
+                  <div class="hotel-image-wrapper"
+                    style="aspect-ratio: 4/3; position: relative; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.06);">
+                    <img src="/assets/hotels/lao-cai/chapa-express-train/interior/interior_3.jpg" alt="Chapa Express Train Room" data-editable="hotel_room_img_4"
+                      style="width: 100%; height: 100%; object-fit: cover;">
+                  </div>
+                  <div class="hotel-room-type"
+                    style="margin-top: 8px; font-size: 13px; font-weight: 500; color: var(--text-muted, #7a7367) !important; text-align: left; padding-left: 4px; display: block;"
+                    data-editable="hotel_room_type_4">Suite Queen Cabin</div>
+                </div>
+              </div>
+
+              <!-- Footer Columns (Introduction & Info/Tel) -->
+              <div class="hotel-info-block">
+                <div class="hotel-header-mobile">
+                  <div class="hotel-subtitle hotel-city" data-editable="hotel_city_4">TRAIN, VIETNAM</div>
+                  <h3 class="hotel-name hotel-title font-serif" data-editable="hotel_name_4">Chapa Express Train</h3>
+                </div>
+
+                <div class="hotel-desc-mobile">
+                  
+                  <p class="hotel-desc" data-editable="hotel_intro_4">Chapa Express Train offers premium overnight sleeper service between Hanoi and Lao Cai (Sapa). Featuring traditional wooden panels, comfortable air-conditioned cabins, clean amenities, and personalized passenger hospitality.</p>
+                  
+
+                  <div class="hotel-tags">
+                    <span data-editable="hotel_date_4">
+                      
+                      <span class="ltr-token">04 Apr – 05 Apr 2027</span>
+                      
+                    </span>
+                    <span class="tel" data-editable="hotel_tel_4">TEL: <span
+                        class="ltr-token">+84 28 3933 3226</span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          
+          
+          
+          
+          
+          <div class="hotel-card-editorial">
+            <div class="hotel-editorial-grid even-row">
+
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+
+              <!-- Side-by-Side Images -->
+              <div class="hotel-images-group hotel-images-grid even-group">
+                <div class="img-wrapper-main hotel-image-wrapper">
+                  <img src="/assets/hotels/lao-cai/sapa-jade-hill/exterior/exterior_1.jpg" alt="Sapa Jade Hill Resort &amp; Spa" data-editable="hotel_img_5">
+                </div>
+                <div class="img-wrapper-sub"
+                  style="height: auto !important; aspect-ratio: auto !important; box-shadow: none; border-radius: 0; background: transparent; overflow: visible !important;">
+                  <div class="hotel-image-wrapper"
+                    style="aspect-ratio: 4/3; position: relative; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.06);">
+                    <img src="/assets/hotels/lao-cai/sapa-jade-hill/interior/interior_2.jpg" alt="Sapa Jade Hill Resort &amp; Spa Room" data-editable="hotel_room_img_5"
+                      style="width: 100%; height: 100%; object-fit: cover;">
+                  </div>
+                  <div class="hotel-room-type"
+                    style="margin-top: 8px; font-size: 13px; font-weight: 500; color: var(--text-muted, #7a7367) !important; text-align: left; padding-left: 4px; display: block;"
+                    data-editable="hotel_room_type_5">Mountain View Bungalow</div>
+                </div>
+              </div>
+
+              <!-- Footer Columns (Introduction & Info/Tel) -->
+              <div class="hotel-info-block">
+                <div class="hotel-header-mobile">
+                  <div class="hotel-subtitle hotel-city" data-editable="hotel_city_5">SAPA, VIETNAM</div>
+                  <h3 class="hotel-name hotel-title font-serif" data-editable="hotel_name_5">Sapa Jade Hill Resort &amp; Spa</h3>
+                </div>
+
+                <div class="hotel-desc-mobile">
+                  
+                  <p class="hotel-desc" data-editable="hotel_intro_5">Located in the scenic mist-covered hills of Sapa, Sapa Jade Hill Resort &amp; Spa features stunning panoramic views of Fansipan mountain and Muong Hoa valley. Designed with local heritage details, the hotel offers comfortable heated bungalows, an outdoor pool, and local gourmet dining.</p>
+                  
+
+                  <div class="hotel-tags">
+                    <span data-editable="hotel_date_5">
+                      
+                      <span class="ltr-token">05 Apr – 06 Apr 2027</span>
+                      
+                    </span>
+                    <span class="tel" data-editable="hotel_tel_5">TEL: <span
+                        class="ltr-token">+84 28 3933 3226</span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          
+          
+          
+          
+          
+          <div class="hotel-card-editorial">
+            <div class="hotel-editorial-grid odd-row">
+
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+
+              <!-- Side-by-Side Images -->
+              <div class="hotel-images-group hotel-images-grid odd-group">
+                <div class="img-wrapper-main hotel-image-wrapper">
+                  <img src="/assets/hotels/danang/radisson-red-danang-hotel/placeholder.png" alt="Radisson RED Danang Hotel" data-editable="hotel_img_6">
+                </div>
+                <div class="img-wrapper-sub"
+                  style="height: auto !important; aspect-ratio: auto !important; box-shadow: none; border-radius: 0; background: transparent; overflow: visible !important;">
+                  <div class="hotel-image-wrapper"
+                    style="aspect-ratio: 4/3; position: relative; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.06);">
+                    <img src="/assets/hotels/danang/radisson-red-danang-hotel/placeholder.png" alt="Radisson RED Danang Hotel Room" data-editable="hotel_room_img_6"
+                      style="width: 100%; height: 100%; object-fit: cover;">
+                  </div>
+                  <div class="hotel-room-type"
+                    style="margin-top: 8px; font-size: 13px; font-weight: 500; color: var(--text-muted, #7a7367) !important; text-align: left; padding-left: 4px; display: block;"
+                    data-editable="hotel_room_type_6">Superior King Room</div>
+                </div>
+              </div>
+
+              <!-- Footer Columns (Introduction & Info/Tel) -->
+              <div class="hotel-info-block">
+                <div class="hotel-header-mobile">
+                  <div class="hotel-subtitle hotel-city" data-editable="hotel_city_6">DA NANG, VIETNAM</div>
+                  <h3 class="hotel-name hotel-title font-serif" data-editable="hotel_name_6">Radisson RED Danang Hotel</h3>
+                </div>
+
+                <div class="hotel-desc-mobile">
+                  
+                  <p class="hotel-desc" data-editable="hotel_intro_6">Radisson RED Danang Hotel offers refined luxury accommodations, personalized service, and modern comforts.</p>
+                  
+
+                  <div class="hotel-tags">
+                    <span data-editable="hotel_date_6">
+                      
+                      <span class="ltr-token">06 Apr – 08 Apr 2027</span>
+                      
+                    </span>
+                    <span class="tel" data-editable="hotel_tel_6">TEL: <span
+                        class="ltr-token">+84 28 3933 3226</span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          
+          
+          
+          
+          
+          <div class="hotel-card-editorial">
+            <div class="hotel-editorial-grid even-row">
+
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+
+              <!-- Side-by-Side Images -->
+              <div class="hotel-images-group hotel-images-grid even-group">
+                <div class="img-wrapper-main hotel-image-wrapper">
+                  <img src="/assets/hotels/quang-nam/la-siesta-hoi-an-resort-spa/placeholder.png" alt="La Siesta Hoi An Resort &amp; Spa" data-editable="hotel_img_7">
+                </div>
+                <div class="img-wrapper-sub"
+                  style="height: auto !important; aspect-ratio: auto !important; box-shadow: none; border-radius: 0; background: transparent; overflow: visible !important;">
+                  <div class="hotel-image-wrapper"
+                    style="aspect-ratio: 4/3; position: relative; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.06);">
+                    <img src="/assets/hotels/quang-nam/la-siesta-hoi-an-resort-spa/placeholder.png" alt="La Siesta Hoi An Resort &amp; Spa Room" data-editable="hotel_room_img_7"
+                      style="width: 100%; height: 100%; object-fit: cover;">
+                  </div>
+                  <div class="hotel-room-type"
+                    style="margin-top: 8px; font-size: 13px; font-weight: 500; color: var(--text-muted, #7a7367) !important; text-align: left; padding-left: 4px; display: block;"
+                    data-editable="hotel_room_type_7">Deluxe Balcony Queen Classic Wing</div>
+                </div>
+              </div>
+
+              <!-- Footer Columns (Introduction & Info/Tel) -->
+              <div class="hotel-info-block">
+                <div class="hotel-header-mobile">
+                  <div class="hotel-subtitle hotel-city" data-editable="hotel_city_7">HOI AN, VIETNAM</div>
+                  <h3 class="hotel-name hotel-title font-serif" data-editable="hotel_name_7">La Siesta Hoi An Resort &amp; Spa</h3>
+                </div>
+
+                <div class="hotel-desc-mobile">
+                  
+                  <p class="hotel-desc" data-editable="hotel_intro_7">La Siesta Hoi An Resort &amp; Spa offers refined luxury accommodations, personalized service, and modern comforts.</p>
+                  
+
+                  <div class="hotel-tags">
+                    <span data-editable="hotel_date_7">
+                      
+                      <span class="ltr-token">08 Apr – 10 Apr 2027</span>
+                      
+                    </span>
+                    <span class="tel" data-editable="hotel_tel_7">TEL: <span
+                        class="ltr-token">+84 28 3933 3226</span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          
+          
+          
+          
+          
+          <div class="hotel-card-editorial">
+            <div class="hotel-editorial-grid odd-row">
+
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+
+              <!-- Side-by-Side Images -->
+              <div class="hotel-images-group hotel-images-grid odd-group">
+                <div class="img-wrapper-main hotel-image-wrapper">
+                  <img src="/assets/hotels/saigon/mai-house/exterior/exterior.jpg" alt="Mai House Hotel" data-editable="hotel_img_8">
+                </div>
+                <div class="img-wrapper-sub"
+                  style="height: auto !important; aspect-ratio: auto !important; box-shadow: none; border-radius: 0; background: transparent; overflow: visible !important;">
+                  <div class="hotel-image-wrapper"
+                    style="aspect-ratio: 4/3; position: relative; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.06);">
+                    <img src="/assets/hotels/saigon/mai-house/interior/interior_1.jpg" alt="Mai House Hotel Room" data-editable="hotel_room_img_8"
+                      style="width: 100%; height: 100%; object-fit: cover;">
+                  </div>
+                  <div class="hotel-room-type"
+                    style="margin-top: 8px; font-size: 13px; font-weight: 500; color: var(--text-muted, #7a7367) !important; text-align: left; padding-left: 4px; display: block;"
+                    data-editable="hotel_room_type_8">Premium King Room</div>
+                </div>
+              </div>
+
+              <!-- Footer Columns (Introduction & Info/Tel) -->
+              <div class="hotel-info-block">
+                <div class="hotel-header-mobile">
+                  <div class="hotel-subtitle hotel-city" data-editable="hotel_city_8">HO CHI MINH CITY, VIETNAM</div>
+                  <h3 class="hotel-name hotel-title font-serif" data-editable="hotel_name_8">Mai House Hotel</h3>
+                </div>
+
+                <div class="hotel-desc-mobile">
+                  
+                  <p class="hotel-desc" data-editable="hotel_intro_8">Mai House Saigon Hotel is a luxury 5-star hotel ideally located in District 3, right next to the vibrant center of District 1 in Ho Chi Minh City. Featuring an elegant Neoclassical architecture with a touch of timeless nostalgia, Mai House offers guest spaces that blend modern luxury with warm hospitality and attentive service.</p>
+                  
+
+                  <div class="hotel-tags">
+                    <span data-editable="hotel_date_8">
+                      
+                      <span class="ltr-token">10 Apr – 12 Apr 2027</span>
+                      
+                    </span>
+                    <span class="tel" data-editable="hotel_tel_8">TEL: <span
+                        class="ltr-token">+84 28 3933 3226</span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          
+          
+        </div>
+        
+
+        
         <div
           style="margin-top: 32px; padding: 18px; background: color-mix(in srgb, var(--accent) 6%, transparent); border-radius: 0; border: 1px dashed var(--accent);">
           <strong
-            style="color: var(--accent); text-transform: uppercase; font-size: 11px; letter-spacing: 0.12em; display: block; margin-bottom: 6px;">{{
-            "Room Notes & Special Requests" | translate(lang) }}</strong>
-          <div data-editable="room_notes" style="font-size: 14px; color: var(--text-muted);">{{ room_notes |
-            rtl_mixed(lang) }}</div>
+            style="color: var(--accent); text-transform: uppercase; font-size: 11px; letter-spacing: 0.12em; display: block; margin-bottom: 6px;">Room Notes &amp; Special Requests</strong>
+          <div data-editable="room_notes" style="font-size: 14px; color: var(--text-muted);">Double Room / Twin sharing. Early check-in included in Hanoi.</div>
         </div>
-        {% endif %}
+        
       </div>
     </section>
 
@@ -4236,7 +5722,7 @@
           <!-- LEFT: 55% Image -->
           <div class="stays-intro-image">
             <div style="aspect-ratio: 4/5; overflow: hidden; position: relative;">
-              <img src="{{ img_hotel_divider or img_2 or img_0 }}" alt="Selected Stays"
+              <img src="/assets/da-nang/danang1.jpg" alt="Selected Stays"
                 style="width: 100%; height: 100%; object-fit: cover;" data-editable="img_hotel_divider">
             </div>
           </div>
@@ -4247,26 +5733,26 @@
               <span
                 style="font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; color: var(--accent); text-transform: uppercase;"
                 data-editable="divider_hotel_kicker">
-                {{ divider_hotel_kicker | default('THE JOURNEY, BROUGHT TOGETHER') }}
+                THE JOURNEY, BROUGHT TOGETHER
               </span>
             </div>
 
             <h2
               style="font-family: var(--font-heading); font-size: clamp(36px, 4vw, 56px); line-height: 1.1; font-weight: 400; color: var(--text-main); margin-bottom: 40px;"
               data-editable="divider_hotel_title">
-              {{ divider_hotel_title | default('Considered in Full') }}
+              Considered in Full
             </h2>
 
             <p style="font-size: 16px; line-height: 1.7; color: var(--text-muted); margin-bottom: 32px; max-width: 480px;"
               data-editable="divider_hotel_tagline">
-              {{ divider_hotel_tagline | default('The stays, private arrangements and experiences described so far are
+              The stays, private arrangements and experiences described so far are
               gathered here as one considered whole. What follows is the practical outline of the journey—quietly
-              arranged, carefully paced and shaped around your comfort throughout.') }}
+              arranged, carefully paced and shaped around your comfort throughout.
             </p>
 
             <p style="font-size: 16px; line-height: 1.7; color: var(--text-main); font-style: italic; max-width: 480px;"
               data-editable="divider_hotel_closing">
-              {{ divider_hotel_closing | default('The next section presents the journey in practical terms.') }}
+              The next section presents the journey in practical terms.
             </p>
           </div>
 
@@ -4284,115 +5770,198 @@
           <div>
             <div class="kicker"
               style="color: var(--accent); margin-bottom: 8px; font-size: 11px; letter-spacing: 0.16em; font-weight: 700; text-transform: uppercase;"
-              data-editable="pricing_kicker">{{ pricing_kicker | default("Package Pricing" | translate(lang)) }}</div>
-            <h2 style="margin-bottom: 0;" data-editable="pricing_h2">{{pricing_h2}}</h2>
+              data-editable="pricing_kicker">Package Pricing</div>
+            <h2 style="margin-bottom: 0;" data-editable="pricing_h2">Journey Investment: USD 2,720</h2>
           </div>
           <div>
-            <p style="margin-bottom: 0;" data-editable="pricing_p">{{pricing_p}}</p>
+            <p style="margin-bottom: 0;" data-editable="pricing_p">Total: Sara (2 Pax). Currency: USD. Final rates subject to reconfirmation.</p>
           </div>
         </div>
 
         <div class="investment-list">
-          {% for opt in price_options %}
+          
           <div class="investment-row">
-            <div class="investment-num">{% if loop.index < 10 %}0{% endif %}{{ loop.index }}</div>
+            <div class="investment-num">01</div>
 
                 <div class="investment-col">
-                  <div class="investment-title" data-editable="price_opt_cat_{{ loop.index }}">{{ opt.hotelCategory }}
+                  <div class="investment-title" data-editable="price_opt_cat_1">Price Per Person (USD)
                   </div>
-                  {% if opt.optionName %}
-                  <div class="investment-desc" data-editable="price_opt_name_{{ loop.index }}">{{ opt.optionName }}
+                  
+                  <div class="investment-desc" data-editable="price_opt_name_1">Based on 2 Pax sharing
                   </div>
-                  {% endif %}
+                  
                 </div>
 
                 <div class="investment-col">
-                  {% if opt.is_total %}
+                  
                   <div class="investment-price">
-                    <span class="ltr-token" data-editable="price_total_{{ loop.index }}">{{ opt.totalPrice.displayText
-                      or ('{:,.0f}'.format(opt.totalPrice.amount) ~ ' ' ~ opt.totalPrice.currency) }}</span>
+                    <span class="ltr-token" data-editable="price_pax_1">USD 2,720 / person</span>
                   </div>
-                  <div class="investment-desc">
-                    {{ "Per person:" | translate(lang) }} <span class="ltr-token"
-                      data-editable="price_pax_{{ loop.index }}">{{ opt.pricePerPerson.displayText or
-                      ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~ opt.pricePerPerson.currency) }}</span>
-                  </div>
-                  {% else %}
-                  <div class="investment-price">
-                    <span class="ltr-token" data-editable="price_pax_{{ loop.index }}">{{ opt.pricePerPerson.displayText
-                      or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~ opt.pricePerPerson.currency) }}</span>
-                  </div>
-                  {% endif %}
+                  
                 </div>
 
                 <div class="investment-col" style="align-items: flex-end;">
-                  {% if opt.isConfirmedMainOption %}
-                  <div class="investment-badge confirmed">{{ "✓ CONFIRMED MAIN OPTION" | translate(lang) }}</div>
-                  {% elif opt.isAlternativeOption %}
-                  <div class="investment-badge alternative">{{ "ALTERNATIVE OPTION" | translate(lang) }}</div>
-                  {% endif %}
+                  
+                  <div class="investment-badge confirmed">✓ CONFIRMED MAIN OPTION</div>
+                  
                 </div>
             </div>
-            {% endfor %}
+            
+          <div class="investment-row">
+            <div class="investment-num">02</div>
+
+                <div class="investment-col">
+                  <div class="investment-title" data-editable="price_opt_cat_2">Price Per Person (EUR)
+                  </div>
+                  
+                  <div class="investment-desc" data-editable="price_opt_name_2">Equivalent EUR rate
+                  </div>
+                  
+                </div>
+
+                <div class="investment-col">
+                  
+                  <div class="investment-price">
+                    <span class="ltr-token" data-editable="price_pax_2">USD 2,380 / person</span>
+                  </div>
+                  
+                </div>
+
+                <div class="investment-col" style="align-items: flex-end;">
+                  
+                  <div class="investment-badge confirmed">✓ CONFIRMED MAIN OPTION</div>
+                  
+                </div>
+            </div>
+            
           </div>
 
           <div class="no-print" style="margin-top: 32px; text-align: center;">
             <button type="button" onclick="addPriceOption()"
               style="background: var(--bg-alt); color: var(--text-main); border: 1px dashed var(--line); padding: 12px 24px; border-radius: 4px; font-size: 13px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
-              + {{ "Add Option" | translate(lang) }}
+              + Add Option
             </button>
           </div>
 
-          {% if price_cond_paras and price_cond_paras[0] %}
+          
           <div class="important-note-container"
             style="margin-top: 48px; padding-top: 24px; border-top: 1px solid color-mix(in srgb, var(--primary) 20%, transparent); font-size: 14px; color: var(--text-main); line-height: 1.6; text-align: left;">
             <strong
-              style="color: var(--primary); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.15em; font-size: 11px; font-weight: 700;">{{
-              "Important Note" | translate(lang) }}</strong>
-            <p style="margin: 0;" data-editable="price_cond_first">{{ price_cond_paras[0] }}</p>
+              style="color: var(--primary); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.15em; font-size: 11px; font-weight: 700;">Important Note</strong>
+            <p style="margin: 0;" data-editable="price_cond_first">Rates are indicative and subject to reconfirmation at the time of booking.</p>
           </div>
-          {% endif %}
+          
         </div>
     </section>
 
     <section>
       <div class="container">
         <div class="section-head" style="grid-template-columns: 1fr; margin-bottom: 32px;">
-          <h2 data-editable="inc_exc_h2">{{ inclusions_title | default("What Your Journey Includes" | translate(lang))
-            }}</h2>
+          <h2 data-editable="inc_exc_h2">What Your Journey Includes</h2>
         </div>
         <div class="two-col">
           <article class="panel">
-            <h3>{{ "Inclusions" | translate(lang) }}</h3>
-            {% if inclusions_lede %}
+            <h3>Inclusions</h3>
+            
             <p style="font-size:14px; color:var(--text-muted); line-height:1.6; margin-bottom:16px; margin-top:-8px;">
-              {{inclusions_lede}}</p>
-            {% endif %}
+              Your journey has been thoughtfully arranged to ensure a seamless and comfortable experience throughout.</p>
+            
             <ul id="inclusions-list" style="list-style-type:none; padding-left:0;">
-              {% for item in inclusions %}
-              {% if item is mapping %}
-              <li style="margin-bottom:16px; line-height:1.6;">
-                <strong style="color:var(--primary); display:block; font-size:15px; margin-bottom:2px;">{{ item.title
-                  }}</strong>
-                <span style="font-size:13px; color:var(--text-muted);">{{ item.desc }}</span>
-              </li>
-              {% else %}
+              
+              
               <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;"
-                data-editable="inc_{{ loop.index }}">{{item}}</li>
-              {% endif %}
-              {% endfor %}
+                data-editable="inc_1">Airport transfer, Early check-in, Welcome Dinner, Evening Walking Tour.</li>
+              
+              
+              
+              <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;"
+                data-editable="inc_2">Private AC transfer, guide, entrance tickets, Trang An boat tour, Lunch.</li>
+              
+              
+              
+              <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;"
+                data-editable="inc_3">Private transfer, Emeraude Cruise, Captain Suite, Lunch, Dinner.</li>
+              
+              
+              
+              <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;"
+                data-editable="inc_4">Morning cruise activity, transfer back to Hanoi, hotel stay.</li>
+              
+              
+              
+              <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;"
+                data-editable="inc_5">Private guide, entrance fees, city tour, Lunch.</li>
+              
+              
+              
+              <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;"
+                data-editable="inc_6">Incense &amp; Hat village tour, transfer to Hanoi station, Chapa Express Suite Cabin, Lunch.</li>
+              
+              
+              
+              <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;"
+                data-editable="inc_7">Station pickup, guided Sapa tour, bungalow stay, Lunch, Dinner.</li>
+              
+              
+              
+              <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;"
+                data-editable="inc_8">Airport transfer, domestic flight, Da Nang pickup &amp; hotel stay, Lunch.</li>
+              
+              
+              
+              <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;"
+                data-editable="inc_9">Private guide &amp; vehicle, entrance tickets, Lunch.</li>
+              
+              
+              
+              <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;"
+                data-editable="inc_10">Transfer to Hoi An, guided walking tour, resort check-in, Lunch, Dinner.</li>
+              
+              
+              
+              <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;"
+                data-editable="inc_11">Countryside cycling tour, guide, tailoring recommendation, Lunch.</li>
+              
+              
+              
+              <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;"
+                data-editable="inc_12">Airport transfers, domestic flight, Cu Chi Tunnels entry &amp; tour, Lunch.</li>
+              
+              
+              
+              <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;"
+                data-editable="inc_13">Private Mekong excursion, boat trip, guide, Lunch.</li>
+              
+              
+              
+              <li style="margin-bottom:8px; line-height:1.6; list-style-type:disc; margin-left:20px;"
+                data-editable="inc_14">Half day city tour, airport departure transfer, Dinner.</li>
+              
+              
             </ul>
           </article>
           <article class="panel">
-            <h3>{{ exclusions_title | default("Exclusions" | translate(lang)) }}</h3>
-            {% if exclusions_lede %}
+            <h3>Exclusions</h3>
+            
             <p style="font-size:14px; color:var(--text-muted); line-height:1.6; margin-bottom:16px; margin-top:-8px;">
-              {{exclusions_lede}}</p>
-            {% endif %}
+              To keep your journey transparent and clearly defined, the following are not included unless specifically stated otherwise:</p>
+            
             <ul id="exclusions-list" style="list-style-type:disc; padding-left:20px;">
-              {% for item in exclusions %}
-              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_{{ loop.index }}">{{item}}</li>
-              {% endfor %}
+              
+              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_1">International flights</li>
+              
+              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_2">Visa fees and travel documentation</li>
+              
+              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_3">Travel insurance</li>
+              
+              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_4">Personal expenses</li>
+              
+              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_5">Optional experiences not specified in the itinerary</li>
+              
+              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_6">Tips and gratuities</li>
+              
+              <li style="margin-bottom:8px; line-height:1.6;" data-editable="exc_7">Any services not expressly listed as included</li>
+              
             </ul>
           </article>
         </div>
@@ -4440,21 +6009,18 @@
           <!-- Left side -->
           <div>
             <div class="kicker overline" data-editable="payment_kicker"
-              style="color: var(--accent); margin-bottom: 16px;">{{ payment_kicker | default("Important Notes" |
-              translate(lang)) }}</div>
+              style="color: var(--accent); margin-bottom: 16px;">Important Notes</div>
             <h2 class="font-serif" data-editable="payment_title"
               style="font-size: clamp(36px, 4vw, 56px); color: var(--primary); line-height: 1.1; margin: 0 0 24px;">
-              {{ payment_title | default("Booking & Payment Terms" | translate(lang)) }}
+              Booking &amp; Payment Terms
             </h2>
             <p data-editable="payment_desc"
               style="color: var(--text-muted); font-size: 16px; line-height: 1.6; margin-bottom: 40px; max-width: 90%;">
-              {{ payment_desc | default("Commercial conditions, deposits, and cancellation policy for this booking." |
-              translate(lang)) }}
+              Commercial conditions, deposits, and cancellation policy for this booking.
             </p>
             <a href="#contact"
               style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--text-main); text-decoration: none; border-bottom: 1px solid var(--text-main); padding-bottom: 4px; transition: opacity 0.2s ease;">
-              <span data-editable="payment_cta">{{ payment_cta | default("Approve & Book Now" | translate(lang))
-                }}</span>
+              <span data-editable="payment_cta">Approve &amp; Book Now</span>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <path d="M7 7l10 10M17 7v10H7" />
@@ -4466,46 +6032,42 @@
           <div style="display: flex; flex-direction: column;">
             <div class="term-row">
               <div data-editable="payment_label_deposit"
-                style="font-family: var(--serif); font-size: 20px; color: var(--text-muted);">{{ payment_label_deposit |
-                default("Deposit" | translate(lang)) }}</div>
+                style="font-family: var(--serif); font-size: 20px; color: var(--text-muted);">Deposit</div>
               <div>
                 <div data-editable="term_deposit" style="color: var(--text-muted); font-size: 15px; line-height: 1.6;">
-                  {{ term_deposit | default("A deposit of 30% of the total tour cost is required upon confirmation of the booking. This deposit is non-refundable.<br><br>For bookings confirmed within 60 days of arrival, full payment of 100% of the total tour cost is required at the time of confirmation.", true) | safe }}
+                  30% deposit upon booking confirmation.
                 </div>
               </div>
             </div>
 
             <div class="term-row">
               <div data-editable="payment_label_balance"
-                style="font-family: var(--serif); font-size: 20px; color: var(--text-muted);">{{ payment_label_balance |
-                default("Balance" | translate(lang)) }}</div>
+                style="font-family: var(--serif); font-size: 20px; color: var(--text-muted);">Balance</div>
               <div>
                 <div data-editable="term_balance" style="color: var(--text-muted); font-size: 15px; line-height: 1.6;">
-                  {{ term_balance | default("The remaining 70% balance must be paid no later than 60 days prior to the scheduled arrival date.", true) | safe }}
+                  70% balance due 45 days prior to arrival.
                 </div>
               </div>
             </div>
 
             <div class="term-row">
               <div data-editable="payment_label_cancellation"
-                style="font-family: var(--serif); font-size: 20px; color: var(--text-muted);">{{
-                payment_label_cancellation | default("Cancellation" | translate(lang)) }}</div>
+                style="font-family: var(--serif); font-size: 20px; color: var(--text-muted);">Cancellation</div>
               <div>
                 <div data-editable="term_cancellation"
                   style="color: var(--text-muted); font-size: 15px; line-height: 1.6;">
-                  {{ term_cancellation | default("Written notice required. Cancellation fees apply based on arrival date:<ul style=\"margin: 8px 0 12px; padding-left: 20px; list-style-type: disc;\"><li style=\"margin-bottom: 4px;\"><strong>&gt; 45 days prior:</strong> Deposit forfeited (30%)</li><li style=\"margin-bottom: 4px;\"><strong>45 – 31 days prior:</strong> 50% of total tour cost</li><li style=\"margin-bottom: 4px;\"><strong>30 – 20 days prior:</strong> 75% of total tour cost</li><li style=\"margin-bottom: 4px;\"><strong>&lt; 20 days prior:</strong> 100% of total tour cost</li></ul>Any non-refundable payments, cancellation charges or penalties imposed by hotels, airlines, cruise operators and other service providers may also apply in addition to the cancellation fees stated above.", true) | safe }}
+                  Free cancellation up to 60 days prior to arrival date.
                 </div>
               </div>
             </div>
 
             <div class="term-row">
               <div data-editable="payment_label_confirmation"
-                style="font-family: var(--serif); font-size: 20px; color: var(--text-muted);">{{
-                payment_label_confirmation | default("Confirmation" | translate(lang)) }}</div>
+                style="font-family: var(--serif); font-size: 20px; color: var(--text-muted);">Confirmation</div>
               <div>
                 <div data-editable="term_confirmation"
                   style="color: var(--text-muted); font-size: 15px; line-height: 1.6;">
-                  {{ term_confirmation | default("The booking will only be considered confirmed once the required payment has been received.", true) | safe }}
+                  Instant confirmation upon deposit receipt.
                 </div>
               </div>
             </div>
@@ -4514,9 +6076,9 @@
       </div>
     </section>
 
-    {% if show_designer_section %}
+    
 
-    {% endif %}
+    
 
     <section id="meet-designer" class="no-print"
       style="background: var(--bg-alt); padding: 80px 0; position: relative; overflow: hidden; border-top: 1px solid var(--line);">
@@ -4559,22 +6121,20 @@
           <div style="text-align: center;">
             <div class="designer-img-container" id="designer-avatar-container" data-editable="designer_img"
               data-img-type="hero"
-              style="--designer-img: url('{{ designer_img | default('/assets/dias_team/hieu.jpg') }}'); margin: 0 auto 24px; width: 100%; max-width: 300px; aspect-ratio: 3/4; border-radius: 200px 200px 0 0; overflow: hidden; border: 4px solid #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.05); position: relative; background-image: url('{{ designer_img | default('/assets/dias_team/hieu.jpg') }}'); background-size: cover; background-position: center;">
+              style="--designer-img: url('/assets/dias_team/hieu.jpg'); margin: 0 auto 24px; width: 100%; max-width: 300px; aspect-ratio: 3/4; border-radius: 200px 200px 0 0; overflow: hidden; border: 4px solid #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.05); position: relative; background-image: url('/assets/dias_team/hieu.jpg'); background-size: cover; background-position: center;">
             </div>
-            <h3 style="font-family: var(--serif); font-size: 26px; color: var(--emerald); margin: 0 0 2px;" data-editable="seller_name">{{
-              seller_name or "Eddie" | rtl_mixed(lang) }}</h3>
+            <h3 style="font-family: var(--serif); font-size: 26px; color: var(--emerald); margin: 0 0 2px;" data-editable="seller_name">Eddie</h3>
             <div style="font-family: var(--serif); font-size: 16px; color: var(--emerald); margin: 0 0 8px; font-weight: 600;" data-editable="seller_subtitle">
               (Trung Hieu Pham)</div>
             <div data-editable="designer_signature"
               style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--gold-2); font-weight: 700; margin-bottom: 24px;">
-              {{ designer_signature or "TRAVEL DESIGNER" | translate(lang) }}</div>
+              TRAVEL DESIGNER</div>
 
             <div style="width: 40px; height: 1px; background: var(--gold); margin: 0 auto 24px;"></div>
 
             <p data-editable="designer_experience"
               style="font-family: var(--serif); font-style: italic; color: var(--text-muted); font-size: 15px; max-width: 240px; margin: 0 auto; line-height: 1.5;">
-              {{ designer_experience or "Present throughout the planning, quietly working behind the journey." |
-              translate(lang) }}
+              Present throughout the planning, quietly working behind the journey.
             </p>
           </div>
 
@@ -4587,23 +6147,23 @@
 
             <div data-editable="designer_kicker"
               style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--gold-2); font-weight: 700; margin-bottom: 20px;">
-              {{ designer_kicker or "YOUR JOURNEY DESIGNER" | translate(lang) }}
+              YOUR JOURNEY DESIGNER
             </div>
 
             <h2 data-editable="designer_title"
               style="font-family: var(--serif); font-size: clamp(32px, 4vw, 48px); color: var(--emerald); line-height: 1.15; margin: 0 0 24px; font-weight: 400;">
-              {{ designer_title or "Let Us Shape the Final Details Together" | translate(lang) }}
+              Let Us Shape the Final Details Together
             </h2>
 
             <div data-editable="designer_quote"
               style="font-family: var(--serif); font-style: italic; font-size: 18px; color: #70624a; line-height: 1.6; margin: 0 0 40px;">
-              “{{ designer_quote or "I believe the desire to travel is contagious—and it is my privilege to turn that inspiration into thoughtfully designed journeys filled with meaningful experiences, authentic connections, and lasting memories" | translate(lang) }}”
+              “I believe the desire to travel is contagious—and it is my privilege to turn that inspiration into thoughtfully designed journeys filled with meaningful experiences, authentic connections, and lasting memories”
             </div>
 
             <!-- Buttons -->
             <div style="display: flex; gap: 24px; margin-bottom: 48px; flex-wrap: wrap;">
               <div style="display: flex; flex-direction: column; gap: 8px;">
-                <a href="https://wa.me/{{ (contact_phone or '+84 913 393 119') | replace('+', '') | replace(' ', '') }}"
+                <a href="https://wa.me/84913393119"
                   class="btn"
                   style="background: var(--gold-2, #c5a059) !important; color: #ffffff !important; border: 1px solid var(--gold-2, #c5a059); padding: 14px 28px; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; display: flex; align-items: center; gap: 10px; font-weight: 600; text-decoration: none; border-radius: 4px;">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -4612,25 +6172,24 @@
                       d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
                     </path>
                   </svg>
-                  <span data-editable="contact_phone_btn" style="color: #ffffff !important;">{{ "CHAT ON WHATSAPP" |
-                    translate(lang) }}</span>
+                  <span data-editable="contact_phone_btn" style="color: #ffffff !important;">CHAT ON WHATSAPP</span>
                 </a>
                 <div style="font-size: 11px; color: var(--gold-2, #c5a059); opacity: 0.9; padding-left: 2px; font-weight: 500;">
-                  {{ "No.:" | translate(lang) }} <span>{{ contact_phone or "+84 913 393 119" }}</span>
+                  No.: <span>+84 913 393 119</span>
                 </div>
               </div>
               <div style="display: flex; flex-direction: column; gap: 8px;">
-                <a href="mailto:{{ seller_email or 'sales@capellatravel.com' }}" class="btn"
+                <a href="mailto:sales@capellatravel.com" class="btn"
                   style="background: transparent !important; color: var(--gold-2, #c5a059) !important; border: 1px solid rgba(197,160,89,0.5); padding: 14px 28px; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; display: flex; align-items: center; gap: 10px; font-weight: 600; text-decoration: none; border-radius: 4px;">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
                     <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                     <polyline points="22,6 12,13 2,6"></polyline>
                   </svg>
-                  <span data-editable="contact_email_btn" style="color: var(--gold-2, #c5a059) !important;">{{ "SEND AN EMAIL" | translate(lang) }}</span>
+                  <span data-editable="contact_email_btn" style="color: var(--gold-2, #c5a059) !important;">SEND AN EMAIL</span>
                 </a>
                 <div style="font-size: 11px; color: var(--gold-2, #c5a059); opacity: 0.9; padding-left: 2px; font-weight: 500;">
-                  {{ "Email:" | translate(lang) }} <span>{{ seller_email or "sales@capellatravel.com" }}</span>
+                  Email: <span>sales@capellatravel.com</span>
                 </div>
               </div>
             </div>
@@ -4648,18 +6207,14 @@
                 <div>
                   <div data-editable="final_req_title"
                     style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-main); font-weight: 700; margin-bottom: 8px;">
-                    {{ final_req_title or "FINAL DETAILS REQUIRED" | translate(lang) }}
+                    FINAL DETAILS REQUIRED
                   </div>
                   <div style="font-size: 14px; color: var(--text-muted); line-height: 1.6; margin: 0;">
-                    {% if final_req and final_req|length > 0 %}
+                    
                     <ul style="margin: 0; padding-left: 16px; display: grid; gap: 4px; list-style-type: disc;">
-                      {% for item in final_req %}<li data-editable="final_req_{{loop.index0}}">{{item}}</li>{% endfor %}
+                      <li data-editable="final_req_0">Copy of passport valid for at least 6 months and flight details.</li>
                     </ul>
-                    {% else %}
-                    <ul style="margin: 0; padding-left: 16px; display: grid; gap: 4px; list-style-type: disc;">
-                      <li data-editable="final_req_text">Copy of passport valid for 6 months.</li>
-                    </ul>
-                    {% endif %}
+                    
                   </div>
                 </div>
               </div>
@@ -4674,19 +6229,14 @@
                 <div>
                   <div data-editable="payment_label_confirmation"
                     style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-main); font-weight: 700; margin-bottom: 8px;">
-                    {{ payment_label_confirmation or "AFTER CONFIRMATION" | translate(lang) }}
+                    AFTER CONFIRMATION
                   </div>
                   <div style="font-size: 14px; color: var(--text-muted); line-height: 1.6; margin: 0;">
-                    {% if final_after and final_after|length > 0 %}
+                    
                     <ul style="margin: 0; padding-left: 16px; display: grid; gap: 4px; list-style-type: disc;">
-                      {% for item in final_after %}<li data-editable="final_after_{{loop.index0}}">{{item}}</li>{%
-                      endfor %}
+                      <li data-editable="final_after_0">24/7 dedicated local concierge and tour manager support.</li>
                     </ul>
-                    {% else %}
-                    <ul style="margin: 0; padding-left: 16px; display: grid; gap: 4px; list-style-type: disc;">
-                      <li data-editable="term_confirmation">24/7 dedicated local concierge support.</li>
-                    </ul>
-                    {% endif %}
+                    
               </div>
             </div>
 
@@ -4697,7 +6247,7 @@
   </main>
 
   <footer class="footer">
-    <div class="container" data-editable="footer_text">{{ footer_text | rtl_mixed(lang) }}</div>
+    <div class="container" data-editable="footer_text">14 Days 13 Nights - Tailor-made for Sara — Luxury quotation prepared for Sara (2 Pax).</div>
   </footer>
 
   <!-- ── Publish Bar ─────────────────────────────────────────── -->
@@ -4705,9 +6255,9 @@
     <div class="pb-left">
       <div class="pb-dot"></div>
       <div class="pb-label">
-        <span class="pb-label-desktop">✏️ {{ client_i18n.editing }} <strong
-            class="ltr-token">{{quotation_id}}</strong></span>
-        <span class="pb-label-mobile">✏️ <strong class="ltr-token">{{quotation_id}}</strong></span>
+        <span class="pb-label-desktop">✏️ Editing <strong
+            class="ltr-token">quo_2fe22ee6b227</strong></span>
+        <span class="pb-label-mobile">✏️ <strong class="ltr-token">quo_2fe22ee6b227</strong></span>
       </div>
     </div>
     <span id="publish-status"></span>
@@ -4720,17 +6270,15 @@
           <path d="M2 17l10 5 10-5"></path>
           <path d="M2 12l10 5 10-5"></path>
         </svg>
-        <span class="template-text" style="font-weight:600;">{% if template_name == 'vietnam_heritage_luxury.html'
-          %}Heritage Theme{% elif template_name == 'prototype_itinerary_imagery.html' %}Prototype Theme{% else
-          %}Brochure Theme{% endif %}</span>
+        <span class="template-text" style="font-weight:600;">Prototype Theme</span>
       </button>
       <select id="select-domain" class="no-print" style="display: none !important;">
-        <option value="https://{{ (brand.domain if brand else '') or 'journeys.vietnamsafar.vn' }}">Production</option>
+        <option value="https://journeys.vietnamsafar.vn">Production</option>
       </select>
       <button id="btn-select-domain" onclick="openDomainModal(event)" title="Select Brand">
-        <img src="{{ (brand.logo if brand else '') or '/assets/vietnam-safar-logo.png' }}"
+        <img src="/assets/brands/vietnam_safar.png"
           style="width:16px; height:16px; border-radius:50%; object-fit:contain; background:white; margin-right:4px;" />
-        <span class="domain-text" style="font-weight:600;">{{ (brand.name if brand else '') or 'Vietnam Safar' }}</span>
+        <span class="domain-text" style="font-weight:600;">Vietnam Safar</span>
       </button>
       <button id="btn-view-live" onclick="redirectToLiveVersion(event)" title="View Live Version">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -4740,7 +6288,7 @@
         </svg>
         <span class="view-text">View Live</span>
       </button>
-      <button id="btn-publish" onclick="publishPage()">🚀 {{ client_i18n.publish_to_web }}</button>
+      <button id="btn-publish" onclick="publishPage()">🚀 Publish to Web</button>
     </div>
   </div>
 
@@ -4752,30 +6300,56 @@
         <button class="pb-modal-close" onclick="closeDomainModal(event)">&times;</button>
       </div>
       <div class="pb-domain-list">
-        {% set brands_list = [
-        {'id': 'vietnam_safar', 'name': 'Vietnam Safar', 'domain': 'journeys.vietnamsafar.vn', 'logo':
-        '/assets/brands/vietnam_safar.png'},
-        {'id': 'capella_travel', 'name': 'Capella Travel', 'domain': 'journeys.capellatravel.com', 'logo':
-        '/assets/brands/capella_travel.svg'},
-        {'id': 'selvara', 'name': 'Selvara', 'domain': 'my.selvarajourneys.com', 'logo': '/assets/brands/selvara.svg'}
-        ] %}
-        {% for b in brands_list %}
-        {% set is_active = brand and brand.id == b.id %}
-        <div class="pb-domain-item {% if is_active %}active{% endif %}" data-brand="{{ b.id }}"
-          onclick="selectBrandOption('{{ b.id }}')"
+        
+        
+        
+        <div class="pb-domain-item active" data-brand="vietnam_safar"
+          onclick="selectBrandOption('vietnam_safar')"
           style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
           <div style="display:flex; align-items:center; gap:12px;">
-            <img src="{{ b.logo }}"
+            <img src="/assets/brands/vietnam_safar.png"
               style="width:28px; height:28px; border-radius:50%; object-fit:contain; background:white; border:1px solid rgba(0,0,0,0.1);" />
             <div class="pb-domain-details">
-              <div class="pb-domain-name" style="font-weight:600; font-size:14px; text-align:left;">{{ b.name }}</div>
-              <div class="pb-domain-badge prod" style="font-size:11px; color:#666;">{{ b.domain }}</div>
+              <div class="pb-domain-name" style="font-weight:600; font-size:14px; text-align:left;">Vietnam Safar</div>
+              <div class="pb-domain-badge prod" style="font-size:11px; color:#666;">journeys.vietnamsafar.vn</div>
             </div>
           </div>
           <span class="pb-domain-check"
-            style="visibility: {% if is_active %}visible{% else %}hidden{% endif %}; color:var(--primary); font-weight:bold;">✓</span>
+            style="visibility: visible; color:var(--primary); font-weight:bold;">✓</span>
         </div>
-        {% endfor %}
+        
+        
+        <div class="pb-domain-item " data-brand="capella_travel"
+          onclick="selectBrandOption('capella_travel')"
+          style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <img src="/assets/brands/capella_travel.svg"
+              style="width:28px; height:28px; border-radius:50%; object-fit:contain; background:white; border:1px solid rgba(0,0,0,0.1);" />
+            <div class="pb-domain-details">
+              <div class="pb-domain-name" style="font-weight:600; font-size:14px; text-align:left;">Capella Travel</div>
+              <div class="pb-domain-badge prod" style="font-size:11px; color:#666;">journeys.capellatravel.com</div>
+            </div>
+          </div>
+          <span class="pb-domain-check"
+            style="visibility: hidden; color:var(--primary); font-weight:bold;">✓</span>
+        </div>
+        
+        
+        <div class="pb-domain-item " data-brand="selvara"
+          onclick="selectBrandOption('selvara')"
+          style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <img src="/assets/brands/selvara.svg"
+              style="width:28px; height:28px; border-radius:50%; object-fit:contain; background:white; border:1px solid rgba(0,0,0,0.1);" />
+            <div class="pb-domain-details">
+              <div class="pb-domain-name" style="font-weight:600; font-size:14px; text-align:left;">Selvara</div>
+              <div class="pb-domain-badge prod" style="font-size:11px; color:#666;">my.selvarajourneys.com</div>
+            </div>
+          </div>
+          <span class="pb-domain-check"
+            style="visibility: hidden; color:var(--primary); font-weight:bold;">✓</span>
+        </div>
+        
       </div>
     </div>
   </div>
@@ -4788,7 +6362,7 @@
         <button class="pb-modal-close" onclick="closeTemplateModal(event)">&times;</button>
       </div>
       <div class="pb-domain-list">
-        <div class="pb-domain-item {% if template_name == 'prototype_itinerary_imagery.html' %}active{% endif %}"
+        <div class="pb-domain-item active"
           onclick="promptSwitchTemplate('prototype_itinerary_imagery.html')"
           style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
           <div style="display:flex; align-items:center; gap:12px;">
@@ -4797,16 +6371,16 @@
               <div class="pb-domain-badge prod" style="font-size:11px; color:#666;">Modern & visual layout</div>
             </div>
           </div>
-          {% if template_name == 'prototype_itinerary_imagery.html' %}
+          
           <div style="color: #4CAF50;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
               stroke-linecap="round" stroke-linejoin="round">
               <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
           </div>
-          {% endif %}
+          
         </div>
-        <div class="pb-domain-item {% if template_name == 'vietnam_heritage_luxury.html' %}active{% endif %}"
+        <div class="pb-domain-item "
           onclick="promptSwitchTemplate('vietnam_heritage_luxury.html')"
           style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
           <div style="display:flex; align-items:center; gap:12px;">
@@ -4815,16 +6389,9 @@
               <div class="pb-domain-badge prod" style="font-size:11px; color:#666;">Classic & structured layout</div>
             </div>
           </div>
-          {% if template_name == 'vietnam_heritage_luxury.html' %}
-          <div style="color: #4CAF50;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
-              stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-          </div>
-          {% endif %}
+          
         </div>
-        <div class="pb-domain-item {% if template_name == 'prototype_itinerary_imagery.html' %}active{% endif %}"
+        <div class="pb-domain-item active"
           onclick="promptSwitchTemplate('prototype_itinerary_imagery.html')"
           style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
           <div style="display:flex; align-items:center; gap:12px;">
@@ -4834,14 +6401,14 @@
               <div class="pb-domain-badge prod" style="font-size:11px; color:#666;">Itinerary with Imagery</div>
             </div>
           </div>
-          {% if template_name == 'prototype_itinerary_imagery.html' %}
+          
           <div style="color: #4CAF50;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
               stroke-linecap="round" stroke-linejoin="round">
               <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
           </div>
-          {% endif %}
+          
         </div>
       </div>
     </div>
@@ -4874,10 +6441,9 @@
         <div class="ring"></div>
         <div class="active-glow"></div>
       </div>
-      <h3>{{ "Translating Journey..." | translate(lang) }}</h3>
-      <p>{{ "Crafting a bespoke luxury narrative in" | translate(lang) }} <span id="loading-lang-name">{{
-          client_i18n.language_names.en }}</span></p>
-      <button class="btn-cancel" onclick="cancelTranslation()">{{ "CANCEL" | translate(lang) }}</button>
+      <h3>Translating Journey...</h3>
+      <p>Crafting a bespoke luxury narrative in <span id="loading-lang-name">English</span></p>
+      <button class="btn-cancel" onclick="cancelTranslation()">CANCEL</button>
     </div>
   </div>
 
@@ -4938,8 +6504,8 @@
     })();
 
     let domainModalMode = 'publish';
-    let modalLatestVersion = '{{ latest_version or 1 }}';
-    let modalItemId = '{{quotation_id}}';
+    let modalLatestVersion = '1';
+    let modalItemId = 'quo_2fe22ee6b227';
     let modalItemType = 'quotations';
 
     // Parse path and fetch latest version info on load
@@ -5005,7 +6571,7 @@
     function redirectToLiveVersion(event) {
       if (event) event.stopPropagation();
 
-      const brandDomain = "{{ (brand.domain if brand else '') or 'journeys.vietnamsafar.vn' }}";
+      const brandDomain = "journeys.vietnamsafar.vn";
       const targetOrigin = `https://${brandDomain}`;
 
       if (window.location.pathname.includes('/published/')) {
@@ -5034,10 +6600,10 @@
   </script>
 
   <script id="translation-status" type="application/json">
-    {{ translation_status | tojson | safe }}
+    {"available_langs": ["en"], "baseline_lang": "en"}
   </script>
   <script id="client-i18n" type="application/json">
-    {{ client_i18n | tojson | safe }}
+    {"change": "Change", "committing_to_github": "Committing to GitHub...", "editing": "Editing", "enable_notifications_browser": "Please enable notifications in your browser settings to receive updates.", "go_to_slide": "Go to slide", "language_names": {"ar": "Arabic", "en": "English", "vi": "Vietnamese"}, "next_image": "Next image", "notification_title": "Enable Notifications", "previous_image": "Previous image", "publish_to_web": "Publish to Web", "publishing": "Publishing...", "remove_block": "Remove this block", "remove_block_confirm": "Remove this block? This action cannot be undone.", "test_notification_body": "Your private guide has been assigned: Mr. Minh (Phone: +84 911 538 738).", "test_notification_title": "Itinerary Update", "translate_block": "Translate this block"}
   </script>
 
   <script id="editor-scripts">
@@ -5077,19 +6643,19 @@
     })();
 
     if (typeof window.QUOTATION_ID === 'undefined') {
-      window.QUOTATION_ID = "{{quotation_id}}";
+      window.QUOTATION_ID = "quo_2fe22ee6b227";
     }
     if (typeof window.CURRENT_LANG === 'undefined') {
-      window.CURRENT_LANG = "{{ lang or 'en' }}";
+      window.CURRENT_LANG = "en";
     }
     const CLIENT_I18N = JSON.parse(document.getElementById('client-i18n').textContent);
 
     // Set globals for compatibility if not already defined
     if (typeof QUOTATION_ID === 'undefined') {
-      window.QUOTATION_ID = "{{quotation_id}}";
+      window.QUOTATION_ID = "quo_2fe22ee6b227";
     }
     if (typeof CURRENT_LANG === 'undefined') {
-      window.CURRENT_LANG = "{{ lang or 'en' }}";
+      window.CURRENT_LANG = "en";
     }
 
     // Dynamically inject inline translate button styles to support previously published static pages
@@ -5526,7 +7092,7 @@
     document.addEventListener("DOMContentLoaded", function () {
       const selectDomain = document.getElementById('select-domain');
       if (selectDomain) {
-        selectDomain.value = "https://{{ (brand.domain if brand else '') or 'journeys.vietnamsafar.vn' }}";
+        selectDomain.value = "https://journeys.vietnamsafar.vn";
       }
       try {
         const brandDataEl = document.getElementById('brand-data');
@@ -5754,24 +7320,45 @@
 
   <script id="destination-images" type="application/json">
     {
-      {% for dest in destinations %}
-        "{{ dest.slug }}": "{{ dest.image_url or (dest.images[0] if dest.images else ((brand.logo if brand else '') or '/assets/vietnam-safar-logo.png')) }}"
-        {% if not loop.last %},{% endif %}
-      {% endfor %}
+      
+        "ha-noi": "/assets/ha-noi/hero/hero1.jpg"
+        ,
+      
+        "ho-chi-minh": "/assets/ho-chi-minh/hero/hero2.jpg"
+        ,
+      
+        "da-nang": "/assets/da-nang/hero/hero2.jpg"
+        ,
+      
+        "quang-nam": "/assets/quang-nam/myson.jpg"
+        ,
+      
+        "quang-ninh": "/assets/quang-ninh/hero/hero1.jpg"
+        ,
+      
+        "lao-cai": "/assets/lao-cai/hero/hero6.jpg"
+        ,
+      
+        "mekong": "/assets/mekong/traodoihanghoa.jpg"
+        ,
+      
+        "ninh-binh": "/assets/ninh-binh/hero/hero1.jpg"
+        
+      
     }
   </script>
 
   <script id="itinerary-data" type="application/json">
-    {{ itinerary | tojson | safe }}
+    [{"activities": ["Airport transfer, Early check-in, Welcome Dinner, Evening Walking Tour."], "date": "2027-03-30", "dayNumber": 1, "description": ["Arrival in Hanoi by CX741. Enjoy pre-booked Early Check-in at Hanoi Le Jardin Hotel \u0026 Spa and rest for half a day. In the evening, gather for a Welcome Dinner followed by an Evening Hanoi Short Walking Tour to ease into the local rhythm."], "destinations": ["Hanoi"], "lang": "en", "meals": ["Dinner"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Hanoi", "title": "Day 1 \u2014 Hanoi"}, {"activities": ["Private AC transfer, guide, entrance tickets, Trang An boat tour, Lunch."], "date": "2027-03-31", "dayNumber": 2, "description": ["Full Day Ninh Binh Tour from Hanoi. Discover the historic ancient capital of Hoa Lu, the grand Bai Dinh Pagoda, serene sampan boat ride through Trang An landscape, and panoramic views from Mua Cave."], "destinations": ["Hanoi"], "lang": "en", "meals": ["Breakfast, Lunch"], "notes": ["Sense of Pace: Moderate"], "overnight": "Hanoi", "title": "Day 2 \u2014 Hanoi"}, {"activities": ["Private transfer, Emeraude Cruise, Captain Suite, Lunch, Dinner."], "date": "2027-04-01", "dayNumber": 3, "description": ["Morning transfer to Ha Long Bay. Embark on the Emeraude Classic Cruise and check into the Captain Suite. Enjoy afternoon cruise activities, kayaking, swimming, and an overnight stay amidst UNESCO karst waters."], "destinations": ["Halong Bay"], "lang": "en", "meals": ["Breakfast, Lunch, Dinner"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Halong Bay", "title": "Day 3 \u2014 Halong Bay"}, {"activities": ["Morning cruise activity, transfer back to Hanoi, hotel stay."], "date": "2027-04-02", "dayNumber": 4, "description": ["Morning cruise activities on Ha Long Bay including Tai Chi and cave visits. Enjoy brunch on board before disembarking and transferring back to Hanoi Le Jardin Hotel \u0026 Spa for relaxation."], "destinations": ["Hanoi"], "lang": "en", "meals": ["Breakfast, Lunch"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Hanoi", "title": "Day 4 \u2014 Hanoi"}, {"activities": ["Private guide, entrance fees, city tour, Lunch."], "date": "2027-04-03", "dayNumber": 5, "description": ["Full Day Hanoi City Tour exploring historic landmarks such as Ho Chi Minh Mausoleum, One Pillar Pagoda, Temple of Literature, and the vibrant Old Quarter."], "destinations": ["Hanoi"], "lang": "en", "meals": ["Breakfast, Lunch"], "notes": ["Sense of Pace: Immersive"], "overnight": "Hanoi", "title": "Day 5 \u2014 Hanoi"}, {"activities": ["Incense \u0026 Hat village tour, transfer to Hanoi station, Chapa Express Suite Cabin, Lunch."], "date": "2027-04-04", "dayNumber": 6, "description": ["Hat Village \u0026 Incense Village Half Day Tour from Hanoi. Free afternoon in Hanoi for leisure and exploration. In the evening, transfer to Hanoi Railway Station to board the overnight Chapa Express Train to Sapa in a Suite Queen Cabin."], "destinations": ["Hanoi"], "lang": "en", "meals": ["Breakfast, Lunch"], "notes": ["Sense of Pace: Moderate"], "overnight": "Hanoi", "title": "Day 6 \u2014 Hanoi"}, {"activities": ["Station pickup, guided Sapa tour, bungalow stay, Lunch, Dinner."], "date": "2027-04-05", "dayNumber": 7, "description": ["Arrival in Lao Cai/Sapa. Embark on a Full Day Sapa Tour exploring lush rice terraces, local hill-tribe villages, and check in at Sapa Jade Hill Resort (Mountain View Bungalow)."], "destinations": ["Sapa"], "lang": "en", "meals": ["Breakfast, Lunch, Dinner"], "notes": ["Sense of Pace: Immersive"], "overnight": "Sapa", "title": "Day 7 \u2014 Sapa"}, {"activities": ["Airport transfer, domestic flight, Da Nang pickup \u0026 hotel stay, Lunch."], "date": "2027-04-06", "dayNumber": 8, "description": ["Enjoy a free morning in Sapa. After lunch, transfer to the airport for a domestic flight to Da Nang. Upon arrival, private transfer to Radisson RED Danang Hotel."], "destinations": ["Da Nang"], "lang": "en", "meals": ["Breakfast, Lunch"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Da Nang", "title": "Day 8 \u2014 Da Nang"}, {"activities": ["Private guide \u0026 vehicle, entrance tickets, Lunch."], "date": "2027-04-07", "dayNumber": 9, "description": ["Full Day Da Nang City Tour highlighting Marble Mountains, Son Tra Peninsula (Linh Ung Pagoda), Dragon Bridge, and local cultural spots."], "destinations": ["Da Nang"], "lang": "en", "meals": ["Breakfast, Lunch"], "notes": ["Sense of Pace: Moderate"], "overnight": "Da Nang", "title": "Day 9 \u2014 Da Nang"}, {"activities": ["Transfer to Hoi An, guided walking tour, resort check-in, Lunch, Dinner."], "date": "2027-04-08", "dayNumber": 10, "description": ["Full Day Hoi An Tour. Transfer to Hoi An Ancient Town, explore lantern-lit streets, Japanese Covered Bridge, and stay at La Siesta Hoi An Resort \u0026 Spa (Deluxe Balcony Queen Classic Wing)."], "destinations": ["Hoi An"], "lang": "en", "meals": ["Breakfast, Lunch, Dinner"], "notes": ["Sense of Pace: Immersive"], "overnight": "Hoi An", "title": "Day 10 \u2014 Hoi An"}, {"activities": ["Countryside cycling tour, guide, tailoring recommendation, Lunch."], "date": "2027-04-09", "dayNumber": 11, "description": ["Morning Hoi An Countryside Cycling Tour through peaceful villages and organic gardens. Free afternoon in Hoi An Ancient Town with custom tailoring recommendations."], "destinations": ["Hoi An"], "lang": "en", "meals": ["Breakfast, Lunch"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Hoi An", "title": "Day 11 \u2014 Hoi An"}, {"activities": ["Airport transfers, domestic flight, Cu Chi Tunnels entry \u0026 tour, Lunch."], "date": "2027-04-10", "dayNumber": 12, "description": ["Transfer to Da Nang Airport and fly to Ho Chi Minh City. In the afternoon, take a guided tour of the historic Cu Chi Tunnels before checking in at Mai House (Premium King Room)."], "destinations": ["Ho Chi Minh City"], "lang": "en", "meals": ["Breakfast, Lunch"], "notes": ["Sense of Pace: Moderate"], "overnight": "Ho Chi Minh City", "title": "Day 12 \u2014 Ho Chi Minh City"}, {"activities": ["Private Mekong excursion, boat trip, guide, Lunch."], "date": "2027-04-11", "dayNumber": 13, "description": ["Full Day Mekong Delta Tour. Cruise down peaceful waterways, visit local artisanal workshops, taste tropical fruits, and experience southern river life."], "destinations": ["Ho Chi Minh City"], "lang": "en", "meals": ["Breakfast, Lunch"], "notes": ["Sense of Pace: Active"], "overnight": "Ho Chi Minh City", "title": "Day 13 \u2014 Ho Chi Minh City"}, {"activities": ["Half day city tour, airport departure transfer, Dinner."], "date": "2027-04-12", "dayNumber": 14, "description": ["Half Day Ho Chi Minh City Tour exploring Saigon Notre-Dame Basilica, Central Post Office, and War Remnants Museum. Relax before private transfer to the airport for departure flight."], "destinations": ["Ho Chi Minh City"], "lang": "en", "meals": ["Breakfast, Dinner"], "notes": ["Sense of Pace: Relaxed"], "overnight": "Ho Chi Minh City", "title": "Day 14 \u2014 Ho Chi Minh City"}]
   </script>
   <script id="route-stops-data" type="application/json">
-    {{ route_stops | tojson | safe }}
+    [{"dayNumber": 1, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "Day 1 \u2014 Hanoi", "showMarker": true, "stopOrder": 1}, {"dayNumber": 2, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "Day 2 \u2014 Hanoi", "showMarker": true, "stopOrder": 1}, {"dayNumber": 3, "destination": "Halong Bay", "displayName": "Halong Bay", "kind": "overnight", "mapTitle": "Day 3 \u2014 Halong Bay", "showMarker": true, "stopOrder": 1}, {"dayNumber": 4, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "Day 4 \u2014 Hanoi", "showMarker": true, "stopOrder": 1}, {"dayNumber": 5, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "Day 5 \u2014 Hanoi", "showMarker": true, "stopOrder": 1}, {"dayNumber": 6, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "Day 6 \u2014 Hanoi", "showMarker": true, "stopOrder": 1}, {"dayNumber": 7, "destination": "Sapa", "displayName": "Sapa", "kind": "overnight", "mapTitle": "Day 7 \u2014 Sapa", "showMarker": true, "stopOrder": 1}, {"dayNumber": 8, "destination": "Da Nang", "displayName": "Da Nang", "kind": "overnight", "mapTitle": "Day 8 \u2014 Da Nang", "showMarker": true, "stopOrder": 1}, {"dayNumber": 9, "destination": "Da Nang", "displayName": "Da Nang", "kind": "overnight", "mapTitle": "Day 9 \u2014 Da Nang", "showMarker": true, "stopOrder": 1}, {"dayNumber": 10, "destination": "Hoi An", "displayName": "Hoi An", "kind": "overnight", "mapTitle": "Day 10 \u2014 Hoi An", "showMarker": true, "stopOrder": 1}, {"dayNumber": 11, "destination": "Hoi An", "displayName": "Hoi An", "kind": "overnight", "mapTitle": "Day 11 \u2014 Hoi An", "showMarker": true, "stopOrder": 1}, {"dayNumber": 12, "destination": "Ho Chi Minh City", "displayName": "Ho Chi Minh City", "kind": "overnight", "mapTitle": "Day 12 \u2014 Ho Chi Minh City", "showMarker": true, "stopOrder": 1}, {"dayNumber": 13, "destination": "Ho Chi Minh City", "displayName": "Ho Chi Minh City", "kind": "overnight", "mapTitle": "Day 13 \u2014 Ho Chi Minh City", "showMarker": true, "stopOrder": 1}, {"dayNumber": 14, "destination": "Ho Chi Minh City", "displayName": "Ho Chi Minh City", "kind": "overnight", "mapTitle": "Day 14 \u2014 Ho Chi Minh City", "showMarker": true, "stopOrder": 1}]
   </script>
   <script id="stay-segments-data" type="application/json">
-    {{ stay_segments | tojson | safe }}
+    [{"activityPreviews": [{"dayNumber": 1, "label": "Day 1", "summary": "Arrival in Hanoi by CX741. Enjoy pre-booked Early Check-in at Hanoi Le Jardin Hotel \u0026 Spa and rest for half a day. In..."}, {"dayNumber": 2, "label": "Day 2", "summary": "Full Day Ninh Binh Tour from Hanoi. Discover the historic ancient capital of Hoa Lu, the grand Bai Dinh Pagoda, serene..."}], "city": "Hanoi", "coords": [21.0285, 105.8542], "dayEnd": 2, "dayStart": 1, "daysLabel": "Days 1-2", "displayName": "Hanoi", "excursions": [], "hotelDateRange": "30 Mar \u2013 01 Apr 2027", "hotelImage": "/assets/hotels/hanoi/hanoi-le-jardin-hotel-spa/exterior/exterior_1.jpg", "hotelName": "Hanoi Le Jardin Hotel \u0026 Spa", "nights": 2, "nightsLabel": "2 nights", "order": 1, "segmentId": "stay-1", "transportFromPrevious": ""}, {"activityPreviews": [{"dayNumber": 3, "label": "Day 3", "summary": "Morning transfer to Ha Long Bay. Embark on the Emeraude Classic Cruise and check into the Captain Suite. Enjoy..."}], "city": "Halong Bay", "coords": [20.9599, 107.0436], "dayEnd": 3, "dayStart": 3, "daysLabel": "Day 3", "displayName": "Halong Bay", "excursions": [], "hotelDateRange": "01 Apr \u2013 02 Apr 2027", "hotelImage": "/assets/hotels/halong/emeraude-classic-cruise/exterior/exterior_1.jpg", "hotelName": "Emeraude Classic Cruise", "nights": 1, "nightsLabel": "1 night", "order": 2, "segmentId": "stay-2", "transportFromPrevious": "Hanoi \u2192 Halong Bay"}, {"activityPreviews": [{"dayNumber": 4, "label": "Day 4", "summary": "Morning cruise activities on Ha Long Bay including Tai Chi and cave visits. Enjoy brunch on board before disembarking..."}, {"dayNumber": 5, "label": "Day 5", "summary": "Full Day Hanoi City Tour exploring historic landmarks such as Ho Chi Minh Mausoleum, One Pillar Pagoda, Temple of..."}, {"dayNumber": 6, "label": "Day 6", "summary": "Hat Village \u0026 Incense Village Half Day Tour from Hanoi. Free afternoon in Hanoi for leisure and exploration. In the..."}], "city": "Hanoi", "coords": [21.0285, 105.8542], "dayEnd": 6, "dayStart": 4, "daysLabel": "Days 4-6", "displayName": "Hanoi", "excursions": [], "hotelDateRange": "02 Apr \u2013 04 Apr 2027", "hotelImage": "/assets/hotels/hanoi/hanoi-le-jardin-hotel-spa/exterior/exterior_3.jpg", "hotelName": "Hanoi Le Jardin Hotel \u0026 Spa", "nights": 3, "nightsLabel": "3 nights", "order": 3, "segmentId": "stay-3", "transportFromPrevious": "Halong Bay \u2192 Hanoi"}, {"activityPreviews": [{"dayNumber": 7, "label": "Day 7", "summary": "Arrival in Lao Cai/Sapa. Embark on a Full Day Sapa Tour exploring lush rice terraces, local hill-tribe villages, and..."}], "city": "Sapa", "coords": [22.3364, 103.8438], "dayEnd": 7, "dayStart": 7, "daysLabel": "Day 7", "displayName": "Sapa", "excursions": [], "hotelDateRange": "05 Apr \u2013 06 Apr 2027", "hotelImage": "/assets/hotels/lao-cai/sapa-jade-hill/exterior/exterior_1.jpg", "hotelName": "Sapa Jade Hill Resort \u0026 Spa", "nights": 1, "nightsLabel": "1 night", "order": 4, "segmentId": "stay-4", "transportFromPrevious": "Hanoi \u2192 Sapa"}, {"activityPreviews": [{"dayNumber": 8, "label": "Day 8", "summary": "Enjoy a free morning in Sapa. After lunch, transfer to the airport for a domestic flight to Da Nang. Upon arrival,..."}, {"dayNumber": 9, "label": "Day 9", "summary": "Full Day Da Nang City Tour highlighting Marble Mountains, Son Tra Peninsula (Linh Ung Pagoda), Dragon Bridge, and local..."}], "city": "Da Nang", "coords": [16.0544, 108.2022], "dayEnd": 9, "dayStart": 8, "daysLabel": "Days 8-9", "displayName": "Da Nang", "excursions": [], "hotelDateRange": "06 Apr \u2013 08 Apr 2027", "hotelImage": "/assets/hotels/danang/radisson-red-danang-hotel/placeholder.png", "hotelName": "Radisson RED Danang Hotel", "nights": 2, "nightsLabel": "2 nights", "order": 5, "segmentId": "stay-5", "transportFromPrevious": "Sapa \u2192 Da Nang"}, {"activityPreviews": [{"dayNumber": 10, "label": "Day 10", "summary": "Full Day Hoi An Tour. Transfer to Hoi An Ancient Town, explore lantern-lit streets, Japanese Covered Bridge, and stay..."}, {"dayNumber": 11, "label": "Day 11", "summary": "Morning Hoi An Countryside Cycling Tour through peaceful villages and organic gardens. Free afternoon in Hoi An Ancient..."}], "city": "Hoi An", "coords": [15.8801, 108.338], "dayEnd": 11, "dayStart": 10, "daysLabel": "Days 10-11", "displayName": "Hoi An", "excursions": [], "hotelDateRange": "08 Apr \u2013 10 Apr 2027", "hotelImage": "/assets/hotels/quang-nam/la-siesta-hoi-an-resort-spa/placeholder.png", "hotelName": "La Siesta Hoi An Resort \u0026 Spa", "nights": 2, "nightsLabel": "2 nights", "order": 6, "segmentId": "stay-6", "transportFromPrevious": "Da Nang \u2192 Hoi An"}, {"activityPreviews": [{"dayNumber": 12, "label": "Day 12", "summary": "Transfer to Da Nang Airport and fly to Ho Chi Minh City. In the afternoon, take a guided tour of the historic Cu Chi..."}, {"dayNumber": 13, "label": "Day 13", "summary": "Full Day Mekong Delta Tour. Cruise down peaceful waterways, visit local artisanal workshops, taste tropical fruits, and..."}, {"dayNumber": 14, "label": "Day 14", "summary": "Half Day Ho Chi Minh City Tour exploring Saigon Notre-Dame Basilica, Central Post Office, and War Remnants Museum...."}], "city": "Ho Chi Minh City", "coords": [10.8231, 106.6297], "dayEnd": 14, "dayStart": 12, "daysLabel": "Days 12-14", "displayName": "Ho Chi Minh City", "excursions": [], "hotelDateRange": "10 Apr \u2013 12 Apr 2027", "hotelImage": "/assets/hotels/saigon/mai-house/exterior/exterior.jpg", "hotelName": "Mai House Hotel", "nights": 3, "nightsLabel": "3 nights", "order": 7, "segmentId": "stay-7", "transportFromPrevious": "Hoi An \u2192 Ho Chi Minh City"}]
   </script>
   <script>
-    window.currentLang = "{{lang}}";
+    window.currentLang = "en";
     document.addEventListener("DOMContentLoaded", function () {
       const DEST_COORDS = {
         "hanoi": [21.0285, 105.8542],
@@ -5891,21 +7478,7 @@
 
       const dataEl = document.getElementById('itinerary-data');
       if (!dataEl) return;
-      const rtlTokenPhrases = {{ [
-        "Hanoi", "Halong Bay", "Sapa", "Da Nang", "Hoi An", "Dalat", "Ninh Binh",
-        "Ho Chi Minh City", "Mekong Delta", "Nha Trang", "Dong Xuan Market", "Tam Coc",
-        "Hang Mua", "Fansipan", "Cat Cat Village", "Lao Chai", "Ta Van",
-        "Ba Na Hills", "Bay Mau Coconut Forest", "Hoa Phu Thanh", "Lang Biang",
-        "Datanla Waterfall", "Me Linh Coffee", "Cu Chi Tunnels", "Ben Thanh Market",
-        "Tan Son Nhat Airport", "Silver Waterfall", "Egg Coffee", "Train Street Coffee",
-        "Moana Coffee", "Han River Cruise", "Crazy House", "Clay Tunnel",
-        "Fresh Garden", "Elephant Waterfall", "Apartment Coffee", "Central Post Office",
-        "Hoi An Ancient Town", "Minasi Premium Hotel", "La Casta Cruise", "Bora Hotel",
-        "Minh Toan SAFI Ocean Hotel", "CICILIA Rouge Dalat", "Cicilia Saigon Center",
-        "Vietnam Safar", "Discovery Asia Travel Group", "USD", "Traveler", "E-visa", "SIM",
-        "Fast Track", "WhatsApp"
-      ] | tojson | safe
-    }};
+      const rtlTokenPhrases = ["Hanoi", "Halong Bay", "Sapa", "Da Nang", "Hoi An", "Dalat", "Ninh Binh", "Ho Chi Minh City", "Mekong Delta", "Nha Trang", "Dong Xuan Market", "Tam Coc", "Hang Mua", "Fansipan", "Cat Cat Village", "Lao Chai", "Ta Van", "Ba Na Hills", "Bay Mau Coconut Forest", "Hoa Phu Thanh", "Lang Biang", "Datanla Waterfall", "Me Linh Coffee", "Cu Chi Tunnels", "Ben Thanh Market", "Tan Son Nhat Airport", "Silver Waterfall", "Egg Coffee", "Train Street Coffee", "Moana Coffee", "Han River Cruise", "Crazy House", "Clay Tunnel", "Fresh Garden", "Elephant Waterfall", "Apartment Coffee", "Central Post Office", "Hoi An Ancient Town", "Minasi Premium Hotel", "La Casta Cruise", "Bora Hotel", "Minh Toan SAFI Ocean Hotel", "CICILIA Rouge Dalat", "Cicilia Saigon Center", "Vietnam Safar", "Discovery Asia Travel Group", "USD", "Traveler", "E-visa", "SIM", "Fast Track", "WhatsApp"];
 
     function escapeHtml(value) {
       return String(value ?? '')
@@ -6107,7 +7680,7 @@
         id: segment.segmentId || `stay-${idx + 1}`,
         coords: resolvedCoords,
         displayCoords: resolvedCoords,
-        img: segment.hotelImage || ((slug && destImages[slug]) ? destImages[slug] : '{{ (brand.logo if brand else "") or "/assets/vietnam-safar-logo.png" }}')
+        img: segment.hotelImage || ((slug && destImages[slug]) ? destImages[slug] : '/assets/brands/vietnam_safar.png')
       };
     }).filter(segment => Array.isArray(segment.coords) && segment.coords.length === 2);
 
@@ -6380,17 +7953,16 @@
   <div id="pwa-notification-prompt" class="notification-prompt-card no-print">
     <div class="notification-prompt-header">
       <div class="notification-prompt-title">
-        <span>🔔</span> {{ "Stay Updated" | translate(lang) }}
+        <span>🔔</span> Stay Updated
       </div>
       <button class="notification-prompt-close" id="pwa-notification-close">&times;</button>
     </div>
     <div class="notification-prompt-body">
-      {{ "Enable notifications to get live updates for your itinerary, guide details, and booking status." |
-      translate(lang) }}
+      Enable notifications to get live updates for your itinerary, guide details, and booking status.
     </div>
     <div class="notification-prompt-actions">
-      <button class="notification-btn-later" id="pwa-notification-later">{{ "Later" | translate(lang) }}</button>
-      <button class="notification-btn-allow" id="pwa-notification-allow">{{ "Enable" | translate(lang) }}</button>
+      <button class="notification-btn-later" id="pwa-notification-later">Later</button>
+      <button class="notification-btn-allow" id="pwa-notification-allow">Enable</button>
     </div>
   </div>
 
@@ -6398,8 +7970,8 @@
   <div id="pwa-notification-success" class="notification-success-card no-print">
     <div class="notification-success-icon">✓</div>
     <div class="notification-success-text">
-      <h4>{{ "Notifications Active" | translate(lang) }}</h4>
-      <p>{{ "You'll receive live itinerary updates here." | translate(lang) }}</p>
+      <h4>Notifications Active</h4>
+      <p>You&#39;ll receive live itinerary updates here.</p>
     </div>
   </div>
 
@@ -6478,8 +8050,8 @@
 
         const options = {
           body: body,
-          icon: '{{ (brand.logo if brand else "") or "/assets/vietnam-safar-logo.png" }}',
-          badge: '{{ (brand.logo if brand else "") or "/assets/vietnam-safar-logo.png" }}',
+          icon: '/assets/brands/vietnam_safar.png',
+          badge: '/assets/brands/vietnam_safar.png',
           vibrate: [100, 50, 100],
           data: {
             url: window.location.href
