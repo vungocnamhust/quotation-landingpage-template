@@ -5062,6 +5062,24 @@ def _extract_image_refs(value: str) -> list[str]:
 
     return refs
 
+def _extract_editable_image_attr(html_content: str, field_name: str) -> str:
+    if not html_content or not field_name:
+        return ""
+
+    patterns = (
+        rf'data-editable=["\']{re.escape(field_name)}["\'][^>]*src=["\']([^"\']+)["\']',
+        rf'src=["\']([^"\']+)["\'][^>]*data-editable=["\']{re.escape(field_name)}["\']',
+        rf'data-editable=["\']{re.escape(field_name)}["\'][^>]*style=["\'][^"\']*url\((["\']?)(.*?)\1\)',
+        rf'style=["\'][^"\']*url\((["\']?)(.*?)\1\)[^"\']*["\'][^>]*data-editable=["\']{re.escape(field_name)}["\']',
+    )
+    for pattern in patterns:
+        match = re.search(pattern, html_content, flags=re.IGNORECASE | re.DOTALL)
+        if match:
+            if len(match.groups()) > 1:
+                return (match.group(2) or "").strip()
+            return (match.group(1) or "").strip()
+    return ""
+
 def _extract_hotel_image_refs(html_content: str, hotel_indexes: list[int]) -> dict[str, dict[str, str]]:
     if not hotel_indexes:
         return {}
@@ -5080,13 +5098,37 @@ def _extract_hotel_image_refs(html_content: str, hotel_indexes: list[int]) -> di
     hotel_refs: dict[str, dict[str, str]] = {}
     for pos, idx in enumerate(hotel_indexes):
         hotel_entry: dict[str, str] = {}
-        if pos < len(main_matches) and main_matches[pos]:
+        direct_main = _extract_editable_image_attr(html_content, f"hotel_img_{idx}")
+        direct_room = _extract_editable_image_attr(html_content, f"hotel_room_img_{idx}")
+        if direct_main:
+            hotel_entry["hotel_img"] = direct_main
+        elif pos < len(main_matches) and main_matches[pos]:
             hotel_entry["hotel_img"] = main_matches[pos].strip()
-        if pos < len(room_matches) and room_matches[pos]:
+        if direct_room:
+            hotel_entry["room_img"] = direct_room
+        elif pos < len(room_matches) and room_matches[pos]:
             hotel_entry["room_img"] = room_matches[pos].strip()
         if hotel_entry:
             hotel_refs[str(idx)] = hotel_entry
     return hotel_refs
+
+def _apply_segment_duration_override(segment: dict, raw_duration: str):
+    clean_duration = (raw_duration or "").strip()
+    segment["mapSegmentDuration"] = clean_duration
+    if not clean_duration:
+        segment["daysLabel"] = ""
+        segment["nightsLabel"] = ""
+        return
+
+    parts = [part.strip() for part in clean_duration.split("•")]
+    parts = [part for part in parts if part]
+    if not parts:
+        segment["daysLabel"] = ""
+        segment["nightsLabel"] = ""
+        return
+
+    segment["daysLabel"] = parts[0]
+    segment["nightsLabel"] = " • ".join(parts[1:]) if len(parts) > 1 else ""
 
 def _extract_itinerary_image_refs(edited_fields: dict, html_content: str) -> dict[str, dict[str, Any]]:
     day_numbers = sorted({
@@ -5602,10 +5644,8 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
             if desc_key in edited_fields and override_text:
                 segment["mapSegmentDesc"] = edited_fields[desc_key]
             
-            # The JS uses dest.daysLabel, dest.nightsLabel for durationHtml. We can override daysLabel for now.
             if duration_key in edited_fields and override_text:
-                # We save it into mapSegmentDuration so JS can use it instead of computing durationHtml
-                segment["mapSegmentDuration"] = edited_fields[duration_key]
+                _apply_segment_duration_override(segment, edited_fields[duration_key])
                 
             if title_key in edited_fields and override_text:
                 segment["displayName"] = edited_fields[title_key]
@@ -5906,15 +5946,18 @@ async def _build_quotation_lang_ctx(
         lang_ctx["latest_version"] = 1
 
     if not ignore_published_html:
-        if not _apply_ctx_html_sync(lang_ctx, ctx_data, effective_lang, baseline_lang):
-            latest_lang = None if effective_lang == baseline_lang else effective_lang
-            html_content = await _get_latest_published_html(quotation_id, lang=latest_lang, fallback=False)
-            if html_content:
-                filter_and_override_ctx_by_html(lang_ctx, html_content, override_text=True)
-            elif effective_lang != baseline_lang:
-                baseline_html = await _get_latest_published_html(quotation_id, lang=None, fallback=False)
-                if baseline_html:
-                    filter_and_override_ctx_by_html(lang_ctx, baseline_html, override_text=False)
+        latest_lang = None if effective_lang == baseline_lang else effective_lang
+        html_content = await _get_latest_published_html(quotation_id, lang=latest_lang, fallback=False)
+        if html_content:
+            filter_and_override_ctx_by_html(lang_ctx, html_content, override_text=True)
+        elif effective_lang != baseline_lang:
+            baseline_html = await _get_latest_published_html(quotation_id, lang=None, fallback=False)
+            if baseline_html:
+                filter_and_override_ctx_by_html(lang_ctx, baseline_html, override_text=False)
+            else:
+                _apply_ctx_html_sync(lang_ctx, ctx_data, effective_lang, baseline_lang)
+        else:
+            _apply_ctx_html_sync(lang_ctx, ctx_data, effective_lang, baseline_lang)
 
     if _is_brochure_template(base_tmpl):
         draft = _ensure_brochure_draft(
@@ -5960,14 +6003,13 @@ async def _render_quotation_doc_from_ctx(
 
 async def _get_latest_published_html(quotation_id: str, lang: str = None, fallback: bool = True) -> str | None:
     """Gets the latest published HTML content from memory, disk, or GitHub."""
-    if not lang:
-        entry = quotations.get(quotation_id)
-        if entry and entry.get("html"):
-            return entry["html"]
-
     from github_publish import get_next_version
     next_version = await get_next_version(quotation_id)
     if next_version <= 1:
+        if not lang:
+            entry = quotations.get(quotation_id)
+            if entry and entry.get("html"):
+                return entry["html"]
         return None
     current_version = next_version - 1
     
@@ -6004,6 +6046,11 @@ async def _get_latest_published_html(quotation_id: str, lang: str = None, fallba
                     resp = await client.get(gh_url, headers=headers)
                     if resp.status_code == 200:
                         return resp.text
+
+    if not lang:
+        entry = quotations.get(quotation_id)
+        if entry and entry.get("html"):
+            return entry["html"]
     return None
 
 @app.get("/quotations/{quotation_id}/pdf", response_class=HTMLResponse)

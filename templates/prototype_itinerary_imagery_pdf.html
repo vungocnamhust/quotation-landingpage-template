@@ -2371,6 +2371,7 @@
           const timelineContainer = document.getElementById('map-timeline');
           mapSegments.forEach((dest, idx) => {
             const dayRangeStr = dest.daysLabel || '';
+            const explicitDuration = (dest.mapSegmentDuration || '').trim();
             const off = dest.offsetPattern || [0, 0];
             const markerHtml = `
           <div class="luxury-marker-wrapper" id="marker-wrapper-${idx}" style="transform: translate(${off[0]}px, ${off[1]}px);">
@@ -2388,7 +2389,9 @@
 
             // Build horizontal timeline item
             let nightsBadge = '';
-            if (dest.nightsLabel) {
+            if (explicitDuration) {
+              nightsBadge = `<span style="font-size:9px;color:var(--muted);font-weight:400;display:block;margin-top:4px;">${explicitDuration}</span>`;
+            } else if (dest.nightsLabel) {
               nightsBadge = `<span style="font-size:9px;color:var(--muted);font-weight:400;display:block;margin-top:4px;">${dest.nightsLabel}</span>`;
             } else if (dayRangeStr) {
               nightsBadge = `<span style="font-size:9px;color:var(--muted);font-weight:400;display:block;margin-top:4px;">${dayRangeStr}</span>`;
