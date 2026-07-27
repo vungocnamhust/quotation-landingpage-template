@@ -5330,6 +5330,17 @@
       }
     }
 
+    function syncEditableMirrors(sourceEl) {
+      const field = sourceEl && sourceEl.getAttribute ? sourceEl.getAttribute('data-editable') : '';
+      if (!field) return;
+      document.querySelectorAll(`[data-editable="${field}"]`).forEach(other => {
+        if (other === sourceEl) return;
+        if (other.innerHTML !== sourceEl.innerHTML) {
+          other.innerHTML = sourceEl.innerHTML;
+        }
+      });
+    }
+
     window.initEditableElements = function (container = document) {
       container.querySelectorAll('[data-editable]').forEach(el => {
         // Prevent double wrapping
@@ -5350,6 +5361,14 @@
         // Prevent click bubbling so clicking text to edit doesn't trigger parent click listeners (e.g., timeline map zoom)
         el.addEventListener('click', (e) => {
           e.stopPropagation();
+        });
+
+        el.addEventListener('input', () => {
+          syncEditableMirrors(el);
+        });
+
+        el.addEventListener('blur', () => {
+          syncEditableMirrors(el);
         });
 
         // Wrap it and add translate button if lang is not English
@@ -5630,6 +5649,10 @@
     });
 
     async function publishPage(newTemplate = null) {
+      document.querySelectorAll('[data-editable]').forEach((el) => {
+        syncEditableMirrors(el);
+      });
+
       // Save map segment descriptions back to JSON so they persist on refresh
       const staySegmentsEl = document.getElementById('stay-segments-data');
       if (staySegmentsEl) {
@@ -5918,6 +5941,10 @@
 
     function wrapLtrToken(value) {
       return `<span class="ltr-token">${escapeHtml(value)}</span>`;
+    }
+
+    function hasExplicitEditableValue(obj, key) {
+      return !!(obj && Object.prototype.hasOwnProperty.call(obj, key) && obj[key] !== undefined && obj[key] !== null);
     }
 
     function formatMixedContent(value) {
@@ -6224,7 +6251,7 @@
         if (Array.isArray(dest.activityPreviews) && dest.activityPreviews.length > 0) {
           popupDefaultHtml += `<div style="margin-top:8px; font-size:11px;">${dest.activityPreviews.slice(0, 3).map(item => `<div>${escapeHtml(item.label)}: ${formatMixedContent(item.summary)}</div>`).join('')}</div>`;
         }
-        let popupDescHtml = dest.mapSegmentDesc || popupDefaultHtml;
+        let popupDescHtml = hasExplicitEditableValue(dest, 'mapSegmentDesc') ? dest.mapSegmentDesc : popupDefaultHtml;
 
         const popupContent = `
             <div style="font-family: var(--font-body); padding: 4px; min-width: 180px;">
@@ -6247,8 +6274,8 @@
           const itemDiv = document.createElement('div');
           itemDiv.className = `timeline-item ${idx === 0 ? 'active' : ''}`;
 
-          let durationHtml = dest.mapSegmentDuration;
-          if (!durationHtml) {
+          let durationHtml = hasExplicitEditableValue(dest, 'mapSegmentDuration') ? dest.mapSegmentDuration : null;
+          if (durationHtml === null) {
             if (dayRangeStr && dest.nightsLabel) {
               durationHtml = `${dayRangeStr} &bull; ${dest.nightsLabel}`;
             } else {
@@ -6273,7 +6300,7 @@
             const previewHtml = dest.activityPreviews.map(item => `<div><strong>${escapeHtml(item.label)}:</strong> ${formatMixedContent(item.summary)}</div>`).join('');
             timelineDefaultHtml += `<div class="item-desc">${previewHtml}</div>`;
           }
-          let timelineDescHtml = dest.mapSegmentDesc || timelineDefaultHtml;
+          let timelineDescHtml = hasExplicitEditableValue(dest, 'mapSegmentDesc') ? dest.mapSegmentDesc : timelineDefaultHtml;
 
           htmlContent += `<div class="item-content" data-editable="map_segment_desc_${idx}">`;
           htmlContent += timelineDescHtml;

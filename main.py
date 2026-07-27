@@ -3929,17 +3929,27 @@ def _apply_brochure_draft_to_lang_ctx(lang_ctx: dict, draft: dict):
     new_segments = []
     for idx, segment_draft in enumerate(draft_segments, 1):
         segment = copy.deepcopy(base_segments[idx - 1]) if idx - 1 < len(base_segments) else {}
+        segment_id = segment_draft.get("id") if "id" in segment_draft else segment.get("segmentId")
+        display_name = segment_draft.get("displayName") if "displayName" in segment_draft else segment.get("displayName")
+        days_label = segment_draft.get("daysLabel") if "daysLabel" in segment_draft else segment.get("daysLabel")
+        nights_label = segment_draft.get("nightsLabel") if "nightsLabel" in segment_draft else segment.get("nightsLabel")
+        hotel_name = segment_draft.get("hotelName") if "hotelName" in segment_draft else segment.get("hotelName")
+        hotel_date_range = segment_draft.get("hotelDateRange") if "hotelDateRange" in segment_draft else segment.get("hotelDateRange")
+        hotel_image = _asset_url(segment_draft.get("hotelImage")) if "hotelImage" in segment_draft else segment.get("hotelImage")
+        map_segment_desc = segment_draft.get("mapSegmentDesc") if "mapSegmentDesc" in segment_draft else segment.get("mapSegmentDesc")
+        map_segment_duration = segment_draft.get("mapSegmentDuration") if "mapSegmentDuration" in segment_draft else segment.get("mapSegmentDuration")
+        coords = copy.deepcopy(segment_draft.get("coords")) if "coords" in segment_draft else copy.deepcopy(segment.get("coords") or [])
         segment.update({
-            "segmentId": segment_draft.get("id") or segment.get("segmentId") or f"stay-{idx}",
-            "displayName": segment_draft.get("displayName") or segment.get("displayName") or "",
-            "daysLabel": segment_draft.get("daysLabel") or segment.get("daysLabel") or "",
-            "nightsLabel": segment_draft.get("nightsLabel") or segment.get("nightsLabel") or "",
-            "hotelName": segment_draft.get("hotelName") or segment.get("hotelName") or "",
-            "hotelDateRange": segment_draft.get("hotelDateRange") or segment.get("hotelDateRange") or "",
-            "hotelImage": _asset_url(segment_draft.get("hotelImage")) or segment.get("hotelImage") or "",
-            "mapSegmentDesc": segment_draft.get("mapSegmentDesc") or segment.get("mapSegmentDesc") or "",
-            "mapSegmentDuration": segment_draft.get("mapSegmentDuration") or segment.get("mapSegmentDuration") or "",
-            "coords": copy.deepcopy(segment_draft.get("coords") or segment.get("coords") or []),
+            "segmentId": segment_id or f"stay-{idx}",
+            "displayName": display_name or "",
+            "daysLabel": days_label or "",
+            "nightsLabel": nights_label or "",
+            "hotelName": hotel_name or "",
+            "hotelDateRange": hotel_date_range or "",
+            "hotelImage": hotel_image or "",
+            "mapSegmentDesc": map_segment_desc if map_segment_desc is not None else "",
+            "mapSegmentDuration": map_segment_duration if map_segment_duration is not None else "",
+            "coords": coords or [],
         })
         new_segments.append(segment)
     if new_segments:
