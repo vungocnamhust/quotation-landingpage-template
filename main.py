@@ -5501,6 +5501,16 @@ def filter_and_override_ctx_by_html(lang_ctx: dict, html_content: str, override_
         override_text=override_text,
     )
     _apply_composite_html_sync(lang_ctx, composite_fields)
+    custom_images = _extract_custom_images_from_html(html_content)
+    if custom_images.get("designer_img"):
+        lang_ctx["designer_img"] = custom_images["designer_img"]
+    if custom_images.get("hero_img"):
+        lang_ctx["hero_img_custom"] = custom_images["hero_img"]
+        lang_ctx["img_0"] = custom_images["hero_img"]
+    if custom_images.get("img_hotel_divider"):
+        lang_ctx["img_hotel_divider"] = custom_images["img_hotel_divider"]
+    if custom_images.get("img_itinerary_divider"):
+        lang_ctx["img_itinerary_divider"] = custom_images["img_itinerary_divider"]
     lang = lang_ctx.get("lang", "en")
     if lang == "ar":
         lang_ctx.update(canonicalize_place_names_in_data(lang_ctx, lang))
@@ -5679,7 +5689,7 @@ async def _build_quotation_lang_ctx(
     base_tmpl = ctx_data.get("template_name", "vietnam_luxury_brosure.html")
     brand_config = resolve_brand(request, payload_dict)
     default_brand_logo = _default_brand_logo(brand_config)
-    hero_image_url = ctx_data.get("img_0") or ctx_data.get("hero_img") or default_brand_logo
+    hero_image_url = ctx_data.get("hero_img") or ctx_data.get("img_0") or default_brand_logo
     if _is_brand_placeholder_image(hero_image_url):
         for day in ctx_data.get("itinerary_days", []) or ctx_data.get("itinerary", []):
             day_hero = day.get("layout_images", {}).get("hero")
@@ -5705,8 +5715,14 @@ async def _build_quotation_lang_ctx(
         lang_ctx["designer_img"] = ctx_data.get("designer_img")
     if ctx_data.get("hero_img"):
         lang_ctx["hero_img_custom"] = ctx_data.get("hero_img")
+        lang_ctx["img_0"] = ctx_data.get("hero_img")
     elif hero_image_url != default_brand_logo:
         lang_ctx["hero_img_custom"] = hero_image_url
+        lang_ctx["img_0"] = hero_image_url
+    if ctx_data.get("img_itinerary_divider"):
+        lang_ctx["img_itinerary_divider"] = ctx_data.get("img_itinerary_divider")
+    if ctx_data.get("img_hotel_divider"):
+        lang_ctx["img_hotel_divider"] = ctx_data.get("img_hotel_divider")
     lang_ctx["translations"] = ctx_data.get("translations", {})
     lang_ctx["baseline_lang"] = baseline_lang
     lang_ctx["translation_status"] = ctx_data.get(
@@ -6167,7 +6183,7 @@ async def get_quotation(quotation_id: str, request: Request):
         
         # Build clean context for target lang
         default_brand_logo = _default_brand_logo(brand_config)
-        hero_image_url = ctx_data.get("img_0") or default_brand_logo
+        hero_image_url = ctx_data.get("hero_img") or ctx_data.get("img_0") or default_brand_logo
         if _is_brand_placeholder_image(hero_image_url):
             for day in ctx_data.get("itinerary_days", []) or ctx_data.get("itinerary", []):
                 day_hero = day.get("layout_images", {}).get("hero")
@@ -6194,6 +6210,15 @@ async def get_quotation(quotation_id: str, request: Request):
         lang_ctx["translations"] = translations
         lang_ctx["baseline_lang"] = baseline_lang
         lang_ctx["translation_status"] = ctx_data.get("translation_status", {"baseline_lang": baseline_lang, "available_langs": [baseline_lang]})
+        if ctx_data.get("designer_img"):
+            lang_ctx["designer_img"] = ctx_data.get("designer_img")
+        if ctx_data.get("hero_img"):
+            lang_ctx["hero_img_custom"] = ctx_data.get("hero_img")
+            lang_ctx["img_0"] = ctx_data.get("hero_img")
+        if ctx_data.get("img_itinerary_divider"):
+            lang_ctx["img_itinerary_divider"] = ctx_data.get("img_itinerary_divider")
+        if ctx_data.get("img_hotel_divider"):
+            lang_ctx["img_hotel_divider"] = ctx_data.get("img_hotel_divider")
         try:
             from github_publish import get_next_version
             next_ver = await get_next_version(quotation_id)
