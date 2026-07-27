@@ -5431,7 +5431,12 @@
           } else if (currentImageTarget instanceof HTMLImageElement) {
             currentImageTarget.src = dataUrl;
           } else if (currentImageTarget instanceof HTMLElement) {
-            currentImageTarget.style.backgroundImage = `url('${dataUrl}')`;
+            if (currentImageTarget.hasAttribute('data-img-type') || (currentImageTarget.classList.contains('day-image') && !currentImageTarget.classList.contains('carousel-container'))) {
+              currentImageTarget.style.setProperty('--image', `url('${dataUrl}')`);
+              currentImageTarget.style.backgroundImage = '';
+            } else {
+              currentImageTarget.style.backgroundImage = `url('${dataUrl}')`;
+            }
           }
         }
         img.src = evt.target.result;

@@ -4873,9 +4873,12 @@ class EditableFieldsParser(HTMLParser):
             field_name = attrs_dict["data-editable"]
             img_url = ""
             if "style" in attrs_dict:
-                match = re.search(r'url\((["\']?)(.*?)\1\)', attrs_dict["style"])
-                if match:
-                    img_url = match.group(2)
+                matches = re.findall(r'url\((["\']?)(.*?)\1\)', attrs_dict["style"])
+                if matches:
+                    # For editable day images the editor may temporarily carry both the
+                    # original CSS var (--image) and the newly selected background image.
+                    # Prefer the last URL so the freshly chosen image wins.
+                    img_url = matches[-1][1]
             elif "src" in attrs_dict:
                 img_url = attrs_dict["src"]
 
