@@ -1882,7 +1882,7 @@
                 data-editable="payment_label_deposit">{{ payment_label_deposit |
                 default("Deposit" | translate(lang)) }}</div>
               <div style="color: var(--text-muted); font-size: 11px; line-height: 1.6;" data-editable="term_deposit">
-                {{ term_deposit }}
+                {{ term_deposit | default("<div class=\"term-line\">A deposit of 30% of the total tour cost is required upon confirmation of the booking. This deposit is non-refundable.</div><div class=\"term-line\" style=\"margin-top: 12px;\">For bookings confirmed within 60 days of arrival, full payment of 100% of the total tour cost is required at the time of confirmation.</div>", true) | safe }}
               </div>
             </div>
 
@@ -1893,7 +1893,7 @@
                 data-editable="payment_label_balance">{{ payment_label_balance |
                 default("Balance" | translate(lang)) }}</div>
               <div style="color: var(--text-muted); font-size: 11px; line-height: 1.6;" data-editable="term_balance">
-                {{ term_balance }}
+                {{ term_balance | default("<div class=\"term-line\">The remaining 70% balance must be paid no later than 60 days prior to the scheduled arrival date.</div>", true) | safe }}
               </div>
             </div>
 
@@ -1905,7 +1905,7 @@
                 default("Cancellation" | translate(lang)) }}</div>
               <div style="color: var(--text-muted); font-size: 11px; line-height: 1.6;"
                 data-editable="term_cancellation">
-                {{ term_cancellation }}
+                {{ term_cancellation | default("<div class=\"term-line\">Written notice required. Cancellation fees apply based on arrival date:</div><div class=\"term-line\" style=\"margin-top: 4px; padding-left: 12px;\">• &gt; 45 days prior: Deposit forfeited (30%)</div><div class=\"term-line\" style=\"margin-top: 4px; padding-left: 12px;\">• 45 – 31 days prior: 50% of total tour cost</div><div class=\"term-line\" style=\"margin-top: 4px; padding-left: 12px;\">• 30 – 20 days prior: 75% of total tour cost</div><div class=\"term-line\" style=\"margin-top: 4px; padding-left: 12px;\">• &lt; 20 days prior: 100% of total tour cost</div><div class=\"term-line\" style=\"margin-top: 12px;\">Any non-refundable payments, cancellation charges or penalties imposed by hotels, airlines, cruise operators and other service providers may also apply in addition to the cancellation fees stated above.</div>", true) | safe }}
               </div>
             </div>
 
@@ -1917,7 +1917,7 @@
                 default("Confirmation" | translate(lang)) }}</div>
               <div style="color: var(--text-muted); font-size: 11px; line-height: 1.6;"
                 data-editable="term_confirmation">
-                {{ term_confirmation }}
+                {{ term_confirmation | default("<div class=\"term-line\">The booking will only be considered confirmed once the required payment has been received.</div>", true) | safe }}
               </div>
             </div>
           </div>

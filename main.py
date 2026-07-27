@@ -70,6 +70,99 @@ BRAND_OWNED_EDITABLE_FIELDS = frozenset({
     "contact_web",
 })
 
+HTML_DIRECT_SYNC_FIELDS = (
+    "tour_title",
+    "kicker",
+    "lede",
+    "cover_kicker",
+    "customer_name",
+    "overview_heading",
+    "guests_txt",
+    "travel_dates",
+    "route_txt",
+    "travel_style",
+    "quotation_number",
+    "contact",
+    "why_private",
+    "why_comfort",
+    "why_muslim",
+    "why_balanced",
+    "journey_h2",
+    "journey_p",
+    "journey_overview_title",
+    "chapter_kicker",
+    "route_map_h2",
+    "route_map_p",
+    "hero_footer",
+    "divider_itinerary_kicker",
+    "divider_itinerary_title",
+    "divider_itinerary_tagline",
+    "itinerary_kicker",
+    "itinerary_h2",
+    "itinerary_p",
+    "room_notes",
+    "pricing_h2",
+    "pricing_p",
+    "pricing_kicker",
+    "price_cond_first",
+    "inc_exc_h2",
+    "muslim_care_text",
+    "payment_kicker",
+    "payment_title",
+    "payment_desc",
+    "payment_cta",
+    "payment_label_deposit",
+    "payment_label_balance",
+    "payment_label_cancellation",
+    "payment_label_confirmation",
+    "term_deposit",
+    "term_balance",
+    "term_cancellation",
+    "term_confirmation",
+    "cta_h2",
+    "designer_kicker",
+    "designer_title",
+    "designer_quote",
+    "designer_expertise",
+    "designer_experience",
+    "designer_signature",
+    "seller_subtitle",
+    "contact_phone_btn",
+    "contact_email_btn",
+    "final_req_title",
+    "label_prepared_for",
+    "label_overview",
+    "label_guests",
+    "label_travel_dates",
+    "label_route",
+    "label_style",
+    "label_ref",
+    "label_contact",
+    "label_nationality",
+    "label_duration",
+    "hero_meta_1",
+    "hero_meta_2",
+    "footer_text",
+    "letter_greeting",
+    "letter_intro",
+    "letter_body_p2",
+    "letter_outro",
+    "letter_sign_off",
+    "letter_sender",
+    "letter_highlight",
+    "divider_hotel_kicker",
+    "divider_hotel_title",
+    "divider_hotel_tagline",
+    "divider_hotel_closing",
+)
+
+HTML_RICH_TEXT_FIELDS = frozenset({
+    "term_deposit",
+    "term_balance",
+    "term_cancellation",
+    "term_confirmation",
+})
+
 # Multi-brand configurations
 BRANDS = {
     "vietnam_safar": {
@@ -4912,7 +5005,11 @@ class EditableFieldsParser(HTMLParser):
                 val = "".join(item['acc']).strip()
                 if not val and item.get('img_url'):
                     val = item['img_url']
-                elif not item['field'].startswith("day_img_") and not item['field'].startswith("img_"):
+                elif (
+                    item['field'] not in HTML_RICH_TEXT_FIELDS
+                    and not item['field'].startswith("day_img_")
+                    and not item['field'].startswith("img_")
+                ):
                     val = re.sub(r'<[^>]*>', '', str(val)).strip()
                 self.edited_fields[item['field']] = val
             else:
@@ -5198,6 +5295,53 @@ def sync_itinerary_deletions_to_payloads(ctx: dict, active_days: set[int], activ
         for lang_key in ctx["translations"]:
             filter_payload(ctx["translations"][lang_key])
 
+def _sync_indexed_html_list(
+    lang_ctx: dict,
+    existing_keys: set[str],
+    edited_fields: dict,
+    *,
+    list_key: str,
+    field_prefix: str,
+    fallback_single_key: str | None = None,
+):
+    source_items = copy.deepcopy(lang_ctx.get(list_key) or [])
+    indexed_keys = {
+        key
+        for key in set(existing_keys or set()) | set((edited_fields or {}).keys())
+        if key.startswith(f"{field_prefix}_")
+    }
+    has_fallback = bool(
+        fallback_single_key
+        and (
+            fallback_single_key in (existing_keys or set())
+            or fallback_single_key in (edited_fields or {})
+        )
+    )
+    if not indexed_keys and not has_fallback:
+        return
+
+    rebuilt_items = []
+    idx = 0
+    while True:
+        item_key = f"{field_prefix}_{idx}"
+        if item_key in edited_fields:
+            rebuilt_items.append(edited_fields[item_key])
+            idx += 1
+            continue
+        if item_key in existing_keys:
+            rebuilt_items.append(source_items[idx] if idx < len(source_items) else "")
+            idx += 1
+            continue
+        break
+
+    if not rebuilt_items and fallback_single_key:
+        if fallback_single_key in edited_fields:
+            rebuilt_items = [edited_fields[fallback_single_key]]
+        elif fallback_single_key in existing_keys:
+            rebuilt_items = [source_items[0] if source_items else ""]
+
+    lang_ctx[list_key] = rebuilt_items
+
 def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fields: dict, override_text: bool = True):
     """
     Filters out deleted blocks and optionally overrides text content of remaining blocks
@@ -5207,25 +5351,20 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
 
     # Simple variables
     if override_text:
-        for key in [
-            'tour_title', 'kicker', 'lede', 'customer_name', 'overview_heading', 
-            'guests_txt', 'travel_dates', 'route_txt', 'travel_style', 
-            'quotation_number', 'contact', 'why_private', 'why_comfort', 
-            'why_muslim', 'why_balanced', 'journey_h2', 'journey_p', 
-            'route_map_h2', 'route_map_p',
-            'itinerary_h2', 'itinerary_p', 'room_notes', 'pricing_h2', 
-            'pricing_p', 'pricing_kicker', 'muslim_care_text', 'term_deposit', 'term_balance', 
-            'term_cancellation', 'term_confirmation', 'cta_h2', 'designer_kicker', 
-            'designer_title', 'designer_quote', 'designer_expertise', 
-            'designer_experience', 'designer_signature',
-            'journey_overview_title', 'label_prepared_for', 'label_overview',
-            'label_guests', 'label_travel_dates', 'label_route', 'label_style',
-            'label_ref', 'label_contact', 'label_nationality', 'label_duration',
-            'hero_meta_1', 'hero_meta_2', 'footer_text', 'letter_greeting', 'letter_intro', 'letter_body_p2',
-            'letter_outro', 'letter_sign_off', 'letter_sender', 'letter_highlight'
-        ]:
+        for key in HTML_DIRECT_SYNC_FIELDS:
             if key in edited_fields:
                 lang_ctx[key] = edited_fields[key]
+
+        if "inc_exc_h2" in edited_fields:
+            lang_ctx["inclusions_title"] = edited_fields["inc_exc_h2"]
+
+        if "price_cond_first" in edited_fields:
+            price_cond_paras = copy.deepcopy(lang_ctx.get("price_cond_paras") or [])
+            if price_cond_paras:
+                price_cond_paras[0] = edited_fields["price_cond_first"]
+            else:
+                price_cond_paras = [edited_fields["price_cond_first"]]
+            lang_ctx["price_cond_paras"] = price_cond_paras
             
     # 1. Filter and update itinerary days
     new_itinerary = []
@@ -5396,6 +5535,23 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
             else:
                 new_exclusions.append(item)
     lang_ctx['exclusions'] = new_exclusions
+
+    if override_text:
+        _sync_indexed_html_list(
+            lang_ctx,
+            existing_keys,
+            edited_fields,
+            list_key="final_req",
+            field_prefix="final_req",
+            fallback_single_key="final_req_text",
+        )
+        _sync_indexed_html_list(
+            lang_ctx,
+            existing_keys,
+            edited_fields,
+            list_key="final_after",
+            field_prefix="final_after",
+        )
     
     # 5. Filter and update pricing per pax
     new_price_options = []

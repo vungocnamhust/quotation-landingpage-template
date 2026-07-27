@@ -295,10 +295,10 @@
     setEditable("payment_kicker", bookingTerms.kicker || "");
     setEditable("payment_title", bookingTerms.title || "");
     setEditable("payment_desc", bookingTerms.description || "");
-    setEditable("term_deposit", bookingTerms.deposit || "");
-    setEditable("term_balance", bookingTerms.balance || "");
-    setEditable("term_cancellation", bookingTerms.cancellation || "");
-    setEditable("term_confirmation", bookingTerms.confirmation || "");
+    setEditable("term_deposit", bookingTerms.deposit || "", true);
+    setEditable("term_balance", bookingTerms.balance || "", true);
+    setEditable("term_cancellation", bookingTerms.cancellation || "", true);
+    setEditable("term_confirmation", bookingTerms.confirmation || "", true);
     setEditable("letter_greeting", narrative.letterGreeting || "");
     setEditable("letter_intro", narrative.letterIntro || "");
     setEditable("letter_body_p2", narrative.letterBody2 || "");
