@@ -277,33 +277,53 @@ async def extract_and_map_destinations(text: str, max_items: int | None = None) 
         return result
     except Exception as e:
         print(f"[Error] Extract destinations failed: {e}")
-        return []
+        text_lower = text.lower()
+        found = []
+        seen_slugs = set()
+        for kw, slug in KEYWORD_MAP.items():
+            if kw in text_lower and slug not in seen_slugs:
+                name_words = [w.capitalize() for w in kw.split()]
+                found.append({"name": " ".join(name_words), "slug": slug})
+                seen_slugs.add(slug)
+        if max_items:
+            found = found[:max_items]
+        return found
 
 def get_random_image_for_province(province_slug: str | None, assets_dir: str = "assets") -> str:
     """
     Nhận vào slug của tỉnh, tìm trong thư mục tương ứng và pick ra 1 ảnh ngẫu nhiên.
     Nếu không tìm thấy hoặc lỗi, sẽ fallback về ảnh mặc định.
     """
-    default_image = "/assets/vietnam-safar-logo.png" # Có thể thay bằng một ảnh cover chung
+    imgs = get_all_images_for_province(province_slug, assets_dir)
+    if imgs and imgs[0] != "/assets/vietnam-safar-logo.png":
+        return random.choice(imgs)
+    return "/assets/vietnam-safar-logo.png"
+
+def get_all_images_for_province(province_slug: str | None, assets_dir: str = "assets") -> list[str]:
+    """
+    Nhận vào slug của tỉnh, tìm trong thư mục tương ứng (bao gồm cả thư mục con như hero/) 
+    và trả về danh sách tất cả ảnh.
+    """
+    default_image = "/assets/vietnam-safar-logo.png"
     
     if not province_slug:
-        return default_image
+        return [default_image]
         
     folder_path = os.path.join(assets_dir, province_slug)
     
     if os.path.isdir(folder_path):
         valid_extensions = {".jpg", ".jpeg", ".png", ".webp"}
-        files = [
-            f for f in os.listdir(folder_path) 
-            if os.path.isfile(os.path.join(folder_path, f)) and os.path.splitext(f)[1].lower() in valid_extensions
-        ]
-        
-        if files:
-            chosen_image = random.choice(files)
-            return f"/{assets_dir}/{province_slug}/{chosen_image}"
+        all_imgs = []
+        for root, _, files in os.walk(folder_path):
+            for f in sorted(files):
+                if os.path.splitext(f)[1].lower() in valid_extensions and not f.startswith("."):
+                    rel = os.path.relpath(os.path.join(root, f), ".")
+                    all_imgs.append(f"/{rel}")
+        if all_imgs:
+            return all_imgs
             
-    return default_image
-    
+    return [default_image]
+
 async def select_landing_image(location: str) -> str:
     """
     Hàm tổng hợp: 
@@ -314,9 +334,6 @@ async def select_landing_image(location: str) -> str:
     """
     province_slug = await get_province_slug_for_location(location)
     image_url = get_random_image_for_province(province_slug)
-    return image_url
-
-def get_all_images_for_province(province_slug: str | None, assets_dir: str = "assets") -> list[str]:
     """
     Nhận vào slug của tỉnh, tìm trong thư mục tương ứng và trả về danh sách tất cả ảnh.
     Nếu không tìm thấy hoặc lỗi, sẽ fallback về logo mặc định.

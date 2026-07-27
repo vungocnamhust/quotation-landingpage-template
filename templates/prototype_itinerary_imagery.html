@@ -1,11 +1,28 @@
 <!DOCTYPE html>
 <html lang="{{ lang or 'en' }}" {% if lang=='ar' %}dir="rtl" {% endif %}
-  style="--hero-img: url('{{img_0}}'); {% for dest in destinations %} --img-{{ loop.index }}: url('{{ dest.image_url or '/assets/vietnam-safar-logo.png' }}'); {% endfor %}">
+  style="--hero-img: url('{{img_0}}'); {% for dest in destinations %} --img-{{ loop.index }}: url('{{ dest.image_url or ((brand.logo if brand else '') or '/assets/vietnam-safar-logo.png') }}'); {% endfor %}">
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{{tour_title}} - {{ "Luxury Quotation" | translate(lang) }}</title>
+  <script id="auto-version-checker">
+    (function () {
+      const CURRENT_VERSION = {{ latest_version | default (1)
+    }};
+    const QUO_ID = "{{ quotation_id }}";
+    if (!QUO_ID || window.location.search.includes('_r=')) return;
+    fetch('/published/' + QUO_ID + '/version?t=' + Date.now(), { cache: 'no-store' })
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        if (data && data.version && data.version > CURRENT_VERSION) {
+          var nextUrl = data.latest_url || ('/published/' + QUO_ID + '/v' + data.version + '.html');
+          window.location.replace(nextUrl + '?_r=' + Date.now());
+        }
+      })
+      .catch(function () { });
+    }) ();
+  </script>
   {% set font_serif = brand.font_serif | default('Playfair Display') %}
   {% set font_sans = brand.font_sans | default('Outfit') %}
   {% set font_accent = brand.font_accent | default(font_serif) %}
@@ -31,9 +48,10 @@
     rel="stylesheet">
 
   <!-- PWA Metadata -->
-  <link rel="manifest" href="/manifest.json?id={{quotation_id}}&type=quotations" />
+  <link rel="manifest"
+    href="/manifest.json?id={{quotation_id}}&type=quotations{% if brand %}&brand={{brand.id}}{% endif %}" />
   <meta name="theme-color" content="{{c_primary}}" />
-  <link rel="apple-touch-icon" href="/assets/vietnam-safar-logo.png" />
+  <link rel="apple-touch-icon" href="{{ (brand.logo if brand else '') or '/assets/vietnam-safar-logo.png' }}" />
   <!-- Leaflet CSS & JS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
@@ -41,77 +59,15 @@
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <style>
     :root {
-      --primary: {
-          {
-          c_primary
-        }
-      }
-
-      ;
-
-      --primary-dark: {
-          {
-          c_primary_dark
-        }
-      }
-
-      ;
-
-      --accent: {
-          {
-          c_accent
-        }
-      }
-
-      ;
-
-      --accent-light: {
-          {
-          c_accent_light
-        }
-      }
-
-      ;
-
-      --bg-main: {
-          {
-          c_bg_main
-        }
-      }
-
-      ;
-
-      --bg-alt: {
-          {
-          c_bg_alt
-        }
-      }
-
-      ;
-
-      --text-main: {
-          {
-          c_text_main
-        }
-      }
-
-      ;
-
-      --text-muted: {
-          {
-          c_text_muted
-        }
-      }
-
-      ;
-
-      --text-light: {
-          {
-          c_text_light
-        }
-      }
-
-      ;
+      --primary: {{ c_primary }};
+      --primary-dark: {{ c_primary_dark }};
+      --accent: {{ c_accent }};
+      --accent-light: {{ c_accent_light }};
+      --bg-main: {{ c_bg_main }};
+      --bg-alt: {{ c_bg_alt }};
+      --text-main: {{ c_text_main }};
+      --text-muted: {{ c_text_muted }};
+      --text-light: {{ c_text_light }};
       --serif: "{{font_serif}}",
       "Playfair Display",
       serif;
@@ -132,6 +88,9 @@
       --font-accent: '{{font_accent}}',
       'Playfair Display',
       serif;
+      --section-padding: clamp(40px, 6vw, 72px);
+      --container-pad: clamp(16px, 5%, 5%);
+      --card-padding: clamp(20px, 3vw, 30px);
     }
 
     html[lang="ar"] {
@@ -148,7 +107,14 @@
       box-sizing: border-box
     }
 
-    /* Enforce word wrapping globally to prevent text layout overflow */
+    html,
+    body {
+      overflow-x: hidden;
+      width: 100%;
+      position: relative;
+      margin: 0;
+    }
+
     body,
     p,
     h1,
@@ -304,7 +270,7 @@
       justify-content: center;
       gap: 10px;
       border: none;
-      border-radius: 999px;
+      border-radius: 0;
       padding: 13px 19px;
       font-weight: 700;
       letter-spacing: .05em;
@@ -348,33 +314,22 @@
     .hero-content {
       position: relative;
       z-index: 2;
-      width: 100%;
-      max-width: 1180px;
+      width: min(1180px, 92%);
       margin: 0 auto;
-      padding: 100px 5% 40px;
+      padding: 100px 0 40px;
       box-sizing: border-box;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 36px;
+      align-items: center;
     }
 
     .hero-content-inner {
-      width: 70%;
-      max-width: 1000px;
+      max-width: 760px;
+      width: 100%;
     }
 
-    @media (max-width: 1200px) {
-      .hero-content-inner {
-        width: 90%;
-      }
-    }
 
-    @media (max-width: 980px) {
-      .hero-content {
-        padding-top: 140px;
-      }
-
-      .hero-content-inner {
-        width: 100%;
-      }
-    }
 
     .kicker {
       color: rgba(255, 255, 255, 0.85);
@@ -398,7 +353,7 @@
     }
 
     .hero-lede {
-      font-size: 18px;
+      font-size: clamp(15px, 1.8vw, 18px);
       color: rgba(255, 255, 255, 0.95);
       margin: 0 0 30px;
       line-height: 1.6;
@@ -417,7 +372,7 @@
       background: rgba(255, 250, 241, .92);
       color: var(--text-main);
       border: 1px solid rgba(255, 255, 255, .7);
-      border-radius: 34px;
+      border-radius: 0;
       padding: 28px;
       box-shadow: var(--shadow);
       backdrop-filter: blur(14px)
@@ -425,7 +380,7 @@
 
     .quote-card h2 {
       font-family: var(--serif);
-      font-size: 30px;
+      font-size: clamp(22px, 3vw, 30px);
       line-height: 1;
       margin: 0 0 18px
     }
@@ -480,7 +435,7 @@
     .strip-card {
       background: var(--bg-alt);
       border: 1px solid var(--line);
-      border-radius: 26px;
+      border-radius: 0;
       padding: 22px;
       box-shadow: 0 14px 45px rgba(17, 19, 15, .08);
       min-width: 0;
@@ -512,7 +467,7 @@
     }
 
     section {
-      padding: 72px 0
+      padding: var(--section-padding) 0
     }
 
     .section-head {
@@ -548,10 +503,11 @@
 
     .image-tile {
       position: relative;
-      border-radius: 34px;
+      border-radius: 0;
       overflow: hidden;
       box-shadow: var(--shadow);
       background: var(--bg-alt);
+      min-width: 0;
     }
 
     .image-tile.large {
@@ -580,7 +536,7 @@
 
     .image-caption strong {
       font-family: var(--serif);
-      font-size: 27px;
+      font-size: clamp(18px, 2.5vw, 27px);
       font-weight: 500
     }
 
@@ -593,8 +549,8 @@
     .experience {
       background: var(--bg-alt);
       border: 1px solid var(--line);
-      border-radius: 30px;
-      padding: 28px;
+      border-radius: 0;
+      padding: var(--card-padding);
       box-shadow: 0 18px 45px rgba(17, 19, 15, .06)
     }
 
@@ -609,7 +565,7 @@
     .day h3,
     .panel h3 {
       font-family: var(--serif);
-      font-size: 27px;
+      font-size: clamp(20px, 2.5vw, 27px);
       line-height: 1.35;
       font-weight: 500;
       margin: 12px 0 10px;
@@ -640,7 +596,7 @@
       gap: 24px;
       background: var(--bg-alt);
       border: 1px solid var(--line);
-      border-radius: 30px;
+      border-radius: 0;
       padding: 24px;
       align-items: start;
       box-shadow: 0 18px 45px rgba(17, 19, 15, .05);
@@ -670,11 +626,11 @@
     }
 
     .pricing {
-      background: #FAF8F5;
-      color: var(--text);
-      border: 1px solid var(--accent-light);
-      border-radius: 42px;
-      padding: 46px;
+      background: var(--bg-alt);
+      color: var(--text-main);
+      border: 1px solid color-mix(in srgb, var(--primary) 25%, transparent);
+      border-radius: 0;
+      padding: var(--card-padding);
       box-shadow: var(--shadow);
       break-inside: avoid
     }
@@ -684,7 +640,8 @@
       font-size: clamp(32px, 4vw + 0.5rem, 58px);
       font-weight: 500;
       letter-spacing: -.055em;
-      margin: 0 0 12px
+      margin: 0 0 12px;
+      color: var(--primary);
     }
 
     .pricing p {
@@ -699,19 +656,22 @@
     }
 
     .price-card {
-      background: rgba(255, 255, 255, .08);
-      border: 1px solid rgba(216, 189, 133, .38);
-      border-radius: 28px;
-      padding: 24px
+      background: #ffffff;
+      border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
+      border-radius: 0;
+      padding: 24px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.03);
+      color: var(--text-main);
     }
 
     .price-card.featured {
-      background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 24%, transparent), rgba(255, 255, 255, .08));
-      border-color: var(--accent-light)
+      background: #ffffff;
+      border: 2px solid var(--primary);
+      box-shadow: 0 12px 32px color-mix(in srgb, var(--primary) 15%, transparent);
     }
 
     .price-card span {
-      color: var(--accent-light);
+      color: var(--primary);
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: .16em;
@@ -723,11 +683,12 @@
       font-family: var(--serif);
       font-size: 40px;
       font-weight: 500;
-      margin: 10px 0 0
+      margin: 10px 0 0;
+      color: var(--primary);
     }
 
     .price-card small {
-      color: rgba(255, 255, 255, .7)
+      color: var(--text-muted);
     }
 
     .two-col {
@@ -739,8 +700,8 @@
     .panel {
       background: var(--bg-alt);
       border: 1px solid var(--line);
-      border-radius: 32px;
-      padding: 30px;
+      border-radius: 0;
+      padding: var(--card-padding);
       box-shadow: 0 18px 45px rgba(17, 19, 15, .05);
       break-inside: avoid
     }
@@ -754,10 +715,10 @@
 
     .cta {
       background: #FAF8F5;
-      color: var(--text);
+      color: #000000;
       border: 1px solid var(--accent-light);
-      border-radius: 44px;
-      padding: 54px;
+      border-radius: 0;
+      padding: var(--card-padding);
       display: grid;
       grid-template-columns: 1.1fr .9fr;
       gap: 44px;
@@ -772,7 +733,8 @@
       font-weight: 500;
       letter-spacing: -.06em;
       line-height: .96;
-      margin: 0 0 18px
+      margin: 0 0 18px;
+      color: #000000;
     }
 
     .cta p {
@@ -781,15 +743,16 @@
     }
 
     .contact {
-      background: rgba(255, 255, 255, .08);
-      border: 1px solid rgba(255, 255, 255, .22);
-      border-radius: 28px;
-      padding: 26px
+      background: #ffffff;
+      border: 1px solid rgba(216, 189, 133, 0.4);
+      border-radius: 0;
+      padding: 26px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
     }
 
     .contact label {
       display: block;
-      color: var(--accent-light);
+      color: #8c6b23;
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: .16em;
@@ -804,7 +767,8 @@
     .contact div {
       font-weight: 800;
       font-size: 18px;
-      margin-top: 4px
+      margin-top: 4px;
+      color: #000000;
     }
 
     .footer {
@@ -823,13 +787,14 @@
       display: none
     }
 
-    @media(max-width: 1440px) {
+    /* ── T0: ≤ 1600px ──────────────────────────── */
+    @media (max-width: 1600px) {
       .container {
-        width: min(1180px, 95%);
+        width: min(1180px, 96%);
       }
 
-      .hero-content {
-        gap: 36px;
+      .hero-content-inner {
+        width: 80%;
       }
 
       .day {
@@ -853,7 +818,15 @@
       }
     }
 
-    @media(max-width:980px) {
+    /* ── T1: ≤ 1280px ──────────────────────────── */
+    @media (max-width: 1280px) {
+      .hero-content-inner {
+        width: 85%;
+      }
+    }
+
+    /* ── T2: ≤ 980px ────────────────────────────── */
+    @media (max-width: 980px) {
       .nav-links {
         display: none
       }
@@ -872,18 +845,21 @@
       }
 
       .gallery {
-        grid-template-columns: 1fr;
-        grid-auto-rows: 280px
+        grid-template-columns: 1fr 1fr;
+        grid-auto-rows: 260px;
       }
 
-      .image-tile.large,
+      .image-tile.large {
+        grid-row: span 2;
+      }
+
       .image-tile.wide {
-        grid-row: auto;
-        grid-column: auto;
+        grid-column: span 2;
       }
 
       .day {
-        grid-template-columns: 1fr
+        grid-template-columns: 90px 1fr;
+        gap: 16px;
       }
 
       .day-meta {
@@ -892,36 +868,19 @@
       }
 
       .hero {
-        min-height: auto
+        min-height: 100svh;
       }
 
       .hero-content {
-        padding: 86px 0 130px
+        padding: 86px 0 var(--section-padding);
+      }
+
+      .hero-content-inner {
+        width: 100%;
       }
     }
 
-    @media(max-width:620px) {
-      .nav-actions {
-        display: none
-      }
 
-      .strip-grid,
-      .experience-grid,
-      .price-grid {
-        grid-template-columns: 1fr
-      }
-
-      .hero h1 {
-        font-size: clamp(24px, 7vw, 36px);
-        line-height: 1.2;
-      }
-
-      .pricing,
-      .cta {
-        padding: 28px;
-        border-radius: 30px
-      }
-    }
 
     @media print {
       .no-print {
@@ -990,74 +949,342 @@
       }
     }
 
+    /* ── Chapter Divider — Full Bleed Storytelling Section ─── */
+    .chapter-divider-section {
+      position: relative;
+      width: 100%;
+      min-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      color: #fff;
+      background-size: cover;
+      background-position: center;
+      box-sizing: border-box;
+    }
+
+    /* Secondary divider (before Hotels) is lighter */
+    .chapter-divider-section--secondary {
+      min-height: 65vh;
+    }
+
+    .chapter-divider-section::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(17, 19, 15, 0.45) 0%, rgba(17, 19, 15, 0.15) 40%, rgba(17, 19, 15, 0.65) 100%);
+      pointer-events: none;
+    }
+
+    .chapter-divider-container {
+      position: relative;
+      z-index: 2;
+      width: min(1180px, 90%);
+      height: 100%;
+      margin: 0 auto;
+      padding: 70px 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-sizing: border-box;
+      flex: 1;
+    }
+
+    .chapter-divider-top {
+      max-width: 800px;
+    }
+
+    .chapter-divider-bottom {
+      max-width: 680px;
+    }
+
+    .chapter-divider-kicker {
+      font-size: 12px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.85);
+      margin-bottom: 20px;
+    }
+
+    .chapter-divider-title {
+      font-family: var(--serif);
+      font-size: clamp(40px, 5.5vw, 76px);
+      font-weight: 400;
+      line-height: 1.05;
+      letter-spacing: -0.01em;
+      margin: 0;
+      color: #ffffff;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .chapter-divider-tagline {
+      font-family: var(--serif);
+      font-size: clamp(18px, 2.2vw, 24px);
+      line-height: 1.45;
+      color: rgba(255, 255, 255, 0.92);
+      margin: 0;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    @media (max-width: 768px) {
+      .chapter-divider-section {
+        min-height: 65vh;
+      }
+
+      .chapter-divider-section--secondary {
+        min-height: 50vh;
+      }
+
+      .chapter-divider-container {
+        padding: 48px 0;
+      }
+    }
+
+    @media print {
+      .chapter-divider-section {
+        min-height: 55vh;
+        page-break-before: always;
+        break-before: page;
+      }
+    }
+
     /* ── Journey Map styles ─────────────────────────────────────────── */
-    .map-layout {
+    .map-layout-new {
       display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
-      gap: 24px;
-      margin-top: 32px;
-      height: 520px;
+      grid-template-columns: 60fr 40fr;
+      height: clamp(500px, 75vh, 800px);
+      width: 100%;
+      background: var(--bg-main);
+    }
+
+    #route-map {
+      scroll-margin-top: 80px;
+    }
+
+    @media (max-width: 768px) {
+      .map-layout-new {
+        grid-template-columns: 1fr;
+        grid-template-rows: 340px auto;
+        height: auto;
+      }
+
+      .map-layout-new .timeline-section {
+        width: 100%;
+        max-height: none;
+        padding: 20px 14px;
+      }
+
+      .map-layout-new .map-section {
+        width: 100%;
+        height: 340px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .map-container {
+        border-right: none;
+        border-bottom: 1px solid var(--line);
+        overflow: hidden;
+      }
+
+      .luxury-marker {
+        width: 22px;
+        height: 22px;
+        font-size: 11px;
+        border-width: 1.5px;
+      }
+
+      .luxury-marker-label {
+        font-size: 12px;
+        left: 28px;
+        top: 2px;
+        max-width: 110px;
+        white-space: normal;
+        line-height: 1.15;
+        text-shadow: 0 0 3px var(--bg-main), 0 0 3px var(--bg-main);
+      }
+    }
+
+    .map-section {
+      position: relative;
+      min-width: 0;
     }
 
     .map-container {
-      border-radius: 34px;
-      overflow: hidden;
-      box-shadow: var(--shadow);
-      border: 1px solid var(--line);
+      width: 100%;
       height: 100%;
       position: relative;
       z-index: 1;
+      border-right: 1px solid var(--line);
+      min-width: 0;
+      overflow: hidden;
     }
 
-    .map-sidebar {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+    .timeline-section {
       overflow-y: auto;
-      padding: 6px 8px 6px 6px;
-      height: 100%;
+      padding: 0 0 0 40px;
+      background: var(--bg-main);
     }
 
-    .sidebar-card {
-      background: var(--bg-alt);
-      border: 1px solid var(--line);
-      border-radius: 20px;
-      padding: 16px 20px;
+    .timeline {
+      position: relative;
+      padding-left: 20px;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      top: 10px;
+      /* Offset to align with first dot */
+      bottom: 20px;
+      /* Offset to align with last dot */
+      left: 0;
+      width: 1px;
+      background: var(--accent);
+      /* Solid line connecting dots */
+      opacity: 0.5;
+    }
+
+    .timeline-item {
+      position: relative;
+      padding-left: 20px;
+      margin-bottom: 30px;
       cursor: pointer;
+      opacity: 0.6;
       transition: all 0.3s ease;
-      box-shadow: 0 4px 15px rgba(17, 19, 15, 0.02);
     }
 
-    .sidebar-card:hover,
-    .sidebar-card.active {
-      transform: translateY(-2px);
+    /* Outer ring for all timeline items */
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -25px;
+      /* Center it on the 1px line which is at left: 0 relative to .timeline */
+      top: 4px;
+      width: 11px;
+      height: 11px;
+      border: 1.5px solid var(--accent);
+      border-radius: 50%;
+      background: var(--bg-main);
+      /* Cover the line behind it */
+      transition: all 0.3s ease;
+      z-index: 2;
+      box-sizing: border-box;
+    }
+
+    /* Inner solid circle (hidden by default, shown when active) */
+    .timeline-item::after {
+      content: '';
+      position: absolute;
+      left: -21.5px;
+      /* Center within the 11px ring */
+      top: 7.5px;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: transparent;
+      transition: all 0.3s ease;
+      z-index: 3;
+    }
+
+    .timeline-item:hover,
+    .timeline-item.active {
+      opacity: 1;
+    }
+
+    .timeline-item.active::before {
       border-color: var(--accent);
-      background: #fffefb;
-      box-shadow: 0 10px 25px color-mix(in srgb, var(--accent) 8%, transparent);
     }
 
-    .sidebar-card span.days-badge {
+    .timeline-item.active::after {
+      background: var(--accent);
+    }
+
+    .item-duration {
       font-size: 11px;
       font-weight: 800;
       color: var(--accent);
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      display: inline-block;
-      margin-bottom: 4px;
+      margin-bottom: 8px;
     }
 
-    .sidebar-card h4 {
+    .item-title {
       font-family: var(--serif);
-      font-size: 18px;
+      font-size: 20px;
       color: var(--primary);
-      margin: 0 0 6px 0;
+      margin: 0 0 4px 0;
     }
 
-    .sidebar-card p {
+    .item-hotel {
       font-size: 13px;
+      color: var(--text-main);
+      font-weight: 600;
+      margin: 0 0 8px 0;
+    }
+
+    .item-content {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .item-sub {
+      color: var(--text-main);
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .item-desc {
       color: var(--text-muted);
-      margin: 0;
-      line-height: 1.4;
+    }
+
+    .luxury-marker-wrapper {
+      position: relative;
+    }
+
+    .luxury-marker {
+      width: 28px;
+      height: 28px;
+      background: var(--primary);
+      border-radius: 50%;
+      border: 2px solid #fff;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: var(--sans);
+    }
+
+    .luxury-marker.active {
+      background: var(--accent);
+      transform: scale(1.15);
+      box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 30%, transparent);
+      z-index: 10;
+    }
+
+    .luxury-marker-label {
+      position: absolute;
+      left: 38px;
+      top: 3px;
+      font-family: var(--serif);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-main);
+      white-space: nowrap;
+      text-shadow: 0 0 4px var(--bg-main), 0 0 4px var(--bg-main), 0 0 4px var(--bg-main);
+      pointer-events: none;
+      transition: color 0.3s;
+    }
+
+    .luxury-marker.active+.luxury-marker-label {
+      color: var(--accent);
     }
 
     /* Leaflet integration styling overrides */
@@ -1066,14 +1293,19 @@
       font-family: var(--sans) !important;
     }
 
+    .leaflet-tile-pane {
+      mix-blend-mode: multiply;
+      filter: sepia(0.2);
+    }
+
     .leaflet-tile-container {
-      filter: sepia(0.2) hue-rotate(4deg) saturate(0.9) contrast(1) brightness(1);
+      filter: saturate(0.9) contrast(1) brightness(1);
     }
 
     .leaflet-popup-content-wrapper {
       background: var(--bg-alt) !important;
       border: 1px solid var(--line) !important;
-      border-radius: 16px !important;
+      border-radius: 0;
       box-shadow: var(--shadow) !important;
     }
 
@@ -1221,7 +1453,7 @@
       background: transparent;
       color: rgba(255, 255, 255, 0.6);
       padding: 6px 14px;
-      border-radius: 16px;
+      border-radius: 0;
       font-size: 11px;
       font-weight: 600;
       cursor: pointer;
@@ -1249,7 +1481,7 @@
 
     .map-sidebar::-webkit-scrollbar-thumb {
       background: var(--line);
-      border-radius: 2px;
+      border-radius: 0;
     }
 
     @media(max-width:980px) {
@@ -1268,20 +1500,20 @@
     }
 
     /* ── Inline editing ─────────────────────────────────────────── */
-    [data-editable] {
-      outline: none;
-      border-radius: 4px;
-      transition: background .15s, box-shadow .15s
+    [data-editable]:not(.day-image):not(.carousel-container):not(.hero-image):not(.image-tile):not(img):not(.hotel-image-wrapper):hover {
+      background-color: color-mix(in srgb, var(--accent) 9%, transparent);
+      cursor: text;
     }
 
-    [data-editable]:hover {
-      background: color-mix(in srgb, var(--accent) 9%, transparent);
-      cursor: text
+    [data-editable]:not(.day-image):not(.carousel-container):not(.hero-image):not(.image-tile):not(img):not(.hotel-image-wrapper):focus {
+      background-color: color-mix(in srgb, var(--accent) 14%, transparent);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent);
     }
 
-    [data-editable]:focus {
-      background: color-mix(in srgb, var(--accent) 14%, transparent);
-      box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent)
+    .day-image[data-editable]:hover,
+    .carousel-container[data-editable]:hover,
+    .image-tile[data-editable]:hover {
+      cursor: pointer;
     }
 
     /* ── Publish Bar ────────────────────────────────────────────── */
@@ -1296,7 +1528,7 @@
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border: 1px solid color-mix(in srgb, var(--primary) 40%, transparent);
-      border-radius: 40px;
+      border-radius: 0;
       box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
       display: flex;
       align-items: center;
@@ -1304,7 +1536,7 @@
       padding: 12px 24px;
       gap: 24px;
       width: max-content;
-      min-width: 600px;
+      min-width: min(600px, 90%);
       max-width: 90%;
       box-sizing: border-box;
     }
@@ -1329,7 +1561,7 @@
         width: 92%;
         min-width: 0;
         bottom: 16px;
-        border-radius: 30px;
+        border-radius: 0;
         padding: 10px 16px;
         gap: 12px;
         flex-wrap: nowrap;
@@ -1394,7 +1626,7 @@
       #btn-approve {
         font-size: 11px !important;
         padding: 8px 14px !important;
-        border-radius: 20px !important;
+        border-radius: 0;
         height: 34px !important;
         display: inline-flex !important;
         align-items: center !important;
@@ -1452,7 +1684,7 @@
       background: var(--primary);
       color: var(--text-light);
       border: none;
-      border-radius: 999px;
+      border-radius: 0;
       padding: 11px 28px;
       font-weight: 700;
       font-size: 12px;
@@ -1484,7 +1716,7 @@
       background: rgba(255, 255, 255, 0.1);
       color: #fff;
       border: 1px solid color-mix(in srgb, var(--primary) 40%, transparent);
-      border-radius: 999px;
+      border-radius: 0;
       padding: 11px 20px;
       font-weight: 700;
       font-size: 12px;
@@ -1536,7 +1768,7 @@
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border: 1px solid color-mix(in srgb, var(--primary) 40%, transparent);
-      border-radius: 24px;
+      border-radius: 0;
       width: 100%;
       max-width: 400px;
       max-height: calc(100vh - 80px);
@@ -1617,7 +1849,7 @@
 
     .pb-domain-list::-webkit-scrollbar-thumb {
       background: color-mix(in srgb, var(--accent) 25%, transparent);
-      border-radius: 10px;
+      border-radius: 0;
     }
 
     .pb-domain-list::-webkit-scrollbar-thumb:hover {
@@ -1631,7 +1863,7 @@
       padding: 12px 16px;
       background: rgba(17, 19, 15, 0.03);
       border: 1px solid rgba(17, 19, 15, 0.08);
-      border-radius: 14px;
+      border-radius: 0;
       cursor: pointer;
       transition: all 0.25s ease;
       box-sizing: border-box;
@@ -1672,7 +1904,7 @@
       font-size: 10px;
       font-weight: 700;
       padding: 2px 6px;
-      border-radius: 4px;
+      border-radius: 0;
       width: fit-content;
       text-transform: uppercase;
       letter-spacing: 0.05em;
@@ -1715,7 +1947,7 @@
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
-      border-radius: 24px;
+      border-radius: 0;
       padding: 20px;
       box-shadow: var(--shadow);
       z-index: 10000;
@@ -1781,7 +2013,7 @@
       background: var(--primary);
       color: var(--text-light);
       border: none;
-      border-radius: 999px;
+      border-radius: 0;
       padding: 10px 16px;
       font-weight: 700;
       font-size: 11px;
@@ -1801,7 +2033,7 @@
       background: rgba(17, 19, 15, 0.05);
       color: var(--text-main);
       border: 1px solid rgba(17, 19, 15, 0.1);
-      border-radius: 999px;
+      border-radius: 0;
       padding: 10px 16px;
       font-weight: 700;
       font-size: 11px;
@@ -1823,7 +2055,7 @@
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border: 1px solid var(--accent-light);
-      border-radius: 20px;
+      border-radius: 0;
       padding: 16px 20px;
       box-shadow: var(--shadow);
       z-index: 10001;
@@ -1925,7 +2157,7 @@
       color: white;
       width: 28px;
       height: 28px;
-      border-radius: 6px;
+      border-radius: 0;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1976,7 +2208,7 @@
       gap: 48px;
       background: var(--bg-alt);
       border: 1px solid var(--line);
-      border-radius: 36px;
+      border-radius: 0;
       padding: 44px;
       box-shadow: var(--shadow);
       align-items: center;
@@ -2004,7 +2236,7 @@
 
     .designer-info h2 {
       font-family: var(--serif);
-      font-size: 36px;
+      font-size: clamp(24px, 3.5vw, 36px);
       color: var(--primary);
       margin: 0 0 16px 0;
     }
@@ -2082,7 +2314,7 @@
     #luxury-loading-overlay .loading-card {
       width: 340px;
       padding: 40px 30px;
-      border-radius: 24px;
+      border-radius: 0;
       background: rgba(20, 20, 20, 0.85);
       border: 1px solid rgba(255, 255, 255, 0.08);
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 24px 60px rgba(0, 0, 0, 0.6);
@@ -2149,7 +2381,7 @@
     #luxury-loading-overlay .btn-cancel {
       display: inline-block;
       padding: 10px 24px;
-      border-radius: 30px;
+      border-radius: 0;
       border: 1px solid rgba(255, 255, 255, 0.12);
       background: transparent;
       color: #e0e0e0;
@@ -2188,7 +2420,7 @@
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      border-radius: 20px;
+      border-radius: 0;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -2224,7 +2456,7 @@
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border: 1px solid var(--line);
-      border-radius: 12px;
+      border-radius: 0;
       box-shadow: 0 10px 30px rgba(17, 19, 15, 0.1);
       min-width: 140px;
       opacity: 0;
@@ -2279,7 +2511,7 @@
     .luxury-editable-wrapper {
       position: relative;
       transition: box-shadow 0.3s ease, border-color 0.3s ease;
-      border-radius: 4px;
+      border-radius: 0;
     }
 
     .luxury-editable-wrapper:hover {
@@ -2391,112 +2623,112 @@
 
     @media (max-width: 768px) {
       .container {
-        width: min(1180px, 88%) !important;
+        width: min(1180px, 88%);
       }
 
       .hero {
-        min-height: auto !important;
-        background: linear-gradient(180deg, rgba(17, 19, 15, 0.92) 0%, rgba(17, 19, 15, 0.78) 50%, rgba(17, 19, 15, 0.65) 100%), var(--hero-img) center/cover no-repeat !important;
+        min-height: 100svh;
+        background: linear-gradient(180deg, rgba(17, 19, 15, 0.92) 0%, rgba(17, 19, 15, 0.78) 50%, rgba(17, 19, 15, 0.65) 100%), var(--hero-img) center/cover no-repeat;
       }
 
       .hero-content {
-        grid-template-columns: 1fr !important;
-        padding: 92px 6% 60px !important;
-        gap: 20px !important;
+        grid-template-columns: 1fr;
+        padding: 92px 6% 60px;
+        gap: 20px;
       }
 
       .hero h1 {
-        font-size: clamp(22px, 6.5vw, 34px) !important;
-        line-height: 1.25 !important;
-        margin-bottom: 16px !important;
-        display: block !important;
-        -webkit-line-clamp: unset !important;
-        overflow: visible !important;
+        font-size: clamp(22px, 6.5vw, 34px);
+        line-height: 1.25;
+        margin-bottom: 16px;
+        display: block;
+        -webkit-line-clamp: unset;
+        overflow: visible;
       }
 
       .hero-lede {
-        font-size: 15px !important;
-        line-height: 1.55 !important;
-        margin-bottom: 20px !important;
-        display: block !important;
-        -webkit-line-clamp: unset !important;
-        overflow: visible !important;
+        font-size: 15px;
+        line-height: 1.55;
+        margin-bottom: 20px;
+        display: block;
+        -webkit-line-clamp: unset;
+        overflow: visible;
       }
 
       .hero-meta {
-        margin-bottom: 24px !important;
-        padding-top: 16px !important;
+        margin-bottom: 24px;
+        padding-top: 16px;
       }
 
       .hero-meta strong {
-        font-size: 12px !important;
-        letter-spacing: .06em !important;
-        line-height: 1.4 !important;
-        margin-bottom: 8px !important;
-        word-break: break-word !important;
+        font-size: 12px;
+        letter-spacing: .06em;
+        line-height: 1.4;
+        margin-bottom: 8px;
+        word-break: break-word;
       }
 
       .hero-meta span {
-        font-size: 13px !important;
-        letter-spacing: .04em !important;
+        font-size: 13px;
+        letter-spacing: .04em;
       }
 
       .hero-actions {
-        flex-direction: column !important;
-        width: 100% !important;
-        gap: 12px !important;
-        margin-bottom: 24px !important;
+        flex-direction: column;
+        width: 100%;
+        gap: 12px;
+        margin-bottom: 24px;
       }
 
       .hero-actions .btn {
-        width: 100% !important;
-        justify-content: center !important;
-        padding: 14px 20px !important;
+        width: 100%;
+        justify-content: center;
+        padding: 14px 20px;
       }
 
       .hero-footer {
-        font-size: 11px !important;
-        flex-wrap: wrap !important;
-        gap: 6px !important;
+        font-size: 11px;
+        flex-wrap: wrap;
+        gap: 6px;
       }
 
       .quote-card {
-        padding: 20px !important;
-        border-radius: 24px !important;
+        padding: 20px;
+        border-radius: 0;
       }
 
       .quote-card h2 {
-        font-size: 22px !important;
-        margin-bottom: 12px !important;
+        font-size: 22px;
+        margin-bottom: 12px;
       }
 
       .quote-row {
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        gap: 4px !important;
-        padding-bottom: 8px !important;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        padding-bottom: 8px;
       }
 
       .quote-row strong {
-        text-align: left !important;
+        text-align: left;
       }
 
       #payment-terms,
       #hotels {
-        padding: 32px 20px !important;
-        border-radius: 24px !important;
-        margin: 24px 0 !important;
+        padding: 32px 20px;
+        border-radius: 0;
+        margin: 24px 0;
       }
 
       #why-works,
       #meet-designer {
-        padding: 40px 20px !important;
-        border-radius: 24px !important;
-        margin: 24px 0 !important;
+        padding: 40px 20px;
+        border-radius: 0;
+        margin: 24px 0;
       }
 
       #payment-terms th.term-th {
-        width: 130px !important;
+        width: 130px;
       }
 
       #payment-terms table {
@@ -2504,20 +2736,20 @@
       }
 
       .nav-inner {
-        height: 56px !important;
-        padding: 8px 0 !important;
+        height: 56px;
+        padding: 8px 0;
       }
 
       .nav-actions {
-        display: flex !important;
-        gap: 6px !important;
-        align-items: center !important;
+        display: flex;
+        gap: 6px;
+        align-items: center;
         flex-shrink: 0;
       }
 
       .brand {
-        font-size: 12px !important;
-        gap: 8px !important;
+        font-size: 12px;
+        gap: 8px;
         max-width: 150px;
         white-space: nowrap;
         overflow: hidden;
@@ -2525,58 +2757,222 @@
       }
 
       .brand img {
-        width: 26px !important;
-        height: 26px !important;
+        width: 26px;
+        height: 26px;
         flex-shrink: 0;
       }
 
       .lang-switcher-btn .lang-text,
       .lang-switcher-btn .lang-caret {
-        display: none !important;
+        display: none;
       }
 
       .lang-switcher-btn {
-        padding: 6px !important;
-        border-radius: 50% !important;
-        width: 32px !important;
-        height: 32px !important;
-        justify-content: center !important;
+        padding: 6px;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        justify-content: center;
       }
 
       #btn-pdf-view .pdf-btn-text,
       .nav-actions .pdf-btn-text {
-        display: none !important;
+        display: none;
       }
 
       #btn-pdf-view,
       .nav-actions .btn.btn-primary {
-        padding: 6px !important;
-        border-radius: 50% !important;
-        width: 32px !important;
-        height: 32px !important;
-        justify-content: center !important;
-        font-size: 13px !important;
+        padding: 6px;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        justify-content: center;
+        font-size: 13px;
       }
 
       #nav-notification-btn {
-        width: 32px !important;
-        height: 32px !important;
-        padding: 0 !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+    }
+
+    /* Investment (Package Pricing) List Styles - Vibrant Light */
+    #quotation.quotation-vibrant-light {
+      background: color-mix(in srgb, var(--primary) 8%, var(--bg-main));
+      padding: var(--section-padding) 0;
+    }
+
+    #quotation.quotation-vibrant-light .kicker {
+      color: var(--primary-dark) !important;
+    }
+
+    #quotation.quotation-vibrant-light h2 {
+      color: var(--text-main) !important;
+    }
+
+    #quotation.quotation-vibrant-light p {
+      color: var(--text-muted) !important;
+    }
+
+    .investment-header {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      align-items: end;
+      margin-bottom: 48px;
+    }
+
+    .investment-list {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .investment-row {
+      display: grid;
+      grid-template-columns: 60px 2fr 1fr auto;
+      align-items: center;
+      padding: 32px;
+      background: var(--bg-main);
+      border-radius: 12px;
+      box-shadow: 0 12px 30px rgba(17, 19, 15, 0.03);
+      transition: all 0.4s ease;
+      position: relative;
+      text-decoration: none;
+      color: inherit;
+      border: 1px solid transparent;
+      overflow: hidden;
+    }
+
+    .investment-row:hover {
+      box-shadow: 0 16px 40px rgba(17, 19, 15, 0.06);
+      transform: translateY(-2px);
+    }
+
+    .investment-row::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: transparent;
+      transition: background 0.4s ease;
+    }
+
+    .investment-row:hover::before {
+      background: var(--primary);
+    }
+
+    .investment-num {
+      font-family: var(--serif);
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1;
+      color: color-mix(in srgb, var(--primary) 20%, transparent);
+      align-self: flex-start;
+    }
+
+    .investment-col {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .investment-title {
+      font-weight: 600;
+      font-size: 18px;
+      color: var(--text-main);
+    }
+
+    .investment-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .investment-price {
+      font-size: 24px;
+      font-weight: 500;
+      color: var(--primary-dark);
+    }
+
+    .investment-badge {
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 700;
+      padding: 8px 16px;
+      border-radius: 4px;
+    }
+
+    .investment-badge.confirmed {
+      background: var(--primary-dark);
+      color: var(--bg-main);
+    }
+
+    .investment-badge.alternative {
+      border: 1px dashed var(--line);
+      color: var(--text-muted);
+    }
+
+    #quotation.quotation-vibrant-light .no-print button {
+      background: var(--primary-dark) !important;
+      color: var(--bg-main) !important;
+      border: none !important;
+      padding: 14px 28px !important;
+      box-shadow: 0 8px 20px color-mix(in srgb, var(--primary-dark) 20%, transparent);
+    }
+
+    #quotation.quotation-vibrant-light .no-print button:hover {
+      background: color-mix(in srgb, var(--primary-dark) 80%, #000) !important;
+    }
+
+    #quotation.quotation-vibrant-light .important-note-container {
+      border-top: 1px dashed color-mix(in srgb, var(--primary) 30%, transparent) !important;
+      color: var(--text-main) !important;
+    }
+
+    #quotation.quotation-vibrant-light .important-note-container strong {
+      color: var(--primary) !important;
+    }
+
+    @media (max-width: 768px) {
+      .investment-header {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .investment-row {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        padding: 24px;
+      }
+
+      .investment-row:hover {
+        transform: none;
+      }
+
+      .investment-col {
+        gap: 4px;
+      }
+
+      .investment-badge {
+        align-self: flex-start;
+        margin-top: 8px;
+      }
+
+      .investment-num {
+        position: absolute;
+        top: 24px;
+        right: 24px;
+        align-self: auto;
       }
     }
   </style>
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const heroImages = [
-        '/assets/brands/hero/elder.png'
-      ];
-      const randomHero = heroImages[Math.floor(Math.random() * heroImages.length)];
-      document.documentElement.style.setProperty('--hero-img', `url(${randomHero})`);
-    });
-  </script>
 </head>
 
 <body>
@@ -2588,7 +2984,6 @@
         <span>{{ (brand.name if brand else '') or 'Vietnam Safar' }}</span>
       </a>
       <div class="nav-links">
-        <a href="#journey">{{ "Journey" | translate(lang) }}</a>
         <a href="#route-map">{{ "Route Map" | translate(lang) }}</a>
         <a href="#itinerary">{{ "Itinerary" | translate(lang) }}</a>
         <a href="#quotation">{{ "Quotation" | translate(lang) }}</a>
@@ -2618,8 +3013,10 @@
               d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z" />
           </svg>
         </button>
-        <a class="btn btn-primary" href="/quotations/{{quotation_id}}/pdf?lang={{lang}}" target="_blank"
-          id="btn-pdf-view">📄 <span class="pdf-btn-text">{{ "PDF Preview" | translate(lang) }}</span></a>
+        <a class="btn btn-primary"
+          href="/quotations/{{quotation_id}}/pdf?lang={{lang}}{% if brand %}&brand={{brand.id}}{% endif %}"
+          target="_blank" id="btn-pdf-view">📄 <span class="pdf-btn-text">{{ "PDF Download" | translate(lang)
+            }}</span></a>
       </div>
     </div>
   </nav>
@@ -2628,102 +3025,204 @@
     <header class="hero">
       <div class="hero-content">
         <div class="hero-content-inner">
+          <div class="kicker" data-editable="cover_kicker">{{ cover_kicker | default("A Privately Arranged Journey" |
+            translate(lang)) }}</div>
           <h1 data-editable="tour_title">{{tour_title}}</h1>
           <p class="hero-lede" data-editable="lede">{{ lede | rtl_mixed(lang) }}</p>
 
           <div class="hero-meta"
             style="margin-bottom: 40px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.2);">
             <strong data-editable="hero_meta_1"
-              style="display: block; font-size: 14px; letter-spacing: .15em; text-transform: uppercase; color: rgba(255,255,255,0.95); margin-bottom: 12px; font-weight: 700;">14
-              DAYS &bull; 13 NIGHTS &bull; {{ guests_txt | upper if guests_txt else 'FAMILY VACATION (2 PAX)'
-              }}</strong>
+              style="display: block; font-size: 14px; letter-spacing: .15em; text-transform: uppercase; color: rgba(255,255,255,0.95); margin-bottom: 12px; font-weight: 700;">{{
+              hero_meta_1 | default("14 DAYS • 13 NIGHTS • " ~ (guests_txt | upper if guests_txt else 'FAMILY VACATION
+              (2 PAX)')) }}</strong>
             <span data-editable="hero_meta_2"
               style="display: block; font-size: 15px; color: rgba(255,255,255,0.7); letter-spacing: .05em; text-transform: uppercase;">{{
-              travel_dates | upper if travel_dates else '01 APR - 14 APR 2027' }}</span>
+              hero_meta_2 | default(travel_dates | upper if travel_dates else '01 APR - 14 APR 2027') }}</span>
           </div>
 
           <div class="hero-actions no-print" style="margin-bottom: 40px;">
-            <a class="btn btn-primary" href="#journey"
-              style="padding: 16px 32px; font-size: 13px; letter-spacing: .08em; border-radius: 999px; background: var(--primary); color: white; border: none; font-weight: 700; box-shadow: 0 8px 24px rgba(0,0,0,0.15);">{{
+            <a class="btn btn-primary" href="#route-map"
+              style="padding: 16px 32px; font-size: 13px; letter-spacing: .08em; border-radius: 0; background: var(--primary); color: white; border: none; font-weight: 700; box-shadow: 0 8px 24px rgba(0,0,0,0.15);">{{
               "BEGIN THE JOURNEY" | translate(lang) }}</a>
           </div>
 
           <div class="hero-footer no-print"
             style="display: flex; justify-content: space-between; font-size: 12px; letter-spacing: .1em; color: rgba(255,255,255,0.6); text-transform: uppercase; width: 100%;">
-            <div class="hf-left" data-editable="hero_footer">{{ brand.name if brand else 'CAPELLA TRAVEL' }} &bull;
+            <div class="hf-left" data-editable="hero_footer">{{ brand.name if brand else 'CAPELLA TRAVEL' }} •
               {{quotation_number}}</div>
           </div>
         </div>
+
       </div>
     </header>
-    <section class="open-letter-section" style="padding: 100px 0; background: var(--bg-main);">
+    <section class="open-letter-section" style="padding: var(--section-padding) 0; background: var(--bg-main);">
       <style>
-        .letter-grid {
+        .letter-container {
+          width: min(1180px, 92%);
+          margin: 0 auto;
+        }
+
+        .letter-header {
+          margin-bottom: 40px;
+        }
+
+        .letter-kicker {
+          font-family: var(--sans);
+          font-size: 13px;
+          font-weight: 700;
+          letter-spacing: 0.15em;
+          text-transform: uppercase;
+          color: var(--accent, #9e7b4f);
+          margin-bottom: 14px;
+        }
+
+        .letter-title {
+          font-family: var(--serif);
+          font-size: clamp(34px, 4.5vw, 56px);
+          font-weight: 500;
+          color: var(--primary, #1c352d);
+          line-height: 1.15;
+          margin: 0 0 28px 0;
+        }
+
+        .letter-highlight-text {
+          font-family: var(--serif);
+          font-style: italic;
+          font-size: clamp(20px, 2.2vw, 24px);
+          line-height: 1.4;
+          color: var(--accent, #9e7b4f);
+          margin: 0 0 44px 0;
+        }
+
+        .letter-body-grid {
           display: grid;
           grid-template-columns: 1fr;
-          gap: 40px;
+          gap: 30px;
         }
 
-        @media (min-width: 992px) {
-          .letter-grid {
-            grid-template-columns: 35% 1fr;
-            gap: 80px;
-            align-items: start;
+        @media (min-width: 768px) {
+          .letter-body-grid {
+            grid-template-columns: 220px 1fr;
+            gap: 40px;
+            align-items: stretch;
           }
         }
+
+        .letter-decor-col {
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          align-items: flex-start;
+          padding-bottom: 10px;
+        }
+
+        @media (max-width: 767px) {
+          .letter-decor-col img {
+            display: none;
+          }
+        }
+
+        .letter-content-main {
+          font-family: var(--sans);
+        }
+
+        .letter-text p {
+          font-size: 16px;
+          line-height: 1.75;
+          color: #383838;
+          margin-top: 0;
+          margin-bottom: 22px;
+        }
+
+        .letter-text p strong {
+          color: #111111;
+        }
+
+        .letter-signature-block {
+          margin-top: 36px;
+        }
+
+        .letter-sig-name {
+          font-family: var(--serif);
+          font-size: clamp(26px, 3vw, 32px);
+          font-weight: 600;
+          color: var(--primary, #1c352d);
+          margin: 0 0 6px 0;
+          line-height: 1.2;
+        }
+
+        .letter-sig-details {
+          font-family: var(--sans);
+          font-size: 14px;
+          color: var(--text-muted, #7a7367);
+          margin: 0;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
       </style>
-      <div class="container">
-        <div class="letter-grid">
-          <!-- IMAGE (35%) -->
-          <div class="letter-image" style="display: flex; align-items: center; justify-content: center; padding: 20px;">
-            <img src="/assets/brands/indochine_icon/hoa sen.svg" alt="Cloud Graphic"
-              style="width: 100%; max-width: 320px; height: auto; display: block; opacity: 0.8;" />
+      <div class="letter-container">
+        <div class="letter-header">
+          <div class="letter-kicker" data-editable="chapter_kicker">
+            {{ chapter_kicker | default('CHAPTER 01 - THE INVITATION') }}
+          </div>
+          <h2 class="letter-title" data-editable="journey_overview_title">
+            {{ journey_overview_title | default("A Journey Shaped Around Your Family") }}
+          </h2>
+        </div>
+
+        <div class="letter-body-grid">
+          <!-- LEFT DECORATION (Ruong bac thang SVG graphic) -->
+          <div class="letter-decor-col">
+            <p class="letter-highlight-text" data-editable="letter_highlight">
+              {{ letter_highlight | default('This journey was designed to leave room for both discovery and rest.') }}
+            </p>
+            <img src="/assets/brands/indochine_icon/ruong_bac_thang.svg" alt="Ruong Bac Thang Graphic"
+              style="width: 100%; max-width: 220px; height: auto; display: block; opacity: 0.85;" />
           </div>
 
-          <!-- LETTER (65%) -->
-          <div class="letter-content" style="padding-top: 10px;">
-            <h2 class="font-serif"
-              style="font-size: clamp(32px, 4vw, 48px); color: var(--text-main); margin-bottom: 40px; line-height: 1.2;"
-              data-editable="journey_overview_title">
-              {{ journey_overview_title | default("A Journey Shaped Around Your Family") }}
-            </h2>
-
-            <!-- HIGHLIGHT QUOTE -->
-            <div style="margin-bottom: 40px; padding-left: 24px; border-left: 2px solid var(--accent);">
-              <p class="font-serif"
-                style="font-size: clamp(24px, 3vw, 32px); font-style: italic; color: var(--accent); line-height: 1.4; margin: 0;"
-                data-editable="letter_highlight">
-                {{ letter_highlight | default('"This journey was designed to leave room for both discovery and rest."')
-                }}
+          <!-- RIGHT CONTENT -->
+          <div class="letter-content-main">
+            <div class="letter-text">
+              <p data-editable="letter_greeting">{{ letter_greeting | default("Dear " ~ (customer_name | default('Family
+                Vacation')) ~ ",") | rtl_mixed(lang) }}</p>
+              <p data-editable="letter_intro">{{ letter_intro | default(
+                "I am delighted to present this privately arranged journey"
+                ~ (": " ~ overview_heading if overview_heading else "")
+                ~ ", created for "
+                ~ (guests_txt if guests_txt else "two guests")
+                ~ (" travelling from " ~ travel_dates if travel_dates else "")
+                ~ ". The route unfolds from "
+                ~ (route_txt if route_txt else "Hanoi through Ninh Binh, Ha Long Bay and Sapa, before continuing to Da
+                Nang, Hoi An and Ho Chi Minh City")
+                ~ "."
+                ) | rtl_mixed(lang) }}</p>
+              <p data-editable="letter_body_p2">
+                {{ letter_body_p2 | default('The programme has been considered around a gentler family rhythm: early
+                check-in in Hanoi, private guiding and transfers, a premium overnight train cabin, and enough space
+                between active days to pause. Dining, room arrangements and transitions have been planned with care,
+                without adding unnecessary movement.') }}
               </p>
-            </div>
-
-            <div class="letter-body" style="font-size: 18px; line-height: 1.85; color: var(--text-muted);">
-              <p style="margin-bottom: 24px;" data-editable="letter_greeting">
-                Dear <strong>{{customer_name}}</strong>,
-              </p>
-              <p style="margin-bottom: 24px;" data-editable="letter_intro">
-                I am delighted to present this exclusively curated itinerary: <strong>{{overview_heading}}</strong>.
-                {% if guests_txt %} Designed carefully for <strong>{{guests_txt}}</strong>,{% endif %}
-                {% if travel_dates %} your journey is planned for <strong>{{travel_dates}}</strong>.{% endif %}
-                {% if route_txt %} The route will take you through <strong>{{route_txt}}</strong>,{% endif %}
-                {% if travel_style %} ensuring a <strong>{{travel_style}}</strong> experience throughout.{% endif %}
-              </p>
-              <p style="margin-bottom: 40px;" data-editable="letter_outro">
-                We have poured our expertise and passion into crafting every detail of this journey, and we cannot wait
-                for you to experience the magic of Vietnam. Please review the details below, and let us know if you
-                would like any refinements. (Ref: <strong>{{quotation_number}}</strong>)
+              <p data-editable="letter_outro">
+                {{ letter_outro | default('Please review the journey as a starting point for a personal conversation.
+                Every final detail can be refined around your preferred pace, room choices and family priorities.') }}
               </p>
             </div>
 
             <!-- SIGNATURE -->
-            <div class="letter-signature">
-              <p style="margin: 0; font-size: 18px; font-weight: 700; color: var(--text-main); letter-spacing: 0.05em; text-transform: uppercase;"
-                data-editable="letter_sign_off">{{ letter_sign_off | default('Anh Nam Le') }}</p>
-              <p style="margin: 4px 0 0 0; font-size: 14px; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase;"
-                data-editable="letter_sender">{{ letter_sender | default('Journey Designer') }}</p>
-              <p style="margin: 4px 0 0 0; font-size: 14px; color: var(--text-muted);" data-editable="contact">
-                {{contact}}</p>
+            <div class="letter-signature-block">
+              <h3 class="letter-sig-name" data-editable="letter_sign_off">
+                {{ letter_sign_off | default('Anh Son Le') }}
+              </h3>
+              <div class="letter-sig-details">
+                <span data-editable="letter_sender">{{ letter_sender | default('Your Journey Designer') }}</span>
+                {% if contact %}
+                <span>&middot;</span>
+                <span>{{ contact | default('+84 911 538 738') }}</span>
+                {% endif %}
+              </div>
             </div>
           </div>
         </div>
@@ -2737,47 +3236,16 @@
 
 
 
-    <section id="why-works"
-      style="background: var(--bg-main); color: var(--text); border: 1px solid var(--accent-light); padding: 72px 0; border-radius: 40px; margin: 40px 0; box-shadow: var(--shadow);">
-      <div class="container">
-        <div class="section-head" style="grid-template-columns: 1fr;">
-          <h2 data-editable="why_works_title" class="font-serif"
-            style="color: var(--text); font-size: clamp(32px, 4vw, 54px); margin: 0 0 10px;">
-            {{ (['Behind the Itinerary Curation', 'Why This Journey Inspires', 'The Anatomy of the Experience', 'A
-            Perfectly Paced Journey'] | random) | translate(lang) }}</h2>
-          <p data-editable="why_works_subtitle" style="color: var(--text-muted); margin: 0;">{{ "Tailored care, balanced
-            pacing, and seamless logistics designed specifically for your group." | translate(lang) }}</p>
-        </div>
-        <div
-          style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 18px; margin-top: 32px;">
-          <article class="experience"
-            style="background: var(--bg-alt); border-color: color-mix(in srgb, var(--accent) 20%, transparent); color: var(--text-main);">
-            <h3 class="font-serif" style="color: var(--accent); font-size: 22px; margin: 12px 0 10px;"
-              data-editable="why_works_title_3">{{ "Dietary & Special Care" | translate(lang) }}</h3>
-            <p style="color: var(--text-main); margin: 0; line-height: 1.6;" data-editable="why_muslim">{{why_muslim}}
-            </p>
-          </article>
-          <article class="experience"
-            style="background: var(--bg-alt); border-color: color-mix(in srgb, var(--accent) 20%, transparent); color: var(--text-main);">
-            <span class="num" style="color: var(--primary);" data-editable="why_works_num_4">04</span>
-            <h3 class="font-serif" style="color: var(--accent); font-size: 22px; margin: 12px 0 10px;"
-              data-editable="why_works_title_4">{{ "Balanced Highlights" | translate(lang) }}</h3>
-            <p style="color: var(--text-main); margin: 0; line-height: 1.6;" data-editable="why_balanced">
-              {{why_balanced}}</p>
-          </article>
-        </div>
-      </div>
-    </section>
 
-    <section id="route-map" style="padding: 72px 0;">
+
+    <section id="route-map" style="padding: var(--section-padding) 0;">
       <div class="container">
         <div class="section-head">
-          <h2>{{ "Your Journey, Mapped" | translate(lang) }}</h2>
-          <p>{{ "An interactive map showing your curated path through Vietnam's iconic landmarks and luxury stopovers.
-            Click on a destination in the list or the map to explore highlights." | translate(lang) }}</p>
+          <h2 data-editable="route_map_h2">{{ route_map_h2 | rtl_mixed(lang) }}</h2>
+          <p data-editable="route_map_p">{{ route_map_p | rtl_mixed(lang) }}</p>
         </div>
-        <div class="map-layout">
-          <div style="position: relative; height: 100%; z-index: 1;">
+        <div class="map-layout-new">
+          <div class="map-section">
             <div id="map" class="map-container">
               <div
                 style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg-alt); color: var(--text-muted); font-size: 14px;">
@@ -2787,174 +3255,618 @@
             </div>
             <!-- Map Mode Switcher -->
             <div class="map-mode-toggle no-print"
-              style="position: absolute; top: 16px; right: 16px; z-index: 1000; display: flex; gap: 4px; background: rgba(17, 19, 15, 0.75); padding: 4px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
+              style="position: absolute; top: 16px; right: 16px; z-index: 1000; display: flex; gap: 4px; background: rgba(17, 19, 15, 0.75); padding: 4px; border-radius: 0; border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
               <button id="toggle-mode-classic" class="mode-btn active" onclick="switchMapMode('classic')">{{ "Classic" |
                 translate(lang) }}</button>
               <button id="toggle-mode-image" class="mode-btn" onclick="switchMapMode('image')">{{ "Image" |
                 translate(lang) }}</button>
             </div>
           </div>
-          <div class="map-sidebar" id="map-sidebar">
-            <!-- Sidebar cards will be generated by JavaScript -->
+          <div class="timeline-section" id="timeline-container">
+            <div class="timeline" id="map-sidebar">
+              <!-- Timeline items will be generated by JavaScript -->
+            </div>
           </div>
         </div>
       </div>
     </section>
 
 
-    <section id="journey-itinerary" style="padding: 100px 0; background: var(--bg-main);">
-      <div class="container">
-        <div class="section-head"
-          style="margin-bottom: 80px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; grid-template-columns: 1fr;">
-          <h2 data-editable="journey_itinerary_h2"
-            style="font-size: clamp(40px, 5vw, 72px); max-width: 800px; margin: 0 auto 24px;">Destination imagery woven
-            into the itinerary.</h2>
-          <p data-editable="journey_itinerary_p" style="font-size: 18px; max-width: 600px; margin: 0 auto;">Immerse
-            yourself in each day's experience with cinematic visuals and detailed plans.</p>
+    <!-- ── Divider: ITINERARY TRANSITION ─────────────────── -->
+    <section class="chapter-divider-section no-print" id="divider-itinerary"
+      style="display: none !important; background-image: url('{{ img_itinerary_divider or img_1 or img_0 }}'); text-align: left;">
+      <div class="chapter-divider-container"
+        style="justify-content: space-between; align-items: flex-start; padding: 80px 0; width: min(1180px, 92%); margin: 0 auto; box-sizing: border-box;">
+        <div class="chapter-divider-top" style="max-width: 800px; margin-bottom: 40px;">
+          <div class="chapter-divider-kicker" data-editable="divider_itinerary_kicker"
+            style="margin-bottom: 24px; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 0.2em; font-size: 12px;">
+            The journey, day by day
+          </div>
+          <h2 class="chapter-divider-title" data-editable="divider_itinerary_title"
+            style="line-height: 1.05; font-size: clamp(48px, 6vw, 96px);">
+            How the Journey<br>Unfolds
+          </h2>
         </div>
 
-        <div class="itinerary-woven">
-          {% for day in itinerary %}
-          {% set day_idx = loop.index %}
-          <article class="day-woven"
-            style="display: flex; flex-direction: column; gap: 48px; margin-bottom: 160px; position: relative;">
+        <div class="chapter-divider-bottom" style="max-width: 680px; display: flex; flex-direction: column; gap: 40px;">
+          <p class="chapter-divider-tagline" data-editable="divider_itinerary_tagline"
+            style="font-size: clamp(20px, 2.5vw, 28px); color: rgba(255,255,255,0.9); font-style: italic; line-height: 1.4;">
+            {{ tour_description or divider_itinerary_tagline | default('A sequence of places, textures and quiet
+            transitions — composed to be experienced rather than rushed.') }}
+          </p>
 
-            <!-- Day Header -->
-            <div style="display: flex; gap: 24px; align-items: center;">
-              <div class="day-label" data-editable="day_badge_{{ loop.index }}"
-                style="height: 80px; width: 80px; border-radius: 50%; background: var(--primary); color: white; display: grid; place-items: center; font-family: var(--serif); font-size: 28px; box-shadow: 0 10px 30px rgba(23, 65, 46, 0.2);">
-                {{ day.day_badge_text | default(day.dayNumber) }}</div>
-              <div>
-                <span class="num" data-editable="day_num_{{ loop.index }}"
-                  style="color: var(--accent); font-weight: 800; letter-spacing: .2em; font-size: 13px; text-transform: uppercase;">{{
-                  day.day_num_text | default("DAY" | translate(lang) ~ " " ~ day.dayNumber ~ ((" · " ~ (day.date |
-                  format_date)) if day.date else "")) }}</span>
-                <h3 data-editable="day_title_{{ loop.index }}"
-                  style="font-family: var(--serif); font-size: 36px; font-weight: 500; margin: 8px 0 0; color: var(--primary);">
-                  {{ day.title | rtl_mixed(lang) }}</h3>
-              </div>
+          <div
+            style="display: flex; flex-wrap: wrap; gap: 48px; font-family: var(--sans); font-size: 15px; color: #fff;">
+            <div>
+              <span
+                style="display: block; font-size: 11px; color: rgba(255,255,255,0.6); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.15em;">Duration</span>
+              {% if duration_nights %}{{ duration_nights + 1 }} Days / {{ duration_nights }} Nights{% elif duration_txt
+              %}{{ duration_txt }}{% else %}14 Days / 13 Nights{% endif %}
             </div>
-
-            <!-- Image Gallery (70% / 30% split) -->
-            <div class="day-gallery"
-              style="display: flex; gap: 24px; height: 65vh; min-height: 500px; max-height: 800px;">
-              <!-- Main Image -->
-              <div
-                style="flex: 7; border-radius: 32px; overflow: hidden; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.1);">
-                <img src="{{ day.images[0] if day.images and day.images|length > 0 else '' }}"
-                  style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.7s ease;"
-                  class="hover-zoom" alt="Main destination image">
-              </div>
-              <!-- Detail Images -->
-              <div style="flex: 3; display: flex; flex-direction: column; gap: 24px;">
-                <div style="flex: 1; border-radius: 32px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.08);">
-                  <img src="{{ day.images[1] if day.images and day.images|length > 1 else '' }}"
-                    style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.7s ease;"
-                    class="hover-zoom" alt="Detail 1">
-                </div>
-                <div style="flex: 1; border-radius: 32px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.08);">
-                  <img src="{{ day.images[2] if day.images and day.images|length > 2 else '' }}"
-                    style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.7s ease;"
-                    class="hover-zoom" alt="Detail 2">
-                </div>
-              </div>
+            <div>
+              <span
+                style="display: block; font-size: 11px; color: rgba(255,255,255,0.6); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.15em;">Route</span>
+              {{ route_txt | default('Hanoi — Halong Bay — Hue — Hoi An — Saigon') }}
             </div>
+          </div>
+        </div>
 
-            <!-- Caption -->
-            <div class="image-caption-text"
-              style="font-size: 14px; color: var(--text-muted); text-align: right; margin-top: -32px; padding-right: 20px; font-style: italic;">
-              Immersive experiences waiting for you.
-            </div>
-
-            <!-- Content & Quote -->
-            <div
-              style="display: grid; grid-template-columns: 1fr 1fr; gap: 80px; margin-top: 20px; align-items: start;">
-              <!-- Itinerary Text -->
-              <div style="font-size: 17px; line-height: 1.8; color: var(--text-main);">
-                {% for para in day.description %}
-                <p data-editable="day_desc_{{day_idx}}_{{ loop.index0 }}"
-                  style="margin-bottom: 20px; color: var(--text-muted);">{{ para | rtl_mixed(lang) }}</p>
-                {% endfor %}
-
-                {% if day.activities %}
-                <div style="margin-top: 24px;">
-                  <strong
-                    style="color: var(--primary); letter-spacing: .06em; font-size: 14px; text-transform: uppercase;">Highlights:</strong>
-                  <span style="color: var(--text-muted); font-size: 15px; margin-left: 8px;">{{ day.activities | join('
-                    · ') }}</span>
-                </div>
-                {% endif %}
-
-                <!-- Metadata -->
-                <div
-                  style="margin-top: 40px; padding: 32px; background: var(--bg-alt); border-radius: 24px; border: 1px solid var(--line); display: inline-flex; gap: 48px; box-shadow: 0 10px 30px rgba(17,19,15,0.03);">
-                  {% if day.overnight %}
-                  <div>
-                    <span
-                      style="font-size:11px;letter-spacing:.16em; color: var(--accent); font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 8px;">Overnight</span>
-                    <span class="font-serif" style="font-size:18px; color: var(--primary); font-weight: 500;">{{
-                      day.overnight }}</span>
-                  </div>
-                  {% endif %}
-                  {% if day.meals %}
-                  <div>
-                    <span
-                      style="font-size:11px;letter-spacing:.16em; color: var(--accent); font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 8px;">Meals</span>
-                    <span style="font-size:15px; color: var(--text-main);">{{ day.meals | join(' · ') }}</span>
-                  </div>
-                  {% endif %}
-                </div>
-              </div>
-
-              <!-- Pull Quote -->
-              <div
-                style="display: flex; align-items: center; padding: 40px 60px; background: rgba(255, 250, 241, 0.5); border-radius: 32px; position: sticky; top: 120px;">
-                <blockquote
-                  style="margin: 0; font-family: var(--serif); font-size: clamp(28px, 3vw, 40px); line-height: 1.3; color: var(--primary); text-align: center; position: relative;">
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
-                    style="position: absolute; top: -30px; left: -30px; opacity: 0.1; color: var(--accent); width: 80px; height: 80px;">
-                    <path
-                      d="M14.417 21H19.043C20.672 21 22 19.672 22 18.043V13.826C22 12.197 20.672 10.87 19.043 10.87H16.435C16.435 7.522 18.261 5.957 20.522 5.565V3C16.87 3.522 14.417 6.13 14.417 10.87V21ZM2.417 21H7.043C8.672 21 10 19.672 10 18.043V13.826C10 12.197 8.672 10.87 7.043 10.87H4.435C4.435 7.522 6.261 5.957 8.522 5.565V3C4.87 3.522 2.417 6.13 2.417 10.87V21Z"
-                      fill="currentColor" />
-                  </svg>
-                  <span data-editable="day_quote_{{ loop.index }}">{{ day.quote | default("An unforgettable day filled
-                    with moments that will stay with you long after the journey ends.") }}</span>
-                </blockquote>
-              </div>
-            </div>
-          </article>
-          {% endfor %}
+        <div
+          style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); opacity: 0.7; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer;"
+          onclick="document.getElementById('itinerary').scrollIntoView({behavior: 'smooth'})">
+          <span style="font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase;">Explore</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 4v16M18 14l-6 6-6-6" />
+          </svg>
         </div>
       </div>
+    </section>
+    <!-- Print-only version (simplified, no full-bleed) -->
+    <div class="no-screen chapter-divider-print"
+      style="display: none !important; padding: 32px 0 16px; border-bottom: 2px solid var(--accent);">
+      <div class="chapter-divider-kicker">{{ divider_itinerary_kicker | default('DAY-BY-DAY ITINERARY') }}</div>
+      <h2 style="font-family:var(--serif);font-size:clamp(28px,4vw,48px);margin:8px 0 0;color:var(--primary);">{{
+        divider_itinerary_title | default(tour_title) }}</h2>
+    </div>
+
+    <section id="itinerary">
       <style>
-        .hover-zoom:hover {
-          transform: scale(1.03);
+        /* CSS from styles.css */
+
+        .chapter-days {
+          width: min(calc(100% - 128px), 1380px);
+          margin-inline: auto;
+          padding-top: 90px;
+        }
+
+        .day {
+          position: relative;
+          margin-bottom: 110px;
+          display: block;
+          background: transparent;
+          border: none;
+          box-shadow: none;
+          border-radius: 0;
+          padding: 0;
+          gap: 0;
+        }
+
+        .day-kicker {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px 18px;
+          align-items: center;
+          margin-bottom: 18px;
+          color: #66685f;
+          font-size: 11px;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+        }
+
+        .day-kicker .destination {
+          color: #24382f;
+          font-weight: 600;
+        }
+
+        .day-title {
+          margin: 0;
+          font-family: "Cormorant Garamond", Georgia, serif;
+          font-size: clamp(42px, 5vw, 74px);
+          font-weight: 500;
+          line-height: 0.98;
+          letter-spacing: -0.02em;
+        }
+
+        .day-copy {
+          max-width: 650px;
+          color: #66685f;
+          font-size: 17px;
+          line-height: 1.75;
+        }
+
+        .day-image {
+          min-height: 320px;
+          background-image: var(--image);
+          background-position: center;
+          background-size: cover;
+          background-color: #d8d0c2;
+        }
+
+        .day-image.hero-image {
+          min-height: 620px;
+        }
+
+        .day-image.small-image {
+          min-height: 270px;
+        }
+
+        .day-detail-list {
+          display: grid;
+          gap: 12px;
+          margin: 30px 0 0;
+          padding: 22px 0 0;
+          border-top: 1px solid #d8d0c2;
+        }
+
+        .day-detail {
+          display: grid;
+          grid-template-columns: 130px 1fr;
+          gap: 24px;
+          font-size: 13px;
+        }
+
+        .day-detail dt {
+          color: var(--text-main, #11130f);
+          font-weight: 700;
+          margin: 0;
+        }
+
+        .day-detail dd {
+          font-weight: 600;
+          margin: 0;
+        }
+
+        .logic-chip {
+          display: none;
+          width: max-content;
+          margin-top: 18px;
+          padding: 5px 9px;
+          color: #24382f;
+          border: 1px solid #aebdb8;
+          border-radius: 0;
+          background: rgba(174, 189, 184, 0.12);
+          font-size: 10px;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+
+        .layout-single {
+          display: grid;
+          grid-template-columns: 1fr 1.25fr;
+          gap: 6vw;
+          align-items: center;
+        }
+
+        .layout-single.is-alternate {
+          grid-template-columns: 1.25fr 1fr;
+        }
+
+        .layout-single .day-image-col {
+          order: 1;
+        }
+
+        .layout-single .day-copy-wrap {
+          order: 2;
+          padding: 40px 0;
+        }
+
+        .layout-single.is-alternate .day-image-col {
+          order: 2;
+        }
+
+        .layout-single.is-alternate .day-copy-wrap {
+          order: 1;
+        }
+
+        .layout-single .day-image {
+          min-height: 580px;
+        }
+
+        .layout-multi {
+          display: grid;
+          grid-template-columns: 1.15fr 0.85fr;
+          gap: 42px;
+        }
+
+        .layout-multi.is-alternate {
+          grid-template-columns: 0.85fr 1.15fr;
+        }
+
+        .layout-multi .day-copy-wrap {
+          order: 1;
+        }
+
+        .layout-multi .editorial-copy {
+          order: 2;
+          align-self: end;
+          padding: 0 0 20px 10px;
+        }
+
+        .layout-multi.is-alternate .day-copy-wrap {
+          order: 2;
+        }
+
+        .layout-multi.is-alternate .editorial-copy {
+          order: 1;
+          align-self: end;
+          padding: 0 10px 20px 0;
+        }
+
+        .layout-multi .supporting-images {
+          grid-column: 1 / -1;
+          display: grid;
+          grid-template-columns: 2fr 1fr;
+          gap: 24px;
+          order: 3;
+          margin-top: 32px;
+        }
+
+        .layout-multi.is-alternate .supporting-images {
+          grid-template-columns: 1fr 2fr;
+        }
+
+        .layout-multi .carousel-container {
+          order: 1;
+        }
+
+        .layout-multi .small-images-col {
+          order: 2;
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
+        }
+
+        .layout-multi.is-alternate .carousel-container {
+          order: 2;
+        }
+
+        .layout-multi.is-alternate .small-images-col {
+          order: 1;
+        }
+
+        .layout-multi .small-image {
+          flex: 1;
+          min-height: 270px;
         }
 
         @media (max-width: 980px) {
-          .day-gallery {
-            flex-direction: column;
-            height: auto !important;
+          .chapter-days {
+            width: min(calc(100% - 48px), 1380px);
           }
 
-          .day-woven>div:last-child {
+          .layout-single,
+          .layout-single.is-alternate {
             grid-template-columns: 1fr;
-            gap: 40px;
           }
 
-          .day-gallery>div {
-            height: 300px;
+          .layout-single .day-image-col,
+          .layout-single.is-alternate .day-image-col {
+            order: 1;
+          }
+
+          .layout-single .day-copy-wrap,
+          .layout-single.is-alternate .day-copy-wrap {
+            order: 2;
+            padding: 30px 0;
+          }
+
+          .layout-multi,
+          .layout-multi.is-alternate {
+            grid-template-columns: 1fr;
+          }
+
+          .layout-multi .day-copy-wrap,
+          .layout-multi.is-alternate .day-copy-wrap {
+            order: 1;
+          }
+
+          .layout-multi .editorial-copy,
+          .layout-multi.is-alternate .editorial-copy {
+            order: 2;
+            padding: 0;
+          }
+
+          .layout-multi .supporting-images,
+          .layout-multi.is-alternate .supporting-images {
+            grid-template-columns: 1fr;
+          }
+
+          .layout-multi .carousel-container,
+          .layout-multi.is-alternate .carousel-container {
+            order: 1;
+          }
+
+          .layout-multi .small-images-col,
+          .layout-multi.is-alternate .small-images-col {
+            order: 2;
+            flex-direction: row;
+          }
+
+          .layout-multi .small-image {
+            flex: 1;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .chapter-days {
+            padding-top: 62px;
+            width: 100%;
+            padding-inline: 24px;
+          }
+
+          .day {
+            margin-bottom: 82px;
+          }
+
+          .day-title {
+            font-size: 38px;
+          }
+
+          .day-image.hero-image {
+            min-height: 480px;
+          }
+
+          .layout-multi .small-images-col,
+          .layout-multi.is-alternate .small-images-col {
+            flex-direction: column;
+          }
+
+          .day-detail {
+            grid-template-columns: 1fr;
+            gap: 2px;
+          }
+        }
+
+        /* ── T4: ≤ 480px (Main Overrides) ────────────────────────────── */
+        @media (max-width: 480px) {
+          .nav-actions {
+            display: none
+          }
+
+          .strip-grid,
+          .experience-grid,
+          .price-grid {
+            grid-template-columns: 1fr
+          }
+
+          .gallery {
+            grid-template-columns: 1fr;
+            grid-auto-rows: 240px;
+          }
+
+          .image-tile.large,
+          .image-tile.wide {
+            grid-row: auto;
+            grid-column: auto;
+          }
+
+          .hero h1 {
+            font-size: clamp(22px, 7vw, 34px);
+            line-height: 1.2;
+          }
+
+          .pricing,
+          .cta {
+            padding: 24px;
+            border-radius: 0;
+          }
+
+          .hero-meta strong {
+            font-size: 11px;
+            letter-spacing: 0.05em;
           }
         }
       </style>
+
+      <div class="chapter-days">
+        <div class="itinerary-intro" style="padding-bottom: 70px;">
+          <div class="day-kicker" style="margin-bottom: 16px;" data-editable="itinerary_kicker">CHAPTER 02 · DAY-BY-DAY
+            ITINERARY</div>
+          <h2 class="day-title" style="margin: 0 0 20px;" data-editable="itinerary_h2">{{ itinerary_h2 |
+            default('Day-by-Day Journey Program') }}</h2>
+          <p style="color: #4a4a4a; font-size: 16px; line-height: 1.8; max-width: 100%; margin: 0;"
+            data-editable="itinerary_p">
+            {{ itinerary_p | default('Your private journey — carefully crafted day by day.') }}
+          </p>
+        </div>
+
+        {% for day in itinerary_days %}
+        {% set layout = day.layout_type %}
+        {% set imgs = day.layout_images %}
+        {% set day_idx_global = day.dayNumber %}
+
+        <article class="day layout-{{ layout }} {% if day.is_alternate %}is-alternate{% endif %}">
+          {% if layout == 'single' %}
+          <div class="day-image-col" style="position: relative;">
+            {% if imgs.carousel and imgs.carousel|length > 1 %}
+            <div class="day-image hero-image carousel-container"
+              style="position: relative; overflow: hidden; border-radius: 4px;"
+              data-editable="day_img_carousel_{{ day_idx_global }}">
+              <div class="carousel-inner"
+                style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
+                {% for c_img in imgs.carousel %}
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('{{ c_img }}') center/cover no-repeat;"></div>
+                {% endfor %}
+              </div>
+              <div class="carousel-dots no-print"
+                style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3;">
+                {% for c_img in imgs.carousel %}
+                <button class="carousel-dot {% if loop.index0 == 0 %}active{% endif %}"
+                  aria-label="Go to slide {{ loop.index }}"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                {% endfor %}
+              </div>
+            </div>
+            <button class="carousel-control prev no-print" aria-label="Previous image"
+              style="position: absolute; left: -20px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.06); background: #ffffff; color: #333; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 20px; line-height: 1; transition: background 0.2s, opacity 0.2s; box-shadow: 0 4px 14px rgba(0,0,0,0.1); padding-bottom: 2px;">‹</button>
+            <button class="carousel-control next no-print" aria-label="Next image"
+              style="position: absolute; right: -20px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.06); background: #ffffff; color: #333; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 20px; line-height: 1; transition: background 0.2s, opacity 0.2s; box-shadow: 0 4px 14px rgba(0,0,0,0.1); padding-bottom: 2px;">›</button>
+            {% else %}
+            <div class="day-image hero-image" style="--image: url('{{ imgs.hero }}')"
+              data-editable="day_img_hero_{{ day_idx_global }}" data-img-type="hero"></div>
+            {% endif %}
+          </div>
+          <div class="day-copy-wrap">
+            <div class="day-kicker">
+              <span class="destination">{{ day.segment_city }}</span>
+              <span>{{ "DAY" | translate(lang) }} {{ day.dayNumber }}</span>
+            </div>
+            <h4 class="day-title" data-editable="day_title_{{ day_idx_global }}">{{ day.title | rtl_mixed(lang) }}</h4>
+            <div class="day-copy" style="margin-top:24px;">
+              {% for para in day.description %}
+              <p data-editable="day_desc_{{ day_idx_global }}_{{ loop.index0 }}">{{ para | rtl_mixed(lang) }}</p>
+              {% endfor %}
+              {% if day.activities %}
+              <p style="font-size:13px;color: var(--text-muted);margin-top:8px"
+                data-deletable="day_activities_{{ day_idx_global }}">
+                <strong style="color: var(--primary);letter-spacing:.06em"
+                  data-editable="day_label_highlights_{{ day_idx_global }}">{{ day.label_highlights |
+                  default("Highlights:" | translate(lang)) }}</strong>
+                <span data-editable="day_highlights_{{ day_idx_global }}">{{ (day.activities | join(' · ')) |
+                  rtl_mixed(lang) }}</span>
+              </p>
+              {% endif %}
+              {% if day.notes %}
+              <div
+                style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--accent);padding-left:10px;background:color-mix(in srgb, var(--accent) 5%, transparent);border-radius:4px;padding-top:4px;padding-bottom:4px;"
+                data-deletable="day_notes_container_{{ day_idx_global }}">
+                <strong style="color: var(--accent);letter-spacing:.06em"
+                  data-editable="day_label_notes_{{ day_idx_global }}">{{ day.label_notes | default("Notes:" |
+                  translate(lang)) }}</strong>
+                <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                  {% for note in day.notes %}
+                  <li style="margin-bottom: 2px;" data-editable="day_note_{{ day_idx_global }}_{{ loop.index0 }}">{{
+                    note | rtl_mixed(lang) }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+              {% endif %}
+            </div>
+            <dl class="day-detail-list">
+              {% if day.overnight %}
+              <div class="day-detail">
+                <dt>{{ "Overnight" | translate(lang) }}</dt>
+                <dd data-editable="day_overnight_{{ day_idx_global }}">{{ day.overnight | rtl_mixed(lang) }}</dd>
+              </div>
+              {% endif %}
+              {% if day.meals %}
+              <div class="day-detail">
+                <dt>{{ "Meals" | translate(lang) }}</dt>
+                <dd data-editable="day_meals_{{ day_idx_global }}">{{ (day.meals | join(' &middot; ')) | rtl_mixed(lang)
+                  }}</dd>
+              </div>
+              {% endif %}
+            </dl>
+            <div class="logic-chip">{{ layout }}</div>
+          </div>
+
+          {% elif layout == 'multi' %}
+          <div class="day-copy-wrap">
+            <div class="day-kicker">
+              <span class="destination">{{ day.segment_city }}</span>
+              <span>{{ "DAY" | translate(lang) }} {{ day.dayNumber }}</span>
+            </div>
+            <h4 class="day-title" data-editable="day_title_{{ day_idx_global }}">{{ day.title | rtl_mixed(lang) }}</h4>
+            <dl class="day-detail-list" style="margin-top:40px;">
+              {% if day.overnight %}
+              <div class="day-detail">
+                <dt>{{ "Overnight" | translate(lang) }}</dt>
+                <dd data-editable="day_overnight_{{ day_idx_global }}">{{ day.overnight | rtl_mixed(lang) }}</dd>
+              </div>
+              {% endif %}
+              {% if day.meals %}
+              <div class="day-detail">
+                <dt>{{ "Meals" | translate(lang) }}</dt>
+                <dd data-editable="day_meals_{{ day_idx_global }}">{{ (day.meals | join(' &middot; ')) | rtl_mixed(lang)
+                  }}</dd>
+              </div>
+              {% endif %}
+            </dl>
+            <div class="logic-chip">{{ layout }}</div>
+          </div>
+          <div class="editorial-copy day-copy">
+            {% for para in day.description %}
+            <p data-editable="day_desc_{{ day_idx_global }}_{{ loop.index0 }}">{{ para | rtl_mixed(lang) }}</p>
+            {% endfor %}
+            {% if day.activities %}
+            <p style="font-size:13px;color: var(--text-muted);margin-top:8px"
+              data-deletable="day_activities_{{ day_idx_global }}">
+              <strong style="color: var(--primary);letter-spacing:.06em"
+                data-editable="day_label_highlights_{{ day_idx_global }}">{{ day.label_highlights |
+                default("Highlights:" | translate(lang)) }}</strong>
+              <span data-editable="day_highlights_{{ day_idx_global }}">{{ (day.activities | join(' · ')) |
+                rtl_mixed(lang) }}</span>
+            </p>
+            {% endif %}
+            {% if day.notes %}
+            <div
+              style="font-size:12px;color:#8a7042;margin-top:10px;border-left:2px solid var(--accent);padding-left:10px;background:color-mix(in srgb, var(--accent) 5%, transparent);border-radius:4px;padding-top:4px;padding-bottom:4px;"
+              data-deletable="day_notes_container_{{ day_idx_global }}">
+              <strong style="color: var(--accent);letter-spacing:.06em"
+                data-editable="day_label_notes_{{ day_idx_global }}">{{ day.label_notes | default("Notes:" |
+                translate(lang)) }}</strong>
+              <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
+                {% for note in day.notes %}
+                <li style="margin-bottom: 2px;" data-editable="day_note_{{ day_idx_global }}_{{ loop.index0 }}">{{ note
+                  | rtl_mixed(lang) }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+            {% endif %}
+          </div>
+          <div class="supporting-images">
+            <div class="day-image hero-image carousel-container" style="position: relative; overflow: hidden;"
+              data-editable="day_img_carousel_{{ day_idx_global }}">
+              <div class="carousel-inner"
+                style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
+                {% for c_img in imgs.carousel %}
+                <div class="carousel-slide"
+                  style="flex: 0 0 100%; height: 100%; background: url('{{ c_img }}') center/cover no-repeat;"></div>
+                {% endfor %}
+              </div>
+              {% if imgs.carousel|length > 1 %}
+              <button class="carousel-control prev no-print" aria-label="Previous image"
+                style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); background: rgba(17,19,15,0.4); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 18px; line-height: 1; transition: background 0.2s, opacity 0.2s; backdrop-filter: blur(4px); padding-bottom: 2px;">‹</button>
+              <button class="carousel-control next no-print" aria-label="Next image"
+                style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); background: rgba(17,19,15,0.4); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; font-size: 18px; line-height: 1; transition: background 0.2s, opacity 0.2s; backdrop-filter: blur(4px); padding-bottom: 2px;">›</button>
+              <div class="carousel-dots no-print"
+                style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3;">
+                {% for c_img in imgs.carousel %}
+                <button class="carousel-dot {% if loop.index0 == 0 %}active{% endif %}"
+                  aria-label="Go to slide {{ loop.index }}"
+                  style="width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;"></button>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+            <div class="small-images-col">
+              <div class="day-image small-image" style="--image: url('{{ imgs['small-1'] }}')"
+                data-editable="day_img_small1_{{ day_idx_global }}" data-img-type="small-1"></div>
+              <div class="day-image small-image" style="--image: url('{{ imgs['small-2'] }}')"
+                data-editable="day_img_small2_{{ day_idx_global }}" data-img-type="small-2"></div>
+            </div>
+          </div>
+          {% endif %}
+        </article>
+        {% endfor %}
+      </div>
     </section>
 
 
-
-
-
     <section id="hotels"
-      style="background: var(--bg-alt); border: 1px solid var(--line); border-radius: 40px; padding: 54px; margin: 40px 0; box-shadow: 0 18px 45px rgba(17,19,15,0.04);">
+      style="background: var(--bg-alt); border: 1px solid var(--line); border-radius: 0; padding: var(--section-padding) 0; margin: 40px 0; box-shadow: 0 18px 45px rgba(17,19,15,0.04);">
       <style>
         /* --- EDITORIAL HOTEL GRID SYSTEM --- */
         .hotel-plan-container {
@@ -2997,8 +3909,8 @@
           aspect-ratio: 4 / 3;
         }
 
-        /* 1. DESKTOP (≥ 1100px) */
-        @media (min-width: 1100px) {
+        /* 1. DESKTOP (≥ 981px) */
+        @media (min-width: 981px) {
           .hotel-editorial-grid.odd-row {
             grid-template-columns: 2.4fr 1.3fr;
           }
@@ -3030,8 +3942,8 @@
           }
         }
 
-        /* 2. TABLET (768px - 1099px) */
-        @media (min-width: 768px) and (max-width: 1099px) {
+        /* 2. TABLET (481px - 980px) */
+        @media (min-width: 481px) and (max-width: 980px) {
           .hotel-editorial-grid.odd-row {
             grid-template-columns: 1.4fr 1fr;
           }
@@ -3061,12 +3973,14 @@
           }
         }
 
-        /* 3. MOBILE (< 768px) */
-        @media (max-width: 767px) {
+        /* 3. MOBILE (≤ 480px) */
+        @media (max-width: 480px) {
           .hotel-editorial-grid {
             display: flex;
             flex-direction: column;
             gap: 16px;
+            width: 100%;
+            min-width: 0;
           }
 
           .hotel-header-mobile {
@@ -3080,6 +3994,8 @@
             /* Bộ đôi ảnh ở giữa */
             grid-template-columns: 1.2fr 1fr;
             gap: 12px;
+            width: 100%;
+            min-width: 0;
           }
 
           /* Even groups on mobile shouldn't swap images to keep consistency */
@@ -3105,7 +4021,7 @@
         /* Common Image Box Styles */
         .img-wrapper-main,
         .img-wrapper-sub {
-          border-radius: 6px;
+          border-radius: 0;
           overflow: hidden;
           position: relative;
           box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
@@ -3253,7 +4169,7 @@
 
         {% if room_notes %}
         <div
-          style="margin-top: 32px; padding: 18px; background: color-mix(in srgb, var(--accent) 6%, transparent); border-radius: 14px; border: 1px dashed var(--accent);">
+          style="margin-top: 32px; padding: 18px; background: color-mix(in srgb, var(--accent) 6%, transparent); border-radius: 0; border: 1px dashed var(--accent);">
           <strong
             style="color: var(--accent); text-transform: uppercase; font-size: 11px; letter-spacing: 0.12em; display: block; margin-bottom: 6px;">{{
             "Room Notes & Special Requests" | translate(lang) }}</strong>
@@ -3264,59 +4180,170 @@
       </div>
     </section>
 
+    <!-- ── Chapter Divider: THE STAYS ───────────────────── -->
+    <section id="divider-hotels" class="stays-intro-section no-print"
+      style="background: var(--bg-main); padding: 0 0 var(--section-padding) 0; position: relative; overflow: hidden;">
+      <style>
+        .stays-intro-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 48px;
+          align-items: center;
+          position: relative;
+          z-index: 2;
+          padding-top: 80px;
+        }
+
+        @media (min-width: 981px) {
+          .stays-intro-grid {
+            grid-template-columns: 55% 1fr;
+            gap: 8%;
+          }
+        }
+
+        .stays-journey-line {
+          position: absolute;
+          top: 0;
+          left: 50%;
+          width: 1px;
+          height: 80px;
+          background: var(--line);
+          z-index: 1;
+        }
+
+        @media (min-width: 981px) {
+          .stays-journey-line {
+            left: 81%;
+            /* 55% + 8% gap + 18% (half of remaining 37%) = 81% */
+          }
+        }
+      </style>
+
+      <div class="container" style="max-width: 1400px; margin: 0 auto; padding: 0 5%; position: relative;">
+        <div class="stays-journey-line"></div>
+
+        <div class="stays-intro-grid">
+
+          <!-- LEFT: 55% Image -->
+          <div class="stays-intro-image">
+            <div style="aspect-ratio: 4/5; overflow: hidden; position: relative;">
+              <img src="{{ img_hotel_divider or img_2 or img_0 }}" alt="Selected Stays"
+                style="width: 100%; height: 100%; object-fit: cover;" data-editable="img_hotel_divider">
+            </div>
+          </div>
+
+          <!-- RIGHT: 45% Text -->
+          <div class="stays-intro-content" style="padding: 20px 0;">
+            <div style="margin-bottom: 32px;">
+              <span
+                style="font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; color: var(--accent); text-transform: uppercase;"
+                data-editable="divider_hotel_kicker">
+                {{ divider_hotel_kicker | default('THE JOURNEY, BROUGHT TOGETHER') }}
+              </span>
+            </div>
+
+            <h2
+              style="font-family: var(--font-heading); font-size: clamp(36px, 4vw, 56px); line-height: 1.1; font-weight: 400; color: var(--text-main); margin-bottom: 40px;"
+              data-editable="divider_hotel_title">
+              {{ divider_hotel_title | default('Considered in Full') }}
+            </h2>
+
+            <p style="font-size: 16px; line-height: 1.7; color: var(--text-muted); margin-bottom: 32px; max-width: 480px;"
+              data-editable="divider_hotel_tagline">
+              {{ divider_hotel_tagline | default('The stays, private arrangements and experiences described so far are
+              gathered here as one considered whole. What follows is the practical outline of the journey—quietly
+              arranged, carefully paced and shaped around your comfort throughout.') }}
+            </p>
+
+            <p style="font-size: 16px; line-height: 1.7; color: var(--text-main); font-style: italic; max-width: 480px;"
+              data-editable="divider_hotel_closing">
+              {{ divider_hotel_closing | default('The next section presents the journey in practical terms.') }}
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </section>
 
 
 
-    <section id="quotation">
+
+    <section id="quotation" class="quotation-vibrant-light">
       <div class="container">
-        <div class="pricing">
-          <h2 data-editable="pricing_h2">{{pricing_h2}}</h2>
-          <p data-editable="pricing_p">{{pricing_p}}</p>
-          <div class="price-grid">
-            {% for opt in price_options %}
-            <div class="price-card {% if opt.isConfirmedMainOption %}featured{% endif %}">
-              <span data-editable="price_opt_cat_{{ loop.index }}">{{ opt.hotelCategory }}</span>
-              {% if opt.optionName %}
-              <small data-editable="price_opt_name_{{ loop.index }}"
-                style="color:rgba(255,255,255,.55);font-size:11px;display:block;margin-top:4px">{{ opt.optionName
-                }}</small>
-              {% endif %}
-              {% if opt.is_total %}
-              <strong data-editable="price_pax_{{ loop.index }}" style="font-size:28px"><span class="ltr-token">{{
-                  opt.totalPrice.displayText or ('{:,.0f}'.format(opt.totalPrice.amount) ~ ' ' ~
-                  opt.totalPrice.currency) }}</span></strong>
-              <small>{{ "total package" | translate(lang) }}</small><br>
-              <span style="font-size:13px;opacity:.8">{{ "Per person:" | translate(lang) }} <span class="ltr-token">{{
-                  opt.pricePerPerson.displayText or
-                  ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~ opt.pricePerPerson.currency) }}</span></span>
-              {% else %}
-              <strong data-editable="price_pax_{{ loop.index }}" style="font-size:28px"><span class="ltr-token">{{
-                  opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~
-                  opt.pricePerPerson.currency) }}</span></strong>
-              {% endif %}
-              {% if opt.isConfirmedMainOption %}
-              <div
-                style="margin-top:12px;font-size:10px;letter-spacing:.14em;color: var(--accent-light);font-weight:800">
-                {{ "✓ CONFIRMED MAIN OPTION" | translate(lang) }}</div>
-              {% elif opt.isAlternativeOption %}
-              <div
-                style="margin-top:12px;font-size:10px;letter-spacing:.14em;color:rgba(216,189,133,.6);font-weight:700">
-                {{ "ALTERNATIVE OPTION" | translate(lang) }}</div>
-              {% endif %}
+
+        <div class="investment-header">
+          <div>
+            <div class="kicker"
+              style="color: var(--accent); margin-bottom: 8px; font-size: 11px; letter-spacing: 0.16em; font-weight: 700; text-transform: uppercase;"
+              data-editable="pricing_kicker">{{ pricing_kicker | default("Package Pricing" | translate(lang)) }}</div>
+            <h2 style="margin-bottom: 0;" data-editable="pricing_h2">{{pricing_h2}}</h2>
+          </div>
+          <div>
+            <p style="margin-bottom: 0;" data-editable="pricing_p">{{pricing_p}}</p>
+          </div>
+        </div>
+
+        <div class="investment-list">
+          {% for opt in price_options %}
+          <div class="investment-row">
+            <div class="investment-num">{% if loop.index < 10 %}0{% endif %}{{ loop.index }}</div>
+
+                <div class="investment-col">
+                  <div class="investment-title" data-editable="price_opt_cat_{{ loop.index }}">{{ opt.hotelCategory }}
+                  </div>
+                  {% if opt.optionName %}
+                  <div class="investment-desc" data-editable="price_opt_name_{{ loop.index }}">{{ opt.optionName }}
+                  </div>
+                  {% endif %}
+                </div>
+
+                <div class="investment-col">
+                  {% if opt.is_total %}
+                  <div class="investment-price">
+                    <span class="ltr-token" data-editable="price_total_{{ loop.index }}">{{ opt.totalPrice.displayText
+                      or ('{:,.0f}'.format(opt.totalPrice.amount) ~ ' ' ~ opt.totalPrice.currency) }}</span>
+                  </div>
+                  <div class="investment-desc">
+                    {{ "Per person:" | translate(lang) }} <span class="ltr-token"
+                      data-editable="price_pax_{{ loop.index }}">{{ opt.pricePerPerson.displayText or
+                      ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~ opt.pricePerPerson.currency) }}</span>
+                  </div>
+                  {% else %}
+                  <div class="investment-price">
+                    <span class="ltr-token" data-editable="price_pax_{{ loop.index }}">{{ opt.pricePerPerson.displayText
+                      or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~ opt.pricePerPerson.currency) }}</span>
+                  </div>
+                  {% endif %}
+                </div>
+
+                <div class="investment-col" style="align-items: flex-end;">
+                  {% if opt.isConfirmedMainOption %}
+                  <div class="investment-badge confirmed">{{ "✓ CONFIRMED MAIN OPTION" | translate(lang) }}</div>
+                  {% elif opt.isAlternativeOption %}
+                  <div class="investment-badge alternative">{{ "ALTERNATIVE OPTION" | translate(lang) }}</div>
+                  {% endif %}
+                </div>
             </div>
             {% endfor %}
           </div>
+
+          <div class="no-print" style="margin-top: 32px; text-align: center;">
+            <button type="button" onclick="addPriceOption()"
+              style="background: var(--bg-alt); color: var(--text-main); border: 1px dashed var(--line); padding: 12px 24px; border-radius: 4px; font-size: 13px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+              + {{ "Add Option" | translate(lang) }}
+            </button>
+          </div>
+
           {% if price_cond_paras and price_cond_paras[0] %}
-          <div
-            style="margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 14px; color: rgba(255,255,255,0.8); line-height: 1.6; text-align: left;">
+          <div class="important-note-container"
+            style="margin-top: 48px; padding-top: 24px; border-top: 1px solid color-mix(in srgb, var(--primary) 20%, transparent); font-size: 14px; color: var(--text-main); line-height: 1.6; text-align: left;">
             <strong
-              style="color: var(--accent-light); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.15em; font-size: 11px; font-weight: 700;">{{
+              style="color: var(--primary); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.15em; font-size: 11px; font-weight: 700;">{{
               "Important Note" | translate(lang) }}</strong>
             <p style="margin: 0;" data-editable="price_cond_first">{{ price_cond_paras[0] }}</p>
           </div>
           {% endif %}
         </div>
-      </div>
     </section>
 
     <section>
@@ -3365,51 +4392,116 @@
 
 
 
-    <section id="payment-terms"
-      style="background: var(--bg-alt); border: 1px solid var(--line); border-radius: 40px; padding: 54px; margin: 40px 0; box-shadow: 0 18px 45px rgba(17,19,15,0.04);">
-      <div class="container">
-        <div class="section-head" style="grid-template-columns: 1fr;">
-          <h2 class="font-serif" style="font-size: clamp(32px, 4vw, 48px); color: var(--primary); margin: 0 0 10px;">
-            {{ "Booking & Payment Terms" | translate(lang) }}</h2>
-          <p style="color: var(--text-muted); margin: 0;">{{ "Commercial conditions, deposits, and cancellation policy
-            for this booking." | translate(lang) }}</p>
-        </div>
-        <div style="overflow-x: auto; margin-top: 32px; border-radius: 18px; border: 1px solid var(--line);">
-          <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
-            <thead>
-              <tr style="background: var(--primary); color: white;">
-                <th class="term-th" style="padding: 16px 20px; width: 250px;">{{ "Term" | translate(lang) }}</th>
-                <th style="padding: 16px 20px;">{{ "Condition" | translate(lang) }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr style="border-bottom: 1px solid var(--line); background: white;">
-                <td style="padding: 16px 20px; font-weight: 700; color: var(--primary);">{{ "Deposit" | translate(lang)
-                  }}</td>
-                <td style="padding: 16px 20px;" data-editable="term_deposit">{{term_deposit}}</td>
-              </tr>
-              <tr
-                style="border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--accent) 5%, transparent);">
-                <td style="padding: 16px 20px; font-weight: 700; color: var(--primary);">{{ "Balance" | translate(lang)
-                  }}</td>
-                <td style="padding: 16px 20px;" data-editable="term_balance">{{term_balance}}</td>
-              </tr>
-              <tr style="border-bottom: 1px solid var(--line); background: white;">
-                <td style="padding: 16px 20px; font-weight: 700; color: var(--primary);">{{ "Cancellation" |
-                  translate(lang) }}</td>
-                <td style="padding: 16px 20px;" data-editable="term_cancellation">{{term_cancellation}}</td>
-              </tr>
-              <tr style="background: color-mix(in srgb, var(--accent) 5%, transparent);">
-                <td style="padding: 16px 20px; font-weight: 700; color: var(--primary);">{{ "Confirmation" |
-                  translate(lang) }}</td>
-                <td style="padding: 16px 20px;" data-editable="term_confirmation">{{term_confirmation}}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+    <section id="payment-terms" style="background: var(--bg-main); padding: var(--section-padding) 0; margin: 40px 0;">
+      <style>
+        .payment-layout {
+          display: grid;
+          grid-template-columns: 1fr 1.5fr;
+          gap: clamp(40px, 6vw, 80px);
+        }
 
-        <div style="text-align: center; margin-top: 40px; margin-bottom: 20px;"><a class="btn btn-accent"
-            href="#contact">Approve & Book Now</a></div>
+        .term-row {
+          display: grid;
+          grid-template-columns: 140px 1fr;
+          gap: 32px;
+          padding: 24px 0;
+          border-bottom: 1px solid color-mix(in srgb, var(--primary) 15%, transparent);
+        }
+
+        .term-row:first-child {
+          border-top: 1px solid color-mix(in srgb, var(--primary) 15%, transparent);
+        }
+
+        @media (max-width: 992px) {
+          .payment-layout {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        @media (max-width: 576px) {
+          .term-row {
+            grid-template-columns: 1fr;
+            gap: 12px;
+            padding: 20px 0;
+          }
+        }
+      </style>
+      <div class="container">
+        <div class="payment-layout">
+          <!-- Left side -->
+          <div>
+            <div class="kicker overline" data-editable="payment_kicker"
+              style="color: var(--accent); margin-bottom: 16px;">{{ payment_kicker | default("Important Notes" |
+              translate(lang)) }}</div>
+            <h2 class="font-serif" data-editable="payment_title"
+              style="font-size: clamp(36px, 4vw, 56px); color: var(--primary); line-height: 1.1; margin: 0 0 24px;">
+              {{ payment_title | default("Booking & Payment Terms" | translate(lang)) }}
+            </h2>
+            <p data-editable="payment_desc"
+              style="color: var(--text-muted); font-size: 16px; line-height: 1.6; margin-bottom: 40px; max-width: 90%;">
+              {{ payment_desc | default("Commercial conditions, deposits, and cancellation policy for this booking." |
+              translate(lang)) }}
+            </p>
+            <a href="#contact"
+              style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--text-main); text-decoration: none; border-bottom: 1px solid var(--text-main); padding-bottom: 4px; transition: opacity 0.2s ease;">
+              <span data-editable="payment_cta">{{ payment_cta | default("Approve & Book Now" | translate(lang))
+                }}</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M7 7l10 10M17 7v10H7" />
+              </svg>
+            </a>
+          </div>
+
+          <!-- Right side -->
+          <div style="display: flex; flex-direction: column;">
+            <div class="term-row">
+              <div data-editable="payment_label_deposit"
+                style="font-family: var(--serif); font-size: 20px; color: var(--text-muted);">{{ payment_label_deposit |
+                default("Deposit" | translate(lang)) }}</div>
+              <div>
+                <div data-editable="term_deposit" style="color: var(--text-muted); font-size: 15px; line-height: 1.6;">
+                  {{ term_deposit | default("A deposit of 30% of the total tour cost is required upon confirmation of the booking. This deposit is non-refundable.<br><br>For bookings confirmed within 60 days of arrival, full payment of 100% of the total tour cost is required at the time of confirmation.", true) | safe }}
+                </div>
+              </div>
+            </div>
+
+            <div class="term-row">
+              <div data-editable="payment_label_balance"
+                style="font-family: var(--serif); font-size: 20px; color: var(--text-muted);">{{ payment_label_balance |
+                default("Balance" | translate(lang)) }}</div>
+              <div>
+                <div data-editable="term_balance" style="color: var(--text-muted); font-size: 15px; line-height: 1.6;">
+                  {{ term_balance | default("The remaining 70% balance must be paid no later than 60 days prior to the scheduled arrival date.", true) | safe }}
+                </div>
+              </div>
+            </div>
+
+            <div class="term-row">
+              <div data-editable="payment_label_cancellation"
+                style="font-family: var(--serif); font-size: 20px; color: var(--text-muted);">{{
+                payment_label_cancellation | default("Cancellation" | translate(lang)) }}</div>
+              <div>
+                <div data-editable="term_cancellation"
+                  style="color: var(--text-muted); font-size: 15px; line-height: 1.6;">
+                  {{ term_cancellation | default("Written notice required. Cancellation fees apply based on arrival date:<ul style=\"margin: 8px 0 12px; padding-left: 20px; list-style-type: disc;\"><li style=\"margin-bottom: 4px;\"><strong>&gt; 45 days prior:</strong> Deposit forfeited (30%)</li><li style=\"margin-bottom: 4px;\"><strong>45 – 31 days prior:</strong> 50% of total tour cost</li><li style=\"margin-bottom: 4px;\"><strong>30 – 20 days prior:</strong> 75% of total tour cost</li><li style=\"margin-bottom: 4px;\"><strong>&lt; 20 days prior:</strong> 100% of total tour cost</li></ul>Any non-refundable payments, cancellation charges or penalties imposed by hotels, airlines, cruise operators and other service providers may also apply in addition to the cancellation fees stated above.", true) | safe }}
+                </div>
+              </div>
+            </div>
+
+            <div class="term-row">
+              <div data-editable="payment_label_confirmation"
+                style="font-family: var(--serif); font-size: 20px; color: var(--text-muted);">{{
+                payment_label_confirmation | default("Confirmation" | translate(lang)) }}</div>
+              <div>
+                <div data-editable="term_confirmation"
+                  style="color: var(--text-muted); font-size: 15px; line-height: 1.6;">
+                  {{ term_confirmation | default("The booking will only be considered confirmed once the required payment has been received.", true) | safe }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -3417,78 +4509,178 @@
 
     {% endif %}
 
-    <section id="contact">
-      <div class="container">
-        <div class="cta">
-          <div>
-            <div class="kicker overline">{{ "Next step" | translate(lang) }}</div>
-            <h2 data-editable="cta_h2">{{cta_h2}}</h2>
-            <div class="two-col" style="margin-top: 24px; text-align: left; font-size: 13px;">
-              <div>
-                <strong
-                  style="color: var(--accent-light); text-transform: uppercase; font-size: 11px; letter-spacing: 0.1em; display: block; margin-bottom: 8px;">{{
-                  "Final Details Required" | translate(lang) }}</strong>
-                <ul style="margin: 0; padding-left: 16px; display: grid; gap: 6px; color: rgba(255,255,255,0.8);">
-                  {% for item in final_req %}
-                  <li style="line-height: 1.4;">{{item}}</li>
-                  {% endfor %}
-                </ul>
-              </div>
-              <div>
-                <strong
-                  style="color: var(--accent-light); text-transform: uppercase; font-size: 11px; letter-spacing: 0.1em; display: block; margin-bottom: 8px;">{{
-                  "After Confirmation" | translate(lang) }}</strong>
-                <ul style="margin: 0; padding-left: 16px; display: grid; gap: 6px; color: rgba(255,255,255,0.8);">
-                  {% for item in final_after %}
-                  <li style="line-height: 1.4;">{{item}}</li>
-                  {% endfor %}
-                </ul>
-              </div>
-            </div>
-          </div>
-          <div class="contact">
-            <label>{{ "Website" | translate(lang) }}</label>
-            <div data-editable="contact_web"><span class="ltr-token">{{contact_web}}</span></div>
-            <label>{{ "WhatsApp" | translate(lang) }}</label>
-            <div data-editable="contact_phone"><span class="ltr-token">{{contact_phone}}</span></div>
-            <label>{{ "Prepared by" | translate(lang) }}</label>
-            <div data-editable="seller_name2">{{ seller_name | rtl_mixed(lang) }}</div>
-            {% if seller_email %}
-            <div style="margin-top:24px" class="no-print">
-              <a class="btn btn-accent" href="mailto:{{seller_email}}">{{ "Request final confirmation" |
-                translate(lang) }}</a>
-            </div>
-            {% endif %}
-          </div>
-        </div>
-      </div>
-    </section>
-
-
     <section id="meet-designer" class="no-print"
-      style="background: var(--bg-alt); padding: 72px 0; border-radius: 40px; margin: 40px 0;">
-      <div class="container designer-container">
-        <div class="designer-card">
-          <div class="designer-img-container" id="designer-avatar-container">
-            <div class="designer-avatar-large"
-              style="background-image: var(--designer-img, url('/assets/dias_team/hieu.jpg')); background-size: cover; background-position: center;">
+      style="background: var(--bg-alt); padding: 80px 0; position: relative; overflow: hidden; border-top: 1px solid var(--line);">
+      <!-- Decorative circles -->
+      <div
+        style="position: absolute; top: -50px; right: -50px; width: 300px; height: 300px; border-radius: 50%; border: 1px solid rgba(217, 210, 197, 0.5); pointer-events: none;">
+      </div>
+      <div
+        style="position: absolute; top: 20px; right: 20px; width: 300px; height: 300px; border-radius: 50%; border: 1px solid rgba(217, 210, 197, 0.5); pointer-events: none;">
+      </div>
+      <div
+        style="position: absolute; bottom: -100px; left: -50px; width: 400px; height: 400px; border-radius: 50%; border: 1px solid rgba(217, 210, 197, 0.5); pointer-events: none;">
+      </div>
+      <div
+        style="position: absolute; bottom: 0px; left: -150px; width: 400px; height: 400px; border-radius: 50%; border: 1px solid rgba(217, 210, 197, 0.5); pointer-events: none;">
+      </div>
+
+      <div class="container" style="max-width: 1100px; margin: 0 auto; position: relative; z-index: 1;">
+        <style>
+          .designer-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 60px;
+            align-items: center;
+          }
+
+          @media (min-width: 768px) {
+            .designer-grid {
+              grid-template-columns: 0.8fr 1.2fr;
+              gap: 80px;
+            }
+
+            .hide-mobile {
+              display: block !important;
+            }
+          }
+        </style>
+        <div class="designer-grid">
+          <!-- Left Column: Image & Name -->
+          <div style="text-align: center;">
+            <div class="designer-img-container" id="designer-avatar-container" data-editable="designer_img"
+              data-img-type="hero"
+              style="--designer-img: url('{{ designer_img | default('/assets/dias_team/hieu.jpg') }}'); margin: 0 auto 24px; width: 100%; max-width: 300px; aspect-ratio: 3/4; border-radius: 200px 200px 0 0; overflow: hidden; border: 4px solid #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.05); position: relative; background-image: url('{{ designer_img | default('/assets/dias_team/hieu.jpg') }}'); background-size: cover; background-position: center;">
             </div>
+            <h3 style="font-family: var(--serif); font-size: 26px; color: var(--emerald); margin: 0 0 2px;" data-editable="seller_name">{{
+              seller_name or "Eddie" | rtl_mixed(lang) }}</h3>
+            <div style="font-family: var(--serif); font-size: 16px; color: var(--emerald); margin: 0 0 8px; font-weight: 600;" data-editable="seller_subtitle">
+              (Trung Hieu Pham)</div>
+            <div data-editable="designer_signature"
+              style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--gold-2); font-weight: 700; margin-bottom: 24px;">
+              {{ designer_signature or "TRAVEL DESIGNER" | translate(lang) }}</div>
+
+            <div style="width: 40px; height: 1px; background: var(--gold); margin: 0 auto 24px;"></div>
+
+            <p data-editable="designer_experience"
+              style="font-family: var(--serif); font-style: italic; color: var(--text-muted); font-size: 15px; max-width: 240px; margin: 0 auto; line-height: 1.5;">
+              {{ designer_experience or "Present throughout the planning, quietly working behind the journey." |
+              translate(lang) }}
+            </p>
           </div>
-          <div class="designer-info">
-            <span data-editable="designer_kicker">{{ "Your Dedicated Specialist" | translate(lang) }}</span>
-            <h2 data-editable="designer_title">{{ "Meet Your Travel Specialist" | translate(lang) }}</h2>
-            <p class="designer-quote" data-editable="designer_quote">"{{ "I am your dedicated travel specialist. I
-              handpicked every hotel, private transfer, and local guide on this itinerary to ensure you experience the
-              true depth of Vietnam in comfort, privacy, and at your own pace. I will personally oversee your journey
-              from behind the scenes." | translate(lang) }}"</p>
-            <div class="designer-details">
-              <div><strong>{{ "Expertise:" | translate(lang) }}</strong> <span data-editable="designer_expertise">{{
-                  "Custom Itineraries, Luxury Travel, Local Experiences" | translate(lang) }}</span></div>
-              <div><strong>{{ "Experience:" | translate(lang) }}</strong> <span data-editable="designer_experience">{{
-                  "Years designing bespoke journeys" | translate(lang) }}</span></div>
+
+          <!-- Right Column: Info & Actions -->
+          <div style="position: relative;">
+            <!-- decorative vertical line -->
+            <div
+              style="position: absolute; left: -40px; top: 0; bottom: 0; width: 1px; background: rgba(217, 210, 197, 0.5); display: none;"
+              class="hide-mobile"></div>
+
+            <div data-editable="designer_kicker"
+              style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--gold-2); font-weight: 700; margin-bottom: 20px;">
+              {{ designer_kicker or "YOUR JOURNEY DESIGNER" | translate(lang) }}
             </div>
-            <div class="designer-signature font-accent" data-editable="designer_signature">{{ "Your Travel Specialist" |
-              translate(lang) }}</div>
+
+            <h2 data-editable="designer_title"
+              style="font-family: var(--serif); font-size: clamp(32px, 4vw, 48px); color: var(--emerald); line-height: 1.15; margin: 0 0 24px; font-weight: 400;">
+              {{ designer_title or "Let Us Shape the Final Details Together" | translate(lang) }}
+            </h2>
+
+            <div data-editable="designer_quote"
+              style="font-family: var(--serif); font-style: italic; font-size: 18px; color: #70624a; line-height: 1.6; margin: 0 0 40px;">
+              “{{ designer_quote or "I believe the desire to travel is contagious—and it is my privilege to turn that inspiration into thoughtfully designed journeys filled with meaningful experiences, authentic connections, and lasting memories" | translate(lang) }}”
+            </div>
+
+            <!-- Buttons -->
+            <div style="display: flex; gap: 24px; margin-bottom: 48px; flex-wrap: wrap;">
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <a href="https://wa.me/{{ (contact_phone or '+84 913 393 119') | replace('+', '') | replace(' ', '') }}"
+                  class="btn"
+                  style="background: var(--gold-2, #c5a059) !important; color: #ffffff !important; border: 1px solid var(--gold-2, #c5a059); padding: 14px 28px; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; display: flex; align-items: center; gap: 10px; font-weight: 600; text-decoration: none; border-radius: 4px;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path
+                      d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
+                    </path>
+                  </svg>
+                  <span data-editable="contact_phone_btn" style="color: #ffffff !important;">{{ "CHAT ON WHATSAPP" |
+                    translate(lang) }}</span>
+                </a>
+                <div style="font-size: 11px; color: var(--gold-2, #c5a059); opacity: 0.9; padding-left: 2px; font-weight: 500;">
+                  {{ "No.:" | translate(lang) }} <span>{{ contact_phone or "+84 913 393 119" }}</span>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <a href="mailto:{{ seller_email or 'sales@capellatravel.com' }}" class="btn"
+                  style="background: transparent !important; color: var(--gold-2, #c5a059) !important; border: 1px solid rgba(197,160,89,0.5); padding: 14px 28px; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; display: flex; align-items: center; gap: 10px; font-weight: 600; text-decoration: none; border-radius: 4px;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                  </svg>
+                  <span data-editable="contact_email_btn" style="color: var(--gold-2, #c5a059) !important;">{{ "SEND AN EMAIL" | translate(lang) }}</span>
+                </a>
+                <div style="font-size: 11px; color: var(--gold-2, #c5a059); opacity: 0.9; padding-left: 2px; font-weight: 500;">
+                  {{ "Email:" | translate(lang) }} <span>{{ seller_email or "sales@capellatravel.com" }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Final Details & After Confirmation -->
+            <div
+              style="display: grid; grid-template-columns: 1fr; gap: 24px; padding-top: 32px; border-top: 1px solid rgba(217, 210, 197, 0.5);">
+              <div style="display: flex; gap: 20px; align-items: flex-start;">
+                <div
+                  style="width: 54px; height: 54px; border-radius: 50%; border: 1px solid var(--gold, #c5a059); display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: white; padding: 10px;">
+                  <img
+                    src="/assets/brands/indochine_icon/button_icon/mountain.png"
+                    alt="icon" style="width: 100%; height: 100%; object-fit: contain;">
+                </div>
+                <div>
+                  <div data-editable="final_req_title"
+                    style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-main); font-weight: 700; margin-bottom: 8px;">
+                    {{ final_req_title or "FINAL DETAILS REQUIRED" | translate(lang) }}
+                  </div>
+                  <div style="font-size: 14px; color: var(--text-muted); line-height: 1.6; margin: 0;">
+                    {% if final_req and final_req|length > 0 %}
+                    <ul style="margin: 0; padding-left: 16px; display: grid; gap: 4px; list-style-type: disc;">
+                      {% for item in final_req %}<li data-editable="final_req_{{loop.index0}}">{{item}}</li>{% endfor %}
+                    </ul>
+                    {% else %}
+                    <ul style="margin: 0; padding-left: 16px; display: grid; gap: 4px; list-style-type: disc;">
+                      <li data-editable="final_req_text">Copy of passport valid for 6 months.</li>
+                    </ul>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 20px; align-items: flex-start;">
+                <div
+                  style="width: 54px; height: 54px; border-radius: 50%; border: 1px solid var(--gold, #c5a059); display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: white; padding: 10px;">
+                  <img
+                    src="/assets/brands/indochine_icon/button_icon/mountain.png"
+                    alt="icon" style="width: 100%; height: 100%; object-fit: contain;">
+                </div>
+                <div>
+                  <div data-editable="payment_label_confirmation"
+                    style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-main); font-weight: 700; margin-bottom: 8px;">
+                    {{ payment_label_confirmation or "AFTER CONFIRMATION" | translate(lang) }}
+                  </div>
+                  <div style="font-size: 14px; color: var(--text-muted); line-height: 1.6; margin: 0;">
+                    {% if final_after and final_after|length > 0 %}
+                    <ul style="margin: 0; padding-left: 16px; display: grid; gap: 4px; list-style-type: disc;">
+                      {% for item in final_after %}<li data-editable="final_after_{{loop.index0}}">{{item}}</li>{%
+                      endfor %}
+                    </ul>
+                    {% else %}
+                    <ul style="margin: 0; padding-left: 16px; display: grid; gap: 4px; list-style-type: disc;">
+                      <li data-editable="term_confirmation">24/7 dedicated local concierge support.</li>
+                    </ul>
+                    {% endif %}
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -3587,8 +4779,8 @@
         <button class="pb-modal-close" onclick="closeTemplateModal(event)">&times;</button>
       </div>
       <div class="pb-domain-list">
-        <div class="pb-domain-item {% if template_name == 'vietnam_luxury_brosure.html' %}active{% endif %}"
-          onclick="promptSwitchTemplate('vietnam_luxury_brosure.html')"
+        <div class="pb-domain-item {% if template_name == 'prototype_itinerary_imagery.html' %}active{% endif %}"
+          onclick="promptSwitchTemplate('prototype_itinerary_imagery.html')"
           style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
           <div style="display:flex; align-items:center; gap:12px;">
             <div class="pb-domain-details">
@@ -3596,7 +4788,7 @@
               <div class="pb-domain-badge prod" style="font-size:11px; color:#666;">Modern & visual layout</div>
             </div>
           </div>
-          {% if template_name == 'vietnam_luxury_brosure.html' %}
+          {% if template_name == 'prototype_itinerary_imagery.html' %}
           <div style="color: #4CAF50;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
               stroke-linecap="round" stroke-linejoin="round">
@@ -3646,6 +4838,7 @@
     </div>
   </div>
 
+  <!-- Custom Confirmation Modal for Theme Switch -->
   <div id="template-confirm-modal" class="pb-modal-overlay" onclick="closeTemplateConfirmModal(event)">
     <div class="pb-modal-card" onclick="event.stopPropagation()">
       <div class="pb-modal-header" style="border-bottom:none; padding-bottom:0; justify-content:center;">
@@ -3658,9 +4851,9 @@
       </div>
       <div style="display: flex; gap: 12px; justify-content: center; padding: 0 16px 20px;">
         <button onclick="closeTemplateConfirmModal(event)"
-          style="padding: 10px 20px; border: 1px solid #ccc; background: transparent; border-radius: 999px; cursor: pointer; color: #666; font-weight: 600; transition: all 0.2s;">Cancel</button>
+          style="padding: 10px 20px; border: 1px solid #ccc; background: transparent; border-radius: 0; cursor: pointer; color: #666; font-weight: 600; transition: all 0.2s;">Cancel</button>
         <button id="btn-confirm-switch"
-          style="padding: 10px 24px; border: none; background: var(--primary); border-radius: 999px; cursor: pointer; color: var(--text-light); font-weight: 700; transition: all 0.2s; box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 30%, transparent);">Continue</button>
+          style="padding: 10px 24px; border: none; background: var(--primary); border-radius: 0; cursor: pointer; color: var(--text-light); font-weight: 700; transition: all 0.2s; box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 30%, transparent);">Continue</button>
       </div>
     </div>
   </div>
@@ -3693,7 +4886,7 @@
             background: rgba(255, 255, 255, 0.1);
             color: #fff;
             border: 1px solid color-mix(in srgb, var(--primary) 40%, transparent);
-            border-radius: 999px;
+            border-radius: 0;
             padding: 11px 20px;
             font-weight: 700;
             font-size: 12px;
@@ -3929,20 +5122,25 @@
     (function () {
       const urlParams = new URLSearchParams(window.location.search);
       const urlLang = urlParams.get('lang') || urlParams.get('language');
-      if (urlLang && urlLang !== CURRENT_LANG) {
-        document.addEventListener('DOMContentLoaded', () => {
+      const urlBrand = urlParams.get('brand');
+
+      document.addEventListener('DOMContentLoaded', () => {
+        if (urlLang && urlLang !== CURRENT_LANG) {
           const activeLangText = document.querySelector('.lang-switcher-btn span:nth-child(2)');
           if (activeLangText) {
             if (urlLang === 'ar') activeLangText.innerText = CLIENT_I18N.language_names.ar;
             else if (urlLang === 'vi') activeLangText.innerText = CLIENT_I18N.language_names.vi;
             else if (urlLang === 'en') activeLangText.innerText = CLIENT_I18N.language_names.en;
           }
-          const pdfBtn = document.getElementById('btn-pdf-view');
-          if (pdfBtn) {
-            pdfBtn.href = `/quotations/${QUOTATION_ID}/pdf?lang=${urlLang}`;
-          }
-        });
-      }
+        }
+
+        // Always sync PDF button with current parameters
+        const pdfBtn = document.getElementById('btn-pdf-view');
+        if (pdfBtn) {
+          const targetLang = urlLang || CURRENT_LANG || 'en';
+          pdfBtn.href = `/quotations/${QUOTATION_ID}/pdf?lang=${targetLang}` + (urlBrand ? `&brand=${urlBrand}` : '');
+        }
+      });
     })();
 
     let activeTranslationController = null;
@@ -4019,6 +5217,62 @@
       }
     }
 
+    function addPriceOption() {
+      const list = document.querySelector('.investment-list');
+      if (!list) return;
+
+      const rows = list.querySelectorAll('.investment-row');
+      const count = rows.length;
+      if (count === 0) return;
+      const newIndex = count + 1;
+
+      const lastRow = rows[count - 1];
+      const newRow = lastRow.cloneNode(true);
+
+      newRow.querySelectorAll('.btn-inline-translate').forEach(btn => btn.remove());
+      newRow.querySelectorAll('.luxury-editable-wrapper').forEach(wrapper => {
+        const parent = wrapper.parentNode;
+        while (wrapper.firstChild) {
+          parent.insertBefore(wrapper.firstChild, wrapper);
+        }
+        parent.removeChild(wrapper);
+      });
+
+      const numEl = newRow.querySelector('.investment-num');
+      if (numEl) {
+        numEl.innerText = newIndex < 10 ? '0' + newIndex : newIndex;
+      }
+
+      newRow.querySelectorAll('[data-editable]').forEach(el => {
+        const attr = el.getAttribute('data-editable');
+        if (attr) {
+          const newAttr = attr.replace(/_\d+$/, '_' + newIndex);
+          el.setAttribute('data-editable', newAttr);
+          if (el.classList.contains('ltr-token')) {
+            el.innerText = '0 USD';
+          } else {
+            el.innerText = 'New Option Text';
+          }
+        }
+      });
+
+      const badge = newRow.querySelector('.investment-badge');
+      if (badge) badge.remove();
+
+      list.appendChild(newRow);
+
+      newRow.classList.remove('removable-block');
+      newRow.querySelectorAll('.block-delete-btn').forEach(btn => btn.remove());
+
+      if (typeof window.initEditableElements === 'function') {
+        window.initEditableElements(newRow);
+      }
+
+      if (typeof initRemovableBlocks === 'function') {
+        initRemovableBlocks();
+      }
+    }
+
     function toggleLangDropdown(event) {
       event.stopPropagation();
       const switcher = document.querySelector('.lang-switcher');
@@ -4067,41 +5321,52 @@
       }
     }
 
-    document.querySelectorAll('[data-editable]').forEach(el => {
-      // Prevent double wrapping
-      if (el.parentNode.classList.contains('luxury-editable-wrapper')) {
-        const existingBtn = el.parentNode.querySelector('.btn-inline-translate');
-        if (existingBtn) {
-          existingBtn.onclick = (e) => {
+    window.initEditableElements = function (container = document) {
+      container.querySelectorAll('[data-editable]').forEach(el => {
+        // Prevent double wrapping
+        if (el.parentNode.classList.contains('luxury-editable-wrapper')) {
+          const existingBtn = el.parentNode.querySelector('.btn-inline-translate');
+          if (existingBtn) {
+            existingBtn.onclick = (e) => {
+              e.stopPropagation();
+              translateBlock(el);
+            };
+          }
+          return;
+        }
+
+        el.contentEditable = 'true';
+        el.spellcheck = false;
+
+        // Prevent click bubbling so clicking text to edit doesn't trigger parent click listeners (e.g., timeline map zoom)
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+        });
+
+        // Wrap it and add translate button if lang is not English
+        if (CURRENT_LANG !== 'en') {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'luxury-editable-wrapper';
+          el.parentNode.insertBefore(wrapper, el);
+          wrapper.appendChild(el);
+
+          const btn = document.createElement('button');
+          btn.className = 'btn-inline-translate no-print';
+          btn.type = 'button';
+          btn.innerText = 'A⇄文';
+          btn.title = CLIENT_I18N.translate_block;
+          btn.onclick = (e) => {
             e.stopPropagation();
             translateBlock(el);
           };
+          wrapper.appendChild(btn);
         }
-        return;
-      }
+      });
+    };
 
-      el.contentEditable = 'true';
-      el.spellcheck = false;
+    // Initial call
+    window.initEditableElements();
 
-      // Wrap it and add translate button if lang is not English
-      if (CURRENT_LANG !== 'en') {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'luxury-editable-wrapper';
-        el.parentNode.insertBefore(wrapper, el);
-        wrapper.appendChild(el);
-
-        const btn = document.createElement('button');
-        btn.className = 'btn-inline-translate no-print';
-        btn.type = 'button';
-        btn.innerText = 'A⇄文';
-        btn.title = CLIENT_I18N.translate_block;
-        btn.onclick = (e) => {
-          e.stopPropagation();
-          translateBlock(el);
-        };
-        wrapper.appendChild(btn);
-      }
-    });
 
     let currentImageTarget = null;
     const fileInput = document.createElement('input');
@@ -4153,12 +5418,12 @@
       const btn = document.createElement('div');
       btn.innerHTML = `🖼️ ${CLIENT_I18N.change}`;
       btn.className = 'img-change-btn no-print';
-      btn.style.cssText = 'position:absolute;top:16px;right:16px;background:rgba(0,0,0,0.6);color:#fff;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;z-index:99;opacity:0.3;transition:0.2s;';
+      btn.style.cssText = 'position:absolute;top:16px;right:16px;background:rgba(0,0,0,0.6);color:#fff;padding:6px 12px;border-radius: 0;font-size:12px;cursor:pointer;z-index:99;opacity:0.3;transition:0.2s;';
       btn.onmouseover = () => btn.style.opacity = '1';
       btn.onmouseout = () => btn.style.opacity = '0.3';
       btn.onclick = (e) => {
         e.stopPropagation();
-        if (el.classList.contains('image-tile')) {
+        if (el.classList.contains('image-tile') || el.classList.contains('carousel-container')) {
           const activeIndex = parseInt(el.dataset.currentIndex || '0', 10);
           const slides = el.querySelectorAll('.carousel-slide');
           currentImageTarget = slides[activeIndex] || el;
@@ -4186,6 +5451,17 @@
           addImageChanger(wrapper, img);
         }
       });
+      // Add image changers to itinerary day images
+      const dayImages = document.querySelectorAll('.day-image[data-editable]');
+      dayImages.forEach((img) => addImageChanger(img, img));
+
+      const dividerHotels = document.getElementById('divider-hotels');
+      if (dividerHotels) {
+        const dividerImg = dividerHotels.querySelector('img[data-editable="img_hotel_divider"]');
+        if (dividerImg && dividerImg.parentElement) {
+          addImageChanger(dividerImg.parentElement, dividerImg);
+        }
+      }
     }
 
     function initRemovableBlocks() {
@@ -4195,7 +5471,7 @@
         '.experience',
         '.image-tile',
         '.strip-card',
-        '.price-card',
+        '.investment-row',
         '#hotels tbody tr',
         '.faq-item',
         '.testimonial-card',
@@ -4356,6 +5632,24 @@
               if (editedEl) {
                 seg.mapSegmentDesc = editedEl.innerHTML;
               }
+              const durEl = document.querySelector(`.timeline-item [data-editable="map_segment_duration_${idx}"]`);
+              if (durEl) {
+                const parts = durEl.innerText.split(' • ');
+                seg.daysLabel = parts[0].trim();
+                if (parts.length > 1) {
+                  seg.nightsLabel = parts.slice(1).join(' • ').trim();
+                } else {
+                  seg.nightsLabel = '';
+                }
+              }
+              const titleEl = document.querySelector(`.timeline-item [data-editable="map_segment_title_${idx}"]`);
+              if (titleEl) {
+                seg.displayName = titleEl.innerText;
+              }
+              const hotelEl = document.querySelector(`.timeline-item [data-editable="map_segment_hotel_${idx}"]`);
+              if (hotelEl) {
+                seg.hotelName = hotelEl.innerText;
+              }
             });
             staySegmentsEl.textContent = JSON.stringify(rawSegments);
           }
@@ -4403,15 +5697,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-
-        console.log("Publish response status:", res.status, res.statusText);
-        let data;
-        try {
-          data = await res.json();
-          console.log("Publish response data:", data);
-        } catch (e) {
-          console.error("Failed to parse json", e);
-        }
+        const data = await res.json();
 
         // Enforce a minimum delay of 1.2s to show the publishing signal
         const elapsed = Date.now() - startTime;
@@ -4460,7 +5746,7 @@
   <script id="destination-images" type="application/json">
     {
       {% for dest in destinations %}
-        "{{ dest.slug }}": "{{ dest.image_url or (dest.images[0] if dest.images else '/assets/vietnam-safar-logo.png') }}"
+        "{{ dest.slug }}": "{{ dest.image_url or (dest.images[0] if dest.images else ((brand.logo if brand else '') or '/assets/vietnam-safar-logo.png')) }}"
         {% if not loop.last %},{% endif %}
       {% endfor %}
     }
@@ -4812,7 +6098,7 @@
         id: segment.segmentId || `stay-${idx + 1}`,
         coords: resolvedCoords,
         displayCoords: resolvedCoords,
-        img: segment.hotelImage || ((slug && destImages[slug]) ? destImages[slug] : '/assets/vietnam-safar-logo.png')
+        img: segment.hotelImage || ((slug && destImages[slug]) ? destImages[slug] : '{{ (brand.logo if brand else "") or "/assets/vietnam-safar-logo.png" }}')
       };
     }).filter(segment => Array.isArray(segment.coords) && segment.coords.length === 2);
 
@@ -4905,9 +6191,9 @@
           popupOffset = [0, -25];
         } else {
           html = `
-              <div class="custom-marker" id="marker-wrapper-${idx}" style="transform: translate(${off[0]}px, ${off[1]}px);">
-                <div class="marker-pulse"></div>
-                <div class="marker-core">${idx + 1}</div>
+              <div class="luxury-marker-wrapper" id="marker-wrapper-${idx}" style="transform: translate(${off[0]}px, ${off[1]}px);">
+                <div class="luxury-marker">${idx + 1}</div>
+                <div class="luxury-marker-label">${formatMixedContent(dest.displayName)}</div>
               </div>
             `;
           iconSize = [28, 28];
@@ -4922,14 +6208,22 @@
           iconAnchor: iconAnchor
         });
 
+        let popupDefaultHtml = '';
+        if (Array.isArray(dest.excursions) && dest.excursions.length > 0) {
+          popupDefaultHtml += `<p style="margin: 6px 0 0; font-size:12px;">${formatMixedContent(dest.excursions.join(' • '))}</p>`;
+        }
+        if (Array.isArray(dest.activityPreviews) && dest.activityPreviews.length > 0) {
+          popupDefaultHtml += `<div style="margin-top:8px; font-size:11px;">${dest.activityPreviews.slice(0, 3).map(item => `<div>${escapeHtml(item.label)}: ${formatMixedContent(item.summary)}</div>`).join('')}</div>`;
+        }
+        let popupDescHtml = dest.mapSegmentDesc || popupDefaultHtml;
+
         const popupContent = `
-            <div class="map-popup">
+            <div style="font-family: var(--font-body); padding: 4px; min-width: 180px;">
               <h4>${formatMixedContent(dest.displayName)}</h4>
               <strong style="color:var(--accent); font-size: 11px;">${dayRangeStr.toUpperCase()}</strong>
               ${dest.hotelName ? `<p style="margin: 6px 0 0; font-size:12px; color:var(--text-main); font-weight:600;">${formatMixedContent(dest.hotelName)}</p>` : ''}
               <p style="margin: 6px 0 0; font-size:12px; color:var(--text-muted);">${dest.nightsLabel || ''}</p>
-              ${Array.isArray(dest.excursions) && dest.excursions.length > 0 ? `<p style="margin: 6px 0 0; font-size:12px; color:var(--text-muted);">${formatMixedContent(dest.excursions.join(' • '))}</p>` : ''}
-              ${Array.isArray(dest.activityPreviews) && dest.activityPreviews.length > 0 ? `<div style="margin-top:8px; font-size:11px; color:var(--text-muted);">${dest.activityPreviews.slice(0, 3).map(item => `<div>${escapeHtml(item.label)}: ${formatMixedContent(item.summary)}</div>`).join('')}</div>` : ''}
+              <div data-editable="map_segment_desc_${idx}" style="color:var(--text-muted);">${popupDescHtml}</div>
             </div>
           `;
 
@@ -4939,23 +6233,51 @@
 
         markers.push(marker);
 
-        // Setup card reference if not built yet
+        // Setup timeline item reference if not built yet
         if (!dest.cardEl) {
-          const card = document.createElement('div');
-          card.className = `sidebar-card ${idx === 0 ? 'active' : ''}`;
-          card.innerHTML = `
-              <span class="days-badge">${dayRangeStr}</span>
-              <h4>${formatMixedContent(dest.displayName)}</h4>
-              <p>${formatMixedContent(dest.hotelName || '')}</p>
-              <p>${escapeHtml(dest.nightsLabel || '')}${Array.isArray(dest.excursions) && dest.excursions.length > 0 ? ` · ${formatMixedContent(dest.excursions.join(' • '))}` : ''}</p>
-            `;
+          const itemDiv = document.createElement('div');
+          itemDiv.className = `timeline-item ${idx === 0 ? 'active' : ''}`;
 
-          card.addEventListener('click', () => {
+          let durationHtml = dest.mapSegmentDuration;
+          if (!durationHtml) {
+            if (dayRangeStr && dest.nightsLabel) {
+              durationHtml = `${dayRangeStr} &bull; ${dest.nightsLabel}`;
+            } else {
+              durationHtml = `${dayRangeStr || dest.nightsLabel || ''}`;
+            }
+          }
+
+          let htmlContent = `
+              <div class="item-duration" data-editable="map_segment_duration_${idx}">${durationHtml}</div>
+              <h3 class="item-title" data-editable="map_segment_title_${idx}">${formatMixedContent(dest.displayName)}</h3>
+          `;
+
+          if (dest.hotelName) {
+            htmlContent += `<div class="item-hotel" data-editable="map_segment_hotel_${idx}">${formatMixedContent(dest.hotelName)}</div>`;
+          }
+
+          let timelineDefaultHtml = '';
+          if (Array.isArray(dest.excursions) && dest.excursions.length > 0) {
+            timelineDefaultHtml += `<div class="item-sub">${formatMixedContent(dest.excursions.join(' &bull; '))}</div>`;
+          }
+          if (Array.isArray(dest.activityPreviews) && dest.activityPreviews.length > 0) {
+            const previewHtml = dest.activityPreviews.map(item => `<div><strong>${escapeHtml(item.label)}:</strong> ${formatMixedContent(item.summary)}</div>`).join('');
+            timelineDefaultHtml += `<div class="item-desc">${previewHtml}</div>`;
+          }
+          let timelineDescHtml = dest.mapSegmentDesc || timelineDefaultHtml;
+
+          htmlContent += `<div class="item-content" data-editable="map_segment_desc_${idx}">`;
+          htmlContent += timelineDescHtml;
+          htmlContent += `</div>`;
+
+          itemDiv.innerHTML = htmlContent;
+
+          itemDiv.addEventListener('click', () => {
             selectDestination(idx);
           });
 
-          sidebarContainer.appendChild(card);
-          dest.cardEl = card;
+          sidebarContainer.appendChild(itemDiv);
+          dest.cardEl = itemDiv;
         }
       });
     }
@@ -5000,8 +6322,9 @@
       polylines.push(polyline);
     }
 
+    const isMobile = window.innerWidth <= 768;
     map.fitBounds(L.latLngBounds(coordPoints), {
-      padding: [50, 50],
+      padding: isMobile ? [25, 25] : [50, 50],
       maxZoom: 12
     });
 
@@ -5009,20 +6332,30 @@
 
     // Initial draw
     drawMarkers();
+    if (window.initEditableElements) {
+      window.initEditableElements(sidebarContainer);
+    }
+    map.on('popupopen', function (e) {
+      if (window.initEditableElements && e.popup && e.popup._contentNode) {
+        window.initEditableElements(e.popup._contentNode);
+      }
+    });
 
     function selectDestination(index) {
       const dest = mapSegments[index];
       map.setView(dest.displayCoords, Math.max(map.getZoom(), 8), { animate: true });
       markers[index].openPopup();
 
-      document.querySelectorAll('.sidebar-card').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('.timeline-item').forEach(c => c.classList.remove('active'));
       dest.cardEl.classList.add('active');
       dest.cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-      document.querySelectorAll('.custom-marker, .custom-irregular-marker').forEach(m => m.classList.remove('active'));
-      const activeMarkerEl = document.getElementById(`marker-wrapper-${index}`);
-      if (activeMarkerEl) {
-        activeMarkerEl.classList.add('active');
+      document.querySelectorAll('.luxury-marker, .custom-irregular-marker').forEach(m => m.classList.remove('active'));
+      const wrapperEl = document.getElementById(`marker-wrapper-${index}`);
+      if (wrapperEl) {
+        const markerInner = wrapperEl.querySelector('.luxury-marker');
+        if (markerInner) markerInner.classList.add('active');
+        else wrapperEl.classList.add('active');
       }
     }
 
@@ -5136,8 +6469,8 @@
 
         const options = {
           body: body,
-          icon: '/assets/vietnam-safar-logo.png',
-          badge: '/assets/vietnam-safar-logo.png',
+          icon: '{{ (brand.logo if brand else "") or "/assets/vietnam-safar-logo.png" }}',
+          badge: '{{ (brand.logo if brand else "") or "/assets/vietnam-safar-logo.png" }}',
           vibrate: [100, 50, 100],
           data: {
             url: window.location.href
@@ -5231,6 +6564,52 @@
           nav.classList.remove('scrolled');
         }
       }
+    });
+
+    // Carousel Initialization
+    document.querySelectorAll('.carousel-container').forEach(container => {
+      const inner = container.querySelector('.carousel-inner');
+      const slides = container.querySelectorAll('.carousel-slide');
+      const prevBtn = container.querySelector('.carousel-control.prev') || container.parentElement.querySelector('.carousel-control.prev');
+      const nextBtn = container.querySelector('.carousel-control.next') || container.parentElement.querySelector('.carousel-control.next');
+      const dots = container.querySelectorAll('.carousel-dot');
+
+      if (!inner || slides.length <= 1) return;
+
+      let currentIndex = 0;
+
+      function updateCarousel() {
+        inner.style.transform = `translateX(-${currentIndex * 100}%)`;
+        dots.forEach((dot, idx) => {
+          if (idx === currentIndex) dot.classList.add('active');
+          else dot.classList.remove('active');
+        });
+        container.dataset.currentIndex = currentIndex; // For image editor sync
+      }
+
+      if (prevBtn) {
+        prevBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          currentIndex = (currentIndex > 0) ? currentIndex - 1 : slides.length - 1;
+          updateCarousel();
+        });
+      }
+
+      if (nextBtn) {
+        nextBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          currentIndex = (currentIndex < slides.length - 1) ? currentIndex + 1 : 0;
+          updateCarousel();
+        });
+      }
+
+      dots.forEach((dot, idx) => {
+        dot.addEventListener('click', (e) => {
+          e.stopPropagation();
+          currentIndex = idx;
+          updateCarousel();
+        });
+      });
     });
   </script>
 </body>

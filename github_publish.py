@@ -145,7 +145,7 @@ async def publish_to_github(quotation_id: str, html_content: str, version: int, 
 
 async def publish_file_to_github(
     file_path: str,
-    html_content: str,
+    html_content: str | bytes,
     commit_message: str,
 ) -> str:
     """
@@ -162,7 +162,8 @@ async def publish_file_to_github(
         "Accept": "application/vnd.github.v3+json",
         "User-Agent": "quotation-landingpage/1.0",
     }
-    encoded = base64.b64encode(html_content.encode("utf-8")).decode("ascii")
+    raw_bytes = html_content if isinstance(html_content, bytes) else html_content.encode("utf-8")
+    encoded = base64.b64encode(raw_bytes).decode("ascii")
 
     await _put_github_file(api_url, headers, encoded, commit_message=commit_message)
 

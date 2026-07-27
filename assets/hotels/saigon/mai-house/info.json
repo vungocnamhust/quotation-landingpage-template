@@ -1,0 +1,14 @@
+{
+  "name": "Mai House Hotel",
+  "location": "Ho Chi Minh City",
+  "images": {
+    "interior": [
+      "assets/hotels/saigon/the-reverie-saigon-hotel/interior/interior_1.jpg"
+    ],
+    "exterior": [
+      "assets/hotels/saigon/the-reverie-saigon-hotel/exterior/exterior_1.jpg"
+    ]
+  },
+  "website": "https://maihouse.com.vn/",
+  "introduction": "Mai House Saigon Hotel is a luxury 5-star hotel ideally located in District 3, right next to the vibrant center of District 1 in Ho Chi Minh City. Featuring an elegant Neoclassical architecture with a touch of timeless nostalgia, Mai House offers guest spaces that blend modern luxury with warm hospitality and attentive service."
+}

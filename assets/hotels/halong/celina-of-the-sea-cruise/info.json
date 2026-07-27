@@ -3,14 +3,10 @@
   "location": "Ha Long",
   "images": {
     "interior": [
-      "assets/hotels/halong/celina-of-the-sea-cruise/interior/image_1.jpg",
-      "assets/hotels/halong/celina-of-the-sea-cruise/interior/image_2.jpg",
-      "assets/hotels/halong/celina-of-the-sea-cruise/interior/image_3.jpg"
+      "assets/hotels/halong/celina-of-the-sea-cruise/interior/interior_1.jpg"
     ],
     "exterior": [
-      "assets/hotels/halong/celina-of-the-sea-cruise/exterior/image_1.png",
-      "assets/hotels/halong/celina-of-the-sea-cruise/exterior/image_2.webp",
-      "assets/hotels/halong/celina-of-the-sea-cruise/exterior/image_3.jpg"
+      "assets/hotels/halong/celina-of-the-sea-cruise/exterior/exterior_1.jpg"
     ]
   },
   "website": "https://celinacruises.com/",

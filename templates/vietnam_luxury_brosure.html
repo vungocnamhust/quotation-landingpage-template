@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{ lang or 'en' }}" {% if lang=='ar' %}dir="rtl" {% endif %}
-  style="--hero-img: url('{{img_0}}'); {% for dest in destinations %} --img-{{ loop.index }}: url('{{ dest.image_url or '/assets/vietnam-safar-logo.png' }}'); {% endfor %}">
+  style="--hero-img: url('{{img_0}}'); {% for dest in destinations %} --img-{{ loop.index }}: url('{{ dest.image_url or ((brand.logo if brand else '') or '/assets/vietnam-safar-logo.png') }}'); {% endfor %}">
 
 <head>
   <meta charset="UTF-8" />
@@ -47,9 +47,9 @@
     rel="stylesheet">
 
   <!-- PWA Metadata -->
-  <link rel="manifest" href="/manifest.json?id={{quotation_id}}&type=quotations" />
+  <link rel="manifest" href="/manifest.json?id={{quotation_id}}&type=quotations{% if brand %}&brand={{brand.id}}{% endif %}" />
   <meta name="theme-color" content="{{c_primary}}" />
-  <link rel="apple-touch-icon" href="/assets/vietnam-safar-logo.png" />
+  <link rel="apple-touch-icon" href="{{ (brand.logo if brand else '') or '/assets/vietnam-safar-logo.png' }}" />
   <!-- Leaflet CSS & JS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
@@ -1498,20 +1498,20 @@
     }
 
     /* ── Inline editing ─────────────────────────────────────────── */
-    [data-editable] {
-      outline: none;
-      border-radius: 0;
-      transition: background .15s, box-shadow .15s
+    [data-editable]:not(.day-image):not(.carousel-container):not(.hero-image):not(.image-tile):not(img):not(.hotel-image-wrapper):hover {
+      background-color: color-mix(in srgb, var(--accent) 9%, transparent);
+      cursor: text;
     }
 
-    [data-editable]:hover {
-      background: color-mix(in srgb, var(--accent) 9%, transparent);
-      cursor: text
+    [data-editable]:not(.day-image):not(.carousel-container):not(.hero-image):not(.image-tile):not(img):not(.hotel-image-wrapper):focus {
+      background-color: color-mix(in srgb, var(--accent) 14%, transparent);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent);
     }
 
-    [data-editable]:focus {
-      background: color-mix(in srgb, var(--accent) 14%, transparent);
-      box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent)
+    .day-image[data-editable]:hover,
+    .carousel-container[data-editable]:hover,
+    .image-tile[data-editable]:hover {
+      cursor: pointer;
     }
 
     /* ── Publish Bar ────────────────────────────────────────────── */
@@ -2973,7 +2973,8 @@
   </style>
 </head>
 
-<body>
+<body data-brochure-mode="{% if use_shared_draft_editor %}editor{% else %}published{% endif %}"
+  data-brochure-preview="0" data-quotation-id="{{ quotation_id }}" data-current-lang="{{ lang or 'en' }}">
   <nav class="nav no-print">
     <div class="container nav-inner">
       <a class="brand" href="#top">
@@ -3184,17 +3185,17 @@
           <!-- RIGHT CONTENT -->
           <div class="letter-content-main">
             <div class="letter-text">
-              <p data-editable="letter_greeting">
-                Dear <strong>{{ customer_name | default('Family Vacation') }}</strong>,
-              </p>
-              <p data-editable="letter_intro">
-                I am delighted to present this privately arranged journey{% if overview_heading %}: <strong>{{
-                  overview_heading }}</strong>{% endif %}, created for {% if guests_txt %}<strong>{{ guests_txt
-                  }}</strong>{% else %}two guests{% endif %}{% if travel_dates %} travelling from <strong>{{
-                  travel_dates }}</strong>{% endif %}. The route unfolds from {% if route_txt %}<strong>{{ route_txt
-                  }}</strong>{% else %}Hanoi through Ninh Binh, Ha Long Bay and Sapa, before continuing to Da Nang, Hoi
-                An and Ho Chi Minh City{% endif %}.
-              </p>
+              <p data-editable="letter_greeting">{{ letter_greeting | default("Dear " ~ (customer_name | default('Family Vacation')) ~ ",") | rtl_mixed(lang) }}</p>
+              <p data-editable="letter_intro">{{ letter_intro | default(
+                "I am delighted to present this privately arranged journey"
+                ~ (": " ~ overview_heading if overview_heading else "")
+                ~ ", created for "
+                ~ (guests_txt if guests_txt else "two guests")
+                ~ (" travelling from " ~ travel_dates if travel_dates else "")
+                ~ ". The route unfolds from "
+                ~ (route_txt if route_txt else "Hanoi through Ninh Binh, Ha Long Bay and Sapa, before continuing to Da Nang, Hoi An and Ho Chi Minh City")
+                ~ "."
+              ) | rtl_mixed(lang) }}</p>
               <p data-editable="letter_body_p2">
                 {{ letter_body_p2 | default('The programme has been considered around a gentler family rhythm: early
                 check-in in Hanoi, private guiding and transfers, a premium overnight train cabin, and enough space
@@ -3214,9 +3215,9 @@
               </h3>
               <div class="letter-sig-details">
                 <span data-editable="letter_sender">{{ letter_sender | default('Your Journey Designer') }}</span>
-                {% if contact or true %}
+                {% if contact %}
                 <span>&middot;</span>
-                <span data-editable="contact">{{ contact | default('+84 911 538 738') }}</span>
+                <span>{{ contact | default('+84 911 538 738') }}</span>
                 {% endif %}
               </div>
             </div>
@@ -4457,7 +4458,7 @@
                 default("Deposit" | translate(lang)) }}</div>
               <div>
                 <div data-editable="term_deposit" style="color: var(--text-muted); font-size: 15px; line-height: 1.6;">
-                  {{term_deposit}}
+                  {{ term_deposit | default("A deposit of 30% of the total tour cost is required upon confirmation of the booking. This deposit is non-refundable.<br><br>For bookings confirmed within 60 days of arrival, full payment of 100% of the total tour cost is required at the time of confirmation.", true) | safe }}
                 </div>
               </div>
             </div>
@@ -4468,7 +4469,7 @@
                 default("Balance" | translate(lang)) }}</div>
               <div>
                 <div data-editable="term_balance" style="color: var(--text-muted); font-size: 15px; line-height: 1.6;">
-                  {{term_balance}}
+                  {{ term_balance | default("The remaining 70% balance must be paid no later than 60 days prior to the scheduled arrival date.", true) | safe }}
                 </div>
               </div>
             </div>
@@ -4480,7 +4481,7 @@
               <div>
                 <div data-editable="term_cancellation"
                   style="color: var(--text-muted); font-size: 15px; line-height: 1.6;">
-                  {{term_cancellation}}
+                  {{ term_cancellation | default("Written notice required. Cancellation fees apply based on arrival date:<ul style=\"margin: 8px 0 12px; padding-left: 20px; list-style-type: disc;\"><li style=\"margin-bottom: 4px;\"><strong>&gt; 45 days prior:</strong> Deposit forfeited (30%)</li><li style=\"margin-bottom: 4px;\"><strong>45 – 31 days prior:</strong> 50% of total tour cost</li><li style=\"margin-bottom: 4px;\"><strong>30 – 20 days prior:</strong> 75% of total tour cost</li><li style=\"margin-bottom: 4px;\"><strong>&lt; 20 days prior:</strong> 100% of total tour cost</li></ul>Any non-refundable payments, cancellation charges or penalties imposed by hotels, airlines, cruise operators and other service providers may also apply in addition to the cancellation fees stated above.", true) | safe }}
                 </div>
               </div>
             </div>
@@ -4492,7 +4493,7 @@
               <div>
                 <div data-editable="term_confirmation"
                   style="color: var(--text-muted); font-size: 15px; line-height: 1.6;">
-                  {{term_confirmation}}
+                  {{ term_confirmation | default("The booking will only be considered confirmed once the required payment has been received.", true) | safe }}
                 </div>
               </div>
             </div>
@@ -4548,7 +4549,7 @@
               data-img-type="hero"
               style="--designer-img: url('{% if designer_img %}{{ designer_img }}{% else %}/assets/dias_team/director.png{% endif %}'); margin: 0 auto 24px; width: 100%; max-width: 300px; aspect-ratio: 3/4; border-radius: 200px 200px 0 0; overflow: hidden; border: 4px solid #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.05); position: relative; background-image: var(--designer-img); background-size: cover; background-position: center;">
             </div>
-            <h3 data-editable="seller_name2"
+            <h3
               style="font-family: var(--serif); font-size: 26px; color: var(--emerald); margin: 0 0 8px;">{{ seller_name
               | rtl_mixed(lang) }}</h3>
             <div data-editable="designer_signature"
@@ -4609,7 +4610,7 @@
                     translate(lang) }}</span>
                 </a>
                 <div style="font-size: 11px; color: var(--emerald, #17412E); opacity: 0.8; padding-left: 2px;">
-                  {{ "No.:" | translate(lang) }} <span data-editable="contact_phone">{{ contact_phone }}</span>
+                  {{ "No.:" | translate(lang) }} <span>{{ contact_phone }}</span>
                 </div>
               </div>
               <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -4624,7 +4625,7 @@
                     Email" | translate(lang) }}</span>
                 </a>
                 <div style="font-size: 11px; color: var(--emerald, #17412E); opacity: 0.8; padding-left: 2px;">
-                  {{ "Email:" | translate(lang) }} <span data-editable="seller_email">{{ seller_email }}</span>
+                  {{ "Email:" | translate(lang) }} <span>{{ seller_email }}</span>
                 </div>
               </div>
             </div>
@@ -4694,6 +4695,20 @@
     <div class="container" data-editable="footer_text">{{ footer_text | rtl_mixed(lang) }}</div>
   </footer>
 
+  <script id="translation-status" type="application/json">
+    {{ translation_status | tojson | safe }}
+  </script>
+  <script id="client-i18n" type="application/json">
+    {{ client_i18n | tojson | safe }}
+  </script>
+  {% if brochure_draft %}
+  <script id="brochure-draft" type="application/json">
+    {{ brochure_draft | tojson | safe }}
+  </script>
+  {% endif %}
+  <script src="/assets/brochure_shared_draft.js"></script>
+
+  {% if not use_shared_draft_editor %}
   <!-- ── Publish Bar ─────────────────────────────────────────── -->
   <div id="publish-bar" class="no-print">
     <div class="pb-left">
@@ -5025,13 +5040,6 @@
         window.location.href = targetUrl;
       }
     }
-  </script>
-
-  <script id="translation-status" type="application/json">
-    {{ translation_status | tojson | safe }}
-  </script>
-  <script id="client-i18n" type="application/json">
-    {{ client_i18n | tojson | safe }}
   </script>
 
   <script id="editor-scripts">
@@ -5745,11 +5753,12 @@
       btn.disabled = false;
     }
   </script>
+  {% endif %}
 
   <script id="destination-images" type="application/json">
     {
       {% for dest in destinations %}
-        "{{ dest.slug }}": "{{ dest.image_url or (dest.images[0] if dest.images else '/assets/vietnam-safar-logo.png') }}"
+        "{{ dest.slug }}": "{{ dest.image_url or (dest.images[0] if dest.images else ((brand.logo if brand else '') or '/assets/vietnam-safar-logo.png')) }}"
         {% if not loop.last %},{% endif %}
       {% endfor %}
     }
@@ -6101,7 +6110,7 @@
         id: segment.segmentId || `stay-${idx + 1}`,
         coords: resolvedCoords,
         displayCoords: resolvedCoords,
-        img: segment.hotelImage || ((slug && destImages[slug]) ? destImages[slug] : '/assets/vietnam-safar-logo.png')
+        img: segment.hotelImage || ((slug && destImages[slug]) ? destImages[slug] : '{{ (brand.logo if brand else "") or "/assets/vietnam-safar-logo.png" }}')
       };
     }).filter(segment => Array.isArray(segment.coords) && segment.coords.length === 2);
 
@@ -6472,8 +6481,8 @@
 
         const options = {
           body: body,
-          icon: '/assets/vietnam-safar-logo.png',
-          badge: '/assets/vietnam-safar-logo.png',
+          icon: '{{ (brand.logo if brand else "") or "/assets/vietnam-safar-logo.png" }}',
+          badge: '{{ (brand.logo if brand else "") or "/assets/vietnam-safar-logo.png" }}',
           vibrate: [100, 50, 100],
           data: {
             url: window.location.href

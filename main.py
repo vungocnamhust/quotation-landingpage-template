@@ -7,7 +7,7 @@ import copy
 import re
 from functools import partial
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, UploadFile, File, Form
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,7 +15,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.exceptions import RequestValidationError
 from markupsafe import Markup, escape
 from pydantic import BaseModel, ValidationError, Field
-from typing import List, Optional
+from typing import Any, List, Optional
 from datetime import date
 from github_publish import publish_to_github, publish_file_to_github
 from image_selector import select_landing_image
@@ -48,6 +48,30 @@ app.mount("/assets", StaticFiles(directory="assets"), name="assets")
 
 # Jinja2 templates
 templates = Jinja2Templates(directory="templates")
+
+NO_CACHE_HEADERS = {
+    "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0, s-maxage=0",
+    "Pragma": "no-cache",
+    "Expires": "0"
+}
+no_cache_headers = NO_CACHE_HEADERS
+
+BRAND_OWNED_CTX_FIELDS = frozenset({
+    "seller_name",
+    "seller_email",
+    "contact",
+    "contact_phone",
+    "contact_web",
+})
+
+BRAND_OWNED_EDITABLE_FIELDS = frozenset({
+    "seller_name",
+    "seller_name2",
+    "seller_email",
+    "contact",
+    "contact_phone",
+    "contact_web",
+})
 
 # Multi-brand configurations
 BRANDS = {
@@ -92,6 +116,16 @@ BRANDS = {
     }
 }
 
+BRAND_LOGO_ASSETS = {
+    brand_cfg.get("logo")
+    for brand_cfg in BRANDS.values()
+    if brand_cfg.get("logo")
+}
+
+LEGACY_BRAND_PLACEHOLDER_ASSETS = frozenset({
+    "/assets/vietnam-safar-logo.png",
+})
+
 def resolve_brand(request: Optional[Request], payload_dict: dict = None) -> dict:
     """Resolve brand based on query param, seller name, or content match."""
     brand_id = None
@@ -123,6 +157,62 @@ def resolve_brand(request: Optional[Request], payload_dict: dict = None) -> dict
             pass
             
     return BRANDS["vietnam_safar"]
+
+def _capture_brand_owned_fields(lang_ctx: dict) -> dict:
+    return {
+        key: lang_ctx.get(key)
+        for key in BRAND_OWNED_CTX_FIELDS
+    }
+
+def _restore_brand_owned_fields(lang_ctx: dict, brand_owned_fields: dict):
+    for key, value in (brand_owned_fields or {}).items():
+        if value:
+            lang_ctx[key] = value
+
+def _is_brand_switched(ctx_data: dict, brand_config: dict) -> bool:
+    stored_brand = ctx_data.get("brand") if isinstance(ctx_data, dict) else {}
+    stored_brand_id = stored_brand.get("id") if isinstance(stored_brand, dict) else None
+    requested_brand_id = (brand_config or {}).get("id")
+    return bool(stored_brand_id and requested_brand_id and stored_brand_id != requested_brand_id)
+
+def _sanitize_html_sync_payload(
+    existing_keys: set[str] | None,
+    edited_fields: dict | None,
+    composite_fields: dict | None = None,
+):
+    safe_existing_keys = {
+        key for key in (existing_keys or set())
+        if key not in BRAND_OWNED_EDITABLE_FIELDS
+    }
+    safe_edited_fields = {
+        key: value
+        for key, value in (edited_fields or {}).items()
+        if key not in BRAND_OWNED_EDITABLE_FIELDS
+    }
+
+    safe_composite_fields = copy.deepcopy(composite_fields or {})
+    top_level = safe_composite_fields.get("top_level", {})
+    if top_level:
+        safe_top_level = {
+            key: value
+            for key, value in top_level.items()
+            if key not in BRAND_OWNED_CTX_FIELDS
+        }
+        if safe_top_level:
+            safe_composite_fields["top_level"] = safe_top_level
+        else:
+            safe_composite_fields.pop("top_level", None)
+
+    return safe_existing_keys, safe_edited_fields, safe_composite_fields
+
+def _default_brand_logo(brand_config: dict | None) -> str:
+    return (brand_config or {}).get("logo") or "/assets/vietnam-safar-logo.png"
+
+def _is_brand_placeholder_image(image_url: str | None) -> bool:
+    return bool(image_url) and (
+        image_url in BRAND_LOGO_ASSETS
+        or image_url in LEGACY_BRAND_PLACEHOLDER_ASSETS
+    )
 
 # ── Luxury Day Title Templates ────────────────────────────────────────────────
 LUXURY_DAY_TEMPLATES = [
@@ -2472,8 +2562,9 @@ def _build_timeline_days(
         override_day = day_overrides.get(str(itinerary_day.dayNumber), {})
         raw_destinations = override_day.get("destinations") or [itinerary_day.destination]
         destinations = [truncate_text(localize_place_name(dest, lang), 40) for dest in raw_destinations if dest]
+        raw_overnight = override_day.get("overnight") or getattr(itinerary_day, "overnight", None) or itinerary_day.destination
         overnight = truncate_text(
-            localize_place_name(override_day.get("overnight", itinerary_day.destination), lang),
+            localize_place_name(raw_overnight, lang),
             40,
         )
         title = truncate_text(
@@ -2527,6 +2618,21 @@ def _build_itinerary_days_flat(timeline_days: list[dict], stay_segments: list[di
             
     edited = (manual_override or {}).get("edited_fields", {})
     
+    effective_day_slugs = {}
+    effective_day_cities = {}
+    for d in timeline_days:
+        d_num = d["dayNumber"]
+        d_dests = d.get("destinations") or []
+        first_dest = d_dests[0] if (d_dests and d_dests[0]) else None
+        if first_dest:
+            d_slug = _normalize_location_slug(first_dest) or day_slugs.get(d_num, "default")
+            d_city = first_dest
+        else:
+            d_slug = day_slugs.get(d_num, "default")
+            d_city = day_cities.get(d_num, "Vietnam")
+        effective_day_slugs[d_num] = d_slug
+        effective_day_cities[d_num] = d_city
+
     # Pre-calculate random image pools partitioned across days for each destination
     import hashlib
     import random
@@ -2534,7 +2640,7 @@ def _build_itinerary_days_flat(timeline_days: list[dict], stay_segments: list[di
     dest_day_counts = {}
     for d in timeline_days:
         d_num = d["dayNumber"]
-        d_slug = day_slugs.get(d_num, "default")
+        d_slug = effective_day_slugs.get(d_num, "default")
         dest_day_counts[d_slug] = dest_day_counts.get(d_slug, 0) + 1
         
     dest_image_pools = {}
@@ -2551,8 +2657,8 @@ def _build_itinerary_days_flat(timeline_days: list[dict], stay_segments: list[di
     
     for i, day_data in enumerate(timeline_days):
         day_num = day_data["dayNumber"]
-        slug = day_slugs.get(day_num, "default")
-        city = day_cities.get(day_num, "Vietnam")
+        slug = effective_day_slugs.get(day_num, "default")
+        city = effective_day_cities.get(day_num, "Vietnam")
         
         imgs = dest_image_pools.get(slug, [])
         day_idx = dest_day_indices.get(slug, 0)
@@ -2590,6 +2696,17 @@ def _build_itinerary_days_flat(timeline_days: list[dict], stay_segments: list[di
         layout_type = "single"
 
 
+        # Train image enhancement for train journey days
+        summary_text = (day_data.get("summary") or "") + " " + (day_data.get("title") or "") + " " + (day_data.get("mainInclusions") or "")
+        if "train" in summary_text.lower() or "chapa" in summary_text.lower():
+            train_img = "/assets/lao-cai/tau-tren-cao.webp"
+            if train_img not in carousel_imgs:
+                carousel_imgs.insert(0, train_img)
+            if not s1_img:
+                s1_img = train_img
+            elif not s2_img:
+                s2_img = train_img
+
         layout_images = {
             "hero": hero_img,
             "small-1": s1_img,
@@ -2622,21 +2739,25 @@ def _build_itinerary_days_flat(timeline_days: list[dict], stay_segments: list[di
 
 def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, destinations: list[dict], lang: str = "en", template_name: str = "vietnam_luxury_brosure.html", brand: dict = None):
     """Build template context. Shared by /quotations (landingpage) and /quotations/{id}/pdf."""
-    default_img = "/assets/vietnam-safar-logo.png"
+    default_img = _default_brand_logo(brand)
     manual_override = _load_quotation_manual_override(quotation_id)
     lang_override = _lang_override(manual_override, lang)
     
     # Defaults for seller/contact
-    seller_name  = "Vietnam Safar – Discovery Asia Travel Group"
-    seller_email = "sales@vietnamsafar.vn"
-    seller_phone = "+84 911 538 738"
+    seller_name  = "Eddie"
+    seller_subtitle = "(Trung Hieu Pham)"
+    seller_email = "sales@capellatravel.com"
+    seller_phone = "+84 913 393 119"
     if brand:
         if brand.get("id") == "capella_travel":
-            seller_name = "Capella Travel"
+            seller_name = "Eddie"
+            seller_subtitle = "(Trung Hieu Pham)"
             seller_email = "sales@capellatravel.com"
+            seller_phone = "+84 913 393 119"
         elif brand.get("id") == "selvara":
             seller_name = "Selvara Journeys"
             seller_email = "sales@selvarajourneys.com"
+            seller_phone = "+84 913 393 119"
 
     # Resolve key display strings from new Spec 36 schema
     tour_title    = truncate_text(payload.landingpageContent.heroSection.subtitle, 70)
@@ -2889,9 +3010,15 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
             slug = _local_slug_lookup(raw_name) or _local_slug_lookup(d_copy.get("name"))
 
         image_url = _extract_image_url(d_copy.get("image_url"), default_img)
+        if _is_brand_placeholder_image(image_url):
+            image_url = default_img
         raw_images = d_copy.get("images") or []
         images = [
-            _extract_image_url(img, default_img)
+            (
+                default_img
+                if _is_brand_placeholder_image(_extract_image_url(img, default_img))
+                else _extract_image_url(img, default_img)
+            )
             for img in raw_images
             if _extract_image_url(img, default_img)
         ]
@@ -2905,7 +3032,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
                 if not os.path.exists(file_path):
                     file_exists = False
             
-            if is_mock_url or not file_exists or image_url == default_img:
+            if is_mock_url or not file_exists or image_url == default_img or _is_brand_placeholder_image(image_url):
                 real_img = _find_real_image_for_province(slug, default_img)
                 if real_img != default_img:
                     image_url = real_img
@@ -2918,7 +3045,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
                     f_path = img.lstrip("/")
                     if not os.path.exists(f_path):
                         f_exists = False
-                if not is_mock and f_exists and img != default_img:
+                if not is_mock and f_exists and img != default_img and not _is_brand_placeholder_image(img):
                     real_images.append(img)
             
             if not real_images:
@@ -3100,8 +3227,8 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
 
     # Finalization defaults/fallbacks
     final = payload.finalization
-    final_req = [truncate_text(final.finalDetailsRequired, 300)]
-    final_after = [truncate_text(final.afterConfirmation, 300)]
+    final_req = [truncate_text(final.finalDetailsRequired, 300)] if (final and final.finalDetailsRequired) else ["Copy of passport valid for 6 months."]
+    final_after = [truncate_text(final.afterConfirmation, 300)] if (final and final.afterConfirmation) else ["24/7 dedicated local concierge support."]
 
     mapped_itinerary = timeline_days
 
@@ -3364,6 +3491,541 @@ def _load_itinerary_ctx(itinerary_id: str) -> dict | None:
         with open(ctx_path, "r", encoding="utf-8") as f:
             return json.load(f)
     return None
+
+
+def _is_brochure_template(template_name: str | None) -> bool:
+    return (template_name or "").endswith("vietnam_luxury_brosure.html")
+
+
+def _safe_asset_ref(url: str | None, asset_id: str | None = None, status: str = "ready") -> dict:
+    return {
+        "assetId": asset_id or "",
+        "url": url or "",
+        "status": status,
+    }
+
+
+def _asset_url(value: Any) -> str:
+    if isinstance(value, dict):
+        return value.get("url") or ""
+    if isinstance(value, str):
+        return value
+    return ""
+
+
+def _simple_list_to_draft(items: list[Any], prefix: str) -> list[dict]:
+    draft_items = []
+    for idx, item in enumerate(items or [], 1):
+        if isinstance(item, dict):
+            text = item.get("text") or item.get("title") or item.get("desc") or ""
+        else:
+            text = str(item or "")
+        draft_items.append({
+            "id": f"{prefix}-{idx}",
+            "text": text,
+        })
+    return draft_items
+
+
+def _draft_items_to_simple_list(items: list[Any]) -> list[str]:
+    simple_items = []
+    for item in items or []:
+        if isinstance(item, dict):
+            val = item.get("text") or ""
+        else:
+            val = str(item or "")
+        if val:
+            simple_items.append(val)
+    return simple_items
+
+
+def _build_brochure_draft_from_lang_ctx(lang_ctx: dict, quotation_id: str, lang: str) -> dict:
+    brand = copy.deepcopy(lang_ctx.get("brand") or BRANDS["vietnam_safar"])
+    hero_url = lang_ctx.get("hero_img_custom") or lang_ctx.get("img_0") or _default_brand_logo(brand)
+    itinerary_days = copy.deepcopy(lang_ctx.get("itinerary_days") or [])
+    stay_segments = copy.deepcopy(lang_ctx.get("stay_segments") or [])
+    hotels = copy.deepcopy(lang_ctx.get("hotels") or [])
+    price_options = copy.deepcopy(lang_ctx.get("price_options") or [])
+
+    draft_days = []
+    for idx, day in enumerate(itinerary_days, 1):
+        layout_images = copy.deepcopy(day.get("layout_images") or {})
+        carousel = [_safe_asset_ref(img) for img in (layout_images.get("carousel") or []) if img]
+        draft_days.append({
+            "id": day.get("id") or f"day-{day.get('dayNumber') or idx}",
+            "dayNumber": day.get("dayNumber") or idx,
+            "segmentCity": day.get("segment_city") or "",
+            "title": day.get("title") or "",
+            "description": copy.deepcopy(day.get("description") or []),
+            "overnight": day.get("overnight") or "",
+            "meals": copy.deepcopy(day.get("meals") or []),
+            "activities": copy.deepcopy(day.get("activities") or []),
+            "notes": copy.deepcopy(day.get("notes") or []),
+            "labelHighlights": day.get("label_highlights") or "Highlights:",
+            "labelNotes": day.get("label_notes") or "Notes:",
+            "layoutType": day.get("layout_type") or "single",
+            "images": {
+                "hero": _safe_asset_ref(layout_images.get("hero")),
+                "small1": _safe_asset_ref(layout_images.get("small-1")),
+                "small2": _safe_asset_ref(layout_images.get("small-2")),
+                "carousel": carousel,
+            },
+        })
+
+    draft_stays = []
+    for idx, hotel in enumerate(hotels, 1):
+        draft_stays.append({
+            "id": hotel.get("id") or f"hotel-{idx}",
+            "city": hotel.get("city_country") or "",
+            "name": hotel.get("name") or "",
+            "introduction": hotel.get("introduction") or hotel.get("hotel_intro") or "",
+            "hotelDate": hotel.get("date_range") or hotel.get("check_in_out") or "",
+            "tel": hotel.get("tel") or hotel.get("telephone") or "",
+            "roomType": hotel.get("room_type") or hotel.get("room_name") or "",
+            "hotelImage": _safe_asset_ref(hotel.get("hotel_img")),
+            "roomImage": _safe_asset_ref(hotel.get("room_img")),
+        })
+
+    draft_price_options = []
+    for idx, opt in enumerate(price_options, 1):
+        draft_price_options.append({
+            "id": opt.get("id") or f"price-{idx}",
+            "category": opt.get("hotelCategory") or "",
+            "name": opt.get("optionName") or "",
+            "perPersonText": ((opt.get("pricePerPerson") or {}).get("displayText") if isinstance(opt.get("pricePerPerson"), dict) else "") or "",
+            "totalText": ((opt.get("totalPrice") or {}).get("displayText") if isinstance(opt.get("totalPrice"), dict) else "") or "",
+            "isTotal": bool(opt.get("is_total")),
+            "isConfirmedMainOption": bool(opt.get("isConfirmedMainOption")),
+            "isAlternativeOption": bool(opt.get("isAlternativeOption")),
+        })
+
+    draft_segments = []
+    for idx, segment in enumerate(stay_segments, 1):
+        draft_segments.append({
+            "id": segment.get("segmentId") or f"stay-{idx}",
+            "displayName": segment.get("displayName") or "",
+            "daysLabel": segment.get("daysLabel") or "",
+            "nightsLabel": segment.get("nightsLabel") or "",
+            "hotelName": segment.get("hotelName") or "",
+            "hotelDateRange": segment.get("hotelDateRange") or "",
+            "hotelImage": _safe_asset_ref(segment.get("hotelImage")),
+            "mapSegmentDesc": segment.get("mapSegmentDesc") or "",
+            "mapSegmentDuration": segment.get("mapSegmentDuration") or "",
+            "coords": copy.deepcopy(segment.get("coords") or []),
+        })
+
+    return {
+        "meta": {
+            "quotationId": quotation_id,
+            "lang": lang,
+            "template": lang_ctx.get("template_name") or "vietnam_luxury_brosure.html",
+            "revision": int((((lang_ctx.get("brochure_draft") or {}).get("meta") or {}).get("revision")) or 1),
+        },
+        "brand": {
+            "name": brand.get("name") or "",
+            "domain": brand.get("domain") or "",
+            "logo": _safe_asset_ref(brand.get("logo")),
+            "colors": {
+                "primary": brand.get("color_primary") or "#17412e",
+                "primaryDark": brand.get("color_primary_dark") or "#0e2f22",
+                "accent": brand.get("color_accent") or "#b7894b",
+                "accentLight": brand.get("color_accent_light") or "#d8bd85",
+                "bgMain": brand.get("color_bg_main") or "#f9f6f0",
+                "bgAlt": brand.get("color_bg_alt") or "#fffaf1",
+                "textMain": brand.get("color_text_main") or "#11130f",
+                "textMuted": brand.get("color_text_muted") or "#706a5d",
+                "textLight": brand.get("color_text_light") or "#ffffff",
+            },
+            "fonts": {
+                "serif": brand.get("font_serif") or "Cormorant Garamond",
+                "sans": brand.get("font_sans") or "Montserrat",
+                "accent": brand.get("font_accent") or "Allura",
+            },
+        },
+        "assets": {
+            "hero": _safe_asset_ref(hero_url),
+            "itineraryDivider": _safe_asset_ref(lang_ctx.get("img_itinerary_divider")),
+            "hotelDivider": _safe_asset_ref(lang_ctx.get("img_hotel_divider")),
+        },
+        "traveler": {
+            "customerName": lang_ctx.get("customer_name") or "",
+            "guestProfile": lang_ctx.get("guests_txt") or "",
+            "nationality": lang_ctx.get("nationality") or "",
+        },
+        "trip": {
+            "title": lang_ctx.get("tour_title") or "",
+            "lede": lang_ctx.get("lede") or "",
+            "durationText": lang_ctx.get("duration_label") or "",
+            "routeText": lang_ctx.get("route_txt") or "",
+            "travelDates": lang_ctx.get("travel_dates") or "",
+            "quotationNumber": lang_ctx.get("quotation_number") or quotation_id,
+        },
+        "narrative": {
+            "coverKicker": lang_ctx.get("cover_kicker") or "A Privately Arranged Journey",
+            "heroMeta1": lang_ctx.get("hero_meta_1") or "",
+            "heroMeta2": lang_ctx.get("hero_meta_2") or lang_ctx.get("travel_dates") or "",
+            "letterGreeting": lang_ctx.get("letter_greeting") or "",
+            "letterIntro": lang_ctx.get("letter_intro") or "",
+            "letterBody2": lang_ctx.get("letter_body_p2") or "",
+            "letterOutro": lang_ctx.get("letter_outro") or "",
+            "letterSignOff": lang_ctx.get("letter_sign_off") or "",
+            "letterSender": lang_ctx.get("letter_sender") or "",
+            "footerText": lang_ctx.get("footer_text") or "",
+        },
+        "route": {
+            "title": lang_ctx.get("route_map_h2") or "",
+            "description": lang_ctx.get("route_map_p") or "",
+            "staySegments": draft_segments,
+        },
+        "itinerary": {
+            "title": lang_ctx.get("itinerary_h2") or "",
+            "description": lang_ctx.get("itinerary_p") or "",
+            "days": draft_days,
+        },
+        "stays": {
+            "hotels": draft_stays,
+            "roomNotes": lang_ctx.get("room_notes") or "",
+        },
+        "pricing": {
+            "kicker": lang_ctx.get("pricing_kicker") or "Package Pricing",
+            "title": lang_ctx.get("pricing_h2") or "",
+            "description": lang_ctx.get("pricing_p") or "",
+            "conditions": _simple_list_to_draft(lang_ctx.get("price_cond_paras") or [], "price-cond"),
+            "options": draft_price_options,
+        },
+        "inclusions": _simple_list_to_draft(lang_ctx.get("inclusions") or [], "inc"),
+        "exclusions": _simple_list_to_draft(lang_ctx.get("exclusions") or [], "exc"),
+        "bookingTerms": {
+            "kicker": lang_ctx.get("payment_kicker") or "Important Notes",
+            "title": lang_ctx.get("payment_title") or "Booking & Payment Terms",
+            "description": lang_ctx.get("payment_desc") or "",
+            "deposit": lang_ctx.get("term_deposit") or "",
+            "balance": lang_ctx.get("term_balance") or "",
+            "cancellation": lang_ctx.get("term_cancellation") or "",
+            "confirmation": lang_ctx.get("term_confirmation") or "",
+        },
+        "designer": {
+            "name": lang_ctx.get("seller_name") or "",
+            "signature": lang_ctx.get("designer_signature") or "",
+            "experience": lang_ctx.get("designer_experience") or "",
+            "quote": lang_ctx.get("designer_quote") or "",
+            "title": lang_ctx.get("designer_title") or "",
+            "phone": lang_ctx.get("contact_phone") or lang_ctx.get("contact") or "",
+            "email": lang_ctx.get("seller_email") or "",
+            "image": _safe_asset_ref(lang_ctx.get("designer_img")),
+        },
+        "finalization": {
+            "requiredItems": _simple_list_to_draft(lang_ctx.get("final_req") or [], "final-req"),
+            "afterConfirmation": _simple_list_to_draft(lang_ctx.get("final_after") or [], "final-after"),
+        },
+        "viewOverrides": {
+            "web": {},
+            "pdf": {},
+        },
+    }
+
+
+def _store_brochure_draft(ctx_data: dict, target_lang: str, draft: dict) -> dict:
+    brochure_drafts = ctx_data.setdefault("brochureDrafts", {})
+    brochure_drafts[target_lang] = copy.deepcopy(draft)
+    ctx_data["brochureDraft"] = copy.deepcopy(draft)
+    ctx_data["brochureDraftLang"] = target_lang
+
+    brand = draft.get("brand") or {}
+    brand_logo = _asset_url(brand.get("logo"))
+    brand_colors = brand.get("colors") or {}
+    brand_fonts = brand.get("fonts") or {}
+    ctx_data["brand"] = {
+        "id": ((ctx_data.get("brand") or {}).get("id") if isinstance(ctx_data.get("brand"), dict) else None) or "vietnam_safar",
+        "name": brand.get("name") or "",
+        "domain": brand.get("domain") or "",
+        "logo": brand_logo or _default_brand_logo(ctx_data.get("brand")),
+        "color_primary": brand_colors.get("primary") or "#17412e",
+        "color_primary_dark": brand_colors.get("primaryDark") or "#0e2f22",
+        "color_accent": brand_colors.get("accent") or "#b7894b",
+        "color_accent_light": brand_colors.get("accentLight") or "#d8bd85",
+        "color_bg_main": brand_colors.get("bgMain") or "#f9f6f0",
+        "color_bg_alt": brand_colors.get("bgAlt") or "#fffaf1",
+        "color_text_main": brand_colors.get("textMain") or "#11130f",
+        "color_text_muted": brand_colors.get("textMuted") or "#706a5d",
+        "color_text_light": brand_colors.get("textLight") or "#ffffff",
+        "font_serif": brand_fonts.get("serif") or "Cormorant Garamond",
+        "font_sans": brand_fonts.get("sans") or "Montserrat",
+        "font_accent": brand_fonts.get("accent") or "Allura",
+    }
+    ctx_data["hero_img"] = _asset_url(((draft.get("assets") or {}).get("hero")))
+    ctx_data["img_itinerary_divider"] = _asset_url(((draft.get("assets") or {}).get("itineraryDivider")))
+    ctx_data["img_hotel_divider"] = _asset_url(((draft.get("assets") or {}).get("hotelDivider")))
+    ctx_data["designer_img"] = _asset_url(((draft.get("designer") or {}).get("image")))
+    return draft
+
+
+def _get_stored_brochure_draft(ctx_data: dict, target_lang: str) -> dict | None:
+    brochure_drafts = ctx_data.get("brochureDrafts") or {}
+    draft = brochure_drafts.get(target_lang)
+    if draft:
+        return copy.deepcopy(draft)
+    stored_single = ctx_data.get("brochureDraft")
+    stored_lang = ctx_data.get("brochureDraftLang")
+    if stored_single and stored_lang == target_lang:
+        return copy.deepcopy(stored_single)
+    return None
+
+
+def _ensure_brochure_draft(ctx_data: dict, quotation_id: str, target_lang: str, lang_ctx: dict, *, force_brand_from_ctx: bool = False) -> dict:
+    draft = _get_stored_brochure_draft(ctx_data, target_lang)
+    if not draft:
+        draft = _build_brochure_draft_from_lang_ctx(lang_ctx, quotation_id, target_lang)
+        _store_brochure_draft(ctx_data, target_lang, draft)
+    elif force_brand_from_ctx:
+        fresh_brand = _build_brochure_draft_from_lang_ctx(lang_ctx, quotation_id, target_lang).get("brand") or {}
+        draft["brand"] = fresh_brand
+        _store_brochure_draft(ctx_data, target_lang, draft)
+    return copy.deepcopy(draft)
+
+
+def _apply_brochure_draft_to_lang_ctx(lang_ctx: dict, draft: dict):
+    brand = copy.deepcopy(lang_ctx.get("brand") or BRANDS["vietnam_safar"])
+    draft_brand = draft.get("brand") or {}
+    draft_colors = draft_brand.get("colors") or {}
+    draft_fonts = draft_brand.get("fonts") or {}
+    brand.update({
+        "name": draft_brand.get("name") or brand.get("name"),
+        "domain": draft_brand.get("domain") or brand.get("domain"),
+        "logo": _asset_url(draft_brand.get("logo")) or brand.get("logo"),
+        "color_primary": draft_colors.get("primary") or brand.get("color_primary"),
+        "color_primary_dark": draft_colors.get("primaryDark") or brand.get("color_primary_dark"),
+        "color_accent": draft_colors.get("accent") or brand.get("color_accent"),
+        "color_accent_light": draft_colors.get("accentLight") or brand.get("color_accent_light"),
+        "color_bg_main": draft_colors.get("bgMain") or brand.get("color_bg_main"),
+        "color_bg_alt": draft_colors.get("bgAlt") or brand.get("color_bg_alt"),
+        "color_text_main": draft_colors.get("textMain") or brand.get("color_text_main"),
+        "color_text_muted": draft_colors.get("textMuted") or brand.get("color_text_muted"),
+        "color_text_light": draft_colors.get("textLight") or brand.get("color_text_light"),
+        "font_serif": draft_fonts.get("serif") or brand.get("font_serif"),
+        "font_sans": draft_fonts.get("sans") or brand.get("font_sans"),
+        "font_accent": draft_fonts.get("accent") or brand.get("font_accent"),
+    })
+    lang_ctx["brand"] = brand
+
+    traveler = draft.get("traveler") or {}
+    trip = draft.get("trip") or {}
+    narrative = draft.get("narrative") or {}
+    route = draft.get("route") or {}
+    pricing = draft.get("pricing") or {}
+    booking_terms = draft.get("bookingTerms") or {}
+    designer = draft.get("designer") or {}
+    assets = draft.get("assets") or {}
+
+    lang_ctx["customer_name"] = traveler.get("customerName") or lang_ctx.get("customer_name")
+    lang_ctx["guests_txt"] = traveler.get("guestProfile") or lang_ctx.get("guests_txt")
+    lang_ctx["nationality"] = traveler.get("nationality") or lang_ctx.get("nationality")
+    lang_ctx["tour_title"] = trip.get("title") or lang_ctx.get("tour_title")
+    lang_ctx["lede"] = trip.get("lede") or lang_ctx.get("lede")
+    lang_ctx["duration_label"] = trip.get("durationText") or lang_ctx.get("duration_label")
+    lang_ctx["route_txt"] = trip.get("routeText") or lang_ctx.get("route_txt")
+    lang_ctx["travel_dates"] = trip.get("travelDates") or lang_ctx.get("travel_dates")
+    lang_ctx["quotation_number"] = trip.get("quotationNumber") or lang_ctx.get("quotation_number")
+
+    lang_ctx["cover_kicker"] = narrative.get("coverKicker") or lang_ctx.get("cover_kicker")
+    lang_ctx["hero_meta_1"] = narrative.get("heroMeta1") or lang_ctx.get("hero_meta_1")
+    lang_ctx["hero_meta_2"] = narrative.get("heroMeta2") or lang_ctx.get("hero_meta_2")
+    lang_ctx["letter_greeting"] = narrative.get("letterGreeting") or lang_ctx.get("letter_greeting")
+    lang_ctx["letter_intro"] = narrative.get("letterIntro") or lang_ctx.get("letter_intro")
+    lang_ctx["letter_body_p2"] = narrative.get("letterBody2") or lang_ctx.get("letter_body_p2")
+    lang_ctx["letter_outro"] = narrative.get("letterOutro") or lang_ctx.get("letter_outro")
+    lang_ctx["letter_sign_off"] = narrative.get("letterSignOff") or lang_ctx.get("letter_sign_off")
+    lang_ctx["letter_sender"] = narrative.get("letterSender") or lang_ctx.get("letter_sender")
+    lang_ctx["footer_text"] = narrative.get("footerText") or lang_ctx.get("footer_text")
+
+    lang_ctx["route_map_h2"] = route.get("title") or lang_ctx.get("route_map_h2")
+    lang_ctx["route_map_p"] = route.get("description") or lang_ctx.get("route_map_p")
+    lang_ctx["itinerary_h2"] = (draft.get("itinerary") or {}).get("title") or lang_ctx.get("itinerary_h2")
+    lang_ctx["itinerary_p"] = (draft.get("itinerary") or {}).get("description") or lang_ctx.get("itinerary_p")
+
+    lang_ctx["pricing_kicker"] = pricing.get("kicker") or lang_ctx.get("pricing_kicker")
+    lang_ctx["pricing_h2"] = pricing.get("title") or lang_ctx.get("pricing_h2")
+    lang_ctx["pricing_p"] = pricing.get("description") or lang_ctx.get("pricing_p")
+    lang_ctx["price_cond_paras"] = _draft_items_to_simple_list(pricing.get("conditions") or []) or lang_ctx.get("price_cond_paras")
+
+    lang_ctx["payment_kicker"] = booking_terms.get("kicker") or lang_ctx.get("payment_kicker")
+    lang_ctx["payment_title"] = booking_terms.get("title") or lang_ctx.get("payment_title")
+    lang_ctx["payment_desc"] = booking_terms.get("description") or lang_ctx.get("payment_desc")
+    lang_ctx["term_deposit"] = booking_terms.get("deposit") or lang_ctx.get("term_deposit")
+    lang_ctx["term_balance"] = booking_terms.get("balance") or lang_ctx.get("term_balance")
+    lang_ctx["term_cancellation"] = booking_terms.get("cancellation") or lang_ctx.get("term_cancellation")
+    lang_ctx["term_confirmation"] = booking_terms.get("confirmation") or lang_ctx.get("term_confirmation")
+
+    lang_ctx["seller_name"] = designer.get("name") or lang_ctx.get("seller_name")
+    lang_ctx["designer_signature"] = designer.get("signature") or lang_ctx.get("designer_signature")
+    lang_ctx["designer_experience"] = designer.get("experience") or lang_ctx.get("designer_experience")
+    lang_ctx["designer_quote"] = designer.get("quote") or lang_ctx.get("designer_quote")
+    lang_ctx["designer_title"] = designer.get("title") or lang_ctx.get("designer_title")
+    lang_ctx["contact_phone"] = designer.get("phone") or lang_ctx.get("contact_phone")
+    lang_ctx["contact"] = designer.get("phone") or lang_ctx.get("contact")
+    lang_ctx["seller_email"] = designer.get("email") or lang_ctx.get("seller_email")
+    lang_ctx["designer_img"] = _asset_url(designer.get("image")) or lang_ctx.get("designer_img")
+
+    hero_url = _asset_url(assets.get("hero"))
+    if hero_url:
+        lang_ctx["hero_img_custom"] = hero_url
+        lang_ctx["img_0"] = hero_url
+    itinerary_divider = _asset_url(assets.get("itineraryDivider"))
+    if itinerary_divider:
+        lang_ctx["img_itinerary_divider"] = itinerary_divider
+    hotel_divider = _asset_url(assets.get("hotelDivider"))
+    if hotel_divider:
+        lang_ctx["img_hotel_divider"] = hotel_divider
+
+    draft_days = (draft.get("itinerary") or {}).get("days") or []
+    base_flat_days = copy.deepcopy(lang_ctx.get("itinerary_days") or [])
+    base_timeline = copy.deepcopy(lang_ctx.get("itinerary") or [])
+    new_flat_days = []
+    new_timeline = []
+    for idx, day_draft in enumerate(draft_days, 1):
+        flat_day = copy.deepcopy(base_flat_days[idx - 1]) if idx - 1 < len(base_flat_days) else {}
+        timeline_day = copy.deepcopy(base_timeline[idx - 1]) if idx - 1 < len(base_timeline) else {}
+        images = day_draft.get("images") or {}
+        flat_day.update({
+            "id": day_draft.get("id") or flat_day.get("id") or f"day-{day_draft.get('dayNumber') or idx}",
+            "dayNumber": day_draft.get("dayNumber") or flat_day.get("dayNumber") or idx,
+            "segment_city": day_draft.get("segmentCity") or flat_day.get("segment_city") or "",
+            "title": day_draft.get("title") or "",
+            "description": copy.deepcopy(day_draft.get("description") or []),
+            "overnight": day_draft.get("overnight") or "",
+            "meals": copy.deepcopy(day_draft.get("meals") or []),
+            "activities": copy.deepcopy(day_draft.get("activities") or []),
+            "notes": copy.deepcopy(day_draft.get("notes") or []),
+            "label_highlights": day_draft.get("labelHighlights") or flat_day.get("label_highlights"),
+            "label_notes": day_draft.get("labelNotes") or flat_day.get("label_notes"),
+            "layout_type": day_draft.get("layoutType") or flat_day.get("layout_type") or "single",
+        })
+        layout_images = copy.deepcopy(flat_day.get("layout_images") or {})
+        layout_images["hero"] = _asset_url(images.get("hero")) or layout_images.get("hero") or ""
+        layout_images["small-1"] = _asset_url(images.get("small1")) or layout_images.get("small-1") or ""
+        layout_images["small-2"] = _asset_url(images.get("small2")) or layout_images.get("small-2") or ""
+        carousel_urls = [_asset_url(item) for item in images.get("carousel") or [] if _asset_url(item)]
+        if carousel_urls:
+            layout_images["carousel"] = carousel_urls
+        flat_day["layout_images"] = layout_images
+        timeline_day.update({
+            "dayNumber": flat_day["dayNumber"],
+            "title": flat_day["title"],
+            "description": copy.deepcopy(flat_day["description"]),
+            "overnight": flat_day["overnight"],
+            "meals": copy.deepcopy(flat_day["meals"]),
+            "activities": copy.deepcopy(flat_day["activities"]),
+            "notes": copy.deepcopy(flat_day["notes"]),
+            "destinations": copy.deepcopy(timeline_day.get("destinations") or ([flat_day["segment_city"]] if flat_day["segment_city"] else [])),
+            "label_highlights": flat_day.get("label_highlights"),
+            "label_notes": flat_day.get("label_notes"),
+        })
+        new_flat_days.append(flat_day)
+        new_timeline.append(timeline_day)
+    if new_flat_days:
+        lang_ctx["itinerary_days"] = new_flat_days
+        lang_ctx["itinerary"] = new_timeline
+        lang_ctx["timeline_days"] = copy.deepcopy(new_timeline)
+
+    draft_segments = route.get("staySegments") or []
+    base_segments = copy.deepcopy(lang_ctx.get("stay_segments") or [])
+    new_segments = []
+    for idx, segment_draft in enumerate(draft_segments, 1):
+        segment = copy.deepcopy(base_segments[idx - 1]) if idx - 1 < len(base_segments) else {}
+        segment.update({
+            "segmentId": segment_draft.get("id") or segment.get("segmentId") or f"stay-{idx}",
+            "displayName": segment_draft.get("displayName") or segment.get("displayName") or "",
+            "daysLabel": segment_draft.get("daysLabel") or segment.get("daysLabel") or "",
+            "nightsLabel": segment_draft.get("nightsLabel") or segment.get("nightsLabel") or "",
+            "hotelName": segment_draft.get("hotelName") or segment.get("hotelName") or "",
+            "hotelDateRange": segment_draft.get("hotelDateRange") or segment.get("hotelDateRange") or "",
+            "hotelImage": _asset_url(segment_draft.get("hotelImage")) or segment.get("hotelImage") or "",
+            "mapSegmentDesc": segment_draft.get("mapSegmentDesc") or segment.get("mapSegmentDesc") or "",
+            "mapSegmentDuration": segment_draft.get("mapSegmentDuration") or segment.get("mapSegmentDuration") or "",
+            "coords": copy.deepcopy(segment_draft.get("coords") or segment.get("coords") or []),
+        })
+        new_segments.append(segment)
+    if new_segments:
+        lang_ctx["stay_segments"] = new_segments
+
+    draft_hotels = (draft.get("stays") or {}).get("hotels") or []
+    base_hotels = copy.deepcopy(lang_ctx.get("hotels") or [])
+    new_hotels = []
+    for idx, hotel_draft in enumerate(draft_hotels, 1):
+        hotel = copy.deepcopy(base_hotels[idx - 1]) if idx - 1 < len(base_hotels) else {}
+        hotel.update({
+            "id": hotel_draft.get("id") or hotel.get("id") or f"hotel-{idx}",
+            "city_country": hotel_draft.get("city") or hotel.get("city_country") or "",
+            "name": hotel_draft.get("name") or hotel.get("name") or "",
+            "introduction": hotel_draft.get("introduction") or hotel.get("introduction") or "",
+            "hotel_intro": hotel_draft.get("introduction") or hotel.get("hotel_intro") or "",
+            "date_range": hotel_draft.get("hotelDate") or hotel.get("date_range") or "",
+            "tel": hotel_draft.get("tel") or hotel.get("tel") or "",
+            "telephone": hotel_draft.get("tel") or hotel.get("telephone") or "",
+            "room_type": hotel_draft.get("roomType") or hotel.get("room_type") or "",
+            "room_name": hotel_draft.get("roomType") or hotel.get("room_name") or "",
+            "hotel_img": _asset_url(hotel_draft.get("hotelImage")) or hotel.get("hotel_img") or "",
+            "room_img": _asset_url(hotel_draft.get("roomImage")) or hotel.get("room_img") or "",
+        })
+        new_hotels.append(hotel)
+    if new_hotels:
+        lang_ctx["hotels"] = new_hotels
+    lang_ctx["room_notes"] = (draft.get("stays") or {}).get("roomNotes") or lang_ctx.get("room_notes")
+
+    draft_options = pricing.get("options") or []
+    base_options = copy.deepcopy(lang_ctx.get("price_options") or [])
+    new_options = []
+    for idx, option_draft in enumerate(draft_options, 1):
+        option = copy.deepcopy(base_options[idx - 1]) if idx - 1 < len(base_options) else {}
+        price_per_person = copy.deepcopy(option.get("pricePerPerson") or {})
+        total_price = copy.deepcopy(option.get("totalPrice") or {})
+        price_per_person["displayText"] = option_draft.get("perPersonText") or price_per_person.get("displayText") or ""
+        total_price["displayText"] = option_draft.get("totalText") or total_price.get("displayText") or ""
+        option.update({
+            "id": option_draft.get("id") or option.get("id") or f"price-{idx}",
+            "hotelCategory": option_draft.get("category") or option.get("hotelCategory") or "",
+            "optionName": option_draft.get("name") or option.get("optionName") or "",
+            "pricePerPerson": price_per_person,
+            "totalPrice": total_price,
+            "is_total": bool(option_draft.get("isTotal")),
+            "isConfirmedMainOption": bool(option_draft.get("isConfirmedMainOption")),
+            "isAlternativeOption": bool(option_draft.get("isAlternativeOption")),
+        })
+        new_options.append(option)
+    if new_options:
+        lang_ctx["price_options"] = new_options
+
+    draft_inclusions = _draft_items_to_simple_list(draft.get("inclusions") or [])
+    draft_exclusions = _draft_items_to_simple_list(draft.get("exclusions") or [])
+    if draft_inclusions:
+        lang_ctx["inclusions"] = draft_inclusions
+    if draft_exclusions:
+        lang_ctx["exclusions"] = draft_exclusions
+
+    finalization = draft.get("finalization") or {}
+    lang_ctx["final_req"] = _draft_items_to_simple_list(finalization.get("requiredItems") or []) or lang_ctx.get("final_req")
+    lang_ctx["final_after"] = _draft_items_to_simple_list(finalization.get("afterConfirmation") or []) or lang_ctx.get("final_after")
+    lang_ctx["brochure_draft"] = copy.deepcopy(draft)
+
+
+async def _persist_ctx_data(quotation_id: str, ctx_data: dict, commit_message: str):
+    quo_dir = os.path.join("published", quotation_id)
+    os.makedirs(quo_dir, exist_ok=True)
+    if os.getenv("ENVIRONMENT", "local") == "production":
+        await publish_file_to_github(
+            file_path=f"published/{quotation_id}/ctx.json",
+            html_content=json.dumps(ctx_data, ensure_ascii=False, default=str),
+            commit_message=commit_message,
+        )
+    else:
+        with open(os.path.join(quo_dir, "ctx.json"), "w", encoding="utf-8") as f:
+            json.dump(ctx_data, f, ensure_ascii=False, default=str)
+    if quotation_id in quotations:
+        quotations[quotation_id]["ctx"] = ctx_data
+
+
+def _draft_asset_public_path(quotation_id: str, filename: str) -> str:
+    return f"/published/{quotation_id}/draft_assets/{filename}"
 
 
 def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, hero_image_url: str, destinations: list[dict], lang: str = "en", template_name: str = "detail_itinerary_landingpage_template.html"):
@@ -3950,7 +4612,8 @@ async def create_quotation(request: Request):
     log.debug("[/quotations] Hero image resolved: %s", hero_image_url)
 
     brand_config = resolve_brand(request, payload.model_dump(mode="json"))
-    ctx = _build_ctx(quotation_id, payload, hero_image_url, destinations, lang=lang, template_name="vietnam_luxury_brosure.html", brand=brand_config)
+    template_name = data.get("template_name") or data.get("template") or "vietnam_luxury_brosure.html"
+    ctx = _build_ctx(quotation_id, payload, hero_image_url, destinations, lang=lang, template_name=template_name, brand=brand_config)
     ctx["baseline_payload"] = payload.model_dump(mode="json")
     ctx["baseline_lang"] = lang
     ctx["translations"] = {}
@@ -3958,8 +4621,10 @@ async def create_quotation(request: Request):
     ctx["translation_status"] = {"baseline_lang": lang, "available_langs": [lang]}
     ctx["brand"] = brand_config
 
-    if "designer_img" in data:
+    if "designer_img" in data and data["designer_img"]:
         ctx["designer_img"] = data["designer_img"]
+    else:
+        ctx["designer_img"] = "/assets/dias_team/hieu.jpg"
 
     # ── Render landing page HTML ───────────────────────────────────────────────
     loop = asyncio.get_event_loop()
@@ -4289,6 +4954,7 @@ def _extract_letter_intro_parts(letter_intro_text: str) -> dict:
 
 def _capture_composite_sync_state(html_content: str) -> dict:
     edited_fields = parse_edited_fields(html_content)
+    _, edited_fields, _ = _sanitize_html_sync_payload(set(), edited_fields)
     composite = {
         "top_level": {},
         "hotels": {},
@@ -4302,9 +4968,6 @@ def _capture_composite_sync_state(html_content: str) -> dict:
         "letter_outro",
         "letter_sign_off",
         "letter_sender",
-        "contact",
-        "seller_email",
-        "contact_phone",
         "footer_text",
     ]
     for field_name in top_fields:
@@ -4437,6 +5100,8 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
     Filters out deleted blocks and optionally overrides text content of remaining blocks
     based on the saved editable state.
     """
+    existing_keys, edited_fields, _ = _sanitize_html_sync_payload(existing_keys, edited_fields)
+
     # Simple variables
     if override_text:
         for key in [
@@ -4453,8 +5118,7 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
             'journey_overview_title', 'label_prepared_for', 'label_overview',
             'label_guests', 'label_travel_dates', 'label_route', 'label_style',
             'label_ref', 'label_contact', 'label_nationality', 'label_duration',
-            'hero_meta_1', 'hero_meta_2', 'footer_text', 'seller_email',
-            'contact_phone', 'letter_greeting', 'letter_intro', 'letter_body_p2',
+            'hero_meta_1', 'hero_meta_2', 'footer_text', 'letter_greeting', 'letter_intro', 'letter_body_p2',
             'letter_outro', 'letter_sign_off', 'letter_sender', 'letter_highlight'
         ]:
             if key in edited_fields:
@@ -4719,10 +5383,13 @@ def filter_and_override_ctx_by_html(lang_ctx: dict, html_content: str, override_
     """
     Backward-compatible wrapper that derives editable state from HTML.
     """
+    existing_keys = get_existing_editable_keys(html_content)
+    edited_fields = parse_edited_fields(html_content)
+    existing_keys, edited_fields, _ = _sanitize_html_sync_payload(existing_keys, edited_fields)
     filter_and_override_ctx(
         lang_ctx,
-        get_existing_editable_keys(html_content),
-        parse_edited_fields(html_content),
+        existing_keys,
+        edited_fields,
         override_text=override_text,
     )
     lang = lang_ctx.get("lang", "en")
@@ -4764,10 +5431,17 @@ def _extract_custom_images_from_html(html_content: str) -> dict:
     return extracted
 
 def _capture_html_sync_state(html_content: str) -> dict:
+    existing_keys = get_existing_editable_keys(html_content)
+    edited_fields = parse_edited_fields(html_content)
+    existing_keys, edited_fields, composite_fields = _sanitize_html_sync_payload(
+        existing_keys,
+        edited_fields,
+        _capture_composite_sync_state(html_content),
+    )
     return {
-        "existing_keys": sorted(get_existing_editable_keys(html_content)),
-        "edited_fields": parse_edited_fields(html_content),
-        "composite_fields": _capture_composite_sync_state(html_content),
+        "existing_keys": sorted(existing_keys),
+        "edited_fields": edited_fields,
+        "composite_fields": composite_fields,
     }
 
 def _save_ctx_html_sync_state(ctx_data: dict, target_lang: str | None, html_content: str, captured_from_version: int | None = None) -> str:
@@ -4786,7 +5460,7 @@ def _apply_composite_html_sync(lang_ctx: dict, composite_fields: dict):
 
     top_level = composite_fields.get("top_level", {})
     for key, value in top_level.items():
-        if value:
+        if key not in BRAND_OWNED_CTX_FIELDS and value:
             lang_ctx[key] = value
 
     hotels = composite_fields.get("hotels", {})
@@ -4840,14 +5514,16 @@ def _apply_ctx_html_sync(
 
     return applied
 
-async def _render_quotation_doc_from_ctx(
+
+async def _build_quotation_lang_ctx(
     ctx_data: dict,
     quotation_id: str,
     target_lang: str,
     request: Request = None,
-    is_pdf: bool = True,
+    *,
     ignore_published_html: bool = False,
-) -> tuple[str, str]:
+    force_editor_draft: bool = False,
+):
     baseline_lang = ctx_data.get("baseline_lang", "en")
     effective_lang = target_lang if target_lang in ("en", "vi", "ar") else baseline_lang
     payload_dict = (
@@ -4861,17 +5537,17 @@ async def _render_quotation_doc_from_ctx(
 
     payload_obj = TourQuotationPayload.model_validate(payload_dict)
     base_tmpl = ctx_data.get("template_name", "vietnam_luxury_brosure.html")
-    tmpl_name = base_tmpl.replace(".html", "_pdf.html") if is_pdf else base_tmpl
-    tmpl = templates.get_template(tmpl_name)
-
     brand_config = resolve_brand(request, payload_dict)
-    hero_image_url = ctx_data.get("img_0", "/assets/vietnam-safar-logo.png")
-    if hero_image_url == "/assets/vietnam-safar-logo.png":
+    default_brand_logo = _default_brand_logo(brand_config)
+    hero_image_url = ctx_data.get("img_0") or ctx_data.get("hero_img") or default_brand_logo
+    if _is_brand_placeholder_image(hero_image_url):
         for day in ctx_data.get("itinerary_days", []) or ctx_data.get("itinerary", []):
             day_hero = day.get("layout_images", {}).get("hero")
-            if day_hero:
+            if day_hero and not _is_brand_placeholder_image(day_hero):
                 hero_image_url = day_hero
                 break
+        else:
+            hero_image_url = default_brand_logo
 
     lang_ctx = _build_ctx(
         quotation_id=quotation_id,
@@ -4882,21 +5558,27 @@ async def _render_quotation_doc_from_ctx(
         template_name=base_tmpl,
         brand=brand_config,
     )
+    brand_locked_fields = _capture_brand_owned_fields(lang_ctx)
+    brand_switched = _is_brand_switched(ctx_data, brand_config)
     lang_ctx["brand"] = brand_config
     if ctx_data.get("designer_img"):
         lang_ctx["designer_img"] = ctx_data.get("designer_img")
-    
     if ctx_data.get("hero_img"):
         lang_ctx["hero_img_custom"] = ctx_data.get("hero_img")
-    elif hero_image_url != "/assets/vietnam-safar-logo.png":
+    elif hero_image_url != default_brand_logo:
         lang_ctx["hero_img_custom"] = hero_image_url
-
     lang_ctx["translations"] = ctx_data.get("translations", {})
     lang_ctx["baseline_lang"] = baseline_lang
     lang_ctx["translation_status"] = ctx_data.get(
         "translation_status",
         {"baseline_lang": baseline_lang, "available_langs": [baseline_lang]},
     )
+    try:
+        from github_publish import get_next_version
+        next_ver = await get_next_version(quotation_id)
+        lang_ctx["latest_version"] = max(1, next_ver - 1)
+    except Exception:
+        lang_ctx["latest_version"] = 1
 
     if not ignore_published_html:
         if not _apply_ctx_html_sync(lang_ctx, ctx_data, effective_lang, baseline_lang):
@@ -4908,6 +5590,45 @@ async def _render_quotation_doc_from_ctx(
                 baseline_html = await _get_latest_published_html(quotation_id, lang=None, fallback=False)
                 if baseline_html:
                     filter_and_override_ctx_by_html(lang_ctx, baseline_html, override_text=False)
+
+    if _is_brochure_template(base_tmpl):
+        draft = _ensure_brochure_draft(
+            ctx_data,
+            quotation_id,
+            effective_lang,
+            lang_ctx,
+            force_brand_from_ctx=brand_switched or force_editor_draft,
+        )
+        _apply_brochure_draft_to_lang_ctx(lang_ctx, draft)
+        lang_ctx["brochure_draft"] = draft
+
+    if brand_switched:
+        _restore_brand_owned_fields(lang_ctx, brand_locked_fields)
+
+    return lang_ctx, effective_lang, base_tmpl
+
+async def _render_quotation_doc_from_ctx(
+    ctx_data: dict,
+    quotation_id: str,
+    target_lang: str,
+    request: Request = None,
+    is_pdf: bool = True,
+    ignore_published_html: bool = False,
+    preview_mode: bool = False,
+    editor_mode: bool = False,
+) -> tuple[str, str]:
+    lang_ctx, effective_lang, base_tmpl = await _build_quotation_lang_ctx(
+        ctx_data,
+        quotation_id,
+        target_lang,
+        request,
+        ignore_published_html=ignore_published_html,
+        force_editor_draft=editor_mode,
+    )
+    tmpl_name = base_tmpl.replace(".html", "_pdf.html") if is_pdf else base_tmpl
+    tmpl = templates.get_template(tmpl_name)
+    lang_ctx["brochure_preview_mode"] = bool(preview_mode)
+    lang_ctx["use_shared_draft_editor"] = bool(editor_mode and _is_brochure_template(base_tmpl))
 
     rendered_html = tmpl.render(**lang_ctx)
     return rendered_html, effective_lang
@@ -4976,6 +5697,7 @@ async def get_quotation_pdf(quotation_id: str, request: Request):
         
     baseline_lang = ctx_data.get("baseline_lang", "en")
     target_lang = lang or baseline_lang
+    preview_mode = request.query_params.get("preview") in {"1", "true", "yes"}
     
     # Trigger lazy translation if not available
     if target_lang != baseline_lang:
@@ -4996,7 +5718,25 @@ async def get_quotation_pdf(quotation_id: str, request: Request):
         target_lang = baseline_lang
         
     try:
-        rendered_html, _ = await _render_quotation_doc_from_ctx(ctx_data, quotation_id, target_lang, request, is_pdf=True)
+        rendered_html, effective_lang = await _render_quotation_doc_from_ctx(
+            ctx_data,
+            quotation_id,
+            target_lang,
+            request,
+            is_pdf=True,
+            preview_mode=preview_mode,
+        )
+        if _is_brochure_template(ctx_data.get("template_name", "vietnam_luxury_brosure.html")):
+            lang_ctx, _, _ = await _build_quotation_lang_ctx(
+                ctx_data,
+                quotation_id,
+                effective_lang,
+                request,
+                ignore_published_html=True,
+                force_editor_draft=preview_mode,
+            )
+            draft = _ensure_brochure_draft(ctx_data, quotation_id, effective_lang, lang_ctx, force_brand_from_ctx=preview_mode)
+            _store_brochure_draft(ctx_data, effective_lang, draft)
         return HTMLResponse(content=rendered_html)
     except Exception as err:
         log.exception("[/quotations] Dynamic PDF render failed for %s: %s", quotation_id, err)
@@ -5055,6 +5795,10 @@ class TranslateBlockRequest(BaseModel):
     target_lang: str
 
 
+class DraftUpsertRequest(BaseModel):
+    draft: dict[str, Any]
+
+
 @app.post("/api/v1/translate-block")
 async def translate_block_endpoint(payload: TranslateBlockRequest):
     """Translates a single block of text into target language."""
@@ -5109,6 +5853,106 @@ async def translate_block_endpoint(payload: TranslateBlockRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/v1/quotations/{quotation_id}/draft")
+async def get_quotation_draft(quotation_id: str, request: Request, lang: str | None = None, language: str | None = None):
+    target_lang = lang or language
+    if target_lang not in ("en", "vi", "ar"):
+        target_lang = None
+
+    ctx_data = _load_ctx_data(quotation_id)
+    if not ctx_data:
+        raise HTTPException(status_code=404, detail=f"Quotation '{quotation_id}' not found.")
+
+    baseline_lang = ctx_data.get("baseline_lang", "en")
+    target_lang = target_lang or baseline_lang
+    template_name = ctx_data.get("template_name", "vietnam_luxury_brosure.html")
+    if not _is_brochure_template(template_name):
+        raise HTTPException(status_code=400, detail="Draft editor is only available for brochure quotations.")
+
+    lang_ctx, effective_lang, _ = await _build_quotation_lang_ctx(
+        ctx_data,
+        quotation_id,
+        target_lang,
+        request,
+        ignore_published_html=True,
+        force_editor_draft=True,
+    )
+    draft = _ensure_brochure_draft(ctx_data, quotation_id, effective_lang, lang_ctx, force_brand_from_ctx=True)
+    await _persist_ctx_data(quotation_id, ctx_data, f"Bootstrap brochure draft for quotation {quotation_id} ({effective_lang})")
+    return {"draft": draft, "lang": effective_lang}
+
+
+@app.put("/api/v1/quotations/{quotation_id}/draft")
+async def put_quotation_draft(
+    quotation_id: str,
+    payload: DraftUpsertRequest,
+    request: Request,
+    lang: str | None = None,
+    language: str | None = None,
+):
+    target_lang = lang or language
+    if target_lang not in ("en", "vi", "ar"):
+        target_lang = None
+
+    ctx_data = _load_ctx_data(quotation_id)
+    if not ctx_data:
+        raise HTTPException(status_code=404, detail=f"Quotation '{quotation_id}' not found.")
+
+    baseline_lang = ctx_data.get("baseline_lang", "en")
+    target_lang = target_lang or baseline_lang
+    template_name = ctx_data.get("template_name", "vietnam_luxury_brosure.html")
+    if not _is_brochure_template(template_name):
+        raise HTTPException(status_code=400, detail="Draft editor is only available for brochure quotations.")
+
+    draft = copy.deepcopy(payload.draft or {})
+    draft.setdefault("meta", {})
+    draft["meta"]["quotationId"] = quotation_id
+    draft["meta"]["lang"] = target_lang
+    draft["meta"]["template"] = template_name
+    draft["meta"]["revision"] = int(draft["meta"].get("revision") or 0) + 1
+
+    _store_brochure_draft(ctx_data, target_lang, draft)
+    await _persist_ctx_data(quotation_id, ctx_data, f"Autosave brochure draft for quotation {quotation_id} ({target_lang})")
+    return {"ok": True, "draft": draft}
+
+
+@app.post("/api/v1/assets")
+async def upload_brochure_asset(
+    quotation_id: str = Form(...),
+    file: UploadFile = File(...),
+):
+    ctx_data = _load_ctx_data(quotation_id)
+    if not ctx_data:
+        raise HTTPException(status_code=404, detail=f"Quotation '{quotation_id}' not found.")
+
+    raw_name = file.filename or "upload.bin"
+    _, ext = os.path.splitext(raw_name)
+    ext = (ext or ".bin").lower()
+    safe_name = f"{uuid.uuid4().hex}{ext}"
+    rel_path = f"{quotation_id}/draft_assets/{safe_name}"
+    local_path = os.path.join("published", rel_path)
+    os.makedirs(os.path.dirname(local_path), exist_ok=True)
+    content = await file.read()
+    if not content:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+
+    if os.getenv("ENVIRONMENT", "local") == "production":
+        await publish_file_to_github(
+            file_path=f"published/{rel_path}",
+            html_content=content,
+            commit_message=f"Upload brochure asset for quotation {quotation_id} ({safe_name})",
+        )
+    else:
+        with open(local_path, "wb") as f:
+            f.write(content)
+
+    return {
+        "assetId": safe_name,
+        "url": _draft_asset_public_path(quotation_id, safe_name),
+        "status": "ready",
+    }
+
+
 
 @app.get("/quotations/{quotation_id}", response_class=HTMLResponse)
 async def get_quotation(quotation_id: str, request: Request):
@@ -5154,15 +5998,46 @@ async def get_quotation(quotation_id: str, request: Request):
     try:
         payload_obj = TourQuotationPayload.model_validate(payload_dict)
         tmpl_name = ctx_data.get("template_name", "vietnam_luxury_brosure.html")
+        if _is_brochure_template(tmpl_name):
+            rendered_html, effective_lang = await _render_quotation_doc_from_ctx(
+                ctx_data,
+                quotation_id,
+                target_lang,
+                request=request,
+                is_pdf=False,
+                ignore_published_html=True,
+                editor_mode=True,
+            )
+            lang_ctx, _, _ = await _build_quotation_lang_ctx(
+                ctx_data,
+                quotation_id,
+                effective_lang,
+                request,
+                ignore_published_html=True,
+                force_editor_draft=True,
+            )
+            draft = _ensure_brochure_draft(ctx_data, quotation_id, effective_lang, lang_ctx, force_brand_from_ctx=True)
+            _store_brochure_draft(ctx_data, effective_lang, draft)
+            await _persist_ctx_data(quotation_id, ctx_data, f"Refresh brochure draft for quotation {quotation_id} ({effective_lang})")
+            return HTMLResponse(content=rendered_html, headers=no_cache_headers)
         tmpl = templates.get_template(tmpl_name)
-        
-        # Build clean context for target lang
-        hero_image_url = ctx_data.get("img_0", "/assets/vietnam-safar-logo.png")
-        destinations = ctx_data.get("destinations", [])
-        translations = ctx_data.get("translations", {})
-        
+
         # Resolve brand from request and payload
         brand_config = resolve_brand(request, payload_dict)
+        
+        # Build clean context for target lang
+        default_brand_logo = _default_brand_logo(brand_config)
+        hero_image_url = ctx_data.get("img_0") or default_brand_logo
+        if _is_brand_placeholder_image(hero_image_url):
+            for day in ctx_data.get("itinerary_days", []) or ctx_data.get("itinerary", []):
+                day_hero = day.get("layout_images", {}).get("hero")
+                if day_hero and not _is_brand_placeholder_image(day_hero):
+                    hero_image_url = day_hero
+                    break
+            else:
+                hero_image_url = default_brand_logo
+        destinations = ctx_data.get("destinations", [])
+        translations = ctx_data.get("translations", {})
 
         lang_ctx = _build_ctx(
             quotation_id=quotation_id,
@@ -5173,6 +6048,8 @@ async def get_quotation(quotation_id: str, request: Request):
             template_name=tmpl_name,
             brand=brand_config,
         )
+        brand_locked_fields = _capture_brand_owned_fields(lang_ctx)
+        brand_switched = _is_brand_switched(ctx_data, brand_config)
         lang_ctx["brand"] = brand_config
         lang_ctx["translations"] = translations
         lang_ctx["baseline_lang"] = baseline_lang
@@ -5188,6 +6065,12 @@ async def get_quotation(quotation_id: str, request: Request):
         latest_lang = None if target_lang == baseline_lang else target_lang
         html_content = await _get_latest_published_html(quotation_id, lang=latest_lang, fallback=False)
         if html_content:
+            if brand_switched:
+                filter_and_override_ctx_by_html(lang_ctx, html_content, override_text=True)
+                _restore_brand_owned_fields(lang_ctx, brand_locked_fields)
+                rendered_html = tmpl.render(**lang_ctx)
+                return HTMLResponse(content=rendered_html, headers=no_cache_headers)
+
             # Strip the old editor block entirely if it exists in the static HTML to avoid duplicate DOM elements and duplicate IDs (e.g. duplicate domain-modal)
             idx_bar = html_content.find('id="publish-bar"')
             if idx_bar == -1:
@@ -5250,11 +6133,12 @@ async def get_quotation(quotation_id: str, request: Request):
 # ── POST /quotations/{id}/publish — commit to GitHub → Vercel ─────────────────
 
 class PublishRequest(BaseModel):
-    html: str
+    html: Optional[str] = None
+    draft: Optional[dict[str, Any]] = None
     template_name: Optional[str] = None
 
 class ApproveRequest(BaseModel):
-    html: str
+    html: Optional[str] = None
     token: str
 
 @app.post("/quotations/{quotation_id}/publish")
@@ -5282,9 +6166,94 @@ async def publish_quotation(quotation_id: str, body: PublishRequest, request: Re
     effective_lang = target_lang
     if ctx_data:
         baseline_lang = ctx_data.get("baseline_lang", "en")
+        active_template = body.template_name or ctx_data.get("template_name") or "vietnam_luxury_brosure.html"
+        if _is_brochure_template(active_template) and body.draft:
+            draft = copy.deepcopy(body.draft)
+            draft.setdefault("meta", {})
+            draft["meta"]["quotationId"] = quotation_id
+            draft["meta"]["lang"] = target_lang or baseline_lang
+            draft["meta"]["template"] = active_template
+            draft["meta"]["revision"] = int(draft["meta"].get("revision") or 0) + 1
+            ctx_data["template_name"] = active_template
+            _store_brochure_draft(ctx_data, target_lang or baseline_lang, draft)
+
+            rendered_html, effective_lang = await _render_quotation_doc_from_ctx(
+                ctx_data,
+                quotation_id,
+                target_lang or baseline_lang,
+                request=request,
+                is_pdf=False,
+                ignore_published_html=True,
+            )
+            rendered_pdf, effective_lang = await _render_quotation_doc_from_ctx(
+                ctx_data,
+                quotation_id,
+                target_lang or baseline_lang,
+                request=request,
+                is_pdf=True,
+                ignore_published_html=True,
+            )
+
+            lang_suffix = f"_{target_lang}" if target_lang and target_lang != baseline_lang else ""
+            filename = f"v{version}{lang_suffix}.html"
+
+            if ENVIRONMENT == "production":
+                try:
+                    published_url = await publish_to_github(
+                        quotation_id=quotation_id,
+                        html_content=rendered_html,
+                        version=version,
+                        lang=target_lang,
+                        baseline_lang=baseline_lang
+                    )
+                    pdf_suffix = "" if effective_lang == baseline_lang else f"_{effective_lang}"
+                    pdf_files = {f"published/{quotation_id}/pdf{pdf_suffix}.html"}
+                    if effective_lang == baseline_lang:
+                        pdf_files.add(f"published/{quotation_id}/pdf_{effective_lang}.html")
+                    for pdf_path in sorted(pdf_files):
+                        await publish_file_to_github(
+                            file_path=pdf_path,
+                            html_content=rendered_pdf,
+                            commit_message=f"Update PDF view for quotation {quotation_id} {os.path.basename(pdf_path)} (version {version})",
+                        )
+                    await publish_file_to_github(
+                        file_path=f"published/{quotation_id}/ctx.json",
+                        html_content=json.dumps(ctx_data, ensure_ascii=False, default=str),
+                        commit_message=f"Update context for quotation {quotation_id} (version {version})",
+                    )
+                except Exception as exc:
+                    log.exception("[publish] Failed for %s", quotation_id)
+                    raise HTTPException(status_code=502, detail=str(exc))
+            else:
+                quo_dir = os.path.join("published", quotation_id)
+                os.makedirs(quo_dir, exist_ok=True)
+                with open(os.path.join(quo_dir, filename), "w", encoding="utf-8") as f:
+                    f.write(rendered_html)
+                with open(os.path.join(quo_dir, "ctx.json"), "w", encoding="utf-8") as f:
+                    json.dump(ctx_data, f, ensure_ascii=False, default=str)
+                pdf_suffix = "" if effective_lang == baseline_lang else f"_{effective_lang}"
+                pdf_paths = {os.path.join(quo_dir, f"pdf{pdf_suffix}.html")}
+                if effective_lang == baseline_lang:
+                    pdf_paths.add(os.path.join(quo_dir, f"pdf_{effective_lang}.html"))
+                for pdf_path in pdf_paths:
+                    with open(pdf_path, "w", encoding="utf-8") as f:
+                        f.write(rendered_pdf)
+                published_url = f"{PUBLIC_BASE_URL}/published/{quotation_id}/{filename}"
+
+            entry = quotations.get(quotation_id)
+            if entry:
+                entry["status"] = "published"
+                entry["published_url"] = published_url
+                entry["html"] = rendered_html
+                entry["ctx"] = ctx_data
+                entry["pdf_html"] = rendered_pdf
+                entry["version"] = version
+
+            log.info("[publish] ✓ %s v%d (lang=%s) [draft] → %s", quotation_id, version, target_lang, published_url)
+            return {"published_url": published_url, "version": version, "status": "published"}
         
         # Extract custom images and store in ctx_data
-        custom_images = _extract_custom_images_from_html(body.html)
+        custom_images = _extract_custom_images_from_html(body.html or "")
         ctx_data.update(custom_images)
         
         if body.template_name and ctx_data.get("template_name") != body.template_name:
@@ -5316,7 +6285,7 @@ async def publish_quotation(quotation_id: str, body: PublishRequest, request: Re
                             new_html = new_html[:idx_start] + new_html[idx_end:]
             body.html = new_html
         else:
-            _save_ctx_html_sync_state(ctx_data, target_lang, body.html, captured_from_version=version)
+            _save_ctx_html_sync_state(ctx_data, target_lang, body.html or "", captured_from_version=version)
 
         rendered_pdf, effective_lang = await _render_quotation_doc_from_ctx(
             ctx_data,
@@ -6334,11 +7303,18 @@ self.addEventListener('notificationclick', event => {
 
 
 @app.get("/manifest.json", include_in_schema=False)
-async def web_manifest(id: str = None, type: str = None):
-    name = "Vietnam Safar - Luxury Travel"
+async def web_manifest(id: str = None, type: str = None, brand: str = None):
+    brand_config = BRANDS.get(brand, BRANDS["vietnam_safar"])
+    brand_name = brand_config.get("name", "Vietnam Safar")
+    brand_logo = brand_config.get("logo", "/assets/vietnam-safar-logo.png")
+    brand_primary = brand_config.get("color_primary", "#17412e")
+
+    name = f"{brand_name} - Luxury Travel"
     start_url = "/"
     if id and type:
         start_url = f"/{type}/{id}"
+        if brand:
+            start_url = f"{start_url}?brand={brand}"
         if type == "quotations":
             entry = quotations.get(id)
             if entry and entry.get("ctx"):
@@ -6354,22 +7330,22 @@ async def web_manifest(id: str = None, type: str = None):
                     
     manifest_data = {
         "name": name,
-        "short_name": "Vietnam Safar",
-        "description": "Your luxury travel itinerary and quotation custom-tailored by Vietnam Safar.",
+        "short_name": brand_name,
+        "description": f"Your luxury travel itinerary and quotation custom-tailored by {brand_name}.",
         "start_url": start_url,
         "display": "standalone",
         "background_color": "#f8f3e9",
-        "theme_color": "#17412e",
+        "theme_color": brand_primary,
         "orientation": "any",
         "icons": [
             {
-                "src": "/assets/vietnam-safar-logo.png",
+                "src": brand_logo,
                 "sizes": "192x192",
                 "type": "image/png",
                 "purpose": "any maskable"
             },
             {
-                "src": "/assets/vietnam-safar-logo.png",
+                "src": brand_logo,
                 "sizes": "512x512",
                 "type": "image/png",
                 "purpose": "any maskable"
@@ -7191,7 +8167,8 @@ def get_luxury_hotel_details(hotel_name_or_arr: str, destination: str, checkin: 
             if paren_match:
                 room_type = paren_match.group(1).strip()
             
-    name = raw_name.split("(")[0].strip() if raw_name else "Luxury Hotel"
+    requested_name = raw_name.split("(")[0].strip() if raw_name else "Luxury Hotel"
+    name = requested_name
     tel = "+84 28 3933 3226"
     suffix = translate_filter("offers refined luxury accommodations, personalized service, and modern comforts.", lang)
     intro = f"{name} {suffix}"
@@ -7199,13 +8176,28 @@ def get_luxury_hotel_details(hotel_name_or_arr: str, destination: str, checkin: 
     room_img = ""
     
     # 1. Try resolving dynamically from the local database (Fusion Search + info.json)
-    resolved = resolve_hotel_details(name, destination, index=index, lang=lang)
+    resolved = resolve_hotel_details(requested_name, destination, index=index, lang=lang)
     if resolved:
-        name = resolved["name"]
-        tel = resolved["tel"]
-        intro = resolved["introduction"]
-        hotel_img = resolved["hotel_img"]
-        room_img = resolved["room_img"]
+        input_tokens = tokenize_hotel_name(requested_name)
+        resolved_tokens = tokenize_hotel_name(resolved["name"])
+        location_stopwords = {
+            "hotel", "resort", "spa", "vietnam", "and", "the", "luxury", "boutique", "villa", "villas", "suites", "suite",
+            "danang", "da", "nang", "hoian", "hoi", "an", "hanoi", "ha", "noi", "sapa", "halong", "saigon", "ninhbinh", "ninh", "binh"
+        }
+        core_input = {t for t in input_tokens if t not in location_stopwords}
+        core_resolved = {t for t in resolved_tokens if t not in location_stopwords}
+        
+        # Only overwrite name/intro if there is core token overlap
+        if core_input and core_resolved and core_input.intersection(core_resolved):
+            name = resolved["name"]
+            intro = resolved["introduction"]
+        else:
+            name = requested_name
+            intro = f"{requested_name} {suffix}"
+            
+        tel = resolved.get("tel", tel)
+        hotel_img = resolved.get("hotel_img", "")
+        room_img = resolved.get("room_img", "")
     else:
         # 2. Legacy static overrides (No destination fallback here, only name-based override)
         if "metropole" in name_lower:

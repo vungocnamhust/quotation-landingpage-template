@@ -3,14 +3,10 @@
   "location": "Ho Chi Minh City",
   "images": {
     "interior": [
-      "assets/hotels/saigon/the-reverie-saigon-hotel/interior/image_1.jpg",
-      "assets/hotels/saigon/the-reverie-saigon-hotel/interior/image_2.jpg",
-      "assets/hotels/saigon/the-reverie-saigon-hotel/interior/image_3.jpg"
+      "assets/hotels/saigon/the-reverie-saigon-hotel/interior/interior_1.jpg"
     ],
     "exterior": [
-      "assets/hotels/saigon/the-reverie-saigon-hotel/exterior/image_1.jpg",
-      "assets/hotels/saigon/the-reverie-saigon-hotel/exterior/image_2.jpg",
-      "assets/hotels/saigon/the-reverie-saigon-hotel/exterior/image_3.jpg"
+      "assets/hotels/saigon/the-reverie-saigon-hotel/exterior/exterior_1.jpg"
     ]
   },
   "website": "https://www.thereveriesaigon.com/",

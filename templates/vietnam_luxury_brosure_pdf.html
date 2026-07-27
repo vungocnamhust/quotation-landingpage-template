@@ -56,41 +56,29 @@
       --gold: {{c_accent}};
       --gold-2: {{c_accent_light}};
 
-      --line: color-mix(in srgb, {
-          {
-          c_accent
-        }
-      }
-
-      28%, transparent);
-
-    --card: {
-        {
-        c_bg_alt
-      }
-    }
-
-    ;
-    --charcoal: #171915;
-    /* kept dark for pricing block contrast */
-    --serif: "{{font_serif}}",
-    "Playfair Display",
-    serif;
-    --sans: "{{font_sans}}",
-    "Outfit",
-    sans-serif;
-    --font-accent: "{{font_accent}}",
-    "Playfair Display",
-    serif;
-    --font-mono: ui-monospace,
-    SFMono-Regular,
-    Menlo,
-    Monaco,
-    Consolas,
-    "Liberation Mono",
-    "Courier New",
-    monospace;
-    --font-heading: var(--serif);
+      --line: color-mix(in srgb, {{ c_accent }} 28%, transparent);
+      --card: {{ c_bg_alt }};
+      --charcoal: #171915;
+      --text: {{ c_text_main }};
+      /* kept dark for pricing block contrast */
+      --serif: "{{font_serif}}",
+      "Playfair Display",
+      serif;
+      --sans: "{{font_sans}}",
+      "Outfit",
+      sans-serif;
+      --font-accent: "{{font_accent}}",
+      "Playfair Display",
+      serif;
+      --font-mono: ui-monospace,
+      SFMono-Regular,
+      Menlo,
+      Monaco,
+      Consolas,
+      "Liberation Mono",
+      "Courier New",
+      monospace;
+      --font-heading: var(--serif);
     }
 
     html[lang="ar"] {
@@ -249,7 +237,7 @@
     }
 
     .cover-kicker {
-      color: var(--primary);
+      color: rgba(255, 255, 255, .85);
       font-size: 10px;
       letter-spacing: .22em;
       text-transform: uppercase;
@@ -1160,7 +1148,8 @@
   </style>
 </head>
 
-<body {% if designer_img or hero_img_custom
+<body data-brochure-mode="pdf" data-brochure-preview="{% if brochure_preview_mode %}1{% else %}0{% endif %}"
+  data-quotation-id="{{ quotation_id }}" data-current-lang="{{ lang or 'en' }}" {% if designer_img or hero_img_custom
   %}style="{% if designer_img %}--designer-img: url('{{ designer_img }}');{% endif %} {% if hero_img_custom %}--hero-img: url('{{ hero_img_custom }}');{% endif %}"
   {% endif %}>
 
@@ -1173,18 +1162,20 @@
       style="background-image: linear-gradient(160deg,rgba(17,19,15,.88),rgba(17,19,15,.55) 55%,rgba(17,19,15,.18)), url('{{ hero_img_custom | default(img_0 | default('/assets/vietnam-safar-logo.png')) }}');">
       <div class="cover-body">
         <div class="cover-top">
-          <div class="cover-kicker">{{ cover_kicker | default("A Privately Arranged Journey" | translate(lang)) }}</div>
-          <h1>{{ tour_title }}</h1>
+          <div class="cover-kicker" data-editable="cover_kicker">{{ cover_kicker | default("A Privately Arranged Journey" | translate(lang)) }}</div>
+          <h1 data-editable="tour_title">{{ tour_title }}</h1>
         </div>
         <div class="cover-bottom">
-          <p class="cover-lede">{{ lede | rtl_mixed(lang) }}</p>
+          <p class="cover-lede" data-editable="lede">{{ lede | rtl_mixed(lang) }}</p>
           <div class="cover-meta" style="margin-top: 32px;">
             <strong
-              style="display: block; font-size: 12px; letter-spacing: .15em; text-transform: uppercase; color: rgba(255,255,255,0.95); margin-bottom: 10px; font-weight: 700;">{{
+              style="display: block; font-size: 12px; letter-spacing: .15em; text-transform: uppercase; color: rgba(255,255,255,0.95); margin-bottom: 10px; font-weight: 700;"
+              data-editable="hero_meta_1">{{
               hero_meta_1 | default("14 DAYS • 13 NIGHTS • " ~ (guests_txt | upper if guests_txt else 'FAMILY VACATION
               (2 PAX)')) }}</strong>
             <span
-              style="display: block; font-size: 13px; color: rgba(255,255,255,0.7); letter-spacing: .05em; text-transform: uppercase;">{{
+              style="display: block; font-size: 13px; color: rgba(255,255,255,0.7); letter-spacing: .05em; text-transform: uppercase;"
+              data-editable="hero_meta_2">{{
               hero_meta_2 | default(travel_dates | upper if travel_dates else '01 APR - 14 APR 2027') }}</span>
           </div>
         </div>
@@ -1205,9 +1196,10 @@
       <!-- Kicker + Title -->
       <div style="margin-top: 24px; margin-bottom: 24px;">
         <div
-          style="font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold); font-weight: 700; margin-bottom: 10px;">
+          style="font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold); font-weight: 700; margin-bottom: 10px;"
+          data-editable="chapter_kicker">
           {{ chapter_kicker | default('CHAPTER 01 - THE INVITATION') }}</div>
-        <h2 class="font-serif"
+        <h2 class="font-serif" data-editable="journey_overview_title"
           style="font-size: 32px; font-weight: 400; color: var(--emerald); line-height: 1.1; letter-spacing: -0.01em; margin: 0 0 16px;">
           {{ journey_overview_title | default('A Journey Shaped Around Your Family') }}</h2>
         <hr style="border: 0; border-top: 1px solid var(--line); margin: 0;">
@@ -1219,7 +1211,7 @@
         <!-- Left: Decorative accent col -->
         <div
           style="display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; padding-bottom: 12px;">
-          <p class="font-serif"
+          <p class="font-serif" data-editable="letter_highlight"
             style="font-style: italic; font-size: 16px; line-height: 1.45; color: var(--gold); margin: 0 0 20px;">{{
             letter_highlight | default('This journey was designed to leave room for both discovery and rest.') }}</p>
           <div>
@@ -1231,35 +1223,38 @@
         <!-- Right: Letter body -->
         <div class="font-sans" style="display: flex; flex-direction: column; justify-content: space-between;">
           <div>
-            <p style="font-size: 13px; line-height: 1.7; color: #383838; margin: 0 0 14px;">Dear <strong
-                style="color: #111;">{{ customer_name | default('Family Vacation') }}</strong>,</p>
-            <p style="font-size: 13px; line-height: 1.7; color: #383838; margin: 0 0 14px;">
-              I am delighted to present this privately arranged journey{% if overview_heading %}: <strong>{{
-                overview_heading }}</strong>{% endif %}, created for {% if guests_txt %}<strong>{{ guests_txt
-                }}</strong>{% else %}two guests{% endif %}{% if travel_dates %} travelling from <strong>{{ travel_dates
-                }}</strong>{% endif %}. The route unfolds from {% if route_txt %}<strong>{{ route_txt }}</strong>{% else
-              %}Hanoi through Ninh Binh, Ha Long Bay and Sapa, before continuing to Da Nang, Hoi An and Ho Chi Minh
-              City{% endif %}.
-            </p>
-            <p style="font-size: 13px; line-height: 1.7; color: #383838; margin: 0 0 14px;">{{ letter_body_p2 |
+            <p data-editable="letter_greeting" style="font-size: 13px; line-height: 1.7; color: #383838; margin: 0 0 14px;">{{
+              letter_greeting | default("Dear " ~ (customer_name | default('Family Vacation')) ~ ",") | rtl_mixed(lang) }}</p>
+            <p data-editable="letter_intro" style="font-size: 13px; line-height: 1.7; color: #383838; margin: 0 0 14px;">{{
+              letter_intro | default(
+              "I am delighted to present this privately arranged journey"
+              ~ (": " ~ overview_heading if overview_heading else "")
+              ~ ", created for "
+              ~ (guests_txt if guests_txt else "two guests")
+              ~ (" travelling from " ~ travel_dates if travel_dates else "")
+              ~ ". The route unfolds from "
+              ~ (route_txt if route_txt else "Hanoi through Ninh Binh, Ha Long Bay and Sapa, before continuing to Da Nang, Hoi An and Ho Chi Minh City")
+              ~ "."
+              ) | rtl_mixed(lang) }}</p>
+            <p data-editable="letter_body_p2" style="font-size: 13px; line-height: 1.7; color: #383838; margin: 0 0 14px;">{{ letter_body_p2 |
               default('The programme has been considered around a gentler family rhythm: early check-in in Hanoi,
               private guiding and transfers, a premium overnight train cabin, and enough space between active days to
               pause. Dining, room arrangements and transitions have been planned with care, without adding unnecessary
-              movement.') }}</p>
-            <p style="font-size: 13px; line-height: 1.7; color: #383838; margin: 0;">{{ letter_outro | default('Please
+              movement.') | rtl_mixed(lang) }}</p>
+            <p data-editable="letter_outro" style="font-size: 13px; line-height: 1.7; color: #383838; margin: 0;">{{ letter_outro | default('Please
               review the journey as a starting point for a personal conversation. Every final detail can be refined
-              around your preferred pace, room choices and family priorities.') }}</p>
+              around your preferred pace, room choices and family priorities.') | rtl_mixed(lang) }}</p>
           </div>
 
           <!-- Signature -->
           <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--line);">
-            <div class="font-serif"
+            <div class="font-serif" data-editable="letter_sign_off"
               style="font-size: 24px; font-weight: 500; color: var(--emerald); line-height: 1.15; margin-bottom: 4px;">
               {{ letter_sign_off | default('Anh Son Le') }}</div>
             <div
               style="font-size: 12px; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-              <span>{{ letter_sender | default('Your Journey Designer') }}</span>
-              {% if contact or true %}
+              <span data-editable="letter_sender">{{ letter_sender | default('Your Journey Designer') }}</span>
+              {% if contact %}
               <span style="color: var(--line);">·</span>
               <span class="ltr-token">{{ contact | default('+84 911 538 738') }}</span>
               {% endif %}
@@ -1286,10 +1281,10 @@
       <div style="flex: 0 0 50%; display: flex; flex-direction: column; padding: 40px 48px 0;">
         <div class="section-label" style="margin-bottom: 8px;">{{ route_map_label | default("Your Journey, Mapped" |
           translate(lang)) }}</div>
-        <h2 class="section-h2" style="margin-bottom: 8px;">{{ route_map_h2 | default("Your Journey, Mapped" |
+        <h2 class="section-h2" style="margin-bottom: 8px;" data-editable="route_map_h2">{{ route_map_h2 | default("Your Journey, Mapped" |
           translate(lang)) }}</h2>
         {% if route_map_p %}
-        <p class="section-p" style="margin-bottom: 24px;">{{ route_map_p }}</p>
+        <p class="section-p" style="margin-bottom: 24px;" data-editable="route_map_p">{{ route_map_p }}</p>
         {% endif %}
 
         <div
@@ -1316,10 +1311,9 @@
         style="flex: 0 0 25%; background: var(--emerald); padding: 40px 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: white; position: relative;">
         <div style="width: 40px; height: 1px; background: var(--gold-2); opacity: 0.5; margin-bottom: 22px;"></div>
         <blockquote style="margin: 0; padding: 0; max-width: 580px;">
-          <p class="font-serif"
+          <p class="font-serif" data-editable="hero_footer"
             style="font-size: 20px; font-style: italic; font-weight: 400; color: #ffffff; line-height: 1.65; letter-spacing: 0.015em; margin: 0;">
-            “Private journeys through Vietnam and Indochina, shaped around living heritage, quiet landscapes and the
-            luxury of time.”
+            “{{ hero_footer | default((overview_paras[1] if overview_paras and overview_paras|length > 1 else lede)) | rtl_mixed(lang) }}”
           </p>
         </blockquote>
         <div style="width: 40px; height: 1px; background: var(--gold-2); opacity: 0.5; margin-top: 22px;"></div>
@@ -1374,9 +1368,9 @@
       <span class="ref"><span class="ltr-token">{{ quotation_number }} · {{ quotation_date }}</span></span>
     </div>
     <div class="page-inner">
-      <div class="section-label">{{ "Service Program" | translate(lang) }}</div>
-      <h2>{{ itinerary_h2 }}</h2>
-      <p class="section-p">{{ itinerary_p }}</p>
+      <div class="section-label" data-editable="itinerary_kicker">{{ itinerary_kicker | default("Service Program" | translate(lang)) }}</div>
+      <h2 data-editable="itinerary_h2">{{ itinerary_h2 }}</h2>
+      <p class="section-p" data-editable="itinerary_p">{{ itinerary_p }}</p>
 
       <div class="itinerary">
         {% for day in itinerary_days %}
@@ -1499,26 +1493,27 @@
 
       <div style="margin-bottom: 12px;">
         <span class="font-mono"
-          style="font-size: 10px; letter-spacing: 0.14em; color: var(--accent); text-transform: uppercase;">
-          {{ divider_stays_kicker | default('SELECTED ACCOMMODATIONS') | upper | translate(lang) }}
+          style="font-size: 10px; letter-spacing: 0.14em; color: var(--accent); text-transform: uppercase;"
+          data-editable="divider_stays_kicker">
+          {{ divider_stays_kicker | default("Selected Hotel Plan" | translate(lang)) }}
         </span>
       </div>
 
-      <h2 class="font-heading"
+      <h2 class="font-heading" data-editable="divider_stays_title"
         style="font-size: 34px; line-height: 1.2; font-weight: 400; color: var(--text-main); margin-bottom: 20px; max-width: 670px;">
-        {{ divider_stays_title | default('Where Each Day Comes to Rest') | translate(lang) }}
+        {{ divider_stays_title | default("Selected Hotel Plan" | translate(lang)) }}
       </h2>
 
-      <p style="font-size: 13.5px; line-height: 1.65; color: var(--text-muted); margin-bottom: 16px; max-width: 670px;">
-        {{ divider_stays_tagline | default('Where you rest is as important as what you see. We have selected these
-        properties for their character, service and sense of place.') | translate(lang) }}
+      <p style="font-size: 13.5px; line-height: 1.65; color: var(--text-muted); margin-bottom: 16px; max-width: 670px;"
+        data-editable="divider_stays_tagline">
+        {{ divider_stays_tagline | default("Proposed hotels and luxury cruises selected for your journey. Subject to availability at confirmation." | translate(lang)) }}
       </p>
     </div>
 
     <!-- Optional: Subtle Page Number/Footer on Divider -->
     <div style="position: absolute; bottom: 24px; right: 60px;">
       <span class="font-mono" style="font-size: 8px; color: var(--text-muted); letter-spacing: 0.1em;">
-        VIETNAM SAFAR — {{ quotation_number }}
+        {{ (brand.name if brand else '') or 'Vietnam Safar' }} — {{ quotation_number }}
       </span>
     </div>
   </div>
@@ -1572,7 +1567,7 @@
                 </div>
                 <div class="hotel-room-type"
                   style="margin-top: 8px; font-size: 13px; font-weight: 500; color: var(--text-muted, #7a7367) !important; text-align: left; padding-left: 4px; display: block;"
-                  data-editable="hotel_room_type_{{ loop.index }}">{{ item.room_type or 'Deluxe Room' }}</div>
+                  data-editable="hotel_room_type_{{ loop.index }}">{{ item.room_type or item.room_name or item.roomType or 'Deluxe Room' }}</div>
               </div>
             </div>
 
@@ -1612,7 +1607,7 @@
       {% if room_notes %}
       <div
         style="margin-top: 20px; padding: 10px 14px; background: rgba(183, 137, 75, 0.05); border-radius: 0; border: 1px dashed var(--gold); font-size: 10px; color: var(--muted); margin-bottom: 24px; page-break-inside: avoid;">
-        <strong>{{ "Room Notes & Special Requests" | translate(lang) }}:</strong> {{ room_notes | rtl_mixed(lang) }}
+        <strong>{{ "Room Notes & Special Requests" | translate(lang) }}:</strong> <span data-editable="room_notes">{{ room_notes | rtl_mixed(lang) }}</span>
       </div>
       {% endif %}
       {% else %}
@@ -1643,23 +1638,26 @@
 
       <div style="margin-bottom: 12px;">
         <span class="font-mono"
-          style="font-size: 10px; letter-spacing: 0.14em; color: var(--accent); text-transform: uppercase;">
+          style="font-size: 10px; letter-spacing: 0.14em; color: var(--accent); text-transform: uppercase;"
+          data-editable="divider_hotel_kicker">
           {{ divider_hotel_kicker | default('THE JOURNEY, BROUGHT TOGETHER') }}
         </span>
       </div>
 
-      <h2 class="font-heading"
+      <h2 class="font-heading" data-editable="divider_hotel_title"
         style="font-size: 34px; line-height: 1.2; font-weight: 400; color: var(--text-main); margin-bottom: 20px; max-width: 670px;">
         {{ divider_hotel_title | default('Considered in Full') }}
       </h2>
 
-      <p style="font-size: 13.5px; line-height: 1.65; color: var(--text-muted); margin-bottom: 16px; max-width: 670px;">
+      <p style="font-size: 13.5px; line-height: 1.65; color: var(--text-muted); margin-bottom: 16px; max-width: 670px;"
+        data-editable="divider_hotel_tagline">
         {{ divider_hotel_tagline | default('The stays, private arrangements and experiences described so far are
         gathered here as one considered whole. What follows is the practical outline of the journey—quietly arranged,
         carefully paced and shaped around your comfort throughout.') }}
       </p>
 
-      <p style="font-size: 13.5px; line-height: 1.65; color: var(--text-main); font-style: italic; max-width: 670px;">
+      <p style="font-size: 13.5px; line-height: 1.65; color: var(--text-main); font-style: italic; max-width: 670px;"
+        data-editable="divider_hotel_closing">
         {{ divider_hotel_closing | default('The next section presents the journey in practical terms.') }}
       </p>
 
@@ -1771,7 +1769,7 @@
       </div>
       <div class="page-inner">
         <div class="section-label">{{ "Package Inclusions & Exclusions" | translate(lang) }}</div>
-        <h2 class="section-h2">{{ inc_exc_h2 or "What Your Journey Includes" | translate(lang) }}</h2>
+        <h2 class="section-h2" data-editable="inc_exc_h2">{{ inc_exc_h2 or "What Your Journey Includes" | translate(lang) }}</h2>
 
 
         <div class="two-col" style="margin-bottom: 24px;">
@@ -1790,7 +1788,7 @@
                 <span style="font-size:9.5px; color:var(--muted);">{{ item.desc }}</span>
               </li>
               {% else %}
-              <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;">{{ item }}</li>
+              <li style="margin-bottom:5px; line-height:1.4; list-style-type:disc; margin-left:15px;" data-editable="inc_{{ loop.index }}">{{ item }}</li>
               {% endif %}
               {% endfor %}
             </ul>
@@ -1803,7 +1801,7 @@
             {% endif %}
             <ul style="list-style-type:disc; padding-left:15px;">
               {% for item in exclusions %}
-              <li style="margin-bottom:5px; line-height:1.4;">{{ item }}</li>
+              <li style="margin-bottom:5px; line-height:1.4;" data-editable="exc_{{ loop.index }}">{{ item }}</li>
               {% endfor %}
             </ul>
           </div>
@@ -1825,11 +1823,11 @@
         <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 40px; margin-bottom: 24px;">
           <!-- Left side -->
           <div>
-            <div class="section-label">{{ payment_kicker | default("Booking Conditions" | translate(lang)) }}</div>
-            <h2 class="section-h2" style="font-size: 32px; line-height: 1.1; margin: 0 0 16px;">
-              {{ payment_title | default("Booking Terms" | translate(lang)) }}
+            <div class="section-label" data-editable="payment_kicker">{{ payment_kicker | default("Important Notes" | translate(lang)) }}</div>
+            <h2 class="section-h2" style="font-size: 32px; line-height: 1.1; margin: 0 0 16px;" data-editable="payment_title">
+              {{ payment_title | default("Booking & Payment Terms" | translate(lang)) }}
             </h2>
-            <p class="section-p" style="margin-bottom: 0;">
+            <p class="section-p" style="margin-bottom: 0;" data-editable="payment_desc">
               {{ payment_desc | default("Commercial conditions, deposits, and cancellation policy for this booking." |
               translate(lang)) }}
             </p>
@@ -1840,9 +1838,9 @@
             <!-- Deposit -->
             <div
               style="display: grid; grid-template-columns: 100px 1fr; gap: 20px; padding: 16px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
-              <div class="font-serif" style="font-size: 14px; color: var(--emerald);">{{ payment_label_deposit |
+              <div class="font-serif" style="font-size: 14px; color: var(--emerald);" data-editable="payment_label_deposit">{{ payment_label_deposit |
                 default("Deposit" | translate(lang)) }}</div>
-              <div style="color: var(--text-muted); font-size: 11px; line-height: 1.6;">
+              <div style="color: var(--text-muted); font-size: 11px; line-height: 1.6;" data-editable="term_deposit">
                 {{ term_deposit }}
               </div>
             </div>
@@ -1850,9 +1848,9 @@
             <!-- Balance -->
             <div
               style="display: grid; grid-template-columns: 100px 1fr; gap: 20px; padding: 16px 0; border-bottom: 1px solid var(--line);">
-              <div class="font-serif" style="font-size: 14px; color: var(--emerald);">{{ payment_label_balance |
+              <div class="font-serif" style="font-size: 14px; color: var(--emerald);" data-editable="payment_label_balance">{{ payment_label_balance |
                 default("Balance" | translate(lang)) }}</div>
-              <div style="color: var(--text-muted); font-size: 11px; line-height: 1.6;">
+              <div style="color: var(--text-muted); font-size: 11px; line-height: 1.6;" data-editable="term_balance">
                 {{ term_balance }}
               </div>
             </div>
@@ -1860,9 +1858,9 @@
             <!-- Cancellation -->
             <div
               style="display: grid; grid-template-columns: 100px 1fr; gap: 20px; padding: 16px 0; border-bottom: 1px solid var(--line);">
-              <div class="font-serif" style="font-size: 14px; color: var(--emerald);">{{ payment_label_cancellation |
+              <div class="font-serif" style="font-size: 14px; color: var(--emerald);" data-editable="payment_label_cancellation">{{ payment_label_cancellation |
                 default("Cancellation" | translate(lang)) }}</div>
-              <div style="color: var(--text-muted); font-size: 11px; line-height: 1.6;">
+              <div style="color: var(--text-muted); font-size: 11px; line-height: 1.6;" data-editable="term_cancellation">
                 {{ term_cancellation }}
               </div>
             </div>
@@ -1870,16 +1868,16 @@
             <!-- Confirmation -->
             <div
               style="display: grid; grid-template-columns: 100px 1fr; gap: 20px; padding: 16px 0; border-bottom: 1px solid var(--line);">
-              <div class="font-serif" style="font-size: 14px; color: var(--emerald);">{{ payment_label_confirmation |
+              <div class="font-serif" style="font-size: 14px; color: var(--emerald);" data-editable="payment_label_confirmation">{{ payment_label_confirmation |
                 default("Confirmation" | translate(lang)) }}</div>
-              <div style="color: var(--text-muted); font-size: 11px; line-height: 1.6;">
+              <div style="color: var(--text-muted); font-size: 11px; line-height: 1.6;" data-editable="term_confirmation">
                 {{ term_confirmation }}
               </div>
             </div>
           </div>
         </div>
 
-        <div class="pdf-footer" style="padding: 10px 0; font-size: 10px;">
+        <div class="pdf-footer" style="padding: 10px 0; font-size: 10px;" data-editable="footer_text">
           {{ footer_text | rtl_mixed(lang) }}<br>
           <span style="color:var(--gold);font-weight:700;">{{ (brand.domain if brand else '') or 'vietnamsafar.vn'
             }}</span> &nbsp;·&nbsp;
@@ -1913,16 +1911,16 @@
           style="display: grid; grid-template-columns: 0.8fr 1.2fr; gap: 60px; align-items: center; position: relative; z-index: 1;">
           <!-- Left Column: Image & Name -->
           <div style="text-align: center;">
-            <div
-              style="margin: 0 auto 24px; width: 100%; max-width: 260px; aspect-ratio: 3/4; border-radius: 200px 200px 0 0; overflow: hidden; border: 4px solid #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.05); background-image: var(--designer-img, url('/assets/dias_team/hieu.jpg')); background-size: cover; background-position: center;">
+            <div data-editable="designer_img"
+              style="margin: 0 auto 24px; width: 100%; max-width: 260px; aspect-ratio: 3/4; border-radius: 200px 200px 0 0; overflow: hidden; border: 4px solid #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.05); background-image: var(--designer-img, url('/assets/dias_team/director.png')); background-size: cover; background-position: center;">
             </div>
             <h3 class="font-serif" style="font-size: 24px; color: var(--emerald); margin: 0 0 8px;">{{ seller_name |
               rtl_mixed(lang) }}</h3>
-            <div
+            <div data-editable="designer_signature"
               style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--gold-2); font-weight: 700; margin-bottom: 24px;">
               {{ designer_signature or "Journey Designer" | translate(lang) }}</div>
             <div style="width: 40px; height: 1px; background: var(--gold); margin: 0 auto 24px;"></div>
-            <p class="font-serif"
+            <p class="font-serif" data-editable="designer_experience"
               style="font-style: italic; color: var(--text-muted); font-size: 13px; max-width: 220px; margin: 0 auto; line-height: 1.5;">
               {{ designer_experience or "Present throughout the planning, quietly working behind the journey." |
               translate(lang) }}
@@ -1936,23 +1934,23 @@
               style="position: absolute; left: -30px; top: 0; bottom: 0; width: 1px; background: rgba(217, 210, 197, 0.5);">
             </div>
 
-            <div
+            <div data-editable="designer_kicker"
               style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--gold-2); font-weight: 700; margin-bottom: 20px;">
               {{ designer_kicker or "Your Journey Designer" | translate(lang) }}
             </div>
 
-            <h2 class="font-serif"
+            <h2 class="font-serif" data-editable="designer_title"
               style="font-size: 32px; color: var(--emerald); line-height: 1.15; margin: 0 0 20px; font-weight: 400;">
               {{ designer_title or "Let Us Shape the Final Details Together" | translate(lang) }}
             </h2>
 
-            <div style="color: var(--text-muted); font-size: 12px; line-height: 1.7; margin: 0 0 24px;">
+            <div style="color: var(--text-muted); font-size: 12px; line-height: 1.7; margin: 0 0 24px;" data-editable="cta_h2">
               {{ cta_h2 or "I will remain your personal point of contact as we refine your journey. Together, we'll
               perfect the pace, room choices, and final arrangements so every detail feels just right." |
               translate(lang) }}
             </div>
 
-            <div class="font-serif"
+            <div class="font-serif" data-editable="designer_quote"
               style="font-style: italic; font-size: 18px; color: var(--emerald); line-height: 1.4; margin: 0 0 32px;">
               “{{ designer_quote or "The final journey should feel considered, not complicated." | translate(lang) }}”
             </div>
@@ -1968,7 +1966,7 @@
                       d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
                     </path>
                   </svg>
-                  <span>{{ "Chat on WhatsApp" | translate(lang) }}</span>
+                  <span data-editable="contact_phone_btn">{{ "Chat on WhatsApp" | translate(lang) }}</span>
                 </a>
                 <div style="font-size: 9px; color: var(--emerald); opacity: 0.8; padding-left: 2px;">
                   {{ "No.:" | translate(lang) }} <span>{{ contact_phone }}</span>
@@ -1982,7 +1980,7 @@
                     <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                     <polyline points="22,6 12,13 2,6"></polyline>
                   </svg>
-                  <span>{{ "Send an Email" | translate(lang) }}</span>
+                  <span data-editable="contact_email_btn">{{ "Send an Email" | translate(lang) }}</span>
                 </a>
                 <div style="font-size: 9px; color: var(--emerald); opacity: 0.8; padding-left: 2px;">
                   {{ "Email:" | translate(lang) }} <span>{{ seller_email }}</span>
@@ -2001,7 +1999,7 @@
                     alt="icon" style="width: 100%; height: 100%; object-fit: contain;">
                 </div>
                 <div>
-                  <div
+                  <div data-editable="final_req_title"
                     style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--gold-2); font-weight: 700; margin-bottom: 4px;">
                     {{ final_req_title or "Final Details Required" | translate(lang) }}
                   </div>
@@ -2011,7 +2009,7 @@
                       {% for item in final_req %}<li data-editable="final_req_{{loop.index0}}">{{item}}</li>{% endfor %}
                     </ul>
                     {% else %}
-                    <span>{{ final_req_text or "Colored copies of passports valid for at least 6 months, and confirmed
+                    <span data-editable="final_req_text">{{ final_req_text or "Colored copies of passports valid for at least 6 months, and confirmed
                       flight details for airport transfers." | translate(lang) }}</span>
                     {% endif %}
                   </div>
@@ -2026,7 +2024,7 @@
                     alt="icon" style="width: 100%; height: 100%; object-fit: contain;">
                 </div>
                 <div>
-                  <div
+                  <div data-editable="payment_label_confirmation"
                     style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--gold-2); font-weight: 700; margin-bottom: 4px;">
                     {{ payment_label_confirmation or "After Confirmation" | translate(lang) }}
                   </div>
@@ -2036,7 +2034,7 @@
                       {% for item in final_after %}<li data-editable="final_after_{{loop.index0}}">{{item}}</li>{% endfor %}
                     </ul>
                     {% else %}
-                    <span>{{ term_confirmation or "Vouchers, detailed daily itinerary guidelines, and emergency contact
+                    <span data-editable="term_confirmation">{{ term_confirmation or "Vouchers, detailed daily itinerary guidelines, and emergency contact
                       details for the local tour coordinator will be provided." | translate(lang) }}</span>
                     {% endif %}
                   </div>
@@ -2416,10 +2414,18 @@
       });
 
       // Auto-trigger print dialog after a safe delay to let tiles render
+      {% if not brochure_preview_mode %}
       window.addEventListener('load', function () {
         setTimeout(function () { window.print(); }, 1200);
       });
+      {% endif %}
     </script>
+  {% if brochure_draft %}
+  <script id="brochure-draft" type="application/json">
+    {{ brochure_draft | tojson | safe }}
+  </script>
+  {% endif %}
+  <script src="/assets/brochure_shared_draft.js"></script>
 </body>
 
 </html>
