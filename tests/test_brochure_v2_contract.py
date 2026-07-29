@@ -14,7 +14,7 @@ import create_quotation_api_v2
 import main
 from db.base import Base
 from quote_document import AssetSelectionResult, validate_quote_document_sections
-from quote_document_adapter import normalize_quote_document
+from quote_document_adapter import apply_quote_document_to_lang_ctx, normalize_quote_document
 from quote_generation import (
     BRAND_PROFILES,
     NarrativeGenerationResult,
@@ -151,6 +151,219 @@ class QuoteDocumentValidationTests(unittest.TestCase):
         ])
 
         self.assertEqual(deduped, [duplicate_url])
+
+    def test_normalize_quote_document_preserves_itinerary_rich_text_fields(self):
+        document = _sample_document()
+        document["itinerary"]["days"][0].update({
+            "titleHtml": 'Arrival in <strong>Hanoi</strong>',
+            "descriptionHtml": ['Private <span style="font-size:18px;font-weight:700">arrival</span> and transfer.'],
+            "activitiesHtml": '<strong>Highlights:</strong> Fast-track arrival · Private transfer',
+            "notesHtml": ['<span style="font-size:16px">Sense of Pace: Relaxed</span>'],
+        })
+
+        normalized = normalize_quote_document(document, "quo_test", "en")
+        day = normalized["itinerary"]["days"][0]
+
+        self.assertEqual(day["titleHtml"], 'Arrival in <strong>Hanoi</strong>')
+        self.assertEqual(
+            day["descriptionHtml"],
+            ['Private <span style="font-size:18px;font-weight:700">arrival</span> and transfer.'],
+        )
+        self.assertEqual(
+            day["activitiesHtml"],
+            '<strong>Highlights:</strong> Fast-track arrival · Private transfer',
+        )
+        self.assertEqual(
+            day["notesHtml"],
+            ['<span style="font-size:16px">Sense of Pace: Relaxed</span>'],
+        )
+
+    def test_apply_quote_document_to_lang_ctx_keeps_itinerary_rich_text_for_rendering(self):
+        document = _sample_document()
+        document["itinerary"]["days"][0].update({
+            "titleHtml": 'Arrival in <strong>Hanoi</strong>',
+            "descriptionHtml": ['Private <span style="font-size:18px">arrival</span> and transfer.'],
+            "activitiesHtml": '<span style="font-size:15px"><strong>Fast-track arrival</strong> · Private transfer</span>',
+            "notesHtml": ['<span style="font-size:16px">Sense of Pace: Relaxed</span>'],
+        })
+
+        lang_ctx: dict = {}
+        apply_quote_document_to_lang_ctx(lang_ctx, document)
+        day = lang_ctx["itinerary_days"][0]
+
+        self.assertEqual(day["title_html"], 'Arrival in <strong>Hanoi</strong>')
+        self.assertEqual(
+            day["description_html"],
+            ['Private <span style="font-size:18px">arrival</span> and transfer.'],
+        )
+        self.assertEqual(
+            day["activities_html"],
+            '<span style="font-size:15px"><strong>Fast-track arrival</strong> · Private transfer</span>',
+        )
+        self.assertEqual(
+            day["notes_html"],
+            ['<span style="font-size:16px">Sense of Pace: Relaxed</span>'],
+        )
+
+    def test_parse_edited_fields_keeps_itinerary_html_markup(self):
+        html = """
+        <h4 data-editable="day_title_1">Arrival in <strong>Hanoi</strong></h4>
+        <p data-editable="day_desc_1_0">Private <span style="font-size:18px">arrival</span> and transfer.</p>
+        <span data-editable="day_highlights_1"><strong>Fast-track arrival</strong> · Private transfer</span>
+        <li data-editable="day_note_1_0"><span style="font-size:16px">Sense of Pace: Relaxed</span></li>
+        """
+
+        edited_fields = main.parse_edited_fields(html)
+
+        self.assertEqual(edited_fields["day_title_1"], "Arrival in <strong>Hanoi</strong>")
+        self.assertEqual(
+            edited_fields["day_desc_1_0"],
+            'Private <span style="font-size:18px">arrival</span> and transfer.',
+        )
+        self.assertEqual(
+            edited_fields["day_highlights_1"],
+            "<strong>Fast-track arrival</strong> · Private transfer",
+        )
+        self.assertEqual(
+            edited_fields["day_note_1_0"],
+            '<span style="font-size:16px">Sense of Pace: Relaxed</span>',
+        )
+
+    def test_parse_edited_fields_recovers_word_pasted_day_description_after_empty_editable(self):
+        html = """
+        <div class="day-copy">
+          <p data-editable="day_desc_1_0" spellcheck="false"></p>
+          <p class="MsoNormal"><span style="font-size:12.0pt;line-height:115%;font-family:&quot;Garamond&quot;,serif;mso-bidi-font-family:&quot;Quire Sans&quot;">Upon arrival at <b>Noi Bai International Airport</b>, you are welcomed by a dedicated concierge representative.</span></p>
+          <p style="font-size:13px;color: var(--text-muted);margin-top:8px" data-deletable="day_activities_1">
+            <strong data-editable="day_label_highlights_1">Highlights:</strong>
+            <span data-editable="day_highlights_1">Private airport pickup</span>
+          </p>
+        </div>
+        """
+
+        edited_fields = main.parse_edited_fields(html)
+
+        self.assertIn("Upon arrival at <b>Noi Bai International Airport</b>", edited_fields["day_desc_1_0"])
+        self.assertNotIn("MsoNormal", edited_fields["day_desc_1_0"])
+        self.assertNotIn("font-size:12.0pt", edited_fields["day_desc_1_0"])
+        self.assertEqual(edited_fields["day_highlights_1"], "Private airport pickup")
+
+    def test_filter_and_override_ctx_by_html_recovers_word_pasted_day_description(self):
+        lang_ctx = {
+            "itinerary": [
+                {
+                    "dayNumber": 1,
+                    "title": "Day 1 — Hanoi",
+                    "description": ["Original description"],
+                    "notes": ["Sense of Pace: Relaxed"],
+                    "activities": ["Private airport pickup"],
+                }
+            ]
+        }
+        html = """
+        <article class="day">
+          <h4 data-editable="day_title_1">Day 1 — Hanoi</h4>
+          <div class="day-copy">
+            <p data-editable="day_desc_1_0" spellcheck="false"></p>
+            <p class="MsoNormal"><span style="font-size:12.0pt;line-height:115%;font-family:&quot;Garamond&quot;,serif;mso-bidi-font-family:&quot;Quire Sans&quot;">Recovered <b>Word paste</b> description.</span></p>
+          </div>
+        </article>
+        """
+
+        main.filter_and_override_ctx_by_html(lang_ctx, html, override_text=True)
+
+        self.assertEqual(lang_ctx["itinerary"][0]["description"], ["Recovered Word paste description."])
+        self.assertIn("<b>Word paste</b>", lang_ctx["itinerary"][0]["description_html"][0])
+        self.assertNotIn("font-size:12.0pt", lang_ctx["itinerary"][0]["description_html"][0])
+
+    def test_parse_edited_fields_strips_word_typography_but_keeps_semantic_markup(self):
+        html = """
+        <div class="day-copy">
+          <p data-editable="day_desc_10_0" spellcheck="false"></p>
+          <p class="MsoNormal"><span style="font-family:&quot;Garamond&quot;,serif;mso-bidi-font-family:&quot;Quire Sans&quot;">Depart from <b>Da Nang City</b> toward <b>Hue</b> for a scenic coastal route.</span></p>
+          <span style="font-size:12.0pt;line-height:115%;font-family:&quot;Garamond&quot;,serif;mso-bidi-font-family:&quot;Quire Sans&quot;">In the afternoon, explore the <b>Hue Imperial City</b>.</span><p></p>
+        </div>
+        """
+
+        edited_fields = main.parse_edited_fields(html)
+
+        self.assertEqual(
+            edited_fields["day_desc_10_0"],
+            "Depart from <b>Da Nang City</b> toward <b>Hue</b> for a scenic coastal route.<br><br>In the afternoon, explore the <b>Hue Imperial City</b>.",
+        )
+
+    def test_parse_edited_fields_strips_word_typography_from_highlights_and_notes(self):
+        html = """
+        <div class="day-copy">
+          <span data-editable="day_highlights_10"><span style="font-size:12.0pt;line-height:115%;font-family:&quot;Garamond&quot;,serif;mso-bidi-font-family:&quot;Quire Sans&quot;">Hai Van Pass, <b>Lang Co Beach</b></span></span>
+          <li data-editable="day_note_10_0"><span style="font-size:12.0pt;line-height:115%;font-family:&quot;Garamond&quot;,serif;mso-bidi-font-family:&quot;Quire Sans&quot;">Starts at <b>08:00am</b></span></li>
+        </div>
+        """
+
+        edited_fields = main.parse_edited_fields(html)
+
+        self.assertEqual(
+            edited_fields["day_highlights_10"],
+            "Hai Van Pass, <b>Lang Co Beach</b>",
+        )
+        self.assertEqual(
+            edited_fields["day_note_10_0"],
+            "Starts at <b>08:00am</b>",
+        )
+
+    def test_render_rich_text_filter_strips_word_typography_at_render_time(self):
+        rendered = main.render_rich_text_filter(
+            '<span style="font-size:12.0pt;line-height:115%;font-family:&quot;Garamond&quot;,serif;mso-bidi-font-family:&quot;Quire Sans&quot;">Hai Van Pass, <b>Lang Co Beach</b></span>',
+            "en",
+        )
+
+        self.assertEqual(str(rendered), "Hai Van Pass, <b>Lang Co Beach</b>")
+
+    def test_apply_published_html_compat_patches_unclamps_itinerary_descriptions(self):
+        html = """
+        <html>
+          <head>
+            <style>
+              .day p {
+                display: -webkit-box;
+                -webkit-line-clamp: 6;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="day-copy">
+              <p data-editable="day_desc_1_0">Visible description</p>
+            </div>
+          </body>
+        </html>
+        """
+
+        patched = main._apply_published_html_compat_patches(html, "prototype_itinerary_imagery.html")
+
+        self.assertIn('id="itinerary-description-unclamp-compat"', patched)
+        self.assertIn('.day-copy > p[data-editable^="day_desc_"]', patched)
+
+    def test_apply_published_html_compat_patches_auto_detects_published_itinerary_html(self):
+        html = """
+        <html>
+          <head></head>
+          <body>
+            <section id="itinerary">
+              <div class="day-copy-wrap">
+                <div class="day-copy">
+                  <p data-editable="day_desc_1_0">Visible description</p>
+                </div>
+              </div>
+            </section>
+          </body>
+        </html>
+        """
+
+        patched = main._apply_published_html_compat_patches(html, None)
+
+        self.assertIn('id="itinerary-description-unclamp-compat"', patched)
 
 
 class NarrativeGeneratorTests(unittest.IsolatedAsyncioTestCase):
