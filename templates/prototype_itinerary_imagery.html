@@ -2930,17 +2930,27 @@
       }
 
       .brand {
-        font-size: 12px;
-        gap: 8px;
-        max-width: 150px;
+        flex: 1 1 auto;
+        min-width: 0;
+        max-width: none;
+        font-size: 11px;
+        gap: 6px;
+        letter-spacing: .05em;
         white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        overflow: visible;
+        text-overflow: clip;
+      }
+
+      .brand span {
+        min-width: 0;
+        white-space: nowrap;
+        overflow: visible;
+        text-overflow: clip;
       }
 
       .brand img {
-        width: 26px;
-        height: 26px;
+        width: 24px;
+        height: 24px;
         flex-shrink: 0;
       }
 
