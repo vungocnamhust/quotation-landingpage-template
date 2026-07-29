@@ -1,6 +1,7 @@
 import asyncio
 import io
 import os
+import socket
 import shutil
 import tempfile
 import unittest
@@ -107,6 +108,7 @@ class MediaPhaseDRouteTests(unittest.TestCase):
     def tearDown(self):
         object.__setattr__(settings, "media_sync_dir", self.original_media_sync_dir)
         shutil.rmtree(self.temp_sync_root, ignore_errors=True)
+        shutil.rmtree(os.path.join("published", "quo_media_fallback"), ignore_errors=True)
 
     def test_media_upload_persists_metadata_and_returns_urls(self):
         asyncio.run(self._seed_quotation("quo_media_upload"))
@@ -137,6 +139,35 @@ class MediaPhaseDRouteTests(unittest.TestCase):
                 self.assertEqual(assets[0].source_type, "editor_upload")
 
         asyncio.run(_assert_db())
+
+    def test_media_upload_falls_back_to_draft_assets_when_db_is_unavailable_for_file_based_quote(self):
+        class BrokenSessionFactory:
+            def __call__(self):
+                return self
+
+            async def __aenter__(self):
+                raise socket.gaierror(8, "nodename nor servname provided, or not known")
+
+            async def __aexit__(self, exc_type, exc, tb):
+                return False
+
+        with patch.object(main, "_get_db_session_factory", return_value=BrokenSessionFactory()):
+            with patch.object(main, "_load_ctx_data", return_value={"quotation_id": "quo_media_fallback"}):
+                response = self.client.post(
+                    "/api/v2/media/upload",
+                    files={"file": ("hero.png", _make_png_bytes(), "image/png")},
+                    data={"quotationId": "quo_media_fallback"},
+                )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["quotationId"], "quo_media_fallback")
+        self.assertEqual(payload["status"], "ready")
+        self.assertEqual(payload["storageMode"], "draft_assets")
+        self.assertTrue(payload["originalUrl"].startswith("/published/quo_media_fallback/draft_assets/"))
+        self.assertEqual(payload["previewUrl"], payload["originalUrl"])
+        self.assertEqual(payload["width"], 1200)
+        self.assertEqual(payload["height"], 800)
 
     def test_list_media_returns_paginated_inventory(self):
         asyncio.run(self._seed_quotation("quo_media_list"))

@@ -5367,6 +5367,91 @@
       }
     }
 
+    function describePublishDetail(detail) {
+      if (!detail) return 'Publish failed';
+      if (typeof detail === 'string') return detail;
+      if (Array.isArray(detail)) return detail.map(describePublishDetail).join('; ');
+      if (detail.errors && Array.isArray(detail.errors)) {
+        return detail.errors.map(item => item.msg || item.message || JSON.stringify(item)).join('; ');
+      }
+      if (detail.detail) return describePublishDetail(detail.detail);
+      try {
+        return JSON.stringify(detail);
+      } catch (e) {
+        return 'Publish failed';
+      }
+    }
+
+    function describeNonJsonPublishError(rawText, status, actionLabel) {
+      const normalized = (rawText || '').trim();
+      if (/request entity too large|payload too large/i.test(normalized)) {
+        return 'Publish payload is too large. Inline edited images must be uploaded before publishing.';
+      }
+      if (normalized) {
+        return `${actionLabel} failed (${status}): ${normalized.slice(0, 240)}`;
+      }
+      return `${actionLabel} failed (${status})`;
+    }
+
+    async function parseJsonResponseSafe(res, actionLabel) {
+      const rawText = await res.text();
+      if (!rawText) return {};
+      try {
+        return JSON.parse(rawText);
+      } catch (err) {
+        throw new Error(describeNonJsonPublishError(rawText, res.status, actionLabel));
+      }
+    }
+
+    const INLINE_PUBLISH_IMAGE_PATTERN = /data:image\/(?:png|jpeg|jpg|webp);base64,[A-Za-z0-9+/=]+/gi;
+
+    function collectInlineImagesForPublish(html) {
+      if (!html) return [];
+      return [...new Set(html.match(INLINE_PUBLISH_IMAGE_PATTERN) || [])];
+    }
+
+    async function uploadInlineImagesForPublish(html, statusEl) {
+      const uniqueImages = collectInlineImagesForPublish(html);
+      if (!uniqueImages.length) return html;
+      let updatedHtml = html;
+
+      for (let index = 0; index < uniqueImages.length; index += 1) {
+        const dataUrl = uniqueImages[index];
+        if (statusEl) {
+          statusEl.textContent = `Uploading changed images (${index + 1}/${uniqueImages.length})…`;
+        }
+
+        const blobResponse = await fetch(dataUrl);
+        const blob = await blobResponse.blob();
+        const mimeType = blob.type || 'image/jpeg';
+        const extension = mimeType === 'image/png' ? 'png' : mimeType === 'image/webp' ? 'webp' : 'jpg';
+        const form = new FormData();
+        form.append('file', blob, `publish-inline-${Date.now()}-${index}.${extension}`);
+        form.append('quotationId', QUOTATION_ID);
+
+        const uploadResponse = await fetch('/api/v2/media/upload', {
+          method: 'POST',
+          body: form,
+        });
+        const uploadData = await parseJsonResponseSafe(uploadResponse, 'Image upload');
+        if (!uploadResponse.ok) {
+          throw new Error(describePublishDetail(uploadData.detail || uploadData));
+        }
+        const assetUrl = uploadData.originalUrl || uploadData.previewUrl;
+        if (!assetUrl) {
+          throw new Error('Image upload completed without a usable asset URL.');
+        }
+        updatedHtml = updatedHtml.split(dataUrl).join(assetUrl);
+      }
+
+      const remainingInlineImages = collectInlineImagesForPublish(updatedHtml);
+      if (remainingInlineImages.length) {
+        throw new Error(`Publish payload still contains ${remainingInlineImages.length} inline image(s) after upload. Please retry after the image upload finishes.`);
+      }
+
+      return updatedHtml;
+    }
+
     function addPriceOption() {
       const list = document.querySelector('.investment-list');
       if (!list) return;
@@ -5836,9 +5921,14 @@
         parent.removeChild(el);
       });
 
-      const html = '<!DOCTYPE html>\n' + clone.outerHTML;
+      let html = '<!DOCTYPE html>\n' + clone.outerHTML;
 
       try {
+        html = await uploadInlineImagesForPublish(html, status);
+        const remainingInlineImages = collectInlineImagesForPublish(html);
+        if (remainingInlineImages.length) {
+          throw new Error(`Publish was blocked because ${remainingInlineImages.length} inline image(s) are still embedded in the quotation HTML.`);
+        }
         const payload = { html };
         if (newTemplate) payload.template_name = newTemplate;
 
@@ -5847,7 +5937,10 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-        const data = await res.json();
+        const data = await parseJsonResponseSafe(res, 'Publish request');
+        if (!res.ok) {
+          throw new Error(describePublishDetail(data.detail || data));
+        }
 
         // Enforce a minimum delay of 1.2s to show the publishing signal
         const elapsed = Date.now() - startTime;

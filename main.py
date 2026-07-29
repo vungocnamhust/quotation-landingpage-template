@@ -6,6 +6,7 @@ import asyncio
 import copy
 import re
 import html
+import socket
 from functools import partial
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, HTTPException, UploadFile, File, Form
@@ -51,6 +52,7 @@ from services.media_service import (
     MediaSyncPathError,
     MediaValidationError,
 )
+from services.storage.local_media_storage import LocalMediaStorage
 from services.storage.r2_storage import R2Storage, R2StorageConfigurationError
 from routers.health import router as health_router
 
@@ -73,8 +75,13 @@ _media_service: MediaService | None = None
 
 def _get_media_service() -> MediaService:
     global _media_service
-    if _media_service is None:
-        _media_service = MediaService(storage=R2Storage())
+    media_backend = (os.getenv("MEDIA_STORAGE_BACKEND") or "").strip().lower()
+    use_r2_storage = media_backend == "r2" or os.getenv("ENVIRONMENT", "local") == "production"
+    desired_storage_class = R2Storage if use_r2_storage else LocalMediaStorage
+
+    if _media_service is None or not isinstance(_media_service.storage, desired_storage_class):
+        storage = desired_storage_class()
+        _media_service = MediaService(storage=storage)
     return _media_service
 
 app = FastAPI(title="Quotation Webhook API")
@@ -4834,6 +4841,86 @@ def _draft_asset_public_path(quotation_id: str, filename: str) -> str:
     return f"/published/{quotation_id}/draft_assets/{filename}"
 
 
+def _iter_exception_chain(exc: BaseException):
+    seen: set[int] = set()
+    current: BaseException | None = exc
+    while current is not None and id(current) not in seen:
+        seen.add(id(current))
+        yield current
+        current = current.__cause__ or current.__context__
+
+
+def _is_database_unavailable_error(exc: BaseException) -> bool:
+    for current in _iter_exception_chain(exc):
+        module_name = current.__class__.__module__
+        message = str(current).lower()
+        if module_name.startswith("sqlalchemy") or module_name.startswith("asyncpg"):
+            return True
+        if isinstance(current, socket.gaierror):
+            return True
+        if isinstance(current, ConnectionRefusedError):
+            return True
+        if isinstance(current, OSError) and getattr(current, "errno", None) in {8, 61, 111}:
+            return True
+        if any(
+            token in message
+            for token in (
+                "nodename nor servname provided",
+                "connection refused",
+                "could not translate host name",
+                "temporary failure in name resolution",
+                "name or service not known",
+            )
+        ):
+            return True
+    return False
+
+
+async def _store_uploaded_draft_asset(
+    *,
+    quotation_id: str,
+    file_name: str,
+    content: bytes,
+    declared_mime_type: str | None,
+) -> dict[str, Any]:
+    ctx_data = _load_ctx_data(quotation_id)
+    if not ctx_data:
+        raise HTTPException(status_code=404, detail=f"Quotation '{quotation_id}' not found.")
+
+    media_service = _get_media_service()
+    prepared = await media_service.prepare_upload(
+        content=content,
+        declared_mime_type=declared_mime_type,
+    )
+    safe_name = f"{uuid.uuid4().hex}.{prepared.extension}"
+    rel_path = f"{quotation_id}/draft_assets/{safe_name}"
+    local_path = os.path.join("published", rel_path)
+    os.makedirs(os.path.dirname(local_path), exist_ok=True)
+
+    if os.getenv("ENVIRONMENT", "local") == "production":
+        await publish_file_to_github(
+            file_path=f"published/{rel_path}",
+            html_content=prepared.content,
+            commit_message=f"Upload brochure asset for quotation {quotation_id} ({safe_name})",
+        )
+    else:
+        with open(local_path, "wb") as f:
+            f.write(prepared.content)
+
+    asset_url = _draft_asset_public_path(quotation_id, safe_name)
+    return {
+        "assetId": safe_name,
+        "quotationId": quotation_id,
+        "status": "ready",
+        "url": asset_url,
+        "originalUrl": asset_url,
+        "previewUrl": asset_url,
+        "width": prepared.width,
+        "height": prepared.height,
+        "storageMode": "draft_assets",
+    }
+
+
 def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, hero_image_url: str, destinations: list[dict], lang: str = "en", template_name: str = "detail_itinerary_landingpage_template.html"):
     """Build rendering context for the detailed itinerary landing page."""
     default_img = "/assets/vietnam-safar-logo.png"
@@ -5932,6 +6019,25 @@ def _normalize_visible_text(value: str) -> str:
     lines = [line for line in lines if line]
     return "\n".join(lines).strip()
 
+def _normalize_image_ref(ref: str) -> str:
+    if not ref:
+        return ""
+
+    normalized = html.unescape(str(ref)).replace("\\", "").strip()
+    while len(normalized) >= 2 and normalized[0] == normalized[-1] and normalized[0] in {"'", '"'}:
+        normalized = normalized[1:-1].strip()
+    return normalized
+
+def _dedupe_image_refs(refs: list[str] | None) -> list[str]:
+    deduped: list[str] = []
+    seen: set[str] = set()
+    for ref in refs or []:
+        normalized = _normalize_image_ref(ref)
+        if normalized and normalized not in seen:
+            seen.add(normalized)
+            deduped.append(normalized)
+    return deduped
+
 def _extract_editable_inner_html(html_content: str, field_name: str) -> str:
     pattern = rf'<(?P<tag>[a-zA-Z0-9]+)(?P<attrs>[^>]*?)data-editable=["\']{re.escape(field_name)}["\'](?P<attrs2>[^>]*)>(?P<body>.*?)</(?P=tag)>'
     match = re.search(pattern, html_content, flags=re.DOTALL)
@@ -5949,12 +6055,11 @@ def _extract_image_refs(value: str) -> list[str]:
         (r'src=["\']([^"\']+)["\']', 1),
     ):
         for match in re.finditer(pattern, value, flags=re.IGNORECASE | re.DOTALL):
-            ref = (match.group(group_idx) or "").strip()
-            ref = ref.strip("\\").strip().strip("\"'")
+            ref = _normalize_image_ref(match.group(group_idx) or "")
             if ref and ref not in refs:
                 refs.append(ref)
 
-    stripped = value.strip()
+    stripped = _normalize_image_ref(value.strip())
     if not refs and stripped and "<" not in stripped:
         refs.append(stripped)
 
@@ -5974,8 +6079,8 @@ def _extract_editable_image_attr(html_content: str, field_name: str) -> str:
         match = re.search(pattern, html_content, flags=re.IGNORECASE | re.DOTALL)
         if match:
             if len(match.groups()) > 1:
-                return (match.group(2) or "").strip()
-            return (match.group(1) or "").strip()
+                return _normalize_image_ref(match.group(2) or "")
+            return _normalize_image_ref(match.group(1) or "")
     return ""
 
 def _extract_hotel_image_refs(html_content: str, hotel_indexes: list[int]) -> dict[str, dict[str, str]]:
@@ -6063,6 +6168,7 @@ def _extract_itinerary_image_refs(edited_fields: dict, html_content: str) -> dic
             for ref in direct_refs:
                 if ref not in carousel_refs:
                     carousel_refs.append(ref)
+        carousel_refs = _dedupe_image_refs(carousel_refs)
 
         if carousel_refs:
             entry["carousel"] = carousel_refs
@@ -6737,13 +6843,16 @@ def _sync_ctx_data_before_publish(ctx_data: dict, rendered_html: str, target_lan
         for idx, day_obj in enumerate(itinerary_list, 1):
             day_img_info = itinerary_img_map.get(str(idx))
             if day_img_info:
-                day_obj["layout_images"] = {
+                layout_images = {
                     "hero": day_img_info.get("hero", ""),
                     "small-1": day_img_info.get("small-1", ""),
                     "small-2": day_img_info.get("small-2", ""),
                 }
-                if day_img_info.get("carousel"):
-                    day_obj["carousel"] = day_img_info["carousel"]
+                normalized_carousel = _dedupe_image_refs(day_img_info.get("carousel") or [])
+                if normalized_carousel:
+                    layout_images["carousel"] = normalized_carousel
+                    day_obj["carousel"] = normalized_carousel
+                day_obj["layout_images"] = layout_images
     return ctx_data
 
 def _apply_composite_html_sync(lang_ctx: dict, composite_fields: dict):
@@ -6789,7 +6898,7 @@ def _apply_composite_html_sync(lang_ctx: dict, composite_fields: dict):
                 if day_sync.get(key):
                     layout_images[key] = day_sync[key]
             if day_sync.get("carousel"):
-                layout_images["carousel"] = copy.deepcopy(day_sync["carousel"])
+                layout_images["carousel"] = _dedupe_image_refs(day_sync["carousel"])
             day_entry["layout_images"] = layout_images
             if day_sync.get("segment_city"):
                 segment_city = html.unescape(day_sync["segment_city"])
@@ -7648,8 +7757,38 @@ async def upload_media_asset(
 ):
     media_service = _get_media_service()
     asset = None
+    fallback_ctx_exists = bool(quotationId and _load_ctx_data(quotationId))
     try:
         content = await file.read()
+        if fallback_ctx_exists:
+            try:
+                async with _get_db_session_factory()() as session:
+                    quotation = await QuotationRepository(session).get_quotation_by_id(quotationId)
+                    if quotation is None:
+                        log.info(
+                            "[media.upload] Falling back to draft asset storage for %s because no DB quotation row exists.",
+                            quotationId,
+                        )
+                        return await _store_uploaded_draft_asset(
+                            quotation_id=quotationId,
+                            file_name=file.filename or "upload",
+                            content=content,
+                            declared_mime_type=file.content_type,
+                        )
+            except Exception as exc:
+                if _is_database_unavailable_error(exc):
+                    log.warning(
+                        "[media.upload] Falling back to draft asset storage for %s because database is unavailable: %s",
+                        quotationId,
+                        exc,
+                    )
+                    return await _store_uploaded_draft_asset(
+                        quotation_id=quotationId,
+                        file_name=file.filename or "upload",
+                        content=content,
+                        declared_mime_type=file.content_type,
+                    )
+                raise
         async with _get_db_session_factory()() as session:
             if quotationId:
                 quotation = await QuotationRepository(session).get_quotation_by_id(quotationId)
@@ -7763,35 +7902,17 @@ async def upload_brochure_asset(
     quotation_id: str = Form(...),
     file: UploadFile = File(...),
 ):
-    ctx_data = _load_ctx_data(quotation_id)
-    if not ctx_data:
-        raise HTTPException(status_code=404, detail=f"Quotation '{quotation_id}' not found.")
-
-    raw_name = file.filename or "upload.bin"
-    _, ext = os.path.splitext(raw_name)
-    ext = (ext or ".bin").lower()
-    safe_name = f"{uuid.uuid4().hex}{ext}"
-    rel_path = f"{quotation_id}/draft_assets/{safe_name}"
-    local_path = os.path.join("published", rel_path)
-    os.makedirs(os.path.dirname(local_path), exist_ok=True)
     content = await file.read()
-    if not content:
-        raise HTTPException(status_code=400, detail="Uploaded file is empty.")
-
-    if os.getenv("ENVIRONMENT", "local") == "production":
-        await publish_file_to_github(
-            file_path=f"published/{rel_path}",
-            html_content=content,
-            commit_message=f"Upload brochure asset for quotation {quotation_id} ({safe_name})",
-        )
-    else:
-        with open(local_path, "wb") as f:
-            f.write(content)
-
+    payload = await _store_uploaded_draft_asset(
+        quotation_id=quotation_id,
+        file_name=file.filename or "upload",
+        content=content,
+        declared_mime_type=file.content_type,
+    )
     return {
-        "assetId": safe_name,
-        "url": _draft_asset_public_path(quotation_id, safe_name),
-        "status": "ready",
+        "assetId": payload["assetId"],
+        "url": payload["url"],
+        "status": payload["status"],
     }
 
 
@@ -9232,7 +9353,7 @@ async def serve_asset(file_path: str):
 async def service_worker():
     from fastapi.responses import Response
     content = """// Service Worker for Vietnam Safar PWA
-const CACHE_NAME = 'vietnam-safar-v3';
+const CACHE_NAME = 'vietnam-safar-v4';
 const ASSETS = [
   '/',
   '/favicon.ico',
@@ -9317,7 +9438,11 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  event.respondWith(fetch(event.request));
+  event.respondWith(
+    fetch(event.request).catch(() => {
+      return caches.match(event.request).then(cachedResponse => cachedResponse || Response.error());
+    })
+  );
 });
 
 self.addEventListener('notificationclick', event => {

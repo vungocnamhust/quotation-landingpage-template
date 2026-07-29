@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+from urllib.parse import urlsplit, urlunsplit
 
 from dotenv import load_dotenv
 
@@ -20,6 +21,20 @@ def _get_int(name: str, default: int) -> int:
     if raw_value is None:
         return default
     return int(raw_value)
+
+
+def _normalize_endpoint_url(value: str) -> str:
+    raw_value = (value or "").strip()
+    if not raw_value:
+        return ""
+
+    candidate = raw_value if "://" in raw_value else f"https://{raw_value}"
+    parsed = urlsplit(candidate)
+    if not parsed.netloc:
+        return raw_value.rstrip("/")
+
+    scheme = parsed.scheme or "https"
+    return urlunsplit((scheme, parsed.netloc, "", "", "")).rstrip("/")
 
 
 def _derive_sync_database_url(database_url: str) -> str:
@@ -66,7 +81,7 @@ class Settings:
     @property
     def resolved_r2_endpoint(self) -> str:
         if self.r2_endpoint:
-            return self.r2_endpoint
+            return _normalize_endpoint_url(self.r2_endpoint)
         if self.r2_account_id:
             return f"https://{self.r2_account_id}.r2.cloudflarestorage.com"
         return ""

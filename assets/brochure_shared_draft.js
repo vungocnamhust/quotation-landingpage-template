@@ -338,9 +338,42 @@
   }
 
   function describeErrors(detail) {
+    if (!detail) return "Validation failed";
+    if (typeof detail === "string") return detail;
+    if (Array.isArray(detail)) return detail.map((item) => describeErrors(item)).join(" | ");
     const errors = detail && Array.isArray(detail.errors) ? detail.errors : [];
-    if (!errors.length) return (detail && detail.message) || "Validation failed";
-    return errors.map((item) => item.message || item.msg || item.path || "Validation error").join(" | ");
+    if (errors.length) {
+      return errors.map((item) => item.message || item.msg || item.path || "Validation error").join(" | ");
+    }
+    if (detail.detail) return describeErrors(detail.detail);
+    if (detail.message) return detail.message;
+    try {
+      return JSON.stringify(detail);
+    } catch (error) {
+      return "Validation failed";
+    }
+  }
+
+  function describeNonJsonResponse(rawText, status, actionLabel) {
+    const normalized = (rawText || "").trim();
+    if (/request entity too large/i.test(normalized) || status === 413) {
+      return `${actionLabel} failed: payload is too large. Upload images as media assets before retrying.`;
+    }
+    if (normalized) {
+      const firstLine = normalized.split(/\r?\n/, 1)[0];
+      return `${actionLabel} failed: ${firstLine}`;
+    }
+    return `${actionLabel} failed with status ${status}`;
+  }
+
+  async function parseJsonResponseSafe(res, actionLabel) {
+    const rawText = await res.text();
+    if (!rawText) return {};
+    try {
+      return JSON.parse(rawText);
+    } catch (error) {
+      throw new Error(describeNonJsonResponse(rawText, res.status, actionLabel));
+    }
   }
 
   function setTextContent(selector, value) {
@@ -846,7 +879,7 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ document: state, baseRevision: lastSavedRevision }),
       });
-      const data = await res.json();
+      const data = await parseJsonResponseSafe(res, "Draft save");
       if (!res.ok) {
         if (res.status === 409 && data.detail && data.detail.currentDocument) {
           state = normalizeDraft(data.detail.currentDocument);
@@ -880,8 +913,8 @@
       method: "POST",
       body: form,
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || "Asset upload failed");
+    const data = await parseJsonResponseSafe(res, "Asset upload");
+    if (!res.ok) throw new Error(describeErrors(data.detail || data));
     return data;
   }
 
@@ -954,7 +987,7 @@
         displayOrder: mapping.displayOrder,
       }),
     });
-    const data = await res.json();
+    const data = await parseJsonResponseSafe(res, "Asset selection");
     if (!res.ok) throw new Error(describeErrors(data.detail || data));
   }
 
@@ -967,7 +1000,7 @@
     if (quotationId) params.set("quotationId", quotationId);
     if (search) params.set("search", search);
     const res = await fetch(`/api/v2/media?${params.toString()}`);
-    const data = await res.json();
+    const data = await parseJsonResponseSafe(res, "Media inventory");
     if (!res.ok) throw new Error(describeErrors(data.detail || data));
     return data;
   }
@@ -1487,7 +1520,7 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ baseRevision: lastSavedRevision }),
         });
-        const data = await res.json();
+        const data = await parseJsonResponseSafe(res, "Publish request");
         if (!res.ok) throw new Error(describeErrors(data.detail || data));
         updateSaveStatus("Published", "success");
         const link = panel.querySelector("#draft-published-link");
@@ -1510,7 +1543,7 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ scopes: ["hero", "overview", "itinerary", "booking_terms", "finalization"] }),
         });
-        const data = await res.json();
+        const data = await parseJsonResponseSafe(res, "Narrative regeneration");
         if (!res.ok) throw new Error(describeErrors(data.detail || data));
         state = normalizeDraft(data.document || state);
         lastSavedRevision = Number(data.currentRevision || ((state.meta || {}).revision || lastSavedRevision));
