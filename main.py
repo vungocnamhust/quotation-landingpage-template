@@ -37,6 +37,22 @@ from quote_generation import (
     RegenerateNarrativeRequest,
     apply_narrative_result_to_document,
 )
+from db.session import get_session_factory
+from repositories import (
+    DocumentRevisionConflictError,
+    PublicationRepository,
+    QuotationDocumentRepository,
+    QuotationRepository,
+)
+from services.media_service import (
+    MediaNotFoundError,
+    MediaSelectionError,
+    MediaService,
+    MediaSyncPathError,
+    MediaValidationError,
+)
+from services.storage.r2_storage import R2Storage, R2StorageConfigurationError
+from routers.health import router as health_router
 
 load_dotenv()
 
@@ -47,7 +63,22 @@ logging.basicConfig(
 )
 log = logging.getLogger("quotation")
 
+
+def _get_db_session_factory():
+    return get_session_factory()
+
+
+_media_service: MediaService | None = None
+
+
+def _get_media_service() -> MediaService:
+    global _media_service
+    if _media_service is None:
+        _media_service = MediaService(storage=R2Storage())
+    return _media_service
+
 app = FastAPI(title="Quotation Webhook API")
+app.include_router(health_router)
 
 # CORS — required for ChatGPT Custom GPT Actions to reach the API
 app.add_middleware(
@@ -4665,6 +4696,84 @@ async def _persist_ctx_data(quotation_id: str, ctx_data: dict, commit_message: s
         quotations[quotation_id]["ctx"] = ctx_data
 
 
+def _build_publication_storage_keys(quotation_id: str, lang: str, version: int) -> tuple[str, str]:
+    return (
+        f"quotations/{quotation_id}/publish/{lang}/v{version}.html",
+        f"quotations/{quotation_id}/publish/{lang}/v{version}.pdf",
+    )
+
+
+def _hydrate_canonical_quote_document(
+    document: dict[str, Any],
+    quotation: Any,
+    *,
+    lang: str,
+    revision: int,
+) -> dict[str, Any]:
+    normalized = copy.deepcopy(document or {})
+    meta = normalized.setdefault("meta", {})
+    meta["quotationId"] = quotation.id
+    meta["lang"] = lang
+    meta["template"] = quotation.template_name
+    meta["brandId"] = quotation.brand_id
+    if quotation.opportunity_id:
+        meta["opportunityId"] = quotation.opportunity_id
+    meta["revision"] = revision
+    meta["version"] = int(meta.get("version") or quotation.current_version or 1)
+    return normalized
+
+
+async def _load_canonical_quote_document_from_db(
+    quotation_id: str,
+    target_lang: str | None = None,
+) -> tuple[Any | None, dict[str, Any] | None, str | None]:
+    async with _get_db_session_factory()() as session:
+        quotation_repo = QuotationRepository(session)
+        document_repo = QuotationDocumentRepository(session)
+
+        quotation = await quotation_repo.get_quotation_by_id(quotation_id)
+        if quotation is None:
+            return None, None, None
+
+        effective_lang = target_lang or quotation.baseline_lang
+        stored_document = await document_repo.get_current_document(quotation_id, effective_lang)
+        if stored_document is None and effective_lang != quotation.baseline_lang:
+            stored_document = await document_repo.get_current_document(quotation_id, quotation.baseline_lang)
+            if stored_document is not None:
+                effective_lang = quotation.baseline_lang
+        if stored_document is None:
+            return quotation, None, effective_lang
+
+        document = _hydrate_canonical_quote_document(
+            stored_document.document_json,
+            quotation,
+            lang=effective_lang,
+            revision=stored_document.revision,
+        )
+        return quotation, document, effective_lang
+
+
+async def _load_latest_quote_request_snapshot_from_db(quotation_id: str) -> dict[str, Any] | None:
+    async with _get_db_session_factory()() as session:
+        quotation_repo = QuotationRepository(session)
+        request_row = await quotation_repo.get_latest_quotation_request(quotation_id)
+        return copy.deepcopy(request_row.request_json) if request_row is not None else None
+
+
+async def _sync_canonical_quote_document_to_ctx(
+    quotation_id: str,
+    target_lang: str,
+    document: dict[str, Any],
+    commit_message: str,
+) -> dict[str, Any] | None:
+    ctx_data = _load_ctx_data(quotation_id)
+    if not ctx_data:
+        return None
+    _store_brochure_draft(ctx_data, target_lang, document)
+    await _persist_ctx_data(quotation_id, ctx_data, commit_message)
+    return ctx_data
+
+
 def _draft_asset_public_path(quotation_id: str, filename: str) -> str:
     return f"/published/{quotation_id}/draft_assets/{filename}"
 
@@ -5456,6 +5565,8 @@ async def create_quotation_v2(payload: CreateQuoteRequestV1):
 
     sfx = f"_{lang}" if lang != "en" else ""
     environment = os.getenv("ENVIRONMENT", "local")
+    published_artifact_url = f"{PUBLIC_BASE_URL}/published/{quotation_id}/v1{sfx}.html"
+    pdf_public_url = f"{PUBLIC_BASE_URL}/quotations/{quotation_id}/pdf"
     if environment == "production":
         if not os.getenv("GITHUB_TOKEN") or not os.getenv("GITHUB_REPO"):
             raise HTTPException(
@@ -5496,7 +5607,7 @@ async def create_quotation_v2(payload: CreateQuoteRequestV1):
             await _save_translation_status(quotation_id, {"baseline_lang": lang, "available_langs": [lang]})
             quotations[quotation_id]["status"] = "published"
             quotations[quotation_id]["published_url"] = f"{PUBLIC_BASE_URL}/quotations/{quotation_id}"
-            quotations[quotation_id]["pdf_url"] = f"{PUBLIC_BASE_URL}/quotations/{quotation_id}/pdf"
+            quotations[quotation_id]["pdf_url"] = pdf_public_url
             quotations[quotation_id]["version"] = 1
         except Exception as exc:
             log.exception("[/api/v2/quotations] GitHub publish FAILED for %s: %s", quotation_id, exc)
@@ -5521,10 +5632,64 @@ async def create_quotation_v2(payload: CreateQuoteRequestV1):
         quotations[quotation_id]["version"] = 1
 
     quotation_url = f"{PUBLIC_BASE_URL}/quotations/{quotation_id}"
+    try:
+        async with _get_db_session_factory()() as session:
+            quotation_repository = QuotationRepository(session)
+            document_repository = QuotationDocumentRepository(session)
+            publication_repository = PublicationRepository(session)
+
+            quotation = await quotation_repository.create_quotation(
+                quotation_id=quotation_id,
+                opportunity_id=payload.opportunity_id or quotation_id,
+                brand_id=payload.brand_id,
+                template_name=BROCHURE_TEMPLATE_NAME,
+                baseline_lang=lang,
+                customer_name=((payload.customer_facts or {}).customer_name if payload.customer_facts else None),
+                title=document.get("trip", {}).get("title") or payload.trip_facts.title,
+            )
+            await quotation_repository.create_quotation_request(
+                quotation_id=quotation_id,
+                request_json=payload.model_dump(mode="json"),
+            )
+            current_document = await document_repository.save_current_document(
+                quotation_id=quotation_id,
+                lang=lang,
+                document_json=document,
+                expected_revision=0,
+                html_sync=initial_html_sync,
+                generation_status=document.get("generationStatus") or {},
+            )
+            canonical_document = _hydrate_canonical_quote_document(
+                current_document.document_json,
+                quotation,
+                lang=lang,
+                revision=current_document.revision,
+            )
+            await document_repository.append_document_revision(
+                quotation_id=quotation_id,
+                lang=lang,
+                revision=current_document.revision,
+                document_json=canonical_document,
+                change_source="create",
+            )
+            html_r2_key, pdf_r2_key = _build_publication_storage_keys(quotation_id, lang, 1)
+            await publication_repository.create_publication(
+                quotation_id=quotation_id,
+                version=1,
+                lang=lang,
+                html_r2_key=html_r2_key,
+                pdf_r2_key=pdf_r2_key,
+                published_url=published_artifact_url,
+                pdf_url=pdf_public_url,
+            )
+            await session.commit()
+    except Exception as exc:
+        log.exception("[/api/v2/quotations] Postgres persistence FAILED for %s: %s", quotation_id, exc)
+        raise HTTPException(status_code=500, detail=f"Postgres persistence failed: {exc}")
     return {
         "quotationId": quotation_id,
         "quotationUrl": quotation_url,
-        "pdfUrl": f"{PUBLIC_BASE_URL}/quotations/{quotation_id}/pdf",
+        "pdfUrl": pdf_public_url,
         "documentVersion": ((document.get("meta") or {}).get("version")) or 1,
         "status": "published",
     }
@@ -6577,6 +6742,14 @@ async def _build_quotation_lang_ctx(
     if _is_brochure_template(base_tmpl):
         document = _get_stored_brochure_draft(ctx_data, effective_lang)
         if not document:
+            _, canonical_document, canonical_lang = await _load_canonical_quote_document_from_db(
+                quotation_id,
+                effective_lang,
+            )
+            if canonical_document:
+                document = _store_brochure_draft(ctx_data, canonical_lang or effective_lang, canonical_document)
+                effective_lang = canonical_lang or effective_lang
+        if not document:
             persisted_document = _load_persisted_quote_document(quotation_id)
             if persisted_document:
                 persisted_lang = ((persisted_document.get("meta") or {}).get("lang")) or effective_lang
@@ -6905,11 +7078,27 @@ class DraftUpsertRequest(BaseModel):
 
 class QuoteDocumentUpsertRequest(BaseModel):
     document: dict[str, Any]
+    baseRevision: Optional[int] = None
 
 
 class QuoteDocumentPublishRequest(BaseModel):
     document: Optional[dict[str, Any]] = None
     template_name: Optional[str] = None
+    baseRevision: Optional[int] = None
+
+
+class MediaSelectionRequest(BaseModel):
+    quotationId: str
+    lang: Optional[str] = None
+    sectionKey: str
+    slotKey: str
+    displayOrder: int = Field(default=0, ge=0)
+
+
+class MediaSyncRequest(BaseModel):
+    folder: str = ""
+    recursive: bool = True
+    quotationId: Optional[str] = None
 
 
 @app.post("/api/v1/translate-block")
@@ -7035,30 +7224,18 @@ async def get_quotation_document(quotation_id: str, request: Request, lang: str 
     if target_lang not in ("en", "vi", "ar"):
         target_lang = None
 
-    ctx_data = _load_ctx_data(quotation_id)
-    if not ctx_data:
+    quotation, document, effective_lang = await _load_canonical_quote_document_from_db(quotation_id, target_lang)
+    if quotation is None:
         raise HTTPException(status_code=404, detail=f"Quotation '{quotation_id}' not found.")
-
-    baseline_lang = ctx_data.get("baseline_lang", "en")
-    target_lang = target_lang or baseline_lang
-    template_name = ctx_data.get("template_name", "vietnam_luxury_brosure.html")
-    if not _is_brochure_template(template_name):
+    if not _is_brochure_template(quotation.template_name):
         raise HTTPException(status_code=400, detail="Document editor is only available for brochure quotations.")
-
-    lang_ctx, effective_lang, _ = await _build_quotation_lang_ctx(
-        ctx_data,
-        quotation_id,
-        target_lang,
-        request,
-        ignore_published_html=True,
-        force_editor_draft=True,
-    )
-    document = _ensure_brochure_draft(ctx_data, quotation_id, effective_lang, lang_ctx, force_brand_from_ctx=True)
-    await _persist_ctx_data(quotation_id, ctx_data, f"Bootstrap quote document for quotation {quotation_id} ({effective_lang})")
+    if document is None:
+        raise HTTPException(status_code=404, detail="No quote document available.")
     return {
         "document": document,
         "lang": effective_lang,
         "documentVersion": ((document.get("meta") or {}).get("version")) or 1,
+        "currentRevision": ((document.get("meta") or {}).get("revision")) or 1,
         "sectionRegistry": {key: value.model_dump(mode="json") for key, value in SECTION_REGISTRY.items()},
     }
 
@@ -7075,29 +7252,77 @@ async def put_quotation_document(
     if target_lang not in ("en", "vi", "ar"):
         target_lang = None
 
-    ctx_data = _load_ctx_data(quotation_id)
-    if not ctx_data:
-        raise HTTPException(status_code=404, detail=f"Quotation '{quotation_id}' not found.")
-
-    baseline_lang = ctx_data.get("baseline_lang", "en")
-    target_lang = target_lang or baseline_lang
-    template_name = ctx_data.get("template_name", "vietnam_luxury_brosure.html")
-    if not _is_brochure_template(template_name):
-        raise HTTPException(status_code=400, detail="Document editor is only available for brochure quotations.")
-
     document = copy.deepcopy(payload.document or {})
-    document.setdefault("meta", {})
-    document["meta"]["quotationId"] = quotation_id
-    document["meta"]["lang"] = target_lang
-    document["meta"]["template"] = template_name
-    document["meta"]["revision"] = int(document["meta"].get("revision") or 0) + 1
+    try:
+        async with _get_db_session_factory()() as session:
+            quotation_repository = QuotationRepository(session)
+            document_repository = QuotationDocumentRepository(session)
 
-    stored_document = _store_brochure_draft(ctx_data, target_lang, _validate_quote_document_or_422(document))
-    await _persist_ctx_data(quotation_id, ctx_data, f"Autosave quote document for quotation {quotation_id} ({target_lang})")
+            quotation = await quotation_repository.get_quotation_by_id(quotation_id)
+            if quotation is None:
+                raise HTTPException(status_code=404, detail=f"Quotation '{quotation_id}' not found.")
+
+            effective_lang = target_lang or quotation.baseline_lang
+            if not _is_brochure_template(quotation.template_name):
+                raise HTTPException(status_code=400, detail="Document editor is only available for brochure quotations.")
+
+            document = _hydrate_canonical_quote_document(
+                document,
+                quotation,
+                lang=effective_lang,
+                revision=payload.baseRevision or int(((document.get("meta") or {}).get("revision")) or 1),
+            )
+            validated_document = _validate_quote_document_or_422(document)
+            saved_document = await document_repository.save_current_document(
+                quotation_id=quotation_id,
+                lang=effective_lang,
+                document_json=validated_document,
+                expected_revision=payload.baseRevision,
+            )
+            canonical_document = _hydrate_canonical_quote_document(
+                saved_document.document_json,
+                quotation,
+                lang=effective_lang,
+                revision=saved_document.revision,
+            )
+            await document_repository.append_document_revision(
+                quotation_id=quotation_id,
+                lang=effective_lang,
+                revision=saved_document.revision,
+                document_json=canonical_document,
+                change_source="autosave",
+            )
+            await session.commit()
+    except DocumentRevisionConflictError as exc:
+        quotation, _, effective_lang = await _load_canonical_quote_document_from_db(quotation_id, target_lang)
+        current_document = None
+        if quotation is not None and exc.current_document is not None:
+            current_document = _hydrate_canonical_quote_document(
+                exc.current_document,
+                quotation,
+                lang=effective_lang or target_lang or quotation.baseline_lang,
+                revision=exc.current_revision or 0,
+            )
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "message": "Document revision conflict.",
+                "currentRevision": exc.current_revision,
+                "currentDocument": current_document,
+            },
+        ) from exc
+
+    await _sync_canonical_quote_document_to_ctx(
+        quotation_id,
+        effective_lang,
+        canonical_document,
+        f"Autosave quote document for quotation {quotation_id} ({effective_lang})",
+    )
     return {
         "ok": True,
-        "document": stored_document,
-        "documentVersion": ((stored_document.get("meta") or {}).get("version")) or 1,
+        "document": canonical_document,
+        "documentVersion": ((canonical_document.get("meta") or {}).get("version")) or 1,
+        "currentRevision": ((canonical_document.get("meta") or {}).get("revision")) or 1,
         "sectionRegistry": {key: value.model_dump(mode="json") for key, value in SECTION_REGISTRY.items()},
     }
 
@@ -7113,17 +7338,16 @@ async def regenerate_quotation_narrative(
     if target_lang not in ("en", "vi", "ar"):
         target_lang = None
 
-    ctx_data = _load_ctx_data(quotation_id)
-    if not ctx_data:
+    quotation, document, effective_lang = await _load_canonical_quote_document_from_db(quotation_id, target_lang)
+    if quotation is None:
         raise HTTPException(status_code=404, detail=f"Quotation '{quotation_id}' not found.")
-
-    baseline_lang = ctx_data.get("baseline_lang", "en")
-    target_lang = target_lang or baseline_lang
-    document = _get_stored_brochure_draft(ctx_data, target_lang)
     if not document:
         raise HTTPException(status_code=404, detail="No brochure document available.")
 
-    request_snapshot = ctx_data.get("createQuoteRequestV1")
+    request_snapshot = await _load_latest_quote_request_snapshot_from_db(quotation_id)
+    if request_snapshot is None:
+        ctx_data = _load_ctx_data(quotation_id) or {}
+        request_snapshot = ctx_data.get("createQuoteRequestV1")
     create_request = (
         CreateQuoteRequestV1.model_validate(request_snapshot)
         if request_snapshot
@@ -7141,17 +7365,172 @@ async def regenerate_quotation_narrative(
     regenerated.setdefault("generationStatus", {})
     regenerated["generationStatus"]["narrative"] = narrative_status
     regenerated["generationStatus"]["warnings"] = narrative_warnings
-    regenerated.setdefault("meta", {})
-    regenerated["meta"]["revision"] = int(regenerated["meta"].get("revision") or 0) + 1
+    regenerated = _validate_quote_document_or_422(
+        _hydrate_canonical_quote_document(
+            regenerated,
+            quotation,
+            lang=effective_lang or quotation.baseline_lang,
+            revision=((document.get("meta") or {}).get("revision")) or 1,
+        )
+    )
 
-    stored_document = _store_brochure_draft(ctx_data, target_lang, _validate_quote_document_or_422(regenerated))
-    await _persist_ctx_data(quotation_id, ctx_data, f"Regenerate brochure narrative for quotation {quotation_id} ({target_lang})")
+    async with _get_db_session_factory()() as session:
+        quotation_repository = QuotationRepository(session)
+        document_repository = QuotationDocumentRepository(session)
+
+        persisted_quotation = await quotation_repository.get_quotation_by_id(quotation_id)
+        saved_document = await document_repository.save_current_document(
+            quotation_id=quotation_id,
+            lang=effective_lang or quotation.baseline_lang,
+            document_json=regenerated,
+            expected_revision=((document.get("meta") or {}).get("revision")) or 1,
+            generation_status=regenerated.get("generationStatus") or {},
+        )
+        stored_document = _hydrate_canonical_quote_document(
+            saved_document.document_json,
+            persisted_quotation,
+            lang=effective_lang or quotation.baseline_lang,
+            revision=saved_document.revision,
+        )
+        await document_repository.append_document_revision(
+            quotation_id=quotation_id,
+            lang=effective_lang or quotation.baseline_lang,
+            revision=saved_document.revision,
+            document_json=stored_document,
+            change_source="regenerate_narrative",
+        )
+        await session.commit()
+
+    await _sync_canonical_quote_document_to_ctx(
+        quotation_id,
+        effective_lang or quotation.baseline_lang,
+        stored_document,
+        f"Regenerate brochure narrative for quotation {quotation_id} ({effective_lang or quotation.baseline_lang})",
+    )
     return {
         "ok": True,
         "document": stored_document,
         "documentVersion": ((stored_document.get("meta") or {}).get("version")) or 1,
+        "currentRevision": ((stored_document.get("meta") or {}).get("revision")) or 1,
         "generationStatus": stored_document.get("generationStatus") or {},
     }
+
+
+@app.post("/api/v2/media/upload")
+async def upload_media_asset(
+    file: UploadFile = File(...),
+    quotationId: str | None = Form(None),
+):
+    media_service = _get_media_service()
+    asset = None
+    try:
+        content = await file.read()
+        async with _get_db_session_factory()() as session:
+            if quotationId:
+                quotation = await QuotationRepository(session).get_quotation_by_id(quotationId)
+                if quotation is None:
+                    raise HTTPException(status_code=404, detail=f"Quotation '{quotationId}' not found.")
+            asset = await media_service.create_media_asset(
+                session,
+                original_filename=file.filename or "upload",
+                content=content,
+                declared_mime_type=file.content_type,
+                quotation_id=quotationId,
+                source_type="editor_upload",
+            )
+            await session.commit()
+    except HTTPException:
+        raise
+    except MediaValidationError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except R2StorageConfigurationError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    except Exception:
+        if asset is not None:
+            await media_service.delete_objects(asset.r2_key, asset.preview_r2_key)
+        raise
+
+    payload = media_service.serialize_media_asset(asset)
+    return {
+        "assetId": payload["id"],
+        "quotationId": payload["quotationId"],
+        "status": payload["status"],
+        "originalUrl": payload["originalUrl"],
+        "previewUrl": payload["previewUrl"],
+        "width": payload["width"],
+        "height": payload["height"],
+    }
+
+
+@app.get("/api/v2/media")
+async def list_media_assets(
+    quotationId: str | None = None,
+    sourceType: str | None = None,
+    status: str | None = None,
+    search: str | None = None,
+    page: int = 1,
+    pageSize: int = 24,
+):
+    media_service = _get_media_service()
+    normalized_page = max(page, 1)
+    normalized_page_size = min(max(pageSize, 1), 100)
+    try:
+        async with _get_db_session_factory()() as session:
+            return await media_service.list_media_assets(
+                session,
+                quotation_id=quotationId,
+                source_type=sourceType,
+                status=status,
+                search=search,
+                page=normalized_page,
+                page_size=normalized_page_size,
+            )
+    except R2StorageConfigurationError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/v2/media/{asset_id}/select")
+async def select_media_asset(asset_id: str, payload: MediaSelectionRequest):
+    media_service = _get_media_service()
+    try:
+        async with _get_db_session_factory()() as session:
+            await media_service.select_media_asset(
+                session,
+                asset_id=asset_id,
+                quotation_id=payload.quotationId,
+                lang=payload.lang,
+                section_key=payload.sectionKey,
+                slot_key=payload.slotKey,
+                display_order=payload.displayOrder,
+            )
+            await session.commit()
+    except MediaNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except MediaSelectionError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    return {"ok": True}
+
+
+@app.post("/api/v2/media/sync")
+async def sync_media_assets(payload: MediaSyncRequest):
+    media_service = _get_media_service()
+    try:
+        async with _get_db_session_factory()() as session:
+            result = await media_service.sync_media_folder(
+                session,
+                folder=payload.folder,
+                recursive=payload.recursive,
+                quotation_id=payload.quotationId,
+            )
+            await session.commit()
+            return result
+    except MediaSyncPathError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except MediaValidationError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except R2StorageConfigurationError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
 @app.post("/api/v1/assets")
@@ -7642,25 +8021,118 @@ async def publish_quotation_document(
     if not ctx_data:
         raise HTTPException(status_code=404, detail=f"Quotation '{quotation_id}' not found.")
 
-    baseline_lang = ctx_data.get("baseline_lang", "en")
-    target_lang = target_lang or baseline_lang
-    template_name = body.template_name or ctx_data.get("template_name") or "vietnam_luxury_brosure.html"
+    quotation, canonical_document, effective_lang = await _load_canonical_quote_document_from_db(quotation_id, target_lang)
+    if quotation is None:
+        raise HTTPException(status_code=404, detail=f"Quotation '{quotation_id}' not found.")
+
+    effective_lang = effective_lang or quotation.baseline_lang
+    template_name = body.template_name or quotation.template_name or ctx_data.get("template_name") or "vietnam_luxury_brosure.html"
     if not _is_brochure_template(template_name):
         raise HTTPException(status_code=400, detail="Document publish is only available for brochure quotations.")
 
-    document = body.document or _get_stored_brochure_draft(ctx_data, target_lang)
-    if not document:
+    if body.document is not None:
+        draft = _hydrate_canonical_quote_document(
+            copy.deepcopy(body.document),
+            quotation,
+            lang=effective_lang,
+            revision=body.baseRevision or int((((body.document or {}).get("meta") or {}).get("revision")) or 1),
+        )
+        validated_document = _validate_quote_document_or_422(draft)
+        try:
+            async with _get_db_session_factory()() as session:
+                quotation_repository = QuotationRepository(session)
+                document_repository = QuotationDocumentRepository(session)
+
+                persisted_quotation = await quotation_repository.get_quotation_by_id(quotation_id)
+                saved_document = await document_repository.save_current_document(
+                    quotation_id=quotation_id,
+                    lang=effective_lang,
+                    document_json=validated_document,
+                    expected_revision=body.baseRevision,
+                )
+                canonical_document = _hydrate_canonical_quote_document(
+                    saved_document.document_json,
+                    persisted_quotation,
+                    lang=effective_lang,
+                    revision=saved_document.revision,
+                )
+                await document_repository.append_document_revision(
+                    quotation_id=quotation_id,
+                    lang=effective_lang,
+                    revision=saved_document.revision,
+                    document_json=canonical_document,
+                    change_source="publish",
+                )
+                await session.commit()
+        except DocumentRevisionConflictError as exc:
+            current_document = None
+            if exc.current_document is not None:
+                current_document = _hydrate_canonical_quote_document(
+                    exc.current_document,
+                    quotation,
+                    lang=effective_lang,
+                    revision=exc.current_revision or 0,
+                )
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "message": "Document revision conflict.",
+                    "currentRevision": exc.current_revision,
+                    "currentDocument": current_document,
+                },
+            ) from exc
+        await _sync_canonical_quote_document_to_ctx(
+            quotation_id,
+            effective_lang,
+            canonical_document,
+            f"Prepare canonical brochure document for publish {quotation_id} ({effective_lang})",
+        )
+
+    if not canonical_document:
         raise HTTPException(status_code=400, detail="No quote document available to publish.")
 
-    normalized = _store_brochure_draft(ctx_data, target_lang, _validate_quote_document_or_422(document))
+    normalized = _store_brochure_draft(ctx_data, effective_lang, _validate_quote_document_or_422(canonical_document))
     publish_body = PublishRequest(draft=normalized, template_name=template_name)
-    return await publish_quotation(
+    publish_result = await publish_quotation(
         quotation_id,
         publish_body,
         request,
-        lang=target_lang,
-        language=target_lang,
+        lang=effective_lang,
+        language=effective_lang,
     )
+    version = int(publish_result.get("version") or 1)
+    html_r2_key, pdf_r2_key = _build_publication_storage_keys(quotation_id, effective_lang, version)
+    async with _get_db_session_factory()() as session:
+        publication_repository = PublicationRepository(session)
+        document_repository = QuotationDocumentRepository(session)
+
+        await publication_repository.create_publication(
+            quotation_id=quotation_id,
+            version=version,
+            lang=effective_lang,
+            html_r2_key=html_r2_key,
+            pdf_r2_key=pdf_r2_key,
+            published_url=publish_result.get("published_url"),
+            pdf_url=f"{PUBLIC_BASE_URL}/quotations/{quotation_id}/pdf",
+        )
+        if body.document is None:
+            latest_document = await document_repository.get_current_document(quotation_id, effective_lang)
+            if latest_document is not None:
+                publication_document = _hydrate_canonical_quote_document(
+                    latest_document.document_json,
+                    quotation,
+                    lang=effective_lang,
+                    revision=latest_document.revision,
+                )
+                await document_repository.append_document_revision(
+                    quotation_id=quotation_id,
+                    lang=effective_lang,
+                    revision=latest_document.revision,
+                    document_json=publication_document,
+                    change_source="publish",
+                )
+        await session.commit()
+    return publish_result
 
 
 

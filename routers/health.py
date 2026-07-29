@@ -1,0 +1,39 @@
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
+
+from core.config import settings
+from db.session import get_db
+
+router = APIRouter(prefix="/health", tags=["health"])
+
+@router.get("/live")
+async def health_live():
+    """Liveness probe: checks if the application is running."""
+    return {"status": "ok"}
+
+@router.get("/ready")
+async def health_ready(db: AsyncSession = Depends(get_db)):
+    """Readiness probe: checks if the application is ready to receive traffic (DB connection works, etc.)."""
+    try:
+        # Check database connection
+        await db.execute(text("SELECT 1"))
+        db_status = "ok"
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"status": "ready", "postgres": db_status}
+        )
+
+    # Check R2 configuration is present (not a full ping to avoid slowing down healthcheck)
+    if not settings.r2_endpoint and not settings.r2_account_id:
+        r2_status = "missing_endpoint_or_account_id"
+    else:
+        r2_status = "ok"
+        
+    return {
+        "status": "ready",
+        "postgres": db_status,
+        "r2_config": r2_status
+    }

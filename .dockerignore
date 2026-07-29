@@ -5,6 +5,7 @@ __pycache__
 .git
 .gitignore
 .env
+.env.production
 published/*
 _published/*
 _Drafts
@@ -13,3 +14,9 @@ _DRAFT
 .idea
 .vscode
 .DS_Store
+docs/
+tests/
+_renders/
+_responsive_screenshots/
+*.html
+.pytest_cache/
