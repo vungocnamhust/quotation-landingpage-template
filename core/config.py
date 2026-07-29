@@ -86,6 +86,15 @@ class Settings:
             return f"https://{self.r2_account_id}.r2.cloudflarestorage.com"
         return ""
 
+    @property
+    def has_r2_configuration(self) -> bool:
+        return bool(
+            self.r2_access_key_id
+            and self.r2_secret_access_key
+            and self.resolved_r2_endpoint
+            and self.r2_bucket
+        )
+
 
 settings = Settings()
 

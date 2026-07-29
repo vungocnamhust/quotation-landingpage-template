@@ -55,6 +55,7 @@ from services.media_service import (
 from services.storage.local_media_storage import LocalMediaStorage
 from services.storage.r2_storage import R2Storage, R2StorageConfigurationError
 from routers.health import router as health_router
+from core.config import settings
 
 load_dotenv()
 
@@ -76,7 +77,7 @@ _media_service: MediaService | None = None
 def _get_media_service() -> MediaService:
     global _media_service
     media_backend = (os.getenv("MEDIA_STORAGE_BACKEND") or "").strip().lower()
-    use_r2_storage = media_backend == "r2" or os.getenv("ENVIRONMENT", "local") == "production"
+    use_r2_storage = media_backend == "r2" or (not media_backend and settings.has_r2_configuration)
     desired_storage_class = R2Storage if use_r2_storage else LocalMediaStorage
 
     if _media_service is None or not isinstance(_media_service.storage, desired_storage_class):
