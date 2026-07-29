@@ -18,11 +18,26 @@
   );
 
   let state = normalizeDraft(parseJsonScript("brochure-draft") || {});
+  let lastSavedRevision = Number((state.meta || {}).revision || 1);
   let saveTimer = null;
   let saveInFlight = false;
   let pendingSave = false;
   let saveStatusEl = null;
   let sidebarToggleEl = null;
+  let mediaSearchTimer = null;
+  const mediaPickerState = {
+    open: false,
+    path: "",
+    label: "",
+    items: [],
+    search: "",
+    loading: false,
+    error: "",
+    page: 1,
+    pageSize: 18,
+    hasMore: false,
+    requestId: 0,
+  };
   const DEFAULT_SECTION_TYPES = [
     "hero",
     "overview_letter",
@@ -345,6 +360,16 @@
     root.querySelectorAll("small[data-asset-url]").forEach((el) => {
       const value = getPath(state, el.dataset.assetUrl || "");
       el.textContent = value && value.url ? value.url : "";
+    });
+    root.querySelectorAll("img[data-asset-preview]").forEach((el) => {
+      const value = getPath(state, el.dataset.assetPreview || "");
+      const url = value && value.url ? value.url : "";
+      el.src = url || "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+      el.hidden = !url;
+    });
+    root.querySelectorAll("[data-asset-empty]").forEach((el) => {
+      const value = getPath(state, el.dataset.assetEmpty || "");
+      el.hidden = !!(value && value.url);
     });
     root.querySelectorAll("[data-brand-preset]").forEach((el) => {
       const active = el.dataset.brandPreset === (((state.meta || {}).brandId) || "");
@@ -765,6 +790,24 @@
     }, 500);
   }
 
+  async function flushSave() {
+    if (!isEditor) return;
+    pendingSave = true;
+    if (saveTimer) {
+      window.clearTimeout(saveTimer);
+      saveTimer = null;
+    }
+    while (saveInFlight) {
+      await new Promise((resolve) => window.setTimeout(resolve, 25));
+    }
+    if (pendingSave) {
+      await saveDraft();
+    }
+    while (saveInFlight) {
+      await new Promise((resolve) => window.setTimeout(resolve, 25));
+    }
+  }
+
   async function saveDraft() {
     if (!isEditor || saveInFlight || !pendingSave) return;
     pendingSave = false;
@@ -773,11 +816,22 @@
       const res = await fetch(`/api/v2/quotations/${quotationId}/document?lang=${encodeURIComponent(currentLang)}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ document: state }),
+        body: JSON.stringify({ document: state, baseRevision: lastSavedRevision }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(describeErrors(data.detail || data));
+      if (!res.ok) {
+        if (res.status === 409 && data.detail && data.detail.currentDocument) {
+          state = normalizeDraft(data.detail.currentDocument);
+          lastSavedRevision = Number(data.detail.currentRevision || ((state.meta || {}).revision || lastSavedRevision));
+          applyDraftToDom(state);
+          syncEditorFields(document.getElementById("brochure-draft-sidebar"));
+          updateSaveStatus("Draft was updated elsewhere; latest version loaded", "error");
+          return;
+        }
+        throw new Error(describeErrors(data.detail || data));
+      }
       state = normalizeDraft(data.document || state);
+      lastSavedRevision = Number(data.currentRevision || ((state.meta || {}).revision || lastSavedRevision));
       sectionRegistry = data.sectionRegistry || sectionRegistry;
       syncEditorFields(document.getElementById("brochure-draft-sidebar"));
       updateSaveStatus("Draft saved", "success");
@@ -792,9 +846,9 @@
 
   async function uploadAsset(file) {
     const form = new FormData();
-    form.append("quotation_id", quotationId);
+    if (quotationId) form.append("quotationId", quotationId);
     form.append("file", file);
-    const res = await fetch("/api/v1/assets", {
+    const res = await fetch("/api/v2/media/upload", {
       method: "POST",
       body: form,
     });
@@ -809,12 +863,12 @@
     setPath(state, path, { assetId: "", url: tempUrl, status: "uploading" });
     applyDraftToDom(state);
     syncEditorFields(document.getElementById("brochure-draft-sidebar"));
-    scheduleSave();
     try {
       const uploaded = await uploadAsset(file);
+      await persistMediaSelection(uploaded.assetId || "", path);
       setPath(state, path, {
         assetId: uploaded.assetId || "",
-        url: uploaded.url || tempUrl,
+        url: uploaded.originalUrl || uploaded.previewUrl || tempUrl,
         status: uploaded.status || "ready",
       });
       applyDraftToDom(state);
@@ -827,6 +881,215 @@
       syncEditorFields(document.getElementById("brochure-draft-sidebar"));
       updateSaveStatus("Asset upload failed", "error");
     }
+  }
+
+  function assetPathToSelection(path) {
+    if (path === "assets.hero") return { sectionKey: "hero", slotKey: "cover_image", displayOrder: 0 };
+    if (path === "brand.logo") return { sectionKey: "brand", slotKey: "logo", displayOrder: 0 };
+    if (path === "assets.itineraryDivider") return { sectionKey: "itinerary", slotKey: "divider_image", displayOrder: 0 };
+    if (path === "assets.hotelDivider") return { sectionKey: "hotel_plan", slotKey: "divider_image", displayOrder: 0 };
+    if (path === "designer.image") return { sectionKey: "designer", slotKey: "portrait_image", displayOrder: 0 };
+
+    let match = path.match(/^itinerary\.days\.(\d+)\.images\.hero$/);
+    if (match) {
+      const index = Number(match[1]);
+      return { sectionKey: "itinerary", slotKey: `day_${index + 1}_hero_image`, displayOrder: index };
+    }
+
+    match = path.match(/^stays\.hotels\.(\d+)\.hotelImage$/);
+    if (match) {
+      const index = Number(match[1]);
+      return { sectionKey: "hotel_plan", slotKey: `hotel_${index + 1}_image`, displayOrder: index };
+    }
+
+    match = path.match(/^stays\.hotels\.(\d+)\.roomImage$/);
+    if (match) {
+      const index = Number(match[1]);
+      return { sectionKey: "hotel_plan", slotKey: `hotel_${index + 1}_room_image`, displayOrder: index };
+    }
+
+    return null;
+  }
+
+  async function persistMediaSelection(assetId, path) {
+    const mapping = assetPathToSelection(path);
+    if (!assetId || !mapping || !quotationId) return;
+    const res = await fetch(`/api/v2/media/${encodeURIComponent(assetId)}/select`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        quotationId,
+        lang: currentLang,
+        sectionKey: mapping.sectionKey,
+        slotKey: mapping.slotKey,
+        displayOrder: mapping.displayOrder,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(describeErrors(data.detail || data));
+  }
+
+  async function fetchMediaInventory(page, pageSize, search) {
+    const params = new URLSearchParams({
+      page: String(page),
+      pageSize: String(pageSize),
+      status: "ready",
+    });
+    if (quotationId) params.set("quotationId", quotationId);
+    if (search) params.set("search", search);
+    const res = await fetch(`/api/v2/media?${params.toString()}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(describeErrors(data.detail || data));
+    return data;
+  }
+
+  function dedupeMediaItems(items) {
+    const seen = new Set();
+    return (items || []).filter((item) => {
+      const key = item && item.id ? item.id : "";
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
+  function openMediaPicker(path, label, panel) {
+    mediaPickerState.open = true;
+    mediaPickerState.path = path || "";
+    mediaPickerState.label = label || "Media library";
+    mediaPickerState.items = [];
+    mediaPickerState.search = "";
+    mediaPickerState.error = "";
+    mediaPickerState.page = 1;
+    mediaPickerState.hasMore = false;
+    renderEditorMediaPicker(panel);
+    loadMediaLibrary(panel, { append: false });
+  }
+
+  function closeMediaPicker(panel) {
+    mediaPickerState.open = false;
+    mediaPickerState.loading = false;
+    mediaPickerState.error = "";
+    if (mediaSearchTimer) {
+      window.clearTimeout(mediaSearchTimer);
+      mediaSearchTimer = null;
+    }
+    renderEditorMediaPicker(panel);
+  }
+
+  async function loadMediaLibrary(panel, options) {
+    if (!mediaPickerState.open) return;
+    const append = !!(options && options.append);
+    const nextPage = append ? mediaPickerState.page + 1 : 1;
+    const requestId = mediaPickerState.requestId + 1;
+    mediaPickerState.requestId = requestId;
+    mediaPickerState.loading = true;
+    mediaPickerState.error = "";
+    renderEditorMediaPicker(panel);
+    try {
+      const payload = await fetchMediaInventory(nextPage, mediaPickerState.pageSize, (mediaPickerState.search || "").trim());
+      if (requestId !== mediaPickerState.requestId) return;
+      const incoming = Array.isArray(payload.items) ? payload.items : [];
+      mediaPickerState.items = append
+        ? dedupeMediaItems([].concat(mediaPickerState.items || [], incoming))
+        : incoming;
+      mediaPickerState.page = nextPage;
+      mediaPickerState.hasMore = Number(payload.total || 0) > nextPage * mediaPickerState.pageSize;
+      mediaPickerState.loading = false;
+      renderEditorMediaPicker(panel);
+    } catch (err) {
+      if (requestId !== mediaPickerState.requestId) return;
+      console.error("[brochure-draft] Media library failed", err);
+      mediaPickerState.loading = false;
+      mediaPickerState.error = err && err.message ? err.message : "Media library failed";
+      renderEditorMediaPicker(panel);
+    }
+  }
+
+  async function chooseMediaAsset(assetId, panel) {
+    const asset = (mediaPickerState.items || []).find((item) => item && item.id === assetId);
+    if (!asset || !mediaPickerState.path) return;
+    try {
+      await persistMediaSelection(asset.id, mediaPickerState.path);
+      setPath(state, mediaPickerState.path, {
+        assetId: asset.id,
+        url: asset.originalUrl || asset.previewUrl || "",
+        status: "ready",
+      });
+      state.meta.revision = Number(state.meta.revision || 1) + 1;
+      applyDraftToDom(state);
+      syncEditorFields(panel);
+      updateSaveStatus("Library image selected", "success");
+      closeMediaPicker(panel);
+      scheduleSave();
+    } catch (err) {
+      console.error("[brochure-draft] Media select failed", err);
+      mediaPickerState.error = err && err.message ? err.message : "Could not select this image";
+      renderEditorMediaPicker(panel);
+    }
+  }
+
+  function renderEditorMediaPicker(panel) {
+    const picker = panel.querySelector(".draft-media-picker");
+    if (!picker) return;
+    if (!mediaPickerState.open) {
+      picker.hidden = true;
+      picker.classList.remove("is-open");
+      return;
+    }
+    picker.hidden = false;
+    picker.classList.add("is-open");
+    const currentAssetId = (((getPath(state, mediaPickerState.path) || {}).assetId) || "");
+    picker.innerHTML = `
+      <button type="button" class="draft-media-picker-backdrop" data-close-media-picker aria-label="Close media library"></button>
+      <div class="draft-media-picker-dialog" role="dialog" aria-modal="true" aria-label="Media library">
+        <div class="draft-media-picker-header">
+          <div>
+            <strong>${escapeHtml(mediaPickerState.label || "Media library")}</strong>
+            <p>Choose an existing image for this slot.</p>
+          </div>
+          <button type="button" class="draft-media-picker-close" data-close-media-picker>Close</button>
+        </div>
+        <div class="draft-media-picker-toolbar">
+          <input
+            type="search"
+            id="draft-media-search"
+            value="${escapeAttr(mediaPickerState.search)}"
+            placeholder="Search images by filename or path"
+            autocomplete="off"
+          />
+          <button type="button" data-refresh-media-picker>Refresh</button>
+        </div>
+        <div class="draft-media-picker-status" data-tone="${mediaPickerState.error ? "error" : (mediaPickerState.loading ? "pending" : "neutral")}">
+          ${escapeHtml(mediaPickerState.error || (mediaPickerState.loading ? "Loading media library..." : `${mediaPickerState.items.length} image(s) available`))}
+        </div>
+        <div class="draft-media-grid">
+          ${mediaPickerState.items.map((item) => {
+            const active = currentAssetId === item.id;
+            return `
+              <article class="draft-media-card ${active ? "is-active" : ""}">
+                <img
+                  class="draft-media-card-image"
+                  src="${escapeAttr(item.previewUrl || item.originalUrl || "")}"
+                  alt="${escapeAttr(item.originalFilename || item.id)}"
+                />
+                <div class="draft-media-card-body">
+                  <strong>${escapeHtml(item.originalFilename || item.id)}</strong>
+                  <small>${escapeHtml([item.width && item.height ? `${item.width}x${item.height}` : "", item.sourceType || "", item.quotationId ? "Quotation" : "Shared"].filter(Boolean).join(" • "))}</small>
+                  <button type="button" data-select-media-asset="${escapeAttr(item.id)}" ${active ? "disabled" : ""}>
+                    ${active ? "Selected" : "Use image"}
+                  </button>
+                </div>
+              </article>
+            `;
+          }).join("") || `<div class="draft-media-empty">${escapeHtml(mediaPickerState.loading ? "Loading..." : "No images found for this search.")}</div>`}
+        </div>
+        <div class="draft-media-picker-footer">
+          <span>Results refresh automatically when you search.</span>
+          ${mediaPickerState.hasMore ? `<button type="button" data-load-more-media>Load more</button>` : ""}
+        </div>
+      </div>
+    `;
   }
 
   function getFieldSections() {
@@ -892,6 +1155,37 @@
     return { path, label, type: type || "text" };
   }
 
+  function renderAssetField(path, label) {
+    const value = normalizeAsset(getPath(state, path));
+    const url = value && value.url ? value.url : "";
+    return `
+      <label class="draft-field draft-field-asset">
+        <span>${escapeHtml(label)}</span>
+        <div class="draft-asset-shell">
+          <div class="draft-asset-preview-frame">
+            <img
+              class="draft-asset-preview-image"
+              data-asset-preview="${escapeAttr(path)}"
+              src="${escapeAttr(url || "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==")}"
+              alt="${escapeAttr(label)}"
+              ${url ? "" : "hidden"}
+            />
+            <div class="draft-asset-preview-empty" data-asset-empty="${escapeAttr(path)}" ${url ? "hidden" : ""}>
+              No image selected
+            </div>
+          </div>
+          <div class="draft-asset-actions">
+            <input type="file" accept="image/*" data-asset-path="${escapeAttr(path)}" />
+            <button type="button" class="draft-asset-library-btn" data-open-gallery-for="${escapeAttr(path)}" data-asset-label="${escapeAttr(label)}">
+              Choose from library
+            </button>
+          </div>
+          <small class="draft-asset-url" data-asset-url="${escapeAttr(path)}">${escapeHtml(url)}</small>
+        </div>
+      </label>
+    `;
+  }
+
   function renderField(def) {
     const value = getPath(state, def.path);
     if (def.type === "textarea") {
@@ -901,8 +1195,7 @@
       return `<label class="draft-field"><span>${escapeHtml(def.label)}</span><input type="color" data-path="${def.path}" value="${escapeHtml(textValue(value) || "#000000")}" /></label>`;
     }
     if (def.type === "asset") {
-      const url = value && value.url ? value.url : "";
-      return `<label class="draft-field"><span>${escapeHtml(def.label)}</span><input type="file" accept="image/*" data-asset-path="${def.path}" /><small class="draft-asset-url" data-asset-url="${def.path}">${escapeHtml(url)}</small></label>`;
+      return renderAssetField(def.path, def.label);
     }
     if (def.type === "bookingItems") {
       return `<label class="draft-field"><span>${escapeHtml(def.label)}</span><textarea data-booking-items="bookingTerms.items" placeholder="Label || Body, one line per item">${escapeHtml(formatBookingItems((state.bookingTerms || {}).items || []))}</textarea></label>`;
@@ -947,7 +1240,7 @@
         <label class="draft-field"><span>Meals</span><textarea data-array-path="itinerary.days.${index}.meals">${escapeHtml((day.meals || []).join("\n"))}</textarea></label>
         <label class="draft-field"><span>Highlights</span><textarea data-array-path="itinerary.days.${index}.activities">${escapeHtml((day.activities || []).join("\n"))}</textarea></label>
         <label class="draft-field"><span>Notes</span><textarea data-array-path="itinerary.days.${index}.notes">${escapeHtml((day.notes || []).join("\n"))}</textarea></label>
-        <label class="draft-field"><span>Primary image</span><input type="file" accept="image/*" data-asset-path="itinerary.days.${index}.images.hero" /></label>
+        ${renderAssetField(`itinerary.days.${index}.images.hero`, "Primary image")}
       </details>
     `).join("");
 
@@ -960,8 +1253,8 @@
         ${renderField(field(`stays.hotels.${index}.hotelDate`, "Date"))}
         ${renderField(field(`stays.hotels.${index}.tel`, "Telephone"))}
         ${renderField(field(`stays.hotels.${index}.roomType`, "Room type"))}
-        <label class="draft-field"><span>Hotel image</span><input type="file" accept="image/*" data-asset-path="stays.hotels.${index}.hotelImage" /></label>
-        <label class="draft-field"><span>Room image</span><input type="file" accept="image/*" data-asset-path="stays.hotels.${index}.roomImage" /></label>
+        ${renderAssetField(`stays.hotels.${index}.hotelImage`, "Hotel image")}
+        ${renderAssetField(`stays.hotels.${index}.roomImage`, "Room image")}
       </details>
     `).join("");
 
@@ -1029,6 +1322,7 @@
         <div class="draft-sidebar-actions">
           <a id="draft-published-link" href="#" target="_blank" hidden>Open published page</a>
         </div>
+        <div class="draft-media-picker" hidden></div>
       </div>
     `;
     document.body.appendChild(panel);
@@ -1054,12 +1348,22 @@
     panel.addEventListener("input", (event) => {
       const target = event.target;
       if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement)) return;
+      if (target.id === "draft-media-search") {
+        mediaPickerState.search = target.value || "";
+        if (mediaSearchTimer) window.clearTimeout(mediaSearchTimer);
+        mediaSearchTimer = window.setTimeout(() => {
+          loadMediaLibrary(panel, { append: false });
+        }, 250);
+        return;
+      }
       const path = target.dataset.path;
       const arrayPath = target.dataset.arrayPath;
       const bookingItemsPath = target.dataset.bookingItems;
       const layoutSectionsPath = target.dataset.layoutSections;
+      let didUpdate = false;
       if (path) {
         setPath(state, path, target.value);
+        didUpdate = true;
       } else if (arrayPath) {
         const items = splitLines(target.value).map((text, index) => ({ id: `${arrayPath.split(".").pop()}-${index + 1}`, text }));
         setPath(state, arrayPath, items.some((item) => item.text === undefined) ? splitLines(target.value) : items);
@@ -1069,10 +1373,13 @@
         if (arrayPath === "inclusions" || arrayPath === "exclusions" || arrayPath.startsWith("finalization.")) {
           setPath(state, arrayPath, splitLines(target.value).map((text, index) => ({ id: `${arrayPath.split(".").pop()}-${index + 1}`, text })));
         }
+        didUpdate = true;
       } else if (bookingItemsPath) {
         setPath(state, bookingItemsPath, parseBookingItems(target.value));
+        didUpdate = true;
       } else if (layoutSectionsPath) {
         setPath(state, layoutSectionsPath, parseLayoutSections(target.value));
+        didUpdate = true;
       } else if (target.dataset.layoutEnabled || target.dataset.layoutOrder) {
         const sections = normalizeLayoutSections((((state || {}).layout || {}).sections) || []);
         const current = new Map(sections.map((section) => [section.type, { ...section }]));
@@ -1085,18 +1392,47 @@
           if (section) section.order = Number(target.value || section.order || 1);
         }
         setPath(state, "layout.sections", normalizeLayoutSections(Array.from(current.values())));
+        didUpdate = true;
       }
+      if (!didUpdate) return;
       state.meta.revision = Number(state.meta.revision || 1) + 1;
       applyDraftToDom(state);
       syncEditorFields(panel);
       scheduleSave();
     });
 
-    panel.addEventListener("click", (event) => {
+    panel.addEventListener("click", async (event) => {
       if (!(event.target instanceof Element)) return;
       const presetBtn = event.target.closest("[data-brand-preset]");
-      if (!presetBtn) return;
-      applyBrandPreset(presetBtn.dataset.brandPreset || "", panel);
+      if (presetBtn) {
+        applyBrandPreset(presetBtn.dataset.brandPreset || "", panel);
+        return;
+      }
+      const openGalleryBtn = event.target.closest("[data-open-gallery-for]");
+      if (openGalleryBtn) {
+        openMediaPicker(
+          openGalleryBtn.getAttribute("data-open-gallery-for") || "",
+          openGalleryBtn.getAttribute("data-asset-label") || "Media library",
+          panel,
+        );
+        return;
+      }
+      if (event.target.closest("[data-close-media-picker]")) {
+        closeMediaPicker(panel);
+        return;
+      }
+      if (event.target.closest("[data-refresh-media-picker]")) {
+        await loadMediaLibrary(panel, { append: false });
+        return;
+      }
+      if (event.target.closest("[data-load-more-media]")) {
+        await loadMediaLibrary(panel, { append: true });
+        return;
+      }
+      const selectMediaBtn = event.target.closest("[data-select-media-asset]");
+      if (selectMediaBtn) {
+        await chooseMediaAsset(selectMediaBtn.getAttribute("data-select-media-asset") || "", panel);
+      }
     });
 
     panel.addEventListener("change", (event) => {
@@ -1115,10 +1451,11 @@
     panel.querySelector("#draft-publish-btn").addEventListener("click", async () => {
       updateSaveStatus("Publishing…", "pending");
       try {
+        await flushSave();
         const res = await fetch(`/api/v2/quotations/${quotationId}/publish?lang=${encodeURIComponent(currentLang)}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ document: state }),
+          body: JSON.stringify({ baseRevision: lastSavedRevision }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(describeErrors(data.detail || data));
@@ -1137,6 +1474,7 @@
     panel.querySelector("#draft-regenerate-btn").addEventListener("click", async () => {
       updateSaveStatus("Regenerating…", "pending");
       try {
+        await flushSave();
         const res = await fetch(`/api/v2/quotations/${quotationId}/regenerate-narrative?lang=${encodeURIComponent(currentLang)}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -1145,6 +1483,7 @@
         const data = await res.json();
         if (!res.ok) throw new Error(describeErrors(data.detail || data));
         state = normalizeDraft(data.document || state);
+        lastSavedRevision = Number(data.currentRevision || ((state.meta || {}).revision || lastSavedRevision));
         applyDraftToDom(state);
         syncEditorFields(panel);
         updateSaveStatus("Narrative regenerated", "success");
@@ -1240,6 +1579,10 @@
         display: block;
         padding: 0 12px 12px;
       }
+      .draft-field-asset {
+        display: grid;
+        gap: 0.5rem;
+      }
       .draft-field span {
         display: block;
         font-size: 12px;
@@ -1259,12 +1602,77 @@
       .draft-field textarea {
         min-height: 84px;
       }
+      .draft-field input[type="search"],
+      .draft-media-picker-toolbar input[type="search"] {
+        width: 100%;
+        border: 1px solid rgba(0,0,0,0.12);
+        padding: 0.75rem 0.875rem;
+        font: inherit;
+        font-size: 0.875rem;
+      }
       .draft-field input[type="color"] {
         width: 100%;
         height: 38px;
         border: 1px solid rgba(0,0,0,0.12);
         padding: 2px;
         background: white;
+      }
+      .draft-asset-shell {
+        display: grid;
+        gap: 0.625rem;
+      }
+      .draft-asset-preview-frame {
+        width: 100%;
+        min-height: 8rem;
+        border: 1px solid rgba(0,0,0,0.08);
+        background: linear-gradient(135deg, rgba(14,36,28,0.04), rgba(14,36,28,0.08));
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+      }
+      .draft-asset-preview-image {
+        display: block;
+        width: 100%;
+        max-height: 12rem;
+        object-fit: cover;
+      }
+      .draft-asset-preview-empty {
+        color: #666;
+        font-size: 0.8125rem;
+        padding: 1rem;
+        text-align: center;
+      }
+      .draft-asset-actions {
+        display: grid;
+        gap: 0.5rem;
+      }
+      .draft-asset-actions input[type="file"],
+      .draft-asset-actions button,
+      .draft-media-picker-close,
+      .draft-media-picker-toolbar button,
+      .draft-media-card button,
+      .draft-media-picker-footer button {
+        min-height: 2.75rem;
+      }
+      .draft-asset-library-btn,
+      .draft-media-picker-close,
+      .draft-media-picker-toolbar button,
+      .draft-media-card button,
+      .draft-media-picker-footer button {
+        border: 1px solid rgba(0,0,0,0.12);
+        background: white;
+        color: #17382d;
+        padding: 0.75rem 0.875rem;
+        cursor: pointer;
+        font: inherit;
+        font-size: 0.875rem;
+      }
+      .draft-asset-library-btn:hover,
+      .draft-media-picker-close:hover,
+      .draft-media-picker-toolbar button:hover,
+      .draft-media-card button:hover,
+      .draft-media-picker-footer button:hover {
+        border-color: var(--primary, #17412e);
       }
       .draft-asset-url {
         display: block;
@@ -1322,9 +1730,138 @@
         text-decoration: none;
         cursor: pointer;
       }
+      .draft-media-picker {
+        position: fixed;
+        inset: 0;
+        z-index: 1001;
+      }
+      .draft-media-picker-backdrop {
+        position: absolute;
+        inset: 0;
+        border: none;
+        background: rgba(14, 20, 18, 0.55);
+        cursor: pointer;
+      }
+      .draft-media-picker-dialog {
+        position: relative;
+        z-index: 1;
+        width: min(100vw - 1.5rem, 42rem);
+        max-height: calc(100vh - 1.5rem);
+        margin: 0.75rem auto;
+        background: #f8f7f2;
+        border: 1px solid rgba(0,0,0,0.08);
+        box-shadow: 0 1.25rem 3rem rgba(9, 20, 17, 0.18);
+        display: grid;
+        grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+      }
+      .draft-media-picker-header,
+      .draft-media-picker-toolbar,
+      .draft-media-picker-footer {
+        padding: 0.875rem 1rem;
+      }
+      .draft-media-picker-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.75rem;
+        border-bottom: 1px solid rgba(0,0,0,0.06);
+      }
+      .draft-media-picker-header strong {
+        display: block;
+        font-size: 1rem;
+        margin-bottom: 0.25rem;
+      }
+      .draft-media-picker-header p,
+      .draft-media-picker-footer span {
+        margin: 0;
+        font-size: 0.8125rem;
+        color: #5f6864;
+      }
+      .draft-media-picker-toolbar {
+        display: grid;
+        gap: 0.625rem;
+        border-bottom: 1px solid rgba(0,0,0,0.06);
+      }
+      .draft-media-picker-status {
+        padding: 0.75rem 1rem;
+        font-size: 0.8125rem;
+        color: #4f5954;
+        border-bottom: 1px solid rgba(0,0,0,0.06);
+      }
+      .draft-media-picker-status[data-tone="error"] {
+        color: #b43a2d;
+      }
+      .draft-media-grid {
+        overflow: auto;
+        padding: 1rem;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.875rem;
+      }
+      .draft-media-card {
+        border: 1px solid rgba(0,0,0,0.08);
+        background: white;
+        overflow: hidden;
+      }
+      .draft-media-card.is-active {
+        border-color: var(--primary, #17412e);
+        box-shadow: 0 0 0 1px rgba(23, 65, 46, 0.15);
+      }
+      .draft-media-card-image {
+        display: block;
+        width: 100%;
+        aspect-ratio: 16 / 10;
+        object-fit: cover;
+        background: rgba(0,0,0,0.04);
+      }
+      .draft-media-card-body {
+        padding: 0.875rem;
+        display: grid;
+        gap: 0.5rem;
+      }
+      .draft-media-card-body strong {
+        font-size: 0.9375rem;
+        line-height: 1.3;
+      }
+      .draft-media-card-body small {
+        color: #5f6864;
+        font-size: 0.75rem;
+      }
+      .draft-media-card button[disabled] {
+        background: rgba(23, 65, 46, 0.1);
+        color: #17382d;
+        cursor: default;
+      }
+      .draft-media-empty {
+        padding: 1.5rem 1rem;
+        text-align: center;
+        border: 1px dashed rgba(0,0,0,0.12);
+        background: rgba(255,255,255,0.75);
+        color: #5f6864;
+        font-size: 0.875rem;
+      }
+      .draft-media-picker-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        border-top: 1px solid rgba(0,0,0,0.06);
+      }
       #draft-save-status[data-tone="success"] { color: #0a7f34; }
       #draft-save-status[data-tone="error"] { color: #c0392b; }
       #draft-save-status[data-tone="pending"] { color: #9a6700; }
+      @media (min-width: 768px) {
+        .draft-asset-actions {
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        }
+        .draft-media-picker-toolbar {
+          grid-template-columns: minmax(0, 1fr) auto;
+          align-items: center;
+        }
+        .draft-media-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
       @media (max-width: 1100px) {
         body[data-brochure-mode="editor"] { padding-right: 0; }
         #brochure-draft-sidebar {
@@ -1333,6 +1870,11 @@
         #brochure-draft-toggle {
           right: 16px;
           top: 78px;
+        }
+      }
+      @media (min-width: 1024px) {
+        .draft-media-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
         }
       }
     `;
