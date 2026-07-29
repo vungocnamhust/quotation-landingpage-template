@@ -15,7 +15,9 @@ import main
 from core.config import settings
 from db.base import Base
 from repositories import MediaRepository, QuotationRepository
-from services.media_service import MediaService
+from services.media_service import MediaService, build_preview_bytes, compute_sha256_bytes
+from services.storage.local_media_storage import LocalMediaStorage
+from services.storage.r2_storage import R2StorageConfigurationError
 
 
 class FakeStorage:
@@ -50,6 +52,133 @@ def _make_png_bytes(size=(1200, 800), color=(24, 99, 170)) -> bytes:
     image = Image.new("RGB", size, color)
     image.save(output, format="PNG")
     return output.getvalue()
+
+
+def _make_rgba_png_bytes(size=(1800, 1200), color=(24, 99, 170, 160)) -> bytes:
+    output = io.BytesIO()
+    image = Image.new("RGBA", size, color)
+    image.save(output, format="PNG")
+    return output.getvalue()
+
+
+class MediaPhaseDUnitTests(unittest.TestCase):
+    def setUp(self):
+        self.storage = FakeStorage()
+        self.service = MediaService(
+            storage=self.storage,
+            preview_max_width=480,
+            preview_max_height=320,
+            preview_quality=82,
+        )
+
+    def test_prepare_upload_extracts_metadata_checksum_and_preview(self):
+        content = _make_png_bytes(size=(1200, 800))
+
+        prepared = asyncio.run(
+            self.service.prepare_upload(
+                content=content,
+                declared_mime_type="image/png",
+            )
+        )
+
+        self.assertEqual(prepared.mime_type, "image/png")
+        self.assertEqual(prepared.extension, "png")
+        self.assertEqual(prepared.width, 1200)
+        self.assertEqual(prepared.height, 800)
+        self.assertEqual(prepared.checksum_sha256, compute_sha256_bytes(content))
+        self.assertTrue(prepared.preview_bytes)
+
+        with Image.open(io.BytesIO(prepared.preview_bytes)) as preview:
+            self.assertEqual(preview.format, "JPEG")
+            self.assertLessEqual(preview.width, 480)
+            self.assertLessEqual(preview.height, 320)
+
+    def test_build_preview_bytes_generates_bounded_jpeg_from_rgba_source(self):
+        content = _make_rgba_png_bytes(size=(1800, 1200))
+
+        preview_bytes = build_preview_bytes(
+            content,
+            max_width=360,
+            max_height=240,
+            quality=75,
+        )
+
+        with Image.open(io.BytesIO(preview_bytes)) as preview:
+            self.assertEqual(preview.format, "JPEG")
+            self.assertEqual(preview.mode, "RGB")
+            self.assertLessEqual(preview.width, 360)
+            self.assertLessEqual(preview.height, 240)
+
+    def test_build_storage_keys_generates_expected_r2_paths(self):
+        quotation_keys = self.service.build_storage_keys(
+            asset_id="med_123",
+            extension="png",
+            quotation_id="quo_abc",
+        )
+        shared_keys = self.service.build_storage_keys(
+            asset_id="med_456",
+            extension="webp",
+            quotation_id=None,
+        )
+
+        self.assertEqual(
+            quotation_keys,
+            (
+                "quotations/quo_abc/media/original/med_123.png",
+                "quotations/quo_abc/media/preview/med_123.jpg",
+            ),
+        )
+        self.assertEqual(
+            shared_keys,
+            (
+                "shared/media/original/med_456.webp",
+                "shared/media/preview/med_456.jpg",
+            ),
+        )
+
+    def test_get_media_service_falls_back_to_local_storage_in_production_without_r2_config(self):
+        original_service = main._media_service
+        original_access_key = settings.r2_access_key_id
+        original_secret_key = settings.r2_secret_access_key
+        original_endpoint = settings.r2_endpoint
+        original_account_id = settings.r2_account_id
+        try:
+            main._media_service = None
+            object.__setattr__(settings, "r2_access_key_id", "")
+            object.__setattr__(settings, "r2_secret_access_key", "")
+            object.__setattr__(settings, "r2_endpoint", "")
+            object.__setattr__(settings, "r2_account_id", "")
+            with patch.dict(os.environ, {"ENVIRONMENT": "production"}, clear=False):
+                service = main._get_media_service()
+            self.assertIsInstance(service.storage, LocalMediaStorage)
+        finally:
+            main._media_service = original_service
+            object.__setattr__(settings, "r2_access_key_id", original_access_key)
+            object.__setattr__(settings, "r2_secret_access_key", original_secret_key)
+            object.__setattr__(settings, "r2_endpoint", original_endpoint)
+            object.__setattr__(settings, "r2_account_id", original_account_id)
+
+    def test_get_media_service_explicit_r2_backend_still_requires_full_r2_config(self):
+        original_service = main._media_service
+        original_access_key = settings.r2_access_key_id
+        original_secret_key = settings.r2_secret_access_key
+        original_endpoint = settings.r2_endpoint
+        original_account_id = settings.r2_account_id
+        try:
+            main._media_service = None
+            object.__setattr__(settings, "r2_access_key_id", "")
+            object.__setattr__(settings, "r2_secret_access_key", "")
+            object.__setattr__(settings, "r2_endpoint", "")
+            object.__setattr__(settings, "r2_account_id", "")
+            with patch.dict(os.environ, {"MEDIA_STORAGE_BACKEND": "r2"}, clear=False):
+                with self.assertRaises(R2StorageConfigurationError):
+                    main._get_media_service()
+        finally:
+            main._media_service = original_service
+            object.__setattr__(settings, "r2_access_key_id", original_access_key)
+            object.__setattr__(settings, "r2_secret_access_key", original_secret_key)
+            object.__setattr__(settings, "r2_endpoint", original_endpoint)
+            object.__setattr__(settings, "r2_account_id", original_account_id)
 
 
 class MediaPhaseDRouteTests(unittest.TestCase):
@@ -147,6 +276,35 @@ class MediaPhaseDRouteTests(unittest.TestCase):
 
             async def __aenter__(self):
                 raise socket.gaierror(8, "nodename nor servname provided, or not known")
+
+            async def __aexit__(self, exc_type, exc, tb):
+                return False
+
+        with patch.object(main, "_get_db_session_factory", return_value=BrokenSessionFactory()):
+            with patch.object(main, "_load_ctx_data", return_value={"quotation_id": "quo_media_fallback"}):
+                response = self.client.post(
+                    "/api/v2/media/upload",
+                    files={"file": ("hero.png", _make_png_bytes(), "image/png")},
+                    data={"quotationId": "quo_media_fallback"},
+                )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["quotationId"], "quo_media_fallback")
+        self.assertEqual(payload["status"], "ready")
+        self.assertEqual(payload["storageMode"], "draft_assets")
+        self.assertTrue(payload["originalUrl"].startswith("/published/quo_media_fallback/draft_assets/"))
+        self.assertEqual(payload["previewUrl"], payload["originalUrl"])
+        self.assertEqual(payload["width"], 1200)
+        self.assertEqual(payload["height"], 800)
+
+    def test_media_upload_falls_back_to_draft_assets_when_db_dns_probe_returns_oserror_16(self):
+        class BrokenSessionFactory:
+            def __call__(self):
+                return self
+
+            async def __aenter__(self):
+                raise OSError(16, "Device or resource busy")
 
             async def __aexit__(self, exc_type, exc, tb):
                 return False

@@ -97,6 +97,33 @@ class QuoteDocumentValidationTests(unittest.TestCase):
         self.assertEqual(errors[0].code, "unknown_section_type")
         self.assertEqual(errors[0].path, "layout.sections.0.type")
 
+    def test_normalize_quote_document_dedupes_double_escaped_day_carousel_urls(self):
+        document = _sample_document()
+        duplicate_url = "/published/quo_f7175e110605/draft_assets/e17a0f2b9d5c4f50a91502fd4fa2ca17.jpg"
+        document["itinerary"]["days"][0]["images"] = {
+            "hero": {"url": "/assets/quang-nam/hoian3.jpg"},
+            "small1": {"url": "/assets/quang-nam/hero/hero3.jpg"},
+            "small2": {"url": duplicate_url},
+            "carousel": [
+                {"url": "/assets/quang-nam/hoian3.jpg"},
+                {"url": "/assets/quang-nam/hero/hero3.jpg"},
+                {"url": duplicate_url},
+                {"url": f"&quot;{duplicate_url}&quot;"},
+                {"url": f"&amp;quot;{duplicate_url}&amp;quot;"},
+            ],
+        }
+
+        normalized = normalize_quote_document(document, "quo_test", "en")
+
+        self.assertEqual(
+            [item["url"] for item in normalized["itinerary"]["days"][0]["images"]["carousel"]],
+            [
+                "/assets/quang-nam/hoian3.jpg",
+                "/assets/quang-nam/hero/hero3.jpg",
+                duplicate_url,
+            ],
+        )
+
     def test_apply_narrative_result_only_overwrites_requested_scopes(self):
         document = _sample_document()
         original_intro = document["narrative"]["letterIntro"]
@@ -113,6 +140,17 @@ class QuoteDocumentValidationTests(unittest.TestCase):
         self.assertEqual(updated["trip"]["lede"], "Fresh hero lede")
         self.assertEqual(updated["narrative"]["coverKicker"], "A New Invitation")
         self.assertEqual(updated["narrative"]["letterIntro"], original_intro)
+
+    def test_html_sync_dedupe_image_refs_removes_double_escaped_quotes(self):
+        duplicate_url = "/published/quo_f7175e110605/draft_assets/e17a0f2b9d5c4f50a91502fd4fa2ca17.jpg"
+
+        deduped = main._dedupe_image_refs([
+            duplicate_url,
+            f"&quot;{duplicate_url}&quot;",
+            f"&amp;quot;{duplicate_url}&amp;quot;",
+        ])
+
+        self.assertEqual(deduped, [duplicate_url])
 
 
 class NarrativeGeneratorTests(unittest.IsolatedAsyncioTestCase):

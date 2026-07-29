@@ -4861,7 +4861,7 @@ def _is_database_unavailable_error(exc: BaseException) -> bool:
             return True
         if isinstance(current, ConnectionRefusedError):
             return True
-        if isinstance(current, OSError) and getattr(current, "errno", None) in {8, 61, 111}:
+        if isinstance(current, OSError) and getattr(current, "errno", None) in {8, 16, 61, 111}:
             return True
         if any(
             token in message
@@ -4869,6 +4869,7 @@ def _is_database_unavailable_error(exc: BaseException) -> bool:
                 "nodename nor servname provided",
                 "connection refused",
                 "could not translate host name",
+                "device or resource busy",
                 "temporary failure in name resolution",
                 "name or service not known",
             )
@@ -6024,7 +6025,12 @@ def _normalize_image_ref(ref: str) -> str:
     if not ref:
         return ""
 
-    normalized = html.unescape(str(ref)).replace("\\", "").strip()
+    normalized = str(ref).replace("\\/", "/").replace("\\", "").strip()
+    for _ in range(4):
+        unescaped = html.unescape(normalized).replace("\\/", "/").replace("\\", "").strip()
+        if unescaped == normalized:
+            break
+        normalized = unescaped
     while len(normalized) >= 2 and normalized[0] == normalized[-1] and normalized[0] in {"'", '"'}:
         normalized = normalized[1:-1].strip()
     return normalized
