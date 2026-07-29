@@ -20,6 +20,23 @@ from datetime import date
 from github_publish import publish_to_github, publish_file_to_github
 from image_selector import select_landing_image
 from destination_profiles import get_profile, get_layout_images_for_destination, get_available_images_for_destination, SOFT_TRANSITIONS
+from quote_document import (
+    CreateQuoteRequestV1,
+    QuoteDocumentV1,
+    SECTION_REGISTRY,
+    validate_quote_document_sections,
+)
+from quote_document_adapter import (
+    apply_quote_document_to_lang_ctx,
+    build_quote_document_from_lang_ctx,
+    normalize_quote_document,
+)
+from quote_generation import (
+    BRAND_PROFILES,
+    QuoteGenerationService,
+    RegenerateNarrativeRequest,
+    apply_narrative_result_to_document,
+)
 
 load_dotenv()
 
@@ -297,6 +314,175 @@ def _sanitize_html_sync_payload(
 
 def _default_brand_logo(brand_config: dict | None) -> str:
     return (brand_config or {}).get("logo") or "/assets/vietnam-safar-logo.png"
+
+
+def _brand_config_from_quote_document(document: dict) -> dict:
+    quote_document = QuoteDocumentV1.model_validate(document)
+    brand_id = quote_document.meta.brandId or "vietnam_safar"
+    base_brand = copy.deepcopy(BRANDS.get(brand_id) or BRANDS["vietnam_safar"])
+    base_brand.update({
+        "id": brand_id,
+        "name": quote_document.brand.name or base_brand.get("name"),
+        "domain": quote_document.brand.domain or base_brand.get("domain"),
+        "logo": quote_document.brand.logo.url or base_brand.get("logo"),
+        "color_primary": quote_document.brand.colors.get("primary") or base_brand.get("color_primary"),
+        "color_primary_dark": quote_document.brand.colors.get("primaryDark") or base_brand.get("color_primary_dark"),
+        "color_accent": quote_document.brand.colors.get("accent") or base_brand.get("color_accent"),
+        "color_accent_light": quote_document.brand.colors.get("accentLight") or base_brand.get("color_accent_light"),
+        "color_bg_main": quote_document.brand.colors.get("bgMain") or base_brand.get("color_bg_main"),
+        "color_bg_alt": quote_document.brand.colors.get("bgAlt") or base_brand.get("color_bg_alt"),
+        "color_text_main": quote_document.brand.colors.get("textMain") or base_brand.get("color_text_main"),
+        "color_text_muted": quote_document.brand.colors.get("textMuted") or base_brand.get("color_text_muted"),
+        "color_text_light": quote_document.brand.colors.get("textLight") or base_brand.get("color_text_light"),
+        "font_serif": quote_document.brand.fonts.get("serif") or base_brand.get("font_serif"),
+        "font_sans": quote_document.brand.fonts.get("sans") or base_brand.get("font_sans"),
+        "font_accent": quote_document.brand.fonts.get("accent") or base_brand.get("font_accent"),
+    })
+    return base_brand
+
+
+def _build_seed_destinations_from_quote_document(document: dict) -> list[dict[str, Any]]:
+    quote_document = QuoteDocumentV1.model_validate(document)
+    seen: set[str] = set()
+    destinations: list[dict[str, Any]] = []
+    for day in quote_document.itinerary.days:
+        name = (day.segmentCity or day.title or "").strip()
+        if not name or name.lower() in seen:
+            continue
+        seen.add(name.lower())
+        carousel = [item.url for item in day.images.carousel if item.url]
+        hero = day.images.hero.url or quote_document.assets.hero.url
+        destinations.append({
+            "name": name,
+            "slug": "",
+            "image_url": hero,
+            "images": carousel or ([hero] if hero else []),
+        })
+    return destinations
+
+
+def _build_compatibility_payload_from_quote_request(request_payload: CreateQuoteRequestV1, document: dict) -> dict[str, Any]:
+    quote_document = QuoteDocumentV1.model_validate(document)
+    itinerary = []
+    for day in quote_document.itinerary.days:
+        itinerary.append({
+            "dayNumber": day.dayNumber,
+            "destination": day.segmentCity or day.title or "Vietnam",
+            "summary": day.title or (day.description[0] if day.description else ""),
+            "mainInclusions": " • ".join(day.activities or day.meals) or (day.description[0] if day.description else "Private arrangements as outlined."),
+            "senseOfPace": "Private paced journey",
+            "dining": ", ".join(day.meals) if day.meals else "As arranged",
+        })
+
+    hotels = []
+    for hotel in request_payload.service_facts.hotels:
+        hotels.append({
+            "destination": hotel.destination,
+            "checkInDate": hotel.check_in or "",
+            "checkOutDate": hotel.check_out or "",
+            "hotelArrangement": hotel.intro or hotel.name or f"Selected stay in {hotel.destination or 'Vietnam'}",
+        })
+    if not hotels:
+        for hotel in quote_document.stays.hotels:
+            hotels.append({
+                "destination": hotel.city,
+                "checkInDate": hotel.hotelDate.split(" - ")[0] if " - " in hotel.hotelDate else "",
+                "checkOutDate": hotel.hotelDate.split(" - ")[1] if " - " in hotel.hotelDate else "",
+                "hotelArrangement": hotel.introduction or hotel.name,
+            })
+
+    booking_item_map = {item.key or item.id: item.body for item in quote_document.bookingTerms.items}
+    total_budget = request_payload.pricing_facts.total_budget or 0.0
+    currency = request_payload.pricing_facts.currency or "USD"
+    return {
+        "quotationNarrative": "\n".join(filter(None, [
+            quote_document.trip.lede,
+            quote_document.narrative.letterIntro,
+            quote_document.narrative.letterBody2,
+            quote_document.narrative.letterOutro,
+        ])),
+        "programOverview": {
+            "heading": "PROGRAM OVERVIEW",
+            "paragraphs": [item for item in [
+                quote_document.trip.lede,
+                quote_document.narrative.letterIntro,
+                quote_document.narrative.letterBody2,
+            ] if item],
+        },
+        "landingpageContent": {
+            "heroSection": {
+                "headline": quote_document.trip.title or "Vietnam Private Journey",
+                "subtitle": quote_document.trip.title or request_payload.trip_facts.title or "Vietnam Private Journey",
+            },
+            "visualDescription": quote_document.brand.name or "Luxury travel brochure",
+        },
+        "journeyGlance": {
+            "market": request_payload.customer_facts.market or quote_document.traveler.nationality or "International",
+            "guestProfile": quote_document.traveler.guestProfile or "Private guests",
+            "hotelStandard": "Luxury",
+            "mealPreference": "As arranged",
+            "priceType": "Indicative",
+            "tourCode": request_payload.opportunity_id or quote_document.trip.quotationNumber or quote_document.meta.quotationId,
+            "domesticFlights": "On request",
+            "priceBasis": quote_document.trip.priceBasis or request_payload.pricing_facts.price_basis,
+            "partnerNote": BRAND_PROFILES.get(quote_document.meta.brandId, BRAND_PROFILES["vietnam_safar"]).content_policy.tone,
+            "validity": "Subject to final confirmation and availability.",
+        },
+        "whyWorks": {
+            "privateFlexible": "Private pacing and curated service remain central throughout the journey.",
+            "comfort": "Selected stays, private transfers, and considered transitions are built into the experience.",
+            "muslimFriendly": "Guest preferences and service details can be tailored during final confirmation.",
+            "balancedHighlights": "The route balances signature moments with quieter pauses and comfortable movement.",
+        },
+        "itinerary": itinerary,
+        "hotelPlan": {
+            "hotels": hotels,
+            "roomNotes": quote_document.stays.roomNotes or "",
+        },
+        "optionalEnhancements": [],
+        "bookingTerms": {
+            "deposit": booking_item_map.get("deposit") or "As per standard booking policy.",
+            "balance": booking_item_map.get("balance") or "Payable prior to tour commencement.",
+            "cancellation": booking_item_map.get("cancellation") or "Subject to cancellation charges as per terms.",
+            "confirmation": booking_item_map.get("confirmation") or "Subject to availability upon payment.",
+        },
+        "finalization": {
+            "finalDetailsRequired": "\n".join(item.text for item in quote_document.finalization.requiredItems),
+            "afterConfirmation": "\n".join(item.text for item in quote_document.finalization.afterConfirmation),
+        },
+        "pricing": {
+            "currency": currency,
+            "pricingTitle": "PRICE QUOTATION – INDICATIVE",
+            "basis": quote_document.trip.priceBasis or request_payload.pricing_facts.price_basis,
+            "priceOptions": [
+                {
+                    "label": option.category or request_payload.pricing_facts.option_label or "Main option",
+                    "notes": option.name,
+                    "amount": None,
+                }
+                for option in quote_document.pricing.options
+            ] or [{
+                "label": request_payload.pricing_facts.option_label or "Main option",
+                "notes": quote_document.trip.priceBasis or "",
+                "amount": None,
+            }],
+            "subtotal": total_budget or None,
+            "discountTotal": None,
+            "taxTotal": None,
+            "grandTotal": total_budget or None,
+        },
+        "retrievalStatus": {
+            "hotel": "pending",
+            "activity": "pending",
+            "guide": "pending",
+            "transfer": "pending",
+            "flight": "pending",
+        },
+        "candidateBlocks": [],
+        "inclusions": [item.text for item in quote_document.inclusions],
+        "exclusions": [item.text for item in quote_document.exclusions],
+        "quotationNumber": request_payload.opportunity_id or quote_document.trip.quotationNumber or quote_document.meta.quotationId,
+    }
 
 def _is_brand_placeholder_image(image_url: str | None) -> bool:
     return bool(image_url) and (
@@ -3587,6 +3773,273 @@ def _is_brochure_template(template_name: str | None) -> bool:
     return (template_name or "").endswith("vietnam_luxury_brosure.html")
 
 
+LEGACY_QUOTATION_TEMPLATES = {
+    "vietnam_heritage_luxury.html",
+    "prototype_itinerary_imagery.html",
+}
+
+BROCHURE_TEMPLATE_NAME = "vietnam_luxury_brosure.html"
+
+
+def _build_brochure_client_i18n(lang: str) -> dict[str, Any]:
+    return {
+        "notification_title": translate_filter("Enable Notifications", lang),
+        "previous_image": translate_filter("Previous image", lang),
+        "next_image": translate_filter("Next image", lang),
+        "go_to_slide": translate_filter("Go to slide", lang),
+        "editing": translate_filter("Editing", lang),
+        "publish_to_web": translate_filter("Publish to Web", lang),
+        "publishing": translate_filter("Publishing...", lang),
+        "committing_to_github": translate_filter("Committing to GitHub...", lang),
+        "translate_block": translate_filter("Translate this block", lang),
+        "change": translate_filter("Change", lang),
+        "remove_block": translate_filter("Remove this block", lang),
+        "remove_block_confirm": translate_filter("Remove this block? This action cannot be undone.", lang),
+        "language_names": {
+            "en": translate_filter("English", lang),
+            "ar": translate_filter("Arabic", lang),
+            "vi": translate_filter("Vietnamese", lang),
+        },
+        "test_notification_title": translate_filter("Itinerary Update", lang),
+        "test_notification_body": translate_filter(
+            "Your private guide has been assigned: Mr. Minh (Phone: +84 911 538 738).",
+            lang,
+        ),
+        "enable_notifications_browser": translate_filter(
+            "Please enable notifications in your browser settings to receive updates.",
+            lang,
+        ),
+        "show_draft": translate_filter("Show Draft", lang),
+        "hide_draft": translate_filter("Hide Draft", lang),
+        "brand_presets_label": translate_filter("Brand Presets", lang),
+        "brand_preset_applied": translate_filter("Brand preset applied", lang),
+    }
+
+
+def _build_brochure_brand_presets() -> list[dict[str, Any]]:
+    presets: list[dict[str, Any]] = []
+    for profile in BRAND_PROFILES.values():
+        presets.append({
+            "brandId": profile.brand_id,
+            "label": profile.display_name.replace(" Journeys", ""),
+            "name": profile.display_name,
+            "domain": profile.domain,
+            "logo": profile.logo,
+            "colors": copy.deepcopy(profile.colors),
+            "fonts": copy.deepcopy(profile.fonts),
+        })
+    return presets
+
+
+def _build_brochure_render_context(
+    ctx_data: dict,
+    document: dict,
+    quotation_id: str,
+    lang: str,
+    *,
+    latest_version: int = 1,
+    preview_mode: bool = False,
+    editor_mode: bool = False,
+) -> dict[str, Any]:
+    baseline_lang = ctx_data.get("baseline_lang", lang)
+    translation_status = ctx_data.get(
+        "translation_status",
+        {"baseline_lang": baseline_lang, "available_langs": [baseline_lang]},
+    )
+    brand_config = _brand_config_from_quote_document(document)
+    lang_ctx: dict[str, Any] = {
+        "quotation_id": quotation_id,
+        "lang": lang,
+        "template_name": BROCHURE_TEMPLATE_NAME,
+        "brand": brand_config,
+        "baseline_lang": baseline_lang,
+        "translations": ctx_data.get("translations", {}),
+        "translation_status": translation_status,
+        "available_langs": ctx_data.get("available_langs", [baseline_lang]),
+        "latest_version": latest_version,
+        "client_i18n": _build_brochure_client_i18n(lang),
+        "brandPresets": _build_brochure_brand_presets(),
+        "sectionRegistry": {key: value.model_dump(mode="json") for key, value in SECTION_REGISTRY.items()},
+        "destinations": copy.deepcopy(ctx_data.get("destinations") or []),
+        "route_stops": copy.deepcopy(ctx_data.get("route_stops") or []),
+        "static_map_url": ctx_data.get("static_map_url") or "",
+        "quotation_title": "",
+        "kicker": "",
+        "travel_style": ctx_data.get("travel_style") or "Private",
+        "contact_web": brand_config.get("domain") or "",
+        "show_hotel_intro": True,
+        "show_designer_section": True,
+        "show_finalization_section": True,
+        "inclusions_title": translate_filter("What Your Journey Includes", lang),
+        "exclusions_title": translate_filter("Exclusions", lang),
+        "inclusions_lede": "",
+        "exclusions_lede": "",
+        "payment_cta": translate_filter("Approve & Book Now", lang),
+        "chapter_kicker": "CHAPTER 01 - THE INVITATION",
+        "divider_itinerary_kicker": "DAY-BY-DAY ITINERARY",
+        "itinerary_kicker": "CHAPTER 02 · DAY-BY-DAY ITINERARY",
+        "divider_hotel_kicker": "THE JOURNEY, BROUGHT TOGETHER",
+        "designer_kicker": translate_filter("Your Journey Designer", lang),
+        "journey_h2": "",
+        "journey_p": "",
+        "cta_h2": "",
+        "terms_p": "",
+    }
+    apply_quote_document_to_lang_ctx(lang_ctx, document)
+    normalized_price_options = []
+    for option in lang_ctx.get("price_options", []) or []:
+        next_option = copy.deepcopy(option)
+        price_per_person = next_option.get("pricePerPerson") or {}
+        total_price = next_option.get("totalPrice") or {}
+        price_per_person.setdefault("displayText", price_per_person.get("displayText") or "TBC")
+        price_per_person.setdefault("amount", 0)
+        price_per_person.setdefault("currency", "")
+        total_price.setdefault("displayText", total_price.get("displayText") or "TBC")
+        total_price.setdefault("amount", 0)
+        total_price.setdefault("currency", "")
+        next_option["pricePerPerson"] = price_per_person
+        next_option["totalPrice"] = total_price
+        normalized_price_options.append(next_option)
+    lang_ctx["price_options"] = normalized_price_options
+    lang_ctx["brand"] = brand_config
+    lang_ctx["contact_web"] = brand_config.get("domain") or lang_ctx.get("contact_web") or ""
+    lang_ctx["brochure_preview_mode"] = bool(preview_mode)
+    lang_ctx["use_shared_draft_editor"] = bool(editor_mode)
+    lang_ctx["quote_document"] = copy.deepcopy(document)
+    lang_ctx["brochure_draft"] = copy.deepcopy(document)
+    return lang_ctx
+
+
+def _merge_brochure_render_context(
+    ctx_data: dict,
+    document: dict,
+    quotation_id: str,
+    lang: str,
+    *,
+    latest_version: int = 1,
+    preview_mode: bool = False,
+    editor_mode: bool = False,
+) -> dict[str, Any]:
+    render_ctx = _build_brochure_render_context(
+        ctx_data,
+        document,
+        quotation_id,
+        lang,
+        latest_version=latest_version,
+        preview_mode=preview_mode,
+        editor_mode=editor_mode,
+    )
+    merged = copy.deepcopy(ctx_data)
+    merged.update(render_ctx)
+    return merged
+
+
+def _load_persisted_quote_document(quotation_id: str) -> dict[str, Any] | None:
+    environment = os.getenv("ENVIRONMENT", "local")
+    if environment == "production":
+        repo = os.getenv("GITHUB_REPO")
+        token = os.getenv("GITHUB_TOKEN")
+        if repo and token:
+            import urllib.request
+
+            try:
+                url = f"https://api.github.com/repos/{repo}/contents/published/{quotation_id}/document.json"
+                req = urllib.request.Request(
+                    url,
+                    headers={
+                        "Authorization": f"token {token}",
+                        "Accept": "application/vnd.github.v3.raw",
+                        "User-Agent": "quotation-landingpage/1.0",
+                    },
+                )
+                with urllib.request.urlopen(req, timeout=5) as response:
+                    return json.loads(response.read().decode("utf-8"))
+            except Exception as exc:
+                log.warning("Failed to fetch document.json from GitHub for %s: %s", quotation_id, exc)
+
+    path = os.path.join("published", quotation_id, "document.json")
+    if os.path.isfile(path):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as exc:
+            log.warning("Failed to parse document.json for %s: %s", quotation_id, exc)
+    return None
+
+
+def _validate_quote_document_or_422(document: dict[str, Any]) -> dict[str, Any]:
+    section_errors = validate_quote_document_sections(document)
+    if section_errors:
+        raise HTTPException(
+            status_code=422,
+            detail={"errors": [item.model_dump(mode="json") for item in section_errors]},
+        )
+    try:
+        normalized = QuoteDocumentV1.model_validate(document).model_dump(mode="json")
+    except ValidationError as exc:
+        raise HTTPException(status_code=422, detail={"errors": exc.errors()}) from exc
+    return normalized
+
+
+def _create_quote_request_from_document(document: dict[str, Any]) -> CreateQuoteRequestV1:
+    quote_document = QuoteDocumentV1.model_validate(document)
+    hotels = []
+    for hotel in quote_document.stays.hotels:
+        hotels.append(
+            {
+                "destination": hotel.city,
+                "name": hotel.name,
+                "room_type": hotel.roomType,
+                "check_in": "",
+                "check_out": "",
+                "intro": hotel.introduction,
+                "phone": hotel.tel,
+            }
+        )
+    return CreateQuoteRequestV1.model_validate(
+        {
+            "opportunity_id": quote_document.meta.opportunityId,
+            "brand_id": quote_document.meta.brandId,
+            "lang": quote_document.meta.lang,
+            "trip_facts": {
+                "title": quote_document.trip.title,
+                "subtitle": quote_document.trip.lede,
+                "destinations": [day.segmentCity for day in quote_document.itinerary.days if day.segmentCity],
+                "start_date": "",
+                "end_date": "",
+                "itinerary": [
+                    {
+                        "day_number": day.dayNumber,
+                        "destination": day.segmentCity,
+                        "summary": day.title,
+                        "overnight": day.overnight,
+                        "meals": day.meals,
+                    }
+                    for day in quote_document.itinerary.days
+                ],
+            },
+            "pricing_facts": {
+                "currency": "USD",
+                "total_budget": None,
+                "price_basis": quote_document.trip.priceBasis,
+                "option_label": ((quote_document.pricing.options or [None])[0].name if quote_document.pricing.options else "Main option"),
+            },
+            "customer_facts": {
+                "customer_name": quote_document.traveler.customerName,
+                "adults": quote_document.traveler.adults or 2,
+                "children": quote_document.traveler.children,
+                "nationality": quote_document.traveler.nationality,
+                "guest_profile": quote_document.traveler.guestProfile,
+            },
+            "service_facts": {
+                "hotels": hotels,
+                "inclusions": [item.text for item in quote_document.inclusions],
+                "exclusions": [item.text for item in quote_document.exclusions],
+            },
+        }
+    )
+
+
 def _safe_asset_ref(url: str | None, asset_id: str | None = None, status: str = "ready") -> dict:
     return {
         "assetId": asset_id or "",
@@ -4106,6 +4559,94 @@ def _apply_brochure_draft_to_lang_ctx(lang_ctx: dict, draft: dict):
     lang_ctx["final_req"] = _draft_items_to_simple_list(finalization.get("requiredItems") or []) or lang_ctx.get("final_req")
     lang_ctx["final_after"] = _draft_items_to_simple_list(finalization.get("afterConfirmation") or []) or lang_ctx.get("final_after")
     lang_ctx["brochure_draft"] = copy.deepcopy(draft)
+
+
+# Canonical brochure document wrappers. These override the legacy draft helpers
+# so the rest of the brochure flow can keep calling the same functions.
+def _build_brochure_draft_from_lang_ctx(lang_ctx: dict, quotation_id: str, lang: str) -> dict:
+    return build_quote_document_from_lang_ctx(lang_ctx, quotation_id, lang)
+
+
+def _store_brochure_draft(ctx_data: dict, target_lang: str, draft: dict) -> dict:
+    requested_brand_id = ((draft.get("meta") or {}).get("brandId")) or None
+    fallback_brand_id = ((ctx_data.get("brand") or {}).get("id") if isinstance(ctx_data.get("brand"), dict) else None) or "vietnam_safar"
+    normalized = normalize_quote_document(
+        draft,
+        (draft.get("meta") or {}).get("quotationId") or ctx_data.get("quotation_id") or "",
+        target_lang,
+        template_name=ctx_data.get("template_name") or "vietnam_luxury_brosure.html",
+        brand_id=requested_brand_id or fallback_brand_id,
+    )
+    ctx_data.setdefault("quoteDocuments", {})[target_lang] = copy.deepcopy(normalized)
+    ctx_data["quoteDocument"] = copy.deepcopy(normalized)
+    ctx_data["quoteDocumentLang"] = target_lang
+    ctx_data.setdefault("brochureDrafts", {})[target_lang] = copy.deepcopy(normalized)
+    ctx_data["brochureDraft"] = copy.deepcopy(normalized)
+    ctx_data["brochureDraftLang"] = target_lang
+
+    brand = normalized.get("brand") or {}
+    brand_colors = brand.get("colors") or {}
+    brand_fonts = brand.get("fonts") or {}
+    ctx_data["brand"] = {
+        "id": ((normalized.get("meta") or {}).get("brandId")) or fallback_brand_id,
+        "name": brand.get("name") or "",
+        "domain": brand.get("domain") or "",
+        "logo": _asset_url(brand.get("logo")) or _default_brand_logo(ctx_data.get("brand")),
+        "color_primary": brand_colors.get("primary") or "#17412e",
+        "color_primary_dark": brand_colors.get("primaryDark") or "#0e2f22",
+        "color_accent": brand_colors.get("accent") or "#b7894b",
+        "color_accent_light": brand_colors.get("accentLight") or "#d8bd85",
+        "color_bg_main": brand_colors.get("bgMain") or "#f9f6f0",
+        "color_bg_alt": brand_colors.get("bgAlt") or "#fffaf1",
+        "color_text_main": brand_colors.get("textMain") or "#11130f",
+        "color_text_muted": brand_colors.get("textMuted") or "#706a5d",
+        "color_text_light": brand_colors.get("textLight") or "#ffffff",
+        "font_serif": brand_fonts.get("serif") or "Cormorant Garamond",
+        "font_sans": brand_fonts.get("sans") or "Montserrat",
+        "font_accent": brand_fonts.get("accent") or "Allura",
+    }
+    ctx_data["hero_img"] = _asset_url(((normalized.get("assets") or {}).get("hero")))
+    ctx_data["img_itinerary_divider"] = _asset_url(((normalized.get("assets") or {}).get("itineraryDivider")))
+    ctx_data["img_hotel_divider"] = _asset_url(((normalized.get("assets") or {}).get("hotelDivider")))
+    ctx_data["designer_img"] = _asset_url(((normalized.get("designer") or {}).get("image")))
+    return normalized
+
+
+def _get_stored_brochure_draft(ctx_data: dict, target_lang: str) -> dict | None:
+    quote_documents = ctx_data.get("quoteDocuments") or {}
+    draft = quote_documents.get(target_lang)
+    if draft:
+        return copy.deepcopy(draft)
+    stored_single = ctx_data.get("quoteDocument")
+    stored_lang = ctx_data.get("quoteDocumentLang")
+    if stored_single and stored_lang == target_lang:
+        return copy.deepcopy(stored_single)
+
+    brochure_drafts = ctx_data.get("brochureDrafts") or {}
+    draft = brochure_drafts.get(target_lang)
+    if draft:
+        return copy.deepcopy(draft)
+    stored_single = ctx_data.get("brochureDraft")
+    stored_lang = ctx_data.get("brochureDraftLang")
+    if stored_single and stored_lang == target_lang:
+        return copy.deepcopy(stored_single)
+    return None
+
+
+def _ensure_brochure_draft(ctx_data: dict, quotation_id: str, target_lang: str, lang_ctx: dict, *, force_brand_from_ctx: bool = False) -> dict:
+    draft = _get_stored_brochure_draft(ctx_data, target_lang)
+    if not draft:
+        draft = _build_brochure_draft_from_lang_ctx(lang_ctx, quotation_id, target_lang)
+        _store_brochure_draft(ctx_data, target_lang, draft)
+    elif force_brand_from_ctx:
+        fresh_document = _build_brochure_draft_from_lang_ctx(lang_ctx, quotation_id, target_lang)
+        draft["brand"] = copy.deepcopy(fresh_document.get("brand") or {})
+        _store_brochure_draft(ctx_data, target_lang, draft)
+    return copy.deepcopy(draft)
+
+
+def _apply_brochure_draft_to_lang_ctx(lang_ctx: dict, draft: dict):
+    apply_quote_document_to_lang_ctx(lang_ctx, draft)
 
 
 async def _persist_ctx_data(quotation_id: str, ctx_data: dict, commit_message: str):
@@ -4665,6 +5206,12 @@ async def create_quotation(request: Request):
     lang = data.get("language") or data.get("lang") or request.query_params.get("lang") or request.query_params.get("language") or "en"
     if lang not in ("en", "vi", "ar"):
         lang = "en"
+    template_name = data.get("template_name") or data.get("template")
+    if template_name not in LEGACY_QUOTATION_TEMPLATES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"/quotations only supports legacy templates: {', '.join(sorted(LEGACY_QUOTATION_TEMPLATES))}. Use /api/v2/quotations for brochure quotes.",
+        )
 
     try:
         payload = TourQuotationPayload.model_validate(data)
@@ -4712,7 +5259,6 @@ async def create_quotation(request: Request):
     log.debug("[/quotations] Hero image resolved: %s", hero_image_url)
 
     brand_config = resolve_brand(request, payload.model_dump(mode="json"))
-    template_name = data.get("template_name") or data.get("template") or "vietnam_luxury_brosure.html"
     ctx = _build_ctx(quotation_id, payload, hero_image_url, destinations, lang=lang, template_name=template_name, brand=brand_config)
     ctx["baseline_payload"] = payload.model_dump(mode="json")
     ctx["baseline_lang"] = lang
@@ -4720,6 +5266,8 @@ async def create_quotation(request: Request):
     ctx["available_langs"] = [lang]
     ctx["translation_status"] = {"baseline_lang": lang, "available_langs": [lang]}
     ctx["brand"] = brand_config
+    ctx["quotation_id"] = quotation_id
+    ctx["opportunity_id"] = payload.quotationNumber or payload.journeyGlance.tourCode or quotation_id
 
     if "designer_img" in data and data["designer_img"]:
         ctx["designer_img"] = data["designer_img"]
@@ -4840,6 +5388,145 @@ async def create_quotation(request: Request):
         "message":      "Landing page published. Open quotationUrl to preview and edit inline.",
         "quotationUrl": quotation_url,
         "pdfUrl":       f"{PUBLIC_BASE_URL}/quotations/{quotation_id}/pdf",
+    }
+
+
+@app.post("/api/v2/quotations")
+async def create_quotation_v2(payload: CreateQuoteRequestV1):
+    quotation_id = f"quo_{uuid.uuid4().hex[:12]}"
+    generation_service = QuoteGenerationService()
+    generated_document = await generation_service.generate(payload)
+    document = generated_document.model_dump(mode="json")
+    document.setdefault("meta", {})
+    document["meta"]["quotationId"] = quotation_id
+    document["meta"]["version"] = 1
+    document["meta"]["status"] = "draft"
+    document["meta"]["template"] = BROCHURE_TEMPLATE_NAME
+    lang = payload.lang if payload.lang in ("en", "vi", "ar") else "en"
+    document = _validate_quote_document_or_422(document)
+    destinations = _build_seed_destinations_from_quote_document(document)
+    ctx: dict[str, Any] = {
+        "baseline_lang": lang,
+        "translations": {},
+        "available_langs": [lang],
+        "translation_status": {"baseline_lang": lang, "available_langs": [lang]},
+        "brand": _brand_config_from_quote_document(document),
+        "quotation_id": quotation_id,
+        "opportunity_id": payload.opportunity_id or quotation_id,
+        "createQuoteRequestV1": payload.model_dump(mode="json"),
+        "template_name": BROCHURE_TEMPLATE_NAME,
+        "destinations": destinations,
+        "route_stops": [],
+    }
+    document = _store_brochure_draft(ctx, lang, document)
+    ctx = _merge_brochure_render_context(
+        ctx,
+        document,
+        quotation_id,
+        lang,
+        latest_version=1,
+        editor_mode=False,
+        preview_mode=False,
+    )
+    ctx["createQuoteRequestV1"] = payload.model_dump(mode="json")
+    ctx["template_name"] = BROCHURE_TEMPLATE_NAME
+    ctx["destinations"] = destinations
+
+    loop = asyncio.get_event_loop()
+    tmpl_lp = templates.get_template(BROCHURE_TEMPLATE_NAME)
+    tmpl_pdf = templates.get_template(BROCHURE_TEMPLATE_NAME.replace(".html", "_pdf.html"))
+    rendered_html, rendered_pdf = await asyncio.gather(
+        loop.run_in_executor(None, partial(tmpl_lp.render, **ctx)),
+        loop.run_in_executor(None, partial(tmpl_pdf.render, **ctx)),
+    )
+    initial_html_sync = _capture_html_sync_state(rendered_html)
+    initial_html_sync["captured_from_version"] = 1
+    ctx.setdefault("html_sync", {})[lang] = initial_html_sync
+
+    quotations[quotation_id] = {
+        "payload": None,
+        "ctx": ctx,
+        "html": rendered_html,
+        "pdf_html": rendered_pdf,
+        "status": "pending",
+        "published_url": None,
+        "pdf_url": None,
+        "version": 0,
+    }
+
+    sfx = f"_{lang}" if lang != "en" else ""
+    environment = os.getenv("ENVIRONMENT", "local")
+    if environment == "production":
+        if not os.getenv("GITHUB_TOKEN") or not os.getenv("GITHUB_REPO"):
+            raise HTTPException(
+                status_code=500,
+                detail="Server misconfiguration: GITHUB_TOKEN / GITHUB_REPO env vars are missing.",
+            )
+        try:
+            await publish_file_to_github(
+                file_path=f"published/{quotation_id}/v1{sfx}.html",
+                html_content=rendered_html,
+                commit_message=f"Publish v2 quotation {quotation_id} v1{sfx}.html",
+            )
+            await publish_file_to_github(
+                file_path=f"published/{quotation_id}/pdf{sfx}.html",
+                html_content=rendered_pdf,
+                commit_message=f"Publish v2 PDF view for quotation {quotation_id} pdf{sfx}.html",
+            )
+            await publish_file_to_github(
+                file_path=f"published/{quotation_id}/pdf_{lang}.html",
+                html_content=rendered_pdf,
+                commit_message=f"Publish v2 PDF view for quotation {quotation_id} pdf_{lang}.html",
+            )
+            await publish_file_to_github(
+                file_path=f"published/{quotation_id}/ctx.json",
+                html_content=json.dumps(ctx, ensure_ascii=False, default=str),
+                commit_message=f"Publish v2 context for {quotation_id}",
+            )
+            await publish_file_to_github(
+                file_path=f"published/{quotation_id}/document.json",
+                html_content=json.dumps(document, ensure_ascii=False),
+                commit_message=f"Publish v2 canonical document for {quotation_id}",
+            )
+            await publish_file_to_github(
+                file_path=f"published/{quotation_id}/create_request_v2.json",
+                html_content=json.dumps(payload.model_dump(mode="json"), ensure_ascii=False),
+                commit_message=f"Publish v2 request snapshot for {quotation_id}",
+            )
+            await _save_translation_status(quotation_id, {"baseline_lang": lang, "available_langs": [lang]})
+            quotations[quotation_id]["status"] = "published"
+            quotations[quotation_id]["published_url"] = f"{PUBLIC_BASE_URL}/quotations/{quotation_id}"
+            quotations[quotation_id]["pdf_url"] = f"{PUBLIC_BASE_URL}/quotations/{quotation_id}/pdf"
+            quotations[quotation_id]["version"] = 1
+        except Exception as exc:
+            log.exception("[/api/v2/quotations] GitHub publish FAILED for %s: %s", quotation_id, exc)
+            raise HTTPException(status_code=502, detail=f"GitHub publish failed: {exc}")
+    else:
+        quo_dir = os.path.join("published", quotation_id)
+        os.makedirs(quo_dir, exist_ok=True)
+        with open(os.path.join(quo_dir, f"v1{sfx}.html"), "w", encoding="utf-8") as f:
+            f.write(rendered_html)
+        with open(os.path.join(quo_dir, f"pdf{sfx}.html"), "w", encoding="utf-8") as f:
+            f.write(rendered_pdf)
+        with open(os.path.join(quo_dir, f"pdf_{lang}.html"), "w", encoding="utf-8") as f:
+            f.write(rendered_pdf)
+        with open(os.path.join(quo_dir, "ctx.json"), "w", encoding="utf-8") as f:
+            json.dump(ctx, f, ensure_ascii=False, default=str)
+        with open(os.path.join(quo_dir, "document.json"), "w", encoding="utf-8") as f:
+            json.dump(document, f, ensure_ascii=False)
+        with open(os.path.join(quo_dir, "create_request_v2.json"), "w", encoding="utf-8") as f:
+            json.dump(payload.model_dump(mode="json"), f, ensure_ascii=False)
+        await _save_translation_status(quotation_id, {"baseline_lang": lang, "available_langs": [lang]})
+        quotations[quotation_id]["status"] = "published"
+        quotations[quotation_id]["version"] = 1
+
+    quotation_url = f"{PUBLIC_BASE_URL}/quotations/{quotation_id}"
+    return {
+        "quotationId": quotation_id,
+        "quotationUrl": quotation_url,
+        "pdfUrl": f"{PUBLIC_BASE_URL}/quotations/{quotation_id}/pdf",
+        "documentVersion": ((document.get("meta") or {}).get("version")) or 1,
+        "status": "published",
     }
 
 
@@ -5885,6 +6572,63 @@ async def _build_quotation_lang_ctx(
 ):
     baseline_lang = ctx_data.get("baseline_lang", "en")
     effective_lang = target_lang if target_lang in ("en", "vi", "ar") else baseline_lang
+    base_tmpl = ctx_data.get("template_name", BROCHURE_TEMPLATE_NAME)
+
+    if _is_brochure_template(base_tmpl):
+        document = _get_stored_brochure_draft(ctx_data, effective_lang)
+        if not document:
+            persisted_document = _load_persisted_quote_document(quotation_id)
+            if persisted_document:
+                persisted_lang = ((persisted_document.get("meta") or {}).get("lang")) or effective_lang
+                document = _store_brochure_draft(ctx_data, persisted_lang, persisted_document)
+                effective_lang = persisted_lang
+        if not document:
+            payload_dict = (
+                ctx_data.get("baseline_payload")
+                if effective_lang == baseline_lang
+                else ctx_data.get("translations", {}).get(effective_lang)
+            )
+            if not payload_dict:
+                payload_dict = ctx_data.get("baseline_payload")
+                effective_lang = baseline_lang
+            if payload_dict:
+                payload_obj = TourQuotationPayload.model_validate(payload_dict)
+                brand_config = resolve_brand(request, payload_dict)
+                default_brand_logo = _default_brand_logo(brand_config)
+                hero_image_url = ctx_data.get("hero_img") or ctx_data.get("img_0") or default_brand_logo
+                legacy_ctx = _build_ctx(
+                    quotation_id=quotation_id,
+                    payload=payload_obj,
+                    hero_image_url=hero_image_url,
+                    destinations=ctx_data.get("destinations", []),
+                    lang=effective_lang,
+                    template_name=base_tmpl,
+                    brand=brand_config,
+                )
+                document = _store_brochure_draft(
+                    ctx_data,
+                    effective_lang,
+                    _build_brochure_draft_from_lang_ctx(legacy_ctx, quotation_id, effective_lang),
+                )
+            else:
+                raise HTTPException(status_code=404, detail=f"Quotation '{quotation_id}' is missing brochure document data.")
+        try:
+            from github_publish import get_next_version
+            next_ver = await get_next_version(quotation_id)
+            latest_version = max(1, next_ver - 1)
+        except Exception:
+            latest_version = 1
+        lang_ctx = _merge_brochure_render_context(
+            ctx_data,
+            document,
+            quotation_id,
+            effective_lang,
+            latest_version=latest_version,
+            preview_mode=False,
+            editor_mode=force_editor_draft,
+        )
+        return lang_ctx, effective_lang, base_tmpl
+
     payload_dict = (
         ctx_data.get("baseline_payload")
         if effective_lang == baseline_lang
@@ -5895,7 +6639,6 @@ async def _build_quotation_lang_ctx(
         effective_lang = baseline_lang
 
     payload_obj = TourQuotationPayload.model_validate(payload_dict)
-    base_tmpl = ctx_data.get("template_name", "vietnam_luxury_brosure.html")
     brand_config = resolve_brand(request, payload_dict)
     default_brand_logo = _default_brand_logo(brand_config)
     hero_image_url = ctx_data.get("hero_img") or ctx_data.get("img_0") or default_brand_logo
@@ -5958,17 +6701,6 @@ async def _build_quotation_lang_ctx(
                 _apply_ctx_html_sync(lang_ctx, ctx_data, effective_lang, baseline_lang)
         else:
             _apply_ctx_html_sync(lang_ctx, ctx_data, effective_lang, baseline_lang)
-
-    if _is_brochure_template(base_tmpl):
-        draft = _ensure_brochure_draft(
-            ctx_data,
-            quotation_id,
-            effective_lang,
-            lang_ctx,
-            force_brand_from_ctx=brand_switched or force_editor_draft,
-        )
-        _apply_brochure_draft_to_lang_ctx(lang_ctx, draft)
-        lang_ctx["brochure_draft"] = draft
 
     if brand_switched:
         _restore_brand_owned_fields(lang_ctx, brand_locked_fields)
@@ -6171,6 +6903,15 @@ class DraftUpsertRequest(BaseModel):
     draft: dict[str, Any]
 
 
+class QuoteDocumentUpsertRequest(BaseModel):
+    document: dict[str, Any]
+
+
+class QuoteDocumentPublishRequest(BaseModel):
+    document: Optional[dict[str, Any]] = None
+    template_name: Optional[str] = None
+
+
 @app.post("/api/v1/translate-block")
 async def translate_block_endpoint(payload: TranslateBlockRequest):
     """Translates a single block of text into target language."""
@@ -6288,6 +7029,131 @@ async def put_quotation_draft(
     return {"ok": True, "draft": draft}
 
 
+@app.get("/api/v2/quotations/{quotation_id}/document")
+async def get_quotation_document(quotation_id: str, request: Request, lang: str | None = None, language: str | None = None):
+    target_lang = lang or language
+    if target_lang not in ("en", "vi", "ar"):
+        target_lang = None
+
+    ctx_data = _load_ctx_data(quotation_id)
+    if not ctx_data:
+        raise HTTPException(status_code=404, detail=f"Quotation '{quotation_id}' not found.")
+
+    baseline_lang = ctx_data.get("baseline_lang", "en")
+    target_lang = target_lang or baseline_lang
+    template_name = ctx_data.get("template_name", "vietnam_luxury_brosure.html")
+    if not _is_brochure_template(template_name):
+        raise HTTPException(status_code=400, detail="Document editor is only available for brochure quotations.")
+
+    lang_ctx, effective_lang, _ = await _build_quotation_lang_ctx(
+        ctx_data,
+        quotation_id,
+        target_lang,
+        request,
+        ignore_published_html=True,
+        force_editor_draft=True,
+    )
+    document = _ensure_brochure_draft(ctx_data, quotation_id, effective_lang, lang_ctx, force_brand_from_ctx=True)
+    await _persist_ctx_data(quotation_id, ctx_data, f"Bootstrap quote document for quotation {quotation_id} ({effective_lang})")
+    return {
+        "document": document,
+        "lang": effective_lang,
+        "documentVersion": ((document.get("meta") or {}).get("version")) or 1,
+        "sectionRegistry": {key: value.model_dump(mode="json") for key, value in SECTION_REGISTRY.items()},
+    }
+
+
+@app.put("/api/v2/quotations/{quotation_id}/document")
+async def put_quotation_document(
+    quotation_id: str,
+    payload: QuoteDocumentUpsertRequest,
+    request: Request,
+    lang: str | None = None,
+    language: str | None = None,
+):
+    target_lang = lang or language
+    if target_lang not in ("en", "vi", "ar"):
+        target_lang = None
+
+    ctx_data = _load_ctx_data(quotation_id)
+    if not ctx_data:
+        raise HTTPException(status_code=404, detail=f"Quotation '{quotation_id}' not found.")
+
+    baseline_lang = ctx_data.get("baseline_lang", "en")
+    target_lang = target_lang or baseline_lang
+    template_name = ctx_data.get("template_name", "vietnam_luxury_brosure.html")
+    if not _is_brochure_template(template_name):
+        raise HTTPException(status_code=400, detail="Document editor is only available for brochure quotations.")
+
+    document = copy.deepcopy(payload.document or {})
+    document.setdefault("meta", {})
+    document["meta"]["quotationId"] = quotation_id
+    document["meta"]["lang"] = target_lang
+    document["meta"]["template"] = template_name
+    document["meta"]["revision"] = int(document["meta"].get("revision") or 0) + 1
+
+    stored_document = _store_brochure_draft(ctx_data, target_lang, _validate_quote_document_or_422(document))
+    await _persist_ctx_data(quotation_id, ctx_data, f"Autosave quote document for quotation {quotation_id} ({target_lang})")
+    return {
+        "ok": True,
+        "document": stored_document,
+        "documentVersion": ((stored_document.get("meta") or {}).get("version")) or 1,
+        "sectionRegistry": {key: value.model_dump(mode="json") for key, value in SECTION_REGISTRY.items()},
+    }
+
+
+@app.post("/api/v2/quotations/{quotation_id}/regenerate-narrative")
+async def regenerate_quotation_narrative(
+    quotation_id: str,
+    payload: RegenerateNarrativeRequest,
+    lang: str | None = None,
+    language: str | None = None,
+):
+    target_lang = lang or language
+    if target_lang not in ("en", "vi", "ar"):
+        target_lang = None
+
+    ctx_data = _load_ctx_data(quotation_id)
+    if not ctx_data:
+        raise HTTPException(status_code=404, detail=f"Quotation '{quotation_id}' not found.")
+
+    baseline_lang = ctx_data.get("baseline_lang", "en")
+    target_lang = target_lang or baseline_lang
+    document = _get_stored_brochure_draft(ctx_data, target_lang)
+    if not document:
+        raise HTTPException(status_code=404, detail="No brochure document available.")
+
+    request_snapshot = ctx_data.get("createQuoteRequestV1")
+    create_request = (
+        CreateQuoteRequestV1.model_validate(request_snapshot)
+        if request_snapshot
+        else _create_quote_request_from_document(document)
+    )
+    service = QuoteGenerationService()
+    brand_profile = BRAND_PROFILES.get(create_request.brand_id, BRAND_PROFILES["vietnam_safar"])
+    narrative, narrative_status, narrative_warnings = await service.narrative_generator.generate(
+        create_request,
+        brand_profile,
+        scopes=payload.scopes,
+        existing_document=document,
+    )
+    regenerated = apply_narrative_result_to_document(document, narrative, payload.scopes)
+    regenerated.setdefault("generationStatus", {})
+    regenerated["generationStatus"]["narrative"] = narrative_status
+    regenerated["generationStatus"]["warnings"] = narrative_warnings
+    regenerated.setdefault("meta", {})
+    regenerated["meta"]["revision"] = int(regenerated["meta"].get("revision") or 0) + 1
+
+    stored_document = _store_brochure_draft(ctx_data, target_lang, _validate_quote_document_or_422(regenerated))
+    await _persist_ctx_data(quotation_id, ctx_data, f"Regenerate brochure narrative for quotation {quotation_id} ({target_lang})")
+    return {
+        "ok": True,
+        "document": stored_document,
+        "documentVersion": ((stored_document.get("meta") or {}).get("version")) or 1,
+        "generationStatus": stored_document.get("generationStatus") or {},
+    }
+
+
 @app.post("/api/v1/assets")
 async def upload_brochure_asset(
     quotation_id: str = Form(...),
@@ -6368,8 +7234,7 @@ async def get_quotation(quotation_id: str, request: Request):
         target_lang = baseline_lang
         
     try:
-        payload_obj = TourQuotationPayload.model_validate(payload_dict)
-        tmpl_name = ctx_data.get("template_name", "vietnam_luxury_brosure.html")
+        tmpl_name = ctx_data.get("template_name", BROCHURE_TEMPLATE_NAME)
         if _is_brochure_template(tmpl_name):
             rendered_html, effective_lang = await _render_quotation_doc_from_ctx(
                 ctx_data,
@@ -6378,20 +7243,14 @@ async def get_quotation(quotation_id: str, request: Request):
                 request=request,
                 is_pdf=False,
                 ignore_published_html=True,
-                editor_mode=True,
+                editor_mode=False,
             )
-            lang_ctx, _, _ = await _build_quotation_lang_ctx(
-                ctx_data,
-                quotation_id,
-                effective_lang,
-                request,
-                ignore_published_html=True,
-                force_editor_draft=True,
-            )
-            draft = _ensure_brochure_draft(ctx_data, quotation_id, effective_lang, lang_ctx, force_brand_from_ctx=True)
-            _store_brochure_draft(ctx_data, effective_lang, draft)
-            await _persist_ctx_data(quotation_id, ctx_data, f"Refresh brochure draft for quotation {quotation_id} ({effective_lang})")
+            document = _get_stored_brochure_draft(ctx_data, effective_lang)
+            if document:
+                _store_brochure_draft(ctx_data, effective_lang, document)
+                await _persist_ctx_data(quotation_id, ctx_data, f"Refresh brochure draft for quotation {quotation_id} ({effective_lang})")
             return HTMLResponse(content=rendered_html, headers=no_cache_headers)
+        payload_obj = TourQuotationPayload.model_validate(payload_dict)
         tmpl = templates.get_template(tmpl_name)
 
         # Resolve brand from request and payload
@@ -6554,7 +7413,7 @@ async def publish_quotation(quotation_id: str, body: PublishRequest, request: Re
     effective_lang = target_lang
     if ctx_data:
         baseline_lang = ctx_data.get("baseline_lang", "en")
-        active_template = body.template_name or ctx_data.get("template_name") or "vietnam_luxury_brosure.html"
+        active_template = body.template_name or ctx_data.get("template_name") or BROCHURE_TEMPLATE_NAME
         if _is_brochure_template(active_template) and body.draft:
             draft = copy.deepcopy(body.draft)
             draft.setdefault("meta", {})
@@ -6563,7 +7422,7 @@ async def publish_quotation(quotation_id: str, body: PublishRequest, request: Re
             draft["meta"]["template"] = active_template
             draft["meta"]["revision"] = int(draft["meta"].get("revision") or 0) + 1
             ctx_data["template_name"] = active_template
-            _store_brochure_draft(ctx_data, target_lang or baseline_lang, draft)
+            _store_brochure_draft(ctx_data, target_lang or baseline_lang, _validate_quote_document_or_422(draft))
 
             rendered_html, effective_lang = await _render_quotation_doc_from_ctx(
                 ctx_data,
@@ -6609,6 +7468,11 @@ async def publish_quotation(quotation_id: str, body: PublishRequest, request: Re
                         html_content=json.dumps(ctx_data, ensure_ascii=False, default=str),
                         commit_message=f"Update context for quotation {quotation_id} (version {version})",
                     )
+                    await publish_file_to_github(
+                        file_path=f"published/{quotation_id}/document.json",
+                        html_content=json.dumps(draft, ensure_ascii=False),
+                        commit_message=f"Update canonical brochure document for quotation {quotation_id} (version {version})",
+                    )
                 except Exception as exc:
                     log.exception("[publish] Failed for %s", quotation_id)
                     raise HTTPException(status_code=502, detail=str(exc))
@@ -6619,6 +7483,8 @@ async def publish_quotation(quotation_id: str, body: PublishRequest, request: Re
                     f.write(rendered_html)
                 with open(os.path.join(quo_dir, "ctx.json"), "w", encoding="utf-8") as f:
                     json.dump(ctx_data, f, ensure_ascii=False, default=str)
+                with open(os.path.join(quo_dir, "document.json"), "w", encoding="utf-8") as f:
+                    json.dump(draft, f, ensure_ascii=False)
                 pdf_suffix = "" if effective_lang == baseline_lang else f"_{effective_lang}"
                 pdf_paths = {os.path.join(quo_dir, f"pdf{pdf_suffix}.html")}
                 if effective_lang == baseline_lang:
@@ -6639,6 +7505,11 @@ async def publish_quotation(quotation_id: str, body: PublishRequest, request: Re
 
             log.info("[publish] ✓ %s v%d (lang=%s) [draft] → %s", quotation_id, version, target_lang, published_url)
             return {"published_url": published_url, "version": version, "status": "published"}
+        if _is_brochure_template(active_template):
+            raise HTTPException(
+                status_code=400,
+                detail="Brochure publish requires a canonical document draft. Raw HTML publish is only supported for legacy v1 templates.",
+            )
         
         # Extract custom images and store in ctx_data
         custom_images = _extract_custom_images_from_html(body.html or "")
@@ -6753,6 +7624,43 @@ async def publish_quotation(quotation_id: str, body: PublishRequest, request: Re
 
     log.info("[publish] ✓ %s v%d (lang=%s) → %s", quotation_id, version, target_lang, published_url)
     return {"published_url": published_url, "version": version, "status": "published"}
+
+
+@app.post("/api/v2/quotations/{quotation_id}/publish")
+async def publish_quotation_document(
+    quotation_id: str,
+    body: QuoteDocumentPublishRequest,
+    request: Request,
+    lang: str | None = None,
+    language: str | None = None,
+):
+    target_lang = lang or language
+    if target_lang not in ("en", "vi", "ar"):
+        target_lang = None
+
+    ctx_data = _load_ctx_data(quotation_id)
+    if not ctx_data:
+        raise HTTPException(status_code=404, detail=f"Quotation '{quotation_id}' not found.")
+
+    baseline_lang = ctx_data.get("baseline_lang", "en")
+    target_lang = target_lang or baseline_lang
+    template_name = body.template_name or ctx_data.get("template_name") or "vietnam_luxury_brosure.html"
+    if not _is_brochure_template(template_name):
+        raise HTTPException(status_code=400, detail="Document publish is only available for brochure quotations.")
+
+    document = body.document or _get_stored_brochure_draft(ctx_data, target_lang)
+    if not document:
+        raise HTTPException(status_code=400, detail="No quote document available to publish.")
+
+    normalized = _store_brochure_draft(ctx_data, target_lang, _validate_quote_document_or_422(document))
+    publish_body = PublishRequest(draft=normalized, template_name=template_name)
+    return await publish_quotation(
+        quotation_id,
+        publish_body,
+        request,
+        lang=target_lang,
+        language=target_lang,
+    )
 
 
 

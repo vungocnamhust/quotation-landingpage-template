@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{ lang or 'en' }}" {% if lang=='ar' %}dir="rtl" {% endif %}
-  style="--hero-img: url('{{img_0}}'); {% for dest in destinations %} --img-{{ loop.index }}: url('{{ dest.image_url or ((brand.logo if brand else '') or '/assets/vietnam-safar-logo.png') }}'); {% endfor %}">
+  style="--hero-img: url('{% if brand and brand.id == 'capella_travel' %}/assets/brands/hero/elder.png?v=27{% else %}{{img_0}}{% endif %}'); {% for dest in destinations %} --img-{{ loop.index }}: url('{{ dest.image_url or ((brand.logo if brand else '') or '/assets/vietnam-safar-logo.png') }}'); {% endfor %}">
 
 <head>
   <meta charset="UTF-8" />
@@ -89,6 +89,10 @@
       --section-padding: clamp(40px, 6vw, 72px);
       --container-pad: clamp(16px, 5%, 5%);
       --card-padding: clamp(20px, 3vw, 30px);
+      --indochine-border: url('/assets/brands/indochine_icon/border.svg');
+      --indochine-xich-lo: url('/assets/brands/indochine_icon/xich_lo.svg');
+      --indochine-cloud: url('/assets/brands/indochine_icon/cloud.svg');
+      --indochine-den-long: url('/assets/brands/indochine_icon/den_long.svg');
     }
 
     html[lang="ar"] {
@@ -174,6 +178,139 @@
     .container {
       width: min(1180px, 92%);
       margin: 0 auto
+    }
+
+    .indochine-shell {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+    }
+
+    .indochine-shell::before,
+    .indochine-shell::after {
+      content: "";
+      position: absolute;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .indochine-shell::before {
+      inset: clamp(0.75rem, 1.8vw, 1.25rem);
+      border-style: solid;
+      border-width: clamp(14px, 1.8vw, 24px);
+      border-image-source: var(--indochine-border);
+      border-image-slice: 72;
+      border-image-repeat: round;
+      background: none;
+      opacity: 0.35;
+    }
+
+    .indochine-shell::after {
+      inset: clamp(1rem, 2.2vw, 1.6rem);
+      border: 1px solid color-mix(in srgb, var(--accent) 10%, transparent);
+      opacity: 0.45;
+    }
+
+    .indochine-shell--no-border::before,
+    .indochine-shell--no-border::after {
+      display: none;
+    }
+
+    .indochine-shell > .container,
+    .indochine-shell > .letter-container,
+    .indochine-shell > .hero-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .indochine-shellline {
+      box-shadow: none;
+    }
+
+    .indochine-watermark {
+      position: absolute;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.25;
+      background-repeat: no-repeat;
+      background-size: contain;
+      background-position: center;
+      mix-blend-mode: multiply;
+      filter: sepia(0.25) saturate(0.75);
+    }
+
+    .indochine-watermark--cyclo {
+      background-image: var(--indochine-xich-lo);
+      width: clamp(160px, 24vw, 300px);
+      aspect-ratio: 251 / 168;
+    }
+
+    .indochine-watermark--buffalo {
+      background-image: var(--indochine-cloud);
+      width: clamp(180px, 28vw, 360px);
+      aspect-ratio: 520 / 295;
+    }
+
+    .indochine-watermark--lantern {
+      background-image: var(--indochine-den-long);
+      width: clamp(80px, 10vw, 132px);
+      aspect-ratio: 166 / 295;
+      opacity: 0.16;
+    }
+
+    .indochine-divider-art {
+      position: absolute;
+      pointer-events: none;
+      z-index: 0;
+      background: var(--indochine-den-long) center/contain no-repeat;
+      width: clamp(84px, 9vw, 116px);
+      aspect-ratio: 166 / 295;
+      opacity: 0.28;
+      filter: brightness(0) invert(1);
+    }
+
+    .hero .indochine-watermark--lantern {
+      top: 5.5rem;
+      right: clamp(1rem, 5vw, 4rem);
+      opacity: 0.22;
+      filter: brightness(0) invert(1);
+    }
+
+    .route-map-watermark {
+      top: 5.5rem;
+      right: max(2rem, calc((100vw - min(1180px, 92vw)) / 2));
+      transform: rotate(-5deg);
+    }
+
+    .hotel-plan-watermark {
+      bottom: 1.5rem;
+      left: 1.5rem;
+      opacity: 0.08;
+    }
+
+    .quotation-watermark {
+      top: 1.5rem;
+      right: 1.5rem;
+      opacity: 0.08;
+    }
+
+    .designer-watermark {
+      bottom: 1rem;
+      right: 1rem;
+      opacity: 0.35;
+      z-index: 2;
+    }
+
+    .divider-itinerary-lantern {
+      top: 1.25rem;
+      right: clamp(1rem, 5vw, 3rem);
+    }
+
+    .divider-hotels-lantern {
+      top: 0;
+      right: clamp(1rem, 5vw, 3rem);
+      filter: none;
+      opacity: 0.16;
     }
 
     .nav {
@@ -3020,8 +3157,11 @@
     </div>
   </nav>
 
-  <main id="top">
-    <header class="hero">
+  <main id="top" style="display: flex; flex-direction: column;">
+    <header class="hero{% if brand and brand.id == 'capella_travel' %} indochine-shell{% endif %}" {% if use_shared_draft_editor %}data-section-id="hero"{% endif %}>
+      {% if brand and brand.id == 'capella_travel' %}
+      <div class="indochine-watermark indochine-watermark--lantern" aria-hidden="true"></div>
+      {% endif %}
       <div class="hero-content">
         <div class="hero-content-inner">
           <div class="kicker" data-editable="cover_kicker">{{ cover_kicker | default("A Privately Arranged Journey" |
@@ -3055,7 +3195,7 @@
 
       </div>
     </header>
-    <section class="open-letter-section" style="padding: var(--section-padding) 0; background: var(--bg-main);">
+    <section class="open-letter-section{% if brand and brand.id == 'capella_travel' %} indochine-shell indochine-shellline{% endif %}" {% if use_shared_draft_editor %}data-section-id="overview_letter"{% endif %} style="padding: var(--section-padding) 0; background: var(--bg-main);">
       <style>
         .letter-container {
           width: min(1180px, 92%);
@@ -3235,7 +3375,10 @@
 
 
 
-    <section id="route-map" style="padding: var(--section-padding) 0;">
+    <section id="route-map" class="{% if brand and brand.id == 'capella_travel' %}indochine-shell indochine-shellline{% endif %}" {% if use_shared_draft_editor %}data-section-id="route_map"{% endif %} style="padding: var(--section-padding) 0;">
+      {% if brand and brand.id == 'capella_travel' %}
+      <div class="indochine-watermark indochine-watermark--cyclo route-map-watermark" aria-hidden="true"></div>
+      {% endif %}
       <div class="container">
         <div class="section-head">
           <h2 data-editable="route_map_h2">{{ route_map_h2 | rtl_mixed(lang) }}</h2>
@@ -3272,6 +3415,9 @@
     <!-- ── Divider: ITINERARY TRANSITION ─────────────────── -->
     <section class="chapter-divider-section no-print" id="divider-itinerary"
       style="display: none !important; background-image: url('{{ img_itinerary_divider or img_1 or img_0 }}'); text-align: left;">
+      {% if brand and brand.id == 'capella_travel' %}
+      <div class="indochine-divider-art divider-itinerary-lantern" aria-hidden="true"></div>
+      {% endif %}
       <div class="chapter-divider-container"
         style="justify-content: space-between; align-items: flex-start; padding: 80px 0; width: min(1180px, 92%); margin: 0 auto; box-sizing: border-box;">
         <div class="chapter-divider-top" style="max-width: 800px; margin-bottom: 40px;">
@@ -3327,7 +3473,7 @@
         divider_itinerary_title | default(tour_title) }}</h2>
     </div>
 
-    <section id="itinerary">
+    <section id="itinerary" {% if use_shared_draft_editor %}data-section-id="itinerary"{% endif %}>
       <style>
         /* CSS from styles.css */
 
@@ -3862,8 +4008,11 @@
     </section>
 
 
-    <section id="hotels"
+    <section id="hotels" class="{% if brand and brand.id == 'capella_travel' %}indochine-shell{% endif %}" {% if use_shared_draft_editor %}data-section-id="hotel_plan"{% endif %}
       style="background: var(--bg-alt); border: 1px solid var(--line); border-radius: 0; padding: var(--section-padding) 0; margin: 40px 0; box-shadow: 0 18px 45px rgba(17,19,15,0.04);">
+      {% if brand and brand.id == 'capella_travel' %}
+      <div class="indochine-watermark indochine-watermark--buffalo hotel-plan-watermark" aria-hidden="true"></div>
+      {% endif %}
       <style>
         /* --- EDITORIAL HOTEL GRID SYSTEM --- */
         .hotel-plan-container {
@@ -4125,6 +4274,9 @@
                 <div class="img-wrapper-sub hotel-image-wrapper">
                   <img src="{{ item.room_img }}" alt="{{ item.name }} Room" data-editable="hotel_room_img_{{ loop.index }}">
                 </div>
+                <div class="hotel-room-type"
+                  style="margin-top: 8px; font-size: 13px; font-weight: 500; color: var(--text-muted, #7a7367) !important; text-align: left; padding-left: 4px; display: block;"
+                  data-editable="hotel_room_type_{{ loop.index }}">{{ item.room_type or item.room_name or item.roomType or '' }}</div>
               </div>
 
               <!-- Footer Columns (Introduction & Info/Tel) -->
@@ -4180,6 +4332,9 @@
     <!-- ── Chapter Divider: THE STAYS ───────────────────── -->
     <section id="divider-hotels" class="stays-intro-section no-print"
       style="background: var(--bg-main); padding: 0 0 var(--section-padding) 0; position: relative; overflow: hidden;">
+      {% if brand and brand.id == 'capella_travel' %}
+      <div class="indochine-divider-art divider-hotels-lantern" aria-hidden="true"></div>
+      {% endif %}
       <style>
         .stays-intro-grid {
           display: grid;
@@ -4265,7 +4420,10 @@
 
 
 
-    <section id="quotation" class="quotation-vibrant-light">
+    <section id="quotation" class="quotation-vibrant-light{% if brand and brand.id == 'capella_travel' %} indochine-shell indochine-shellline{% endif %}" {% if use_shared_draft_editor %}data-section-id="pricing"{% endif %}>
+      {% if brand and brand.id == 'capella_travel' %}
+      <div class="indochine-watermark indochine-watermark--buffalo quotation-watermark" aria-hidden="true"></div>
+      {% endif %}
       <div class="container">
 
         <div class="investment-header">
@@ -4343,7 +4501,8 @@
         </div>
     </section>
 
-    <section>
+    {% if use_shared_draft_editor and section_enabled.get('inclusions_exclusions', true) %}
+    <section id="inclusions-exclusions" {% if use_shared_draft_editor %}data-section-id="inclusions_exclusions"{% endif %}>
       <div class="container">
         <div class="section-head" style="grid-template-columns: 1fr; margin-bottom: 32px;">
           <h2 data-editable="inc_exc_h2">{{ inclusions_title | default("What Your Journey Includes" | translate(lang))
@@ -4386,10 +4545,11 @@
         </div>
       </div>
     </section>
+    {% endif %}
 
 
 
-    <section id="payment-terms" style="background: var(--bg-main); padding: var(--section-padding) 0; margin: 40px 0;">
+    <section id="payment-terms" class="{% if brand and brand.id == 'capella_travel' %}indochine-shell indochine-shell--no-border indochine-shellline{% endif %}" {% if use_shared_draft_editor %}data-section-id="booking_terms"{% endif %} style="background: var(--bg-main); padding: var(--section-padding) 0; margin: 40px 0;">
       <style>
         .payment-layout {
           display: grid;
@@ -4451,52 +4611,24 @@
           </div>
 
           <!-- Right side -->
-          <div style="display: flex; flex-direction: column;">
-            <div class="term-row">
-              <div data-editable="payment_label_deposit"
-                style="font-family: var(--serif); font-size: 20px; color: var(--text-muted);">{{ payment_label_deposit |
-                default("Deposit" | translate(lang)) }}</div>
+          {% set booking_terms_render = booking_terms_items if booking_terms_items and booking_terms_items|length > 0 else [
+            {"id": "deposit", "label": payment_label_deposit | default("Deposit" | translate(lang)), "body": term_deposit | default("A deposit of 30% of the total tour cost is required upon confirmation of the booking. This deposit is non-refundable.<br><br>For bookings confirmed within 60 days of arrival, full payment of 100% of the total tour cost is required at the time of confirmation.", true)},
+            {"id": "balance", "label": payment_label_balance | default("Balance" | translate(lang)), "body": term_balance | default("The remaining 70% balance must be paid no later than 60 days prior to the scheduled arrival date.", true)},
+            {"id": "cancellation", "label": payment_label_cancellation | default("Cancellation" | translate(lang)), "body": term_cancellation | default("Written notice required. Cancellation fees apply based on arrival date:<ul style=\"margin: 8px 0 12px; padding-left: 20px; list-style-type: disc;\"><li style=\"margin-bottom: 4px;\"><strong>&gt; 45 days prior:</strong> Deposit forfeited (30%)</li><li style=\"margin-bottom: 4px;\"><strong>45 – 31 days prior:</strong> 50% of total tour cost</li><li style=\"margin-bottom: 4px;\"><strong>30 – 20 days prior:</strong> 75% of total tour cost</li><li style=\"margin-bottom: 4px;\"><strong>&lt; 20 days prior:</strong> 100% of total tour cost</li></ul>Any non-refundable payments, cancellation charges or penalties imposed by hotels, airlines, cruise operators and other service providers may also apply in addition to the cancellation fees stated above.", true)},
+            {"id": "confirmation", "label": payment_label_confirmation | default("Confirmation" | translate(lang)), "body": term_confirmation | default("The booking will only be considered confirmed once the required payment has been received.", true)}
+          ] %}
+          <div style="display: flex; flex-direction: column;" data-booking-terms-list>
+            {% for item in booking_terms_render %}
+            <div class="term-row" data-booking-term-id="{{ item.id or loop.index0 }}">
+              <div data-editable="{% if item.id == 'confirmation' %}payment_label_confirmation{% else %}booking_term_label_{{ loop.index0 }}{% endif %}"
+                style="font-family: var(--serif); font-size: 20px; color: var(--text-muted);">{{ item.label }}</div>
               <div>
-                <div data-editable="term_deposit" style="color: var(--text-muted); font-size: 15px; line-height: 1.6;">
-                  {{ term_deposit | default("A deposit of 30% of the total tour cost is required upon confirmation of the booking. This deposit is non-refundable.<br><br>For bookings confirmed within 60 days of arrival, full payment of 100% of the total tour cost is required at the time of confirmation.", true) | safe }}
+                <div data-editable="booking_term_body_{{ loop.index0 }}" style="color: var(--text-muted); font-size: 15px; line-height: 1.6;">
+                  {{ item.body | safe }}
                 </div>
               </div>
             </div>
-
-            <div class="term-row">
-              <div data-editable="payment_label_balance"
-                style="font-family: var(--serif); font-size: 20px; color: var(--text-muted);">{{ payment_label_balance |
-                default("Balance" | translate(lang)) }}</div>
-              <div>
-                <div data-editable="term_balance" style="color: var(--text-muted); font-size: 15px; line-height: 1.6;">
-                  {{ term_balance | default("The remaining 70% balance must be paid no later than 60 days prior to the scheduled arrival date.", true) | safe }}
-                </div>
-              </div>
-            </div>
-
-            <div class="term-row">
-              <div data-editable="payment_label_cancellation"
-                style="font-family: var(--serif); font-size: 20px; color: var(--text-muted);">{{
-                payment_label_cancellation | default("Cancellation" | translate(lang)) }}</div>
-              <div>
-                <div data-editable="term_cancellation"
-                  style="color: var(--text-muted); font-size: 15px; line-height: 1.6;">
-                  {{ term_cancellation | default("Written notice required. Cancellation fees apply based on arrival date:<ul style=\"margin: 8px 0 12px; padding-left: 20px; list-style-type: disc;\"><li style=\"margin-bottom: 4px;\"><strong>&gt; 45 days prior:</strong> Deposit forfeited (30%)</li><li style=\"margin-bottom: 4px;\"><strong>45 – 31 days prior:</strong> 50% of total tour cost</li><li style=\"margin-bottom: 4px;\"><strong>30 – 20 days prior:</strong> 75% of total tour cost</li><li style=\"margin-bottom: 4px;\"><strong>&lt; 20 days prior:</strong> 100% of total tour cost</li></ul>Any non-refundable payments, cancellation charges or penalties imposed by hotels, airlines, cruise operators and other service providers may also apply in addition to the cancellation fees stated above.", true) | safe }}
-                </div>
-              </div>
-            </div>
-
-            <div class="term-row">
-              <div data-editable="payment_label_confirmation"
-                style="font-family: var(--serif); font-size: 20px; color: var(--text-muted);">{{
-                payment_label_confirmation | default("Confirmation" | translate(lang)) }}</div>
-              <div>
-                <div data-editable="term_confirmation"
-                  style="color: var(--text-muted); font-size: 15px; line-height: 1.6;">
-                  {{ term_confirmation | default("The booking will only be considered confirmed once the required payment has been received.", true) | safe }}
-                </div>
-              </div>
-            </div>
+            {% endfor %}
           </div>
         </div>
       </div>
@@ -4506,8 +4638,11 @@
 
     {% endif %}
 
-    <section id="meet-designer" class="no-print"
+    <section id="meet-designer" class="no-print{% if brand and brand.id == 'capella_travel' %} indochine-shell indochine-shell--no-border{% endif %}" {% if use_shared_draft_editor %}data-section-id="designer"{% endif %}
       style="background: var(--bg-alt); padding: 80px 0; position: relative; overflow: hidden; border-top: 1px solid var(--line);">
+      {% if brand and brand.id == 'capella_travel' %}
+      <div class="indochine-watermark indochine-watermark--cyclo designer-watermark" aria-hidden="true"></div>
+      {% endif %}
       <!-- Decorative circles -->
       <div
         style="position: absolute; top: -50px; right: -50px; width: 300px; height: 300px; border-radius: 50%; border: 1px solid rgba(217, 210, 197, 0.5); pointer-events: none;">
@@ -4547,11 +4682,13 @@
           <div style="text-align: center;">
             <div class="designer-img-container" id="designer-avatar-container" data-editable="designer_img"
               data-img-type="hero"
-              style="--designer-img: url('{% if designer_img %}{{ designer_img }}{% else %}/assets/dias_team/director.png{% endif %}'); margin: 0 auto 24px; width: 100%; max-width: 300px; aspect-ratio: 3/4; border-radius: 200px 200px 0 0; overflow: hidden; border: 4px solid #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.05); position: relative; background-image: var(--designer-img); background-size: cover; background-position: center;">
+              style="--designer-img: url('{% if brand and brand.id == 'capella_travel' and (not designer_img or 'director.png' in designer_img) %}/assets/dias_team/hieu.jpg{% elif designer_img %}{{ designer_img }}{% else %}/assets/dias_team/director.png{% endif %}'); margin: 0 auto 24px; width: 100%; max-width: 300px; aspect-ratio: 3/4; border-radius: 200px 200px 0 0; overflow: hidden; border: 4px solid #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.05); position: relative; background-image: var(--designer-img); background-size: cover; background-position: center;">
             </div>
-            <h3
-              style="font-family: var(--serif); font-size: 26px; color: var(--emerald); margin: 0 0 8px;">{{ seller_name
+            <h3 data-editable="seller_name"
+              style="font-family: var(--serif); font-size: 26px; color: var(--emerald); margin: 0 0 2px;">{{ seller_name
               | rtl_mixed(lang) }}</h3>
+            <div data-editable="seller_subtitle"
+              style="font-family: var(--serif); font-size: 16px; color: var(--emerald); margin: 0 0 8px; font-weight: 600;">{{ seller_subtitle | default('', true) }}</div>
             <div data-editable="designer_signature"
               style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--gold-2); font-weight: 700; margin-bottom: 24px;">
               {{ designer_signature or "Journey Designer" | translate(lang) }}</div>
@@ -4630,65 +4767,61 @@
               </div>
             </div>
 
-            <!-- Final Details & After Confirmation -->
-            <div
-              style="display: grid; grid-template-columns: 1fr; gap: 24px; padding-top: 32px; border-top: 1px solid rgba(217, 210, 197, 0.5);">
-              <div style="display: flex; gap: 20px; align-items: flex-start;">
-                <div
-                  style="width: 54px; height: 54px; border-radius: 50%; border: 1px solid var(--gold, #c5a059); display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: white; padding: 10px;">
-                  <img
-                    src="/assets/brands/indochine_icon/button_icon/{{ ['chua.svg', 'human.png', 'mountain.png', 'sen.png', 'vien.png'] | random }}"
-                    alt="icon" style="width: 100%; height: 100%; object-fit: contain;">
-                </div>
-                <div>
-                  <div data-editable="final_req_title"
-                    style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--gold-2); font-weight: 700; margin-bottom: 8px;">
-                    {{ final_req_title or "Final Details Required" | translate(lang) }}
-                  </div>
-                  <div style="font-size: 14px; color: var(--text-muted); line-height: 1.6; margin: 0;">
-                    {% if final_req and final_req|length > 0 %}
-                    <ul style="margin: 0; padding-left: 16px; display: grid; gap: 4px;">
-                      {% for item in final_req %}<li data-editable="final_req_{{loop.index0}}">{{item}}</li>{% endfor %}
-                    </ul>
-                    {% else %}
-                    <span data-editable="final_req_text">{{ final_req_text or "Colored copies of passports valid for at
-                      least 6 months, and confirmed flight details for airport transfers." | translate(lang) }}</span>
-                    {% endif %}
-                  </div>
-                </div>
-              </div>
-
-              <div style="display: flex; gap: 20px; align-items: flex-start;">
-                <div
-                  style="width: 54px; height: 54px; border-radius: 50%; border: 1px solid var(--gold, #c5a059); display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: white; padding: 10px;">
-                  <img
-                    src="/assets/brands/indochine_icon/button_icon/{{ ['sen.png', 'vien.png', 'chua.svg', 'mountain.png', 'human.png'] | random }}"
-                    alt="icon" style="width: 100%; height: 100%; object-fit: contain;">
-                </div>
-                <div>
-                  <div data-editable="payment_label_confirmation"
-                    style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--gold-2); font-weight: 700; margin-bottom: 8px;">
-                    {{ payment_label_confirmation or "After Confirmation" | translate(lang) }}
-                  </div>
-                  <div style="font-size: 14px; color: var(--text-muted); line-height: 1.6; margin: 0;">
-                    {% if final_after and final_after|length > 0 %}
-                    <ul style="margin: 0; padding-left: 16px; display: grid; gap: 4px;">
-                      {% for item in final_after %}<li data-editable="final_after_{{loop.index0}}">{{item}}</li>{% endfor %}
-                    </ul>
-                    {% else %}
-                    <span data-editable="term_confirmation">{{ term_confirmation or "Vouchers, detailed daily itinerary
-                      guidelines, and emergency contact details for the local tour coordinator will be provided." |
-                      translate(lang) }}</span>
-                    {% endif %}
-                  </div>
-                </div>
-              </div>
-            </div>
-
           </div>
         </div>
       </div>
     </section>
+
+    {% if use_shared_draft_editor and section_enabled.get('finalization', true) %}
+    <section id="quote-finalization" {% if use_shared_draft_editor %}data-section-id="finalization"{% endif %}
+      style="background: var(--bg-main); padding: 80px 0; border-top: 1px solid rgba(217, 210, 197, 0.5);">
+      <div class="container" style="max-width: 1100px; margin: 0 auto;">
+        <div style="display: grid; grid-template-columns: 1fr; gap: 24px;">
+          <div style="display: flex; gap: 20px; align-items: flex-start;">
+            <div
+              style="width: 54px; height: 54px; border-radius: 50%; border: 1px solid var(--gold, #c5a059); display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: white; padding: 10px;">
+              <img src="/assets/brands/indochine_icon/button_icon/{{ ['chua.svg', 'human.png', 'mountain.png', 'sen.png', 'vien.png'] | random }}"
+                alt="icon" style="width: 100%; height: 100%; object-fit: contain;">
+            </div>
+            <div>
+              <div data-editable="final_req_title"
+                style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--gold-2); font-weight: 700; margin-bottom: 8px;">
+                {{ final_req_title or "Final Details Required" | translate(lang) }}
+              </div>
+              <div style="font-size: 14px; color: var(--text-muted); line-height: 1.6; margin: 0;">
+                <ul data-finalization-required-list style="margin: 0; padding-left: 16px; display: grid; gap: 4px;">
+                  {% for item in final_req %}
+                  <li data-editable="final_req_{{loop.index0}}">{{ item }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 20px; align-items: flex-start;">
+            <div
+              style="width: 54px; height: 54px; border-radius: 50%; border: 1px solid var(--gold, #c5a059); display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: white; padding: 10px;">
+              <img src="/assets/brands/indochine_icon/button_icon/{{ ['sen.png', 'vien.png', 'chua.svg', 'mountain.png', 'human.png'] | random }}"
+                alt="icon" style="width: 100%; height: 100%; object-fit: contain;">
+            </div>
+            <div>
+              <div data-editable="final_after_title"
+                style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--gold-2); font-weight: 700; margin-bottom: 8px;">
+                {{ final_after_title or "After Confirmation" | translate(lang) }}
+              </div>
+              <div style="font-size: 14px; color: var(--text-muted); line-height: 1.6; margin: 0;">
+                <ul data-finalization-after-list style="margin: 0; padding-left: 16px; display: grid; gap: 4px;">
+                  {% for item in final_after %}
+                  <li data-editable="final_after_{{loop.index0}}">{{ item }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    {% endif %}
   </main>
 
   <footer class="footer">
@@ -4700,6 +4833,12 @@
   </script>
   <script id="client-i18n" type="application/json">
     {{ client_i18n | tojson | safe }}
+  </script>
+  <script id="section-registry" type="application/json">
+    {{ sectionRegistry | default({}) | tojson | safe }}
+  </script>
+  <script id="brand-presets" type="application/json">
+    {{ brandPresets | default([]) | tojson | safe }}
   </script>
   {% if brochure_draft %}
   <script id="brochure-draft" type="application/json">

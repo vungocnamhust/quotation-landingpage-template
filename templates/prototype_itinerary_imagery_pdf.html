@@ -37,34 +37,28 @@
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <style>
     :root {
+
       /* ── Dynamic brand tokens — injected from brand object ── */
-      --primary: {{ c_primary }};
-      --primary-dark: {{ c_primary_dark }};
-      --accent: {{ c_accent }};
-      --accent-light: {{ c_accent_light }};
-      --bg-main: {{ c_bg_main }};
-      --bg-alt: {{ c_bg_alt }};
-      --text-main: {{ c_text_main }};
-      --text-muted: {{ c_text_muted }};
-      --text-light: {{ c_text_light }};
-      --ivory: {{ c_bg_main }};
-      --ink: {{ c_text_main }};
-      --muted: {{ c_text_muted }};
-      --emerald: {{ c_primary }};
-      --emerald-2: {{ c_primary_dark }};
-      --gold: {{ c_accent }};
-      --gold-2: {{ c_accent_light }};
-      --line: color-mix(in srgb, {{ c_accent }} 28%, transparent);
-      --card: {{ c_bg_alt }};
+      --primary: {{c_primary}};
+      --primary-dark: {{c_primary_dark}};
+      --accent: {{c_accent}};
+      --accent-light: {{c_accent_light}};
+      --bg-main: {{c_bg_main}};
+      --bg-alt: {{c_bg_alt}};
+      --text-main: {{c_text_main}};
+      --text-muted: {{c_text_muted}};
+      --text-light: {{c_text_light}};
+      --ivory: {{c_bg_main}};
+      --ink: {{c_text_main}};
+      --muted: {{c_text_muted}};
+      --emerald: {{c_primary}};
+      --emerald-2: {{c_primary_dark}};
+      --gold: {{c_accent}};
+      --gold-2: {{c_accent_light}};
+      --line: color-mix(in srgb, {{c_accent}} 28%, transparent);
+      --card: {{c_bg_alt}};
       --charcoal: #171915;
-      --text: {{ c_text_main }};
-      --serif: "{{font_serif}}", "Playfair Display", serif;
-      --sans: "{{font_sans}}", "Outfit", sans-serif;
-      --font-accent: "{{font_accent}}", "Playfair Display", serif;
-      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      --font-heading: var(--serif);
-    }
-    /* kept dark for pricing block contrast */
+      --text: {{c_text_main}};
     --serif: "{{font_serif}}",
     "Playfair Display",
     serif;
@@ -83,6 +77,11 @@
     "Courier New",
     monospace;
     --font-heading: var(--serif);
+    --indochine-border: url('/assets/brands/indochine_icon/border.svg');
+    --indochine-xich-lo: url('/assets/brands/indochine_icon/xich_lo.svg');
+    --indochine-cloud: url('/assets/brands/indochine_icon/cloud.svg');
+    --indochine-den-long: url('/assets/brands/indochine_icon/den_long.svg');
+    --indochine-van-mieu: url('/assets/brands/indochine_icon/chua_1_cot.svg');
     }
 
     html[lang="ar"] {
@@ -120,6 +119,8 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
     }
 
     html,
@@ -172,10 +173,113 @@
       background: var(--ivory);
       page-break-after: always;
       position: relative;
+      overflow: hidden;
     }
 
     .pdf-page:last-of-type {
       page-break-after: auto;
+    }
+
+    .pdf-page::before {
+      content: "";
+      position: absolute;
+      inset: 14px;
+      border-style: solid;
+      border-width: 20px;
+      border-image-source: var(--indochine-border);
+      border-image-slice: 72;
+      border-image-repeat: stretch;
+      background: none;
+      opacity: 0.4;
+      pointer-events: none;
+      z-index: 0;
+      filter: brightness(0.4) sepia(1) saturate(3) hue-rotate(85deg);
+    }
+
+    .pdf-page::after {
+      content: "";
+      position: absolute;
+      inset: 24px;
+      border: 1px solid color-mix(in srgb, var(--gold) 12%, transparent);
+      opacity: 0.4;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .pdf-page>* {
+      position: relative;
+      z-index: 1;
+    }
+
+    .pdf-indochine-art {
+      position: absolute;
+      pointer-events: none;
+      z-index: 0;
+      background-repeat: no-repeat;
+      background-size: contain;
+      background-position: center;
+      mix-blend-mode: multiply;
+      opacity: 0.12;
+    }
+
+    .pdf-indochine-art--cyclo {
+      background-image: var(--indochine-xich-lo);
+      width: 210px;
+      height: 140px;
+    }
+
+    .pdf-indochine-art--buffalo {
+      background-image: var(--indochine-cloud);
+      width: 240px;
+      height: 136px;
+      opacity: 0.08;
+    }
+
+    .pdf-indochine-art--van-mieu {
+      background-image: var(--indochine-van-mieu);
+      width: 240px;
+      height: 172px;
+      opacity: 0.12;
+    }
+
+    .pdf-indochine-art--lantern {
+      background-image: var(--indochine-den-long);
+      width: 92px;
+      height: 164px;
+      opacity: 0.16;
+    }
+
+    .cover-lantern {
+      top: 78px;
+      right: 54px;
+      filter: brightness(0) invert(1);
+      opacity: 0.2;
+    }
+
+    .route-cyclo {
+      top: 92px;
+      right: 48px;
+    }
+
+    .selected-stays-buffalo {
+      bottom: 28px;
+      right: 36px;
+    }
+
+    .divider-lantern {
+      top: 24px;
+      right: 40px;
+      filter: brightness(0) invert(1);
+    }
+
+    .hotel-divider-lantern {
+      top: 28px;
+      right: 52px;
+    }
+
+    .terms-buffalo {
+      top: 72px;
+      right: 42px;
     }
 
     .ltr-token {
@@ -1183,6 +1287,7 @@
       <img class="cover-media" src="{{ hero_img_custom | default(img_0 | default('/assets/vietnam-safar-logo.png')) }}"
         alt="">
       <div class="cover-overlay"></div>
+      <div class="pdf-indochine-art pdf-indochine-art--lantern cover-lantern" aria-hidden="true"></div>
       <div class="cover-body">
         <div class="cover-top">
           <div class="cover-kicker" data-editable="cover_kicker">{{ cover_kicker | default("A Privately Arranged
@@ -1298,6 +1403,7 @@
 
   <!-- ═══════════════════ PAGE 3 — Glance & Overview ═══════════════════ -->
   <div class="pdf-page" style="display: flex; flex-direction: column;">
+    <div class="pdf-indochine-art pdf-indochine-art--cyclo route-cyclo" aria-hidden="true"></div>
     <div class="page-header">
       <span class="brand">{% if brand and brand.logo %}<img src="{{ brand.logo }}"
           style="height: 14px; margin-right: 6px; vertical-align: middle;">{% endif %}{{ (brand.name if brand else '')
@@ -1357,6 +1463,7 @@
   <!-- ── PDF: Chapter Divider — THE JOURNEY ─── -->
   <div class="pdf-page pdf-chapter-divider"
     style="display: none !important; background-image: url('{{ img_itinerary_divider or img_1 or img_0 }}');">
+    <div class="pdf-indochine-art pdf-indochine-art--lantern divider-lantern" aria-hidden="true"></div>
     <div class="pdf-chapter-divider-top">
       <div class="pdf-chapter-divider-kicker">
         The journey, day by day
@@ -1508,6 +1615,7 @@
   <!-- ── PDF: Chapter Divider — SELECTED ACCOMMODATIONS ─── -->
   <div class="pdf-page"
     style="height: 1123px; padding: 0; background: var(--bg-main); display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;">
+    <div class="pdf-indochine-art pdf-indochine-art--van-mieu selected-stays-buffalo" aria-hidden="true"></div>
     <!-- Top 58% Full-bleed Hero Image -->
     <div style="width: 100%; height: 58%; flex: 0 0 58%; position: relative; overflow: hidden;">
       <img src="{{ img_stays_divider or (hotels[0].room_img if hotels else img_2) }}" alt="Selected Accommodations"
@@ -1656,6 +1764,7 @@
   <!-- ── PDF: Chapter Divider — THE JOURNEY, BROUGHT TOGETHER (Option 1: Top Hero Image + Bottom Editorial Content) ─── -->
   <div class="pdf-page"
     style="height: 1123px; padding: 0; background: var(--bg-main); display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;">
+    <div class="pdf-indochine-art pdf-indochine-art--lantern hotel-divider-lantern" aria-hidden="true"></div>
     <!-- Top 58% Full-bleed Hero Image -->
     <div style="width: 100%; height: 58%; flex: 0 0 58%; position: relative; overflow: hidden;">
       <img src="{{ img_hotel_divider or img_2 or img_0 }}" alt="Considered in Full"
@@ -1850,6 +1959,7 @@
 
     <!-- ═══════════════════ PAGE 8 — Booking Terms ═══════════════════ -->
     <div class="pdf-page">
+      <div class="pdf-indochine-art pdf-indochine-art--buffalo terms-buffalo" aria-hidden="true"></div>
       <div class="page-header">
         <span class="brand">{% if brand and brand.logo %}<img src="{{ brand.logo }}"
             style="height: 14px; margin-right: 6px; vertical-align: middle;">{% endif %}{{ (brand.name if brand else '')
@@ -1882,7 +1992,11 @@
                 data-editable="payment_label_deposit">{{ payment_label_deposit |
                 default("Deposit" | translate(lang)) }}</div>
               <div style="color: var(--text-muted); font-size: 11px; line-height: 1.6;" data-editable="term_deposit">
-                {{ term_deposit | default("<div class=\"term-line\">A deposit of 30% of the total tour cost is required upon confirmation of the booking. This deposit is non-refundable.</div><div class=\"term-line\" style=\"margin-top: 12px;\">For bookings confirmed within 60 days of arrival, full payment of 100% of the total tour cost is required at the time of confirmation.</div>", true) | safe }}
+                {{ term_deposit | default("<div class=\"term-line\">A deposit of 30% of the total tour cost is required
+                  upon confirmation of the booking. This deposit is non-refundable.</div>
+                <div class=\"term-line\" style=\"margin-top: 12px;\">For bookings confirmed within 60 days of arrival,
+                  full payment of 100% of the total tour cost is required at the time of confirmation.</div>", true) |
+                safe }}
               </div>
             </div>
 
@@ -1893,7 +2007,8 @@
                 data-editable="payment_label_balance">{{ payment_label_balance |
                 default("Balance" | translate(lang)) }}</div>
               <div style="color: var(--text-muted); font-size: 11px; line-height: 1.6;" data-editable="term_balance">
-                {{ term_balance | default("<div class=\"term-line\">The remaining 70% balance must be paid no later than 60 days prior to the scheduled arrival date.</div>", true) | safe }}
+                {{ term_balance | default("<div class=\"term-line\">The remaining 70% balance must be paid no later than
+                  60 days prior to the scheduled arrival date.</div>", true) | safe }}
               </div>
             </div>
 
@@ -1905,7 +2020,19 @@
                 default("Cancellation" | translate(lang)) }}</div>
               <div style="color: var(--text-muted); font-size: 11px; line-height: 1.6;"
                 data-editable="term_cancellation">
-                {{ term_cancellation | default("<div class=\"term-line\">Written notice required. Cancellation fees apply based on arrival date:</div><div class=\"term-line\" style=\"margin-top: 4px; padding-left: 12px;\">• &gt; 45 days prior: Deposit forfeited (30%)</div><div class=\"term-line\" style=\"margin-top: 4px; padding-left: 12px;\">• 45 – 31 days prior: 50% of total tour cost</div><div class=\"term-line\" style=\"margin-top: 4px; padding-left: 12px;\">• 30 – 20 days prior: 75% of total tour cost</div><div class=\"term-line\" style=\"margin-top: 4px; padding-left: 12px;\">• &lt; 20 days prior: 100% of total tour cost</div><div class=\"term-line\" style=\"margin-top: 12px;\">Any non-refundable payments, cancellation charges or penalties imposed by hotels, airlines, cruise operators and other service providers may also apply in addition to the cancellation fees stated above.</div>", true) | safe }}
+                {{ term_cancellation | default("<div class=\"term-line\">Written notice required. Cancellation fees
+                  apply based on arrival date:</div>
+                <div class=\"term-line\" style=\"margin-top: 4px; padding-left: 12px;\">• &gt; 45 days prior: Deposit
+                  forfeited (30%)</div>
+                <div class=\"term-line\" style=\"margin-top: 4px; padding-left: 12px;\">• 45 – 31 days prior: 50% of
+                  total tour cost</div>
+                <div class=\"term-line\" style=\"margin-top: 4px; padding-left: 12px;\">• 30 – 20 days prior: 75% of
+                  total tour cost</div>
+                <div class=\"term-line\" style=\"margin-top: 4px; padding-left: 12px;\">• &lt; 20 days prior: 100% of
+                  total tour cost</div>
+                <div class=\"term-line\" style=\"margin-top: 12px;\">Any non-refundable payments, cancellation charges
+                  or penalties imposed by hotels, airlines, cruise operators and other service providers may also apply
+                  in addition to the cancellation fees stated above.</div>", true) | safe }}
               </div>
             </div>
 
@@ -1917,7 +2044,8 @@
                 default("Confirmation" | translate(lang)) }}</div>
               <div style="color: var(--text-muted); font-size: 11px; line-height: 1.6;"
                 data-editable="term_confirmation">
-                {{ term_confirmation | default("<div class=\"term-line\">The booking will only be considered confirmed once the required payment has been received.</div>", true) | safe }}
+                {{ term_confirmation | default("<div class=\"term-line\">The booking will only be considered confirmed
+                  once the required payment has been received.</div>", true) | safe }}
               </div>
             </div>
           </div>
@@ -1960,9 +2088,11 @@
             <div data-editable="designer_img"
               style="margin: 0 auto 24px; width: 100%; max-width: 260px; aspect-ratio: 3/4; border-radius: 200px 200px 0 0; overflow: hidden; border: 4px solid #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.05); background-image: url('{{ designer_img | default('/assets/dias_team/hieu.jpg') }}'); background-size: cover; background-position: center;">
             </div>
-            <h3 class="font-serif" style="font-size: 24px; color: var(--emerald); margin: 0 0 2px;" data-editable="seller_name">{{ seller_name or "Eddie" |
+            <h3 class="font-serif" style="font-size: 24px; color: var(--emerald); margin: 0 0 2px;"
+              data-editable="seller_name">{{ seller_name or "Eddie" |
               rtl_mixed(lang) }}</h3>
-            <div class="font-serif" style="font-size: 14px; color: var(--emerald); margin: 0 0 8px; font-weight: 600;" data-editable="seller_subtitle">
+            <div class="font-serif" style="font-size: 14px; color: var(--emerald); margin: 0 0 8px; font-weight: 600;"
+              data-editable="seller_subtitle">
               (Trung Hieu Pham)</div>
             <div data-editable="designer_signature"
               style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--gold-2); font-weight: 700; margin-bottom: 24px;">
@@ -1994,7 +2124,9 @@
 
             <div class="font-serif" data-editable="designer_quote"
               style="font-style: italic; font-size: 15px; color: #70624a; line-height: 1.5; margin: 0 0 32px;">
-              “{{ designer_quote or "I believe the desire to travel is contagious—and it is my privilege to turn that inspiration into thoughtfully designed journeys filled with meaningful experiences, authentic connections, and lasting memories" | translate(lang) }}”
+              “{{ designer_quote or "I believe the desire to travel is contagious—and it is my privilege to turn that
+              inspiration into thoughtfully designed journeys filled with meaningful experiences, authentic connections,
+              and lasting memories" | translate(lang) }}”
             </div>
 
             <!-- Buttons -->
@@ -2010,7 +2142,8 @@
                   </svg>
                   <span data-editable="contact_phone_btn">{{ "CHAT ON WHATSAPP" | translate(lang) }}</span>
                 </a>
-                <div style="font-size: 9px; color: var(--gold-2, #c5a059); opacity: 0.9; padding-left: 2px; font-weight: 500;">
+                <div
+                  style="font-size: 9px; color: var(--gold-2, #c5a059); opacity: 0.9; padding-left: 2px; font-weight: 500;">
                   {{ "No.:" | translate(lang) }} <span>{{ contact_phone or "+84 913 393 119" }}</span>
                 </div>
               </div>
@@ -2024,7 +2157,8 @@
                   </svg>
                   <span data-editable="contact_email_btn">{{ "SEND AN EMAIL" | translate(lang) }}</span>
                 </a>
-                <div style="font-size: 9px; color: var(--gold-2, #c5a059); opacity: 0.9; padding-left: 2px; font-weight: 500;">
+                <div
+                  style="font-size: 9px; color: var(--gold-2, #c5a059); opacity: 0.9; padding-left: 2px; font-weight: 500;">
                   {{ "Email:" | translate(lang) }} <span>{{ seller_email or "sales@capellatravel.com" }}</span>
                 </div>
               </div>
@@ -2036,9 +2170,8 @@
               <div style="display: flex; gap: 16px; align-items: flex-start;">
                 <div
                   style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--gold); display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: white; padding: 8px;">
-                  <img
-                    src="/assets/brands/indochine_icon/button_icon/mountain.png"
-                    alt="icon" style="width: 100%; height: 100%; object-fit: contain;">
+                  <img src="/assets/brands/indochine_icon/button_icon/mountain.png" alt="icon"
+                    style="width: 100%; height: 100%; object-fit: contain;">
                 </div>
                 <div>
                   <div data-editable="final_req_title"
@@ -2062,9 +2195,8 @@
               <div style="display: flex; gap: 16px; align-items: flex-start;">
                 <div
                   style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--gold); display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: white; padding: 8px;">
-                  <img
-                    src="/assets/brands/indochine_icon/button_icon/mountain.png"
-                    alt="icon" style="width: 100%; height: 100%; object-fit: contain;">
+                  <img src="/assets/brands/indochine_icon/button_icon/mountain.png" alt="icon"
+                    style="width: 100%; height: 100%; object-fit: contain;">
                 </div>
                 <div>
                   <div data-editable="payment_label_confirmation"

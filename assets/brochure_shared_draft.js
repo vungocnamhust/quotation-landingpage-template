@@ -5,20 +5,37 @@
   const body = document.body;
   const mode = body.dataset.brochureMode || "published";
   const isEditor = mode === "editor";
-  const isPdf = mode === "pdf";
-  const isPreview = body.dataset.brochurePreview === "1";
   const quotationId = body.dataset.quotationId || "";
   const currentLang = body.dataset.currentLang || "en";
-  const targetOrigin = window.location.origin;
   const clientI18n = parseJsonScript("client-i18n") || {};
+  let sectionRegistry = parseJsonScript("section-registry") || {};
+  const parsedBrandPresets = parseJsonScript("brand-presets");
+  const brandPresets = Array.isArray(parsedBrandPresets) ? parsedBrandPresets : [];
+  const brandPresetMap = new Map(
+    brandPresets
+      .filter((preset) => preset && preset.brandId)
+      .map((preset) => [preset.brandId, preset])
+  );
 
   let state = normalizeDraft(parseJsonScript("brochure-draft") || {});
   let saveTimer = null;
   let saveInFlight = false;
   let pendingSave = false;
-  let previewReady = false;
-  let previewIframe = null;
   let saveStatusEl = null;
+  let sidebarToggleEl = null;
+  const DEFAULT_SECTION_TYPES = [
+    "hero",
+    "overview_letter",
+    "route_map",
+    "itinerary",
+    "hotel_plan",
+    "pricing",
+    "inclusions_exclusions",
+    "booking_terms",
+    "designer",
+    "finalization",
+  ];
+  const SIDEBAR_STORAGE_KEY = "brochureDraftCollapsed";
 
   function parseJsonScript(id) {
     const el = document.getElementById(id);
@@ -33,6 +50,12 @@
 
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
+  }
+
+  function getSectionDefinitions() {
+    const entries = Object.entries(sectionRegistry || {});
+    if (entries.length) return entries.map(([type, def]) => ({ type, ...(def || {}) }));
+    return DEFAULT_SECTION_TYPES.map((type) => ({ type, label: type.replace(/_/g, " ") }));
   }
 
   function normalizeDraft(draft) {
@@ -116,13 +139,104 @@
     }));
     next.inclusions = (next.inclusions || []).map((item, index) => ({ id: item.id || `inc-${index + 1}`, text: item.text || "" }));
     next.exclusions = (next.exclusions || []).map((item, index) => ({ id: item.id || `exc-${index + 1}`, text: item.text || "" }));
-    next.bookingTerms = next.bookingTerms || {};
+    next.bookingTerms = normalizeBookingTerms(next.bookingTerms || {});
     next.designer = next.designer || {};
     next.designer.image = normalizeAsset(next.designer.image);
     next.finalization = next.finalization || {};
+    next.finalization.requiredTitle = next.finalization.requiredTitle || next.finalization.required_title || "Final Details Required";
+    next.finalization.afterConfirmationTitle = next.finalization.afterConfirmationTitle || next.finalization.after_confirmation_title || "After Confirmation";
     next.finalization.requiredItems = (next.finalization.requiredItems || []).map((item, index) => ({ id: item.id || `final-req-${index + 1}`, text: item.text || "" }));
     next.finalization.afterConfirmation = (next.finalization.afterConfirmation || []).map((item, index) => ({ id: item.id || `final-after-${index + 1}`, text: item.text || "" }));
+    next.layout = next.layout || {};
+    next.layout.sections = normalizeLayoutSections(next.layout.sections || []);
     return next;
+  }
+
+  function normalizeBookingTerms(bookingTerms) {
+    const next = { ...bookingTerms };
+    const fallbackItems = [
+      { id: "deposit", key: "deposit", label: next.depositLabel || "Deposit", body: next.deposit || "" },
+      { id: "balance", key: "balance", label: next.balanceLabel || "Balance", body: next.balance || "" },
+      { id: "cancellation", key: "cancellation", label: next.cancellationLabel || "Cancellation", body: next.cancellation || "" },
+      { id: "confirmation", key: "confirmation", label: next.confirmationLabel || "Confirmation", body: next.confirmation || "" },
+    ];
+    next.items = (next.items || fallbackItems).map((item, index) => ({
+      id: item.id || item.key || `term-${index + 1}`,
+      key: item.key || item.id || `term_${index + 1}`,
+      label: item.label || "",
+      body: item.body || "",
+    }));
+    return next;
+  }
+
+  function normalizeLayoutSections(sections) {
+    const source = Array.isArray(sections) && sections.length ? sections : DEFAULT_SECTION_TYPES.map((type, index) => ({
+      id: type,
+      type,
+      enabled: true,
+      order: index + 1,
+      props: {},
+    }));
+    return source
+      .map((section, index) => ({
+        id: section.id || section.type || `section-${index + 1}`,
+        type: section.type || DEFAULT_SECTION_TYPES[index] || "hero",
+        enabled: section.enabled !== false,
+        order: Number(section.order || index + 1),
+        props: section.props && typeof section.props === "object" ? section.props : {},
+      }))
+      .sort((a, b) => a.order - b.order);
+  }
+
+  function bookingTermsMap(draft) {
+    const items = ((draft.bookingTerms || {}).items || []).reduce((acc, item) => {
+      acc[item.key || item.id] = item;
+      return acc;
+    }, {});
+    return items;
+  }
+
+  function formatBookingItems(items) {
+    return (items || []).map((item) => `${item.label || ""} || ${item.body || ""}`).join("\n");
+  }
+
+  function parseBookingItems(value) {
+    return String(value || "")
+      .split(/\n+/)
+      .map((line, index) => {
+        const [label, ...bodyParts] = line.split("||");
+        const body = bodyParts.join("||").trim();
+        return {
+          id: `term-${index + 1}`,
+          key: `term_${index + 1}`,
+          label: (label || "").trim(),
+          body,
+        };
+      })
+      .filter((item) => item.label || item.body);
+  }
+
+  function formatLayoutSections(sections) {
+    return (sections || []).map((section) => `${section.type} || ${section.enabled ? "on" : "off"} || ${section.order}`).join("\n");
+  }
+
+  function parseLayoutSections(value) {
+    const parsed = String(value || "")
+      .split(/\n+/)
+      .map((line, index) => {
+        const [typeRaw, enabledRaw, orderRaw] = line.split("||").map((item) => (item || "").trim());
+        const type = typeRaw || DEFAULT_SECTION_TYPES[index] || "";
+        if (!type) return null;
+        return {
+          id: type,
+          type,
+          enabled: enabledRaw !== "off",
+          order: Number(orderRaw || index + 1),
+          props: {},
+        };
+      })
+      .filter(Boolean);
+    return normalizeLayoutSections(parsed);
   }
 
   function normalizeAsset(asset) {
@@ -175,6 +289,19 @@
     return value == null ? "" : String(value);
   }
 
+  function formatArrayField(path, value) {
+    if (!Array.isArray(value)) return textValue(value);
+    return value
+      .map((item) => (item && typeof item === "object" ? item.text || "" : String(item || "")))
+      .join(path.includes(".description") ? "\n\n" : "\n");
+  }
+
+  function describeErrors(detail) {
+    const errors = detail && Array.isArray(detail.errors) ? detail.errors : [];
+    if (!errors.length) return (detail && detail.message) || "Validation failed";
+    return errors.map((item) => item.message || item.msg || item.path || "Validation error").join(" | ");
+  }
+
   function setTextContent(selector, value) {
     document.querySelectorAll(selector).forEach((el) => {
       el.textContent = value || "";
@@ -197,10 +324,95 @@
     }
   }
 
+  function syncEditorFields(rootEl) {
+    const root = rootEl || document;
+    root.querySelectorAll("input[data-path], textarea[data-path]").forEach((el) => {
+      const value = getPath(state, el.dataset.path || "");
+      if (el instanceof HTMLInputElement && el.type === "file") return;
+      if (el instanceof HTMLInputElement && el.type === "color") {
+        el.value = textValue(value) || "#000000";
+        return;
+      }
+      el.value = textValue(value);
+    });
+    root.querySelectorAll("textarea[data-array-path]").forEach((el) => {
+      const path = el.dataset.arrayPath || "";
+      el.value = formatArrayField(path, getPath(state, path));
+    });
+    root.querySelectorAll("textarea[data-booking-items]").forEach((el) => {
+      el.value = formatBookingItems((state.bookingTerms || {}).items || []);
+    });
+    root.querySelectorAll("small[data-asset-url]").forEach((el) => {
+      const value = getPath(state, el.dataset.assetUrl || "");
+      el.textContent = value && value.url ? value.url : "";
+    });
+    root.querySelectorAll("[data-brand-preset]").forEach((el) => {
+      const active = el.dataset.brandPreset === (((state.meta || {}).brandId) || "");
+      el.classList.toggle("is-active", active);
+      el.setAttribute("aria-pressed", active ? "true" : "false");
+    });
+  }
+
+  function setSidebarCollapsed(collapsed) {
+    body.dataset.brochureSidebarCollapsed = collapsed ? "1" : "0";
+    if (sidebarToggleEl) {
+      sidebarToggleEl.textContent = collapsed
+        ? (clientI18n.show_draft || "Show Draft")
+        : (clientI18n.hide_draft || "Hide Draft");
+      sidebarToggleEl.setAttribute("aria-expanded", collapsed ? "false" : "true");
+    }
+    try {
+      window.localStorage.setItem(SIDEBAR_STORAGE_KEY, collapsed ? "1" : "0");
+    } catch (err) {
+      console.warn("[brochure-draft] Sidebar state was not persisted", err);
+    }
+  }
+
+  function renderBrandPresetPicker() {
+    if (!brandPresets.length) return "";
+    return `
+      <div class="draft-brand-presets">
+        <span class="draft-brand-presets-label">${escapeHtml(clientI18n.brand_presets_label || "Brand Presets")}</span>
+        <div class="draft-brand-presets-buttons">
+          ${brandPresets.map((preset) => {
+            const active = preset.brandId === (((state.meta || {}).brandId) || "");
+            return `
+              <button
+                type="button"
+                class="draft-brand-preset-btn ${active ? "is-active" : ""}"
+                data-brand-preset="${escapeAttr(preset.brandId)}"
+                aria-pressed="${active ? "true" : "false"}"
+              >${escapeHtml(preset.label || preset.name || preset.brandId)}</button>
+            `;
+          }).join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  function applyBrandPreset(brandId, panel) {
+    const preset = brandPresetMap.get(brandId);
+    if (!preset) return;
+    state.meta = state.meta || {};
+    state.meta.brandId = preset.brandId;
+    state.meta.revision = Number(state.meta.revision || 1) + 1;
+    state.brand = state.brand || {};
+    state.brand.name = preset.name || state.brand.name || "";
+    state.brand.domain = preset.domain || state.brand.domain || "";
+    state.brand.logo = normalizeAsset({ url: preset.logo || "", status: "ready" });
+    state.brand.colors = { ...(preset.colors || {}) };
+    state.brand.fonts = { ...(preset.fonts || {}) };
+    applyDraftToDom(state);
+    syncEditorFields(panel);
+    updateSaveStatus(clientI18n.brand_preset_applied || "Brand preset applied", "neutral");
+    scheduleSave();
+  }
+
   function applyBrandTokens(draft) {
     const brand = draft.brand || {};
     const colors = brand.colors || {};
     const fonts = brand.fonts || {};
+    const brandId = ((draft.meta || {}).brandId) || "";
     const root = document.documentElement;
     const varMap = {
       "--primary": colors.primary,
@@ -227,8 +439,19 @@
     });
     const navBrandText = document.querySelector("a.brand span");
     if (navBrandText && brand.name) navBrandText.textContent = brand.name;
+    document.querySelectorAll(".domain-text").forEach((node) => {
+      node.textContent = brand.name || "";
+    });
     const fav = document.querySelector('link[rel="apple-touch-icon"]');
     if (fav && brand.logo && brand.logo.url) fav.href = brand.logo.url;
+    const pdfBtn = document.getElementById("btn-pdf-view");
+    if (pdfBtn) {
+      const pdfUrl = new URL(pdfBtn.getAttribute("href") || `/quotations/${quotationId}/pdf`, window.location.origin);
+      pdfUrl.searchParams.set("lang", currentLang);
+      if (brandId) pdfUrl.searchParams.set("brand", brandId);
+      else pdfUrl.searchParams.delete("brand");
+      pdfBtn.href = `${pdfUrl.pathname}${pdfUrl.search}${pdfUrl.hash}`;
+    }
   }
 
   function buildCarouselMarkup(urls) {
@@ -279,6 +502,7 @@
     const pricing = draft.pricing || {};
     const bookingTerms = draft.bookingTerms || {};
     const designer = draft.designer || {};
+    const bookingItems = bookingTermsMap(draft);
 
     setEditable("tour_title", trip.title || "");
     setEditable("lede", trip.lede || "");
@@ -295,10 +519,14 @@
     setEditable("payment_kicker", bookingTerms.kicker || "");
     setEditable("payment_title", bookingTerms.title || "");
     setEditable("payment_desc", bookingTerms.description || "");
-    setEditable("term_deposit", bookingTerms.deposit || "", true);
-    setEditable("term_balance", bookingTerms.balance || "", true);
-    setEditable("term_cancellation", bookingTerms.cancellation || "", true);
-    setEditable("term_confirmation", bookingTerms.confirmation || "", true);
+    setEditable("payment_label_deposit", (bookingItems.deposit || {}).label || "");
+    setEditable("payment_label_balance", (bookingItems.balance || {}).label || "");
+    setEditable("payment_label_cancellation", (bookingItems.cancellation || {}).label || "");
+    setEditable("payment_label_confirmation", (bookingItems.confirmation || {}).label || "");
+    setEditable("term_deposit", (bookingItems.deposit || {}).body || "", true);
+    setEditable("term_balance", (bookingItems.balance || {}).body || "", true);
+    setEditable("term_cancellation", (bookingItems.cancellation || {}).body || "", true);
+    setEditable("term_confirmation", (bookingItems.confirmation || {}).body || "", true);
     setEditable("letter_greeting", narrative.letterGreeting || "");
     setEditable("letter_intro", narrative.letterIntro || "");
     setEditable("letter_body_p2", narrative.letterBody2 || "");
@@ -401,12 +629,33 @@
     });
   }
 
+  function applyBookingTerms(draft) {
+    const items = ((draft.bookingTerms || {}).items || []).filter((item) => item.label || item.body);
+    document.querySelectorAll("[data-booking-terms-list]").forEach((container) => {
+      container.innerHTML = items.map((item, index) => `
+        <div class="term-row" data-booking-term-id="${escapeAttr(item.id || `term-${index + 1}`)}">
+          <div data-editable="booking_term_label_${index}" style="font-family: var(--serif); font-size: inherit; color: inherit;">${escapeHtml(item.label || "")}</div>
+          <div><div data-editable="booking_term_body_${index}" style="color: inherit; font-size: inherit; line-height: inherit;">${item.body || ""}</div></div>
+        </div>
+      `).join("");
+    });
+  }
+
   function applyFinalization(draft) {
+    const finalization = draft.finalization || {};
+    setEditable("final_req_title", finalization.requiredTitle || "");
+    setEditable("final_after_title", finalization.afterConfirmationTitle || "");
     (draft.finalization.requiredItems || []).forEach((item, index) => {
       setEditable(`final_req_${index}`, item.text || "");
     });
     (draft.finalization.afterConfirmation || []).forEach((item, index) => {
       setEditable(`final_after_${index}`, item.text || "");
+    });
+    document.querySelectorAll("[data-finalization-required-list]").forEach((container) => {
+      container.innerHTML = (finalization.requiredItems || []).map((item, index) => `<li data-editable="final_req_${index}">${escapeHtml(item.text || "")}</li>`).join("");
+    });
+    document.querySelectorAll("[data-finalization-after-list]").forEach((container) => {
+      container.innerHTML = (finalization.afterConfirmation || []).map((item, index) => `<li data-editable="final_after_${index}">${escapeHtml(item.text || "")}</li>`).join("");
     });
   }
 
@@ -460,6 +709,7 @@
   }
 
   function applyDraftToDom(draft) {
+    applyLayout(draft);
     applyBrandTokens(draft);
     applyAssets(draft);
     applyTopLevel(draft);
@@ -468,8 +718,34 @@
     applyPricing(draft);
     applyCollection("inc", draft.inclusions || []);
     applyCollection("exc", draft.exclusions || []);
+    applyBookingTerms(draft);
     applyFinalization(draft);
     applyRouteSegments(draft);
+  }
+
+  function applyLayout(draft) {
+    const sections = normalizeLayoutSections((((draft || {}).layout || {}).sections) || []);
+    const main = document.getElementById("top");
+    const pdfPagesRoot = document.querySelector(".pdf-pages") || document.body;
+    const sectionGroups = new Map();
+    document.querySelectorAll("[data-section-id]").forEach((node) => {
+      const type = node.getAttribute("data-section-id");
+      if (!type) return;
+      if (!sectionGroups.has(type)) sectionGroups.set(type, []);
+      sectionGroups.get(type).push(node);
+    });
+
+    sections.forEach((section, index) => {
+      const nodes = sectionGroups.get(section.type) || [];
+      nodes.forEach((node) => {
+        node.style.display = section.enabled ? "" : "none";
+        node.style.order = String(section.order || index + 1);
+        const parent = node.closest(".pdf-page") ? pdfPagesRoot : main;
+        if (parent && node.parentElement === parent) {
+          parent.appendChild(node);
+        }
+      });
+    });
   }
 
   function updateSaveStatus(message, tone) {
@@ -494,16 +770,17 @@
     pendingSave = false;
     saveInFlight = true;
     try {
-      const res = await fetch(`/api/v1/quotations/${quotationId}/draft?lang=${encodeURIComponent(currentLang)}`, {
+      const res = await fetch(`/api/v2/quotations/${quotationId}/document?lang=${encodeURIComponent(currentLang)}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ draft: state }),
+        body: JSON.stringify({ document: state }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || "Failed to save draft");
-      state = normalizeDraft(data.draft || state);
+      if (!res.ok) throw new Error(describeErrors(data.detail || data));
+      state = normalizeDraft(data.document || state);
+      sectionRegistry = data.sectionRegistry || sectionRegistry;
+      syncEditorFields(document.getElementById("brochure-draft-sidebar"));
       updateSaveStatus("Draft saved", "success");
-      sendDraftToPreview();
     } catch (err) {
       console.error("[brochure-draft] Save failed", err);
       updateSaveStatus("Draft save failed", "error");
@@ -531,7 +808,7 @@
     const tempUrl = URL.createObjectURL(file);
     setPath(state, path, { assetId: "", url: tempUrl, status: "uploading" });
     applyDraftToDom(state);
-    sendDraftToPreview();
+    syncEditorFields(document.getElementById("brochure-draft-sidebar"));
     scheduleSave();
     try {
       const uploaded = await uploadAsset(file);
@@ -541,53 +818,15 @@
         status: uploaded.status || "ready",
       });
       applyDraftToDom(state);
-      sendDraftToPreview();
+      syncEditorFields(document.getElementById("brochure-draft-sidebar"));
       scheduleSave();
     } catch (err) {
       console.error("[brochure-draft] Upload failed", err);
       setPath(state, path, { assetId: "", url: tempUrl, status: "error" });
       applyDraftToDom(state);
-      sendDraftToPreview();
+      syncEditorFields(document.getElementById("brochure-draft-sidebar"));
       updateSaveStatus("Asset upload failed", "error");
     }
-  }
-
-  function sendDraftToPreview() {
-    if (!isEditor || !previewIframe || !previewIframe.contentWindow || !previewReady) return;
-    previewIframe.contentWindow.postMessage({
-      type: "BROCHURE_DRAFT_SYNC",
-      revision: (state.meta && state.meta.revision) || 1,
-      draft: state,
-    }, targetOrigin);
-  }
-
-  function initPreviewMessaging() {
-    window.addEventListener("message", (event) => {
-      if (event.origin !== targetOrigin || !event.data || typeof event.data !== "object") return;
-      if (event.data.type === "PDF_PREVIEW_READY") {
-        previewReady = true;
-        sendDraftToPreview();
-      } else if (event.data.type === "PDF_PREVIEW_APPLIED") {
-        updateSaveStatus("Preview updated", "success");
-      } else if (event.data.type === "PDF_PREVIEW_ERROR") {
-        updateSaveStatus("Preview sync failed", "error");
-      }
-    });
-  }
-
-  function initPdfPreviewRuntime() {
-    window.addEventListener("message", (event) => {
-      if (event.origin !== targetOrigin || !event.data || event.data.type !== "BROCHURE_DRAFT_SYNC") return;
-      try {
-        state = normalizeDraft(event.data.draft || {});
-        applyDraftToDom(state);
-        window.parent.postMessage({ type: "PDF_PREVIEW_APPLIED", revision: event.data.revision || 0 }, targetOrigin);
-      } catch (err) {
-        console.error("[brochure-draft] PDF preview sync failed", err);
-        window.parent.postMessage({ type: "PDF_PREVIEW_ERROR", message: err.message || String(err) }, targetOrigin);
-      }
-    });
-    window.parent.postMessage({ type: "PDF_PREVIEW_READY" }, targetOrigin);
   }
 
   function getFieldSections() {
@@ -639,12 +878,14 @@
       field("bookingTerms.kicker", "Terms kicker"),
       field("bookingTerms.title", "Terms title"),
       field("bookingTerms.description", "Terms description", "textarea"),
-      field("bookingTerms.deposit", "Deposit", "textarea"),
-      field("bookingTerms.balance", "Balance", "textarea"),
-      field("bookingTerms.cancellation", "Cancellation", "textarea"),
-      field("bookingTerms.confirmation", "Confirmation", "textarea"),
+      field("bookingTerms.items", "Items", "bookingItems"),
     ];
-    return { trip, narrative, brand, designer, booking };
+    const layout = [
+      field("layout.sections", "Sections", "layoutItems"),
+      field("finalization.requiredTitle", "Final details title"),
+      field("finalization.afterConfirmationTitle", "After confirmation title"),
+    ];
+    return { trip, narrative, brand, designer, booking, layout };
   }
 
   function field(path, label, type) {
@@ -661,9 +902,39 @@
     }
     if (def.type === "asset") {
       const url = value && value.url ? value.url : "";
-      return `<label class="draft-field"><span>${escapeHtml(def.label)}</span><input type="file" accept="image/*" data-asset-path="${def.path}" /><small class="draft-asset-url">${escapeHtml(url)}</small></label>`;
+      return `<label class="draft-field"><span>${escapeHtml(def.label)}</span><input type="file" accept="image/*" data-asset-path="${def.path}" /><small class="draft-asset-url" data-asset-url="${def.path}">${escapeHtml(url)}</small></label>`;
+    }
+    if (def.type === "bookingItems") {
+      return `<label class="draft-field"><span>${escapeHtml(def.label)}</span><textarea data-booking-items="bookingTerms.items" placeholder="Label || Body, one line per item">${escapeHtml(formatBookingItems((state.bookingTerms || {}).items || []))}</textarea></label>`;
+    }
+    if (def.type === "layoutItems") {
+      return `<div class="draft-field"><span>${escapeHtml(def.label)}</span>${renderLayoutEditor()}</div>`;
     }
     return `<label class="draft-field"><span>${escapeHtml(def.label)}</span><input type="text" data-path="${def.path}" value="${escapeHtml(textValue(value))}" /></label>`;
+  }
+
+  function renderLayoutEditor() {
+    const sections = normalizeLayoutSections((((state || {}).layout || {}).sections) || []);
+    const current = new Map(sections.map((section) => [section.type, section]));
+    return `
+      <div class="draft-layout-list">
+        ${getSectionDefinitions().map((definition, index) => {
+          const section = current.get(definition.type) || {
+            id: definition.type,
+            type: definition.type,
+            enabled: true,
+            order: index + 1,
+            props: {},
+          };
+          return `
+            <div class="draft-layout-row" data-layout-type="${escapeAttr(definition.type)}">
+              <label><input type="checkbox" data-layout-enabled="${escapeAttr(definition.type)}" ${section.enabled ? "checked" : ""} /> ${escapeHtml(definition.label || definition.type)}</label>
+              <input type="number" min="1" data-layout-order="${escapeAttr(definition.type)}" value="${Number(section.order || index + 1)}" />
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
   }
 
   function renderDynamicSections() {
@@ -734,9 +1005,10 @@
         </div>
         <details open class="draft-section"><summary>Trip</summary>${sections.trip.map(renderField).join("")}</details>
         <details class="draft-section"><summary>Narrative</summary>${sections.narrative.map(renderField).join("")}</details>
-        <details class="draft-section"><summary>Brand & Assets</summary>${sections.brand.map(renderField).join("")}</details>
+        <details class="draft-section"><summary>Brand & Assets</summary>${renderBrandPresetPicker()}${sections.brand.map(renderField).join("")}</details>
         <details class="draft-section"><summary>Designer</summary>${sections.designer.map(renderField).join("")}</details>
         <details class="draft-section"><summary>Booking Terms</summary>${sections.booking.map(renderField).join("")}</details>
+        <details class="draft-section"><summary>Layout & Finalization</summary>${sections.layout.map(renderField).join("")}</details>
         <details class="draft-section"><summary>Route</summary>${dynamic.routeMarkup}</details>
         <details class="draft-section"><summary>Itinerary</summary>${dynamic.daysMarkup}</details>
         <details class="draft-section"><summary>Hotels</summary>${dynamic.hotelsMarkup}</details>
@@ -752,6 +1024,9 @@
           <button type="button" id="draft-publish-btn">Publish</button>
         </div>
         <div class="draft-sidebar-actions">
+          <button type="button" id="draft-regenerate-btn">Regenerate Narrative</button>
+        </div>
+        <div class="draft-sidebar-actions">
           <a id="draft-published-link" href="#" target="_blank" hidden>Open published page</a>
         </div>
       </div>
@@ -760,28 +1035,29 @@
     saveStatusEl = panel.querySelector("#draft-save-status");
     updateSaveStatus("Ready", "neutral");
 
-    const previewWrap = document.createElement("div");
-    previewWrap.id = "brochure-pdf-preview";
-    const currentUrl = new URL(window.location.href);
-    const previewUrl = new URL(`/quotations/${quotationId}/pdf`, targetOrigin);
-    previewUrl.searchParams.set("lang", currentLang);
-    previewUrl.searchParams.set("preview", "1");
-    if (currentUrl.searchParams.get("brand")) previewUrl.searchParams.set("brand", currentUrl.searchParams.get("brand"));
-    previewWrap.innerHTML = `
-      <div class="draft-preview-header">
-        <strong>PDF Preview</strong>
-        <span>Realtime sync</span>
-      </div>
-      <iframe title="PDF Preview" src="${previewUrl.toString()}"></iframe>
-    `;
-    document.body.appendChild(previewWrap);
-    previewIframe = previewWrap.querySelector("iframe");
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.id = "brochure-draft-toggle";
+    document.body.appendChild(toggle);
+    sidebarToggleEl = toggle;
+    sidebarToggleEl.addEventListener("click", () => {
+      setSidebarCollapsed(body.dataset.brochureSidebarCollapsed !== "1");
+    });
+    let storedCollapsed = false;
+    try {
+      storedCollapsed = window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === "1";
+    } catch (err) {
+      storedCollapsed = false;
+    }
+    setSidebarCollapsed(storedCollapsed);
 
     panel.addEventListener("input", (event) => {
       const target = event.target;
       if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement)) return;
       const path = target.dataset.path;
       const arrayPath = target.dataset.arrayPath;
+      const bookingItemsPath = target.dataset.bookingItems;
+      const layoutSectionsPath = target.dataset.layoutSections;
       if (path) {
         setPath(state, path, target.value);
       } else if (arrayPath) {
@@ -793,11 +1069,34 @@
         if (arrayPath === "inclusions" || arrayPath === "exclusions" || arrayPath.startsWith("finalization.")) {
           setPath(state, arrayPath, splitLines(target.value).map((text, index) => ({ id: `${arrayPath.split(".").pop()}-${index + 1}`, text })));
         }
+      } else if (bookingItemsPath) {
+        setPath(state, bookingItemsPath, parseBookingItems(target.value));
+      } else if (layoutSectionsPath) {
+        setPath(state, layoutSectionsPath, parseLayoutSections(target.value));
+      } else if (target.dataset.layoutEnabled || target.dataset.layoutOrder) {
+        const sections = normalizeLayoutSections((((state || {}).layout || {}).sections) || []);
+        const current = new Map(sections.map((section) => [section.type, { ...section }]));
+        if (target.dataset.layoutEnabled) {
+          const section = current.get(target.dataset.layoutEnabled);
+          if (section) section.enabled = !!target.checked;
+        }
+        if (target.dataset.layoutOrder) {
+          const section = current.get(target.dataset.layoutOrder);
+          if (section) section.order = Number(target.value || section.order || 1);
+        }
+        setPath(state, "layout.sections", normalizeLayoutSections(Array.from(current.values())));
       }
       state.meta.revision = Number(state.meta.revision || 1) + 1;
       applyDraftToDom(state);
-      sendDraftToPreview();
+      syncEditorFields(panel);
       scheduleSave();
+    });
+
+    panel.addEventListener("click", (event) => {
+      if (!(event.target instanceof Element)) return;
+      const presetBtn = event.target.closest("[data-brand-preset]");
+      if (!presetBtn) return;
+      applyBrandPreset(presetBtn.dataset.brandPreset || "", panel);
     });
 
     panel.addEventListener("change", (event) => {
@@ -816,13 +1115,13 @@
     panel.querySelector("#draft-publish-btn").addEventListener("click", async () => {
       updateSaveStatus("Publishing…", "pending");
       try {
-        const res = await fetch(`/quotations/${quotationId}/publish?lang=${encodeURIComponent(currentLang)}`, {
+        const res = await fetch(`/api/v2/quotations/${quotationId}/publish?lang=${encodeURIComponent(currentLang)}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ draft: state }),
+          body: JSON.stringify({ document: state }),
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || "Publish failed");
+        if (!res.ok) throw new Error(describeErrors(data.detail || data));
         updateSaveStatus("Published", "success");
         const link = panel.querySelector("#draft-published-link");
         if (link && data.published_url) {
@@ -835,6 +1134,27 @@
         updateSaveStatus("Publish failed", "error");
       }
     });
+    panel.querySelector("#draft-regenerate-btn").addEventListener("click", async () => {
+      updateSaveStatus("Regenerating…", "pending");
+      try {
+        const res = await fetch(`/api/v2/quotations/${quotationId}/regenerate-narrative?lang=${encodeURIComponent(currentLang)}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ scopes: ["hero", "overview", "itinerary", "booking_terms", "finalization"] }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(describeErrors(data.detail || data));
+        state = normalizeDraft(data.document || state);
+        applyDraftToDom(state);
+        syncEditorFields(panel);
+        updateSaveStatus("Narrative regenerated", "success");
+      } catch (err) {
+        console.error("[brochure-draft] Regenerate failed", err);
+        updateSaveStatus("Regenerate failed", "error");
+      }
+    });
+
+    syncEditorFields(panel);
   }
 
   function injectEditorStyles() {
@@ -842,6 +1162,10 @@
     style.textContent = `
       body[data-brochure-mode="editor"] {
         padding-right: 360px;
+        transition: padding-right 0.24s ease;
+      }
+      body[data-brochure-mode="editor"][data-brochure-sidebar-collapsed="1"] {
+        padding-right: 0;
       }
       #brochure-draft-sidebar {
         position: fixed;
@@ -854,6 +1178,27 @@
         box-shadow: -10px 0 40px rgba(0,0,0,0.08);
         z-index: 1200;
         overflow: auto;
+        transition: transform 0.24s ease, box-shadow 0.24s ease;
+      }
+      body[data-brochure-mode="editor"][data-brochure-sidebar-collapsed="1"] #brochure-draft-sidebar {
+        transform: translateX(calc(100% + 24px));
+        box-shadow: none;
+      }
+      #brochure-draft-toggle {
+        position: fixed;
+        top: 88px;
+        right: 376px;
+        z-index: 1210;
+        border: none;
+        background: var(--primary, #17412e);
+        color: white;
+        padding: 10px 14px;
+        cursor: pointer;
+        box-shadow: 0 12px 30px rgba(0,0,0,0.16);
+        transition: right 0.24s ease, transform 0.24s ease;
+      }
+      body[data-brochure-mode="editor"][data-brochure-sidebar-collapsed="1"] #brochure-draft-toggle {
+        right: 16px;
       }
       #brochure-draft-sidebar .draft-sidebar-inner {
         padding: 18px;
@@ -921,6 +1266,46 @@
         padding: 2px;
         background: white;
       }
+      .draft-asset-url {
+        display: block;
+        margin-top: 6px;
+        color: #666;
+        font-size: 11px;
+        word-break: break-all;
+      }
+      .draft-brand-presets {
+        padding: 12px;
+        border-bottom: 1px solid rgba(0,0,0,0.06);
+        display: grid;
+        gap: 10px;
+      }
+      .draft-brand-presets-label {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        color: #555;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .draft-brand-presets-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .draft-brand-preset-btn {
+        border: 1px solid rgba(0,0,0,0.12);
+        background: white;
+        color: #222;
+        padding: 8px 10px;
+        cursor: pointer;
+        font: inherit;
+        font-size: 12px;
+      }
+      .draft-brand-preset-btn.is-active {
+        background: var(--primary, #17412e);
+        color: white;
+        border-color: var(--primary, #17412e);
+      }
       .draft-sidebar-actions {
         display: flex;
         gap: 10px;
@@ -940,39 +1325,14 @@
       #draft-save-status[data-tone="success"] { color: #0a7f34; }
       #draft-save-status[data-tone="error"] { color: #c0392b; }
       #draft-save-status[data-tone="pending"] { color: #9a6700; }
-      #brochure-pdf-preview {
-        position: fixed;
-        left: 18px;
-        bottom: 18px;
-        width: min(42vw, 520px);
-        height: min(78vh, 760px);
-        background: rgba(255,255,255,0.96);
-        box-shadow: 0 18px 50px rgba(0,0,0,0.2);
-        z-index: 1150;
-        display: flex;
-        flex-direction: column;
-        border: 1px solid rgba(0,0,0,0.1);
-      }
-      #brochure-pdf-preview .draft-preview-header {
-        display: flex;
-        justify-content: space-between;
-        padding: 10px 12px;
-        font-size: 12px;
-        border-bottom: 1px solid rgba(0,0,0,0.08);
-      }
-      #brochure-pdf-preview iframe {
-        flex: 1;
-        width: 100%;
-        border: 0;
-        background: #525659;
-      }
       @media (max-width: 1100px) {
         body[data-brochure-mode="editor"] { padding-right: 0; }
         #brochure-draft-sidebar {
           width: min(420px, 100vw);
         }
-        #brochure-pdf-preview {
-          display: none;
+        #brochure-draft-toggle {
+          right: 16px;
+          top: 78px;
         }
       }
     `;
@@ -981,12 +1341,8 @@
 
   applyDraftToDom(state);
 
-  if (isPdf && isPreview) {
-    initPdfPreviewRuntime();
-  } else if (isEditor) {
+  if (isEditor) {
     injectEditorStyles();
-    initPreviewMessaging();
     renderEditor();
-    sendDraftToPreview();
   }
 })();

@@ -1157,7 +1157,7 @@
     "Confidential" | translate(lang) }}</div>
 
   <!-- ═══════════════════ PAGE 1 — Cover ═══════════════════ -->
-  <div class="pdf-page">
+  <div class="pdf-page" data-section-id="hero">
     <div class="cover"
       style="background-image: linear-gradient(160deg,rgba(17,19,15,.88),rgba(17,19,15,.55) 55%,rgba(17,19,15,.18)), url('{{ hero_img_custom | default(img_0 | default('/assets/vietnam-safar-logo.png')) }}');">
       <div class="cover-body">
@@ -1184,7 +1184,7 @@
   </div>
 
   <!-- ═══════════════════ PAGE 2 — Open Letter ═══════════════════ -->
-  <div class="pdf-page">
+  <div class="pdf-page" data-section-id="overview_letter">
     <div class="page-header">
       <span class="brand">{% if brand and brand.logo %}<img src="{{ brand.logo }}"
           style="height: 14px; margin-right: 6px; vertical-align: middle;">{% endif %}{{ (brand.name if brand else '')
@@ -1267,7 +1267,7 @@
   </div>
 
   <!-- ═══════════════════ PAGE 3 — Glance & Overview ═══════════════════ -->
-  <div class="pdf-page" style="display: flex; flex-direction: column;">
+  <div class="pdf-page" data-section-id="route_map" style="display: flex; flex-direction: column;">
     <div class="page-header">
       <span class="brand">{% if brand and brand.logo %}<img src="{{ brand.logo }}"
           style="height: 14px; margin-right: 6px; vertical-align: middle;">{% endif %}{{ (brand.name if brand else '')
@@ -1359,7 +1359,7 @@
   </div>
 
   <!-- ═══════════════════ PAGE 4 — Itinerary ═══════════════════ -->
-  <div class="pdf-page">
+  <div class="pdf-page" data-section-id="itinerary">
     <div class="page-header">
       <span class="brand">{% if brand and brand.logo %}<img src="{{ brand.logo }}"
           style="height: 14px; margin-right: 6px; vertical-align: middle;">{% endif %}{{ (brand.name if brand else '')
@@ -1473,7 +1473,7 @@
 
 
   <!-- ── PDF: Chapter Divider — SELECTED ACCOMMODATIONS ─── -->
-  <div class="pdf-page"
+  <div class="pdf-page" data-section-id="hotel_plan"
     style="height: 1123px; padding: 0; background: var(--bg-main); display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;">
     <!-- Top 58% Full-bleed Hero Image -->
     <div style="width: 100%; height: 58%; flex: 0 0 58%; position: relative; overflow: hidden;">
@@ -1519,7 +1519,7 @@
   </div>
 
   <!-- ═══════════════════ PAGE 5 — Hotel Plan & Pricing ═══════════════════ -->
-  <div class="pdf-page">
+  <div class="pdf-page" data-section-id="hotel_plan">
     <div class="page-header">
       <span class="brand">{% if brand and brand.logo %}<img src="{{ brand.logo }}"
           style="height: 14px; margin-right: 6px; vertical-align: middle;">{% endif %}{{ (brand.name if brand else '')
@@ -1618,7 +1618,7 @@
   </div>
 
   <!-- ── PDF: Chapter Divider — THE JOURNEY, BROUGHT TOGETHER (Option 1: Top Hero Image + Bottom Editorial Content) ─── -->
-  <div class="pdf-page"
+  <div class="pdf-page" data-section-id="pricing"
     style="height: 1123px; padding: 0; background: var(--bg-main); display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;">
     <!-- Top 58% Full-bleed Hero Image -->
     <div style="width: 100%; height: 58%; flex: 0 0 58%; position: relative; overflow: hidden;">
@@ -1671,7 +1671,7 @@
   </div>
 
   <!-- ═══════════════════ DEDICATED PAGE — Journey Investment (Package Pricing) ═══════════════════ -->
-  <div class="pdf-page"
+  <div class="pdf-page" data-section-id="pricing"
     style="background: color-mix(in srgb, var(--c_primary, var(--primary, #17412e)) 8%, #ffffff); color: var(--text-main, #333);">
     <div class="page-header" style="border-bottom: 1px solid rgba(0,0,0,0.1); color: var(--text-muted, #666);">
       <span class="brand" style="color: var(--text-main, #333);">{% if brand and brand.logo %}<img
@@ -1759,7 +1759,7 @@
     </div>
 
     <!-- ═══════════════════ PAGE 6 — Inc/Exc & Muslim Care ═══════════════════ -->
-    <div class="pdf-page">
+    <div class="pdf-page" data-section-id="inclusions_exclusions">
       <div class="page-header">
         <span class="brand">{% if brand and brand.logo %}<img src="{{ brand.logo }}"
             style="height: 14px; margin-right: 6px; vertical-align: middle;">{% endif %}{{ (brand.name if brand else '')
@@ -1811,7 +1811,7 @@
     </div>
 
     <!-- ═══════════════════ PAGE 8 — Booking Terms ═══════════════════ -->
-    <div class="pdf-page">
+    <div class="pdf-page" data-section-id="booking_terms">
       <div class="page-header">
         <span class="brand">{% if brand and brand.logo %}<img src="{{ brand.logo }}"
             style="height: 14px; margin-right: 6px; vertical-align: middle;">{% endif %}{{ (brand.name if brand else '')
@@ -1834,46 +1834,23 @@
           </div>
 
           <!-- Right side -->
-          <div style="display: flex; flex-direction: column;">
-            <!-- Deposit -->
+          {% set booking_terms_render = booking_terms_items if booking_terms_items and booking_terms_items|length > 0 else [
+            {"id": "deposit", "label": payment_label_deposit | default("Deposit" | translate(lang)), "body": term_deposit},
+            {"id": "balance", "label": payment_label_balance | default("Balance" | translate(lang)), "body": term_balance},
+            {"id": "cancellation", "label": payment_label_cancellation | default("Cancellation" | translate(lang)), "body": term_cancellation},
+            {"id": "confirmation", "label": payment_label_confirmation | default("Confirmation" | translate(lang)), "body": term_confirmation}
+          ] %}
+          <div style="display: flex; flex-direction: column;" data-booking-terms-list>
+            {% for item in booking_terms_render %}
             <div
-              style="display: grid; grid-template-columns: 100px 1fr; gap: 20px; padding: 16px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
-              <div class="font-serif" style="font-size: 14px; color: var(--emerald);" data-editable="payment_label_deposit">{{ payment_label_deposit |
-                default("Deposit" | translate(lang)) }}</div>
-              <div style="color: var(--text-muted); font-size: 11px; line-height: 1.6;" data-editable="term_deposit">
-                {{ term_deposit }}
+              style="display: grid; grid-template-columns: 100px 1fr; gap: 20px; padding: 16px 0; border-top: {% if loop.first %}1px solid var(--line){% else %}0{% endif %}; border-bottom: 1px solid var(--line);"
+              data-booking-term-id="{{ item.id or loop.index0 }}">
+              <div class="font-serif" style="font-size: 14px; color: var(--emerald);" data-editable="booking_term_label_{{ loop.index0 }}">{{ item.label }}</div>
+              <div style="color: var(--text-muted); font-size: 11px; line-height: 1.6;" data-editable="booking_term_body_{{ loop.index0 }}">
+                {{ item.body }}
               </div>
             </div>
-
-            <!-- Balance -->
-            <div
-              style="display: grid; grid-template-columns: 100px 1fr; gap: 20px; padding: 16px 0; border-bottom: 1px solid var(--line);">
-              <div class="font-serif" style="font-size: 14px; color: var(--emerald);" data-editable="payment_label_balance">{{ payment_label_balance |
-                default("Balance" | translate(lang)) }}</div>
-              <div style="color: var(--text-muted); font-size: 11px; line-height: 1.6;" data-editable="term_balance">
-                {{ term_balance }}
-              </div>
-            </div>
-
-            <!-- Cancellation -->
-            <div
-              style="display: grid; grid-template-columns: 100px 1fr; gap: 20px; padding: 16px 0; border-bottom: 1px solid var(--line);">
-              <div class="font-serif" style="font-size: 14px; color: var(--emerald);" data-editable="payment_label_cancellation">{{ payment_label_cancellation |
-                default("Cancellation" | translate(lang)) }}</div>
-              <div style="color: var(--text-muted); font-size: 11px; line-height: 1.6;" data-editable="term_cancellation">
-                {{ term_cancellation }}
-              </div>
-            </div>
-
-            <!-- Confirmation -->
-            <div
-              style="display: grid; grid-template-columns: 100px 1fr; gap: 20px; padding: 16px 0; border-bottom: 1px solid var(--line);">
-              <div class="font-serif" style="font-size: 14px; color: var(--emerald);" data-editable="payment_label_confirmation">{{ payment_label_confirmation |
-                default("Confirmation" | translate(lang)) }}</div>
-              <div style="color: var(--text-muted); font-size: 11px; line-height: 1.6;" data-editable="term_confirmation">
-                {{ term_confirmation }}
-              </div>
-            </div>
+            {% endfor %}
           </div>
         </div>
 
@@ -1889,7 +1866,7 @@
 
     {% if show_designer_section %}
     <!-- ═══════════════════ PAGE 9 — Travel Specialist ═══════════════════ -->
-    <div class="pdf-page">
+    <div class="pdf-page" data-section-id="designer">
       <div class="page-header">
         <span class="brand">{% if brand and brand.logo %}<img src="{{ brand.logo }}"
             style="height: 14px; margin-right: 6px; vertical-align: middle;">{% endif %}{{ (brand.name if brand else '')
@@ -1988,64 +1965,59 @@
               </div>
             </div>
 
-            <!-- Final Details & After Confirmation -->
-            <div
-              style="display: grid; grid-template-columns: 1fr; gap: 16px; padding-top: 20px; border-top: 1px solid rgba(217, 210, 197, 0.5);">
-              <div style="display: flex; gap: 16px; align-items: flex-start;">
-                <div
-                  style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--gold); display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: white; padding: 8px;">
-                  <img
-                    src="/assets/brands/indochine_icon/button_icon/{{ ['chua.svg', 'human.png', 'mountain.png', 'sen.png', 'vien.png'] | random }}"
-                    alt="icon" style="width: 100%; height: 100%; object-fit: contain;">
-                </div>
-                <div>
-                  <div data-editable="final_req_title"
-                    style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--gold-2); font-weight: 700; margin-bottom: 4px;">
-                    {{ final_req_title or "Final Details Required" | translate(lang) }}
-                  </div>
-                  <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5; margin: 0;">
-                    {% if final_req and final_req|length > 0 %}
-                    <ul style="margin: 0; padding-left: 14px; display: grid; gap: 3px;">
-                      {% for item in final_req %}<li data-editable="final_req_{{loop.index0}}">{{item}}</li>{% endfor %}
-                    </ul>
-                    {% else %}
-                    <span data-editable="final_req_text">{{ final_req_text or "Colored copies of passports valid for at least 6 months, and confirmed
-                      flight details for airport transfers." | translate(lang) }}</span>
-                    {% endif %}
-                  </div>
-                </div>
-              </div>
-
-              <div style="display: flex; gap: 16px; align-items: flex-start;">
-                <div
-                  style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--gold); display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: white; padding: 8px;">
-                  <img
-                    src="/assets/brands/indochine_icon/button_icon/{{ ['sen.png', 'vien.png', 'chua.svg', 'mountain.png', 'human.png'] | random }}"
-                    alt="icon" style="width: 100%; height: 100%; object-fit: contain;">
-                </div>
-                <div>
-                  <div data-editable="payment_label_confirmation"
-                    style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--gold-2); font-weight: 700; margin-bottom: 4px;">
-                    {{ payment_label_confirmation or "After Confirmation" | translate(lang) }}
-                  </div>
-                  <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5; margin: 0;">
-                    {% if final_after and final_after|length > 0 %}
-                    <ul style="margin: 0; padding-left: 14px; display: grid; gap: 3px;">
-                      {% for item in final_after %}<li data-editable="final_after_{{loop.index0}}">{{item}}</li>{% endfor %}
-                    </ul>
-                    {% else %}
-                    <span data-editable="term_confirmation">{{ term_confirmation or "Vouchers, detailed daily itinerary guidelines, and emergency contact
-                      details for the local tour coordinator will be provided." | translate(lang) }}</span>
-                    {% endif %}
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
     </div>
     {% endif %}
+    <div class="pdf-page" data-section-id="finalization">
+      <div class="page-header">
+        <span class="brand">{% if brand and brand.logo %}<img src="{{ brand.logo }}"
+            style="height: 14px; margin-right: 6px; vertical-align: middle;">{% endif %}{{ (brand.name if brand else '')
+          or 'Vietnam Safar' }} — {{ "Travel Proposal" |
+          translate(lang) }}</span>
+        <span class="ref"><span class="ltr-token">{{ quotation_number }} · {{ quotation_date }}</span></span>
+      </div>
+      <div class="page-inner" style="display: flex; flex-direction: column; justify-content: center; gap: 18px;">
+        <div style="display: flex; gap: 16px; align-items: flex-start;">
+          <div
+            style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--gold); display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: white; padding: 8px;">
+            <img src="/assets/brands/indochine_icon/button_icon/{{ ['chua.svg', 'human.png', 'mountain.png', 'sen.png', 'vien.png'] | random }}"
+              alt="icon" style="width: 100%; height: 100%; object-fit: contain;">
+          </div>
+          <div>
+            <div data-editable="final_req_title"
+              style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--gold-2); font-weight: 700; margin-bottom: 4px;">
+              {{ final_req_title or "Final Details Required" | translate(lang) }}
+            </div>
+            <ul data-finalization-required-list style="margin: 0; padding-left: 14px; display: grid; gap: 3px; font-size: 11px; color: var(--text-muted); line-height: 1.5;">
+              {% for item in final_req %}
+              <li data-editable="final_req_{{loop.index0}}">{{ item }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 16px; align-items: flex-start;">
+          <div
+            style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--gold); display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: white; padding: 8px;">
+            <img src="/assets/brands/indochine_icon/button_icon/{{ ['sen.png', 'vien.png', 'chua.svg', 'mountain.png', 'human.png'] | random }}"
+              alt="icon" style="width: 100%; height: 100%; object-fit: contain;">
+          </div>
+          <div>
+            <div data-editable="final_after_title"
+              style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--gold-2); font-weight: 700; margin-bottom: 4px;">
+              {{ final_after_title or "After Confirmation" | translate(lang) }}
+            </div>
+            <ul data-finalization-after-list style="margin: 0; padding-left: 14px; display: grid; gap: 3px; font-size: 11px; color: var(--text-muted); line-height: 1.5;">
+              {% for item in final_after %}
+              <li data-editable="final_after_{{loop.index0}}">{{ item }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <script id="itinerary-data" type="application/json">
   {{ itinerary | tojson | safe }}
