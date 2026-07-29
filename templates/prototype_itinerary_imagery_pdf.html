@@ -651,7 +651,41 @@
     }
 
     .day-copy {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 0;
+    }
+
+    .day-copy-body {
+      flex: 1;
+      min-height: 0;
       overflow: hidden;
+    }
+
+    .day-copy-body p:last-child {
+      margin-bottom: 0 !important;
+    }
+
+    .day-notes {
+      flex-shrink: 0;
+      font-size: 10px;
+      color: #8a7042;
+      border-left: 2px solid var(--gold);
+      padding: 4px 0 4px 10px;
+      background: rgba(183, 137, 75, 0.05);
+      border-radius: 2px;
+    }
+
+    .day-notes ul {
+      margin: 4px 0 0;
+      padding-left: 12px;
+      list-style-type: disc;
+    }
+
+    .day-notes li {
+      margin-bottom: 2px;
     }
 
     .day-detail-list {
@@ -1576,36 +1610,36 @@
               style="font-size: 18px; font-weight: 500; color: var(--emerald); margin: 0 0 12px; line-height: 1.25;">{{
               day.title | rtl_mixed(lang) }}</h3>
 
-            <div class="day-copy"
-              style="flex: 1; font-size: 11px; color: var(--muted); line-height: 1.5; overflow: hidden;">
-              {% if day.description is string %}
-              <p style="margin-bottom: 8px;">{{ day.description | rtl_mixed(lang) }}</p>
-              {% else %}
-              {% for para in day.description %}
-              <p style="margin-bottom: 8px;">{{ para | rtl_mixed(lang) }}</p>
-              {% endfor %}
-              {% endif %}
+            <div class="day-copy" style="font-size: 11px; color: var(--muted); line-height: 1.5;">
+              <div class="day-copy-body">
+                {% if day.description is string %}
+                <p style="margin-bottom: 8px;">{{ day.description | rtl_mixed(lang) }}</p>
+                {% else %}
+                {% for para in day.description %}
+                <p style="margin-bottom: 8px;">{{ para | rtl_mixed(lang) }}</p>
+                {% endfor %}
+                {% endif %}
 
-              {% if day.activities %}
-              <p style="font-size: 10px; color: var(--text-muted); margin-top: 8px;">
-                <strong style="color: var(--emerald); letter-spacing: 0.06em;">{{ day.label_highlights |
-                  default("Highlights:" | translate(lang)) }}</strong>
-                <span>{{ (day.activities | join(' · ')) if day.activities is iterable and day.activities is not string
-                  else day.activities | rtl_mixed(lang) }}</span>
-              </p>
-              {% endif %}
+                {% if day.activities %}
+                <p style="font-size: 10px; color: var(--text-muted); margin-top: 8px;">
+                  <strong style="color: var(--emerald); letter-spacing: 0.06em;">{{ day.label_highlights |
+                    default("Highlights:" | translate(lang)) }}</strong>
+                  <span>{{ (day.activities | join(' · ')) if day.activities is iterable and day.activities is not string
+                    else day.activities | rtl_mixed(lang) }}</span>
+                </p>
+                {% endif %}
+              </div>
 
               {% if day.notes %}
-              <div
-                style="font-size: 10px; color: #8a7042; margin-top: 8px; border-left: 2px solid var(--gold); padding-left: 10px; background: rgba(183,137,75,0.05); border-radius: 2px; padding-top: 4px; padding-bottom: 4px;">
+              <div class="day-notes">
                 <strong style="color: var(--gold); letter-spacing: 0.06em;">{{ day.label_notes | default("Notes:" |
                   translate(lang)) }}</strong>
-                <ul style="margin: 4px 0 0; padding-left: 12px; list-style-type: disc;">
+                <ul>
                   {% if day.notes is string %}
-                  <li style="margin-bottom: 2px;">{{ day.notes | rtl_mixed(lang) }}</li>
+                  <li>{{ day.notes | rtl_mixed(lang) }}</li>
                   {% else %}
                   {% for note in day.notes %}
-                  <li style="margin-bottom: 2px;">{{ note | rtl_mixed(lang) }}</li>
+                  <li>{{ note | rtl_mixed(lang) }}</li>
                   {% endfor %}
                   {% endif %}
                 </ul>
