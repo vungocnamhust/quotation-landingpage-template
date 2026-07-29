@@ -7188,8 +7188,10 @@ async def get_quotation_pdf(quotation_id: str, request: Request):
     baseline_lang = ctx_data.get("baseline_lang", "en")
     target_lang = lang or baseline_lang
     preview_mode = request.query_params.get("preview") in {"1", "true", "yes"}
+    template_name = ctx_data.get("template_name", BROCHURE_TEMPLATE_NAME)
+    use_static_pdf_cache = not preview_mode and template_name not in LEGACY_QUOTATION_TEMPLATES
 
-    if not preview_mode:
+    if use_static_pdf_cache:
         published_pdf = await _get_latest_published_pdf_html(quotation_id, target_lang)
         if published_pdf:
             return HTMLResponse(content=published_pdf)
