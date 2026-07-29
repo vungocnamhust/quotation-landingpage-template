@@ -230,6 +230,12 @@ WORD_PASTE_RECOVERABLE_PREFIXES = (
     "day_desc_",
 )
 
+WORD_PASTE_TYPOGRAPHY_PREFIXES = (
+    "day_desc_",
+    "day_highlights_",
+    "day_note_",
+)
+
 
 def _field_supports_rich_text(field_name: str) -> bool:
     if not field_name:
@@ -243,6 +249,12 @@ def _field_supports_word_paste_recovery(field_name: str) -> bool:
     if not field_name:
         return False
     return any(field_name.startswith(prefix) for prefix in WORD_PASTE_RECOVERABLE_PREFIXES)
+
+
+def _field_supports_word_paste_typography_cleanup(field_name: str) -> bool:
+    if not field_name:
+        return False
+    return any(field_name.startswith(prefix) for prefix in WORD_PASTE_TYPOGRAPHY_PREFIXES)
 
 # Multi-brand configurations
 BRANDS = {
@@ -1843,7 +1855,7 @@ templates.env.filters["rtl_mixed"] = rtl_mixed_filter
 def render_rich_text_filter(text: str, lang: str = "en"):
     if text is None:
         return ""
-    value = str(text)
+    value = _normalize_word_pasted_markup(str(text))
     if "<" not in value and ">" not in value:
         return rtl_mixed_filter(value, lang)
     return Markup(value)
@@ -6022,14 +6034,15 @@ PLAIN_SPAN_RE = re.compile(
 )
 
 
-def _normalize_word_pasted_rich_text(field_name: str, value: str) -> str:
-    if not value or not field_name.startswith("day_desc_"):
+def _normalize_word_pasted_markup(value: str) -> str:
+    if not value:
         return value
 
-    if not WORD_PASTE_MARKER_RE.search(value):
-        return value
+    text = str(value)
+    if not WORD_PASTE_MARKER_RE.search(text):
+        return text
 
-    normalized = value.replace("\xa0", " ")
+    normalized = text.replace("\xa0", " ")
     normalized = re.sub(r'</?o:p[^>]*>', '', normalized, flags=re.IGNORECASE)
     normalized = WORD_PASTE_SPAN_RE.sub("<span>", normalized)
     normalized = WORD_PASTE_PARAGRAPH_OPEN_RE.sub("", normalized)
@@ -6050,6 +6063,12 @@ def _normalize_word_pasted_rich_text(field_name: str, value: str) -> str:
     normalized = re.sub(r'^(?:\s*<br\s*/?>\s*)+', '', normalized, flags=re.IGNORECASE)
     normalized = re.sub(r'(?:\s*<br\s*/?>\s*)+$', '', normalized, flags=re.IGNORECASE)
     return normalized.strip()
+
+
+def _normalize_word_pasted_rich_text(field_name: str, value: str) -> str:
+    if not value or not _field_supports_word_paste_typography_cleanup(field_name):
+        return value
+    return _normalize_word_pasted_markup(value)
 
 
 def _repair_word_pasted_editable_blocks(html_content: str) -> str:
