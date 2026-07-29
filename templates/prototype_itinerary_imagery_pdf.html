@@ -591,7 +591,7 @@
 
     .day-card {
       display: grid;
-      grid-template-columns: 1fr 260px;
+      grid-template-columns: minmax(0, 1fr) 260px;
       /* text on left, image on right */
       gap: 20px;
       background: var(--card);
@@ -606,7 +606,7 @@
     }
 
     .day-card.is-alternate {
-      grid-template-columns: 260px 1fr;
+      grid-template-columns: 260px minmax(0, 1fr);
     }
 
     .day-card.is-alternate .day-content {
@@ -641,6 +641,51 @@
     .day-card p {
       font-size: 11px;
       color: var(--muted);
+    }
+
+    .day-content,
+    .day-copy,
+    .day-media {
+      min-width: 0;
+      min-height: 0;
+    }
+
+    .day-copy {
+      overflow: hidden;
+    }
+
+    .day-detail-list {
+      flex-wrap: wrap;
+    }
+
+    .day-media {
+      display: grid;
+      grid-template-rows: minmax(0, 2.15fr) minmax(0, 1fr);
+      gap: 8px;
+      height: 100%;
+      align-self: stretch;
+    }
+
+    .day-media-main,
+    .day-media-thumbs,
+    .day-media-thumb {
+      min-height: 0;
+      overflow: hidden;
+      border-radius: 4px;
+    }
+
+    .day-media-thumbs {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .day-media-main img,
+    .day-media-thumb img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
     }
 
     .day-meta {
@@ -1594,11 +1639,17 @@
           {% set img_hero = imgs.hero or (day.carousel[0] if day.carousel and day.carousel|length > 0 else (day.image or day.image_url or '/assets/brands/vietnam_safar.png')) %}
           {% set img_small1 = imgs['small-1'] or (day.carousel[1] if day.carousel and day.carousel|length > 1 else img_hero) %}
           {% set img_small2 = imgs['small-2'] or (day.carousel[2] if day.carousel and day.carousel|length > 2 else img_small1) %}
-          <div class="day-media" style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
-            <div style="flex: 2; background: url('{{ img_hero }}') center/cover no-repeat; border-radius: 4px;"></div>
-            <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-              <div style="background: url('{{ img_small1 }}') center/cover no-repeat; border-radius: 4px;"></div>
-              <div style="background: url('{{ img_small2 }}') center/cover no-repeat; border-radius: 4px;"></div>
+          <div class="day-media">
+            <div class="day-media-main">
+              <img src="{{ img_hero }}" alt="{{ day.title | striptags }}">
+            </div>
+            <div class="day-media-thumbs">
+              <div class="day-media-thumb">
+                <img src="{{ img_small1 }}" alt="{{ day.title | striptags }} image 2">
+              </div>
+              <div class="day-media-thumb">
+                <img src="{{ img_small2 }}" alt="{{ day.title | striptags }} image 3">
+              </div>
             </div>
           </div>
         </div>
