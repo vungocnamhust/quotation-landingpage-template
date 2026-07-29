@@ -625,9 +625,9 @@
       padding: 18px;
       align-items: stretch;
       page-break-inside: avoid;
-      height: 310px;
-      /* Approx 1/3 of page to fit 3 per page exactly */
-      overflow: hidden;
+      min-height: 310px;
+      height: auto;
+      overflow: visible;
     }
 
     .day-card.is-alternate {
@@ -646,6 +646,15 @@
       display: none;
     }
 
+    .day-card .day-content {
+      display: flex !important;
+      flex-direction: column;
+      justify-content: flex-start;
+      min-height: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
     .day-card h3 {
       font-family: var(--serif);
       font-size: 18px;
@@ -653,6 +662,7 @@
       color: var(--emerald);
       margin: 2px 0 5px;
       line-height: 1.1;
+      overflow-wrap: anywhere;
     }
 
     .day-badge {
@@ -666,6 +676,7 @@
     .day-card p {
       font-size: 11px;
       color: var(--muted);
+      overflow-wrap: anywhere;
     }
 
     .day-content,
@@ -677,16 +688,19 @@
 
     .day-copy {
       display: flex;
-      flex: 1;
+      flex: 1 1 auto;
       flex-direction: column;
+      justify-content: flex-start;
       gap: 8px;
       min-height: 0;
+      overflow: visible;
     }
 
     .day-copy-body {
-      flex: 1;
+      flex: 0 0 auto;
+      display: block;
       min-height: 0;
-      overflow: hidden;
+      overflow: visible;
     }
 
     .day-copy-body p:last-child {
@@ -698,6 +712,7 @@
       font-size: 10px;
       color: var(--text-muted);
       line-height: 1.45;
+      overflow-wrap: anywhere;
     }
 
     .day-notes {
@@ -708,6 +723,7 @@
       padding: 4px 0 4px 10px;
       background: rgba(183, 137, 75, 0.05);
       border-radius: 2px;
+      overflow-wrap: anywhere;
     }
 
     .day-notes ul {
@@ -721,7 +737,9 @@
     }
 
     .day-detail-list {
+      flex: 0 0 auto;
       flex-wrap: wrap;
+      margin-top: auto !important;
     }
 
     .day-media {
@@ -1632,7 +1650,7 @@
         {% for day in itinerary_days %}
         {% set imgs = day.layout_images | default({}) %}
         <div class="day-card {% if day.is_alternate %}is-alternate{% endif %}">
-          <div class="day-content" style="display: flex; flex-direction: column; height: 100%;">
+          <div class="day-content">
             <div class="day-kicker"
               style="font-size: 9px; letter-spacing: 0.15em; color: var(--gold); font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">
               <span class="destination" style="color: var(--muted); margin-right: 6px;">{{ day.segment_city }}</span>

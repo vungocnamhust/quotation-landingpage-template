@@ -226,6 +226,10 @@ HTML_RICH_TEXT_PREFIXES = (
     "day_note_",
 )
 
+WORD_PASTE_RECOVERABLE_PREFIXES = (
+    "day_desc_",
+)
+
 
 def _field_supports_rich_text(field_name: str) -> bool:
     if not field_name:
@@ -233,6 +237,12 @@ def _field_supports_rich_text(field_name: str) -> bool:
     if field_name in HTML_RICH_TEXT_FIELDS:
         return True
     return any(field_name.startswith(prefix) for prefix in HTML_RICH_TEXT_PREFIXES)
+
+
+def _field_supports_word_paste_recovery(field_name: str) -> bool:
+    if not field_name:
+        return False
+    return any(field_name.startswith(prefix) for prefix in WORD_PASTE_RECOVERABLE_PREFIXES)
 
 # Multi-brand configurations
 BRANDS = {
@@ -5957,6 +5967,130 @@ from html.parser import HTMLParser
 
 VOID_TAGS = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"}
 
+EMPTY_EDITABLE_TAG_RE = re.compile(
+    r'<(?P<tag>p|div|li)[^>]*data-editable=["\'](?P<field>[^"\']+)["\'][^>]*>(?P<inner>\s*)</(?P=tag)>',
+    flags=re.IGNORECASE | re.DOTALL,
+)
+
+WORD_PASTE_FRAGMENT_RE = re.compile(
+    r"""
+    \s*
+    (?:
+        <p\b[^>]*\bclass=["\'][^"\']*\bMso[a-zA-Z0-9_-]*[^"\']*["\'][^>]*>.*?</p>
+        |
+        <span\b[^>]*\bmso-[^>]*>.*?</span>
+        |
+        <span\b[^>]*\bfont-family:(?:&quot;|")Garamond(?:&quot;|")[^>]*>.*?</span>
+    )
+    """,
+    flags=re.IGNORECASE | re.DOTALL | re.VERBOSE,
+)
+
+WORD_PASTE_MARKER_RE = re.compile(
+    r'(?:\bMso[a-zA-Z0-9_-]*\b|\bmso-[a-z0-9-]+\b|font-family:(?:&quot;|")Garamond(?:&quot;|"))',
+    flags=re.IGNORECASE,
+)
+
+WORD_PASTE_SPAN_RE = re.compile(
+    r'<span\b[^>]*(?:\bMso[a-zA-Z0-9_-]*\b|\bmso-[a-z0-9-]+\b|font-family:(?:&quot;|")Garamond(?:&quot;|")|font-size:\s*12(?:\.0)?pt)[^>]*>',
+    flags=re.IGNORECASE | re.DOTALL,
+)
+
+WORD_PASTE_PARAGRAPH_OPEN_RE = re.compile(
+    r'<p\b[^>]*>',
+    flags=re.IGNORECASE | re.DOTALL,
+)
+
+WORD_PASTE_PARAGRAPH_CLOSE_RE = re.compile(
+    r'</p\s*>',
+    flags=re.IGNORECASE,
+)
+
+WORD_PASTE_BREAK_RUN_RE = re.compile(
+    r'(?:<br\s*/?>\s*){3,}',
+    flags=re.IGNORECASE,
+)
+
+EMPTY_SPAN_RE = re.compile(
+    r'<span>\s*</span>',
+    flags=re.IGNORECASE,
+)
+
+PLAIN_SPAN_RE = re.compile(
+    r'<span>(.*?)</span>',
+    flags=re.IGNORECASE | re.DOTALL,
+)
+
+
+def _normalize_word_pasted_rich_text(field_name: str, value: str) -> str:
+    if not value or not field_name.startswith("day_desc_"):
+        return value
+
+    if not WORD_PASTE_MARKER_RE.search(value):
+        return value
+
+    normalized = value.replace("\xa0", " ")
+    normalized = re.sub(r'</?o:p[^>]*>', '', normalized, flags=re.IGNORECASE)
+    normalized = WORD_PASTE_SPAN_RE.sub("<span>", normalized)
+    normalized = WORD_PASTE_PARAGRAPH_OPEN_RE.sub("", normalized)
+    normalized = WORD_PASTE_PARAGRAPH_CLOSE_RE.sub("<br><br>", normalized)
+
+    while True:
+        unwrapped = PLAIN_SPAN_RE.sub(r"\1", normalized)
+        if unwrapped == normalized:
+            break
+        normalized = unwrapped
+
+    normalized = EMPTY_SPAN_RE.sub("", normalized)
+    normalized = re.sub(r'(?i)<p>\s*</p>', '', normalized)
+    normalized = WORD_PASTE_BREAK_RUN_RE.sub("<br><br>", normalized)
+    normalized = re.sub(r'[ \t\r\f\v]*\n[ \t\r\f\v]*', ' ', normalized)
+    normalized = re.sub(r' {2,}', ' ', normalized)
+    normalized = re.sub(r'\s*<br><br>\s*', '<br><br>', normalized, flags=re.IGNORECASE)
+    normalized = re.sub(r'^(?:\s*<br\s*/?>\s*)+', '', normalized, flags=re.IGNORECASE)
+    normalized = re.sub(r'(?:\s*<br\s*/?>\s*)+$', '', normalized, flags=re.IGNORECASE)
+    return normalized.strip()
+
+
+def _repair_word_pasted_editable_blocks(html_content: str) -> str:
+    if not html_content:
+        return html_content
+
+    repaired_parts: list[str] = []
+    cursor = 0
+    for match in EMPTY_EDITABLE_TAG_RE.finditer(html_content):
+        repaired_parts.append(html_content[cursor:match.start()])
+        original_block = match.group(0)
+        field_name = match.group("field") or ""
+        if not _field_supports_word_paste_recovery(field_name):
+            repaired_parts.append(original_block)
+            cursor = match.end()
+            continue
+
+        scan_pos = match.end()
+        recovered_fragments: list[str] = []
+        while True:
+            fragment_match = WORD_PASTE_FRAGMENT_RE.match(html_content, scan_pos)
+            if not fragment_match:
+                break
+            recovered_fragments.append(fragment_match.group(0))
+            scan_pos = fragment_match.end()
+
+        if recovered_fragments:
+            repaired_parts.append(
+                f"<{match.group('tag')} data-editable=\"{field_name}\">"
+                + "".join(recovered_fragments)
+                + f"</{match.group('tag')}>"
+            )
+            cursor = scan_pos
+            continue
+
+        repaired_parts.append(original_block)
+        cursor = match.end()
+
+    repaired_parts.append(html_content[cursor:])
+    return "".join(repaired_parts)
+
 class EditableFieldsParser(HTMLParser):
     def __init__(self):
         super().__init__()
@@ -6025,6 +6159,8 @@ class EditableFieldsParser(HTMLParser):
                     and not item['field'].startswith("img_")
                 ):
                     val = re.sub(r'<[^>]*>', '', str(val)).strip()
+                elif _field_supports_rich_text(item['field']):
+                    val = _normalize_word_pasted_rich_text(item['field'], val)
                 self.edited_fields[item['field']] = val
             else:
                 item['acc'].append(f"</{tag}>")
@@ -6033,7 +6169,7 @@ class EditableFieldsParser(HTMLParser):
 
 def parse_edited_fields(html_content: str) -> dict:
     parser = EditableFieldsParser()
-    parser.feed(html_content)
+    parser.feed(_repair_word_pasted_editable_blocks(html_content))
     return parser.edited_fields
 
 def _normalize_visible_text(value: str) -> str:
