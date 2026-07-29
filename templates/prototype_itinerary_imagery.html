@@ -3570,6 +3570,16 @@
           line-height: 1.75;
         }
 
+        .day-copy > p[data-editable^="day_desc_"],
+        .editorial-copy > p[data-editable^="day_desc_"] {
+          display: block;
+          -webkit-line-clamp: unset;
+          -webkit-box-orient: initial;
+          overflow: visible;
+          text-overflow: clip;
+          max-width: none;
+        }
+
         .day-image {
           min-height: 320px;
           background-image: var(--image);
