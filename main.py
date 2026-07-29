@@ -10049,3 +10049,8 @@ def get_luxury_hotel_details(hotel_name_or_arr: str, destination: str, checkin: 
     }
 
 # Reload trigger comment to refresh cached templates and routing logic v2
+
+@app.api_route("/{path_name:path}", methods=["GET", "POST", "PUT", "DELETE"])
+async def catch_all(request: Request, path_name: str):
+    return {"url_path": request.url.path, "path_name": path_name, "scope_path": request.scope.get("path")}
+
