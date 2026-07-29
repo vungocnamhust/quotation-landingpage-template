@@ -452,6 +452,74 @@ class RepositoryContractTests(unittest.IsolatedAsyncioTestCase):
                 await session.flush()
             await session.rollback()
 
+    async def test_upsert_media_selection_normalizes_shared_lang_to_all_and_updates_legacy_null_row(self):
+        async with self.session_factory() as session:
+            quotation_repo = QuotationRepository(session)
+            media_repo = MediaRepository(session)
+            await quotation_repo.create_quotation(
+                quotation_id="quo_repo_shared_upsert",
+                brand_id="vietnam_safar",
+                template_name="brochure",
+                baseline_lang="en",
+            )
+            await media_repo.create_media_asset(
+                asset_id="med_shared_existing",
+                quotation_id="quo_repo_shared_upsert",
+                bucket="quotation-v2",
+                r2_key="quotations/quo_repo_shared_upsert/media/original/med_shared_existing.jpg",
+                original_filename="shared-existing.jpg",
+                mime_type="image/jpeg",
+                size_bytes=200,
+                checksum_sha256="shared-existing",
+                source_type="editor_upload",
+            )
+            await media_repo.create_media_asset(
+                asset_id="med_shared_replacement",
+                quotation_id="quo_repo_shared_upsert",
+                bucket="quotation-v2",
+                r2_key="quotations/quo_repo_shared_upsert/media/original/med_shared_replacement.jpg",
+                original_filename="shared-replacement.jpg",
+                mime_type="image/jpeg",
+                size_bytes=201,
+                checksum_sha256="shared-replacement",
+                source_type="editor_upload",
+            )
+            session.add(
+                MediaSelection(
+                    quotation_id="quo_repo_shared_upsert",
+                    asset_id="med_shared_existing",
+                    lang=None,
+                    section_key="hero",
+                    slot_key="cover_image",
+                    display_order=0,
+                )
+            )
+            await session.flush()
+
+            selection = await media_repo.upsert_media_selection(
+                quotation_id="quo_repo_shared_upsert",
+                asset_id="med_shared_replacement",
+                lang=None,
+                section_key="hero",
+                slot_key="cover_image",
+                display_order=0,
+            )
+            await session.commit()
+
+        async with self.session_factory() as session:
+            media_repo = MediaRepository(session)
+            shared = await media_repo.list_media_selections(
+                quotation_id="quo_repo_shared_upsert",
+                lang="all",
+                section_key="hero",
+                slot_key="cover_image",
+            )
+
+            self.assertEqual(selection.lang, "all")
+            self.assertEqual(len(shared), 1)
+            self.assertEqual(shared[0].asset_id, "med_shared_replacement")
+            self.assertEqual(shared[0].lang, "all")
+
     async def test_create_publication_updates_quotation_status_and_version(self):
         async with self.session_factory() as session:
             quotation_repo = QuotationRepository(session)

@@ -196,6 +196,42 @@ class MediaPhaseDRouteTests(unittest.TestCase):
 
         asyncio.run(_assert_db())
 
+    def test_select_media_asset_without_lang_uses_shared_selection_bucket(self):
+        asyncio.run(self._seed_quotation("quo_media_shared"))
+        upload_response = self.client.post(
+            "/api/v2/media/upload",
+            files={"file": ("cover.png", _make_png_bytes(), "image/png")},
+            data={"quotationId": "quo_media_shared"},
+        )
+        asset_id = upload_response.json()["assetId"]
+
+        response = self.client.post(
+            f"/api/v2/media/{asset_id}/select",
+            json={
+                "quotationId": "quo_media_shared",
+                "sectionKey": "hero",
+                "slotKey": "cover_image",
+                "displayOrder": 0,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        async def _assert_db():
+            async with self.session_factory() as session:
+                media_repo = MediaRepository(session)
+                selections = await media_repo.list_media_selections(
+                    quotation_id="quo_media_shared",
+                    lang="all",
+                    section_key="hero",
+                    slot_key="cover_image",
+                )
+                self.assertEqual(len(selections), 1)
+                self.assertEqual(selections[0].asset_id, asset_id)
+                self.assertEqual(selections[0].lang, "all")
+
+        asyncio.run(_assert_db())
+
     def test_sync_media_folder_uploads_new_files_skips_duplicates_and_reports_failures(self):
         asyncio.run(self._seed_quotation("quo_media_sync"))
         sync_folder = os.path.join(self.temp_sync_root, "hanoi")

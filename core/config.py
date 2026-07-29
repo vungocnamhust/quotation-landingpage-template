@@ -73,3 +73,15 @@ class Settings:
 
 
 settings = Settings()
+
+
+def is_production_environment() -> bool:
+    explicit_environment = os.getenv("ENVIRONMENT")
+    if explicit_environment is not None:
+        return explicit_environment.strip().lower() == "production"
+
+    vercel_environment = os.getenv("VERCEL_ENV")
+    if vercel_environment is not None:
+        return vercel_environment.strip().lower() == "production"
+
+    return os.getenv("VERCEL") == "1"

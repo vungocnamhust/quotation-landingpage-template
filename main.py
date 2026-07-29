@@ -4770,8 +4770,64 @@ async def _sync_canonical_quote_document_to_ctx(
     if not ctx_data:
         return None
     _store_brochure_draft(ctx_data, target_lang, document)
-    await _persist_ctx_data(quotation_id, ctx_data, commit_message)
+    try:
+        await _persist_ctx_data(quotation_id, ctx_data, commit_message)
+    except Exception:
+        log.warning(
+            "[quotation-v2] Legacy ctx sync failed for %s (%s); canonical document remains in Postgres",
+            quotation_id,
+            target_lang,
+            exc_info=True,
+        )
     return ctx_data
+
+
+def _is_asset_reference(value: Any) -> bool:
+    return isinstance(value, dict) and bool(set(value.keys()) & {"assetId", "url", "status"})
+
+
+def _is_transient_asset_reference(value: dict[str, Any]) -> bool:
+    url = str(value.get("url") or "")
+    status = str(value.get("status") or "")
+    return url.startswith("blob:") or status in {"uploading", "error"}
+
+
+def _sanitize_canonical_asset_state(document: Any, fallback_document: Any = None) -> Any:
+    if isinstance(document, list):
+        fallback_items = fallback_document if isinstance(fallback_document, list) else []
+        return [
+            _sanitize_canonical_asset_state(
+                item,
+                fallback_items[index] if index < len(fallback_items) else None,
+            )
+            for index, item in enumerate(document)
+        ]
+
+    if isinstance(document, dict):
+        if _is_asset_reference(document):
+            asset = {
+                "assetId": document.get("assetId") or "",
+                "url": document.get("url") or "",
+                "status": document.get("status") or "ready",
+            }
+            if _is_transient_asset_reference(asset):
+                fallback_asset = fallback_document if isinstance(fallback_document, dict) else None
+                if fallback_asset and _is_asset_reference(fallback_asset):
+                    return {
+                        "assetId": fallback_asset.get("assetId") or "",
+                        "url": fallback_asset.get("url") or "",
+                        "status": fallback_asset.get("status") or "ready",
+                    }
+                return {"assetId": "", "url": "", "status": "ready"}
+            return asset
+
+        fallback_map = fallback_document if isinstance(fallback_document, dict) else {}
+        return {
+            key: _sanitize_canonical_asset_state(value, fallback_map.get(key))
+            for key, value in document.items()
+        }
+
+    return document
 
 
 def _draft_asset_public_path(quotation_id: str, filename: str) -> str:
@@ -5565,7 +5621,6 @@ async def create_quotation_v2(payload: CreateQuoteRequestV1):
 
     sfx = f"_{lang}" if lang != "en" else ""
     environment = os.getenv("ENVIRONMENT", "local")
-    published_artifact_url = f"{PUBLIC_BASE_URL}/published/{quotation_id}/v1{sfx}.html"
     pdf_public_url = f"{PUBLIC_BASE_URL}/quotations/{quotation_id}/pdf"
     if environment == "production":
         if not os.getenv("GITHUB_TOKEN") or not os.getenv("GITHUB_REPO"):
@@ -5636,7 +5691,6 @@ async def create_quotation_v2(payload: CreateQuoteRequestV1):
         async with _get_db_session_factory()() as session:
             quotation_repository = QuotationRepository(session)
             document_repository = QuotationDocumentRepository(session)
-            publication_repository = PublicationRepository(session)
 
             quotation = await quotation_repository.create_quotation(
                 quotation_id=quotation_id,
@@ -5646,6 +5700,8 @@ async def create_quotation_v2(payload: CreateQuoteRequestV1):
                 baseline_lang=lang,
                 customer_name=((payload.customer_facts or {}).customer_name if payload.customer_facts else None),
                 title=document.get("trip", {}).get("title") or payload.trip_facts.title,
+                status="published",
+                current_version=1,
             )
             await quotation_repository.create_quotation_request(
                 quotation_id=quotation_id,
@@ -5671,16 +5727,6 @@ async def create_quotation_v2(payload: CreateQuoteRequestV1):
                 revision=current_document.revision,
                 document_json=canonical_document,
                 change_source="create",
-            )
-            html_r2_key, pdf_r2_key = _build_publication_storage_keys(quotation_id, lang, 1)
-            await publication_repository.create_publication(
-                quotation_id=quotation_id,
-                version=1,
-                lang=lang,
-                html_r2_key=html_r2_key,
-                pdf_r2_key=pdf_r2_key,
-                published_url=published_artifact_url,
-                pdf_url=pdf_public_url,
             )
             await session.commit()
     except Exception as exc:
@@ -5988,6 +6034,11 @@ def _extract_itinerary_image_refs(edited_fields: dict, html_content: str) -> dic
         for idx in re.findall(r'data-editable=["\']day_img_(?:hero|small1|small2|carousel)_(\d+)["\']', html_content)
     })
     if not day_numbers:
+        day_numbers = sorted({
+            int(idx)
+            for idx in re.findall(r'data-editable=["\']day_img_carousel_(\d+)["\']', html_content)
+        })
+    if not day_numbers:
         return {}
 
     itinerary_refs: dict[str, dict[str, Any]] = {}
@@ -6004,18 +6055,44 @@ def _extract_itinerary_image_refs(edited_fields: dict, html_content: str) -> dic
                 entry[target_key] = refs[0]
 
         carousel_refs = _extract_image_refs(edited_fields.get(f"day_img_carousel_{day_num}", ""))
+        pattern_block = rf'data-editable=["\']day_img_carousel_{day_num}["\'].*?(?=(?:data-editable=|</article>|<article|$))'
+        match = re.search(pattern_block, html_content, flags=re.DOTALL | re.IGNORECASE)
+        if match:
+            block_html = match.group(0)
+            direct_refs = _extract_image_refs(block_html)
+            for ref in direct_refs:
+                if ref not in carousel_refs:
+                    carousel_refs.append(ref)
+
         if carousel_refs:
             entry["carousel"] = carousel_refs
-            entry.setdefault("hero", carousel_refs[0])
-            if len(carousel_refs) > 1:
-                entry.setdefault("small-1", carousel_refs[1])
-            if len(carousel_refs) > 2:
-                entry.setdefault("small-2", carousel_refs[2])
+            entry["hero"] = carousel_refs[0]
+            entry["small-1"] = carousel_refs[1] if len(carousel_refs) > 1 else carousel_refs[0]
+            entry["small-2"] = carousel_refs[2] if len(carousel_refs) > 2 else (carousel_refs[1] if len(carousel_refs) > 1 else carousel_refs[0])
 
         if entry:
             itinerary_refs[str(day_num)] = entry
 
     return itinerary_refs
+
+
+def _extract_visible_itinerary_day_meta(html_content: str) -> dict[str, dict[str, Any]]:
+    itinerary_meta: dict[str, dict[str, Any]] = {}
+    for match in re.finditer(r'<article class="day\b.*?</article>', html_content, flags=re.DOTALL | re.IGNORECASE):
+        block_html = match.group(0)
+        day_match = re.search(r'data-editable=["\']day_title_(\d+)["\']', block_html)
+        if not day_match:
+            continue
+        destination_match = re.search(r'<span class="destination">\s*(.*?)\s*</span>', block_html, flags=re.DOTALL | re.IGNORECASE)
+        if not destination_match:
+            continue
+        destination_text = _normalize_visible_text(destination_match.group(1))
+        if not destination_text:
+            continue
+        itinerary_meta[day_match.group(1)] = {
+            "segment_city": destination_text,
+        }
+    return itinerary_meta
 
 def _extract_letter_intro_parts(letter_intro_text: str) -> dict:
     parts = {}
@@ -6101,6 +6178,8 @@ def _capture_composite_sync_state(html_content: str) -> dict:
     itinerary_image_refs = _extract_itinerary_image_refs(edited_fields, html_content)
     if itinerary_image_refs:
         composite["itinerary_days"].update(itinerary_image_refs)
+    for day_num, day_meta in _extract_visible_itinerary_day_meta(html_content).items():
+        composite["itinerary_days"].setdefault(day_num, {}).update(day_meta)
 
     if not composite["top_level"]:
         composite.pop("top_level")
@@ -6492,6 +6571,8 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
             duration_key = f"map_segment_duration_{s_idx}"
             title_key = f"map_segment_title_{s_idx}"
             hotel_key = f"map_segment_hotel_{s_idx}"
+            if not any(key in existing_keys for key in (desc_key, duration_key, title_key, hotel_key)):
+                continue
             
             if desc_key in edited_fields and override_text:
                 segment["mapSegmentDesc"] = edited_fields[desc_key]
@@ -6506,6 +6587,13 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
                 segment["hotelName"] = edited_fields[hotel_key]
                 
             new_stay_segments.append(segment)
+        for idx, segment in enumerate(new_stay_segments):
+            segment["order"] = idx + 1
+            if idx == 0:
+                segment["transportFromPrevious"] = ""
+            else:
+                previous = new_stay_segments[idx - 1]
+                segment["transportFromPrevious"] = f"{previous['displayName']} → {segment['displayName']}"
         lang_ctx["stay_segments"] = new_stay_segments
 
     if "itinerary_days" in lang_ctx and "itinerary" in lang_ctx:
@@ -6572,6 +6660,8 @@ def filter_and_override_ctx_by_html(lang_ctx: dict, html_content: str, override_
         lang_ctx["img_hotel_divider"] = custom_images["img_hotel_divider"]
     if custom_images.get("img_itinerary_divider"):
         lang_ctx["img_itinerary_divider"] = custom_images["img_itinerary_divider"]
+    if "itinerary" in lang_ctx:
+        lang_ctx["route_stops"] = _build_route_stops_from_timeline(lang_ctx.get("itinerary", []))
     lang = lang_ctx.get("lang", "en")
     if lang == "ar":
         lang_ctx.update(canonicalize_place_names_in_data(lang_ctx, lang))
@@ -6634,6 +6724,28 @@ def _save_ctx_html_sync_state(ctx_data: dict, target_lang: str | None, html_cont
     html_sync[lang_key] = html_sync_state
     return lang_key
 
+def _sync_ctx_data_before_publish(ctx_data: dict, rendered_html: str, target_lang: str | None, version: int | None = None) -> dict:
+    """Ensures ctx_data html_sync and itinerary_days image arrays match the rendered HTML version."""
+    if not ctx_data or not rendered_html:
+        return ctx_data
+    _save_ctx_html_sync_state(ctx_data, target_lang, rendered_html, captured_from_version=version)
+    filter_and_override_ctx_by_html(ctx_data, rendered_html, override_text=True)
+    composite_sync = _capture_composite_sync_state(rendered_html)
+    itinerary_img_map = composite_sync.get("itinerary_days", {})
+    itinerary_list = ctx_data.get("itinerary_days") or ctx_data.get("itinerary") or []
+    if itinerary_img_map and itinerary_list:
+        for idx, day_obj in enumerate(itinerary_list, 1):
+            day_img_info = itinerary_img_map.get(str(idx))
+            if day_img_info:
+                day_obj["layout_images"] = {
+                    "hero": day_img_info.get("hero", ""),
+                    "small-1": day_img_info.get("small-1", ""),
+                    "small-2": day_img_info.get("small-2", ""),
+                }
+                if day_img_info.get("carousel"):
+                    day_obj["carousel"] = day_img_info["carousel"]
+    return ctx_data
+
 def _apply_composite_html_sync(lang_ctx: dict, composite_fields: dict):
     if not composite_fields:
         return
@@ -6679,7 +6791,19 @@ def _apply_composite_html_sync(lang_ctx: dict, composite_fields: dict):
             if day_sync.get("carousel"):
                 layout_images["carousel"] = copy.deepcopy(day_sync["carousel"])
             day_entry["layout_images"] = layout_images
+            if day_sync.get("segment_city"):
+                segment_city = html.unescape(day_sync["segment_city"])
+                day_entry["segment_city"] = segment_city
+                existing_destinations = [
+                    html.unescape(str(dest)).strip()
+                    for dest in (day_entry.get("destinations") or [])
+                    if str(dest).strip()
+                ]
+                if segment_city and len(existing_destinations) <= 1:
+                    day_entry["destinations"] = [segment_city]
 
+        for day in lang_ctx.get("itinerary", []):
+            apply_day_sync(day)
         for day in lang_ctx.get("itinerary_days", []):
             apply_day_sync(day)
 
@@ -6705,6 +6829,8 @@ def _apply_ctx_html_sync(
             override_text=True,
         )
         _apply_composite_html_sync(lang_ctx, lang_sync.get("composite_fields", {}))
+        if "itinerary" in lang_ctx:
+            lang_ctx["route_stops"] = _build_route_stops_from_timeline(lang_ctx.get("itinerary", []))
         if target_lang == "ar":
             lang_ctx.update(canonicalize_place_names_in_data(lang_ctx, target_lang))
         return True
@@ -6719,6 +6845,8 @@ def _apply_ctx_html_sync(
                 override_text=False,
             )
             _apply_composite_html_sync(lang_ctx, baseline_sync.get("composite_fields", {}))
+            if "itinerary" in lang_ctx:
+                lang_ctx["route_stops"] = _build_route_stops_from_timeline(lang_ctx.get("itinerary", []))
             if target_lang == "ar":
                 lang_ctx.update(canonicalize_place_names_in_data(lang_ctx, target_lang))
             applied = True
@@ -6778,6 +6906,26 @@ async def _build_quotation_lang_ctx(
                     template_name=base_tmpl,
                     brand=brand_config,
                 )
+                latest_lang = None if effective_lang == baseline_lang else effective_lang
+                latest_html = await _get_latest_published_html(
+                    quotation_id,
+                    lang=latest_lang,
+                    fallback=False,
+                )
+                if latest_html:
+                    filter_and_override_ctx_by_html(legacy_ctx, latest_html, override_text=True)
+                elif effective_lang != baseline_lang:
+                    baseline_html = await _get_latest_published_html(
+                        quotation_id,
+                        lang=None,
+                        fallback=False,
+                    )
+                    if baseline_html:
+                        filter_and_override_ctx_by_html(legacy_ctx, baseline_html, override_text=False)
+                    else:
+                        _apply_ctx_html_sync(legacy_ctx, ctx_data, effective_lang, baseline_lang)
+                else:
+                    _apply_ctx_html_sync(legacy_ctx, ctx_data, effective_lang, baseline_lang)
                 document = _store_brochure_draft(
                     ctx_data,
                     effective_lang,
@@ -6800,6 +6948,21 @@ async def _build_quotation_lang_ctx(
             preview_mode=False,
             editor_mode=force_editor_draft,
         )
+        if not ignore_published_html:
+            latest_lang = None if effective_lang == baseline_lang else effective_lang
+            html_content = await _get_latest_published_html(quotation_id, lang=latest_lang, fallback=False)
+            if html_content:
+                filter_and_override_ctx_by_html(lang_ctx, html_content, override_text=True)
+            elif effective_lang != baseline_lang:
+                baseline_html = await _get_latest_published_html(quotation_id, lang=None, fallback=False)
+                if baseline_html:
+                    filter_and_override_ctx_by_html(lang_ctx, baseline_html, override_text=False)
+                else:
+                    _apply_ctx_html_sync(lang_ctx, ctx_data, effective_lang, baseline_lang)
+            else:
+                _apply_ctx_html_sync(lang_ctx, ctx_data, effective_lang, baseline_lang)
+        else:
+            _apply_ctx_html_sync(lang_ctx, ctx_data, effective_lang, baseline_lang)
         return lang_ctx, effective_lang, base_tmpl
 
     payload_dict = (
@@ -6877,6 +7040,8 @@ async def _build_quotation_lang_ctx(
 
     if brand_switched:
         _restore_brand_owned_fields(lang_ctx, brand_locked_fields)
+    elif ignore_published_html:
+        _apply_ctx_html_sync(lang_ctx, ctx_data, effective_lang, baseline_lang)
 
     return lang_ctx, effective_lang, base_tmpl
 
@@ -6958,6 +7123,54 @@ async def _get_latest_published_html(quotation_id: str, lang: str = None, fallba
             return entry["html"]
     return None
 
+async def _get_latest_published_pdf_html(quotation_id: str, lang: str = None) -> str | None:
+    """Gets the latest published static PDF HTML content from disk or GitHub."""
+    lang_suffix = f"_{lang}" if lang else ""
+    file_options = [
+        f"{quotation_id}/pdf{lang_suffix}.html",
+        f"{quotation_id}/pdf.html",
+    ]
+    try:
+        from github_publish import get_next_version
+        next_ver = await get_next_version(quotation_id)
+        if next_ver > 1:
+            ver = next_ver - 1
+            file_options.insert(0, f"{quotation_id}/v{ver}_pdf{lang_suffix}.html")
+            file_options.insert(1, f"{quotation_id}/v{ver}_pdf.html")
+    except Exception:
+        pass
+
+    for file_path in file_options:
+        local_path = os.path.join("published", file_path)
+        if os.path.isfile(local_path):
+            try:
+                with open(local_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+                    if content and len(content) > 100:
+                        return content
+            except Exception:
+                pass
+
+        ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
+        if ENVIRONMENT == "production":
+            repo = os.getenv("GITHUB_REPO")
+            token = os.getenv("GITHUB_TOKEN")
+            if repo and token:
+                import httpx
+                try:
+                    async with httpx.AsyncClient(timeout=10) as client:
+                        headers = {
+                            "Authorization": f"token {token}", 
+                            "Accept": "application/vnd.github.v3.raw"
+                        }
+                        gh_url = f"https://api.github.com/repos/{repo}/contents/published/{file_path}"
+                        resp = await client.get(gh_url, headers=headers)
+                        if resp.status_code == 200 and len(resp.text) > 100:
+                            return resp.text
+                except Exception:
+                    pass
+    return None
+
 @app.get("/quotations/{quotation_id}/pdf", response_class=HTMLResponse)
 async def get_quotation_pdf(quotation_id: str, request: Request):
     """
@@ -6975,6 +7188,11 @@ async def get_quotation_pdf(quotation_id: str, request: Request):
     baseline_lang = ctx_data.get("baseline_lang", "en")
     target_lang = lang or baseline_lang
     preview_mode = request.query_params.get("preview") in {"1", "true", "yes"}
+
+    if not preview_mode:
+        published_pdf = await _get_latest_published_pdf_html(quotation_id, target_lang)
+        if published_pdf:
+            return HTMLResponse(content=published_pdf)
     
     # Trigger lazy translation if not available
     if target_lang != baseline_lang:
@@ -7089,7 +7307,7 @@ class QuoteDocumentPublishRequest(BaseModel):
 
 class MediaSelectionRequest(BaseModel):
     quotationId: str
-    lang: Optional[str] = None
+    lang: str = "all"
     sectionKey: str
     slotKey: str
     displayOrder: int = Field(default=0, ge=0)
@@ -7266,8 +7484,13 @@ async def put_quotation_document(
             if not _is_brochure_template(quotation.template_name):
                 raise HTTPException(status_code=400, detail="Document editor is only available for brochure quotations.")
 
-            document = _hydrate_canonical_quote_document(
+            current_document = await document_repository.get_current_document(quotation_id, effective_lang)
+            sanitized_document = _sanitize_canonical_asset_state(
                 document,
+                current_document.document_json if current_document is not None else None,
+            )
+            document = _hydrate_canonical_quote_document(
+                sanitized_document,
                 quotation,
                 lang=effective_lang,
                 revision=payload.baseRevision or int(((document.get("meta") or {}).get("revision")) or 1),
@@ -7820,6 +8043,8 @@ async def publish_quotation(quotation_id: str, body: PublishRequest, request: Re
                 ignore_published_html=True,
             )
 
+            _sync_ctx_data_before_publish(ctx_data, rendered_html, target_lang or baseline_lang, version)
+
             lang_suffix = f"_{target_lang}" if target_lang and target_lang != baseline_lang else ""
             filename = f"v{version}{lang_suffix}.html"
 
@@ -7905,7 +8130,7 @@ async def publish_quotation(quotation_id: str, body: PublishRequest, request: Re
                 is_pdf=False,
                 ignore_published_html=True,
             )
-            _save_ctx_html_sync_state(ctx_data, target_lang, new_html, captured_from_version=version)
+            _sync_ctx_data_before_publish(ctx_data, new_html, target_lang, version=version)
             # Strip editor scripts before publishing
             idx_bar = new_html.find('id="publish-bar"')
             if idx_bar == -1:
@@ -7923,7 +8148,7 @@ async def publish_quotation(quotation_id: str, body: PublishRequest, request: Re
                             new_html = new_html[:idx_start] + new_html[idx_end:]
             body.html = new_html
         else:
-            _save_ctx_html_sync_state(ctx_data, target_lang, body.html or "", captured_from_version=version)
+            _sync_ctx_data_before_publish(ctx_data, body.html or "", target_lang or baseline_lang, version)
 
         rendered_pdf, effective_lang = await _render_quotation_doc_from_ctx(
             ctx_data,
@@ -7931,7 +8156,7 @@ async def publish_quotation(quotation_id: str, body: PublishRequest, request: Re
             target_lang or baseline_lang,
             request=request,
             is_pdf=True,
-            ignore_published_html=bool(body.template_name),
+            ignore_published_html=True,
         )
 
         if quotation_id in quotations:
@@ -8031,8 +8256,13 @@ async def publish_quotation_document(
         raise HTTPException(status_code=400, detail="Document publish is only available for brochure quotations.")
 
     if body.document is not None:
-        draft = _hydrate_canonical_quote_document(
+        current_document_payload = canonical_document
+        sanitized_document = _sanitize_canonical_asset_state(
             copy.deepcopy(body.document),
+            current_document_payload,
+        )
+        draft = _hydrate_canonical_quote_document(
+            sanitized_document,
             quotation,
             lang=effective_lang,
             revision=body.baseRevision or int((((body.document or {}).get("meta") or {}).get("revision")) or 1),
@@ -10053,4 +10283,3 @@ def get_luxury_hotel_details(hotel_name_or_arr: str, destination: str, checkin: 
 @app.api_route("/{path_name:path}", methods=["GET", "POST", "PUT", "DELETE"])
 async def catch_all(request: Request, path_name: str):
     return {"url_path": request.url.path, "path_name": path_name, "scope_path": request.scope.get("path")}
-

@@ -38,6 +38,7 @@
     hasMore: false,
     requestId: 0,
   };
+  const transientAssetPreviews = new Map();
   const DEFAULT_SECTION_TYPES = [
     "hero",
     "overview_letter",
@@ -264,6 +265,31 @@
     };
   }
 
+  function revokeObjectUrl(url) {
+    if (url && typeof url === "string" && url.startsWith("blob:")) {
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  function clearTransientAssetPreview(path) {
+    const existing = transientAssetPreviews.get(path);
+    if (existing && existing.url) revokeObjectUrl(existing.url);
+    transientAssetPreviews.delete(path);
+  }
+
+  function setTransientAssetPreview(path, asset) {
+    clearTransientAssetPreview(path);
+    transientAssetPreviews.set(path, normalizeAsset(asset));
+  }
+
+  function buildDraftForView(draft) {
+    const viewDraft = clone(draft || {});
+    transientAssetPreviews.forEach((asset, path) => {
+      setPath(viewDraft, path, normalizeAsset(asset));
+    });
+    return viewDraft;
+  }
+
   function splitLines(value) {
     return String(value || "")
       .split(/\n+/)
@@ -341,8 +367,9 @@
 
   function syncEditorFields(rootEl) {
     const root = rootEl || document;
+    const viewState = buildDraftForView(state);
     root.querySelectorAll("input[data-path], textarea[data-path]").forEach((el) => {
-      const value = getPath(state, el.dataset.path || "");
+      const value = getPath(viewState, el.dataset.path || "");
       if (el instanceof HTMLInputElement && el.type === "file") return;
       if (el instanceof HTMLInputElement && el.type === "color") {
         el.value = textValue(value) || "#000000";
@@ -352,23 +379,23 @@
     });
     root.querySelectorAll("textarea[data-array-path]").forEach((el) => {
       const path = el.dataset.arrayPath || "";
-      el.value = formatArrayField(path, getPath(state, path));
+      el.value = formatArrayField(path, getPath(viewState, path));
     });
     root.querySelectorAll("textarea[data-booking-items]").forEach((el) => {
-      el.value = formatBookingItems((state.bookingTerms || {}).items || []);
+      el.value = formatBookingItems((viewState.bookingTerms || {}).items || []);
     });
     root.querySelectorAll("small[data-asset-url]").forEach((el) => {
-      const value = getPath(state, el.dataset.assetUrl || "");
+      const value = getPath(viewState, el.dataset.assetUrl || "");
       el.textContent = value && value.url ? value.url : "";
     });
     root.querySelectorAll("img[data-asset-preview]").forEach((el) => {
-      const value = getPath(state, el.dataset.assetPreview || "");
+      const value = getPath(viewState, el.dataset.assetPreview || "");
       const url = value && value.url ? value.url : "";
       el.src = url || "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
       el.hidden = !url;
     });
     root.querySelectorAll("[data-asset-empty]").forEach((el) => {
-      const value = getPath(state, el.dataset.assetEmpty || "");
+      const value = getPath(viewState, el.dataset.assetEmpty || "");
       el.hidden = !!(value && value.url);
     });
     root.querySelectorAll("[data-brand-preset]").forEach((el) => {
@@ -734,18 +761,19 @@
   }
 
   function applyDraftToDom(draft) {
-    applyLayout(draft);
-    applyBrandTokens(draft);
-    applyAssets(draft);
-    applyTopLevel(draft);
-    applyItinerary(draft);
-    applyHotels(draft);
-    applyPricing(draft);
-    applyCollection("inc", draft.inclusions || []);
-    applyCollection("exc", draft.exclusions || []);
-    applyBookingTerms(draft);
-    applyFinalization(draft);
-    applyRouteSegments(draft);
+    const viewDraft = buildDraftForView(draft);
+    applyLayout(viewDraft);
+    applyBrandTokens(viewDraft);
+    applyAssets(viewDraft);
+    applyTopLevel(viewDraft);
+    applyItinerary(viewDraft);
+    applyHotels(viewDraft);
+    applyPricing(viewDraft);
+    applyCollection("inc", viewDraft.inclusions || []);
+    applyCollection("exc", viewDraft.exclusions || []);
+    applyBookingTerms(viewDraft);
+    applyFinalization(viewDraft);
+    applyRouteSegments(viewDraft);
   }
 
   function applyLayout(draft) {
@@ -860,12 +888,13 @@
   async function handleAssetInput(path, file) {
     if (!file) return;
     const tempUrl = URL.createObjectURL(file);
-    setPath(state, path, { assetId: "", url: tempUrl, status: "uploading" });
+    setTransientAssetPreview(path, { assetId: "", url: tempUrl, status: "uploading" });
     applyDraftToDom(state);
     syncEditorFields(document.getElementById("brochure-draft-sidebar"));
     try {
       const uploaded = await uploadAsset(file);
       await persistMediaSelection(uploaded.assetId || "", path);
+      clearTransientAssetPreview(path);
       setPath(state, path, {
         assetId: uploaded.assetId || "",
         url: uploaded.originalUrl || uploaded.previewUrl || tempUrl,
@@ -876,7 +905,7 @@
       scheduleSave();
     } catch (err) {
       console.error("[brochure-draft] Upload failed", err);
-      setPath(state, path, { assetId: "", url: tempUrl, status: "error" });
+      setTransientAssetPreview(path, { assetId: "", url: tempUrl, status: "error" });
       applyDraftToDom(state);
       syncEditorFields(document.getElementById("brochure-draft-sidebar"));
       updateSaveStatus("Asset upload failed", "error");
@@ -1011,6 +1040,7 @@
     if (!asset || !mediaPickerState.path) return;
     try {
       await persistMediaSelection(asset.id, mediaPickerState.path);
+      clearTransientAssetPreview(mediaPickerState.path);
       setPath(state, mediaPickerState.path, {
         assetId: asset.id,
         url: asset.originalUrl || asset.previewUrl || "",
@@ -1882,6 +1912,10 @@
   }
 
   applyDraftToDom(state);
+  window.addEventListener("beforeunload", () => {
+    transientAssetPreviews.forEach((asset) => revokeObjectUrl(asset && asset.url));
+    transientAssetPreviews.clear();
+  });
 
   if (isEditor) {
     injectEditorStyles();

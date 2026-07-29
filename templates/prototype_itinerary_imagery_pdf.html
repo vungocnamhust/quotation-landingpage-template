@@ -196,6 +196,11 @@
       filter: brightness(0.4) sepia(1) saturate(3) hue-rotate(85deg);
     }
 
+    .pdf-page:first-of-type::before,
+    .pdf-page:has(.cover)::before {
+      display: none;
+    }
+
     .pdf-page::after {
       content: "";
       position: absolute;
@@ -1586,24 +1591,15 @@
             </div>
           </div>
 
+          {% set img_hero = imgs.hero or (day.carousel[0] if day.carousel and day.carousel|length > 0 else (day.image or day.image_url or '/assets/brands/vietnam_safar.png')) %}
+          {% set img_small1 = imgs['small-1'] or (day.carousel[1] if day.carousel and day.carousel|length > 1 else img_hero) %}
+          {% set img_small2 = imgs['small-2'] or (day.carousel[2] if day.carousel and day.carousel|length > 2 else img_small1) %}
           <div class="day-media" style="display: flex; flex-direction: column; gap: 8px; height: 100%;">
-            {% if imgs['small-1'] and imgs['small-2'] %}
-            <div style="flex: 2; background: url('{{ imgs.hero }}') center/cover no-repeat; border-radius: 4px;"></div>
+            <div style="flex: 2; background: url('{{ img_hero }}') center/cover no-repeat; border-radius: 4px;"></div>
             <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-              <div style="background: url('{{ imgs['small-1'] }}') center/cover no-repeat; border-radius: 4px;"></div>
-              <div style="background: url('{{ imgs['small-2'] }}') center/cover no-repeat; border-radius: 4px;"></div>
+              <div style="background: url('{{ img_small1 }}') center/cover no-repeat; border-radius: 4px;"></div>
+              <div style="background: url('{{ img_small2 }}') center/cover no-repeat; border-radius: 4px;"></div>
             </div>
-            {% elif imgs['small-1'] %}
-            <div style="flex: 1; background: url('{{ imgs.hero }}') center/cover no-repeat; border-radius: 4px;"></div>
-            <div style="flex: 1; background: url('{{ imgs['small-1'] }}') center/cover no-repeat; border-radius: 4px;">
-            </div>
-            {% elif imgs.hero %}
-            <div style="flex: 1; background: url('{{ imgs.hero }}') center/cover no-repeat; border-radius: 4px;"></div>
-            {% elif day.image or day.image_url %}
-            <div
-              style="flex: 1; background: url('{{ day.image or day.image_url }}') center/cover no-repeat; border-radius: 4px;">
-            </div>
-            {% endif %}
           </div>
         </div>
         {% endfor %}

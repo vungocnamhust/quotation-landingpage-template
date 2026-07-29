@@ -7,6 +7,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.models.media import MediaAsset, MediaSelection
 
+SHARED_MEDIA_SELECTION_LANG = "all"
+
+
+def normalize_media_selection_lang(lang: str | None) -> str:
+    normalized = (lang or "").strip()
+    return normalized or SHARED_MEDIA_SELECTION_LANG
+
 
 class MediaRepository:
     def __init__(self, session: AsyncSession) -> None:
@@ -145,21 +152,30 @@ class MediaRepository:
         lang: str | None = None,
         display_order: int = 0,
     ) -> MediaSelection:
+        normalized_lang = normalize_media_selection_lang(lang)
         stmt = (
             select(MediaSelection)
             .where(MediaSelection.quotation_id == quotation_id)
-            .where(MediaSelection.lang == lang)
             .where(MediaSelection.section_key == section_key)
             .where(MediaSelection.slot_key == slot_key)
             .where(MediaSelection.display_order == display_order)
         )
+        if normalized_lang == SHARED_MEDIA_SELECTION_LANG:
+            stmt = stmt.where(
+                or_(
+                    MediaSelection.lang == SHARED_MEDIA_SELECTION_LANG,
+                    MediaSelection.lang.is_(None),
+                )
+            )
+        else:
+            stmt = stmt.where(MediaSelection.lang == normalized_lang)
         result = await self.session.execute(stmt)
         selection = result.scalar_one_or_none()
         if selection is None:
             selection = MediaSelection(
                 quotation_id=quotation_id,
                 asset_id=asset_id,
-                lang=lang,
+                lang=normalized_lang,
                 section_key=section_key,
                 slot_key=slot_key,
                 display_order=display_order,
@@ -167,6 +183,7 @@ class MediaRepository:
             self.session.add(selection)
         else:
             selection.asset_id = asset_id
+            selection.lang = normalized_lang
         await self.session.flush()
         return selection
 
@@ -180,7 +197,16 @@ class MediaRepository:
     ) -> list[MediaSelection]:
         stmt: Select[tuple[MediaSelection]] = select(MediaSelection).where(MediaSelection.quotation_id == quotation_id)
         if lang is not None:
-            stmt = stmt.where(MediaSelection.lang == lang)
+            normalized_lang = normalize_media_selection_lang(lang)
+            if normalized_lang == SHARED_MEDIA_SELECTION_LANG:
+                stmt = stmt.where(
+                    or_(
+                        MediaSelection.lang == SHARED_MEDIA_SELECTION_LANG,
+                        MediaSelection.lang.is_(None),
+                    )
+                )
+            else:
+                stmt = stmt.where(MediaSelection.lang == normalized_lang)
         if section_key is not None:
             stmt = stmt.where(MediaSelection.section_key == section_key)
         if slot_key is not None:

@@ -474,6 +474,14 @@ class BrochureRouteContractTests(unittest.TestCase):
         self.assertIsNotNone(quotation)
         self.assertEqual(canonical_lang, "en")
         self.assertEqual(canonical_document["meta"]["quotationId"], created_id)
+
+        async def _assert_no_publications():
+            async with self.session_factory() as session:
+                publication_repo = PublicationRepository(session)
+                publications = await publication_repo.list_publications(created_id, lang="en")
+                self.assertEqual(publications, [])
+
+        asyncio.run(_assert_no_publications())
         created_dir = os.path.join("published", created_id)
         if os.path.isdir(created_dir):
             shutil.rmtree(created_dir)
@@ -547,6 +555,70 @@ class BrochureRouteContractTests(unittest.TestCase):
         self.assertEqual(
             stale_response.json()["detail"]["currentDocument"]["trip"]["title"],
             "Writer One",
+        )
+
+    def test_put_document_succeeds_when_legacy_ctx_sync_fails_after_db_commit(self):
+        document = _sample_document()
+        asyncio.run(self._seed_brochure_document("quo_test", copy.deepcopy(document)))
+        main.quotations["quo_test"] = {"ctx": {
+            "template_name": main.BROCHURE_TEMPLATE_NAME,
+            "baseline_lang": "en",
+            "available_langs": ["en"],
+            "translation_status": {"baseline_lang": "en", "available_langs": ["en"]},
+            "quoteDocuments": {"en": copy.deepcopy(document)},
+            "quoteDocument": copy.deepcopy(document),
+            "quoteDocumentLang": "en",
+            "brand": {"id": "vietnam_safar"},
+        }}
+        updated_document = copy.deepcopy(document)
+        updated_document["trip"]["title"] = "Saved Despite Ctx Failure"
+
+        with patch.object(main, "_persist_ctx_data", side_effect=RuntimeError("ctx sync failed")):
+            response = self.client.put(
+                "/api/v2/quotations/quo_test/document",
+                json={"document": updated_document, "baseRevision": 1},
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["currentRevision"], 2)
+
+        async def _assert_saved():
+            quotation, saved_document, _ = await main._load_canonical_quote_document_from_db("quo_test", "en")
+            self.assertIsNotNone(quotation)
+            self.assertEqual(saved_document["trip"]["title"], "Saved Despite Ctx Failure")
+            self.assertEqual(saved_document["meta"]["revision"], 2)
+
+        asyncio.run(_assert_saved())
+
+    def test_put_document_drops_transient_blob_asset_urls_from_canonical_state(self):
+        document = _sample_document()
+        document["assets"]["hero"] = {
+            "assetId": "med_existing",
+            "url": "https://cdn.test/existing-hero.jpg",
+            "status": "ready",
+        }
+        asyncio.run(self._seed_brochure_document("quo_test", copy.deepcopy(document)))
+
+        uploaded_document = copy.deepcopy(document)
+        uploaded_document["assets"]["hero"] = {
+            "assetId": "",
+            "url": "blob:https://example.test/preview-123",
+            "status": "uploading",
+        }
+
+        response = self.client.put(
+            "/api/v2/quotations/quo_test/document",
+            json={"document": uploaded_document, "baseRevision": 1},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json()["document"]["assets"]["hero"]["url"],
+            "https://cdn.test/existing-hero.jpg",
+        )
+        self.assertEqual(
+            response.json()["document"]["assets"]["hero"]["assetId"],
+            "med_existing",
         )
 
     def test_publish_document_reads_canonical_postgres_document_and_creates_publication(self):
