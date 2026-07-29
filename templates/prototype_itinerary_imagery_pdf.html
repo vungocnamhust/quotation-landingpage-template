@@ -181,6 +181,14 @@
     }
 
     .pdf-page::before {
+      content: none;
+    }
+
+    .pdf-page::after {
+      content: none;
+    }
+
+    .pdf-page--shell::before {
       content: "";
       position: absolute;
       inset: 14px;
@@ -188,103 +196,120 @@
       border-width: 20px;
       border-image-source: var(--indochine-border);
       border-image-slice: 72;
-      border-image-repeat: stretch;
+      border-image-repeat: round;
       background: none;
-      opacity: 0.4;
+      opacity: 0.5;
       pointer-events: none;
       z-index: 0;
       filter: brightness(0.4) sepia(1) saturate(3) hue-rotate(85deg);
     }
 
-    .pdf-page:first-of-type::before,
-    .pdf-page:has(.cover)::before {
-      display: none;
-    }
-
-    .pdf-page::after {
+    .pdf-page--shell::after {
       content: "";
       position: absolute;
       inset: 24px;
-      border: 1px solid color-mix(in srgb, var(--gold) 12%, transparent);
-      opacity: 0.4;
+      border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
+      opacity: 0.6;
       pointer-events: none;
       z-index: 0;
     }
 
     .pdf-page>* {
       position: relative;
-      z-index: 1;
+      z-index: 2;
     }
 
     .pdf-indochine-art {
       position: absolute;
       pointer-events: none;
-      z-index: 0;
+      z-index: 1;
       background-repeat: no-repeat;
       background-size: contain;
       background-position: center;
       mix-blend-mode: multiply;
-      opacity: 0.12;
+      opacity: 0.25;
+      filter: sepia(0.5) hue-rotate(-20deg) contrast(1.2) brightness(0.9);
     }
 
     .pdf-indochine-art--cyclo {
       background-image: var(--indochine-xich-lo);
-      width: 210px;
-      height: 140px;
+      width: 220px;
+      aspect-ratio: 251 / 168;
+      opacity: 0.15;
+      filter: grayscale(1) contrast(3) brightness(1.2);
     }
 
     .pdf-indochine-art--buffalo {
       background-image: var(--indochine-cloud);
       width: 240px;
-      height: 136px;
-      opacity: 0.08;
+      aspect-ratio: 528 / 266;
+      opacity: 0.25;
     }
 
     .pdf-indochine-art--van-mieu {
       background-image: var(--indochine-van-mieu);
       width: 240px;
-      height: 172px;
-      opacity: 0.12;
+      aspect-ratio: 597 / 429;
+      opacity: 0.15;
+      filter: grayscale(1) contrast(3) brightness(1.2);
     }
 
     .pdf-indochine-art--lantern {
       background-image: var(--indochine-den-long);
-      width: 92px;
-      height: 164px;
-      opacity: 0.16;
+      width: 96px;
+      aspect-ratio: 166 / 295;
+      opacity: 0.25;
     }
 
     .cover-lantern {
       top: 78px;
       right: 54px;
-      filter: brightness(0) invert(1);
-      opacity: 0.2;
+      opacity: 0.25;
+      background-color: white;
     }
 
     .route-cyclo {
       top: 92px;
-      right: 48px;
+      right: 32px;
+      transform: rotate(-5deg);
+      opacity: 0.22;
     }
 
-    .selected-stays-buffalo {
-      bottom: 28px;
-      right: 36px;
+    .hotel-plan-van-mieu {
+      bottom: 24px;
+      right: 24px;
+      opacity: 0.28;
     }
 
     .divider-lantern {
       top: 24px;
       right: 40px;
-      filter: brightness(0) invert(1);
+      opacity: 0.35;
     }
 
     .hotel-divider-lantern {
-      top: 28px;
-      right: 52px;
+      top: 0;
+      right: 40px;
+      filter: none;
+      opacity: 0.16;
     }
 
     .terms-buffalo {
       top: 72px;
       right: 42px;
+      opacity: 0.4;
+    }
+
+    .pricing-cloud {
+      bottom: 24px;
+      right: 24px;
+      opacity: 0.4;
+    }
+
+    .designer-cyclo {
+      bottom: 18px;
+      right: 18px;
+      opacity: 0.35;
     }
 
     .ltr-token {
@@ -666,6 +691,13 @@
 
     .day-copy-body p:last-child {
       margin-bottom: 0 !important;
+    }
+
+    .day-highlights {
+      flex-shrink: 0;
+      font-size: 10px;
+      color: var(--text-muted);
+      line-height: 1.45;
     }
 
     .day-notes {
@@ -1366,7 +1398,7 @@
     "Confidential" | translate(lang) }}</div>
 
   <!-- ═══════════════════ PAGE 1 — Cover ═══════════════════ -->
-  <div class="pdf-page">
+  <div class="pdf-page pdf-page--no-shell">
     <div class="cover">
       <img class="cover-media" src="{{ hero_img_custom | default(img_0 | default('/assets/vietnam-safar-logo.png')) }}"
         alt="">
@@ -1397,7 +1429,7 @@
   </div>
 
   <!-- ═══════════════════ PAGE 2 — Open Letter ═══════════════════ -->
-  <div class="pdf-page">
+  <div class="pdf-page pdf-page--shell">
     <div class="page-header">
       <span class="brand">{% if brand and brand.logo %}<img src="{{ brand.logo }}"
           style="height: 14px; margin-right: 6px; vertical-align: middle;">{% endif %}{{ (brand.name if brand else '')
@@ -1486,7 +1518,7 @@
   </div>
 
   <!-- ═══════════════════ PAGE 3 — Glance & Overview ═══════════════════ -->
-  <div class="pdf-page" style="display: flex; flex-direction: column;">
+  <div class="pdf-page pdf-page--no-shell" style="display: flex; flex-direction: column;">
     <div class="pdf-indochine-art pdf-indochine-art--cyclo route-cyclo" aria-hidden="true"></div>
     <div class="page-header">
       <span class="brand">{% if brand and brand.logo %}<img src="{{ brand.logo }}"
@@ -1545,7 +1577,7 @@
   </div>
 
   <!-- ── PDF: Chapter Divider — THE JOURNEY ─── -->
-  <div class="pdf-page pdf-chapter-divider"
+  <div class="pdf-page pdf-page--no-shell pdf-chapter-divider"
     style="display: none !important; background-image: url('{{ img_itinerary_divider or img_1 or img_0 }}');">
     <div class="pdf-indochine-art pdf-indochine-art--lantern divider-lantern" aria-hidden="true"></div>
     <div class="pdf-chapter-divider-top">
@@ -1582,7 +1614,7 @@
   </div>
 
   <!-- ═══════════════════ PAGE 4 — Itinerary ═══════════════════ -->
-  <div class="pdf-page">
+  <div class="pdf-page pdf-page--no-shell">
     <div class="page-header">
       <span class="brand">{% if brand and brand.logo %}<img src="{{ brand.logo }}"
           style="height: 14px; margin-right: 6px; vertical-align: middle;">{% endif %}{{ (brand.name if brand else '')
@@ -1619,16 +1651,16 @@
                 <p style="margin-bottom: 8px;">{{ para | rtl_mixed(lang) }}</p>
                 {% endfor %}
                 {% endif %}
-
-                {% if day.activities %}
-                <p style="font-size: 10px; color: var(--text-muted); margin-top: 8px;">
-                  <strong style="color: var(--emerald); letter-spacing: 0.06em;">{{ day.label_highlights |
-                    default("Highlights:" | translate(lang)) }}</strong>
-                  <span>{{ (day.activities | join(' · ')) if day.activities is iterable and day.activities is not string
-                    else day.activities | rtl_mixed(lang) }}</span>
-                </p>
-                {% endif %}
               </div>
+
+              {% if day.activities %}
+              <div class="day-highlights">
+                <strong style="color: var(--emerald); letter-spacing: 0.06em;">{{ day.label_highlights |
+                  default("Highlights:" | translate(lang)) }}</strong>
+                <span>{{ (day.activities | join(' · ')) if day.activities is iterable and day.activities is not string
+                  else day.activities | rtl_mixed(lang) }}</span>
+              </div>
+              {% endif %}
 
               {% if day.notes %}
               <div class="day-notes">
@@ -1694,9 +1726,8 @@
 
 
   <!-- ── PDF: Chapter Divider — SELECTED ACCOMMODATIONS ─── -->
-  <div class="pdf-page"
+  <div class="pdf-page pdf-page--no-shell"
     style="height: 1123px; padding: 0; background: var(--bg-main); display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;">
-    <div class="pdf-indochine-art pdf-indochine-art--van-mieu selected-stays-buffalo" aria-hidden="true"></div>
     <!-- Top 58% Full-bleed Hero Image -->
     <div style="width: 100%; height: 58%; flex: 0 0 58%; position: relative; overflow: hidden;">
       <img src="{{ img_stays_divider or (hotels[0].room_img if hotels else img_2) }}" alt="Selected Accommodations"
@@ -1742,7 +1773,8 @@
   </div>
 
   <!-- ═══════════════════ PAGE 5 — Hotel Plan & Pricing ═══════════════════ -->
-  <div class="pdf-page">
+  <div class="pdf-page pdf-page--shell">
+    <div class="pdf-indochine-art pdf-indochine-art--van-mieu hotel-plan-van-mieu" aria-hidden="true"></div>
     <div class="page-header">
       <span class="brand">{% if brand and brand.logo %}<img src="{{ brand.logo }}"
           style="height: 14px; margin-right: 6px; vertical-align: middle;">{% endif %}{{ (brand.name if brand else '')
@@ -1843,7 +1875,7 @@
   </div>
 
   <!-- ── PDF: Chapter Divider — THE JOURNEY, BROUGHT TOGETHER (Option 1: Top Hero Image + Bottom Editorial Content) ─── -->
-  <div class="pdf-page"
+  <div class="pdf-page pdf-page--no-shell"
     style="height: 1123px; padding: 0; background: var(--bg-main); display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;">
     <div class="pdf-indochine-art pdf-indochine-art--lantern hotel-divider-lantern" aria-hidden="true"></div>
     <!-- Top 58% Full-bleed Hero Image -->
@@ -1897,8 +1929,9 @@
   </div>
 
   <!-- ═══════════════════ DEDICATED PAGE — Journey Investment (Package Pricing) ═══════════════════ -->
-  <div class="pdf-page"
+  <div class="pdf-page pdf-page--shell"
     style="background: color-mix(in srgb, var(--c_primary, var(--primary, #17412e)) 8%, #ffffff); color: var(--text-main, #333);">
+    <div class="pdf-indochine-art pdf-indochine-art--buffalo pricing-cloud" aria-hidden="true"></div>
     <div class="page-header" style="border-bottom: 1px solid rgba(0,0,0,0.1); color: var(--text-muted, #666);">
       <span class="brand" style="color: var(--text-main, #333);">{% if brand and brand.logo %}<img
           src="{{ brand.logo }}" style="height: 14px; margin-right: 6px; vertical-align: middle;">{% endif %}{{
@@ -1985,7 +2018,7 @@
     </div>
 
     <!-- ═══════════════════ PAGE 6 — Inc/Exc & Muslim Care ═══════════════════ -->
-    <div class="pdf-page">
+    <div class="pdf-page pdf-page--no-shell">
       <div class="page-header">
         <span class="brand">{% if brand and brand.logo %}<img src="{{ brand.logo }}"
             style="height: 14px; margin-right: 6px; vertical-align: middle;">{% endif %}{{ (brand.name if brand else '')
@@ -2039,8 +2072,7 @@
     </div>
 
     <!-- ═══════════════════ PAGE 8 — Booking Terms ═══════════════════ -->
-    <div class="pdf-page">
-      <div class="pdf-indochine-art pdf-indochine-art--buffalo terms-buffalo" aria-hidden="true"></div>
+    <div class="pdf-page pdf-page--no-shell">
       <div class="page-header">
         <span class="brand">{% if brand and brand.logo %}<img src="{{ brand.logo }}"
             style="height: 14px; margin-right: 6px; vertical-align: middle;">{% endif %}{{ (brand.name if brand else '')
@@ -2144,7 +2176,8 @@
 
     {% if show_designer_section %}
     <!-- ═══════════════════ PAGE 9 — Travel Specialist ═══════════════════ -->
-    <div class="pdf-page">
+    <div class="pdf-page pdf-page--no-shell">
+      <div class="pdf-indochine-art pdf-indochine-art--cyclo designer-cyclo" aria-hidden="true"></div>
       <div class="page-header">
         <span class="brand">{% if brand and brand.logo %}<img src="{{ brand.logo }}"
             style="height: 14px; margin-right: 6px; vertical-align: middle;">{% endif %}{{ (brand.name if brand else '')
