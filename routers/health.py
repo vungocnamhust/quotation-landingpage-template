@@ -26,11 +26,13 @@ async def health_ready(db: AsyncSession = Depends(get_db)):
             detail={"status": "ready", "postgres": db_status}
         )
 
-    # Check R2 configuration is present (not a full ping to avoid slowing down healthcheck)
-    if not settings.r2_endpoint and not settings.r2_account_id:
-        r2_status = "missing_endpoint_or_account_id"
-    else:
+    # Check R2 configuration completeness (not a full ping to avoid slowing down healthcheck)
+    if settings.has_r2_configuration:
         r2_status = "ok"
+    elif settings.resolved_r2_endpoint or settings.r2_account_id:
+        r2_status = "partial_configuration"
+    else:
+        r2_status = "not_configured"
         
     return {
         "status": "ready",
