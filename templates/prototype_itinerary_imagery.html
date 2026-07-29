@@ -3909,10 +3909,10 @@
               <span class="destination">{{ day.segment_city }}</span>
               <span>{{ "DAY" | translate(lang) }} {{ day.dayNumber }}</span>
             </div>
-            <h4 class="day-title" data-editable="day_title_{{ day_idx_global }}">{{ day.title | rtl_mixed(lang) }}</h4>
+            <h4 class="day-title" data-editable="day_title_{{ day_idx_global }}">{{ (day.title_html or day.title) | render_rich_text(lang) }}</h4>
             <div class="day-copy" style="margin-top:24px;">
               {% for para in day.description %}
-              <p data-editable="day_desc_{{ day_idx_global }}_{{ loop.index0 }}">{{ para | rtl_mixed(lang) }}</p>
+              <p data-editable="day_desc_{{ day_idx_global }}_{{ loop.index0 }}">{{ ((day.description_html[loop.index0] if day.description_html and loop.index0 < (day.description_html | length) else para)) | render_rich_text(lang) }}</p>
               {% endfor %}
               {% if day.activities %}
               <p style="font-size:13px;color: var(--text-muted);margin-top:8px"
@@ -3920,8 +3920,8 @@
                 <strong style="color: var(--primary);letter-spacing:.06em"
                   data-editable="day_label_highlights_{{ day_idx_global }}">{{ day.label_highlights |
                   default("Highlights:" | translate(lang)) }}</strong>
-                <span data-editable="day_highlights_{{ day_idx_global }}">{{ (day.activities | join(' · ')) |
-                  rtl_mixed(lang) }}</span>
+                <span data-editable="day_highlights_{{ day_idx_global }}">{{ (day.activities_html or (day.activities | join(' · '))) |
+                  render_rich_text(lang) }}</span>
               </p>
               {% endif %}
               {% if day.notes %}
@@ -3934,7 +3934,7 @@
                 <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
                   {% for note in day.notes %}
                   <li style="margin-bottom: 2px;" data-editable="day_note_{{ day_idx_global }}_{{ loop.index0 }}">{{
-                    note | rtl_mixed(lang) }}</li>
+                    ((day.notes_html[loop.index0] if day.notes_html and loop.index0 < (day.notes_html | length) else note)) | render_rich_text(lang) }}</li>
                   {% endfor %}
                 </ul>
               </div>
@@ -3964,7 +3964,7 @@
               <span class="destination">{{ day.segment_city }}</span>
               <span>{{ "DAY" | translate(lang) }} {{ day.dayNumber }}</span>
             </div>
-            <h4 class="day-title" data-editable="day_title_{{ day_idx_global }}">{{ day.title | rtl_mixed(lang) }}</h4>
+            <h4 class="day-title" data-editable="day_title_{{ day_idx_global }}">{{ (day.title_html or day.title) | render_rich_text(lang) }}</h4>
             <dl class="day-detail-list" style="margin-top:40px;">
               {% if day.overnight %}
               <div class="day-detail">
@@ -3984,7 +3984,7 @@
           </div>
           <div class="editorial-copy day-copy">
             {% for para in day.description %}
-            <p data-editable="day_desc_{{ day_idx_global }}_{{ loop.index0 }}">{{ para | rtl_mixed(lang) }}</p>
+            <p data-editable="day_desc_{{ day_idx_global }}_{{ loop.index0 }}">{{ ((day.description_html[loop.index0] if day.description_html and loop.index0 < (day.description_html | length) else para)) | render_rich_text(lang) }}</p>
             {% endfor %}
             {% if day.activities %}
             <p style="font-size:13px;color: var(--text-muted);margin-top:8px"
@@ -3992,8 +3992,8 @@
               <strong style="color: var(--primary);letter-spacing:.06em"
                 data-editable="day_label_highlights_{{ day_idx_global }}">{{ day.label_highlights |
                 default("Highlights:" | translate(lang)) }}</strong>
-              <span data-editable="day_highlights_{{ day_idx_global }}">{{ (day.activities | join(' · ')) |
-                rtl_mixed(lang) }}</span>
+              <span data-editable="day_highlights_{{ day_idx_global }}">{{ (day.activities_html or (day.activities | join(' · '))) |
+                render_rich_text(lang) }}</span>
             </p>
             {% endif %}
             {% if day.notes %}
@@ -4005,8 +4005,8 @@
                 translate(lang)) }}</strong>
               <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
                 {% for note in day.notes %}
-                <li style="margin-bottom: 2px;" data-editable="day_note_{{ day_idx_global }}_{{ loop.index0 }}">{{ note
-                  | rtl_mixed(lang) }}</li>
+                <li style="margin-bottom: 2px;" data-editable="day_note_{{ day_idx_global }}_{{ loop.index0 }}">{{ ((day.notes_html[loop.index0] if day.notes_html and loop.index0 < (day.notes_html | length) else note))
+                  | render_rich_text(lang) }}</li>
                 {% endfor %}
               </ul>
             </div>
@@ -5610,10 +5610,16 @@
 
         el.addEventListener('input', () => {
           syncEditableMirrors(el);
+          if (window.syncBrochureEditableToDraft) {
+            window.syncBrochureEditableToDraft(el);
+          }
         });
 
         el.addEventListener('blur', () => {
           syncEditableMirrors(el);
+          if (window.syncBrochureEditableToDraft) {
+            window.syncBrochureEditableToDraft(el);
+          }
         });
 
         // Wrap it and add translate button if lang is not English

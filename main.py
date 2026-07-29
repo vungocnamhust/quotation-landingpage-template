@@ -219,6 +219,21 @@ HTML_RICH_TEXT_FIELDS = frozenset({
     "term_confirmation",
 })
 
+HTML_RICH_TEXT_PREFIXES = (
+    "day_title_",
+    "day_desc_",
+    "day_highlights_",
+    "day_note_",
+)
+
+
+def _field_supports_rich_text(field_name: str) -> bool:
+    if not field_name:
+        return False
+    if field_name in HTML_RICH_TEXT_FIELDS:
+        return True
+    return any(field_name.startswith(prefix) for prefix in HTML_RICH_TEXT_PREFIXES)
+
 # Multi-brand configurations
 BRANDS = {
     "vietnam_safar": {
@@ -1813,6 +1828,18 @@ def rtl_mixed_filter(text: str, lang: str = "en"):
 
 
 templates.env.filters["rtl_mixed"] = rtl_mixed_filter
+
+
+def render_rich_text_filter(text: str, lang: str = "en"):
+    if text is None:
+        return ""
+    value = str(text)
+    if "<" not in value and ">" not in value:
+        return rtl_mixed_filter(value, lang)
+    return Markup(value)
+
+
+templates.env.filters["render_rich_text"] = render_rich_text_filter
 
 
 def format_date_filter(date_str: str) -> str:
@@ -5993,7 +6020,7 @@ class EditableFieldsParser(HTMLParser):
                 if not val and item.get('img_url'):
                     val = item['img_url']
                 elif (
-                    item['field'] not in HTML_RICH_TEXT_FIELDS
+                    not _field_supports_rich_text(item['field'])
                     and not item['field'].startswith("day_img_")
                     and not item['field'].startswith("img_")
                 ):
@@ -6020,6 +6047,17 @@ def _normalize_visible_text(value: str) -> str:
     lines = [" ".join(line.split()) for line in value.splitlines()]
     lines = [line for line in lines if line]
     return "\n".join(lines).strip()
+
+
+def _split_itinerary_list_text(value: str) -> list[str]:
+    normalized = _normalize_visible_text(value)
+    if not normalized:
+        return []
+    return [
+        item.strip()
+        for item in re.split(r"\s*[·•]\s*|\n+", normalized)
+        if item.strip()
+    ]
 
 def _normalize_image_ref(ref: str) -> str:
     if not ref:
@@ -6459,7 +6497,8 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
         if t_key in existing_keys:
             if override_text:
                 if t_key in edited_fields:
-                    day['title'] = edited_fields[t_key]
+                    day['title_html'] = edited_fields[t_key]
+                    day['title'] = _normalize_visible_text(edited_fields[t_key])
                 
                 badge_key = f"day_badge_{idx}"
                 if badge_key in edited_fields:
@@ -6489,22 +6528,32 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
                 any_desc_edited = any(f"day_desc_{idx}_{p}" in edited_fields for p in range(20))
                 if any_desc_edited:
                     desc_paras = []
+                    desc_paras_html = []
                     p = 0
                     while True:
                         p_key = f"day_desc_{idx}_{p}"
                         if p_key in edited_fields:
-                            desc_paras.append(edited_fields[p_key])
+                            desc_paras_html.append(edited_fields[p_key])
+                            desc_paras.append(_normalize_visible_text(edited_fields[p_key]))
                             p += 1
                         elif p_key in existing_keys:
                             orig_desc = day.get('description', [])
+                            orig_desc_html = day.get('description_html', [])
                             if p < len(orig_desc):
                                 desc_paras.append(orig_desc[p])
                             else:
                                 desc_paras.append("")
+                            if p < len(orig_desc_html):
+                                desc_paras_html.append(orig_desc_html[p])
+                            elif p < len(orig_desc):
+                                desc_paras_html.append(orig_desc[p])
+                            else:
+                                desc_paras_html.append("")
                             p += 1
                         else:
                             break
                     day['description'] = desc_paras
+                    day['description_html'] = desc_paras_html
 
                 # Update Overnight & Meals even if description itself was unchanged.
                 o_key = f"day_overnight_{idx}"
@@ -6517,28 +6566,40 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
                 # Update Highlights (activities)
                 h_key = f"day_highlights_{idx}"
                 if h_key in edited_fields:
-                    day['activities'] = [h.strip() for h in re.split(r'[·•\-,/]', edited_fields[h_key]) if h.strip()]
+                    day['activities_html'] = edited_fields[h_key]
+                    day['activities'] = _split_itinerary_list_text(edited_fields[h_key])
 
                 # Update Notes list
                 any_notes_edited = any(f"day_note_{idx}_{p}" in edited_fields for p in range(20))
                 if any_notes_edited:
                     notes_list = []
+                    notes_list_html = []
                     p = 0
                     while True:
                         n_key = f"day_note_{idx}_{p}"
                         if n_key in edited_fields:
-                            notes_list.append(edited_fields[n_key])
+                            notes_list_html.append(edited_fields[n_key])
+                            notes_list.append(_normalize_visible_text(edited_fields[n_key]))
                             p += 1
                         elif n_key in existing_keys:
                             orig_notes = day.get('notes', [])
+                            orig_notes_html = day.get('notes_html', [])
                             if p < len(orig_notes):
                                 notes_list.append(orig_notes[p])
                             else:
                                 notes_list.append("")
+                            if p < len(orig_notes_html):
+                                notes_list_html.append(orig_notes_html[p])
+                            elif p < len(orig_notes):
+                                notes_list_html.append(orig_notes[p])
+                            else:
+                                notes_list_html.append("")
                             p += 1
                         else:
                             break
                     day['notes'] = notes_list
+                    day['notes_html'] = notes_list_html
+
             new_itinerary.append(day)
     lang_ctx['itinerary'] = new_itinerary
     
@@ -6731,11 +6792,15 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
                 "date": timeline_day.get("date"),
                 "lang": timeline_day.get("lang", lang_ctx.get("lang", "en")),
                 "title": timeline_day.get("title", ""),
+                "title_html": timeline_day.get("title_html", ""),
                 "description": copy.deepcopy(timeline_day.get("description", [])),
+                "description_html": copy.deepcopy(timeline_day.get("description_html", [])),
                 "overnight": timeline_day.get("overnight", ""),
                 "meals": copy.deepcopy(timeline_day.get("meals", [])),
                 "activities": copy.deepcopy(timeline_day.get("activities", [])),
+                "activities_html": timeline_day.get("activities_html", ""),
                 "notes": copy.deepcopy(timeline_day.get("notes", [])),
+                "notes_html": copy.deepcopy(timeline_day.get("notes_html", [])),
                 "destinations": copy.deepcopy(timeline_day.get("destinations", [])),
                 "label_highlights": timeline_day.get("label_highlights"),
                 "label_notes": timeline_day.get("label_notes"),

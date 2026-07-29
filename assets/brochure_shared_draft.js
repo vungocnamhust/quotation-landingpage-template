@@ -105,16 +105,23 @@
     next.itinerary = next.itinerary || {};
     next.itinerary.days = (next.itinerary.days || []).map((day, index) => {
       const images = day.images || {};
+      const description = Array.isArray(day.description) ? day.description : (day.description ? [String(day.description)] : []);
+      const activities = Array.isArray(day.activities) ? day.activities : splitLines(day.activities || "");
+      const notes = Array.isArray(day.notes) ? day.notes : splitLines(day.notes || "");
       return {
         id: day.id || `day-${day.dayNumber || index + 1}`,
         dayNumber: day.dayNumber || index + 1,
         segmentCity: day.segmentCity || "",
         title: day.title || "",
-        description: Array.isArray(day.description) ? day.description : (day.description ? [String(day.description)] : []),
+        titleHtml: day.titleHtml || day.title || "",
+        description,
+        descriptionHtml: Array.isArray(day.descriptionHtml) && day.descriptionHtml.length ? day.descriptionHtml : description.slice(),
         overnight: day.overnight || "",
         meals: Array.isArray(day.meals) ? day.meals : splitLines(day.meals || ""),
-        activities: Array.isArray(day.activities) ? day.activities : splitLines(day.activities || ""),
-        notes: Array.isArray(day.notes) ? day.notes : splitLines(day.notes || ""),
+        activities,
+        activitiesHtml: day.activitiesHtml || activities.join(" · "),
+        notes,
+        notesHtml: Array.isArray(day.notesHtml) && day.notesHtml.length ? day.notesHtml : notes.slice(),
         labelHighlights: day.labelHighlights || "Highlights:",
         labelNotes: day.labelNotes || "Notes:",
         layoutType: day.layoutType || "single",
@@ -293,6 +300,19 @@
   function splitLines(value) {
     return String(value || "")
       .split(/\n+/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  function editablePlainText(value) {
+    const temp = document.createElement("div");
+    temp.innerHTML = String(value || "");
+    return (temp.innerText || temp.textContent || "").trim();
+  }
+
+  function splitEditableList(value) {
+    return editablePlainText(value)
+      .split(/\s*[·•]\s*|\n+/)
       .map((item) => item.trim())
       .filter(Boolean);
   }
@@ -632,17 +652,19 @@
   function applyItinerary(draft) {
     (draft.itinerary.days || []).forEach((day, index) => {
       const dayNumber = day.dayNumber || index + 1;
-      setEditable(`day_title_${dayNumber}`, day.title || "");
+      setEditable(`day_title_${dayNumber}`, day.titleHtml || day.title || "", true);
       (day.description || []).forEach((paragraph, paragraphIndex) => {
-        setEditable(`day_desc_${dayNumber}_${paragraphIndex}`, paragraph || "");
+        const paragraphHtml = ((day.descriptionHtml || [])[paragraphIndex]) || paragraph || "";
+        setEditable(`day_desc_${dayNumber}_${paragraphIndex}`, paragraphHtml, true);
       });
       setEditable(`day_overnight_${dayNumber}`, day.overnight || "");
       setEditable(`day_meals_${dayNumber}`, (day.meals || []).join(" · "));
-      setEditable(`day_highlights_${dayNumber}`, (day.activities || []).join(" · "));
+      setEditable(`day_highlights_${dayNumber}`, day.activitiesHtml || (day.activities || []).join(" · "), true);
       setEditable(`day_label_highlights_${dayNumber}`, day.labelHighlights || "Highlights:");
       setEditable(`day_label_notes_${dayNumber}`, day.labelNotes || "Notes:");
       (day.notes || []).forEach((note, noteIndex) => {
-        setEditable(`day_note_${dayNumber}_${noteIndex}`, note || "");
+        const noteHtml = ((day.notesHtml || [])[noteIndex]) || note || "";
+        setEditable(`day_note_${dayNumber}_${noteIndex}`, noteHtml, true);
       });
       const images = day.images || {};
       const heroUrl = images.hero && images.hero.url;
@@ -665,11 +687,15 @@
       itineraryDataEl.textContent = JSON.stringify((draft.itinerary.days || []).map((day) => ({
         dayNumber: day.dayNumber,
         title: day.title,
+        titleHtml: day.titleHtml,
         description: day.description,
+        descriptionHtml: day.descriptionHtml,
         overnight: day.overnight,
         meals: day.meals,
         activities: day.activities,
+        activitiesHtml: day.activitiesHtml,
         notes: day.notes,
+        notesHtml: day.notesHtml,
       })));
     }
   }
@@ -838,6 +864,60 @@
     if (!saveStatusEl) return;
     saveStatusEl.textContent = message || "";
     saveStatusEl.dataset.tone = tone || "neutral";
+  }
+
+  function findItineraryDayByNumber(dayNumber) {
+    return (state.itinerary.days || []).find((day) => Number(day.dayNumber) === Number(dayNumber));
+  }
+
+  function syncEditableToDraft(sourceEl) {
+    if (!(sourceEl instanceof HTMLElement)) return false;
+    const field = sourceEl.getAttribute("data-editable") || "";
+    if (!field) return false;
+
+    let match = field.match(/^day_title_(\d+)$/);
+    if (match) {
+      const day = findItineraryDayByNumber(match[1]);
+      if (!day) return false;
+      day.titleHtml = sourceEl.innerHTML || "";
+      day.title = editablePlainText(sourceEl.innerHTML);
+      return true;
+    }
+
+    match = field.match(/^day_desc_(\d+)_(\d+)$/);
+    if (match) {
+      const day = findItineraryDayByNumber(match[1]);
+      const paragraphIndex = Number(match[2]);
+      if (!day) return false;
+      while ((day.descriptionHtml || []).length <= paragraphIndex) day.descriptionHtml.push("");
+      while ((day.description || []).length <= paragraphIndex) day.description.push("");
+      day.descriptionHtml[paragraphIndex] = sourceEl.innerHTML || "";
+      day.description[paragraphIndex] = editablePlainText(sourceEl.innerHTML);
+      return true;
+    }
+
+    match = field.match(/^day_highlights_(\d+)$/);
+    if (match) {
+      const day = findItineraryDayByNumber(match[1]);
+      if (!day) return false;
+      day.activitiesHtml = sourceEl.innerHTML || "";
+      day.activities = splitEditableList(sourceEl.innerHTML);
+      return true;
+    }
+
+    match = field.match(/^day_note_(\d+)_(\d+)$/);
+    if (match) {
+      const day = findItineraryDayByNumber(match[1]);
+      const noteIndex = Number(match[2]);
+      if (!day) return false;
+      while ((day.notesHtml || []).length <= noteIndex) day.notesHtml.push("");
+      while ((day.notes || []).length <= noteIndex) day.notes.push("");
+      day.notesHtml[noteIndex] = sourceEl.innerHTML || "";
+      day.notes[noteIndex] = editablePlainText(sourceEl.innerHTML);
+      return true;
+    }
+
+    return false;
   }
 
   function scheduleSave() {
@@ -1426,12 +1506,27 @@
       let didUpdate = false;
       if (path) {
         setPath(state, path, target.value);
+        let match = path.match(/^itinerary\.days\.(\d+)\.title$/);
+        if (match) {
+          const day = (state.itinerary.days || [])[Number(match[1])];
+          if (day) day.titleHtml = target.value || "";
+        }
         didUpdate = true;
       } else if (arrayPath) {
         const items = splitLines(target.value).map((text, index) => ({ id: `${arrayPath.split(".").pop()}-${index + 1}`, text }));
         setPath(state, arrayPath, items.some((item) => item.text === undefined) ? splitLines(target.value) : items);
         if (arrayPath.includes("itinerary.days")) {
-          setPath(state, arrayPath, splitLines(target.value));
+          const values = splitLines(target.value);
+          setPath(state, arrayPath, values);
+          const match = arrayPath.match(/^itinerary\.days\.(\d+)\.(description|activities|notes)$/);
+          if (match) {
+            const day = (state.itinerary.days || [])[Number(match[1])];
+            if (day) {
+              if (match[2] === "description") day.descriptionHtml = values.slice();
+              if (match[2] === "activities") day.activitiesHtml = values.join(" · ");
+              if (match[2] === "notes") day.notesHtml = values.slice();
+            }
+          }
         }
         if (arrayPath === "inclusions" || arrayPath === "exclusions" || arrayPath.startsWith("finalization.")) {
           setPath(state, arrayPath, splitLines(target.value).map((text, index) => ({ id: `${arrayPath.split(".").pop()}-${index + 1}`, text })));
@@ -1945,6 +2040,15 @@
   }
 
   applyDraftToDom(state);
+  window.syncBrochureEditableToDraft = function (sourceEl) {
+    if (!isEditor) return false;
+    const changed = syncEditableToDraft(sourceEl);
+    if (!changed) return false;
+    state.meta.revision = Number(state.meta.revision || 1) + 1;
+    syncEditorFields(document.getElementById("brochure-draft-sidebar"));
+    scheduleSave();
+    return true;
+  };
   window.addEventListener("beforeunload", () => {
     transientAssetPreviews.forEach((asset) => revokeObjectUrl(asset && asset.url));
     transientAssetPreviews.clear();

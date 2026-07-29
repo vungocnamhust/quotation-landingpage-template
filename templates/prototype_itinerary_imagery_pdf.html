@@ -1640,15 +1640,15 @@
             </div>
             <h3 class="day-title font-serif"
               style="font-size: 18px; font-weight: 500; color: var(--emerald); margin: 0 0 12px; line-height: 1.25;">{{
-              day.title | rtl_mixed(lang) }}</h3>
+              (day.title_html or day.title) | render_rich_text(lang) }}</h3>
 
             <div class="day-copy" style="font-size: 11px; color: var(--muted); line-height: 1.5;">
               <div class="day-copy-body">
                 {% if day.description is string %}
-                <p style="margin-bottom: 8px;">{{ day.description | rtl_mixed(lang) }}</p>
+                <p style="margin-bottom: 8px;">{{ ((day.description_html[0] if day.description_html and (day.description_html | length) > 0 else day.description)) | render_rich_text(lang) }}</p>
                 {% else %}
                 {% for para in day.description %}
-                <p style="margin-bottom: 8px;">{{ para | rtl_mixed(lang) }}</p>
+                <p style="margin-bottom: 8px;">{{ ((day.description_html[loop.index0] if day.description_html and loop.index0 < (day.description_html | length) else para)) | render_rich_text(lang) }}</p>
                 {% endfor %}
                 {% endif %}
               </div>
@@ -1657,8 +1657,8 @@
               <div class="day-highlights">
                 <strong style="color: var(--emerald); letter-spacing: 0.06em;">{{ day.label_highlights |
                   default("Highlights:" | translate(lang)) }}</strong>
-                <span>{{ (day.activities | join(' · ')) if day.activities is iterable and day.activities is not string
-                  else day.activities | rtl_mixed(lang) }}</span>
+                <span>{{ (day.activities_html or ((day.activities | join(' · ')) if day.activities is iterable and day.activities is not string
+                  else day.activities)) | render_rich_text(lang) }}</span>
               </div>
               {% endif %}
 
@@ -1668,10 +1668,10 @@
                   translate(lang)) }}</strong>
                 <ul>
                   {% if day.notes is string %}
-                  <li>{{ day.notes | rtl_mixed(lang) }}</li>
+                  <li>{{ ((day.notes_html[0] if day.notes_html and (day.notes_html | length) > 0 else day.notes)) | render_rich_text(lang) }}</li>
                   {% else %}
                   {% for note in day.notes %}
-                  <li>{{ note | rtl_mixed(lang) }}</li>
+                  <li>{{ ((day.notes_html[loop.index0] if day.notes_html and loop.index0 < (day.notes_html | length) else note)) | render_rich_text(lang) }}</li>
                   {% endfor %}
                   {% endif %}
                 </ul>
