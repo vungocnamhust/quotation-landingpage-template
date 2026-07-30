@@ -3258,6 +3258,8 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
     # Extract inclusions from itinerary day mainInclusions dynamically, unless quote override exists
     if lang_override.get("inclusions"):
         inc_lines = [canonicalize_place_names_in_text(truncate_text(x, 160), lang) for x in lang_override["inclusions"]]
+    elif getattr(payload, "inclusions", None):
+        inc_lines = [canonicalize_place_names_in_text(translate_filter(truncate_text(x, 160), lang), lang) for x in payload.inclusions]
     else:
         inc_lines = []
         for d in payload.itinerary:
@@ -3275,6 +3277,8 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
 
     if lang_override.get("exclusions"):
         exc_lines = [canonicalize_place_names_in_text(truncate_text(x, 160), lang) for x in lang_override["exclusions"]]
+    elif getattr(payload, "exclusions", None):
+        exc_lines = [canonicalize_place_names_in_text(translate_filter(truncate_text(x, 160), lang), lang) for x in payload.exclusions]
     else:
         exc_lines = [canonicalize_place_names_in_text(translate_filter(truncate_text(x, 120), lang), lang) for x in default_exclusions]
 
@@ -3584,10 +3588,10 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
 
     # Booking Terms defaults/fallbacks
     b_terms = payload.bookingTerms
-    term_deposit = truncate_text(b_terms.deposit, 300)
-    term_balance = truncate_text(b_terms.balance, 300)
-    term_cancellation = truncate_text(b_terms.cancellation, 300)
-    term_confirmation = truncate_text(b_terms.confirmation, 300)
+    term_deposit = b_terms.deposit or ""
+    term_balance = b_terms.balance or ""
+    term_cancellation = b_terms.cancellation or ""
+    term_confirmation = b_terms.confirmation or ""
 
     # Finalization defaults/fallbacks
     final = payload.finalization
@@ -4946,7 +4950,6 @@ async def _store_uploaded_draft_asset(
     safe_name = f"{uuid.uuid4().hex}.{prepared.extension}"
     rel_path = f"{quotation_id}/draft_assets/{safe_name}"
     local_path = os.path.join("published", rel_path)
-    os.makedirs(os.path.dirname(local_path), exist_ok=True)
 
     if os.getenv("ENVIRONMENT", "local") == "production":
         await publish_file_to_github(
@@ -4955,6 +4958,7 @@ async def _store_uploaded_draft_asset(
             commit_message=f"Upload brochure asset for quotation {quotation_id} ({safe_name})",
         )
     else:
+        os.makedirs(os.path.dirname(local_path), exist_ok=True)
         with open(local_path, "wb") as f:
             f.write(prepared.content)
 
@@ -6894,6 +6898,10 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
     
     # 6. Filter and update map segment descriptions and sidebar fields
     if "stay_segments" in lang_ctx:
+        has_route_segment_bindings = any(
+            key.startswith("map_segment_")
+            for key in existing_keys | set(edited_fields.keys())
+        )
         new_stay_segments = []
         for s_idx, segment in enumerate(lang_ctx["stay_segments"]):
             desc_key = f"map_segment_desc_{s_idx}"
@@ -6923,7 +6931,8 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
             else:
                 previous = new_stay_segments[idx - 1]
                 segment["transportFromPrevious"] = f"{previous['displayName']} → {segment['displayName']}"
-        lang_ctx["stay_segments"] = new_stay_segments
+        if has_route_segment_bindings:
+            lang_ctx["stay_segments"] = new_stay_segments
 
     if "itinerary_days" in lang_ctx and "itinerary" in lang_ctx:
         existing_flat_days = {
