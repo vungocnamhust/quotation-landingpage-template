@@ -755,7 +755,6 @@
     }
 
     .experience p,
-    .day p,
     .panel p,
     .panel li {
       color: var(--text-muted);
@@ -3640,14 +3639,17 @@
           line-height: 1.75;
         }
 
+        .day-copy p,
+        .editorial-copy p,
+        .day p,
         .day-copy > p[data-editable^="day_desc_"],
         .editorial-copy > p[data-editable^="day_desc_"] {
-          display: block;
-          -webkit-line-clamp: unset;
-          -webkit-box-orient: initial;
-          overflow: visible;
-          text-overflow: clip;
-          max-width: none;
+          display: block !important;
+          -webkit-line-clamp: unset !important;
+          -webkit-box-orient: initial !important;
+          overflow: visible !important;
+          text-overflow: clip !important;
+          max-width: none !important;
         }
 
         .day-image {

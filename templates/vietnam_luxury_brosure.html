@@ -708,7 +708,6 @@
     }
 
     .experience p,
-    .day p,
     .panel p,
     .panel li {
       color: var(--text-muted);
@@ -5610,6 +5609,36 @@
     fileInput.style.display = 'none';
     document.body.appendChild(fileInput);
 
+    function applyImagePreview(targetInfo, dataUrl) {
+      if (!targetInfo) return;
+
+      if (targetInfo instanceof HTMLImageElement) {
+        targetInfo.src = dataUrl;
+        return;
+      }
+
+      if (targetInfo instanceof HTMLElement) {
+        targetInfo.style.backgroundImage = `url('${dataUrl}')`;
+        return;
+      }
+
+      if (typeof targetInfo === 'object' && targetInfo.cssVar) {
+        const cssValue = `url('${dataUrl}')`;
+        document.documentElement.style.setProperty(targetInfo.cssVar, cssValue);
+        if (targetInfo.element instanceof HTMLElement) {
+          targetInfo.element.style.setProperty(targetInfo.cssVar, cssValue);
+          if (targetInfo.syncBackground) {
+            targetInfo.element.style.backgroundImage = `var(${targetInfo.cssVar})`;
+          }
+        }
+        return;
+      }
+
+      if (typeof targetInfo === 'string') {
+        document.documentElement.style.setProperty(targetInfo, `url('${dataUrl}')`);
+      }
+    }
+
     fileInput.addEventListener('change', function (e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -5633,13 +5662,7 @@
           ctx.drawImage(img, 0, 0, width, height);
           const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
 
-          if (typeof currentImageTarget === 'string') {
-            document.documentElement.style.setProperty(currentImageTarget, `url('${dataUrl}')`);
-          } else if (currentImageTarget instanceof HTMLImageElement) {
-            currentImageTarget.src = dataUrl;
-          } else if (currentImageTarget instanceof HTMLElement) {
-            currentImageTarget.style.backgroundImage = `url('${dataUrl}')`;
-          }
+          applyImagePreview(currentImageTarget, dataUrl);
         }
         img.src = evt.target.result;
       }
@@ -5662,6 +5685,8 @@
           const activeIndex = parseInt(el.dataset.currentIndex || '0', 10);
           const slides = el.querySelectorAll('.carousel-slide');
           currentImageTarget = slides[activeIndex] || el;
+        } else if (target === '--designer-img') {
+          currentImageTarget = { cssVar: target, element: el, syncBackground: true };
         } else {
           currentImageTarget = target;
         }
@@ -5674,6 +5699,10 @@
     function initImageChangers() {
       addImageChanger('.hero', '--hero-img');
       addImageChanger('#designer-avatar-container', '--designer-img');
+      const designerAvatar = document.getElementById('designer-avatar-container');
+      if (designerAvatar && designerAvatar.style.backgroundImage && !designerAvatar.style.backgroundImage.includes('var(--designer-img)')) {
+        designerAvatar.style.backgroundImage = 'var(--designer-img)';
+      }
       const tiles = document.querySelectorAll('.gallery .image-tile');
       tiles.forEach((tile, index) => {
         addImageChanger(tile, tile);
