@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" 
-  style="--hero-img: url('/assets/ninh-binh/hero/hero3.jpg');  --img-1: url('/assets/ha-noi/hero/hero1.jpg');  --img-2: url('/assets/ho-chi-minh/hero/hero2.jpg');  --img-3: url('/assets/da-nang/hero/hero2.jpg');  --img-4: url('/assets/quang-nam/myson.jpg');  --img-5: url('/assets/quang-ninh/hero/hero1.jpg');  --img-6: url('/assets/lao-cai/tau-tren-cao.webp');  --img-7: url('/assets/mekong/pexels-quang-nguyen-vinh-222549-6347098.jpg');  --img-8: url('/assets/ninh-binh/hero/hero3.jpg'); ">
+  style="--hero-img: url('/assets/da-nang/hyatt-regency-danang-resort-spa-3.jpg');  --img-1: url('/assets/ha-noi/hero/hero4.jpg');  --img-2: url('/assets/ho-chi-minh/hero/hero2.jpg');  --img-3: url('/assets/da-nang/hyatt-regency-danang-resort-spa-3.jpg');  --img-4: url('/assets/quang-nam/xe-dap-hoi-an.jpg');  --img-5: url('/assets/quang-ninh/hero/hero3.jpg');  --img-6: url('/assets/lao-cai/tau-tren-cao.webp');  --img-7: url('/assets/mekong/hero/hero4.jpg');  --img-8: url('/assets/ninh-binh/hero/hero3.jpg'); ">
 
 <head>
   <meta charset="UTF-8" />
@@ -9,7 +9,7 @@
   <script id="auto-version-checker">
     (function () {
       const CURRENT_VERSION = 1;
-    const QUO_ID = "quo_ccc80b695199";
+    const QUO_ID = "quo_ac40e4ebdebb";
     if (!QUO_ID || window.location.search.includes('_r=') || window.location.pathname.includes('/quotations/')) return;
     fetch('/published/' + QUO_ID + '/version?t=' + Date.now(), { cache: 'no-store' })
       .then(function (res) { return res.json(); })
@@ -48,7 +48,7 @@
 
   <!-- PWA Metadata -->
   <link rel="manifest"
-    href="/manifest.json?id=quo_ccc80b695199&type=quotations&brand=capella_travel" />
+    href="/manifest.json?id=quo_ac40e4ebdebb&type=quotations&brand=capella_travel" />
   <meta name="theme-color" content="#CBA135" />
   <link rel="apple-touch-icon" href="/assets/brands/capella_travel.png" />
   <!-- Leaflet CSS & JS -->
@@ -1697,6 +1697,66 @@
       cursor: pointer;
     }
 
+    .img-change-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      min-height: 44px;
+      padding: 0.65rem 0.95rem;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 0;
+      background: rgba(17, 19, 15, 0.72);
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      z-index: 120;
+      opacity: 0.82;
+      pointer-events: auto;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+      transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease;
+    }
+
+    .img-change-btn:hover {
+      opacity: 1;
+      transform: translateY(-1px);
+      background: rgba(17, 19, 15, 0.84);
+    }
+
+    .img-change-btn--hero {
+      top: auto;
+      right: auto;
+      left: 50%;
+      bottom: max(1.5rem, env(safe-area-inset-bottom, 0px));
+      transform: translateX(-50%);
+      min-width: 9rem;
+      padding-inline: 1.15rem;
+      z-index: 125;
+    }
+
+    .img-change-btn--hero:hover {
+      transform: translateX(-50%) translateY(-1px);
+    }
+
+    @media (max-width: 767px) {
+      .img-change-btn {
+        min-height: 44px;
+      }
+
+      .img-change-btn--hero {
+        bottom: 1rem;
+        width: calc(100% - 2rem);
+        max-width: 14rem;
+      }
+    }
+
     /* ── Publish Bar ────────────────────────────────────────────── */
     #publish-bar {
       position: fixed;
@@ -3203,7 +3263,7 @@
           </svg>
         </button>
         <a class="btn btn-primary"
-          href="/quotations/quo_ccc80b695199/pdf?lang=en&brand=capella_travel"
+          href="/quotations/quo_ac40e4ebdebb/pdf?lang=en&brand=capella_travel"
           target="_blank" id="btn-pdf-view">📄 <span class="pdf-btn-text">PDF Download</span></a>
       </div>
     </div>
@@ -6800,8 +6860,8 @@
       <div class="pb-dot"></div>
       <div class="pb-label">
         <span class="pb-label-desktop">✏️ Editing <strong
-            class="ltr-token">quo_ccc80b695199</strong></span>
-        <span class="pb-label-mobile">✏️ <strong class="ltr-token">quo_ccc80b695199</strong></span>
+            class="ltr-token">quo_ac40e4ebdebb</strong></span>
+        <span class="pb-label-mobile">✏️ <strong class="ltr-token">quo_ac40e4ebdebb</strong></span>
       </div>
     </div>
     <span id="publish-status"></span>
@@ -7049,7 +7109,7 @@
 
     let domainModalMode = 'publish';
     let modalLatestVersion = '1';
-    let modalItemId = 'quo_ccc80b695199';
+    let modalItemId = 'quo_ac40e4ebdebb';
     let modalItemType = 'quotations';
 
     // Parse path and fetch latest version info on load
@@ -7187,7 +7247,7 @@
     })();
 
     if (typeof window.QUOTATION_ID === 'undefined') {
-      window.QUOTATION_ID = "quo_ccc80b695199";
+      window.QUOTATION_ID = "quo_ac40e4ebdebb";
     }
     if (typeof window.CURRENT_LANG === 'undefined') {
       window.CURRENT_LANG = "en";
@@ -7196,7 +7256,7 @@
 
     // Set globals for compatibility if not already defined
     if (typeof QUOTATION_ID === 'undefined') {
-      window.QUOTATION_ID = "quo_ccc80b695199";
+      window.QUOTATION_ID = "quo_ac40e4ebdebb";
     }
     if (typeof CURRENT_LANG === 'undefined') {
       window.CURRENT_LANG = "en";
@@ -7649,13 +7709,13 @@
       const el = typeof selectorOrElement === 'string' ? document.querySelector(selectorOrElement) : selectorOrElement;
       if (!el) return;
       if (el.querySelector('.img-change-btn')) return; // already exists
-      const btn = document.createElement('div');
+      const isHeroTarget = el.classList.contains('hero');
+      const btn = document.createElement('button');
+      btn.type = 'button';
       btn.innerHTML = `🖼️ ${CLIENT_I18N.change}`;
-      btn.className = 'img-change-btn no-print';
-      btn.style.cssText = 'position:absolute;top:16px;right:16px;background:rgba(0,0,0,0.6);color:#fff;padding:6px 12px;border-radius: 0;font-size:12px;cursor:pointer;z-index:99;opacity:0.3;transition:0.2s;';
-      btn.onmouseover = () => btn.style.opacity = '1';
-      btn.onmouseout = () => btn.style.opacity = '0.3';
+      btn.className = `img-change-btn no-print${isHeroTarget ? ' img-change-btn--hero' : ''}`;
       btn.onclick = (e) => {
+        e.preventDefault();
         e.stopPropagation();
         if (el.classList.contains('image-tile') || el.classList.contains('carousel-container')) {
           const activeIndex = parseInt(el.dataset.currentIndex || '0', 10);
@@ -7994,25 +8054,25 @@
   <script id="destination-images" type="application/json">
     {
       
-        "ha-noi": "/assets/ha-noi/hero/hero1.jpg"
+        "ha-noi": "/assets/ha-noi/hero/hero4.jpg"
         ,
       
         "ho-chi-minh": "/assets/ho-chi-minh/hero/hero2.jpg"
         ,
       
-        "da-nang": "/assets/da-nang/hero/hero2.jpg"
+        "da-nang": "/assets/da-nang/hyatt-regency-danang-resort-spa-3.jpg"
         ,
       
-        "quang-nam": "/assets/quang-nam/myson.jpg"
+        "quang-nam": "/assets/quang-nam/xe-dap-hoi-an.jpg"
         ,
       
-        "quang-ninh": "/assets/quang-ninh/hero/hero1.jpg"
+        "quang-ninh": "/assets/quang-ninh/hero/hero3.jpg"
         ,
       
         "lao-cai": "/assets/lao-cai/tau-tren-cao.webp"
         ,
       
-        "mekong": "/assets/mekong/pexels-quang-nguyen-vinh-222549-6347098.jpg"
+        "mekong": "/assets/mekong/hero/hero4.jpg"
         ,
       
         "ninh-binh": "/assets/ninh-binh/hero/hero3.jpg"

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" style="--hero-img: url('/assets/ninh-binh/hero/hero3.jpg'); --img-1: url('/assets/ha-noi/hero/hero1.jpg'); --img-2: url('/assets/ho-chi-minh/hero/hero2.jpg'); --img-3: url('/assets/da-nang/hero/hero2.jpg'); --img-4: url('/assets/quang-nam/myson.jpg'); --img-5: url('/assets/quang-ninh/hero/hero1.jpg'); --img-6: url('/assets/lao-cai/hero/hero6.jpg'); --img-7: url('/assets/mekong/traodoihanghoa.jpg'); --img-8: url('/assets/ninh-binh/hero/hero2.jpg'); --primary: #CBA135; --primary-dark: #B7894B; --accent: #333333; --accent-light: #4F4F4F;"><head>
+<html lang="en" style="--hero-img: url('/assets/da-nang/hyatt-regency-danang-resort-spa-3.jpg'); --img-1: url('/assets/ha-noi/hero/hero1.jpg'); --img-2: url('/assets/ho-chi-minh/hero/hero2.jpg'); --img-3: url('/assets/da-nang/hero/hero2.jpg'); --img-4: url('/assets/quang-nam/myson.jpg'); --img-5: url('/assets/quang-ninh/hero/hero1.jpg'); --img-6: url('/assets/lao-cai/hero/hero6.jpg'); --img-7: url('/assets/mekong/traodoihanghoa.jpg'); --img-8: url('/assets/ninh-binh/hero/hero2.jpg'); --primary: #CBA135; --primary-dark: #B7894B; --accent: #333333; --accent-light: #4F4F4F;"><head>
 <meta charset="utf-8">
 <meta content="width=device-width, initial-scale=1.0" name="viewport">
 <title>14 Days 13 Nights - Tailor-made for Sara - Luxury Quotation</title>
@@ -9,7 +9,7 @@
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700&amp;family=Cairo:wght@300;400;600;700&amp;family=Amiri:ital,wght@0,400;0,700;1,400&amp;family=Montserrat:wght@300;400;500;600;700&amp;family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;family=Cormorant+Garamond:ital,wght@1,400;1,500;1,600&amp;display=swap" rel="stylesheet">
 <!-- PWA Metadata -->
-<link href="/manifest.json?id=quo_ccc80b695199&amp;type=quotations&amp;brand=capella_travel" rel="manifest">
+<link href="/manifest.json?id=quo_ac40e4ebdebb&amp;type=quotations&amp;brand=capella_travel" rel="manifest">
 <meta content="#CBA135" name="theme-color">
 <link href="/assets/brands/capella_travel.png" rel="apple-touch-icon">
 <!-- Leaflet CSS & JS -->
@@ -1656,6 +1656,66 @@
       cursor: pointer;
     }
 
+    .img-change-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      min-height: 44px;
+      padding: 0.65rem 0.95rem;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 0;
+      background: rgba(17, 19, 15, 0.72);
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      z-index: 120;
+      opacity: 0.82;
+      pointer-events: auto;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+      transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease;
+    }
+
+    .img-change-btn:hover {
+      opacity: 1;
+      transform: translateY(-1px);
+      background: rgba(17, 19, 15, 0.84);
+    }
+
+    .img-change-btn--hero {
+      top: auto;
+      right: auto;
+      left: 50%;
+      bottom: max(1.5rem, env(safe-area-inset-bottom, 0px));
+      transform: translateX(-50%);
+      min-width: 9rem;
+      padding-inline: 1.15rem;
+      z-index: 125;
+    }
+
+    .img-change-btn--hero:hover {
+      transform: translateX(-50%) translateY(-1px);
+    }
+
+    @media (max-width: 767px) {
+      .img-change-btn {
+        min-height: 44px;
+      }
+
+      .img-change-btn--hero {
+        bottom: 1rem;
+        width: calc(100% - 2rem);
+        max-width: 14rem;
+      }
+    }
+
     /* ── Publish Bar ────────────────────────────────────────────── */
     #publish-bar {
       position: fixed;
@@ -3249,7 +3309,7 @@
 <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"></path>
 </svg>
 </button>
-<a class="btn btn-primary" href="/quotations/quo_ccc80b695199/pdf?lang=en" id="btn-pdf-view" target="_blank">📄 <span class="pdf-btn-text">PDF Download</span></a>
+<a class="btn btn-primary" href="/quotations/quo_ac40e4ebdebb/pdf?lang=en&amp;brand=capella_travel" id="btn-pdf-view" target="_blank">📄 <span class="pdf-btn-text">PDF Download</span></a>
 </div>
 </div>
 </nav>
@@ -3486,25 +3546,25 @@
 <div class="timeline" id="map-sidebar"><div class="timeline-item active">
               <div class="item-duration" data-editable="map_segment_duration_0" spellcheck="false">Days 1-2 • 2 nights</div>
               <h3 class="item-title" data-editable="map_segment_title_0" spellcheck="false">Hanoi</h3>
-          <div class="item-hotel" data-editable="map_segment_hotel_0" spellcheck="false">Hanoi Le Jardin Hotel &amp; Spa</div><div class="item-content" data-editable="map_segment_desc_0" spellcheck="false"><div class="item-desc"><div><strong>Day 1:</strong> Arrival in Hanoi by CX741. Enjoy pre-booked Early Check-in at Hanoi Le Jardin Hotel &amp; Spa and rest for half a day. In...</div><div><strong>Day 2:</strong> Full Day Ninh Binh Tour from Hanoi. Discover the historic ancient capital of Hoa Lu, the grand Bai Dinh Pagoda, serene...</div></div></div></div><div class="timeline-item ">
+          <div class="item-hotel" data-editable="map_segment_hotel_0" spellcheck="false">Hanoi Le Jardin Hotel &amp; Spa</div><div class="item-content" data-editable="map_segment_desc_0" spellcheck="false"><div class="item-desc"><br></div></div></div><div class="timeline-item ">
               <div class="item-duration" data-editable="map_segment_duration_1" spellcheck="false">Day 3 • 1 night</div>
               <h3 class="item-title" data-editable="map_segment_title_1" spellcheck="false">Halong Bay</h3>
-          <div class="item-hotel" data-editable="map_segment_hotel_1" spellcheck="false">Emeraude Classic Cruise</div><div class="item-content" data-editable="map_segment_desc_1" spellcheck="false"><div class="item-desc"><div><strong>Day 3:</strong> Morning transfer to Ha Long Bay. Embark on the Emeraude Classic Cruise and check into the Captain Suite. Enjoy...</div></div></div></div><div class="timeline-item ">
+          <div class="item-hotel" data-editable="map_segment_hotel_1" spellcheck="false">Emeraude Classic Cruise</div><div class="item-content" data-editable="map_segment_desc_1" spellcheck="false"><div class="item-desc"><br></div></div></div><div class="timeline-item ">
               <div class="item-duration" data-editable="map_segment_duration_2" spellcheck="false">Days 4-6 • 3 nights</div>
               <h3 class="item-title" data-editable="map_segment_title_2" spellcheck="false">Hanoi</h3>
-          <div class="item-hotel" data-editable="map_segment_hotel_2" spellcheck="false">Hanoi Le Jardin Hotel &amp; Spa</div><div class="item-content" data-editable="map_segment_desc_2" spellcheck="false"><div class="item-desc"><div><strong>Day 4:</strong> Morning cruise activities on Ha Long Bay including Tai Chi and cave visits. Enjoy brunch on board before disembarking...</div><div><strong>Day 5:</strong> Full Day Hanoi City Tour exploring historic landmarks such as Ho Chi Minh Mausoleum, One Pillar Pagoda, Temple of...</div><div><strong>Day 6:</strong> Hat Village &amp; Incense Village Half Day Tour from Hanoi. Free afternoon in Hanoi for leisure and exploration. In the...</div></div></div></div><div class="timeline-item ">
+          <div class="item-hotel" data-editable="map_segment_hotel_2" spellcheck="false">Hanoi Le Jardin Hotel &amp; Spa</div><div class="item-content" data-editable="map_segment_desc_2" spellcheck="false"><div class="item-desc"><br></div></div></div><div class="timeline-item ">
               <div class="item-duration" data-editable="map_segment_duration_3" spellcheck="false">Day 7 • 1 night</div>
               <h3 class="item-title" data-editable="map_segment_title_3" spellcheck="false">Sapa</h3>
-          <div class="item-hotel" data-editable="map_segment_hotel_3" spellcheck="false">Sapa Jade Hill Resort &amp; Spa</div><div class="item-content" data-editable="map_segment_desc_3" spellcheck="false"><div class="item-desc"><div><strong>Day 7:</strong> Arrival in Lao Cai/Sapa. Embark on a Full Day Sapa Tour exploring lush rice terraces, local hill-tribe villages, and...</div></div></div></div><div class="timeline-item ">
+          <div class="item-hotel" data-editable="map_segment_hotel_3" spellcheck="false">Sapa Jade Hill Resort &amp; Spa</div><div class="item-content" data-editable="map_segment_desc_3" spellcheck="false"><div class="item-desc"><br></div></div></div><div class="timeline-item ">
               <div class="item-duration" data-editable="map_segment_duration_4" spellcheck="false">Days 8-9 • 2 nights</div>
               <h3 class="item-title" data-editable="map_segment_title_4" spellcheck="false">Da Nang</h3>
-          <div class="item-hotel" data-editable="map_segment_hotel_4" spellcheck="false">Radisson RED Danang Hotel</div><div class="item-content" data-editable="map_segment_desc_4" spellcheck="false"><div class="item-desc"><div><strong>Day 8:</strong> Enjoy a free morning in Sapa. After lunch, transfer to the airport for a domestic flight to Da Nang. Upon arrival,...</div><div><strong>Day 9:</strong> Full Day Da Nang City Tour highlighting Marble Mountains, Son Tra Peninsula (Linh Ung Pagoda), Dragon Bridge, and local...</div></div></div></div><div class="timeline-item ">
+          <div class="item-hotel" data-editable="map_segment_hotel_4" spellcheck="false">Radisson RED Danang Hotel</div><div class="item-content" data-editable="map_segment_desc_4" spellcheck="false"><div class="item-desc"><br></div></div></div><div class="timeline-item ">
               <div class="item-duration" data-editable="map_segment_duration_5" spellcheck="false">Days 10-11 • 2 nights</div>
               <h3 class="item-title" data-editable="map_segment_title_5" spellcheck="false">Hoi An</h3>
-          <div class="item-hotel" data-editable="map_segment_hotel_5" spellcheck="false">La Siesta Hoi An Resort &amp; Spa</div><div class="item-content" data-editable="map_segment_desc_5" spellcheck="false"><div class="item-desc"><div><strong>Day 10:</strong> Full Day Hoi An Tour. Transfer to Hoi An Ancient Town, explore lantern-lit streets, Japanese Covered Bridge, and stay...</div><div><strong>Day 11:</strong> Morning Hoi An Countryside Cycling Tour through peaceful villages and organic gardens. Free afternoon in Hoi An Ancient...</div></div></div></div><div class="timeline-item ">
+          <div class="item-hotel" data-editable="map_segment_hotel_5" spellcheck="false">La Siesta Hoi An Resort &amp; Spa</div><div class="item-content" data-editable="map_segment_desc_5" spellcheck="false"><div class="item-desc"><br></div></div></div><div class="timeline-item ">
               <div class="item-duration" data-editable="map_segment_duration_6" spellcheck="false">Days 12-14 • 3 nights</div>
               <h3 class="item-title" data-editable="map_segment_title_6" spellcheck="false">Ho Chi Minh City</h3>
-          <div class="item-hotel" data-editable="map_segment_hotel_6" spellcheck="false">Mai House Hotel</div><div class="item-content" data-editable="map_segment_desc_6" spellcheck="false"><div class="item-desc"><div><strong>Day 12:</strong> Transfer to Da Nang Airport and fly to Ho Chi Minh City. In the afternoon, take a guided tour of the historic Cu Chi...</div><div><strong>Day 13:</strong> Full Day Mekong Delta Tour. Cruise down peaceful waterways, visit local artisanal workshops, taste tropical fruits, and...</div><div><strong>Day 14:</strong> Half Day Ho Chi Minh City Tour exploring Saigon Notre-Dame Basilica, Central Post Office, and War Remnants Museum....</div></div></div></div></div>
+          <div class="item-hotel" data-editable="map_segment_hotel_6" spellcheck="false">Mai House Hotel</div><div class="item-content" data-editable="map_segment_desc_6" spellcheck="false"><div class="item-desc"><br></div></div></div></div>
 </div>
 </div>
 </div>
@@ -4158,7 +4218,7 @@
 <div class="day-image-col" style="position: relative;">
 <div class="day-image hero-image carousel-container" data-editable="day_img_carousel_6" style="position: relative; overflow: hidden; border-radius: 4px;" spellcheck="false">
 <div class="carousel-inner" style="position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
-<div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url(&quot;/published/quo_ccc80b695199/draft_assets/3c2ba8284ee14284ad621f9438380ed0.jpg&quot;) center center / cover no-repeat;"></div>
+<div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/ha-noi/hero/pexels-hiepnv-18703298.jpg') center/cover no-repeat;"></div>
 <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/ha-noi/hero/pexels-hiepnv-18703298.jpg') center/cover no-repeat;"></div>
 <div class="carousel-slide" style="flex: 0 0 100%; height: 100%; background: url('/assets/ha-noi/hero/pexels-hiepnv-18703298.jpg') center/cover no-repeat;"></div>
 </div>
@@ -5505,25 +5565,25 @@
 <script id="destination-images" type="application/json">
     {
       
-        "ha-noi": "/assets/ha-noi/hero/hero1.jpg"
+        "ha-noi": "/assets/ha-noi/hero/hero4.jpg"
         ,
       
         "ho-chi-minh": "/assets/ho-chi-minh/hero/hero2.jpg"
         ,
       
-        "da-nang": "/assets/da-nang/hero/hero2.jpg"
+        "da-nang": "/assets/da-nang/hyatt-regency-danang-resort-spa-3.jpg"
         ,
       
-        "quang-nam": "/assets/quang-nam/myson.jpg"
+        "quang-nam": "/assets/quang-nam/xe-dap-hoi-an.jpg"
         ,
       
-        "quang-ninh": "/assets/quang-ninh/hero/hero1.jpg"
+        "quang-ninh": "/assets/quang-ninh/hero/hero3.jpg"
         ,
       
         "lao-cai": "/assets/lao-cai/tau-tren-cao.webp"
         ,
       
-        "mekong": "/assets/mekong/pexels-quang-nguyen-vinh-222549-6347098.jpg"
+        "mekong": "/assets/mekong/hero/hero4.jpg"
         ,
       
         "ninh-binh": "/assets/ninh-binh/hero/hero3.jpg"
@@ -5537,7 +5597,7 @@
 <script id="route-stops-data" type="application/json">
     [{"dayNumber": 1, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "Day 1 \u2014 Hanoi", "showMarker": true, "stopOrder": 1}, {"dayNumber": 2, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "Day 2 \u2014 Hanoi", "showMarker": true, "stopOrder": 1}, {"dayNumber": 3, "destination": "Halong Bay", "displayName": "Halong Bay", "kind": "overnight", "mapTitle": "Day 3 \u2014 Halong Bay", "showMarker": true, "stopOrder": 1}, {"dayNumber": 4, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "Day 4 \u2014 Hanoi", "showMarker": true, "stopOrder": 1}, {"dayNumber": 5, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "Day 5 \u2014 Hanoi", "showMarker": true, "stopOrder": 1}, {"dayNumber": 6, "destination": "Hanoi", "displayName": "Hanoi", "kind": "overnight", "mapTitle": "Day 6 \u2014 Hanoi", "showMarker": true, "stopOrder": 1}, {"dayNumber": 7, "destination": "Sapa", "displayName": "Sapa", "kind": "overnight", "mapTitle": "Day 7 \u2014 Sapa", "showMarker": true, "stopOrder": 1}, {"dayNumber": 8, "destination": "Da Nang", "displayName": "Da Nang", "kind": "overnight", "mapTitle": "Day 8 \u2014 Da Nang", "showMarker": true, "stopOrder": 1}, {"dayNumber": 9, "destination": "Da Nang", "displayName": "Da Nang", "kind": "overnight", "mapTitle": "Day 9 \u2014 Da Nang", "showMarker": true, "stopOrder": 1}, {"dayNumber": 10, "destination": "Hoi An", "displayName": "Hoi An", "kind": "overnight", "mapTitle": "Day 10 \u2014 Hoi An", "showMarker": true, "stopOrder": 1}, {"dayNumber": 11, "destination": "Hoi An", "displayName": "Hoi An", "kind": "overnight", "mapTitle": "Day 11 \u2014 Hoi An", "showMarker": true, "stopOrder": 1}, {"dayNumber": 12, "destination": "Ho Chi Minh City", "displayName": "Ho Chi Minh City", "kind": "overnight", "mapTitle": "Day 12 \u2014 Ho Chi Minh City", "showMarker": true, "stopOrder": 1}, {"dayNumber": 13, "destination": "Ho Chi Minh City", "displayName": "Ho Chi Minh City", "kind": "overnight", "mapTitle": "Day 13 \u2014 Ho Chi Minh City", "showMarker": true, "stopOrder": 1}, {"dayNumber": 14, "destination": "Ho Chi Minh City", "displayName": "Ho Chi Minh City", "kind": "overnight", "mapTitle": "Day 14 \u2014 Ho Chi Minh City", "showMarker": true, "stopOrder": 1}]
   </script>
-<script id="stay-segments-data" type="application/json">[{"activityPreviews":[{"dayNumber":1,"label":"Day 1","summary":"Arrival in Hanoi by CX741. Enjoy pre-booked Early Check-in at Hanoi Le Jardin Hotel & Spa and rest for half a day. In..."},{"dayNumber":2,"label":"Day 2","summary":"Full Day Ninh Binh Tour from Hanoi. Discover the historic ancient capital of Hoa Lu, the grand Bai Dinh Pagoda, serene..."}],"city":"Hanoi","coords":[21.0285,105.8542],"dayEnd":2,"dayStart":1,"daysLabel":"DAYS 1-2","displayName":"Hanoi","excursions":[],"hotelDateRange":"30 Mar – 01 Apr 2027","hotelImage":"/assets/hotels/hanoi/hanoi-le-jardin-hotel-spa/exterior/exterior_1.jpg","hotelName":"Hanoi Le Jardin Hotel & Spa","nights":2,"nightsLabel":"2 NIGHTS","order":1,"segmentId":"stay-1","transportFromPrevious":"","mapSegmentDesc":"<div class=\"item-desc\"><div><strong>Day 1:</strong> Arrival in Hanoi by CX741. Enjoy pre-booked Early Check-in at Hanoi Le Jardin Hotel &amp; Spa and rest for half a day. In...</div><div><strong>Day 2:</strong> Full Day Ninh Binh Tour from Hanoi. Discover the historic ancient capital of Hoa Lu, the grand Bai Dinh Pagoda, serene...</div></div>"},{"activityPreviews":[{"dayNumber":3,"label":"Day 3","summary":"Morning transfer to Ha Long Bay. Embark on the Emeraude Classic Cruise and check into the Captain Suite. Enjoy..."}],"city":"Halong Bay","coords":[20.9599,107.0436],"dayEnd":3,"dayStart":3,"daysLabel":"DAY 3","displayName":"Halong Bay","excursions":[],"hotelDateRange":"01 Apr – 02 Apr 2027","hotelImage":"/assets/hotels/halong/emeraude-classic-cruise/exterior/exterior_1.jpg","hotelName":"Emeraude Classic Cruise","nights":1,"nightsLabel":"1 NIGHT","order":2,"segmentId":"stay-2","transportFromPrevious":"Hanoi → Halong Bay","mapSegmentDesc":"<div class=\"item-desc\"><div><strong>Day 3:</strong> Morning transfer to Ha Long Bay. Embark on the Emeraude Classic Cruise and check into the Captain Suite. Enjoy...</div></div>"},{"activityPreviews":[{"dayNumber":4,"label":"Day 4","summary":"Morning cruise activities on Ha Long Bay including Tai Chi and cave visits. Enjoy brunch on board before disembarking..."},{"dayNumber":5,"label":"Day 5","summary":"Full Day Hanoi City Tour exploring historic landmarks such as Ho Chi Minh Mausoleum, One Pillar Pagoda, Temple of..."},{"dayNumber":6,"label":"Day 6","summary":"Hat Village & Incense Village Half Day Tour from Hanoi. Free afternoon in Hanoi for leisure and exploration. In the..."}],"city":"Hanoi","coords":[21.0285,105.8542],"dayEnd":6,"dayStart":4,"daysLabel":"DAYS 4-6","displayName":"Hanoi","excursions":[],"hotelDateRange":"02 Apr – 04 Apr 2027","hotelImage":"/assets/hotels/hanoi/hanoi-le-jardin-hotel-spa/exterior/exterior_3.jpg","hotelName":"Hanoi Le Jardin Hotel & Spa","nights":3,"nightsLabel":"3 NIGHTS","order":3,"segmentId":"stay-3","transportFromPrevious":"Halong Bay → Hanoi","mapSegmentDesc":"<div class=\"item-desc\"><div><strong>Day 4:</strong> Morning cruise activities on Ha Long Bay including Tai Chi and cave visits. Enjoy brunch on board before disembarking...</div><div><strong>Day 5:</strong> Full Day Hanoi City Tour exploring historic landmarks such as Ho Chi Minh Mausoleum, One Pillar Pagoda, Temple of...</div><div><strong>Day 6:</strong> Hat Village &amp; Incense Village Half Day Tour from Hanoi. Free afternoon in Hanoi for leisure and exploration. In the...</div></div>"},{"activityPreviews":[{"dayNumber":7,"label":"Day 7","summary":"Arrival in Lao Cai/Sapa. Embark on a Full Day Sapa Tour exploring lush rice terraces, local hill-tribe villages, and..."}],"city":"Sapa","coords":[22.3364,103.8438],"dayEnd":7,"dayStart":7,"daysLabel":"DAY 7","displayName":"Sapa","excursions":[],"hotelDateRange":"05 Apr – 06 Apr 2027","hotelImage":"/assets/hotels/lao-cai/sapa-jade-hill/exterior/exterior_1.jpg","hotelName":"Sapa Jade Hill Resort & Spa","nights":1,"nightsLabel":"1 NIGHT","order":4,"segmentId":"stay-4","transportFromPrevious":"Hanoi → Sapa","mapSegmentDesc":"<div class=\"item-desc\"><div><strong>Day 7:</strong> Arrival in Lao Cai/Sapa. Embark on a Full Day Sapa Tour exploring lush rice terraces, local hill-tribe villages, and...</div></div>"},{"activityPreviews":[{"dayNumber":8,"label":"Day 8","summary":"Enjoy a free morning in Sapa. After lunch, transfer to the airport for a domestic flight to Da Nang. Upon arrival,..."},{"dayNumber":9,"label":"Day 9","summary":"Full Day Da Nang City Tour highlighting Marble Mountains, Son Tra Peninsula (Linh Ung Pagoda), Dragon Bridge, and local..."}],"city":"Da Nang","coords":[16.0544,108.2022],"dayEnd":9,"dayStart":8,"daysLabel":"DAYS 8-9","displayName":"Da Nang","excursions":[],"hotelDateRange":"06 Apr – 08 Apr 2027","hotelImage":"/assets/hotels/danang/radisson-red-danang-hotel/placeholder.png","hotelName":"Radisson RED Danang Hotel","nights":2,"nightsLabel":"2 NIGHTS","order":5,"segmentId":"stay-5","transportFromPrevious":"Sapa → Da Nang","mapSegmentDesc":"<div class=\"item-desc\"><div><strong>Day 8:</strong> Enjoy a free morning in Sapa. After lunch, transfer to the airport for a domestic flight to Da Nang. Upon arrival,...</div><div><strong>Day 9:</strong> Full Day Da Nang City Tour highlighting Marble Mountains, Son Tra Peninsula (Linh Ung Pagoda), Dragon Bridge, and local...</div></div>"},{"activityPreviews":[{"dayNumber":10,"label":"Day 10","summary":"Full Day Hoi An Tour. Transfer to Hoi An Ancient Town, explore lantern-lit streets, Japanese Covered Bridge, and stay..."},{"dayNumber":11,"label":"Day 11","summary":"Morning Hoi An Countryside Cycling Tour through peaceful villages and organic gardens. Free afternoon in Hoi An Ancient..."}],"city":"Hoi An","coords":[15.8801,108.338],"dayEnd":11,"dayStart":10,"daysLabel":"DAYS 10-11","displayName":"Hoi An","excursions":[],"hotelDateRange":"08 Apr – 10 Apr 2027","hotelImage":"/assets/hotels/quang-nam/la-siesta-hoi-an-resort-spa/exterior/exterior_1.jpg","hotelName":"La Siesta Hoi An Resort & Spa","nights":2,"nightsLabel":"2 NIGHTS","order":6,"segmentId":"stay-6","transportFromPrevious":"Da Nang → Hoi An","mapSegmentDesc":"<div class=\"item-desc\"><div><strong>Day 10:</strong> Full Day Hoi An Tour. Transfer to Hoi An Ancient Town, explore lantern-lit streets, Japanese Covered Bridge, and stay...</div><div><strong>Day 11:</strong> Morning Hoi An Countryside Cycling Tour through peaceful villages and organic gardens. Free afternoon in Hoi An Ancient...</div></div>"},{"activityPreviews":[{"dayNumber":12,"label":"Day 12","summary":"Transfer to Da Nang Airport and fly to Ho Chi Minh City. In the afternoon, take a guided tour of the historic Cu Chi..."},{"dayNumber":13,"label":"Day 13","summary":"Full Day Mekong Delta Tour. Cruise down peaceful waterways, visit local artisanal workshops, taste tropical fruits, and..."},{"dayNumber":14,"label":"Day 14","summary":"Half Day Ho Chi Minh City Tour exploring Saigon Notre-Dame Basilica, Central Post Office, and War Remnants Museum...."}],"city":"Ho Chi Minh City","coords":[10.8231,106.6297],"dayEnd":14,"dayStart":12,"daysLabel":"DAYS 12-14","displayName":"Ho Chi Minh City","excursions":[],"hotelDateRange":"10 Apr – 12 Apr 2027","hotelImage":"/assets/hotels/saigon/mai-house/exterior/exterior.jpg","hotelName":"Mai House Hotel","nights":3,"nightsLabel":"3 NIGHTS","order":7,"segmentId":"stay-7","transportFromPrevious":"Hoi An → Ho Chi Minh City","mapSegmentDesc":"<div class=\"item-desc\"><div><strong>Day 12:</strong> Transfer to Da Nang Airport and fly to Ho Chi Minh City. In the afternoon, take a guided tour of the historic Cu Chi...</div><div><strong>Day 13:</strong> Full Day Mekong Delta Tour. Cruise down peaceful waterways, visit local artisanal workshops, taste tropical fruits, and...</div><div><strong>Day 14:</strong> Half Day Ho Chi Minh City Tour exploring Saigon Notre-Dame Basilica, Central Post Office, and War Remnants Museum....</div></div>"}]</script>
+<script id="stay-segments-data" type="application/json">[{"activityPreviews":[{"dayNumber":1,"label":"Day 1","summary":"Arrival in Hanoi by CX741. Enjoy pre-booked Early Check-in at Hanoi Le Jardin Hotel & Spa and rest for half a day. In..."},{"dayNumber":2,"label":"Day 2","summary":"Full Day Ninh Binh Tour from Hanoi. Discover the historic ancient capital of Hoa Lu, the grand Bai Dinh Pagoda, serene..."}],"city":"Hanoi","coords":[21.0285,105.8542],"dayEnd":2,"dayStart":1,"daysLabel":"DAYS 1-2","displayName":"Hanoi","excursions":[],"hotelDateRange":"30 Mar – 01 Apr 2027","hotelImage":"/assets/hotels/hanoi/hanoi-le-jardin-hotel-spa/exterior/exterior_1.jpg","hotelName":"Hanoi Le Jardin Hotel & Spa","nights":2,"nightsLabel":"2 NIGHTS","order":1,"segmentId":"stay-1","transportFromPrevious":"","mapSegmentDesc":"<div class=\"item-desc\"><br></div>"},{"activityPreviews":[{"dayNumber":3,"label":"Day 3","summary":"Morning transfer to Ha Long Bay. Embark on the Emeraude Classic Cruise and check into the Captain Suite. Enjoy..."}],"city":"Halong Bay","coords":[20.9599,107.0436],"dayEnd":3,"dayStart":3,"daysLabel":"DAY 3","displayName":"Halong Bay","excursions":[],"hotelDateRange":"01 Apr – 02 Apr 2027","hotelImage":"/assets/hotels/halong/emeraude-classic-cruise/exterior/exterior_1.jpg","hotelName":"Emeraude Classic Cruise","nights":1,"nightsLabel":"1 NIGHT","order":2,"segmentId":"stay-2","transportFromPrevious":"Hanoi → Halong Bay","mapSegmentDesc":"<div class=\"item-desc\"><br></div>"},{"activityPreviews":[{"dayNumber":4,"label":"Day 4","summary":"Morning cruise activities on Ha Long Bay including Tai Chi and cave visits. Enjoy brunch on board before disembarking..."},{"dayNumber":5,"label":"Day 5","summary":"Full Day Hanoi City Tour exploring historic landmarks such as Ho Chi Minh Mausoleum, One Pillar Pagoda, Temple of..."},{"dayNumber":6,"label":"Day 6","summary":"Hat Village & Incense Village Half Day Tour from Hanoi. Free afternoon in Hanoi for leisure and exploration. In the..."}],"city":"Hanoi","coords":[21.0285,105.8542],"dayEnd":6,"dayStart":4,"daysLabel":"DAYS 4-6","displayName":"Hanoi","excursions":[],"hotelDateRange":"02 Apr – 04 Apr 2027","hotelImage":"/assets/hotels/hanoi/hanoi-le-jardin-hotel-spa/exterior/exterior_3.jpg","hotelName":"Hanoi Le Jardin Hotel & Spa","nights":3,"nightsLabel":"3 NIGHTS","order":3,"segmentId":"stay-3","transportFromPrevious":"Halong Bay → Hanoi","mapSegmentDesc":"<div class=\"item-desc\"><br></div>"},{"activityPreviews":[{"dayNumber":7,"label":"Day 7","summary":"Arrival in Lao Cai/Sapa. Embark on a Full Day Sapa Tour exploring lush rice terraces, local hill-tribe villages, and..."}],"city":"Sapa","coords":[22.3364,103.8438],"dayEnd":7,"dayStart":7,"daysLabel":"DAY 7","displayName":"Sapa","excursions":[],"hotelDateRange":"05 Apr – 06 Apr 2027","hotelImage":"/assets/hotels/lao-cai/sapa-jade-hill/exterior/exterior_1.jpg","hotelName":"Sapa Jade Hill Resort & Spa","nights":1,"nightsLabel":"1 NIGHT","order":4,"segmentId":"stay-4","transportFromPrevious":"Hanoi → Sapa","mapSegmentDesc":"<div class=\"item-desc\"><br></div>"},{"activityPreviews":[{"dayNumber":8,"label":"Day 8","summary":"Enjoy a free morning in Sapa. After lunch, transfer to the airport for a domestic flight to Da Nang. Upon arrival,..."},{"dayNumber":9,"label":"Day 9","summary":"Full Day Da Nang City Tour highlighting Marble Mountains, Son Tra Peninsula (Linh Ung Pagoda), Dragon Bridge, and local..."}],"city":"Da Nang","coords":[16.0544,108.2022],"dayEnd":9,"dayStart":8,"daysLabel":"DAYS 8-9","displayName":"Da Nang","excursions":[],"hotelDateRange":"06 Apr – 08 Apr 2027","hotelImage":"/assets/hotels/danang/radisson-red-danang-hotel/placeholder.png","hotelName":"Radisson RED Danang Hotel","nights":2,"nightsLabel":"2 NIGHTS","order":5,"segmentId":"stay-5","transportFromPrevious":"Sapa → Da Nang","mapSegmentDesc":"<div class=\"item-desc\"><br></div>"},{"activityPreviews":[{"dayNumber":10,"label":"Day 10","summary":"Full Day Hoi An Tour. Transfer to Hoi An Ancient Town, explore lantern-lit streets, Japanese Covered Bridge, and stay..."},{"dayNumber":11,"label":"Day 11","summary":"Morning Hoi An Countryside Cycling Tour through peaceful villages and organic gardens. Free afternoon in Hoi An Ancient..."}],"city":"Hoi An","coords":[15.8801,108.338],"dayEnd":11,"dayStart":10,"daysLabel":"DAYS 10-11","displayName":"Hoi An","excursions":[],"hotelDateRange":"08 Apr – 10 Apr 2027","hotelImage":"/assets/hotels/quang-nam/la-siesta-hoi-an-resort-spa/exterior/exterior_1.jpg","hotelName":"La Siesta Hoi An Resort & Spa","nights":2,"nightsLabel":"2 NIGHTS","order":6,"segmentId":"stay-6","transportFromPrevious":"Da Nang → Hoi An","mapSegmentDesc":"<div class=\"item-desc\"><br></div>"},{"activityPreviews":[{"dayNumber":12,"label":"Day 12","summary":"Transfer to Da Nang Airport and fly to Ho Chi Minh City. In the afternoon, take a guided tour of the historic Cu Chi..."},{"dayNumber":13,"label":"Day 13","summary":"Full Day Mekong Delta Tour. Cruise down peaceful waterways, visit local artisanal workshops, taste tropical fruits, and..."},{"dayNumber":14,"label":"Day 14","summary":"Half Day Ho Chi Minh City Tour exploring Saigon Notre-Dame Basilica, Central Post Office, and War Remnants Museum...."}],"city":"Ho Chi Minh City","coords":[10.8231,106.6297],"dayEnd":14,"dayStart":12,"daysLabel":"DAYS 12-14","displayName":"Ho Chi Minh City","excursions":[],"hotelDateRange":"10 Apr – 12 Apr 2027","hotelImage":"/assets/hotels/saigon/mai-house/exterior/exterior.jpg","hotelName":"Mai House Hotel","nights":3,"nightsLabel":"3 NIGHTS","order":7,"segmentId":"stay-7","transportFromPrevious":"Hoi An → Ho Chi Minh City","mapSegmentDesc":"<div class=\"item-desc\"><br></div>"}]</script>
 <script>
     window.currentLang = "en";
     document.addEventListener("DOMContentLoaded", function () {
@@ -6376,123 +6436,141 @@
     });
   </script>
 
-<!-- Custom Responsive Domain Selector Modal (Transformed to Brand Selector) -->
-<div class="pb-modal-overlay" id="domain-modal" onclick="closeDomainModal(event)">
-<div class="pb-modal-card" onclick="event.stopPropagation()">
-<div class="pb-modal-header">
-<h3>Select Brand</h3>
-<button class="pb-modal-close" onclick="closeDomainModal(event)">×</button>
-</div>
-<div class="pb-domain-list">
-<div class="pb-domain-item" data-brand="vietnam_safar" onclick="selectBrandOption('vietnam_safar')" style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
-<div style="display:flex; align-items:center; gap:12px;">
-<img src="/assets/brands/vietnam_safar.png" style="width:28px; height:28px; border-radius:50%; object-fit:contain; background:white; border:1px solid rgba(0,0,0,0.1);">
-<div class="pb-domain-details">
-<div class="pb-domain-name" style="font-weight:600; font-size:14px; text-align:left;">Vietnam Safar</div>
-<div class="pb-domain-badge prod" style="font-size:11px; color:#666;">journeys.vietnamsafar.vn</div>
-</div>
-</div>
-<span class="pb-domain-check" style="visibility: hidden; color:var(--primary); font-weight:bold;">✓</span>
-</div>
-<div class="pb-domain-item active" data-brand="capella_travel" onclick="selectBrandOption('capella_travel')" style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
-<div style="display:flex; align-items:center; gap:12px;">
-<img src="/assets/brands/capella_travel.svg" style="width:28px; height:28px; border-radius:50%; object-fit:contain; background:white; border:1px solid rgba(0,0,0,0.1);">
-<div class="pb-domain-details">
-<div class="pb-domain-name" style="font-weight:600; font-size:14px; text-align:left;">Capella Travel</div>
-<div class="pb-domain-badge prod" style="font-size:11px; color:#666;">journeys.capellatravel.com</div>
-</div>
-</div>
-<span class="pb-domain-check" style="visibility: visible; color:var(--primary); font-weight:bold;">✓</span>
-</div>
-<div class="pb-domain-item" data-brand="selvara" onclick="selectBrandOption('selvara')" style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
-<div style="display:flex; align-items:center; gap:12px;">
-<img src="/assets/brands/selvara.svg" style="width:28px; height:28px; border-radius:50%; object-fit:contain; background:white; border:1px solid rgba(0,0,0,0.1);">
-<div class="pb-domain-details">
-<div class="pb-domain-name" style="font-weight:600; font-size:14px; text-align:left;">Selvara</div>
-<div class="pb-domain-badge prod" style="font-size:11px; color:#666;">my.selvarajourneys.com</div>
-</div>
-</div>
-<span class="pb-domain-check" style="visibility: hidden; color:var(--primary); font-weight:bold;">✓</span>
-</div>
-</div>
-</div>
-</div>
-<!-- Custom Theme Selector Modal -->
-<div class="pb-modal-overlay" id="template-modal" onclick="closeTemplateModal(event)">
-<div class="pb-modal-card" onclick="event.stopPropagation()">
-<div class="pb-modal-header">
-<h3>Select Theme</h3>
-<button class="pb-modal-close" onclick="closeTemplateModal(event)">×</button>
-</div>
-<div class="pb-domain-list">
-<div class="pb-domain-item" onclick="promptSwitchTemplate('prototype_itinerary_imagery.html')" style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
-<div style="display:flex; align-items:center; gap:12px;">
-<div class="pb-domain-details">
-<div class="pb-domain-name" style="font-weight:600; font-size:14px; text-align:left;">Brochure Theme</div>
-<div class="pb-domain-badge prod" style="font-size:11px; color:#666;">Modern &amp; visual layout</div>
-</div>
-</div>
-<div style="color: #4CAF50;">
-<svg fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" viewBox="0 0 24 24" width="20">
-<polyline points="20 6 9 17 4 12"></polyline>
-</svg>
-</div>
-</div>
-<div class="pb-domain-item" onclick="promptSwitchTemplate('vietnam_heritage_luxury.html')" style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
-<div style="display:flex; align-items:center; gap:12px;">
-<div class="pb-domain-details">
-<div class="pb-domain-name" style="font-weight:600; font-size:14px; text-align:left;">Heritage Theme</div>
-<div class="pb-domain-badge prod" style="font-size:11px; color:#666;">Classic &amp; structured layout</div>
-</div>
-</div>
-</div>
-<div class="pb-domain-item" onclick="promptSwitchTemplate('prototype_itinerary_imagery.html')" style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
-<div style="display:flex; align-items:center; gap:12px;">
-<div class="pb-domain-details">
-<div class="pb-domain-name" style="font-weight:600; font-size:14px; text-align:left;">Prototype Theme
+
+  <!-- Custom Responsive Domain Selector Modal (Transformed to Brand Selector) -->
+  <div id="domain-modal" class="pb-modal-overlay" onclick="closeDomainModal(event)">
+    <div class="pb-modal-card" onclick="event.stopPropagation()">
+      <div class="pb-modal-header">
+        <h3>Select Brand</h3>
+        <button class="pb-modal-close" onclick="closeDomainModal(event)">×</button>
+      </div>
+      <div class="pb-domain-list">
+        
+        
+        
+        <div class="pb-domain-item" data-brand="vietnam_safar" onclick="selectBrandOption('vietnam_safar')" style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <img src="/assets/brands/vietnam_safar.png" style="width:28px; height:28px; border-radius:50%; object-fit:contain; background:white; border:1px solid rgba(0,0,0,0.1);">
+            <div class="pb-domain-details">
+              <div class="pb-domain-name" style="font-weight:600; font-size:14px; text-align:left;">Vietnam Safar</div>
+              <div class="pb-domain-badge prod" style="font-size:11px; color:#666;">journeys.vietnamsafar.vn</div>
+            </div>
+          </div>
+          <span class="pb-domain-check" style="visibility: hidden; color:var(--primary); font-weight:bold;">✓</span>
+        </div>
+        
+        
+        <div class="pb-domain-item active" data-brand="capella_travel" onclick="selectBrandOption('capella_travel')" style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <img src="/assets/brands/capella_travel.svg" style="width:28px; height:28px; border-radius:50%; object-fit:contain; background:white; border:1px solid rgba(0,0,0,0.1);">
+            <div class="pb-domain-details">
+              <div class="pb-domain-name" style="font-weight:600; font-size:14px; text-align:left;">Capella Travel</div>
+              <div class="pb-domain-badge prod" style="font-size:11px; color:#666;">journeys.capellatravel.com</div>
+            </div>
+          </div>
+          <span class="pb-domain-check" style="visibility: visible; color:var(--primary); font-weight:bold;">✓</span>
+        </div>
+        
+        
+        <div class="pb-domain-item" data-brand="selvara" onclick="selectBrandOption('selvara')" style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <img src="/assets/brands/selvara.svg" style="width:28px; height:28px; border-radius:50%; object-fit:contain; background:white; border:1px solid rgba(0,0,0,0.1);">
+            <div class="pb-domain-details">
+              <div class="pb-domain-name" style="font-weight:600; font-size:14px; text-align:left;">Selvara</div>
+              <div class="pb-domain-badge prod" style="font-size:11px; color:#666;">my.selvarajourneys.com</div>
+            </div>
+          </div>
+          <span class="pb-domain-check" style="visibility: hidden; color:var(--primary); font-weight:bold;">✓</span>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Theme Selector Modal -->
+  <div id="template-modal" class="pb-modal-overlay" onclick="closeTemplateModal(event)">
+    <div class="pb-modal-card" onclick="event.stopPropagation()">
+      <div class="pb-modal-header">
+        <h3>Select Theme</h3>
+        <button class="pb-modal-close" onclick="closeTemplateModal(event)">×</button>
+      </div>
+      <div class="pb-domain-list">
+        <div class="pb-domain-item" onclick="promptSwitchTemplate('prototype_itinerary_imagery.html')" style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div class="pb-domain-details">
+              <div class="pb-domain-name" style="font-weight:600; font-size:14px; text-align:left;">Brochure Theme</div>
+              <div class="pb-domain-badge prod" style="font-size:11px; color:#666;">Modern &amp; visual layout</div>
+            </div>
+          </div>
+          
+          <div style="color: #4CAF50;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+          
+        </div>
+        <div class="pb-domain-item" onclick="promptSwitchTemplate('vietnam_heritage_luxury.html')" style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div class="pb-domain-details">
+              <div class="pb-domain-name" style="font-weight:600; font-size:14px; text-align:left;">Heritage Theme</div>
+              <div class="pb-domain-badge prod" style="font-size:11px; color:#666;">Classic &amp; structured layout</div>
+            </div>
+          </div>
+          
+        </div>
+        <div class="pb-domain-item" onclick="promptSwitchTemplate('prototype_itinerary_imagery.html')" style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div class="pb-domain-details">
+              <div class="pb-domain-name" style="font-weight:600; font-size:14px; text-align:left;">Prototype Theme
               </div>
-<div class="pb-domain-badge prod" style="font-size:11px; color:#666;">Itinerary with Imagery</div>
-</div>
-</div>
-<div style="color: #4CAF50;">
-<svg fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" viewBox="0 0 24 24" width="20">
-<polyline points="20 6 9 17 4 12"></polyline>
-</svg>
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- Custom Confirmation Modal for Theme Switch -->
-<div class="pb-modal-overlay" id="template-confirm-modal" onclick="closeTemplateConfirmModal(event)">
-<div class="pb-modal-card" onclick="event.stopPropagation()">
-<div class="pb-modal-header" style="border-bottom:none; padding-bottom:0; justify-content:center;">
-<h3 style="color: var(--accent-light); font-size: 20px;">Confirm Theme Switch</h3>
-</div>
-<div class="pb-modal-body" style="padding: 16px; font-size: 15px; color: #4a4a4a; line-height: 1.5; text-align: center;">
+              <div class="pb-domain-badge prod" style="font-size:11px; color:#666;">Itinerary with Imagery</div>
+            </div>
+          </div>
+          
+          <div style="color: #4CAF50;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Confirmation Modal for Theme Switch -->
+  <div id="template-confirm-modal" class="pb-modal-overlay" onclick="closeTemplateConfirmModal(event)">
+    <div class="pb-modal-card" onclick="event.stopPropagation()">
+      <div class="pb-modal-header" style="border-bottom:none; padding-bottom:0; justify-content:center;">
+        <h3 style="color: var(--accent-light); font-size: 20px;">Confirm Theme Switch</h3>
+      </div>
+      <div class="pb-modal-body" style="padding: 16px; font-size: 15px; color: #4a4a4a; line-height: 1.5; text-align: center;">
         Switching the theme will automatically save your current changes and reload the page.<br><br>
-<strong>Do you want to continue?</strong>
-<br></div>
-<div style="display: flex; gap: 12px; justify-content: center; padding: 0 16px 20px;">
-<button onclick="closeTemplateConfirmModal(event)" style="padding: 10px 20px; border: 1px solid #ccc; background: transparent; border-radius: 0; cursor: pointer; color: #666; font-weight: 600; transition: all 0.2s;">Cancel</button>
-<button id="btn-confirm-switch" style="padding: 10px 24px; border: none; background: var(--primary); border-radius: 0; cursor: pointer; color: var(--text-light); font-weight: 700; transition: all 0.2s; box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 30%, transparent);">Continue</button>
-</div>
-</div>
-</div>
-<!-- Luxury Loading Overlay -->
-<div class="no-print" id="luxury-loading-overlay">
-<div class="loading-card">
-<div class="luxury-spinner">
-<div class="ring"></div>
-<div class="active-glow"></div>
-</div>
-<h3>Translating Journey...</h3>
-<p>Crafting a bespoke luxury narrative in <span id="loading-lang-name">English</span></p>
-<button class="btn-cancel" onclick="cancelTranslation()">CANCEL</button>
-</div>
-</div>
-<!-- Domain Selector Controls (Persistent Script) -->
-<script>
+        <strong>Do you want to continue?</strong>
+      </div>
+      <div style="display: flex; gap: 12px; justify-content: center; padding: 0 16px 20px;">
+        <button onclick="closeTemplateConfirmModal(event)" style="padding: 10px 20px; border: 1px solid #ccc; background: transparent; border-radius: 0; cursor: pointer; color: #666; font-weight: 600; transition: all 0.2s;">Cancel</button>
+        <button id="btn-confirm-switch" style="padding: 10px 24px; border: none; background: var(--primary); border-radius: 0; cursor: pointer; color: var(--text-light); font-weight: 700; transition: all 0.2s; box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 30%, transparent);">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Luxury Loading Overlay -->
+  <div id="luxury-loading-overlay" class="no-print">
+    <div class="loading-card">
+      <div class="luxury-spinner">
+        <div class="ring"></div>
+        <div class="active-glow"></div>
+      </div>
+      <h3>Translating Journey...</h3>
+      <p>Crafting a bespoke luxury narrative in <span id="loading-lang-name">English</span></p>
+      <button class="btn-cancel" onclick="cancelTranslation()">CANCEL</button>
+    </div>
+  </div>
+
+  <!-- Domain Selector Controls (Persistent Script) -->
+  <script>
     // Dynamically inject styles for the bottom bar redirect button
     (function () {
       const styleId = 'bottom-bar-btn-styles';
@@ -6548,8 +6626,8 @@
     })();
 
     let domainModalMode = 'publish';
-    let modalLatestVersion = '1';
-    let modalItemId = 'quo_ccc80b695199';
+    let modalLatestVersion = '2';
+    let modalItemId = 'quo_ac40e4ebdebb';
     let modalItemType = 'quotations';
 
     // Parse path and fetch latest version info on load
@@ -6642,11 +6720,13 @@
       }
     }
   </script>
-<script id="translation-status" type="application/json">
+
+  <script id="translation-status" type="application/json">
     {"available_langs": ["en"], "baseline_lang": "en"}
   </script>
-<script id="client-i18n" type="application/json">
+  <script id="client-i18n" type="application/json">
     {"change": "Change", "committing_to_github": "Committing to GitHub...", "editing": "Editing", "enable_notifications_browser": "Please enable notifications in your browser settings to receive updates.", "go_to_slide": "Go to slide", "language_names": {"ar": "Arabic", "en": "English", "vi": "Vietnamese"}, "next_image": "Next image", "notification_title": "Enable Notifications", "previous_image": "Previous image", "publish_to_web": "Publish to Web", "publishing": "Publishing...", "remove_block": "Remove this block", "remove_block_confirm": "Remove this block? This action cannot be undone.", "test_notification_body": "Your private guide has been assigned: Mr. Minh (Phone: +84 911 538 738).", "test_notification_title": "Itinerary Update", "translate_block": "Translate this block"}
   </script>
-<input type="file" accept="image/*" style="display: none;">
+
+  <input type="file" accept="image/*" style="display: none;">
 </body></html>

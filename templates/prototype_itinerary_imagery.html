@@ -1698,6 +1698,66 @@
       cursor: pointer;
     }
 
+    .img-change-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      min-height: 44px;
+      padding: 0.65rem 0.95rem;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 0;
+      background: rgba(17, 19, 15, 0.72);
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      z-index: 120;
+      opacity: 0.82;
+      pointer-events: auto;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+      transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease;
+    }
+
+    .img-change-btn:hover {
+      opacity: 1;
+      transform: translateY(-1px);
+      background: rgba(17, 19, 15, 0.84);
+    }
+
+    .img-change-btn--hero {
+      top: auto;
+      right: auto;
+      left: 50%;
+      bottom: max(1.5rem, env(safe-area-inset-bottom, 0px));
+      transform: translateX(-50%);
+      min-width: 9rem;
+      padding-inline: 1.15rem;
+      z-index: 125;
+    }
+
+    .img-change-btn--hero:hover {
+      transform: translateX(-50%) translateY(-1px);
+    }
+
+    @media (max-width: 767px) {
+      .img-change-btn {
+        min-height: 44px;
+      }
+
+      .img-change-btn--hero {
+        bottom: 1rem;
+        width: calc(100% - 2rem);
+        max-width: 14rem;
+      }
+    }
+
     /* ── Publish Bar ────────────────────────────────────────────── */
     #publish-bar {
       position: fixed;
@@ -5747,13 +5807,13 @@
       const el = typeof selectorOrElement === 'string' ? document.querySelector(selectorOrElement) : selectorOrElement;
       if (!el) return;
       if (el.querySelector('.img-change-btn')) return; // already exists
-      const btn = document.createElement('div');
+      const isHeroTarget = el.classList.contains('hero');
+      const btn = document.createElement('button');
+      btn.type = 'button';
       btn.innerHTML = `🖼️ ${CLIENT_I18N.change}`;
-      btn.className = 'img-change-btn no-print';
-      btn.style.cssText = 'position:absolute;top:16px;right:16px;background:rgba(0,0,0,0.6);color:#fff;padding:6px 12px;border-radius: 0;font-size:12px;cursor:pointer;z-index:99;opacity:0.3;transition:0.2s;';
-      btn.onmouseover = () => btn.style.opacity = '1';
-      btn.onmouseout = () => btn.style.opacity = '0.3';
+      btn.className = `img-change-btn no-print${isHeroTarget ? ' img-change-btn--hero' : ''}`;
       btn.onclick = (e) => {
+        e.preventDefault();
         e.stopPropagation();
         if (el.classList.contains('image-tile') || el.classList.contains('carousel-container')) {
           const activeIndex = parseInt(el.dataset.currentIndex || '0', 10);
