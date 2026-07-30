@@ -5994,6 +5994,8 @@ WORD_PASTE_FRAGMENT_RE = re.compile(
     (?:
         <p\b[^>]*\bclass=["\'][^"\']*\bMso[a-zA-Z0-9_-]*[^"\']*["\'][^>]*>.*?</p>
         |
+        <p\b[^>]*>.*?</p>
+        |
         <span\b[^>]*\bmso-[^>]*>.*?</span>
         |
         <span\b[^>]*\bfont-family:(?:&quot;|")Garamond(?:&quot;|")[^>]*>.*?</span>
@@ -6100,10 +6102,13 @@ def _repair_word_pasted_editable_blocks(html_content: str) -> str:
             scan_pos = fragment_match.end()
 
         if recovered_fragments:
+            tag = match.group('tag')
+            if tag == 'p' and any('<p' in f.lower() for f in recovered_fragments):
+                tag = 'div'
             repaired_parts.append(
-                f"<{match.group('tag')} data-editable=\"{field_name}\">"
+                f"<{tag} data-editable=\"{field_name}\">"
                 + "".join(recovered_fragments)
-                + f"</{match.group('tag')}>"
+                + f"</{tag}>"
             )
             cursor = scan_pos
             continue
@@ -8474,6 +8479,9 @@ async def publish_quotation(quotation_id: str, body: PublishRequest, request: Re
                 detail="Brochure publish requires a canonical document draft. Raw HTML publish is only supported for legacy v1 templates.",
             )
         
+        if body.html:
+            body.html = _repair_word_pasted_editable_blocks(body.html)
+
         # Extract custom images and store in ctx_data
         custom_images = _extract_custom_images_from_html(body.html or "")
         ctx_data.update(custom_images)

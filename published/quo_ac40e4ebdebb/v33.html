@@ -713,7 +713,6 @@
     }
 
     .experience p,
-    .day p,
     .panel p,
     .panel li {
       color: var(--text-muted);
@@ -3945,14 +3944,18 @@
           line-height: 1.75;
         }
 
+        .day-copy p,
+        .editorial-copy p,
+        .day p,
+        div[data-editable^="day_desc_"] p,
         .day-copy > p[data-editable^="day_desc_"],
         .editorial-copy > p[data-editable^="day_desc_"] {
-          display: block;
-          -webkit-line-clamp: unset;
-          -webkit-box-orient: initial;
-          overflow: visible;
-          text-overflow: clip;
-          max-width: none;
+          display: block !important;
+          -webkit-line-clamp: unset !important;
+          -webkit-box-orient: initial !important;
+          overflow: visible !important;
+          text-overflow: clip !important;
+          max-width: none !important;
         }
 
         .day-image {
@@ -4276,8 +4279,8 @@ solid #1B365D .75pt;padding:0in;mso-padding-alt:0in 0in 4.0pt 0in"><b><span styl
 115%;color:windowtext">Day 1: Graceful Hanoi Arrival &amp; Evening Stroll</span></b><span style="font-size:26.0pt;line-height:115%;color:windowtext"><o:p></o:p></span></p>
 
 </div></h4>
-<div class="day-copy" style="margin-top:24px;">
-<p data-editable="day_desc_1_0" spellcheck="false"></p><p class="MsoNormal" style="margin-bottom:6.0pt"><span style="color:windowtext">Welcome
+<div class="day-copy" data-editable="day_desc_1_0" style="margin-top:24px;">
+<p class="MsoNormal" style="margin-bottom:6.0pt"><span style="color:windowtext">Welcome
 to Vietnam! Upon arriving at <b>Noi Bai
 International Airport</b>, your private driver meets you for a seamless
 transfer into vibrant <b>Hanoi</b>. Check
@@ -4351,8 +4354,8 @@ solid #1B365D .75pt;padding:0in;mso-padding-alt:0in 0in 4.0pt 0in"><b><span styl
 Waterways</span></b><span style="font-size:26.0pt;line-height:115%;color:windowtext"><o:p></o:p></span></p>
 
 </div></h4>
-<div class="day-copy" style="margin-top:24px;">
-<p data-editable="day_desc_2_0" spellcheck="false"></p><p class="MsoNormal" style="margin-bottom:6.0pt"><span style="color:windowtext">Depart
+<div class="day-copy" data-editable="day_desc_2_0" style="margin-top:24px;">
+<p class="MsoNormal" style="margin-bottom:6.0pt"><span style="color:windowtext">Depart
 Hanoi behind as you journey south through picturesque rural landscapes toward
 the historical region of Ninh Binh. Begin your morning exploration at <b>Hoa Lu Ancient Capital</b>, where you will
 wander through historic sanctuary temples built in honor of the ancient Dinh
@@ -4436,8 +4439,8 @@ solid #1B365D .75pt;padding:0in;mso-padding-alt:0in 0in 4.0pt 0in"><b><span styl
 Cruise</span></b><span style="font-size:26.0pt;line-height:115%;color:windowtext"><o:p></o:p></span></p>
 
 </div></h4>
-<div class="day-copy" style="margin-top:24px;">
-<p data-editable="day_desc_3_0" spellcheck="false"></p><p class="MsoNormal" style="margin-bottom:6.0pt"><span style="color:windowtext">Depart
+<div class="day-copy" data-editable="day_desc_3_0" style="margin-top:24px;">
+<p class="MsoNormal" style="margin-bottom:6.0pt"><span style="color:windowtext">Depart
 Hanoi on a comfortable morning scenic transfer toward the stunning coastal
 shores of northeastern Vietnam. Upon arrival at the harbor, board the
 magnificent <b>Emeraude Classic Cruise</b>
@@ -4508,8 +4511,8 @@ solid #1B365D .75pt;padding:0in;mso-padding-alt:0in 0in 4.0pt 0in"><b><span styl
 115%;color:windowtext">Day 4: Tranquil Ha Long Sunrise &amp; Return to Hanoi</span></b><span style="font-size:26.0pt;line-height:115%;color:windowtext"><o:p></o:p></span></p>
 
 </div></h4>
-<div class="day-copy" style="margin-top:24px;">
-<p data-editable="day_desc_4_0" spellcheck="false"></p><p class="MsoNormal" style="margin-bottom:6.0pt"><span style="color:windowtext">Wake
+<div class="day-copy" data-editable="day_desc_4_0" style="margin-top:24px;">
+<p class="MsoNormal" style="margin-bottom:6.0pt"><span style="color:windowtext">Wake
 up early to witness a tranquil morning over the waters of <b>Ha Long Bay</b>. After completing check-out procedures and disembarking
 from your cruise, meet your driver for a comfortable highway transfer back to <b>Hanoi</b>. Arrive back in the bustling
 capital by early afternoon and enjoy a completely free day to relax, explore
@@ -4580,8 +4583,8 @@ solid #1B365D .75pt;padding:0in;mso-padding-alt:0in 0in 4.0pt 0in"><b><span styl
 to Sapa</span></b><span style="font-size:26.0pt;line-height:115%;color:windowtext"><o:p></o:p></span></p>
 
 </div></h4>
-<div class="day-copy" style="margin-top:24px;">
-<p data-editable="day_desc_5_0" spellcheck="false"></p><p class="MsoNormal" style="margin-bottom:6.0pt"><span style="color:windowtext">Begin
+<div class="day-copy" data-editable="day_desc_5_0" style="margin-top:24px;">
+<p class="MsoNormal" style="margin-bottom:6.0pt"><span style="color:windowtext">Begin
 your immersive city exploration visiting the solemn <b>Ho Chi Minh Mausoleum Complex</b>, learning about the nation's historic
 founding leader before admiring the unique lotus-inspired architecture of <b>One Pillar Pagoda</b>. Continue your
 cultural journey to the ancient <b>Temple
@@ -4642,7 +4645,7 @@ AM</b> for about <b>9-10 hours</b></span></li>
 </div>
 <div class="day-copy-wrap">
 <div class="day-kicker">
-<span class="destination">Hanoi</span>
+<span class="destination">Sapa</span>
 <span>DAY 6</span>
 </div>
 <h4 class="day-title" data-editable="day_title_6" spellcheck="false"><div style="mso-element:para-border-div;border:none;border-bottom:solid #1B365D 1.0pt;
@@ -4654,8 +4657,8 @@ solid #1B365D .75pt;padding:0in;mso-padding-alt:0in 0in 4.0pt 0in"><b><span styl
 115%;color:windowtext">Day 6: Majestic Sapa Peak: High Altitude Sacred Fansipan</span></b><span style="font-size:26.0pt;line-height:115%;color:windowtext"><o:p></o:p></span></p>
 
 </div></h4>
-<div class="day-copy" style="margin-top:24px;">
-<p data-editable="day_desc_6_0" spellcheck="false"></p><p class="MsoNormal" style="margin-bottom:6.0pt"><span style="color:windowtext">Arrive
+<div class="day-copy" data-editable="day_desc_6_0" style="margin-top:24px;">
+<p class="MsoNormal" style="margin-bottom:6.0pt"><span style="color:windowtext">Arrive
 in Sapa in the morning and transfer to your hotel for rest and relaxation after
 your overnight train journey. In the afternoon, embark on an exciting mountain
 excursion riding the spectacular <b>Fansipan
@@ -4739,8 +4742,8 @@ Sky-High Passes</span></b><span style="font-size:26.0pt;line-height:115%;
 color:windowtext"><o:p></o:p></span></p>
 
 </div></h4>
-<div class="day-copy" style="margin-top:24px;">
-<p data-editable="day_desc_7_0" spellcheck="false"></p><p class="MsoNormal" style="margin-bottom:6.0pt"><span style="color:windowtext">Embark
+<div class="day-copy" data-editable="day_desc_7_0" style="margin-top:24px;">
+<p class="MsoNormal" style="margin-bottom:6.0pt"><span style="color:windowtext">Embark
 on a captivating cultural trek down into the scenic valley to visit traditional
 <b>Cat Cat Village</b>, home to the Black
 Hmong ethnic community. Discover authentic timber stilt houses, observe age-old
@@ -4824,8 +4827,8 @@ solid #1B365D .75pt;padding:0in;mso-padding-alt:0in 0in 4.0pt 0in"><b><span styl
 115%;color:windowtext">Day 8: Sapa to Da Nang Transit &amp; Coastal Arrival</span></b><span style="font-size:26.0pt;line-height:115%;color:windowtext"><o:p></o:p></span></p>
 
 </div></h4>
-<div class="day-copy" style="margin-top:24px;">
-<p data-editable="day_desc_8_0" spellcheck="false"></p><p class="MsoNormal" style="margin-bottom:6.0pt"><span style="color:windowtext">Bid
+<div class="day-copy" data-editable="day_desc_8_0" style="margin-top:24px;">
+<p class="MsoNormal" style="margin-bottom:6.0pt"><span style="color:windowtext">Bid
 farewell to the misty mountains of <b>Sapa</b>
 as your private transfer driver conveys you back to <b>Hanoi</b> for your scheduled domestic flight from <b>Noi Bai International Airport</b>. Upon arriving at <b>Da Nang International Airport</b> in
 central Vietnam, transfer smoothly to your seaside resort, <b>Radisson Hotel Da Nang</b>, where you can relax for the evening.<o:p></o:p></span></p><p></p>
@@ -4895,8 +4898,8 @@ Son Tra Sanctuary</span></b><span style="font-size:26.0pt;line-height:115%;
 color:windowtext"><o:p></o:p></span></p>
 
 </div></h4>
-<div class="day-copy" style="margin-top:24px;">
-<p data-editable="day_desc_9_0" spellcheck="false"></p><p class="MsoNormal" style="margin-bottom:6.0pt"><span style="color:windowtext">Start
+<div class="day-copy" data-editable="day_desc_9_0" style="margin-top:24px;">
+<p class="MsoNormal" style="margin-bottom:6.0pt"><span style="color:windowtext">Start
 your morning exploring the mystical limestone peaks of <b>Marble Mountains</b>, climbing stone stairways to discover hidden cave
 grottoes and historic Buddhist sanctuaries. Afterwards, cross the iconic <b>Dragon Bridge</b> spanning the river and
 visit the renowned <b>Museum of Cham
@@ -4979,8 +4982,8 @@ Lantern-Lit Waterways</span></b><span style="font-size:26.0pt;line-height:115%;
 color:windowtext"><o:p></o:p></span></p>
 
 </div></h4>
-<div class="day-copy" style="margin-top:24px;">
-<p data-editable="day_desc_10_0" spellcheck="false"></p><p class="MsoNormal" style="margin-bottom:6.0pt"><span style="color:windowtext">Depart
+<div class="day-copy" data-editable="day_desc_10_0" style="margin-top:24px;">
+<p class="MsoNormal" style="margin-bottom:6.0pt"><span style="color:windowtext">Depart
 Da Nang at midday for the lush eco-sanctuary of <b>Cam Thanh Coconut Village</b>, where you will board a traditional
 bamboo basket boat to navigate peaceful palm-fringed waterways. Learn local
 fishing techniques and enjoy a fun-filled excursion through green waterways
@@ -5065,8 +5068,8 @@ Cycling Tour</span></b><span style="font-size:26.0pt;line-height:115%;
 color:windowtext"><o:p></o:p></span></p>
 
 </div></h4>
-<div class="day-copy" style="margin-top:24px;">
-<p data-editable="day_desc_11_0" spellcheck="false"></p><p class="MsoNormal" style="margin-bottom:6.0pt"><span style="color:windowtext">Hop
+<div class="day-copy" data-editable="day_desc_11_0" style="margin-top:24px;">
+<p class="MsoNormal" style="margin-bottom:6.0pt"><span style="color:windowtext">Hop
 on a bicycle for a refreshing morning ride through the peaceful <b>Hoi An Countryside</b>. Pedaling along
 quiet village paths, ride through lush green paddies to <b>Tra Que Vegetable Village</b>, where you can learn about organic
 farming from local villagers. Continue cycling along scenic canals in the <b>Cam Thanh Rural Trails</b>, observing
@@ -5136,8 +5139,8 @@ solid #1B365D .75pt;padding:0in;mso-padding-alt:0in 0in 4.0pt 0in"><b><span styl
 Tunnels</span></b><span style="font-size:26.0pt;line-height:115%;color:windowtext"><o:p></o:p></span></p>
 
 </div></h4>
-<div class="day-copy" style="margin-top:24px;">
-<p data-editable="day_desc_12_0" spellcheck="false"></p><p class="MsoNormal" style="margin-bottom:6.0pt"><span style="color:windowtext">Transfer
+<div class="day-copy" data-editable="day_desc_12_0" style="margin-top:24px;">
+<p class="MsoNormal" style="margin-bottom:6.0pt"><span style="color:windowtext">Transfer
 to <b>Da Nang International Airport</b> for
 your short domestic flight south to bustling <b>Ho Chi Minh City</b>. Upon arrival at <b>Tan Son Nhat International Airport</b>, meet your driver and guide for
 a comfortable transfer into the dynamic city center, where you will savor a
@@ -5211,8 +5214,8 @@ solid #1B365D .75pt;padding:0in;mso-padding-alt:0in 0in 4.0pt 0in"><b><span styl
 of Ben Tre</span></b><span style="font-size:26.0pt;line-height:115%;color:windowtext"><o:p></o:p></span></p>
 
 </div></h4>
-<div class="day-copy" style="margin-top:24px;">
-<p data-editable="day_desc_13_0" spellcheck="false"></p><p class="MsoNormal" style="margin-bottom:6.0pt"><span style="color:windowtext">Depart
+<div class="day-copy" data-editable="day_desc_13_0" style="margin-top:24px;">
+<p class="MsoNormal" style="margin-bottom:6.0pt"><span style="color:windowtext">Depart
 the city early heading south into the fertile tropical heart of the <b>Mekong Delta</b>. Arrive in the picturesque
 province of <b>Ben Tre Waterways</b>,
 famous for its coconut groves and tranquil canals. Board a local river boat to
@@ -5286,8 +5289,8 @@ solid #1B365D .75pt;padding:0in;mso-padding-alt:0in 0in 4.0pt 0in"><b><span styl
 Departure</span></b><span style="font-size:26.0pt;line-height:115%;color:windowtext"><o:p></o:p></span></p>
 
 </div></h4>
-<div class="day-copy" style="margin-top:24px;">
-<p data-editable="day_desc_14_0" spellcheck="false"></p><p class="MsoNormal" style="margin-bottom:6.0pt"><span style="color:windowtext">Begin
+<div class="day-copy" data-editable="day_desc_14_0" style="margin-top:24px;">
+<p class="MsoNormal" style="margin-bottom:6.0pt"><span style="color:windowtext">Begin
 your final morning city tour admiring the elegant French colonial architecture
 of <b>Saigon Notre-Dame Basilica</b> and
 the historic <b>Central Post Office</b>,
