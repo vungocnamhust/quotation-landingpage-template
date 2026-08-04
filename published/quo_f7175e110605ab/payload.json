@@ -40,7 +40,7 @@
       "mainInclusions": "Arrival transfer",
       "senseOfPace": "Relaxed",
       "dining": "Dinner",
-      "date": null,
+      "date": "2026-09-15",
       "overnight": "Hanoi"
     },
     {
@@ -50,7 +50,7 @@
       "mainInclusions": "Hanoi highlights",
       "senseOfPace": "Moderate",
       "dining": "Breakfast, Lunch, Dinner",
-      "date": null,
+      "date": "2026-09-16",
       "overnight": "Hanoi"
     },
     {
@@ -60,7 +60,7 @@
       "mainInclusions": "Ninh Binh highlights",
       "senseOfPace": "Moderate",
       "dining": "Breakfast, Lunch, Dinner",
-      "date": null,
+      "date": "2026-09-17",
       "overnight": "Ninh Binh"
     },
     {
@@ -70,7 +70,7 @@
       "mainInclusions": "Private transfer to Ha Long",
       "senseOfPace": "Moderate",
       "dining": "Breakfast, Lunch, Dinner",
-      "date": null,
+      "date": "2026-09-18",
       "overnight": "Ha Long"
     },
     {
@@ -80,7 +80,7 @@
       "mainInclusions": "Transfer and overnight train",
       "senseOfPace": "Moderate",
       "dining": "Breakfast, Lunch",
-      "date": null,
+      "date": "2026-09-19",
       "overnight": "Sapa"
     },
     {
@@ -90,7 +90,7 @@
       "mainInclusions": "Sapa cycling tour",
       "senseOfPace": "Active",
       "dining": "Breakfast, Lunch, Dinner",
-      "date": null,
+      "date": "2026-09-20",
       "overnight": "Sapa"
     },
     {
@@ -100,7 +100,7 @@
       "mainInclusions": "Sapa trek",
       "senseOfPace": "Active",
       "dining": "Breakfast, Lunch, Dinner (Half)",
-      "date": null,
+      "date": "2026-09-21",
       "overnight": "Sapa"
     },
     {
@@ -110,7 +110,7 @@
       "mainInclusions": "Airport transfer, flight and arrival transfer",
       "senseOfPace": "Moderate",
       "dining": "Breakfast, Lunch, Dinner (Half)",
-      "date": null,
+      "date": "2026-09-22",
       "overnight": "Hoi An"
     },
     {
@@ -120,7 +120,7 @@
       "mainInclusions": "Basket boat and My Son",
       "senseOfPace": "Moderate",
       "dining": "Breakfast, Dinner",
-      "date": null,
+      "date": "2026-09-23",
       "overnight": "Hoi An"
     },
     {
@@ -130,7 +130,7 @@
       "mainInclusions": "Hai Van Pass",
       "senseOfPace": "Moderate",
       "dining": "Breakfast, Lunch, Dinner",
-      "date": null,
+      "date": "2026-09-24",
       "overnight": "Hoi An"
     },
     {
@@ -140,7 +140,7 @@
       "mainInclusions": "Flight and Vespa tour",
       "senseOfPace": "Active",
       "dining": "Breakfast, Lunch, Dinner",
-      "date": null,
+      "date": "2026-09-25",
       "overnight": "Ho Chi Minh City"
     },
     {
@@ -150,7 +150,7 @@
       "mainInclusions": "Cu Chi Tunnels and War Remnants Museum",
       "senseOfPace": "Moderate",
       "dining": "Breakfast, Lunch, Dinner (Half)",
-      "date": null,
+      "date": "2026-09-26",
       "overnight": "Ho Chi Minh City"
     },
     {
@@ -160,7 +160,7 @@
       "mainInclusions": "Free day",
       "senseOfPace": "Relaxed",
       "dining": "Breakfast, Lunch, Dinner",
-      "date": null,
+      "date": "2026-09-27",
       "overnight": "Ho Chi Minh City"
     },
     {
@@ -170,7 +170,7 @@
       "mainInclusions": "Airport transfer",
       "senseOfPace": "Relaxed",
       "dining": "Breakfast",
-      "date": null,
+      "date": "2026-09-28",
       "overnight": "Departure"
     }
   ],
@@ -178,33 +178,45 @@
     "hotels": [
       {
         "destination": "Hanoi",
-        "checkInDate": "2027-03-27",
-        "checkOutDate": "2027-03-30",
+        "checkInDate": "2026-09-15",
+        "checkOutDate": "2026-09-17",
         "hotelArrangement": "Peridot Grand Luxury Boutique Hotel (Grand Deluxe)"
       },
       {
+        "destination": "Ninh Binh",
+        "checkInDate": "2026-09-17",
+        "checkOutDate": "2026-09-18",
+        "hotelArrangement": "Emeralda Resort Ninh Binh (Deluxe Room)"
+      },
+      {
         "destination": "Ha Long",
-        "checkInDate": "2027-03-30",
-        "checkOutDate": "2027-03-31",
-        "hotelArrangement": "Celina Of The Sea Cruise (Executive Balcony)"
+        "checkInDate": "2026-09-18",
+        "checkOutDate": "2026-09-19",
+        "hotelArrangement": "Heritage Line Ginger Cruise (Junior Suite)"
+      },
+      {
+        "destination": "Sapa",
+        "checkInDate": "2026-09-19",
+        "checkOutDate": "2026-09-20",
+        "hotelArrangement": "Chapa Express (Suite Twin Cabin)"
+      },
+      {
+        "destination": "Sapa",
+        "checkInDate": "2026-09-20",
+        "checkOutDate": "2026-09-22",
+        "hotelArrangement": "Topas Ecolodge (Deluxe Room)"
       },
       {
         "destination": "Hoi An",
-        "checkInDate": "2027-03-31",
-        "checkOutDate": "2027-04-03",
+        "checkInDate": "2026-09-22",
+        "checkOutDate": "2026-09-25",
         "hotelArrangement": "Anantara Hoi An Resort (Deluxe Balcony)"
       },
       {
-        "destination": "Da Nang",
-        "checkInDate": "2027-04-03",
-        "checkOutDate": "2027-04-07",
-        "hotelArrangement": "Hyatt Regency Danang Resort and Spa (3 Bedroom Beach Front Pool Villa)"
-      },
-      {
         "destination": "Ho Chi Minh City",
-        "checkInDate": "2027-04-07",
-        "checkOutDate": "2027-04-09",
-        "hotelArrangement": "The Reverie Saigon Hotel (Deluxe Room)"
+        "checkInDate": "2026-09-25",
+        "checkOutDate": "2026-09-28",
+        "hotelArrangement": "The Myst Dong Khoi (Deluxe Room)"
       }
     ],
     "roomNotes": "Premium rooms, VIP setup for Birthday on Day 4 and Day 11."
