@@ -7750,7 +7750,9 @@ async def get_quotation_draft(quotation_id: str, request: Request, lang: str | N
         force_editor_draft=True,
     )
     draft = _ensure_brochure_draft(ctx_data, quotation_id, effective_lang, lang_ctx, force_brand_from_ctx=True)
-    await _persist_ctx_data(quotation_id, ctx_data, f"Bootstrap brochure draft for quotation {quotation_id} ({effective_lang})")
+    # GET must remain read-only. Persist only through PUT /draft or publish;
+    # otherwise merely opening or refreshing the editor writes ctx.json and
+    # creates a GitHub commit on every request.
     return {"draft": draft, "lang": effective_lang}
 
 
@@ -8211,10 +8213,6 @@ async def get_quotation(quotation_id: str, request: Request):
                 ignore_published_html=True,
                 editor_mode=False,
             )
-            document = _get_stored_brochure_draft(ctx_data, effective_lang)
-            if document:
-                _store_brochure_draft(ctx_data, effective_lang, document)
-                await _persist_ctx_data(quotation_id, ctx_data, f"Refresh brochure draft for quotation {quotation_id} ({effective_lang})")
             return HTMLResponse(content=rendered_html, headers=no_cache_headers)
         payload_obj = TourQuotationPayload.model_validate(payload_dict)
         tmpl = templates.get_template(tmpl_name)
