@@ -36,128 +36,142 @@
     {
       "dayNumber": 1,
       "destination": "Hanoi",
-      "summary": "Arrival in Hanoi, transfer to hotel and overnight in Hanoi.",
-      "mainInclusions": "Airport transfer",
+      "summary": "Arrival in Hanoi. Overnight in Hanoi.",
+      "mainInclusions": "Arrival transfer",
       "senseOfPace": "Relaxed",
-      "dining": "None",
-      "date": null
+      "dining": "Dinner",
+      "date": null,
+      "overnight": "Hanoi"
     },
     {
       "dayNumber": 2,
       "destination": "Hanoi",
-      "summary": "Full day exploring Hanoi highlights. Overnight in Hanoi.",
-      "mainInclusions": "Tour guide, transportation",
+      "summary": "Explore Hanoi highlights. Overnight in Hanoi.",
+      "mainInclusions": "Hanoi highlights",
       "senseOfPace": "Moderate",
-      "dining": "Breakfast",
-      "date": null
+      "dining": "Breakfast, Lunch, Dinner",
+      "date": null,
+      "overnight": "Hanoi"
     },
     {
       "dayNumber": 3,
       "destination": "Ninh Binh",
-      "summary": "Visit Ninh Binh highlights. Overnight in Ninh Binh.",
-      "mainInclusions": "Tour guide, transportation",
+      "summary": "Explore Ninh Binh highlights. Overnight in Ninh Binh.",
+      "mainInclusions": "Ninh Binh highlights",
       "senseOfPace": "Moderate",
-      "dining": "Breakfast",
-      "date": null
+      "dining": "Breakfast, Lunch, Dinner",
+      "date": null,
+      "overnight": "Ninh Binh"
     },
     {
       "dayNumber": 4,
       "destination": "Ha Long",
-      "summary": "Transfer to Ha Long Bay. Enjoy cruise and overnight in Ha Long.",
-      "mainInclusions": "Cruise, transfer",
-      "senseOfPace": "Relaxed",
+      "summary": "Transfer to Ha Long. Overnight in Ha Long.",
+      "mainInclusions": "Private transfer to Ha Long",
+      "senseOfPace": "Moderate",
       "dining": "Breakfast, Lunch, Dinner",
-      "date": null
+      "date": null,
+      "overnight": "Ha Long"
     },
     {
       "dayNumber": 5,
-      "destination": "Hanoi / Sapa",
-      "summary": "Transfer back to Hanoi. In the evening, take the overnight train to Sapa.",
-      "mainInclusions": "Transfer, Train ticket",
+      "destination": "Sapa",
+      "summary": "Transfer to Hanoi, then take the overnight train to Sapa.",
+      "mainInclusions": "Transfer and overnight train",
       "senseOfPace": "Moderate",
-      "dining": "Breakfast",
-      "date": null
+      "dining": "Breakfast, Lunch",
+      "date": null,
+      "overnight": "Sapa"
     },
     {
       "dayNumber": 6,
       "destination": "Sapa",
-      "summary": "Arrive in Sapa. Enjoy a cycling tour around the villages. Overnight in Sapa.",
-      "mainInclusions": "Tour guide, bicycles",
+      "summary": "Arrive in Sapa and enjoy a cycling tour. Overnight in Sapa.",
+      "mainInclusions": "Sapa cycling tour",
       "senseOfPace": "Active",
-      "dining": "Breakfast",
-      "date": null
+      "dining": "Breakfast, Lunch, Dinner",
+      "date": null,
+      "overnight": "Sapa"
     },
     {
       "dayNumber": 7,
       "destination": "Sapa",
-      "summary": "Full day trekking in Sapa through scenic rice terraces. Overnight in Sapa.",
-      "mainInclusions": "Tour guide, trekking",
+      "summary": "Enjoy a Sapa trek. Overnight in Sapa.",
+      "mainInclusions": "Sapa trek",
       "senseOfPace": "Active",
-      "dining": "Breakfast",
-      "date": null
+      "dining": "Breakfast, Lunch, Dinner (Half)",
+      "date": null,
+      "overnight": "Sapa"
     },
     {
       "dayNumber": 8,
       "destination": "Hoi An",
-      "summary": "Airport transfer, fly to Da Nang. Transfer to Hoi An and overnight.",
-      "mainInclusions": "Airport transfer, Flight",
+      "summary": "Airport transfer, fly to Da Nang, then transfer to Hoi An. Overnight in Hoi An.",
+      "mainInclusions": "Airport transfer, flight and arrival transfer",
       "senseOfPace": "Moderate",
-      "dining": "Breakfast",
-      "date": null
+      "dining": "Breakfast, Lunch, Dinner (Half)",
+      "date": null,
+      "overnight": "Hoi An"
     },
     {
       "dayNumber": 9,
       "destination": "Hoi An",
-      "summary": "Experience the basket boat ride and visit My Son Sanctuary. Overnight in Hoi An.",
-      "mainInclusions": "Tour guide, basket boat, tickets",
+      "summary": "Enjoy a basket boat experience and visit My Son. Overnight in Hoi An.",
+      "mainInclusions": "Basket boat and My Son",
       "senseOfPace": "Moderate",
-      "dining": "Breakfast",
-      "date": null
+      "dining": "Breakfast, Dinner",
+      "date": null,
+      "overnight": "Hoi An"
     },
     {
       "dayNumber": 10,
       "destination": "Hoi An",
-      "summary": "Journey over the spectacular Hai Van pass. Overnight in Hoi An.",
-      "mainInclusions": "Tour guide, transportation",
+      "summary": "Travel over Hai Van Pass. Overnight in Hoi An.",
+      "mainInclusions": "Hai Van Pass",
       "senseOfPace": "Moderate",
-      "dining": "Breakfast",
-      "date": null
+      "dining": "Breakfast, Lunch, Dinner",
+      "date": null,
+      "overnight": "Hoi An"
     },
     {
       "dayNumber": 11,
       "destination": "Ho Chi Minh City",
-      "summary": "Fly to Ho Chi Minh City. Enjoy an exciting Vespa tour. Overnight in HCM.",
-      "mainInclusions": "Flight, Vespa tour",
+      "summary": "Fly to Ho Chi Minh City and enjoy a Vespa tour. Overnight in Ho Chi Minh City.",
+      "mainInclusions": "Flight and Vespa tour",
       "senseOfPace": "Active",
-      "dining": "Breakfast",
-      "date": null
+      "dining": "Breakfast, Lunch, Dinner",
+      "date": null,
+      "overnight": "Ho Chi Minh City"
     },
     {
       "dayNumber": 12,
       "destination": "Ho Chi Minh City",
-      "summary": "Visit the Cu Chi tunnels and the War Remnants Museum. Overnight in HCM.",
-      "mainInclusions": "Tour guide, tickets",
+      "summary": "Visit the Cu Chi Tunnels and War Remnants Museum. Overnight in Ho Chi Minh City.",
+      "mainInclusions": "Cu Chi Tunnels and War Remnants Museum",
       "senseOfPace": "Moderate",
-      "dining": "Breakfast",
-      "date": null
+      "dining": "Breakfast, Lunch, Dinner (Half)",
+      "date": null,
+      "overnight": "Ho Chi Minh City"
     },
     {
       "dayNumber": 13,
       "destination": "Ho Chi Minh City",
-      "summary": "Free day to explore Ho Chi Minh City at your own pace. Overnight in HCM.",
-      "mainInclusions": "None",
+      "summary": "Enjoy a free day in Ho Chi Minh City. Overnight in Ho Chi Minh City.",
+      "mainInclusions": "Free day",
       "senseOfPace": "Relaxed",
-      "dining": "Breakfast",
-      "date": null
+      "dining": "Breakfast, Lunch, Dinner",
+      "date": null,
+      "overnight": "Ho Chi Minh City"
     },
     {
       "dayNumber": 14,
       "destination": "Departure",
-      "summary": "Transfer to the airport for your departure flight from Ho Chi Minh City.",
+      "summary": "Transfer to the airport for departure from SGN.",
       "mainInclusions": "Airport transfer",
       "senseOfPace": "Relaxed",
       "dining": "Breakfast",
-      "date": null
+      "date": null,
+      "overnight": "Departure"
     }
   ],
   "hotelPlan": {
@@ -165,38 +179,32 @@
       {
         "destination": "Hanoi",
         "checkInDate": "2027-03-27",
-        "checkOutDate": "2027-03-29",
-        "hotelArrangement": "Peridot Grand Luxury Boutique Hotel"
-      },
-      {
-        "destination": "Ninh Binh",
-        "checkInDate": "2027-03-29",
         "checkOutDate": "2027-03-30",
-        "hotelArrangement": "Ninh Binh Hidden Charm"
+        "hotelArrangement": "Peridot Grand Luxury Boutique Hotel (Grand Deluxe)"
       },
       {
         "destination": "Ha Long",
         "checkInDate": "2027-03-30",
         "checkOutDate": "2027-03-31",
-        "hotelArrangement": "Celina Of The Sea Cruise"
-      },
-      {
-        "destination": "Sapa",
-        "checkInDate": "2027-03-31",
-        "checkOutDate": "2027-04-03",
-        "hotelArrangement": "Hotel de la Coupole"
+        "hotelArrangement": "Celina Of The Sea Cruise (Executive Balcony)"
       },
       {
         "destination": "Hoi An",
+        "checkInDate": "2027-03-31",
+        "checkOutDate": "2027-04-03",
+        "hotelArrangement": "Anantara Hoi An Resort (Deluxe Balcony)"
+      },
+      {
+        "destination": "Da Nang",
         "checkInDate": "2027-04-03",
-        "checkOutDate": "2027-04-06",
-        "hotelArrangement": "Anantara Hoi An Resort"
+        "checkOutDate": "2027-04-07",
+        "hotelArrangement": "Hyatt Regency Danang Resort and Spa (3 Bedroom Beach Front Pool Villa)"
       },
       {
         "destination": "Ho Chi Minh City",
-        "checkInDate": "2027-04-06",
+        "checkInDate": "2027-04-07",
         "checkOutDate": "2027-04-09",
-        "hotelArrangement": "The Reverie Saigon Hotel"
+        "hotelArrangement": "The Reverie Saigon Hotel (Deluxe Room)"
       }
     ],
     "roomNotes": "Premium rooms, VIP setup for Birthday on Day 4 and Day 11."
