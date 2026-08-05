@@ -1792,7 +1792,7 @@
       "nightsLabel": "2 NIGHTS",
       "hotelName": "Peridot Grand Luxury Boutique Hotel",
       "hotelImage": "/assets/hotels/hanoi/peridot-grand-luxury-boutique-hotel/exterior/exterior_1.jpg",
-      "hotelDateRange": "27 Mar – 30 Mar 2027",
+      "hotelDateRange": "15 Sep – 17 Sep 2026",
       "coords": [
         21.0285,
         105.8542
@@ -1839,7 +1839,7 @@
       "mapSegmentDuration": "DAY 3 • 1 NIGHT",
       "hotelName": "Emeralda Resort Ninh Binh",
       "hotelImage": "",
-      "hotelDateRange": "",
+      "hotelDateRange": "17 Sep – 18 Sep 2026",
       "mapSegmentDesc": ""
     },
     {
@@ -1866,7 +1866,8 @@
       "transportFromPrevious": "Ninh Binh → Ha Long",
       "mapSegmentDuration": "DAY 4 • 1 NIGHT",
       "mapSegmentDesc": "",
-      "hotelName": "Heritage Line Ginger Cruise"
+      "hotelName": "Heritage Line Ginger Cruise",
+      "hotelDateRange": "18 Sep – 19 Sep 2026"
     },
     {
       "segmentId": "stay-4",
@@ -1875,9 +1876,9 @@
       "displayName": "Sapa",
       "dayStart": 5,
       "dayEnd": 7,
-      "daysLabel": "DAYS 5-8",
+      "daysLabel": "DAYS 5-7",
       "nights": 2,
-      "nightsLabel": "3 NIGHTS",
+      "nightsLabel": "2 NIGHTS",
       "coords": [
         22.3364,
         103.8438
@@ -1903,7 +1904,7 @@
       "mapSegmentDuration": "DAYS 5-8 • 3 NIGHTS",
       "hotelName": "Chapa Express Overnight Train&Topas Ecolodge",
       "hotelImage": "",
-      "hotelDateRange": "",
+      "hotelDateRange": "19 Sep – 22 Sep 2026",
       "mapSegmentDesc": ""
     },
     {
@@ -1913,12 +1914,12 @@
       "displayName": "Hoi An",
       "dayStart": 8,
       "dayEnd": 10,
-      "daysLabel": "DAYS 8-11",
+      "daysLabel": "DAYS 8-10",
       "nights": 3,
       "nightsLabel": "3 NIGHTS",
       "hotelName": "Anantara Hoi An Resort",
       "hotelImage": "/assets/hotels/danang/hyatt-regency-danang-resort-and-spa/exterior/exterior_1.jpg",
-      "hotelDateRange": "03 Apr – 07 Apr 2027",
+      "hotelDateRange": "22 Sep – 25 Sep 2026",
       "coords": [
         15.8801,
         108.338
@@ -1952,7 +1953,7 @@
       "displayName": "Ho Chi Minh City",
       "dayStart": 11,
       "dayEnd": 13,
-      "daysLabel": "DAYS 11-14",
+      "daysLabel": "DAYS 11-13",
       "nights": 3,
       "nightsLabel": "3 NIGHTS",
       "coords": [
@@ -1979,7 +1980,8 @@
       "transportFromPrevious": "Hoi An → Ho Chi Minh City",
       "mapSegmentDuration": "DAYS 11-14 • 3 NIGHTS",
       "mapSegmentDesc": "",
-      "hotelName": "The Myst Dong Khoi"
+      "hotelName": "The Myst Dong Khoi",
+      "hotelDateRange": "25 Sep – 28 Sep 2026"
     },
     {
       "segmentId": "stay-7",
