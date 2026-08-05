@@ -1575,7 +1575,20 @@
           {{ "Route Overview" | translate(lang) }}</div>
         <div class="horizontal-timeline" id="map-timeline"
           style="display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start;">
-          <!-- Destination list rendered via JS -->
+          {# Server-render this route overview so PDF engines cannot omit the
+             final destination while waiting for JavaScript. #}
+          {% for segment in stay_segments %}
+          <div style="display:flex; flex-direction:column; align-items:center; gap:8px; width:85px; position:relative;">
+            <div style="width:26px;height:26px;border-radius:50%;background:var(--emerald);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;z-index:2;position:relative;">{{ loop.index }}</div>
+            <div style="text-align:center; width:100%;">
+              <span class="font-serif" style="font-size:13px;font-weight:500;color:var(--emerald);display:block;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ segment.displayName }}</span>
+              {% set segment_duration = segment.mapSegmentDuration or segment.nightsLabel or segment.daysLabel %}
+              {% if segment_duration %}<span style="font-size:9px;color:var(--muted);font-weight:400;display:block;margin-top:4px;">{{ segment_duration }}</span>{% endif %}
+              {% if segment.hotelName %}<div style="font-size:8px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">{{ segment.hotelName }}</div>{% endif %}
+            </div>
+          </div>
+          {% if not loop.last %}<div style="flex:1; min-width:15px; max-width:40px; height:1px; background:var(--accent); opacity:0.5; margin-top:13px;"></div>{% endif %}
+          {% endfor %}
         </div>
       </div>
 
@@ -1584,10 +1597,9 @@
         style="flex: 0 0 25%; background: var(--emerald); padding: 40px 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: white; position: relative;">
         <div style="width: 40px; height: 1px; background: var(--gold-2); opacity: 0.5; margin-bottom: 22px;"></div>
         <blockquote style="margin: 0; padding: 0; max-width: 580px;">
-          <p class="font-serif" data-editable="hero_footer"
+          <p class="font-serif"
             style="font-size: 20px; font-style: italic; font-weight: 400; color: #ffffff; line-height: 1.65; letter-spacing: 0.015em; margin: 0;">
-            “{{ hero_footer | default((overview_paras[1] if overview_paras and overview_paras|length > 1 else lede)) |
-            rtl_mixed(lang) }}”
+            “{{ (brand.name if brand else '') or 'Vietnam Safar' }} · {{ quotation_number }}”
           </p>
         </blockquote>
         <div style="width: 40px; height: 1px; background: var(--gold-2); opacity: 0.5; margin-top: 22px;"></div>
@@ -2592,6 +2604,10 @@
             displayCoords: Array.isArray(segment.coords) && segment.coords.length === 2 ? segment.coords : findCoordinates(segment.city || segment.displayName)
           })).filter(segment => Array.isArray(segment.coords) && segment.coords.length === 2);
 
+          // The persisted stay-segment coordinates are canonical. Route-stop
+          // lookup can omit cross-border locations such as Siem Reap.
+          const journeyLinePoints = mapSegments.map(segment => segment.coords);
+
           daysData.forEach(day => {
             const city = day.destination;
             if (!city) return;
@@ -2626,8 +2642,9 @@
             });
           });
 
-          if (coordPoints.length > 0) {
-            map.fitBounds(L.latLngBounds(coordPoints), {
+          const mapBoundsPoints = journeyLinePoints.length > 0 ? journeyLinePoints : coordPoints;
+          if (mapBoundsPoints.length > 0) {
+            map.fitBounds(L.latLngBounds(mapBoundsPoints), {
               padding: [30, 30],
               maxZoom: 12
             });
@@ -2635,6 +2652,7 @@
 
           // Draw markers
           const timelineContainer = document.getElementById('map-timeline');
+          if (timelineContainer) timelineContainer.innerHTML = '';
           mapSegments.forEach((dest, idx) => {
             const dayRangeStr = dest.daysLabel || '';
             const explicitDuration = (dest.mapSegmentDuration || '').trim();
@@ -2692,9 +2710,10 @@
           });
 
           // Draw polylines
-          for (let i = 0; i < coordPoints.length - 1; i++) {
-            const p1 = coordPoints[i];
-            const p2 = coordPoints[i + 1];
+          const linePoints = journeyLinePoints.length > 1 ? journeyLinePoints : coordPoints;
+          for (let i = 0; i < linePoints.length - 1; i++) {
+            const p1 = linePoints[i];
+            const p2 = linePoints[i + 1];
             const dist = getDistance(p1, p2);
             const isFlight = dist > 300;
 
