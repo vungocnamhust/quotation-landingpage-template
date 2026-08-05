@@ -6341,6 +6341,12 @@ def _apply_segment_duration_override(segment: dict, raw_duration: str):
 
     segment["daysLabel"] = parts[0]
     segment["nightsLabel"] = " • ".join(parts[1:]) if len(parts) > 1 else ""
+    # Preserve a structured night count as well as the editable display text.
+    # Static web and PDF renders do not always consume the same presentation
+    # field, so leaving this stale causes a saved map edit to revert on refresh.
+    nights_match = re.search(r"\b(\d+)\s*night(?:s)?\b", clean_duration, flags=re.IGNORECASE)
+    if nights_match:
+        segment["nights"] = int(nights_match.group(1))
 
 
 def _normalize_map_segment_description(value: Any) -> str:
@@ -7362,6 +7368,18 @@ async def _build_quotation_lang_ctx(
         template_name=base_tmpl,
         brand=brand_config,
     )
+    # Published HTML only records editable fields. Keep the persisted route
+    # arrays as the structural source of truth so a PDF render cannot rebuild
+    # the final Siem Reap stay from the older payload.
+    for structural_key in (
+        "itinerary",
+        "timeline_days",
+        "route_stops",
+        "stay_segments",
+        "itinerary_days",
+    ):
+        if structural_key in ctx_data:
+            lang_ctx[structural_key] = copy.deepcopy(ctx_data[structural_key])
     brand_locked_fields = _capture_brand_owned_fields(lang_ctx)
     brand_switched = _is_brand_switched(ctx_data, brand_config)
     lang_ctx["brand"] = brand_config
@@ -7554,8 +7572,16 @@ async def get_quotation_pdf(quotation_id: str, request: Request):
     baseline_lang = ctx_data.get("baseline_lang", "en")
     target_lang = lang or baseline_lang
     preview_mode = request.query_params.get("preview") in {"1", "true", "yes"}
+    requested_brand = request.query_params.get("brand")
     template_name = ctx_data.get("template_name", BROCHURE_TEMPLATE_NAME)
-    use_static_pdf_cache = not preview_mode and template_name not in LEGACY_QUOTATION_TEMPLATES
+    # A published PDF artifact is brand-specific. It cannot safely satisfy a
+    # URL which asks the renderer to resolve a different brand at request time.
+    # In that case render from the canonical context and current template.
+    use_static_pdf_cache = (
+        not preview_mode
+        and not requested_brand
+        and template_name not in LEGACY_QUOTATION_TEMPLATES
+    )
 
     if use_static_pdf_cache:
         published_pdf = await _get_latest_published_pdf_html(quotation_id, target_lang)
