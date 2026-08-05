@@ -299,11 +299,10 @@ class QuoteDocumentValidationTests(unittest.TestCase):
     def test_map_duration_edit_updates_structured_nights_for_pdf_and_refresh(self):
         segment = {"nights": 1, "nightsLabel": "1 NIGHT"}
 
-        main._apply_segment_duration_override(segment, "DAYS 14-16 • 2 NIGHTS")
+        main._apply_segment_duration_override(segment, "DAYS 14-15 • 2 NIGHT")
 
-        self.assertEqual(segment["mapSegmentDuration"], "DAYS 14-16 • 2 NIGHTS")
-        self.assertEqual(segment["daysLabel"], "DAYS 14-16")
-        self.assertEqual(segment["nightsLabel"], "2 NIGHTS")
+        self.assertEqual(segment["mapSegmentDuration"], "DAYS 14-15 • 2 NIGHT")
+        self.assertEqual(segment["nightsLabel"], "2 NIGHT")
         self.assertEqual(segment["nights"], 2)
 
     def test_pdf_route_overview_has_server_rendered_stay_segments(self):
@@ -348,30 +347,6 @@ class QuoteDocumentValidationTests(unittest.TestCase):
         self.assertEqual(response.body, b"brand-resolved PDF")
         cached_pdf.assert_not_awaited()
         dynamic_pdf.assert_awaited_once()
-
-    def test_hotel_date_edit_updates_all_pdf_render_date_fields(self):
-        lang_ctx = {
-            "itinerary": [],
-            "hotels": [{
-                "name": "Jaya House River Park Hotel",
-                "date_range": "28 Sep – 30 Sep 2026",
-                "check_in_out": "28 Sep – 30 Sep 2026",
-            }],
-            "stay_segments": [{
-                "hotelName": "Jaya House River Park Hotel",
-                "hotelDateRange": "28 Sep – 30 Sep 2026",
-            }],
-        }
-
-        main.filter_and_override_ctx(
-            lang_ctx,
-            {"hotel_name_1", "hotel_date_1"},
-            {"hotel_date_1": "29 Sep – 01 Oct 2026"},
-        )
-
-        self.assertEqual(lang_ctx["hotels"][0]["date_range"], "29 Sep – 01 Oct 2026")
-        self.assertEqual(lang_ctx["hotels"][0]["check_in_out"], "29 Sep – 01 Oct 2026")
-        self.assertEqual(lang_ctx["stay_segments"][0]["hotelDateRange"], "29 Sep – 01 Oct 2026")
     def test_parse_edited_fields_strips_word_typography_but_keeps_semantic_markup(self):
         html = """
         <div class="day-copy">

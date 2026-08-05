@@ -9,18 +9,18 @@ import html
 import socket
 from functools import partial
 from dotenv import load_dotenv
-from fastapi import BackgroundTasks, Depends, FastAPI, Request, HTTPException, UploadFile, File, Form
+from fastapi import FastAPI, Request, HTTPException, UploadFile, File, Form
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.templating import Jinja2Templates
 from fastapi.exceptions import RequestValidationError
 from markupsafe import Markup, escape
 from pydantic import BaseModel, ValidationError, Field
-from typing import Any, List, Optional, Literal
-from datetime import date, datetime
+from typing import Any, List, Optional
+from datetime import date
 from github_publish import publish_to_github, publish_file_to_github
 from image_selector import select_landing_image
-from destination_profiles import DESTINATION_PROFILES, get_profile, get_layout_images_for_destination, get_available_images_for_destination, SOFT_TRANSITIONS
+from destination_profiles import get_profile, get_layout_images_for_destination, get_available_images_for_destination, SOFT_TRANSITIONS
 from quote_document import (
     CreateQuoteRequestV1,
     QuoteDocumentV1,
@@ -54,12 +54,6 @@ from services.media_service import (
 )
 from services.storage.local_media_storage import LocalMediaStorage
 from services.storage.r2_storage import R2Storage, R2StorageConfigurationError
-from services.media_library_service import MediaLibraryService, is_allowed_prefix, normalize_library_prefix
-from services.media_locations import accommodation_location, destination_location, storage_slug, team_location
-from repositories.destination_repository import DestinationRepository
-from repositories.media_library_repository import MediaLibraryRepository
-from repositories.travel_designer_repository import TravelDesignerRepository
-from core.auth import Principal, require_editor
 from routers.health import router as health_router
 from core.config import settings
 
@@ -78,7 +72,6 @@ def _get_db_session_factory():
 
 
 _media_service: MediaService | None = None
-_media_library_service: MediaLibraryService | None = None
 
 
 def _get_media_service() -> MediaService:
@@ -91,15 +84,6 @@ def _get_media_service() -> MediaService:
         storage = desired_storage_class()
         _media_service = MediaService(storage=storage)
     return _media_service
-
-
-def _get_media_library_service() -> MediaLibraryService:
-    global _media_library_service
-    if not settings.has_r2_configuration:
-        raise HTTPException(status_code=503, detail="R2 media library is not configured.")
-    if _media_library_service is None:
-        _media_library_service = MediaLibraryService(storage=R2Storage(), session_factory=_get_db_session_factory())
-    return _media_library_service
 
 app = FastAPI(title="Quotation Webhook API")
 app.include_router(health_router)
@@ -7752,62 +7736,6 @@ class MediaSyncRequest(BaseModel):
     quotationId: Optional[str] = None
 
 
-class MediaLibraryLocationRequest(BaseModel):
-    kind: Literal["destination", "accommodation", "team"]
-    destinationId: str | None = None
-    destinationName: str | None = None
-    accommodationName: str | None = None
-    accommodationKind: Literal["hotel", "cruise"] | None = None
-    travelDesignerId: str | None = None
-
-
-class TravelDesignerProfileRequest(BaseModel):
-    name: str
-    email: str
-    phone: str = ""
-    imageR2Key: str | None = None
-
-
-_DESTINATION_GEO = {
-    "ha-noi": ("vietnam", "north", "hanoi"), "ninh-binh": ("vietnam", "north", "ninh-binh"), "quang-ninh": ("vietnam", "north", "quang-ninh"), "lao-cai": ("vietnam", "north", "lao-cai"),
-    "da-nang": ("vietnam", "central", "da-nang"), "quang-nam": ("vietnam", "central", "quang-nam"), "thua-thien-hue": ("vietnam", "central", "thua-thien-hue"), "khanh-hoa": ("vietnam", "central", "khanh-hoa"),
-    "ho-chi-minh": ("vietnam", "south", "ho-chi-minh"), "mekong": ("vietnam", "south", "mekong"), "siem-reap": ("cambodia", "northwest", "siem-reap"), "phnom-penh": ("cambodia", "central", "phnom-penh"),
-    "luang-prabang": ("laos", "north", "luang-prabang"), "vientiane": ("laos", "central", "vientiane"), "bangkok": ("thailand", "central", "bangkok"), "chiang-mai": ("thailand", "north", "chiang-mai"), "phuket": ("thailand", "south", "phuket"),
-}
-
-
-async def _seed_destination_catalog(session) -> None:
-    repository = DestinationRepository(session)
-    for slug, profile in DESTINATION_PROFILES.items():
-        if slug == "default":
-            continue
-        geo = _DESTINATION_GEO.get(slug, (None, None, None))
-        await repository.upsert(destination_id=f"dst_{slug}", canonical_name=str(profile.get("label") or slug.title()), slug=slug, aliases=[slug, slug.replace("-", " ")], country_slug=geo[0], region_slug=geo[1], province_slug=geo[2])
-
-
-async def _resolve_media_location(session, payload: MediaLibraryLocationRequest):
-    await _seed_destination_catalog(session)
-    destinations = DestinationRepository(session)
-    if payload.kind == "team":
-        if not payload.travelDesignerId:
-            raise HTTPException(status_code=422, detail={"missingInputs": ["travelDesignerId"]})
-        profile = await TravelDesignerRepository(session).get_profile(payload.travelDesignerId)
-        if profile is None:
-            raise HTTPException(status_code=404, detail="Travel Designer profile was not found.")
-        return team_location(profile)
-    destination = await session.get(__import__("db.models.destination", fromlist=["DestinationCatalog"]).DestinationCatalog, payload.destinationId) if payload.destinationId else await destinations.resolve(payload.destinationName or "")
-    if destination is None:
-        raise HTTPException(status_code=422, detail={"missingInputs": ["destinationId"]})
-    try:
-        if payload.kind == "destination":
-            return destination_location(destination)
-        if not payload.accommodationName or not payload.accommodationKind:
-            raise HTTPException(status_code=422, detail={"missingInputs": ["accommodationName", "accommodationKind"]})
-        return accommodation_location(destination, payload.accommodationName, payload.accommodationKind)
-    except ValueError as exc:
-        raise HTTPException(status_code=422, detail={"message": str(exc), "missingInputs": ["destination geographic mapping"]}) from exc
-
-
 @app.post("/api/v1/translate-block")
 async def translate_block_endpoint(payload: TranslateBlockRequest):
     """Translates a single block of text into target language."""
@@ -8128,125 +8056,6 @@ async def regenerate_quotation_narrative(
         "currentRevision": ((stored_document.get("meta") or {}).get("revision")) or 1,
         "generationStatus": stored_document.get("generationStatus") or {},
     }
-
-
-@app.post("/api/v2/media-library/sync")
-async def sync_media_library(background_tasks: BackgroundTasks, principal: Principal = Depends(require_editor)):
-    service = _get_media_library_service()
-    run_id = await service.create_run()
-    background_tasks.add_task(service.process_run, run_id)
-    return {"syncRunId": run_id, "status": "queued"}
-
-
-@app.get("/api/v2/media-library/sync/{run_id}")
-async def get_media_library_sync(run_id: str, principal: Principal = Depends(require_editor)):
-    async with _get_db_session_factory()() as session:
-        run = await MediaLibraryRepository(session).get_sync_run(run_id)
-        if run is None:
-            raise HTTPException(status_code=404, detail="Media library sync run not found.")
-        return {"id": run.id, "status": run.status, "indexedCount": run.indexed_count, "previewCount": run.preview_count, "errorCount": run.error_count}
-
-
-@app.post("/api/v2/media-library/resolve-location")
-async def resolve_media_library_location(payload: MediaLibraryLocationRequest, principal: Principal = Depends(require_editor)):
-    async with _get_db_session_factory()() as session:
-        location = await _resolve_media_location(session, payload)
-        await session.commit()
-    return {"kind": location.kind, "leafPrefix": location.leaf_prefix, "breadcrumbs": location.leaf_prefix.split("/"), "uploadAllowed": True}
-
-
-@app.post("/api/v2/media-library/uploads")
-async def upload_media_library_asset(
-    file: UploadFile = File(...), kind: Literal["destination", "accommodation", "team"] = Form(...), destinationId: str | None = Form(None), destinationName: str | None = Form(None), accommodationName: str | None = Form(None), accommodationKind: Literal["hotel", "cruise"] | None = Form(None), travelDesignerId: str | None = Form(None), principal: Principal = Depends(require_editor),
-):
-    payload = MediaLibraryLocationRequest(kind=kind, destinationId=destinationId, destinationName=destinationName, accommodationName=accommodationName, accommodationKind=accommodationKind, travelDesignerId=travelDesignerId)
-    media_service = _get_media_service()
-    prepared = await media_service.prepare_upload(content=await file.read(), declared_mime_type=file.content_type)
-    async with _get_db_session_factory()() as session:
-        location = await _resolve_media_location(session, payload)
-        await session.commit()
-    item = await _get_media_library_service().create_library_asset(location=location, prepared=prepared, original_filename=file.filename or "image")
-    storage = _get_media_library_service().storage
-    return {"r2Key": item.r2_key, "previewUrl": storage.build_public_url(item.preview_r2_key), "width": item.width, "height": item.height, "location": location.leaf_prefix}
-
-
-@app.get("/api/v2/media-library/children")
-async def get_media_library_children(prefix: str = "", cursor: int = 0, limit: int = 60, search: str = "", principal: Principal = Depends(require_editor)):
-    requested = normalize_library_prefix(prefix)
-    allowed = (*settings.media_library_prefixes, *settings.media_library_country_roots, "accommodations", "team")
-    if not requested:
-        return {"prefix": "", "folders": [{"prefix": item, "name": item.split("/")[-1]} for item in allowed], "items": [], "nextCursor": None}
-    if not is_allowed_prefix(requested, allowed):
-        raise HTTPException(status_code=422, detail="Media library prefix is not allowed.")
-    async with _get_db_session_factory()() as session:
-        repository = MediaLibraryRepository(session)
-        items = await repository.list_children(prefix=requested, cursor=max(cursor, 0), limit=min(max(limit, 1), 100), search=search.strip())
-        folders = await repository.list_child_prefixes(prefix=requested)
-    storage = _get_media_library_service().storage
-    return {"prefix": requested, "folders": [{"prefix": item, "name": item.rsplit("/", 1)[-1]} for item in folders if item.rsplit("/", 1)[-1] != "preview"], "items": [{"r2Key": item.r2_key, "fileName": item.file_name, "previewStatus": item.preview_status, "previewUrl": storage.build_public_url(item.preview_r2_key) if item.preview_r2_key else None, "width": item.width, "height": item.height} for item in items[:limit]], "nextCursor": cursor + limit if len(items) > limit else None}
-
-
-@app.get("/api/v2/media-library/search")
-async def search_media_library(prefix: str, query: str, cursor: int = 0, limit: int = 60, principal: Principal = Depends(require_editor)):
-    requested = normalize_library_prefix(prefix)
-    allowed = (*settings.media_library_prefixes, *settings.media_library_country_roots, "accommodations", "team")
-    if not is_allowed_prefix(requested, allowed):
-        raise HTTPException(status_code=422, detail="Media library prefix is not allowed.")
-    async with _get_db_session_factory()() as session:
-        items = await MediaLibraryRepository(session).search(prefix=requested, query=query.strip(), cursor=max(cursor, 0), limit=min(max(limit, 1), 100))
-    storage = _get_media_library_service().storage
-    return {"items": [{"r2Key": item.r2_key, "fileName": item.file_name, "previewUrl": storage.build_public_url(item.preview_r2_key) if item.preview_r2_key else None, "width": item.width, "height": item.height} for item in items[:limit]], "nextCursor": cursor + limit if len(items) > limit else None}
-
-
-@app.get("/api/v2/destinations")
-async def search_destinations(query: str = "", limit: int = 20, principal: Principal = Depends(require_editor)):
-    async with _get_db_session_factory()() as session:
-        await _seed_destination_catalog(session)
-        await session.commit()
-        rows = await DestinationRepository(session).search(query, limit=max(1, min(limit, 50)))
-        return {"items": [{"id": item.id, "name": item.canonical_name, "slug": item.slug, "matchedFrom": alias} for item, alias in rows]}
-
-
-def _serialize_travel_designer(profile) -> dict[str, Any]:
-    image_url = profile.image_url
-    if profile.image_r2_key:
-        try:
-            image_url = _get_media_library_service().storage.build_public_url(profile.image_r2_key)
-        except HTTPException:
-            pass
-    return {"id": profile.id, "name": profile.name, "email": profile.email, "phone": profile.phone, "imageAssetId": profile.image_asset_id, "imageUrl": image_url, "imageR2Key": profile.image_r2_key, "isActive": profile.is_active}
-
-
-@app.get("/api/v2/travel-designers")
-async def list_travel_designers(active: Literal["true", "false", "all"] = "true", search: str = "", principal: Principal = Depends(require_editor)):
-    async with _get_db_session_factory()() as session:
-        items = await TravelDesignerRepository(session).list_profiles(active_only={"true": True, "false": False, "all": None}[active], search=search)
-        return {"items": [_serialize_travel_designer(item) for item in items]}
-
-
-@app.post("/api/v2/travel-designers", status_code=201)
-async def create_travel_designer(payload: TravelDesignerProfileRequest, principal: Principal = Depends(require_editor)):
-    async with _get_db_session_factory()() as session:
-        repository = TravelDesignerRepository(session)
-        if await repository.get_by_email(payload.email):
-            raise HTTPException(status_code=409, detail="A Travel Designer already uses this email.")
-        profile = await repository.create_profile(profile_id=f"td_{uuid.uuid4().hex[:12]}", email=payload.email, name=payload.name, phone=payload.phone, storage_slug=storage_slug(payload.email.split("@", 1)[0]), image_r2_key=payload.imageR2Key)
-        await session.commit()
-        await session.refresh(profile)
-        return _serialize_travel_designer(profile)
-
-
-@app.put("/api/v2/travel-designers/{profile_id}")
-async def update_travel_designer(profile_id: str, payload: TravelDesignerProfileRequest, principal: Principal = Depends(require_editor)):
-    async with _get_db_session_factory()() as session:
-        repository = TravelDesignerRepository(session)
-        profile = await repository.get_profile(profile_id)
-        if profile is None:
-            raise HTTPException(status_code=404, detail="Travel Designer profile was not found.")
-        profile = await repository.update_profile(profile, email=payload.email, name=payload.name, phone=payload.phone, storage_slug=storage_slug(payload.email.split("@", 1)[0]), image_r2_key=payload.imageR2Key)
-        await session.commit()
-        await session.refresh(profile)
-        return _serialize_travel_designer(profile)
 
 
 @app.post("/api/v2/media/upload")
