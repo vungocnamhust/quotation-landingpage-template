@@ -5,7 +5,7 @@ import os
 import shutil
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -295,6 +295,58 @@ class QuoteDocumentValidationTests(unittest.TestCase):
         )
 
         self.assertEqual([segment["city"] for segment in lang_ctx["stay_segments"]], ["Ho Chi Minh City", "Siem Reap"])
+
+    def test_map_duration_edit_updates_structured_nights_for_pdf_and_refresh(self):
+        segment = {"nights": 1, "nightsLabel": "1 NIGHT"}
+
+        main._apply_segment_duration_override(segment, "DAYS 14-15 • 2 NIGHT")
+
+        self.assertEqual(segment["mapSegmentDuration"], "DAYS 14-15 • 2 NIGHT")
+        self.assertEqual(segment["nightsLabel"], "2 NIGHT")
+        self.assertEqual(segment["nights"], 2)
+
+    def test_pdf_route_overview_has_server_rendered_stay_segments(self):
+        with open("templates/prototype_itinerary_imagery_pdf.html", encoding="utf-8") as template_file:
+            template = template_file.read()
+
+        self.assertIn("{% for segment in stay_segments %}", template)
+        self.assertIn("timelineContainer.innerHTML = ''", template)
+
+    def test_pdf_map_uses_stay_segment_coordinates_for_every_journey_leg(self):
+        with open("templates/prototype_itinerary_imagery_pdf.html", encoding="utf-8") as template_file:
+            template = template_file.read()
+
+        self.assertIn("const journeyLinePoints = mapSegments.map(segment => segment.coords);", template)
+        self.assertIn("const linePoints = journeyLinePoints.length > 1 ? journeyLinePoints : coordPoints;", template)
+
+    def test_pdf_route_footer_resolves_requested_brand_at_render_time(self):
+        with open("templates/prototype_itinerary_imagery_pdf.html", encoding="utf-8") as template_file:
+            template = template_file.read()
+
+        self.assertIn("“{{ (brand.name if brand else '') or 'Vietnam Safar' }} · {{ quotation_number }}”", template)
+
+    def test_brand_specific_pdf_bypasses_static_pdf_cache(self):
+        request = main.Request({
+            "type": "http",
+            "method": "GET",
+            "path": "/quotations/quo_test/pdf",
+            "query_string": b"lang=en&brand=capella_travel",
+            "headers": [],
+        })
+        ctx_data = {"baseline_lang": "en", "template_name": "custom.html"}
+        cached_pdf = AsyncMock(return_value="stale static PDF")
+        dynamic_pdf = AsyncMock(return_value=("brand-resolved PDF", "en"))
+
+        with (
+            patch.object(main, "_load_ctx_data", return_value=ctx_data),
+            patch.object(main, "_get_latest_published_pdf_html", cached_pdf),
+            patch.object(main, "_render_quotation_doc_from_ctx", dynamic_pdf),
+        ):
+            response = asyncio.run(main.get_quotation_pdf("quo_test", request))
+
+        self.assertEqual(response.body, b"brand-resolved PDF")
+        cached_pdf.assert_not_awaited()
+        dynamic_pdf.assert_awaited_once()
     def test_parse_edited_fields_strips_word_typography_but_keeps_semantic_markup(self):
         html = """
         <div class="day-copy">
