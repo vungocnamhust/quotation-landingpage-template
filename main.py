@@ -6805,6 +6805,7 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
 
     # 2. Filter and update hotels
     new_hotels = []
+    updated_hotel_dates: list[tuple[str, str]] = []
     for h_idx, hotel in enumerate(lang_ctx.get('hotels', []), 1):
         name_key = f"hotel_name_{h_idx}"
         keep_hidden_duplicate = (
@@ -6828,7 +6829,13 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
                 if city_key in edited_fields:
                     hotel['city_country'] = edited_fields[city_key]
                 if date_key in edited_fields:
-                    hotel['check_in_out'] = edited_fields[date_key]
+                    # The landing page used check_in_out while the PDF hotel
+                    # cards use date_range. Keep both render aliases in sync
+                    # so a saved hotel-date edit cannot disappear on download.
+                    hotel_date = edited_fields[date_key]
+                    hotel['check_in_out'] = hotel_date
+                    hotel['date_range'] = hotel_date
+                    updated_hotel_dates.append((hotel.get('name') or hotel.get('hotel_name') or "", hotel_date))
                 if tel_key in edited_fields:
                     tel_value = re.sub(r'^\s*TEL:\s*', '', edited_fields[tel_key], flags=re.IGNORECASE)
                     hotel['tel'] = tel_value
@@ -6841,6 +6848,17 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
                     hotel['room_type'] = edited_fields[info_key]
             new_hotels.append(hotel)
     lang_ctx['hotels'] = new_hotels
+
+    # Route cards retain their own hotel date field. Mirror the hotel edit to
+    # its matching stay so map/PDF data cannot retain a conflicting old range.
+    for hotel_name, hotel_date in updated_hotel_dates:
+        normalized_hotel_name = _normalize_visible_text(hotel_name).casefold()
+        if not normalized_hotel_name:
+            continue
+        for segment in lang_ctx.get("stay_segments", []):
+            segment_name = _normalize_visible_text(segment.get("hotelName") or "").casefold()
+            if segment_name == normalized_hotel_name:
+                segment["hotelDateRange"] = hotel_date
     
     # 3. Filter and update inclusions
     new_inclusions = []
@@ -7421,6 +7439,11 @@ async def _build_quotation_lang_ctx(
                 _apply_ctx_html_sync(lang_ctx, ctx_data, effective_lang, baseline_lang)
         else:
             _apply_ctx_html_sync(lang_ctx, ctx_data, effective_lang, baseline_lang)
+
+        # html_sync is the persisted editor state for this quotation. A
+        # versioned landing-page snapshot is only a presentation artifact and
+        # may predate a saved edit, so it must not overwrite html_sync.
+        _apply_ctx_html_sync(lang_ctx, ctx_data, effective_lang, baseline_lang)
 
     if brand_switched:
         _restore_brand_owned_fields(lang_ctx, brand_locked_fields)
