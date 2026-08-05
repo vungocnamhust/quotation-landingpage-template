@@ -276,6 +276,25 @@ class QuoteDocumentValidationTests(unittest.TestCase):
         self.assertIn("<b>Word paste</b>", lang_ctx["itinerary"][0]["description_html"][0])
         self.assertNotIn("font-size:12.0pt", lang_ctx["itinerary"][0]["description_html"][0])
 
+    def test_brand_switch_ignores_javascript_map_placeholder_keys(self):
+        lang_ctx = {
+            "itinerary": [],
+            "stay_segments": [
+                {"city": "Ho Chi Minh City", "displayName": "Ho Chi Minh City", "order": 1, "transportFromPrevious": ""},
+                {"city": "Siem Reap", "displayName": "Siem Reap", "order": 2, "transportFromPrevious": "Ho Chi Minh City → Siem Reap"},
+            ],
+        }
+
+        # The prototype emits these literal strings in JavaScript. They are
+        # not persisted map fields and must never be interpreted as deleted
+        # numeric segment bindings during a brand-switch render.
+        main.filter_and_override_ctx(
+            lang_ctx,
+            {"map_segment_desc_${idx}", "map_segment_title_${idx}"},
+            {},
+        )
+
+        self.assertEqual([segment["city"] for segment in lang_ctx["stay_segments"]], ["Ho Chi Minh City", "Siem Reap"])
     def test_parse_edited_fields_strips_word_typography_but_keeps_semantic_markup(self):
         html = """
         <div class="day-copy">

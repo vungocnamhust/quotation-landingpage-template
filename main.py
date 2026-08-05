@@ -6903,8 +6903,11 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
     
     # 6. Filter and update map segment descriptions and sidebar fields
     if "stay_segments" in lang_ctx:
+        # The prototype map creates these fields in JavaScript. Literal
+        # placeholders such as map_segment_title_${idx} are not persisted
+        # bindings and must not make all route segments disappear.
         has_route_segment_bindings = any(
-            key.startswith("map_segment_")
+            re.fullmatch(r"map_segment_(?:desc|duration|title|hotel)_\d+", key)
             for key in existing_keys | set(edited_fields.keys())
         )
         new_stay_segments = []
@@ -6913,11 +6916,13 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
             duration_key = f"map_segment_duration_{s_idx}"
             title_key = f"map_segment_title_{s_idx}"
             hotel_key = f"map_segment_hotel_{s_idx}"
-            if not any(key in existing_keys for key in (desc_key, duration_key, title_key, hotel_key)):
+            if has_route_segment_bindings and not any(
+                key in existing_keys for key in (desc_key, duration_key, title_key, hotel_key)
+            ):
                 continue
             
             if desc_key in edited_fields and override_text:
-                segment["mapSegmentDesc"] = edited_fields[desc_key]
+                segment["mapSegmentDesc"] = _normalize_map_segment_description(edited_fields[desc_key])
             
             if duration_key in edited_fields and override_text:
                 _apply_segment_duration_override(segment, edited_fields[duration_key])
@@ -8269,12 +8274,6 @@ async def get_quotation(quotation_id: str, request: Request):
         latest_lang = None if target_lang == baseline_lang else target_lang
         html_content = await _get_latest_published_html(quotation_id, lang=latest_lang, fallback=False)
         if html_content:
-            if brand_switched:
-                filter_and_override_ctx_by_html(lang_ctx, html_content, override_text=True)
-                _restore_brand_owned_fields(lang_ctx, brand_locked_fields)
-                rendered_html = tmpl.render(**lang_ctx)
-                return HTMLResponse(content=rendered_html, headers=no_cache_headers)
-
             # Strip the old editor block entirely if it exists in the static HTML to avoid duplicate DOM elements and duplicate IDs (e.g. duplicate domain-modal)
             idx_bar = html_content.find('id="publish-bar"')
             if idx_bar == -1:
