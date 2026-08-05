@@ -6198,6 +6198,8 @@
         "hoi an": [15.8801, 108.3380],
         "hoian": [15.8801, 108.3380],
         "sapa": [22.3364, 103.8438],
+        "siem reap": [13.3633, 103.8564],
+        "siemreap": [13.3633, 103.8564],
         "phu quoc": [10.2899, 103.9840],
         "nha trang": [12.2388, 109.1967],
         "da lat": [11.9404, 108.4583]
@@ -6214,6 +6216,7 @@
         "khanh-hoa": [12.2388, 109.1967],
         "ninh-binh": [20.2539, 105.9750],
         "thua-thien-hue": [16.4637, 107.5909],
+        "siem-reap": [13.3633, 103.8564],
         "kien-giang": [10.2899, 103.9840],
         "binh-thuan": [10.9333, 108.1000],
         "can-tho": [10.0401, 105.7882],
@@ -6386,6 +6389,7 @@
         "mekong": "mekong", "đồng bằng sông cửu long": "mekong", "dong bang song cuu long": "mekong", "miền tây": "mekong", "mien tay": "mekong", "tây nam bộ": "mekong", "tay nam bo": "mekong",
         "hà giang": "ha-giang", "ha giang": "ha-giang", "đồng văn": "ha-giang", "dong van": "ha-giang", "mèo vạc": "ha-giang", "meo vac": "ha-giang",
         "ninh bình": "ninh-binh", "ninh binh": "ninh-binh", "tràng an": "ninh-binh", "trang an": "ninh-binh", "tam cốc": "ninh-binh", "tam coc": "ninh-binh", "bích động": "ninh-binh", "bich dong": "ninh-binh",
+        "siem reap": "siem-reap", "siemreap": "siem-reap",
         "nghệ an": "nghe-an", "nghe an": "nghe-an", "cửa lò": "nghe-an", "cua lo": "nghe-an",
         "quảng bình": "quang-binh", "quang binh": "quang-binh", "phong nha": "quang-binh", "ke bang": "quang-binh",
         "hải phòng": "hai-phong", "hai phong": "hai-phong", "haiphong": "hai-phong",
@@ -6513,6 +6517,11 @@
         img: segment.hotelImage || ((slug && destImages[slug]) ? destImages[slug] : '{{ (brand.logo if brand else "") or "/assets/vietnam-safar-logo.png" }}')
       };
     }).filter(segment => Array.isArray(segment.coords) && segment.coords.length === 2);
+
+    // The stay-segment coordinates are canonical for the journey map. Route
+    // stops may intentionally omit coordinates for departure-only days, so
+    // they must not be the only source for the connecting journey line.
+    const journeyLinePoints = mapSegments.map(segment => segment.coords);
 
     if (mapSegments.length === 0) {
       document.getElementById('route-map').style.display = 'none';
@@ -6709,9 +6718,10 @@
       drawMarkers();
     };
 
-    for (let i = 0; i < coordPoints.length - 1; i++) {
-      const p1 = coordPoints[i];
-      const p2 = coordPoints[i + 1];
+    const linePoints = journeyLinePoints.length > 1 ? journeyLinePoints : coordPoints;
+    for (let i = 0; i < linePoints.length - 1; i++) {
+      const p1 = linePoints[i];
+      const p2 = linePoints[i + 1];
       const dist = getDistance(p1, p2);
 
       let pathPoints;
@@ -6735,7 +6745,7 @@
     }
 
     const isMobile = window.innerWidth <= 768;
-    map.fitBounds(L.latLngBounds(coordPoints), {
+    map.fitBounds(L.latLngBounds(linePoints), {
       padding: isMobile ? [25, 25] : [50, 50],
       maxZoom: 12
     });

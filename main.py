@@ -6904,7 +6904,7 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
     # 6. Filter and update map segment descriptions and sidebar fields
     if "stay_segments" in lang_ctx:
         has_route_segment_bindings = any(
-            key.startswith("map_segment_")
+            re.fullmatch(r"map_segment_(?:desc|duration|title|hotel)_\d+", key)
             for key in existing_keys | set(edited_fields.keys())
         )
         new_stay_segments = []
