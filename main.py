@@ -6342,6 +6342,17 @@ def _apply_segment_duration_override(segment: dict, raw_duration: str):
     segment["daysLabel"] = parts[0]
     segment["nightsLabel"] = " • ".join(parts[1:]) if len(parts) > 1 else ""
 
+
+def _normalize_map_segment_description(value: Any) -> str:
+    """Preserve readable line breaks in map segment descriptions."""
+    if value is None:
+        return ""
+    text = str(value)
+    if "<" in text and ">" in text:
+        return text
+    text = html.unescape(text).strip()
+    return re.sub(r"\s*(?=Day\s+\d+\s*:)", "<br>", text)
+
 def _extract_itinerary_image_refs(edited_fields: dict, html_content: str) -> dict[str, dict[str, Any]]:
     day_numbers = sorted({
         int(idx)
