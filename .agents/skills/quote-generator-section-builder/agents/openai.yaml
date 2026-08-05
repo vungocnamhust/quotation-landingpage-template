@@ -1,0 +1,4 @@
+interface:
+  display_name: "Quote Generator Section Builder"
+  short_description: "Build sections within display contracts"
+  default_prompt: "Use $quote-generator-section-builder to add or refactor quote-generator sections through the display-system contracts, including typography slots and validated color scopes."

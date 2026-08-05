@@ -1,0 +1,4 @@
+interface:
+  display_name: "Quote Generator Display Governor"
+  short_description: "Guardrails for quote-generator display work"
+  default_prompt: "Use $quote-generator-display-governor as the mandatory orchestrator for quote-generator display work; preserve brand palette -> theme color recipe -> resolved color scope -> component role ownership, then run typography, color, section-boundary, lint, and build gates before completion."

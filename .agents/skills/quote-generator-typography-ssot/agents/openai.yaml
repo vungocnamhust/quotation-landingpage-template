@@ -1,0 +1,4 @@
+interface:
+  display_name: "Quote Generator Typography SSoT"
+  short_description: "Single-source typography guardrails"
+  default_prompt: "Use $quote-generator-typography-ssot to change quote-generator typography without creating a second source of truth; keep text metrics in typography slots and color in validated theme color scopes."

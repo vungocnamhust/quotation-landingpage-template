@@ -1,0 +1,4 @@
+interface:
+  display_name: "Quote Generator Parity Review"
+  short_description: "Audit brochure UI against prototypes"
+  default_prompt: "Use $quote-generator-parity-review to audit quote-generator UI drift against the brochure and PDF prototypes, including brand color scopes, contrast, typography, and view-mode parity."
