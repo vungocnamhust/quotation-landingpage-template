@@ -2181,18 +2181,20 @@
               </div>
             </div>
 
-            <!-- Confirmation -->
-            <div
-              style="display: grid; grid-template-columns: 100px 1fr; gap: 20px; padding: 16px 0; border-bottom: 1px solid var(--line);">
-              <div class="font-serif" style="font-size: 14px; color: var(--emerald);"
-                data-editable="payment_label_confirmation">{{ payment_label_confirmation |
-                default("Confirmation" | translate(lang)) }}</div>
-              <div style="color: var(--text-muted); font-size: 11px; line-height: 1.6;"
-                data-editable="term_confirmation">
-                {{ term_confirmation | default("<div class=\"term-line\">The booking will only be considered confirmed
-                  once the required payment has been received.</div>", true) | safe }}
+            {% if term_confirmation %}
+              <!-- Confirmation is optional; the landing page only renders the
+                   terms explicitly configured for a quotation. -->
+              <div
+                style="display: grid; grid-template-columns: 100px 1fr; gap: 20px; padding: 16px 0; border-bottom: 1px solid var(--line);">
+                <div class="font-serif" style="font-size: 14px; color: var(--emerald);"
+                  data-editable="payment_label_confirmation">{{ payment_label_confirmation |
+                  default("Confirmation" | translate(lang)) }}</div>
+                <div style="color: var(--text-muted); font-size: 11px; line-height: 1.6;"
+                  data-editable="term_confirmation">
+                  {{ term_confirmation | safe }}
+                </div>
               </div>
-            </div>
+            {% endif %}
           </div>
         </div>
 
