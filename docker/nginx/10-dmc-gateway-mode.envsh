@@ -1,0 +1,28 @@
+#!/bin/sh
+set -eu
+
+case "${DMC_GATEWAY_ENABLED:-false}" in
+  1|true|TRUE|yes|YES|on|ON)
+    : "${DMC_AUTH_PROXY_URL:?DMC_AUTH_PROXY_URL is required when DMC_GATEWAY_ENABLED=true}"
+    export DMC_AUTH_REQUEST_URI="/_dmc_quote_auth"
+    ;;
+  0|false|FALSE|no|NO|off|OFF|"")
+    # auth_request is disabled, so this URL is never contacted. It remains a
+    # valid URL to keep Nginx startup deterministic without DMC DNS available.
+    export DMC_AUTH_REQUEST_URI="off"
+    export DMC_AUTH_PROXY_URL="${DMC_AUTH_PROXY_URL:-http://127.0.0.1:9}"
+    ;;
+  *)
+    echo "DMC_GATEWAY_ENABLED must be a boolean" >&2
+    exit 1
+    ;;
+esac
+
+# Nginx is an outer host allowlist; Next/FastAPI still perform the database
+# backed active-brand check. Keep a safe default for local mounts while making
+# the production list explicit through PUBLIC_BRAND_HOSTS.
+export PUBLIC_BRAND_HOSTS="${PUBLIC_BRAND_HOSTS:-journeys.capellatravel.com my.selvarajourneys.com journeys.vietnamsafar.vn}"
+
+# The official Nginx envsubst entrypoint runs after this script. Restrict it to
+# our placeholders so normal Nginx variables such as $host stay intact.
+export NGINX_ENVSUBST_FILTER='DMC_AUTH_REQUEST_URI|DMC_AUTH_PROXY_URL|PUBLIC_BRAND_HOSTS|PUBLICATION_PREVIEW_HOSTNAME'

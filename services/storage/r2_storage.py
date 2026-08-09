@@ -52,12 +52,14 @@ class R2Storage:
             )
         self.client = client
 
-    def upload_bytes(self, key: str, content: bytes, content_type: str) -> str:
+    def upload_bytes(self, key: str, content: bytes, content_type: str, *, cache_control: str | None = None) -> str:
+        extra = {"CacheControl": cache_control} if cache_control else {}
         self.client.put_object(
             Bucket=self.bucket,
             Key=key,
             Body=content,
             ContentType=content_type,
+            **extra,
         )
         return self.build_public_url(key)
 
@@ -77,6 +79,11 @@ class R2Storage:
 
     def delete_object(self, key: str) -> None:
         self.client.delete_object(Bucket=self.bucket, Key=key)
+
+    def copy_object(self, source_key: str, target_key: str, *, cache_control: str | None = None) -> str:
+        extra = {"CacheControl": cache_control, "MetadataDirective": "REPLACE"} if cache_control else {}
+        self.client.copy_object(Bucket=self.bucket, Key=target_key, CopySource={"Bucket": self.bucket, "Key": source_key}, ContentType="text/html; charset=utf-8", **extra)
+        return self.build_public_url(target_key)
 
     def build_public_url(self, key: str) -> str:
         encoded_key = quote(key, safe="/")

@@ -1,5 +1,12 @@
 # Refactor Tech Stack Plan
 
+> **Status update — 2026-08-06.** This folder is now an implementation
+> record as well as the target plan. The one-VPS modular monolith decision is
+> unchanged: Postgres is canonical editor state, R2 is canonical binary and
+> publication-artifact storage. Do not read the early Phase A/B/D/E/F checkboxes
+> as proof that work is absent; see `07-implementation-checklist.md` and
+> `12-v2-brochure-workflow-gate.md` for verified work versus deployment gates.
+
 Tai lieu nay mo ta chi tiet ke hoach refactor `Create quotation V2` sang mo hinh:
 
 - `1 VPS`
@@ -20,6 +27,11 @@ Muc tieu la de team co the doc theo thu tu va implement truc tiep, khong can tu 
 5. [05-migration-and-cutover.md](/Users/nam/Workspace/projects/running/travel.ai/quotation-landingpage-template/docs/plans/refactor-tech-stack/05-migration-and-cutover.md)
 6. [06-docker-compose-and-ops.md](/Users/nam/Workspace/projects/running/travel.ai/quotation-landingpage-template/docs/plans/refactor-tech-stack/06-docker-compose-and-ops.md)
 7. [07-implementation-checklist.md](/Users/nam/Workspace/projects/running/travel.ai/quotation-landingpage-template/docs/plans/refactor-tech-stack/07-implementation-checklist.md)
+8. [08-quotation-content-studio-contract.md](./08-quotation-content-studio-contract.md)
+9. [09-media-library-and-option-catalog.md](./09-media-library-and-option-catalog.md)
+10. [10-quotations-new-ui-ux.md](./10-quotations-new-ui-ux.md)
+11. [11-r2-media-file-contract.md](./11-r2-media-file-contract.md)
+12. [12-v2-brochure-workflow-gate.md](./12-v2-brochure-workflow-gate.md)
 
 ## Scope chot
 
@@ -45,3 +57,18 @@ Muc tieu la de team co the doc theo thu tu va implement truc tiep, khong can tu 
 - Canonical state cua editor phai nam o Postgres.
 - Canonical binary object phai nam o R2.
 
+## Cap nhat implementation va boundary hien tai
+
+- V2 document, revision history, publication records, Content Studio
+  candidates, fact sources, Travel Designer profile/assignment va Media Library
+  catalog da co Postgres/Alembic ownership.
+- Media Library (`/api/v2/media-library/*`) la write path moi cho R2 taxonomy
+  va searchable option catalog. `/api/v2/media/*` va `media_assets` la legacy
+  compatibility path; khong mo rong path cu cho feature moi.
+- Publish V2 upload HTML immutable va `current` alias len R2. PDF render on
+  demand tu immutable document revision va khong co R2 key.
+- Quote Generator la display/editor client; public brochure UI phai consume
+  resolved `PageViewModel + theme + view mode + color scope`, khong tu doc raw
+  brand data hay editor state.
+- Legacy V1 van duoc giu rieng. V1 `brochureDraft`/published HTML precedence
+  khong duoc tro thanh fallback im lang cua V2.

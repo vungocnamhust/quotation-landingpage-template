@@ -1,0 +1,218 @@
+server {
+    listen 80 default_server;
+    server_name _;
+
+    # Public brand hosts are database-resolved by Next/FastAPI. They may serve
+    # only public React quotation and media paths; no editor/API fallback.
+    location ~ ^/(en|vi|ar)/q/[^/]+/ {
+        proxy_pass http://quote-generator:8115;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location ~ ^/(en|vi|ar)/q/[^/]+$ {
+        proxy_pass http://quote-generator:8115;
+        proxy_hide_header Cache-Control;
+        add_header Cache-Control "public, s-maxage=300, stale-while-revalidate=86400" always;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location ^~ /media/ {
+        proxy_pass http://quote-generator:8115;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location / { return 404; }
+}
+
+server {
+    listen 80;
+    server_name quote.capellatravel.com;
+
+    client_max_body_size 20M;
+    proxy_connect_timeout 30s;
+    proxy_read_timeout 120s;
+    proxy_send_timeout 120s;
+
+    location ^~ /internal/ { return 404; }
+    location ^~ /api/internal/ { return 404; }
+
+    # Only DMC auth_request can create these headers. They are cleared on all
+    # protected upstream requests so browser-supplied identity/service headers
+    # never become trusted FastAPI input.
+    location = /_dmc_quote_auth {
+        internal;
+        proxy_pass ${DMC_AUTH_PROXY_URL};
+        proxy_pass_request_body off;
+        proxy_set_header Content-Length "";
+        proxy_set_header X-Original-Method $request_method;
+        proxy_set_header X-Original-URI $request_uri;
+        proxy_set_header X-DMC-Email "";
+        proxy_set_header X-DMC-Person-Id "";
+        proxy_set_header X-DMC-Brand "";
+        proxy_set_header X-DMC-Role "";
+        proxy_set_header X-Quote-Service-Token "";
+    }
+
+    location ^~ /_next/ {
+        proxy_pass http://quote-generator:8115;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location ^~ /quotations/ {
+        auth_request ${DMC_AUTH_REQUEST_URI};
+        auth_request_set $auth_email $upstream_http_x_dmc_email;
+        auth_request_set $auth_person $upstream_http_x_dmc_person_id;
+        auth_request_set $auth_brand $upstream_http_x_dmc_brand;
+        auth_request_set $auth_role $upstream_http_x_dmc_role;
+        proxy_pass http://quote-generator:8115;
+        proxy_set_header X-DMC-Email $auth_email;
+        proxy_set_header X-DMC-Person-Id $auth_person;
+        proxy_set_header X-DMC-Brand $auth_brand;
+        proxy_set_header X-DMC-Role $auth_role;
+        proxy_set_header X-Quote-Service-Token "";
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location ^~ /workspace/ {
+        auth_request ${DMC_AUTH_REQUEST_URI};
+        auth_request_set $auth_email $upstream_http_x_dmc_email;
+        auth_request_set $auth_person $upstream_http_x_dmc_person_id;
+        auth_request_set $auth_brand $upstream_http_x_dmc_brand;
+        auth_request_set $auth_role $upstream_http_x_dmc_role;
+        proxy_pass http://quote-generator:8115;
+        proxy_set_header X-DMC-Email $auth_email;
+        proxy_set_header X-DMC-Person-Id $auth_person;
+        proxy_set_header X-DMC-Brand $auth_brand;
+        proxy_set_header X-DMC-Role $auth_role;
+        proxy_set_header X-Quote-Service-Token "";
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location ^~ /content-studio/ {
+        auth_request ${DMC_AUTH_REQUEST_URI};
+        auth_request_set $auth_email $upstream_http_x_dmc_email;
+        auth_request_set $auth_person $upstream_http_x_dmc_person_id;
+        auth_request_set $auth_brand $upstream_http_x_dmc_brand;
+        auth_request_set $auth_role $upstream_http_x_dmc_role;
+        proxy_pass http://quote-generator:8115;
+        proxy_set_header X-DMC-Email $auth_email;
+        proxy_set_header X-DMC-Person-Id $auth_person;
+        proxy_set_header X-DMC-Brand $auth_brand;
+        proxy_set_header X-DMC-Role $auth_role;
+        proxy_set_header X-Quote-Service-Token "";
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location ^~ /preferences/ {
+        auth_request ${DMC_AUTH_REQUEST_URI};
+        auth_request_set $auth_email $upstream_http_x_dmc_email;
+        auth_request_set $auth_person $upstream_http_x_dmc_person_id;
+        auth_request_set $auth_brand $upstream_http_x_dmc_brand;
+        auth_request_set $auth_role $upstream_http_x_dmc_role;
+        proxy_pass http://quote-generator:8115;
+        proxy_set_header X-DMC-Email $auth_email;
+        proxy_set_header X-DMC-Person-Id $auth_person;
+        proxy_set_header X-DMC-Brand $auth_brand;
+        proxy_set_header X-DMC-Role $auth_role;
+        proxy_set_header X-Quote-Service-Token "";
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location ^~ /api/v2/ {
+        auth_request ${DMC_AUTH_REQUEST_URI};
+        auth_request_set $auth_email $upstream_http_x_dmc_email;
+        auth_request_set $auth_person $upstream_http_x_dmc_person_id;
+        auth_request_set $auth_brand $upstream_http_x_dmc_brand;
+        auth_request_set $auth_role $upstream_http_x_dmc_role;
+        proxy_pass http://app:8111;
+        proxy_set_header X-DMC-Email $auth_email;
+        proxy_set_header X-DMC-Person-Id $auth_person;
+        proxy_set_header X-DMC-Brand $auth_brand;
+        proxy_set_header X-DMC-Role $auth_role;
+        proxy_set_header X-Quote-Service-Token "";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # V1 remains isolated on its legacy FastAPI/Jinja routes.
+    location / {
+        proxy_pass http://app:8111;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+server {
+    listen 80;
+    server_name ${PUBLIC_BRAND_HOSTS};
+
+    location ^~ /internal/ { return 404; }
+    location ^~ /api/internal/ { return 404; }
+
+    location ~ ^/(en|vi|ar)/q/[^/]+/ {
+        proxy_pass http://quote-generator:8115;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location ~ ^/(en|vi|ar)/q/[^/]+$ {
+        proxy_pass http://quote-generator:8115;
+        proxy_hide_header Cache-Control;
+        add_header Cache-Control "public, s-maxage=300, stale-while-revalidate=86400" always;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location ^~ /media/ {
+        proxy_pass http://quote-generator:8115;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location / { return 404; }
+}

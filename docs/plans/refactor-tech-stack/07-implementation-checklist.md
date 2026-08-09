@@ -1,5 +1,10 @@
 # 07. Implementation Checklist
 
+> **Status snapshot — 2026-08-06.** This checklist originally described work
+> before implementation. Checked items are present in the repository and have
+> focused automated coverage where noted; unchecked deployment/manual gates are
+> intentionally not claimed complete.
+
 ## 1. Definition of done
 
 Chi coi la hoan thanh khi tat ca muc sau deu dung:
@@ -16,23 +21,23 @@ Chi coi la hoan thanh khi tat ca muc sau deu dung:
 
 ## Phase A. Foundation
 
-- [ ] Them dependencies SQLAlchemy, asyncpg, alembic, boto3, Pillow, python-multipart
-- [ ] Tao `config` cho DB va R2 env vars
-- [ ] Tao `db/base.py`
-- [ ] Tao `db/session.py`
-- [ ] Init Alembic
-- [ ] Tao migration schema ban dau
+- [x] Them dependencies SQLAlchemy, asyncpg, alembic, boto3, Pillow, python-multipart
+- [x] Tao `config` cho DB va R2 env vars
+- [x] Tao `db/base.py`
+- [x] Tao `db/session.py`
+- [x] Init Alembic
+- [x] Tao migration schema ban dau
 
 ## Phase B. Database models and repositories
 
-- [ ] Tao model `quotations`
-- [ ] Tao model `quotation_requests`
-- [ ] Tao model `quotation_documents`
-- [ ] Tao model `quotation_document_revisions`
-- [ ] Tao model `quotation_publications`
-- [ ] Tao model `media_assets`
-- [ ] Tao model `media_selections`
-- [ ] Tao repositories cho quotation/document/media/publication
+- [x] Tao model `quotations`
+- [x] Tao model `quotation_requests`
+- [x] Tao model `quotation_documents`
+- [x] Tao model `quotation_document_revisions`
+- [x] Tao model `quotation_publications`
+- [x] Tao model `media_assets`
+- [x] Tao model `media_selections`
+- [x] Tao repositories cho quotation/document/media/publication
 
 ## Phase C. Quotation v2 persistence
 
@@ -44,28 +49,26 @@ Chi coi la hoan thanh khi tat ca muc sau deu dung:
 
 ## Phase D. R2 media
 
-- [ ] Tao `R2Storage` adapter
-- [ ] Tao helper tinh checksum
-- [ ] Tao helper doc image size
-- [ ] Tao helper tao thumbnail preview
-- [ ] Implement `POST /api/v2/media/upload`
-- [ ] Implement `GET /api/v2/media`
-- [ ] Implement `POST /api/v2/media/{asset_id}/select`
-- [ ] Implement `POST /api/v2/media/sync`
+- [x] Tao `R2Storage` adapter
+- [x] Tao helper tinh checksum
+- [x] Tao helper doc image size
+- [x] Tao helper tao thumbnail preview
+- [x] Implement Media Library upload/list/select/sync write path
+- [ ] Verify legacy `/api/v2/media/*` compatibility endpoints against isolated R2
 
 ## Phase E. Migration
 
-- [ ] Viet script migrate quotation v2 tu `published/`
-- [ ] Viet script migrate media len R2
-- [ ] Test migration tren du lieu mau
+- [x] Viet script migrate quotation v2 tu `published/`
+- [x] Viet script migrate media len R2
+- [x] Test migration tren fixture ctx-only va production-shaped
 - [ ] Verify editor mo duoc quotation da migrate
 
 ## Phase F. Docker Compose
 
-- [ ] Tao `docker/app/Dockerfile`
-- [ ] Tao `docker/nginx/default.conf`
-- [ ] Tao `docker-compose.yml`
-- [ ] Tao health endpoints
+- [x] Tao `docker/app/Dockerfile`
+- [x] Tao `docker/nginx/default.conf`
+- [x] Tao compose manifests local/production
+- [x] Tao health endpoints
 - [ ] Tao `.env.production.example`
 - [ ] Deploy thu tren local bang Docker Compose
 

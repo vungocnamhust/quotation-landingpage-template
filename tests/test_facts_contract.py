@@ -1,0 +1,21 @@
+from services.facts_contract import normalize_legacy_facts_snapshot
+from quote_document import CreateQuoteRequestV1
+
+
+def test_legacy_snapshot_drops_retired_editorial_trip_fields_and_normalizes_booking_html():
+    source = {
+        "trip_facts": {
+            "destinations": ["Hanoi"],
+            "title": "Retired AI title",
+            "itinerary": [{"day_number": 1, "destination": "Hanoi", "display_title": "Retired title"}],
+        },
+        "booking_facts": {"items": [{"label": "Deposit", "body": "<p>Pay <strong>30%</strong> now; &lt; 20 days is non-refundable.</p>"}]},
+    }
+
+    normalized = normalize_legacy_facts_snapshot(source)
+
+    assert "title" not in normalized["trip_facts"]
+    assert "display_title" not in normalized["trip_facts"]["itinerary"][0]
+    assert normalized["booking_facts"]["items"][0]["body"] == "Pay 30% now; less than 20 days is non-refundable."
+    assert CreateQuoteRequestV1.model_validate(normalized).trip_facts.destinations == ["Hanoi"]
+    assert source["booking_facts"]["items"][0]["body"].startswith("<p>")

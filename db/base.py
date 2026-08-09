@@ -6,4 +6,4 @@ class Base(DeclarativeBase):
 
 
 # Import models so Base.metadata is fully populated for Alembic.
-from db.models import media, publication, quotation  # noqa: E402,F401
+from db.models import brand, media, publication, quotation  # noqa: E402,F401

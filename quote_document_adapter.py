@@ -10,6 +10,9 @@ from quote_document import (
     QuoteSection,
     QuoteTermItem,
     build_default_sections,
+    build_rich_content_from_legacy,
+    rich_content_values,
+    strip_legacy_rich_document_fields,
 )
 
 
@@ -17,6 +20,7 @@ def _asset_ref(value: Any) -> QuoteAssetRef:
     if isinstance(value, dict):
         return QuoteAssetRef(
             assetId=value.get("assetId") or "",
+            r2Key=value.get("r2Key") or "",
             url=value.get("url") or "",
             status=value.get("status") or "ready",
         )
@@ -96,8 +100,11 @@ def build_quote_document_from_lang_ctx(lang_ctx: dict, quotation_id: str, lang: 
     stored_document = lang_ctx.get("quote_document") or lang_ctx.get("brochure_draft") or {}
     stored_layout = stored_document.get("layout") if isinstance(stored_document, dict) else {}
 
-    quote_document = QuoteDocumentV1.model_validate(
-        {
+    # This function is retained exclusively by legacy-artifact migration and
+    # repair commands.  It materializes the strict rich-content contract here,
+    # before handing the result to the V2 validator; runtime never performs
+    # this conversion on a loaded V2 document.
+    payload = {
             "meta": {
                 "quotationId": quotation_id,
                 "opportunityId": lang_ctx.get("opportunity_id") or lang_ctx.get("quotation_number") or quotation_id,
@@ -152,14 +159,14 @@ def build_quote_document_from_lang_ctx(lang_ctx: dict, quotation_id: str, lang: 
                 "coverKicker": lang_ctx.get("cover_kicker") or "A Privately Arranged Journey",
                 "heroMeta1": lang_ctx.get("hero_meta_1") or "",
                 "heroMeta2": lang_ctx.get("hero_meta_2") or "",
-                "journeyOverviewTitle": lang_ctx.get("journey_overview_title") or "",
-                "letterHighlight": lang_ctx.get("letter_highlight") or "",
-                "letterGreeting": lang_ctx.get("letter_greeting") or "",
+                "journeyOverviewTitle": lang_ctx.get("journey_overview_title") or "A Journey Shaped Around Your Family",
+                "letterHighlight": lang_ctx.get("letter_highlight") or "This journey was designed to leave room for both discovery and rest.",
+                "letterGreeting": lang_ctx.get("letter_greeting") or f"Dear {lang_ctx.get('greeting_name') or lang_ctx.get('customer_name') or 'Valued Guest'},",
                 "letterIntro": lang_ctx.get("letter_intro") or "",
                 "letterBody2": lang_ctx.get("letter_body_p2") or "",
                 "letterOutro": lang_ctx.get("letter_outro") or "",
-                "letterSignOff": lang_ctx.get("letter_sign_off") or "",
-                "letterSender": lang_ctx.get("letter_sender") or "",
+                "letterSignOff": lang_ctx.get("letter_sign_off") or lang_ctx.get("seller_name") or "Eddie - Trung Hieu Pham",
+                "letterSender": lang_ctx.get("letter_sender") or "Your Journey Designer",
                 "footerText": lang_ctx.get("footer_text") or "",
             },
             "route": {
@@ -254,17 +261,17 @@ def build_quote_document_from_lang_ctx(lang_ctx: dict, quotation_id: str, lang: 
                 "items": [item.model_dump() for item in _term_items(lang_ctx)],
             },
             "designer": {
-                "name": lang_ctx.get("seller_name") or "",
-                "subtitle": lang_ctx.get("seller_subtitle") or "",
-                "kicker": lang_ctx.get("designer_kicker") or "",
-                "signature": lang_ctx.get("designer_signature") or "",
-                "experience": lang_ctx.get("designer_experience") or "",
+                "name": lang_ctx.get("seller_name") or "Eddie",
+                "subtitle": lang_ctx.get("seller_subtitle") or "Trung Hieu Pham",
+                "kicker": lang_ctx.get("designer_kicker") or "YOUR JOURNEY DESIGNER",
+                "signature": lang_ctx.get("designer_signature") or "TRAVEL DESIGNER",
+                "experience": lang_ctx.get("designer_experience") or "Present throughout the planning, quietly working behind the journey.",
                 "quote": lang_ctx.get("designer_quote") or "",
                 "title": lang_ctx.get("designer_title") or "",
                 "ctaBody": lang_ctx.get("cta_h2") or "",
-                "phone": lang_ctx.get("contact_phone") or lang_ctx.get("contact") or "",
+                "phone": lang_ctx.get("contact_phone") or lang_ctx.get("contact") or "+84 911 538 738",
                 "email": lang_ctx.get("seller_email") or "",
-                "image": _asset_ref(lang_ctx.get("designer_img")),
+                "image": _asset_ref(lang_ctx.get("designer_img") or "/assets/dias_team/hieu.jpg"),
             },
             "finalization": {
                 "requiredTitle": lang_ctx.get("final_req_title") or "Final Details Required",
@@ -285,7 +292,10 @@ def build_quote_document_from_lang_ctx(lang_ctx: dict, quotation_id: str, lang: 
             }),
             "viewOverrides": copy.deepcopy((stored_document.get("viewOverrides") if isinstance(stored_document, dict) else None) or {"web": {}, "pdf": {}}),
         }
-    )
+    payload["content"] = build_rich_content_from_legacy(payload)
+    payload["meta"]["contentSchemaVersion"] = 1
+    payload = strip_legacy_rich_document_fields(payload)
+    quote_document = QuoteDocumentV1.model_validate(payload)
     return quote_document.model_dump(mode="json")
 
 
@@ -296,12 +306,19 @@ def normalize_quote_document(document: dict | None, quotation_id: str, lang: str
     payload["meta"]["lang"] = payload["meta"].get("lang") or lang
     payload["meta"]["brandId"] = payload["meta"].get("brandId") or brand_id
     payload["meta"]["template"] = payload["meta"].get("template") or template_name
+    # Atomic V2 cutover: legacy HTML is migrated by the explicit preflight
+    # command, never by a runtime adapter or public renderer.
+    if not isinstance(payload.get("content"), dict) or not isinstance(payload.get("content", {}).get("sections"), dict):
+        raise ValueError("content.sections is required; run scripts/migrate_v2_rich_content.py before loading this document.")
+    if payload["meta"].get("contentSchemaVersion") != 1:
+        raise ValueError("meta.contentSchemaVersion=1 is required before loading this document.")
     payload["layout"] = payload.get("layout") or {"sections": build_default_sections()}
     return QuoteDocumentV1.model_validate(payload).model_dump(mode="json")
 
 
 def apply_quote_document_to_lang_ctx(lang_ctx: dict, document: dict) -> None:
     quote_document = QuoteDocumentV1.model_validate(document)
+    rich_content = rich_content_values(quote_document)
     brand = quote_document.brand
     lang_ctx["brand"] = {
         **copy.deepcopy(lang_ctx.get("brand") or {}),
@@ -435,28 +452,37 @@ def apply_quote_document_to_lang_ctx(lang_ctx: dict, document: dict) -> None:
     lang_ctx["pricing_p"] = quote_document.pricing.description or lang_ctx.get("pricing_p")
     lang_ctx["payment_cta"] = quote_document.pricing.ctaLabel or lang_ctx.get("payment_cta")
     lang_ctx["price_cond_paras"] = [item.text for item in quote_document.pricing.conditions]
+    def legacy_price_text(amount_minor: int | None, currency: str, suffix: str, fallback: str) -> str:
+        if amount_minor is None or not currency:
+            return fallback
+        divisor = 1 if currency == "VND" else 100
+        return f"{currency} {amount_minor / divisor:,.0f} {suffix}".strip()
+
     lang_ctx["price_options"] = [
         {
             "id": option.id,
-            "hotelCategory": option.category,
-            "optionName": option.name,
-            "pricePerPerson": {"displayText": option.perPersonText},
-            "totalPrice": {"displayText": option.totalText},
-            "is_total": option.isTotal,
-            "isConfirmedMainOption": option.isConfirmedMainOption,
-            "isAlternativeOption": option.isAlternativeOption,
+            "hotelCategory": option.label,
+            "optionName": option.label,
+            "pricePerPerson": {"displayText": legacy_price_text(option.perTravelerAmountMinor, option.currency, "/ person", option.legacyPerPersonText)},
+            "totalPrice": {"displayText": legacy_price_text(option.groupTotalAmountMinor, option.currency, "total", option.legacyTotalText)},
+            # This bridge is for legacy Jinja snapshots only. Public V2 React
+            # rendering consumes the typed values directly and has no status.
+            "is_total": False,
+            "isConfirmedMainOption": index == 0,
+            "isAlternativeOption": False,
         }
-        for option in quote_document.pricing.options
+        for index, option in enumerate(quote_document.pricing.options)
     ]
 
-    lang_ctx["inclusions"] = [item.text for item in quote_document.inclusions]
-    lang_ctx["exclusions"] = [item.text for item in quote_document.exclusions]
+    lang_ctx["inclusions"] = rich_content["inclusions"]
+    lang_ctx["exclusions"] = rich_content["exclusions"]
 
-    lang_ctx["payment_kicker"] = quote_document.bookingTerms.kicker or lang_ctx.get("payment_kicker")
-    lang_ctx["payment_title"] = quote_document.bookingTerms.title or lang_ctx.get("payment_title")
-    lang_ctx["payment_desc"] = quote_document.bookingTerms.description or lang_ctx.get("payment_desc")
-    lang_ctx["booking_terms_items"] = [item.model_dump(mode="json") for item in quote_document.bookingTerms.items]
-    item_map = {item.key or item.id: item for item in quote_document.bookingTerms.items}
+    lang_ctx["payment_desc"] = rich_content["bookingDescription"] or lang_ctx.get("payment_desc")
+    lang_ctx["booking_terms_items"] = rich_content["bookingItems"]
+    item_map = {
+        str(item["label"]).strip().lower(): QuoteTermItem(id=str(index), label=str(item["label"]), body=str(item["body"]))
+        for index, item in enumerate(rich_content["bookingItems"], 1)
+    }
     lang_ctx["payment_label_deposit"] = item_map.get("deposit", QuoteTermItem(id="deposit")).label or lang_ctx.get("payment_label_deposit")
     lang_ctx["payment_label_balance"] = item_map.get("balance", QuoteTermItem(id="balance")).label or lang_ctx.get("payment_label_balance")
     lang_ctx["payment_label_cancellation"] = item_map.get("cancellation", QuoteTermItem(id="cancellation")).label or lang_ctx.get("payment_label_cancellation")
@@ -478,10 +504,11 @@ def apply_quote_document_to_lang_ctx(lang_ctx: dict, document: dict) -> None:
     lang_ctx["contact"] = quote_document.designer.phone or lang_ctx.get("contact")
     lang_ctx["seller_email"] = quote_document.designer.email or lang_ctx.get("seller_email")
 
-    lang_ctx["final_req_title"] = quote_document.finalization.requiredTitle or lang_ctx.get("final_req_title")
-    lang_ctx["final_after_title"] = quote_document.finalization.afterConfirmationTitle or lang_ctx.get("final_after_title")
-    lang_ctx["final_req"] = [item.text for item in quote_document.finalization.requiredItems]
-    lang_ctx["final_after"] = [item.text for item in quote_document.finalization.afterConfirmation]
+    groups = rich_content["finalizationGroups"]
+    lang_ctx["final_req_title"] = (groups[0]["title"] if groups else "") or lang_ctx.get("final_req_title")
+    lang_ctx["final_after_title"] = (groups[1]["title"] if len(groups) > 1 else "") or lang_ctx.get("final_after_title")
+    lang_ctx["final_req"] = list(groups[0]["items"]) if groups else []
+    lang_ctx["final_after"] = list(groups[1]["items"]) if len(groups) > 1 else []
 
     section_enabled = {}
     section_order = {}

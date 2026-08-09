@@ -6,6 +6,11 @@ from urllib.parse import urlsplit, urlunsplit
 
 from dotenv import load_dotenv
 
+# Container environments are the deployment source of truth. Loading a checked
+# out .env.local with override=True inside Compose silently replaces DATABASE_URL
+# and production credentials with a developer machine's values.
+if os.getenv("ENVIRONMENT", "local").strip().lower() in {"local", "development", "dev"} and os.path.exists(".env.local"):
+    load_dotenv(".env.local", override=True)
 load_dotenv()
 
 
@@ -77,6 +82,35 @@ class Settings:
     media_preview_max_width: int = _get_int("MEDIA_PREVIEW_MAX_WIDTH", 480)
     media_preview_max_height: int = _get_int("MEDIA_PREVIEW_MAX_HEIGHT", 320)
     media_preview_quality: int = _get_int("MEDIA_PREVIEW_QUALITY", 82)
+    media_library_prefixes: tuple[str, ...] = tuple(
+        item.strip().strip("/")
+        for item in os.getenv("MEDIA_LIBRARY_PREFIXES", "shared/media,library/media").split(",")
+        if item.strip().strip("/")
+    )
+    media_library_country_roots: tuple[str, ...] = tuple(
+        item.strip().strip("/")
+        for item in os.getenv("MEDIA_LIBRARY_COUNTRY_ROOTS", "vietnam,cambodia,laos,thailand").split(",")
+        if item.strip().strip("/")
+    )
+    media_library_preview_concurrency: int = _get_int("MEDIA_LIBRARY_PREVIEW_CONCURRENCY", 3)
+    publication_job_max_attempts: int = _get_int("PUBLICATION_JOB_MAX_ATTEMPTS", 5)
+    publication_job_backoff_base_seconds: int = _get_int("PUBLICATION_JOB_BACKOFF_BASE_SECONDS", 30)
+    publication_job_backoff_max_seconds: int = _get_int("PUBLICATION_JOB_BACKOFF_MAX_SECONDS", 900)
+    publication_job_lease_seconds: int = _get_int("PUBLICATION_JOB_LEASE_SECONDS", 300)
+    publication_worker_poll_seconds: int = _get_int("PUBLICATION_WORKER_POLL_SECONDS", 2)
+    dmc_gateway_enabled: bool = _get_bool("DMC_GATEWAY_ENABLED", False)
+    dmc_auth_proxy_url: str = os.getenv("DMC_AUTH_PROXY_URL", "").strip()
+    cloudflare_access_team_domain: str = os.getenv("CLOUDFLARE_ACCESS_TEAM_DOMAIN", "").strip().lower()
+    cloudflare_access_audience: str = os.getenv("CLOUDFLARE_ACCESS_AUDIENCE", "").strip()
+
+    @property
+    def media_library_roots(self) -> tuple[str, ...]:
+        """Every browseable root must also be included in an R2 sync run."""
+        return tuple(
+            dict.fromkeys(
+                ("shared/media", "library/media", *self.media_library_prefixes, *self.media_library_country_roots, "accommodations", "team")
+            )
+        )
 
     @property
     def resolved_r2_endpoint(self) -> str:
@@ -94,6 +128,12 @@ class Settings:
             and self.resolved_r2_endpoint
             and self.r2_bucket
         )
+
+    @property
+    def cloudflare_access_jwks_url(self) -> str:
+        if not self.cloudflare_access_team_domain:
+            return ""
+        return f"https://{self.cloudflare_access_team_domain}/cdn-cgi/access/certs"
 
 
 settings = Settings()

@@ -1,0 +1,1203 @@
+{
+  "version": 1,
+  "description": "Executable renderer coverage for every editable-brochure contract descriptor. Update this manifest with the registry.",
+  "fields": [
+    {
+      "fieldId": "identity.brandName",
+      "source": "/presentation/identityOverrides/brandName",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/components/display/BrochureNavBar.tsx",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "identity.logoAlt",
+      "source": "/presentation/identityOverrides/logoAlt",
+      "owner": "design",
+      "kind": "altText",
+      "behavior": "inspector",
+      "renderer": "quote-generator/components/display/BrochureNavBar.tsx",
+      "domAttribute": "alt"
+    },
+    {
+      "fieldId": "nav.routeMap",
+      "source": "/presentation/copyOverrides/nav.routeMap",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/components/display/BrochureNavBar.tsx",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "nav.itinerary",
+      "source": "/presentation/copyOverrides/nav.itinerary",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/components/display/BrochureNavBar.tsx",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "nav.quotation",
+      "source": "/presentation/copyOverrides/nav.quotation",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/components/display/BrochureNavBar.tsx",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "nav.terms",
+      "source": "/presentation/copyOverrides/nav.terms",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/components/display/BrochureNavBar.tsx",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "a11y.brochureSections",
+      "source": "/presentation/copyOverrides/a11y.brochureSections",
+      "owner": "design",
+      "kind": "aria",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "aria-label"
+    },
+    {
+      "fieldId": "nav.brochureTheme",
+      "source": "/presentation/copyOverrides/nav.brochureTheme",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/components/display/BrochureNavBar.tsx",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "hero.primaryCta",
+      "source": "/presentation/copyOverrides/hero.primaryCta",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "trip.title",
+      "source": "/trip/title",
+      "owner": "content",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "trip.lede",
+      "source": "/trip/lede",
+      "owner": "content",
+      "kind": "richText",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "hero.coverKicker",
+      "source": "/narrative/coverKicker",
+      "owner": "content",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "hero.metaPrimary",
+      "source": "/narrative/heroMeta1",
+      "owner": "content",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "hero.metaSecondary",
+      "source": "/narrative/heroMeta2",
+      "owner": "content",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "assets.hero",
+      "source": "/assets/hero",
+      "owner": "fact",
+      "kind": "image",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "assets.hero.altText",
+      "source": "/assets/hero/altText",
+      "owner": "fact",
+      "kind": "altText",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "alt"
+    },
+    {
+      "fieldId": "letter.kicker",
+      "source": "/presentation/copyOverrides/letter.kicker",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "letter.intro",
+      "source": "/narrative/letterIntro",
+      "owner": "content",
+      "kind": "richText",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "letter.body",
+      "source": "/narrative/letterBody2",
+      "owner": "content",
+      "kind": "richText",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "routeMap.title",
+      "source": "/route/title",
+      "owner": "content",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "routeMap.description",
+      "source": "/route/description",
+      "owner": "content",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "routeMap.segmentDescription",
+      "source": "/route/staySegments/*/mapSegmentDesc",
+      "owner": "content",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "a11y.routeMapOverview",
+      "source": "/presentation/copyOverrides/a11y.routeMapOverview",
+      "owner": "design",
+      "kind": "aria",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "aria-label"
+    },
+    {
+      "fieldId": "itinerary.kicker",
+      "source": "/presentation/copyOverrides/itinerary.kicker",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "itinerary.title",
+      "source": "/itinerary/title",
+      "owner": "content",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "itinerary.description",
+      "source": "/itinerary/description",
+      "owner": "content",
+      "kind": "richText",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "itinerary.days.*.title",
+      "source": "/itinerary/days/*/title",
+      "owner": "content",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "itinerary.days.*.description",
+      "source": "/itinerary/days/*/description/0",
+      "owner": "content",
+      "kind": "richText",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "itinerary.days.*.activities",
+      "source": "/itinerary/days/*/activities",
+      "owner": "content",
+      "kind": "richText",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "itinerary.explore",
+      "source": "/presentation/copyOverrides/itinerary.explore",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "itinerary.overnightLabel",
+      "source": "/presentation/copyOverrides/itinerary.overnightLabel",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "itinerary.mealsLabel",
+      "source": "/presentation/copyOverrides/itinerary.mealsLabel",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "assets.itineraryDivider",
+      "source": "/assets/itineraryDivider",
+      "owner": "fact",
+      "kind": "image",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "assets.itineraryDivider.altText",
+      "source": "/assets/itineraryDivider/altText",
+      "owner": "fact",
+      "kind": "altText",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "alt"
+    },
+    {
+      "fieldId": "itinerary.days.*.gallery",
+      "source": "/itinerary/days/*/images/carousel",
+      "owner": "fact",
+      "kind": "gallery",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "itinerary.days.*.gallery.altText",
+      "source": "/itinerary/days/*/images/carousel/*/altText",
+      "owner": "fact",
+      "kind": "altText",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "alt"
+    },
+    {
+      "fieldId": "stays.title",
+      "source": "/presentation/copyOverrides/stays.title",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "stays.description",
+      "source": "/presentation/copyOverrides/stays.description",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "stays.kicker",
+      "source": "/presentation/copyOverrides/stays.kicker",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "stays.tagline",
+      "source": "/presentation/copyOverrides/stays.tagline",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "stays.closing",
+      "source": "/presentation/copyOverrides/stays.closing",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "assets.hotelDivider",
+      "source": "/assets/hotelDivider",
+      "owner": "fact",
+      "kind": "image",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "assets.hotelDivider.altText",
+      "source": "/assets/hotelDivider/altText",
+      "owner": "fact",
+      "kind": "altText",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "alt"
+    },
+    {
+      "fieldId": "designer.image",
+      "source": "/designer/image",
+      "owner": "fact",
+      "kind": "image",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "designer.image.altText",
+      "source": "/designer/image/altText",
+      "owner": "fact",
+      "kind": "altText",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "alt"
+    },
+    {
+      "fieldId": "stays.hotels.*.hotelImage",
+      "source": "/stays/hotels/*/hotelImage",
+      "owner": "fact",
+      "kind": "image",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "stays.hotels.*.hotelImage.altText",
+      "source": "/stays/hotels/*/hotelImage/altText",
+      "owner": "fact",
+      "kind": "altText",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "alt"
+    },
+    {
+      "fieldId": "stays.hotels.*.roomImage",
+      "source": "/stays/hotels/*/roomImage",
+      "owner": "fact",
+      "kind": "image",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "stays.hotels.*.roomImage.altText",
+      "source": "/stays/hotels/*/roomImage/altText",
+      "owner": "fact",
+      "kind": "altText",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "alt"
+    },
+    {
+      "fieldId": "pricing.kicker",
+      "source": "/presentation/copyOverrides/pricing.kicker",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "pricing.title",
+      "source": "/presentation/copyOverrides/pricing.title",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "pricing.description",
+      "source": "/presentation/copyOverrides/pricing.description",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "pricing.importantNoteLabel",
+      "source": "/presentation/copyOverrides/pricing.importantNoteLabel",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "pricing.confirmedMainOption",
+      "source": "/presentation/copyOverrides/pricing.confirmedMainOption",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "hotels.telephonePrefix",
+      "source": "/presentation/copyOverrides/hotels.telephonePrefix",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "stays.pdfTitle",
+      "source": "/presentation/copyOverrides/stays.pdfTitle",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/components/display/PdfBrochureDocument.tsx",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "pdf.whitespaceSlogan",
+      "source": "/presentation/copyOverrides/pdf.whitespaceSlogan",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/components/display/PdfBrochureDocument.tsx",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "bookingTerms.cta",
+      "source": "/presentation/copyOverrides/bookingTerms.cta",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "inclusions.items",
+      "source": "/content/sections/inclusions_exclusions/blocks/0/leftItems/*",
+      "owner": "fact",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "exclusions.items",
+      "source": "/content/sections/inclusions_exclusions/blocks/0/rightItems/*",
+      "owner": "fact",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "bookingTerms.body",
+      "source": "/content/sections/booking_terms/blocks/*/text",
+      "owner": "fact",
+      "kind": "richText",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "inclusions.title",
+      "source": "/presentation/copyOverrides/inclusions.title",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "inclusions.inclusionsTitle",
+      "source": "/presentation/copyOverrides/inclusions.inclusionsTitle",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "inclusions.exclusionsTitle",
+      "source": "/presentation/copyOverrides/inclusions.exclusionsTitle",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "inclusions.lead",
+      "source": "/presentation/copyOverrides/inclusions.lead",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "exclusions.lead",
+      "source": "/presentation/copyOverrides/exclusions.lead",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "finalization.kicker",
+      "source": "/presentation/copyOverrides/finalization.kicker",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "finalization.title",
+      "source": "/presentation/copyOverrides/finalization.title",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "finalization.description",
+      "source": "/presentation/copyOverrides/finalization.description",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "finalization.requiredItems",
+      "source": "/content/sections/finalization/blocks/0/groups/0/items/*",
+      "owner": "content",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "finalization.afterConfirmationItems",
+      "source": "/content/sections/finalization/blocks/0/groups/1/items/*",
+      "owner": "content",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "designer.kicker",
+      "source": "/presentation/copyOverrides/designer.kicker",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "designer.title",
+      "source": "/presentation/copyOverrides/designer.title",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "footer.text",
+      "source": "/narrative/footerText",
+      "owner": "content",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "carousel.previousImage",
+      "source": "/presentation/copyOverrides/carousel.previousImage",
+      "owner": "design",
+      "kind": "aria",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "aria-label"
+    },
+    {
+      "fieldId": "carousel.nextImage",
+      "source": "/presentation/copyOverrides/carousel.nextImage",
+      "owner": "design",
+      "kind": "aria",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "aria-label"
+    },
+    {
+      "fieldId": "carousel.itineraryImages",
+      "source": "/presentation/copyOverrides/carousel.itineraryImages",
+      "owner": "design",
+      "kind": "aria",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "aria-label"
+    },
+    {
+      "fieldId": "carousel.showImage",
+      "source": "/presentation/copyOverrides/carousel.showImage",
+      "owner": "design",
+      "kind": "aria",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "aria-label"
+    },
+    {
+      "fieldId": "nav.language.en",
+      "source": "/presentation/copyOverrides/nav.language.en",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/components/display/BrochureNavBar.tsx",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "nav.language.vi",
+      "source": "/presentation/copyOverrides/nav.language.vi",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/components/display/BrochureNavBar.tsx",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "nav.language.ar",
+      "source": "/presentation/copyOverrides/nav.language.ar",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/components/display/BrochureNavBar.tsx",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "letter.journeyOverviewTitle",
+      "source": "/narrative/journeyOverviewTitle",
+      "owner": "content",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "letter.highlight",
+      "source": "/narrative/letterHighlight",
+      "owner": "content",
+      "kind": "richText",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "letter.greeting",
+      "source": "/narrative/letterGreeting",
+      "owner": "content",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "letter.outro",
+      "source": "/narrative/letterOutro",
+      "owner": "content",
+      "kind": "richText",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "letter.signOff",
+      "source": "/narrative/letterSignOff",
+      "owner": "content",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "letter.sender",
+      "source": "/narrative/letterSender",
+      "owner": "content",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "finalization.requiredTitle",
+      "source": "/content/sections/finalization/blocks/0/groups/0/title",
+      "owner": "content",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "finalization.afterConfirmationTitle",
+      "source": "/content/sections/finalization/blocks/0/groups/1/title",
+      "owner": "content",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "stays.roomNotes",
+      "source": "/stays/roomNotes",
+      "owner": "fact",
+      "kind": "richText",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "stays.hotels.*.city",
+      "source": "/stays/hotels/*/city",
+      "owner": "fact",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "stays.hotels.*.name",
+      "source": "/stays/hotels/*/name",
+      "owner": "fact",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "stays.hotels.*.introduction",
+      "source": "/stays/hotels/*/introduction",
+      "owner": "fact",
+      "kind": "richText",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "stays.hotels.*.hotelDate",
+      "source": "/stays/hotels/*/hotelDate",
+      "owner": "fact",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "stays.hotels.*.tel",
+      "source": "/stays/hotels/*/tel",
+      "owner": "fact",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "stays.hotels.*.roomType",
+      "source": "/stays/hotels/*/roomType",
+      "owner": "fact",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "pricing.conditions",
+      "source": "/pricing/conditions",
+      "owner": "fact",
+      "kind": "richText",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "pricing.options.*.label",
+      "source": "/pricing/options/*/label",
+      "owner": "fact",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "pricing.options.*.groupTotalAmountMinor",
+      "source": "/pricing/options/*/groupTotalAmountMinor",
+      "owner": "fact",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "pricing.options.*.perTravelerAmountMinor",
+      "source": "/pricing/options/*/perTravelerAmountMinor",
+      "owner": "fact",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "itinerary.days.*.dayNumber",
+      "source": "/itinerary/days/*/dayNumber",
+      "owner": "fact-derived",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "itinerary.days.*.labelHighlights",
+      "source": "/itinerary/days/*/labelHighlights",
+      "owner": "fact",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "itinerary.days.*.overnight",
+      "source": "/itinerary/days/*/overnight",
+      "owner": "fact",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "itinerary.days.*.meals",
+      "source": "/itinerary/days/*/meals/*",
+      "owner": "fact",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "itinerary.days.*.notes",
+      "source": "/itinerary/days/*/notes/*",
+      "owner": "fact",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "itinerary.days.*.segmentCity",
+      "source": "/itinerary/days/*/segmentCity",
+      "owner": "fact-derived",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "route.staySegments.*.displayName",
+      "source": "/route/staySegments/*/displayName",
+      "owner": "fact-derived",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "route.staySegments.*.daysLabel",
+      "source": "/route/staySegments/*/daysLabel",
+      "owner": "fact-derived",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "route.staySegments.*.nightsLabel",
+      "source": "/route/staySegments/*/nightsLabel",
+      "owner": "fact-derived",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "route.staySegments.*.hotelName",
+      "source": "/route/staySegments/*/hotelName",
+      "owner": "fact-derived",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "bookingTerms.item",
+      "source": "/content/sections/booking_terms/blocks/*/items/*/body",
+      "owner": "fact",
+      "kind": "richText",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "bookingTerms.item.label",
+      "source": "/content/sections/booking_terms/blocks/*/items/*/label",
+      "owner": "fact",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "brand.displayName",
+      "source": "/brand/displayName",
+      "owner": "fact-derived",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "designer.subtitle",
+      "source": "/designer/subtitle",
+      "owner": "fact",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "designer.signature",
+      "source": "/designer/signature",
+      "owner": "fact",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "designer.quote",
+      "source": "/designer/quote",
+      "owner": "fact",
+      "kind": "richText",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "designer.experience",
+      "source": "/designer/experience",
+      "owner": "fact",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "designer.name",
+      "source": "/designer/name",
+      "owner": "fact-derived",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "designer.email",
+      "source": "/designer/email",
+      "owner": "fact-derived",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "designer.phone",
+      "source": "/designer/phone",
+      "owner": "fact-derived",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "designer.contact",
+      "source": "/designer/contact",
+      "owner": "fact-derived",
+      "kind": "text",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "labels.classic",
+      "source": "/labels/classic",
+      "owner": "system",
+      "kind": "text",
+      "behavior": "readonly",
+      "renderer": "quote-generator/components/DisplayStateScreen.tsx",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "labels.bookingTermsTitle",
+      "source": "/labels/bookingTermsTitle",
+      "owner": "system",
+      "kind": "text",
+      "behavior": "readonly",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "labels.chatWhatsapp",
+      "source": "/labels/chatWhatsapp",
+      "owner": "system",
+      "kind": "text",
+      "behavior": "readonly",
+      "renderer": "quote-generator/components/DisplayStateScreen.tsx",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "labels.sendEmail",
+      "source": "/labels/sendEmail",
+      "owner": "system",
+      "kind": "text",
+      "behavior": "readonly",
+      "renderer": "quote-generator/components/DisplayStateScreen.tsx",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "labels.loading",
+      "source": "/labels/loading",
+      "owner": "system",
+      "kind": "text",
+      "behavior": "readonly",
+      "renderer": "quote-generator/components/DisplayStateScreen.tsx",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "labels.loadingBody",
+      "source": "/labels/loadingBody",
+      "owner": "system",
+      "kind": "text",
+      "behavior": "readonly",
+      "renderer": "quote-generator/components/DisplayStateScreen.tsx",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "labels.errorTitle",
+      "source": "/labels/errorTitle",
+      "owner": "system",
+      "kind": "text",
+      "behavior": "readonly",
+      "renderer": "quote-generator/components/DisplayStateScreen.tsx",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "labels.errorBody",
+      "source": "/labels/errorBody",
+      "owner": "system",
+      "kind": "text",
+      "behavior": "readonly",
+      "renderer": "quote-generator/components/DisplayStateScreen.tsx",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "labels.tryAgain",
+      "source": "/labels/tryAgain",
+      "owner": "system",
+      "kind": "text",
+      "behavior": "readonly",
+      "renderer": "quote-generator/components/DisplayStateScreen.tsx",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "labels.notFoundTitle",
+      "source": "/labels/notFoundTitle",
+      "owner": "system",
+      "kind": "text",
+      "behavior": "readonly",
+      "renderer": "quote-generator/components/DisplayStateScreen.tsx",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "labels.notFoundBody",
+      "source": "/labels/notFoundBody",
+      "owner": "system",
+      "kind": "text",
+      "behavior": "readonly",
+      "renderer": "quote-generator/components/DisplayStateScreen.tsx",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "labels.returnHome",
+      "source": "/labels/returnHome",
+      "owner": "system",
+      "kind": "text",
+      "behavior": "readonly",
+      "renderer": "quote-generator/components/DisplayStateScreen.tsx",
+      "domAttribute": "data-editable"
+    }
+  ]
+}

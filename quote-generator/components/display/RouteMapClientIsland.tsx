@@ -1,0 +1,36 @@
+'use client';
+
+import dynamic from 'next/dynamic';
+import type { RouteMapViewModel, TypographySlotMap } from '../../display/types';
+import type { ViewMode } from '../../display/contracts';
+
+const RouteMapExperience = dynamic(() => import('./RouteMapExperience'), {
+  ssr: false,
+  loading: () => <div className="display-route-map__loading" />,
+});
+
+export default function RouteMapClientIsland({
+  viewModel,
+  typography,
+  mapColors,
+  viewMode,
+}: {
+  viewModel: RouteMapViewModel;
+  typography: TypographySlotMap;
+  mapColors: { route: string };
+  viewMode: Exclude<ViewMode, 'pdf'>;
+}) {
+  const islandKey = `${viewMode}:${viewModel.defaultMode}:${viewModel.initialActiveSegment}:${viewModel.segments
+    .map((segment) => segment.sequence)
+    .join('-')}`;
+
+  return (
+    <RouteMapExperience
+      key={islandKey}
+      viewModel={viewModel}
+      typography={typography}
+      mapColors={mapColors}
+      viewMode={viewMode}
+    />
+  );
+}

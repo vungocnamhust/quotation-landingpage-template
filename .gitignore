@@ -1,7 +1,20 @@
-# Environment — never commit real secrets
+# ==========================================
+# Environment & Secrets (Never commit secrets)
+# ==========================================
 .env
+.env.local
+.env.production
+.env.development
+.env.staging
+.env.test
+.env*.local
+!.env.example
+!.env.local.example
+!.env.production.example
 
-# Python
+# ==========================================
+# Python Runtime & Dependencies
+# ==========================================
 __pycache__/
 *.py[cod]
 *.pyo
@@ -12,21 +25,52 @@ dist/
 build/
 .venv/
 venv/
+ENV/
+env/
+.pytest_cache/
+.coverage
+htmlcov/
 
-# macOS
-.DS_Store
+# ==========================================
+# Node.js & Frontend Build Outputs
+# ==========================================
+node_modules/
+.next/
+out/
+.vercel/
+*.tsbuildinfo
 
-# Draft landing pages (auto-generated, not committed)
+# ==========================================
+# Logs & Temporary Test / Render Files
+# ==========================================
+*.log
+server.log
+tmp/
+.tmp/
+_renders/
+_responsive_screenshots/
+artifacts/
+trigger-build.txt
+
+# ==========================================
+# Generated Drafts & Auto-artifacts
+# ==========================================
 published/*/draft.html
 
-# IDE
-.idea/
-.vscode/
-
-# Logs
-*.log
-.env
-.env.production
-
-
+# ==========================================
+# IDE & System Files
+# ==========================================
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+

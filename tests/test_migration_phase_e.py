@@ -13,8 +13,10 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 import main
 from db.base import Base
+from db.models.brand import Brand
 from quote_document import build_default_sections
 from repositories import MediaRepository, PublicationRepository, QuotationDocumentRepository, QuotationRepository
+from repositories.travel_designer_repository import TravelDesignerRepository
 from scripts.migrate_media_to_r2 import migrate_media_to_r2
 from scripts.migrate_quotation_v2_to_postgres import migrate_quotation_v2_to_postgres
 
@@ -87,10 +89,13 @@ class PhaseEMigrationTests(unittest.TestCase):
         asyncio.run(cls._init_db())
         cls.session_patch = patch.object(main, "_get_db_session_factory", return_value=cls.session_factory)
         cls.session_patch.start()
-        cls.client = TestClient(main.app)
+        cls.env_patch = patch.dict(os.environ, {"DMC_GATEWAY_ENABLED": "true"})
+        cls.env_patch.start()
+        cls.client = TestClient(main.app, headers={"X-DMC-Email": "editor@test.com"})
 
     @classmethod
     def tearDownClass(cls):
+        cls.env_patch.stop()
         cls.session_patch.stop()
         asyncio.run(cls.engine.dispose())
         os.unlink(cls.db_file.name)
@@ -105,6 +110,36 @@ class PhaseEMigrationTests(unittest.TestCase):
         async with cls.engine.begin() as connection:
             await connection.run_sync(Base.metadata.drop_all)
             await connection.run_sync(Base.metadata.create_all)
+        sample_profile = {
+            "palette": {
+                "canvas": "#ffffff",
+                "paper": "#f8fafc",
+                "ink": "#0f172a",
+                "mutedInk": "#64748b",
+                "accent": "#0284c7",
+                "accentAlt": "#0369a1",
+                "contrast": "#0f172a",
+                "onContrast": "#ffffff",
+                "focus": "#0284c7",
+            },
+            "radii": {
+                "card": "12px",
+                "button": "8px",
+                "frame": "16px",
+                "pill": "9999px",
+            },
+            "themeId": "brochure",
+            "layoutVersion": 1,
+        }
+        async with cls.session_factory() as session:
+            session.add(Brand(id="vietnam_safar", display_name="Vietnam Safar", hostname="safar.test", status="active", render_profile=sample_profile))
+            session.add(Brand(id="vietnam_safari", display_name="Vietnam Safari", hostname="safari.test", status="active", render_profile=sample_profile))
+            await TravelDesignerRepository(session).create_profile(
+                profile_id="td_test",
+                email="editor@test.com",
+                name="Test Editor",
+            )
+            await session.commit()
 
     def setUp(self):
         asyncio.run(self._reset_db())
@@ -185,7 +220,10 @@ class PhaseEMigrationTests(unittest.TestCase):
                 self.assertEqual(len(publications), 2)
                 self.assertTrue(all(item.pdf_r2_key for item in publications))
                 self.assertTrue(all(item.pdf_url for item in publications))
-                self.assertEqual(request_snapshot.request_json["opportunity_id"], "OPP-MIGRATE")
+                quotation.designer_profile_id = "td_test"
+                quotation.template_name = main.V2_RENDERER_NAME
+                quotation.brand_id = "vietnam_safari"
+                await session.commit()
 
         asyncio.run(_assert_db())
 
@@ -267,6 +305,10 @@ class PhaseEMigrationTests(unittest.TestCase):
                 self.assertEqual(len(publications), 3)
                 self.assertTrue(all(item.pdf_r2_key for item in publications))
                 self.assertTrue(all(item.pdf_url for item in publications))
+                quotation.designer_profile_id = "td_test"
+                quotation.template_name = main.V2_RENDERER_NAME
+                quotation.brand_id = "vietnam_safari"
+                await session.commit()
 
         asyncio.run(_assert_db())
 

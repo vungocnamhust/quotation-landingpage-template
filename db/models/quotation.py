@@ -19,12 +19,20 @@ class Quotation(Base):
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
     opportunity_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    source_kind: Mapped[str] = mapped_column(String(32), nullable=False, default="manual", server_default="manual")
+    source_snapshot_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    source_version: Mapped[str | None] = mapped_column(String(128), nullable=True)
     brand_id: Mapped[str] = mapped_column(String(64), nullable=False)
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="draft", server_default="draft")
     baseline_lang: Mapped[str] = mapped_column(String(5), nullable=False, default="en", server_default="en")
     current_revision: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
     current_version: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
     template_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    designer_profile_id: Mapped[str | None] = mapped_column(
+        ForeignKey("travel_designer_profiles.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     customer_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     title: Mapped[str | None] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
@@ -108,3 +116,27 @@ class QuotationDocumentRevision(Base):
         nullable=False,
         server_default=func.now(),
     )
+
+
+class QuotationContentDraft(Base):
+    __tablename__ = "quotation_content_drafts"
+    __table_args__ = (
+        Index("ix_quotation_content_drafts_quotation_lang_created", "quotation_id", "lang", "created_at"),
+        Index("ix_quotation_content_drafts_cache", "quotation_id", "lang", "scope", "generation_mode", "facts_hash"),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    quotation_id: Mapped[str] = mapped_column(ForeignKey("quotations.id", ondelete="CASCADE"), nullable=False)
+    lang: Mapped[str] = mapped_column(String(5), nullable=False)
+    scope: Mapped[str] = mapped_column(String(128), nullable=False)
+    generation_mode: Mapped[str] = mapped_column(String(32), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="draft", server_default="draft")
+    facts_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    source_document_revision: Mapped[int] = mapped_column(Integer, nullable=False)
+    prompt_version: Mapped[str] = mapped_column(String(64), nullable=False)
+    facts_snapshot: Mapped[dict[str, Any]] = mapped_column(JSON_VARIANT, nullable=False)
+    candidate_json: Mapped[dict[str, Any]] = mapped_column(JSON_VARIANT, nullable=False)
+    missing_inputs: Mapped[list[str]] = mapped_column(JSON_VARIANT, nullable=False)
+    generation_metadata: Mapped[dict[str, Any]] = mapped_column(JSON_VARIANT, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())

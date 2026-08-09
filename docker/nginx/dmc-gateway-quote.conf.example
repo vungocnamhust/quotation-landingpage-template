@@ -1,0 +1,21 @@
+# Enable only after quote.capellatravel.com is registered in DMC route-registry.
+# This is the same auth_request contract used by dmc-gateway: dmc-auth-proxy:8000/auth.
+location = /_dmc_quote_auth {
+    internal;
+    proxy_pass http://dmc-auth-proxy:8000/auth;
+    proxy_pass_request_body off;
+    proxy_set_header Content-Length "";
+    proxy_set_header X-Original-URI $request_uri;
+    proxy_set_header Cf-Access-Authenticated-User-Email $http_cf_access_authenticated_user_email;
+}
+
+# Add these directives to each protected editor/API location when gateway is enabled:
+# auth_request /_dmc_quote_auth;
+# auth_request_set $auth_role $upstream_http_x_dmc_role;
+# auth_request_set $auth_brand $upstream_http_x_dmc_brand;
+# auth_request_set $auth_person $upstream_http_x_dmc_person_id;
+# auth_request_set $auth_email $upstream_http_x_dmc_email;
+# proxy_set_header X-DMC-Role $auth_role;
+# proxy_set_header X-DMC-Brand $auth_brand;
+# proxy_set_header X-DMC-Person-Id $auth_person;
+# proxy_set_header X-DMC-Email $auth_email;

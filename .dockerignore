@@ -1,11 +1,12 @@
-.venv
-venv
-__pycache__
-*.pyc
-.git
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.git/
 .gitignore
-.env
-.env.production
+# Runtime configuration is injected by Compose. Never bake credentials into an
+# image layer or even send them to the Docker daemon as build context.
+.env*
 published/*
 _published/*
 _Drafts
@@ -16,7 +17,18 @@ _DRAFT
 .DS_Store
 docs/
 tests/
+e2e/
 _renders/
 _responsive_screenshots/
 *.html
 .pytest_cache/
+# quote-generator has its own, much smaller build context. These local build
+# products were previously copied into the FastAPI image on every source edit.
+quote-generator/
+node_modules/
+.next/
+coverage/
+playwright-report/
+test-results/
+agent/
+.agents/

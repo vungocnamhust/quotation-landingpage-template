@@ -7,10 +7,10 @@ Hien tai quotation v2 dang co cac dac diem sau:
 - `FastAPI` tap trung trong `main.py`
 - Production dang duoc thiet ke quanh `Vercel`
 - State duoc giu bang:
-  - in-memory store
-  - file trong `published/`
-  - GitHub persistence cho production
-- Upload media draft hien tai chua co object storage thuc thu
+  - legacy V1 file trong `published/`
+  - legacy GitHub persistence cho V1/publication compatibility
+- V2 da co Postgres persistence, Alembic migrations va R2 storage boundary;
+  cutover/deployment verification van la cong viec van hanh rieng.
 
 He qua:
 
@@ -150,8 +150,7 @@ alembic/
 
 ### Khong duoc coi la canonical
 
-- `published/*.json`
-- `published/*.html`
+  - `published/*.json` va `published/*.html` cua legacy V1
 - local disk trong container app
 - in-memory dictionaries trong process
 
@@ -168,11 +167,11 @@ Phase 1 chi tap trung quotation v2 va media management:
 - `POST /api/v2/media/sync`
 - `POST /api/v2/media/{asset_id}/select`
 
-Itinerary va legacy v1 co the giu nguyen tam thoi, khong refactor dong loat trong dot dau.
+Itinerary va legacy v1 giu boundary rieng; khong refactor dong loat hoac de V1
+fallback im lang vao V2.
 
 ## 8. Quy uoc migration
 
 - `quotation v2` moi se doc/ghi bang Postgres
 - Du lieu cu tu `published/<id>/ctx.json` va `document.json` se migrate theo script
 - Sau khi cutover, code v2 khong quay lai doc file JSON lam fallback im lang
-

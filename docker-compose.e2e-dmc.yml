@@ -1,0 +1,51 @@
+services:
+  dmc-auth-proxy:
+    image: quotation-e2e-app
+    command: ["uvicorn", "e2e.dmc_auth_proxy:app", "--host", "0.0.0.0", "--port", "8120"]
+    volumes:
+      - ./e2e:/app/e2e:ro
+    healthcheck:
+      # Use the mock session marker so urllib accepts the 204 response instead
+      # of treating the unauthenticated 401 probe as a failed healthcheck.
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen(urllib.request.Request('http://127.0.0.1:8120/verify', headers={'X-DMC-Mock-Session':'approved'}))"]
+      interval: 1s
+      timeout: 2s
+      retries: 15
+    networks: [e2e]
+
+  app:
+    environment:
+      DMC_GATEWAY_ENABLED: "true"
+      QUOTE_AUTH_REQUIRED: "true"
+
+  nginx:
+    environment:
+      DMC_GATEWAY_ENABLED: "true"
+      DMC_AUTH_PROXY_URL: http://dmc-auth-proxy:8120/verify
+    depends_on:
+      app:
+        condition: service_healthy
+      quote-generator:
+        condition: service_healthy
+      dmc-auth-proxy:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 1s
+      timeout: 2s
+      retries: 15
+
+  e2e-dmc:
+    image: quotation-e2e-app
+    environment:
+      E2E_EDITOR_BASE_URL: http://quote.capellatravel.com
+    depends_on:
+      nginx:
+        condition: service_healthy
+      dmc-auth-proxy:
+        condition: service_healthy
+    command: ["python", "-m", "e2e.dmc_gateway_compose"]
+    profiles: ["test"]
+    volumes:
+      - ./e2e:/app/e2e:ro
+    networks: [e2e]

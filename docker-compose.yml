@@ -17,9 +17,11 @@ services:
     restart: unless-stopped
 
   migrate:
+    image: quotation-legacy-migrate:latest
     build:
       context: .
       dockerfile: docker/app/Dockerfile
+      target: runtime-base
     env_file:
       - .env.production
     networks:
@@ -31,9 +33,11 @@ services:
     restart: "no"
 
   app:
+    image: quotation-legacy-app:latest
     build:
       context: .
       dockerfile: docker/app/Dockerfile
+      target: pdf-runtime
     env_file:
       - .env.production
     networks:
@@ -49,15 +53,18 @@ services:
     restart: unless-stopped
 
   nginx:
-    image: nginx:1.27-alpine
+    image: quotation-legacy-nginx:latest
+    build:
+      context: ./docker/nginx
+      dockerfile: Dockerfile
+    environment:
+      DMC_GATEWAY_ENABLED: "false"
     networks:
       - quotation_net
     depends_on:
       - app
     ports:
       - "80:80"
-    volumes:
-      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     restart: unless-stopped
 
 networks:

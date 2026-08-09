@@ -1,0 +1,18 @@
+name: quotation-local-public-preview
+
+services:
+  public-preview:
+    image: quotation-local-public-preview:latest
+    build:
+      context: ./docker/nginx
+      dockerfile: Dockerfile
+    environment:
+      DMC_GATEWAY_ENABLED: "false"
+      # Must equal an active brands.hostname in the local API database.
+      PUBLICATION_PREVIEW_HOSTNAME: ${PUBLICATION_PREVIEW_HOSTNAME:?Set an active brand hostname, for example journeys.capellatravel.com}
+      NGINX_ENVSUBST_TEMPLATE_DIR: /etc/nginx/local-public-preview-templates
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "127.0.0.1:8180:80"
+    restart: unless-stopped

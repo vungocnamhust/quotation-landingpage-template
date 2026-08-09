@@ -1,0 +1,133 @@
+name: quotation-production
+
+x-pdf-app-build: &pdf-app-build
+  context: .
+  dockerfile: docker/app/Dockerfile
+  target: pdf-runtime
+
+x-migration-build: &migration-build
+  context: .
+  dockerfile: docker/app/Dockerfile
+  target: runtime-base
+
+services:
+  postgres:
+    image: postgres:16
+    env_file:
+      - .env.production
+    environment:
+      POSTGRES_DB: quotation
+      POSTGRES_USER: quotation
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - quotation_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U quotation -d quotation"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  migrate:
+    image: ${QUOTE_MIGRATE_IMAGE:-quotation-migrate:local}
+    build: *migration-build
+    env_file:
+      - .env.production
+    networks:
+      - quotation_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # Do the ownership cutover before any API/worker can load a document.  The
+    # second pass is an assertion that the persisted state is now schema-v1,
+    # not merely a best-effort conversion.
+    command: ["/bin/sh", "-c", "python -m scripts.production_preflight && alembic upgrade head && python scripts/migrate_v2_rich_content.py --apply && python scripts/migrate_v2_rich_content.py"]
+    restart: "no"
+
+  app:
+    image: ${QUOTE_APP_IMAGE:-quotation-app:local}
+    build: *pdf-app-build
+    env_file:
+      - .env.production
+    networks:
+      - quotation_net
+      - dmc-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8111/health/ready')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - media_sync_data:/data/media-sync
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8111"]
+    restart: unless-stopped
+
+  quote-generator:
+    image: ${QUOTE_GENERATOR_IMAGE:-quotation-generator:local}
+    build:
+      context: ./quote-generator
+      dockerfile: ../docker/quote-generator/Dockerfile
+    env_file:
+      - .env.production
+    environment:
+      QUOTATION_INTERNAL_API_URL: http://app:8111
+    networks:
+      - quotation_net
+    depends_on:
+      app:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8115/').then(r=>{if(!r.ok) process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  publication-worker:
+    image: ${QUOTE_APP_IMAGE:-quotation-app:local}
+    env_file:
+      - .env.production
+    environment:
+      QUOTE_GENERATOR_INTERNAL_URL: http://quote-generator:8115
+    networks:
+      - quotation_net
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      quote-generator:
+        condition: service_healthy
+    command: ["python", "-m", "services.publication_worker"]
+    restart: unless-stopped
+
+  nginx:
+    image: ${QUOTE_NGINX_IMAGE:-quotation-nginx:local}
+    build:
+      context: ./docker/nginx
+      dockerfile: Dockerfile
+    env_file:
+      - .env.production
+    networks:
+      - quotation_net
+      - dmc-network
+    depends_on:
+      app:
+        condition: service_healthy
+      quote-generator:
+        condition: service_healthy
+    restart: unless-stopped
+
+networks:
+  quotation_net:
+  dmc-network:
+    external: true
+    name: dmc-network
+
+volumes:
+  postgres_data:
+  media_sync_data:

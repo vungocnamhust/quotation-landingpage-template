@@ -1,0 +1,83 @@
+name: quotation-local
+
+x-pdf-app-build: &pdf-app-build
+  context: .
+  dockerfile: docker/app/Dockerfile
+  target: pdf-runtime
+
+x-migration-build: &migration-build
+  context: .
+  dockerfile: docker/app/Dockerfile
+  target: runtime-base
+
+services:
+  postgres:
+    image: postgres:16
+    env_file:
+      - .env.local
+    environment:
+      POSTGRES_DB: quotation
+      POSTGRES_USER: quotation
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - quotation_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U quotation -d quotation"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  migrate:
+    image: quotation-local-migrate:latest
+    build: *migration-build
+    env_file:
+      - .env.local
+    working_dir: /app
+    volumes:
+      - .:/app
+    networks:
+      - quotation_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["alembic", "upgrade", "head"]
+    restart: "no"
+
+  app:
+    image: quotation-local-app:latest
+    build: *pdf-app-build
+    env_file:
+      - .env.local
+    working_dir: /app
+    volumes:
+      - .:/app
+      - media_sync_data:/data/media-sync
+    networks:
+      - quotation_net
+      - dmc-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    # Keep the API process stable while a sale is editing a quotation.  Source
+    # changes are picked up by rebuilding/restarting this local service, rather
+    # than terminating in-flight editor mutations through Uvicorn's reloader.
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8111"]
+    ports:
+      - "8111:8111"
+    restart: unless-stopped
+
+networks:
+  quotation_net:
+  dmc-network:
+    external: true
+    name: dmc-network
+
+volumes:
+  postgres_data:
+  media_sync_data:

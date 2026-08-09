@@ -1,0 +1,8 @@
+[Unit]
+Description=Synchronize Cloudflare CIDRs for quotation origin access
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh /opt/quotation-landingpage-template/scripts/sync_cloudflare_origin_allowlist.sh

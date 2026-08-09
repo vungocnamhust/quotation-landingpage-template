@@ -86,7 +86,7 @@ services:
         condition: service_completed_successfully
     volumes:
       - media_sync_data:/data/media-sync
-    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8111"]
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8111"]
     restart: unless-stopped
 
   nginx:
@@ -244,6 +244,11 @@ Neu can:
 - chi app container noi bo noi voi postgres
 - rotate R2 credentials neu lo
 
+> **Deployment status.** Compose manifests and Dockerfile exist in this repo,
+> but a real VPS/gateway/browser smoke is not established by local lint or
+> build. Treat the following as the required deployment gate, not completed
+> evidence.
+
 ## 12. Runbook deploy
 
 Tren VPS:
@@ -272,4 +277,3 @@ Compose phai co:
 
 - dependency healthcheck cho postgres
 - migration step ro rang
-

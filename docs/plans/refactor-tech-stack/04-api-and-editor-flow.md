@@ -4,6 +4,14 @@
 
 Tai lieu nay chot API contract va editor flow sau refactor, de frontend/backend implement dong bo.
 
+Media Library write contract: [11-r2-media-file-contract.md](./11-r2-media-file-contract.md).
+
+> **Current boundary.** The quotation/document/publish contract in this file is
+> current. Sections 3.5–3.8 describe the older `/api/v2/media/*` compatibility
+> API; new media picker and upload work must use the Media Library contract.
+> Content candidates remain server-persisted and are not canonical until the
+> editor explicitly applies them with `baseRevision` protection.
+
 ## 2. Quotation flow tong quan
 
 ### Tao quotation v2
@@ -144,7 +152,7 @@ Response:
 }
 ```
 
-## 3.5 `POST /api/v2/media/upload`
+## 3.5 `POST /api/v2/media/upload` (legacy compatibility)
 
 Request:
 
@@ -167,7 +175,7 @@ Response:
 }
 ```
 
-## 3.6 `GET /api/v2/media`
+## 3.6 `GET /api/v2/media` (legacy compatibility)
 
 Phuc vu gallery picker.
 
@@ -182,7 +190,7 @@ Response:
 }
 ```
 
-## 3.7 `POST /api/v2/media/sync`
+## 3.7 `POST /api/v2/media/sync` (legacy compatibility)
 
 Request:
 
@@ -206,7 +214,7 @@ Response:
 }
 ```
 
-## 3.8 `POST /api/v2/media/{asset_id}/select`
+## 3.8 `POST /api/v2/media/{asset_id}/select` (legacy compatibility)
 
 Request:
 
@@ -314,4 +322,6 @@ Neu chua co auth:
 
 - tam thoi de nullable
 - khong block implementation
+# V2 manual publication boundary
 
+Manual quotations use Postgres document revisions as the only editor source. Content candidates remain outside the document until Apply. `POST /api/v2/quotations/{id}/publish` uploads only rendered HTML to R2 at `quotations/{id}/publish/{lang}/v{version}/index.html` (immutable) and copies it to `current/index.html` (`no-cache`). PDF is rendered on demand by Playwright from the publication's immutable `document_revision`; it is never stored in R2. Restore only repoints the R2 current HTML alias and publication pointer, never the canonical draft.

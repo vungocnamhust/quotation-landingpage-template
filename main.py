@@ -1,5 +1,6 @@
 import uuid
 import json
+import base64
 import logging
 import os
 import asyncio
@@ -7,24 +8,30 @@ import copy
 import re
 import html
 import socket
+import secrets
 from functools import partial
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request, HTTPException, UploadFile, File, Form
-from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
+from fastapi import BackgroundTasks, Depends, FastAPI, Request, HTTPException, UploadFile, File, Form
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, RedirectResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.templating import Jinja2Templates
 from fastapi.exceptions import RequestValidationError
 from markupsafe import Markup, escape
-from pydantic import BaseModel, ValidationError, Field
-from typing import Any, List, Optional
-from datetime import date
+from pydantic import BaseModel, ConfigDict, ValidationError, Field, field_validator, model_validator
+from sqlalchemy import func, text
+from sqlalchemy.exc import IntegrityError
+from typing import Any, List, Optional, Literal
+from datetime import date, datetime, timezone
 from github_publish import publish_to_github, publish_file_to_github
 from image_selector import select_landing_image
-from destination_profiles import get_profile, get_layout_images_for_destination, get_available_images_for_destination, SOFT_TRANSITIONS
+from destination_profiles import DESTINATION_PROFILES, get_profile, get_layout_images_for_destination, get_available_images_for_destination, SOFT_TRANSITIONS
 from quote_document import (
+    BrandContentPolicy,
+    BrandProfile,
     CreateQuoteRequestV1,
     QuoteDocumentV1,
     SECTION_REGISTRY,
+    rich_content_values,
     validate_quote_document_sections,
 )
 from quote_document_adapter import (
@@ -32,19 +39,34 @@ from quote_document_adapter import (
     build_quote_document_from_lang_ctx,
     normalize_quote_document,
 )
+from editable_brochure_contract import (
+    editable_contract_payload,
+    design_identity_field, is_design_copy_field,
+    is_fact_media_field, media_slot_descriptor, expand_media_slot_field_ids,
+    is_gallery_field,
+)
 from quote_generation import (
     BRAND_PROFILES,
     QuoteGenerationService,
-    RegenerateNarrativeRequest,
-    apply_narrative_result_to_document,
 )
 from db.session import get_session_factory
 from repositories import (
+    BrandRepository,
+    ContentDraftRepository,
     DocumentRevisionConflictError,
     PublicationRepository,
+    PublicationTargetRepository,
     QuotationDocumentRepository,
     QuotationRepository,
 )
+from services.facts_resolver import FactsResolutionError, FactsResolver
+from services.facts_contract import normalize_legacy_facts_snapshot
+from services.quotation_intake_policy import quotation_intake_missing_inputs
+from services.skeleton_builder import SkeletonBuilder
+from services.content_draft_service import ContentDraftService
+from services.content_registry import content_owned_targets, content_registry_payload, content_editor_state_payload, content_registry_for_document_payload
+from services.section_content_generator import ContentGenerationError
+from services.content_readiness_service import resolve_content_readiness
 from services.media_service import (
     MediaNotFoundError,
     MediaSelectionError,
@@ -54,9 +76,19 @@ from services.media_service import (
 )
 from services.storage.local_media_storage import LocalMediaStorage
 from services.storage.r2_storage import R2Storage, R2StorageConfigurationError
+from services.media_library_service import MediaLibraryService, is_allowed_prefix, normalize_library_prefix
+from services.brochure_media_resolver import BrochureMediaResolver, Candidate
+from services.media_locations import accommodation_asset_location, accommodation_location, destination_location, storage_slug, team_location
+from repositories.destination_repository import DestinationRepository
+from repositories.media_library_repository import MediaLibraryRepository
+from repositories.travel_designer_repository import TravelDesignerRepository
+from repositories.accommodation_repository import AccommodationRepository
+from core.auth import Principal, require_editor, require_editor_or_service, require_quote_admin
 from routers.health import router as health_router
 from core.config import settings
 
+if os.getenv("ENVIRONMENT", "local").strip().lower() in {"local", "development", "dev"} and os.path.exists(".env.local"):
+    load_dotenv(".env.local", override=True)
 load_dotenv()
 
 logging.basicConfig(
@@ -66,12 +98,238 @@ logging.basicConfig(
 )
 log = logging.getLogger("quotation")
 
+V2_RENDERER_NAME = "quote-generator"
+
+
+class FactsMediaRequest(BaseModel):
+    baseRevision: int
+    slots: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class FactsDesignerRequest(BaseModel):
+    baseRevision: int
+    designerProfileId: str
+
+# These keys are display chrome only. Facts and reviewed narrative never pass
+# through presentation.copyOverrides, which prevents Design from becoming a
+# second owner of operational quotation data.
+def _validate_v2_copy_overrides(overrides: Any) -> dict[str, str]:
+    if not isinstance(overrides, dict):
+        raise HTTPException(status_code=422, detail={"message": "copyOverrides must be an object."})
+    invalid = [key for key, value in overrides.items()
+               if not is_design_copy_field(key) or not isinstance(value, str)
+               or not value.strip() or len(value) > 500]
+    if invalid:
+        raise HTTPException(status_code=422, detail={
+            "message": "copyOverrides contains an invalid presentation key or value.",
+            "invalidKeys": sorted(str(key) for key in invalid),
+        })
+    return {key: value.strip() for key, value in overrides.items()}
+
+
+def _validate_v2_media_overrides(overrides: Any) -> dict[str, Any]:
+    if not isinstance(overrides, dict):
+        raise HTTPException(status_code=422, detail={"message": "mediaOverrides must be an object."})
+    if overrides:
+        raise HTTPException(status_code=422, detail={"message": "mediaOverrides is legacy read-only. Save quotation media through /facts/media slots."})
+    return {}
+
+
+def _validate_v2_identity_overrides(overrides: Any) -> dict[str, str]:
+    """Validate identity writes through the same Design registry as the UI.
+
+    Media identity has no Design descriptor. Quotation media is Fact-owned and
+    must use its existing canonical Facts media route.
+    """
+    if not isinstance(overrides, dict):
+        raise HTTPException(status_code=422, detail={"message": "identityOverrides must be an object."})
+    invalid: list[str] = []
+    normalized: dict[str, str] = {}
+    for key, value in overrides.items():
+        limit = 160 if key == "brandName" else 500
+        if design_identity_field(str(key)) is None or not isinstance(value, str) or not value.strip() or len(value) > limit:
+            invalid.append(str(key))
+            continue
+        normalized[str(key)] = value.strip()
+    if invalid:
+        raise HTTPException(status_code=422, detail={
+            "message": "identityOverrides contains an invalid Design field or value.",
+            "invalidKeys": sorted(invalid),
+        })
+    return normalized
+
+
+def _media_classification(item) -> str:
+    value = f"{item.parent_prefix}/{item.file_name}".lower()
+    return next((tag for tag in ("exterior", "interior", "room", "hero", "ornament") if tag in value), "generic")
+
+
+async def _resolve_active_travel_designer(principal: Principal):
+    """Map the trusted interactive identity to the one workspace owner row."""
+    if not principal.email:
+        raise HTTPException(status_code=403, detail="An active Travel Designer profile is required. Contact a DMC administrator.")
+    async with _get_db_session_factory()() as session:
+        profile = await TravelDesignerRepository(session).get_active_by_email(principal.email)
+    if profile is None:
+        raise HTTPException(status_code=403, detail="An active Travel Designer profile is required. Contact a DMC administrator.")
+    return profile
+
+
+async def require_owned_quotation(
+    quotation_id: str,
+    principal: Principal = Depends(require_editor),
+):
+    """Ownership is enforced server-side for every interactive quote action.
+
+    Return 404 for unassigned and foreign quotes so a manually entered ID does
+    not reveal the existence of another designer's customer record.
+    """
+    async with _get_db_session_factory()() as session:
+        quotation = await QuotationRepository(session).get_quotation_by_id(quotation_id)
+        if (
+            quotation is None
+            or quotation.template_name != V2_RENDERER_NAME
+        ):
+            raise HTTPException(status_code=404, detail="Quotation was not found.")
+    return quotation
+
+
+def _workspace_cursor(quotation) -> str:
+    payload = json.dumps({"updatedAt": quotation.updated_at.isoformat(), "id": quotation.id}, separators=(",", ":"))
+    return base64.urlsafe_b64encode(payload.encode()).decode().rstrip("=")
+
+
+def _parse_workspace_cursor(cursor: str | None) -> tuple[datetime | None, str | None]:
+    if not cursor:
+        return None, None
+    try:
+        padded = cursor + "=" * (-len(cursor) % 4)
+        payload = json.loads(base64.urlsafe_b64decode(padded).decode())
+        return datetime.fromisoformat(payload["updatedAt"]), str(payload["id"])
+    except (ValueError, KeyError, TypeError, UnicodeDecodeError, json.JSONDecodeError):
+        raise HTTPException(status_code=422, detail="Invalid workspace cursor") from None
+
+
+def _relative_luminance(hex_color: str) -> float:
+    """Return WCAG relative luminance for an already-validated #RRGGBB value."""
+    channels = [int(hex_color[index : index + 2], 16) / 255 for index in (1, 3, 5)]
+    normalized = [
+        channel / 12.92 if channel <= 0.03928 else ((channel + 0.055) / 1.055) ** 2.4
+        for channel in channels
+    ]
+    return 0.2126 * normalized[0] + 0.7152 * normalized[1] + 0.0722 * normalized[2]
+
+
+def _contrast_ratio(foreground: str, background: str) -> float:
+    lighter = max(_relative_luminance(foreground), _relative_luminance(background))
+    darker = min(_relative_luminance(foreground), _relative_luminance(background))
+    return (lighter + 0.05) / (darker + 0.05)
+
+
+class BrandRenderProfileContract(BaseModel):
+    """Mutable brand configuration; release snapshots use the serialized form."""
+
+    model_config = ConfigDict(extra="allow")
+    palette: dict[str, str]
+    radii: dict[str, str]
+    themeId: Literal["brochure"] = "brochure"
+    layoutVersion: int = 1
+
+    @field_validator("palette")
+    @classmethod
+    def validate_palette(cls, palette: dict[str, str]) -> dict[str, str]:
+        required = {"canvas", "paper", "ink", "mutedInk", "accent", "accentAlt", "contrast", "onContrast", "focus"}
+        section_backgrounds = {"storyContrast", "investmentSurface", "investmentText"}
+        if missing := required.difference(palette):
+            raise ValueError(f"palette is missing required colors: {', '.join(sorted(missing))}")
+        if section_backgrounds.intersection(palette):
+            if missing := section_backgrounds.difference(palette):
+                raise ValueError(
+                    "palette section-background colors must be supplied together: "
+                    f"{', '.join(sorted(missing))}"
+                )
+        if invalid := [key for key, value in palette.items() if not re.fullmatch(r"#[0-9a-fA-F]{6}", value)]:
+            raise ValueError(f"palette contains invalid #RRGGBB values: {', '.join(sorted(invalid))}")
+        checks = (
+            ("ink", "canvas", 4.5, "body text"),
+            ("onContrast", "contrast", 4.5, "contrast text"),
+            ("focus", "canvas", 3.0, "focus ring"),
+        )
+        if section_backgrounds.issubset(palette):
+            checks += (
+                ("onContrast", "storyContrast", 4.5, "story contrast text"),
+                ("investmentText", "investmentSurface", 4.5, "investment text"),
+            )
+        for foreground, background, minimum, label in checks:
+            ratio = _contrast_ratio(palette[foreground], palette[background])
+            if ratio < minimum:
+                raise ValueError(
+                    f"{label} contrast is {ratio:.2f}:1; required minimum is {minimum}:1"
+                )
+        return palette
+
+    @field_validator("radii")
+    @classmethod
+    def validate_radii(cls, radii: dict[str, str]) -> dict[str, str]:
+        required = {"card", "button", "frame", "pill"}
+        if missing := required.difference(radii):
+            raise ValueError(f"radii is missing required values: {', '.join(sorted(missing))}")
+        if any(not value.strip() for value in radii.values()):
+            raise ValueError("radii values must not be empty")
+        if re.fullmatch(r"\s*(?:999+px|50%|100%)\s*", radii["button"], flags=re.IGNORECASE):
+            raise ValueError("radii.button must be a component radius, not a pill radius")
+        return radii
+
+    @model_validator(mode="after")
+    def validate_layout(self):
+        if self.layoutVersion != 1:
+            raise ValueError("layoutVersion 1 is the only supported V2 layout")
+        return self
+
+
+def _serialize_brand_render_profile(brand: Any) -> dict[str, Any]:
+    profile = copy.deepcopy(brand.render_profile or {})
+    BrandRenderProfileContract.model_validate(profile)
+    profile.update({
+        "id": brand.id,
+        "displayName": brand.display_name,
+        "hostname": brand.hostname,
+        "logoUrl": profile.get("logoUrl") or brand.logo_asset_key or "",
+    })
+    return profile
+
+
+def _brand_generation_profile(brand: Any) -> BrandProfile:
+    profile = _serialize_brand_render_profile(brand)
+    content_policy = profile.get("contentPolicy") if isinstance(profile.get("contentPolicy"), dict) else {}
+    return BrandProfile(
+        brand_id=brand.id,
+        display_name=brand.display_name,
+        domain=brand.hostname,
+        logo=profile.get("logoUrl") or "",
+        colors=profile.get("palette") if isinstance(profile.get("palette"), dict) else {},
+        fonts=profile.get("typography") if isinstance(profile.get("typography"), dict) else {},
+        content_policy=BrandContentPolicy.model_validate(content_policy),
+    )
+
+
+async def _require_active_v2_brand(brand_id: str | None) -> Any:
+    if not brand_id:
+        raise HTTPException(status_code=422, detail={"message": "An active brand is required.", "missingInputs": ["brand_id"]})
+    async with _get_db_session_factory()() as session:
+        brand = await BrandRepository(session).get_active(brand_id)
+        if brand is None:
+            raise HTTPException(status_code=422, detail={"message": "Brand is unavailable for V2.", "missingInputs": ["brand_id"]})
+        return brand
+
 
 def _get_db_session_factory():
     return get_session_factory()
 
 
 _media_service: MediaService | None = None
+_media_library_service: MediaLibraryService | None = None
+_pdf_render_semaphore = asyncio.Semaphore(1)
 
 
 def _get_media_service() -> MediaService:
@@ -84,6 +342,15 @@ def _get_media_service() -> MediaService:
         storage = desired_storage_class()
         _media_service = MediaService(storage=storage)
     return _media_service
+
+
+def _get_media_library_service() -> MediaLibraryService:
+    global _media_library_service
+    if not settings.has_r2_configuration:
+        raise HTTPException(status_code=503, detail="R2 media library is not configured.")
+    if _media_library_service is None:
+        _media_library_service = MediaLibraryService(storage=R2Storage(), session_factory=_get_db_session_factory())
+    return _media_library_service
 
 app = FastAPI(title="Quotation Webhook API")
 app.include_router(health_router)
@@ -224,6 +491,7 @@ HTML_RICH_TEXT_PREFIXES = (
     "day_desc_",
     "day_highlights_",
     "day_note_",
+    "booking_term_body_",
 )
 
 WORD_PASTE_RECOVERABLE_PREFIXES = (
@@ -439,6 +707,7 @@ def _build_seed_destinations_from_quote_document(document: dict) -> list[dict[st
 
 def _build_compatibility_payload_from_quote_request(request_payload: CreateQuoteRequestV1, document: dict) -> dict[str, Any]:
     quote_document = QuoteDocumentV1.model_validate(document)
+    rich_content = rich_content_values(quote_document)
     itinerary = []
     for day in quote_document.itinerary.days:
         itinerary.append({
@@ -467,9 +736,12 @@ def _build_compatibility_payload_from_quote_request(request_payload: CreateQuote
                 "hotelArrangement": hotel.introduction or hotel.name,
             })
 
-    booking_item_map = {item.key or item.id: item.body for item in quote_document.bookingTerms.items}
-    total_budget = request_payload.pricing_facts.total_budget or 0.0
-    currency = request_payload.pricing_facts.currency or "USD"
+    booking_item_map = {str(item["label"]).strip().lower(): str(item["body"]) for item in rich_content["bookingItems"]}
+    pricing_options = request_payload.pricing_facts.options
+    first_pricing_option = pricing_options[0] if pricing_options else None
+    currency = first_pricing_option.currency if first_pricing_option else "USD"
+    currency_divisor = 1 if currency == "VND" else 100
+    total_budget = (first_pricing_option.group_total_amount_minor / currency_divisor) if first_pricing_option else 0.0
     return {
         "quotationNarrative": "\n".join(filter(None, [
             quote_document.trip.lede,
@@ -488,7 +760,7 @@ def _build_compatibility_payload_from_quote_request(request_payload: CreateQuote
         "landingpageContent": {
             "heroSection": {
                 "headline": quote_document.trip.title or "Vietnam Private Journey",
-                "subtitle": quote_document.trip.title or request_payload.trip_facts.title or "Vietnam Private Journey",
+                "subtitle": quote_document.trip.title or "Vietnam Private Journey",
             },
             "visualDescription": quote_document.brand.name or "Luxury travel brochure",
         },
@@ -500,7 +772,7 @@ def _build_compatibility_payload_from_quote_request(request_payload: CreateQuote
             "priceType": "Indicative",
             "tourCode": request_payload.opportunity_id or quote_document.trip.quotationNumber or quote_document.meta.quotationId,
             "domesticFlights": "On request",
-            "priceBasis": quote_document.trip.priceBasis or request_payload.pricing_facts.price_basis,
+            "priceBasis": quote_document.trip.priceBasis,
             "partnerNote": BRAND_PROFILES.get(quote_document.meta.brandId, BRAND_PROFILES["vietnam_safar"]).content_policy.tone,
             "validity": "Subject to final confirmation and availability.",
         },
@@ -523,22 +795,22 @@ def _build_compatibility_payload_from_quote_request(request_payload: CreateQuote
             "confirmation": booking_item_map.get("confirmation") or "Subject to availability upon payment.",
         },
         "finalization": {
-            "finalDetailsRequired": "\n".join(item.text for item in quote_document.finalization.requiredItems),
-            "afterConfirmation": "\n".join(item.text for item in quote_document.finalization.afterConfirmation),
+            "finalDetailsRequired": "\n".join(rich_content["finalizationGroups"][0]["items"]) if rich_content["finalizationGroups"] else "",
+            "afterConfirmation": "\n".join(rich_content["finalizationGroups"][1]["items"]) if len(rich_content["finalizationGroups"]) > 1 else "",
         },
         "pricing": {
             "currency": currency,
             "pricingTitle": "PRICE QUOTATION – INDICATIVE",
-            "basis": quote_document.trip.priceBasis or request_payload.pricing_facts.price_basis,
+            "basis": quote_document.trip.priceBasis,
             "priceOptions": [
                 {
-                    "label": option.category or request_payload.pricing_facts.option_label or "Main option",
-                    "notes": option.name,
-                    "amount": None,
+                    "label": option.label or f"Option {index:02d}",
+                    "notes": "",
+                    "amount": (option.groupTotalAmountMinor / (1 if option.currency == "VND" else 100)) if option.groupTotalAmountMinor else None,
                 }
-                for option in quote_document.pricing.options
+                for index, option in enumerate(quote_document.pricing.options, 1)
             ] or [{
-                "label": request_payload.pricing_facts.option_label or "Main option",
+                "label": "Option 01",
                 "notes": quote_document.trip.priceBasis or "",
                 "amount": None,
             }],
@@ -555,8 +827,8 @@ def _build_compatibility_payload_from_quote_request(request_payload: CreateQuote
             "flight": "pending",
         },
         "candidateBlocks": [],
-        "inclusions": [item.text for item in quote_document.inclusions],
-        "exclusions": [item.text for item in quote_document.exclusions],
+        "inclusions": rich_content["inclusions"],
+        "exclusions": rich_content["exclusions"],
         "quotationNumber": request_payload.opportunity_id or quote_document.trip.quotationNumber or quote_document.meta.quotationId,
     }
 
@@ -4073,8 +4345,28 @@ def _validate_quote_document_or_422(document: dict[str, Any]) -> dict[str, Any]:
     return normalized
 
 
+def _normalize_quote_document_structure_or_422(document: dict[str, Any]) -> dict[str, Any]:
+    """Validate canonical shape without applying the publish-only section gate.
+
+    Facts media, designer assignment, and deterministic defaults are all valid
+    before Content has filled the brochure's required narrative/legal sections.
+    Review/Publish remains the sole completeness boundary.
+    """
+    try:
+        candidate = copy.deepcopy(document)
+        # Facts/media mutations can start before a staff member creates the
+        # rich sections. This supplies only the empty V1 container; it never
+        # translates legacy content or makes the document publishable.
+        candidate.setdefault("content", {"sections": {}})
+        candidate.setdefault("meta", {}).setdefault("contentSchemaVersion", 1)
+        return QuoteDocumentV1.model_validate(candidate).model_dump(mode="json")
+    except ValidationError as exc:
+        raise HTTPException(status_code=422, detail={"errors": exc.errors()}) from exc
+
+
 def _create_quote_request_from_document(document: dict[str, Any]) -> CreateQuoteRequestV1:
     quote_document = QuoteDocumentV1.model_validate(document)
+    rich_content = rich_content_values(quote_document)
     hotels = []
     for hotel in quote_document.stays.hotels:
         hotels.append(
@@ -4094,8 +4386,6 @@ def _create_quote_request_from_document(document: dict[str, Any]) -> CreateQuote
             "brand_id": quote_document.meta.brandId,
             "lang": quote_document.meta.lang,
             "trip_facts": {
-                "title": quote_document.trip.title,
-                "subtitle": quote_document.trip.lede,
                 "destinations": [day.segmentCity for day in quote_document.itinerary.days if day.segmentCity],
                 "start_date": "",
                 "end_date": "",
@@ -4103,7 +4393,6 @@ def _create_quote_request_from_document(document: dict[str, Any]) -> CreateQuote
                     {
                         "day_number": day.dayNumber,
                         "destination": day.segmentCity,
-                        "summary": day.title,
                         "overnight": day.overnight,
                         "meals": day.meals,
                     }
@@ -4111,10 +4400,18 @@ def _create_quote_request_from_document(document: dict[str, Any]) -> CreateQuote
                 ],
             },
             "pricing_facts": {
-                "currency": "USD",
-                "total_budget": None,
-                "price_basis": quote_document.trip.priceBasis,
-                "option_label": ((quote_document.pricing.options or [None])[0].name if quote_document.pricing.options else "Main option"),
+                "conditions": [item.text for item in quote_document.pricing.conditions],
+                "options": [
+                    {
+                        "id": option.id,
+                        "label": option.label or f"Option {index:02d}",
+                        "currency": option.currency,
+                        "per_traveler_amount_minor": option.perTravelerAmountMinor,
+                        "group_total_amount_minor": option.groupTotalAmountMinor,
+                    }
+                    for index, option in enumerate(quote_document.pricing.options, 1)
+                    if option.currency and option.perTravelerAmountMinor and option.groupTotalAmountMinor
+                ],
             },
             "customer_facts": {
                 "customer_name": quote_document.traveler.customerName,
@@ -4125,8 +4422,8 @@ def _create_quote_request_from_document(document: dict[str, Any]) -> CreateQuote
             },
             "service_facts": {
                 "hotels": hotels,
-                "inclusions": [item.text for item in quote_document.inclusions],
-                "exclusions": [item.text for item in quote_document.exclusions],
+                "inclusions": rich_content["inclusions"],
+                "exclusions": rich_content["exclusions"],
             },
         }
     )
@@ -4759,9 +5056,56 @@ async def _persist_ctx_data(quotation_id: str, ctx_data: dict, commit_message: s
 
 def _build_publication_storage_keys(quotation_id: str, lang: str, version: int) -> tuple[str, str]:
     return (
-        f"quotations/{quotation_id}/publish/{lang}/v{version}.html",
-        f"quotations/{quotation_id}/publish/{lang}/v{version}.pdf",
+        f"quotations/{quotation_id}/publish/{lang}/v{version}/index.html",
+        f"quotations/{quotation_id}/publish/{lang}/current/index.html",
     )
+
+
+def _render_canonical_document_html(document: dict[str, Any], quotation: Any, *, lang: str, view: Literal["web", "print"], version: int = 1) -> str:
+    hydrated = _hydrate_r2_asset_urls(_hydrate_canonical_quote_document(document, quotation, lang=lang, revision=int((document.get("meta") or {}).get("revision") or 1)))
+    ctx = _build_brochure_render_context({}, hydrated, quotation.id, lang, latest_version=version, preview_mode=view == "web", editor_mode=False)
+    template_name = quotation.template_name.replace(".html", "_pdf.html") if view == "print" else quotation.template_name
+    return templates.get_template(template_name).render(**ctx)
+
+
+def _render_pdf_bytes(print_html: str) -> bytes:
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError as exc:
+        raise RuntimeError("Playwright/Chromium is not installed.") from exc
+    with sync_playwright() as browser_runtime:
+        browser = browser_runtime.chromium.launch()
+        try:
+            page = browser.new_page()
+            page.set_content(print_html, wait_until="networkidle")
+            return page.pdf(format="A4", print_background=True, prefer_css_page_size=True)
+        finally:
+            browser.close()
+
+
+def _render_react_pdf_bytes(*, hostname: str, release_id: str) -> bytes:
+    """Print the private React SSR route; V2 never converts through Jinja.
+
+    The private route resolves its immutable release by ID, not by public host.
+    Chromium forbids callers from overriding the ``Host`` header, so use the
+    Compose-only origin directly and keep the public hostname out of this
+    browser request.
+    """
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError as exc:
+        raise RuntimeError("Playwright/Chromium is not installed.") from exc
+    quote_generator_url = os.getenv("QUOTE_GENERATOR_INTERNAL_URL", "http://quote-generator:8115").rstrip("/")
+    url = f"{quote_generator_url}/internal/releases/{release_id}/pdf"
+    with sync_playwright() as browser_runtime:
+        browser = browser_runtime.chromium.launch()
+        try:
+            page = browser.new_page()
+            page.goto(url, wait_until="networkidle", timeout=60_000)
+            page.wait_for_selector('[data-render-ready="true"]', state="attached", timeout=15_000)
+            return page.pdf(format="A4", print_background=True, prefer_css_page_size=True)
+        finally:
+            browser.close()
 
 
 def _hydrate_canonical_quote_document(
@@ -4781,6 +5125,10 @@ def _hydrate_canonical_quote_document(
         meta["opportunityId"] = quotation.opportunity_id
     meta["revision"] = revision
     meta["version"] = int(meta.get("version") or quotation.current_version or 1)
+    # The document payload is already canonical at this boundary. Preserve the
+    # schema marker when older clients omit meta while editing an otherwise V1
+    # block document; rich HTML is never reconstructed here.
+    meta.setdefault("contentSchemaVersion", 1)
     return normalized
 
 
@@ -4844,7 +5192,7 @@ async def _sync_canonical_quote_document_to_ctx(
 
 
 def _is_asset_reference(value: Any) -> bool:
-    return isinstance(value, dict) and bool(set(value.keys()) & {"assetId", "url", "status"})
+    return isinstance(value, dict) and bool(set(value.keys()) & {"assetId", "r2Key", "url", "status"})
 
 
 def _is_transient_asset_reference(value: dict[str, Any]) -> bool:
@@ -4868,18 +5216,22 @@ def _sanitize_canonical_asset_state(document: Any, fallback_document: Any = None
         if _is_asset_reference(document):
             asset = {
                 "assetId": document.get("assetId") or "",
+                "r2Key": document.get("r2Key") or "",
                 "url": document.get("url") or "",
                 "status": document.get("status") or "ready",
+                "altText": document.get("altText") or "",
             }
             if _is_transient_asset_reference(asset):
                 fallback_asset = fallback_document if isinstance(fallback_document, dict) else None
                 if fallback_asset and _is_asset_reference(fallback_asset):
                     return {
                         "assetId": fallback_asset.get("assetId") or "",
+                        "r2Key": fallback_asset.get("r2Key") or "",
                         "url": fallback_asset.get("url") or "",
                         "status": fallback_asset.get("status") or "ready",
+                        "altText": fallback_asset.get("altText") or "",
                     }
-                return {"assetId": "", "url": "", "status": "ready"}
+                return {"assetId": "", "r2Key": "", "url": "", "status": "ready", "altText": ""}
             return asset
 
         fallback_map = fallback_document if isinstance(fallback_document, dict) else {}
@@ -4889,6 +5241,21 @@ def _sanitize_canonical_asset_state(document: Any, fallback_document: Any = None
         }
 
     return document
+
+
+def _hydrate_r2_asset_urls(document: Any) -> Any:
+    """Derive render URLs from canonical r2Key values without changing identity."""
+    if isinstance(document, list):
+        return [_hydrate_r2_asset_urls(item) for item in document]
+    if not isinstance(document, dict):
+        return document
+    if _is_asset_reference(document):
+        asset = dict(document)
+        r2_key = str(asset.get("r2Key") or "")
+        if r2_key and settings.has_r2_configuration:
+            asset["url"] = _get_media_library_service().storage.build_public_url(r2_key)
+        return asset
+    return {key: _hydrate_r2_asset_urls(value) for key, value in document.items()}
 
 
 def _draft_asset_public_path(quotation_id: str, filename: str) -> str:
@@ -5698,17 +6065,29 @@ async def create_quotation(request: Request):
     }
 
 
-@app.post("/api/v2/quotations")
-async def create_quotation_v2(payload: CreateQuoteRequestV1):
+@app.post("/api/v2/legacy-create-quotations", include_in_schema=False)
+async def create_quotation_v2_legacy(payload: CreateQuoteRequestV1):
+    raise HTTPException(
+        status_code=410,
+        detail={
+            "message": "This legacy V2 creation endpoint has been retired.",
+            "use": "POST /api/v2/quotations",
+        },
+    )
+    # Kept below temporarily for source-level migration reference only.  The
+    # React V2 boundary must never execute this Jinja flow.
+    payload, resolved_destination_refs = await _canonicalize_quote_destinations(payload)
     quotation_id = f"quo_{uuid.uuid4().hex[:12]}"
     generation_service = QuoteGenerationService()
     generated_document = await generation_service.generate(payload)
     document = generated_document.model_dump(mode="json")
+    document = await _apply_create_fact_media_slots(document, payload.factMediaSlots)
     document.setdefault("meta", {})
     document["meta"]["quotationId"] = quotation_id
     document["meta"]["version"] = 1
     document["meta"]["status"] = "draft"
     document["meta"]["template"] = BROCHURE_TEMPLATE_NAME
+    document["meta"]["resolvedDestinationRefs"] = resolved_destination_refs
     lang = payload.lang if payload.lang in ("en", "vi", "ar") else "en"
     document = _validate_quote_document_or_422(document)
     destinations = _build_seed_destinations_from_quote_document(document)
@@ -5841,7 +6220,7 @@ async def create_quotation_v2(payload: CreateQuoteRequestV1):
                 template_name=BROCHURE_TEMPLATE_NAME,
                 baseline_lang=lang,
                 customer_name=((payload.customer_facts or {}).customer_name if payload.customer_facts else None),
-                title=document.get("trip", {}).get("title") or payload.trip_facts.title,
+                title=document.get("trip", {}).get("title") or "Untitled journey",
                 status="published",
                 current_version=1,
             )
@@ -5881,6 +6260,523 @@ async def create_quotation_v2(payload: CreateQuoteRequestV1):
         "documentVersion": ((document.get("meta") or {}).get("version")) or 1,
         "status": "published",
     }
+
+
+async def _resolve_v2_facts(payload: CreateQuoteRequestV1) -> tuple[CreateQuoteRequestV1, dict[str, Any]]:
+    async with _get_db_session_factory()() as session:
+        await _seed_destination_catalog(session)
+        resolver = FactsResolver()
+        try:
+            canonical, resolved = await resolver.resolve(payload, DestinationRepository(session).resolve)
+        except FactsResolutionError as exc:
+            raise HTTPException(status_code=422, detail={"message": str(exc), "missingInputs": exc.missing_inputs}) from exc
+        await session.commit()
+        return canonical, resolved
+
+
+async def _validate_selected_accommodations(payload: CreateQuoteRequestV1) -> None:
+    """Ensure Intake snapshots originate from active accommodation profiles."""
+    missing: list[str] = []
+    async with _get_db_session_factory()() as session:
+        repository = AccommodationRepository(session)
+        for index, hotel in enumerate(payload.service_facts.hotels):
+            profile = await repository.get_profile(hotel.accommodation_id or "")
+            if profile is None or not profile.is_active:
+                missing.append(f"service_facts.hotels[{index}].accommodation_id")
+                continue
+            selected_assets = {key for key in (hotel.hotel_asset, hotel.room_asset) if key}
+            if any(not key.startswith(f"{profile.asset_prefix}/") for key in selected_assets):
+                missing.extend((f"service_facts.hotels[{index}].hotel_asset", f"service_facts.hotels[{index}].room_asset"))
+                continue
+            profile_assets = {key for key in (profile.hotel_asset, profile.room_asset) if key}
+            custom_assets = selected_assets - profile_assets
+            if custom_assets:
+                active_keys = await MediaLibraryRepository(session).get_active_media_keys(custom_assets)
+                if custom_assets - active_keys:
+                    missing.extend((f"service_facts.hotels[{index}].hotel_asset", f"service_facts.hotels[{index}].room_asset"))
+    if missing:
+        raise HTTPException(status_code=422, detail={"message": "Selected accommodation profile or asset is unavailable.", "missingInputs": sorted(set(missing))})
+
+
+def _facts_response(*, quotation, request_json: dict[str, Any], document: dict[str, Any], resolved_facts: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "facts": request_json,
+        "resolvedFacts": resolved_facts,
+        "source": {"kind": quotation.source_kind, "opportunityId": quotation.opportunity_id, "snapshotAt": quotation.source_snapshot_at.isoformat() if quotation.source_snapshot_at else None, "version": quotation.source_version},
+        "currentRevision": ((document.get("meta") or {}).get("revision")) or quotation.current_revision,
+        "baselineLang": quotation.baseline_lang,
+        "missingInputs": resolved_facts.get("missingInputs", []),
+    }
+
+
+def _preserve_content_owned_values(current: dict[str, Any], rebuilt: dict[str, Any]) -> None:
+    """A Facts save can rebuild only Facts/fact-derived values, never editorial copy."""
+    for path in content_owned_targets():
+        if ".*." in path:
+            # Itinerary content is keyed by day number, so a route change does
+            # not accidentally attach an old narrative to a new day position.
+            current_days = ((current.get("itinerary") or {}).get("days") or [])
+            rebuilt_days = ((rebuilt.get("itinerary") or {}).get("days") or [])
+            for next_day in rebuilt_days:
+                previous = next((item for item in current_days if item.get("dayNumber") == next_day.get("dayNumber")), None)
+                if previous is None:
+                    continue
+                for key in ("title", "description", "activities"):
+                    if key in previous:
+                        next_day[key] = copy.deepcopy(previous[key])
+            continue
+        source: Any = current
+        target: Any = rebuilt
+        parts = path.split(".")
+        for part in parts[:-1]:
+            if not isinstance(source, dict) or part not in source:
+                source = None
+                break
+            source = source[part]
+            if not isinstance(target, dict):
+                break
+            target = target.setdefault(part, {})
+        if isinstance(source, dict) and isinstance(target, dict) and parts[-1] in source:
+            target[parts[-1]] = copy.deepcopy(source[parts[-1]])
+
+
+@app.post("/api/v2/quotations")
+async def create_canonical_quotation_v2(payload: CreateQuoteRequestV1, principal: Principal = Depends(require_editor)):
+    if payload.source.kind != "manual":
+        raise HTTPException(status_code=422, detail={"message": "Only manual quotations are supported in this phase.", "missingInputs": ["source.kind"]})
+    missing_intake_inputs = quotation_intake_missing_inputs(payload)
+    if missing_intake_inputs:
+        raise HTTPException(status_code=422, detail={"message": "Required quotation intake facts are missing.", "missingInputs": missing_intake_inputs})
+    canonical, resolved = await _resolve_v2_facts(payload)
+    await _validate_selected_accommodations(canonical)
+    await _require_active_v2_brand(canonical.brand_id)
+    designer = await _resolve_active_travel_designer(principal)
+    if resolved["missingInputs"]:
+        raise HTTPException(status_code=422, detail={"message": "Required quotation facts are missing.", "missingInputs": resolved["missingInputs"]})
+    quotation_id, lang = f"quo_{uuid.uuid4().hex[:12]}", canonical.lang or "en"
+    document = SkeletonBuilder().build(quotation_id=quotation_id, payload=canonical, resolved_facts=resolved, template=V2_RENDERER_NAME)
+    # The creation screen has no persisted document yet, so its Facts picker
+    # sends selections as generic contract slots. Validate and materialize them
+    # at the same canonical boundary as later /facts/media mutations.
+    document = await _apply_create_fact_media_slots(document, canonical.factMediaSlots)
+    selected_designer_id = canonical.presentation_options.travel_designer_id or designer.id
+    if selected_designer_id != designer.id:
+        async with _get_db_session_factory()() as session:
+            selected = await TravelDesignerRepository(session).get_profile(selected_designer_id)
+        if selected is None or not selected.is_active:
+            raise HTTPException(status_code=422, detail={"message": "Travel Designer is unavailable.", "missingInputs": ["presentation_options.travel_designer_id"]})
+        designer = selected
+    # The quotation row and the facts snapshot must agree on the same selected
+    # profile. Without this assignment a newly-created quote could snapshot a
+    # designer into the document while Facts reloaded a null selector.
+    canonical.presentation_options.travel_designer_id = designer.id
+    # Designer identity is selected Fact data; editorial copy stays in document.designer.
+    _apply_travel_designer_snapshot(document, _serialize_travel_designer(designer))
+    document["meta"]["resolvedDestinationRefs"] = {key: resolved[key] for key in ("routeDestinationRefs", "itinerary", "hotels")}
+    try:
+        async with _get_db_session_factory()() as session:
+            quotes, documents = QuotationRepository(session), QuotationDocumentRepository(session)
+            quotation = await quotes.create_quotation(quotation_id=quotation_id, opportunity_id=canonical.opportunity_id, brand_id=canonical.brand_id or "", template_name=V2_RENDERER_NAME, baseline_lang=lang, customer_name=canonical.customer_facts.customer_name, title="Untitled journey", status="draft", source_kind="manual", source_snapshot_at=datetime.now().astimezone(), designer_profile_id=designer.id)
+            await quotes.create_quotation_request(quotation_id=quotation_id, request_json=canonical.model_dump(mode="json"))
+            await _apply_missing_media_defaults(session, document, quotation_id, lang)
+            saved = await documents.save_current_document(quotation_id=quotation_id, lang=lang, document_json=document, expected_revision=0)
+            document["meta"]["revision"] = saved.revision
+            await documents.append_document_revision(quotation_id=quotation_id, lang=lang, revision=saved.revision, document_json=document, change_source="create_facts")
+            await session.commit()
+    except Exception as exc:
+        log.exception("[/api/v2/quotations] canonical draft persistence failed")
+        raise HTTPException(status_code=500, detail="Unable to persist quotation draft.") from exc
+    return {"quotationId": quotation_id, "status": "draft", "currentRevision": 1, "baselineLang": lang, "resolvedFacts": resolved}
+
+
+@app.get("/api/v2/workspace/me")
+async def get_workspace_me(principal: Principal = Depends(require_editor)):
+    profile = await _resolve_active_travel_designer(principal)
+    return {"profile": _serialize_travel_designer(profile), "capabilities": {"createQuotation": True}}
+
+
+@app.get("/api/v2/workspace/quotations")
+async def list_workspace_quotations(
+    status: str | None = None,
+    q: str = "",
+    cursor: str | None = None,
+    limit: int = 20,
+    principal: Principal = Depends(require_editor),
+):
+    updated_before, id_before = _parse_workspace_cursor(cursor)
+    async with _get_db_session_factory()() as session:
+        quotes = QuotationRepository(session)
+        items = await quotes.list_for_designer(
+            status=status,
+            search=q,
+            updated_before=updated_before,
+            id_before=id_before,
+            limit=min(max(limit, 1), 100) + 1,
+        )
+        summary = await quotes.status_summary_workspace()
+    has_next = len(items) > min(max(limit, 1), 100)
+    visible = items[: min(max(limit, 1), 100)]
+    return {
+        "items": [
+            {
+                "id": item.id,
+                "title": item.title,
+                "customerName": item.customer_name,
+                "brandId": item.brand_id,
+                "status": item.status,
+                "locale": item.baseline_lang,
+                "updatedAt": item.updated_at.isoformat(),
+                "currentRevision": item.current_revision,
+                "currentVersion": item.current_version,
+            }
+            for item in visible
+        ],
+        "nextCursor": _workspace_cursor(visible[-1]) if has_next and visible else None,
+        "summary": summary,
+    }
+
+
+@app.get("/api/v2/workspace/quotations/{quotation_id}/overview")
+async def get_workspace_quotation_overview(
+    quotation_id: str,
+    _owned=Depends(require_owned_quotation),
+):
+    workflow = await _canonical_workflow(quotation_id)
+    async with _get_db_session_factory()() as session:
+        quote = await QuotationRepository(session).get_quotation_by_id(quotation_id)
+        targets = await PublicationTargetRepository(session).list_targets(quotation_id, locale=quote.baseline_lang)
+    return {
+        "quotation": {
+            "id": quote.id,
+            "title": quote.title,
+            "customerName": quote.customer_name,
+            "brandId": quote.brand_id,
+            "status": quote.status,
+            "locale": quote.baseline_lang,
+            "updatedAt": quote.updated_at.isoformat(),
+            "currentRevision": quote.current_revision,
+            "currentVersion": quote.current_version,
+        },
+        "workflow": workflow,
+        "publications": [
+            {"targetId": target.id, "brandId": target.brand_id, "status": target.status, "activeReleaseId": target.active_release_id}
+            for target in targets
+        ],
+    }
+
+
+@app.get("/api/v2/quotations/{quotation_id}/facts")
+async def get_quotation_facts_v2(quotation_id: str, principal: Principal = Depends(require_editor), _owned=Depends(require_owned_quotation)):
+    async with _get_db_session_factory()() as session:
+        quotes, documents = QuotationRepository(session), QuotationDocumentRepository(session)
+        quotation = await quotes.get_quotation_by_id(quotation_id)
+        request = await quotes.get_latest_quotation_request(quotation_id)
+        if quotation is None or request is None:
+            raise HTTPException(status_code=404, detail="Quotation facts were not found.")
+        document = await documents.get_current_document(quotation_id, quotation.baseline_lang)
+        payload = CreateQuoteRequestV1.model_validate(normalize_legacy_facts_snapshot(request.request_json))
+        canonical, resolved = await _resolve_v2_facts(payload)
+        # Legacy/newly-created snapshots may have the profile only on the
+        # quotation row. Rehydrate the Fact selector from that authoritative
+        # assignment so an editor never sees a false empty state.
+        if canonical.presentation_options.travel_designer_id is None and quotation.designer_profile_id:
+            canonical.presentation_options.travel_designer_id = quotation.designer_profile_id
+        return _facts_response(quotation=quotation, request_json=canonical.model_dump(mode="json"), document=(document.document_json if document else {}), resolved_facts=resolved)
+
+
+@app.put("/api/v2/quotations/{quotation_id}/facts")
+async def put_quotation_facts_v2(quotation_id: str, payload: CreateQuoteRequestV1, baseRevision: int, principal: Principal = Depends(require_editor), _owned=Depends(require_owned_quotation)):
+    canonical, resolved = await _resolve_v2_facts(payload)
+    if resolved["missingInputs"]:
+        raise HTTPException(status_code=422, detail={"message": "Required quotation facts are missing.", "missingInputs": resolved["missingInputs"]})
+    async with _get_db_session_factory()() as session:
+        quotes, documents, drafts, designers = QuotationRepository(session), QuotationDocumentRepository(session), ContentDraftRepository(session), TravelDesignerRepository(session)
+        quotation = await quotes.get_quotation_by_id(quotation_id)
+        if quotation is None:
+            raise HTTPException(status_code=404, detail="Quotation was not found.")
+        if quotation.source_kind != "manual":
+            raise HTTPException(status_code=403, detail="Facts are read-only for this quotation source.")
+        if canonical.brand_id != quotation.brand_id:
+            raise HTTPException(status_code=422, detail={"message": "A quotation brand is immutable. Create a publication target to render another brand.", "missingInputs": ["brand_id"]})
+        current = await documents.get_current_document(quotation_id, quotation.baseline_lang)
+        if current is None:
+            raise HTTPException(status_code=404, detail="Canonical document was not found.")
+        rebuilt = SkeletonBuilder().build(quotation_id=quotation_id, payload=canonical, resolved_facts=resolved, template=quotation.template_name)
+        _preserve_content_owned_values(current.document_json, rebuilt)
+        if canonical.presentation_options.travel_designer_id:
+            profile = await designers.get_profile(canonical.presentation_options.travel_designer_id)
+            if profile is None or not profile.is_active:
+                raise HTTPException(status_code=422, detail={"message": "Travel Designer is unavailable.", "missingInputs": ["presentation_options.travel_designer_id"]})
+            quotation.designer_profile_id = profile.id
+            _apply_travel_designer_snapshot(rebuilt, _serialize_travel_designer(profile))
+        # Rebase facts without deleting Design-owned copy overrides or Fact-owned media.
+        rebuilt["presentation"] = copy.deepcopy((current.document_json.get("presentation") or {}))
+        _copy_fact_media_slots(current.document_json, rebuilt)
+        await _apply_missing_media_defaults(session, rebuilt, quotation_id, quotation.baseline_lang)
+        try:
+            saved = await documents.save_current_document(quotation_id=quotation_id, lang=quotation.baseline_lang, document_json=rebuilt, expected_revision=baseRevision)
+        except DocumentRevisionConflictError as exc:
+            raise HTTPException(status_code=409, detail={"message": "Facts revision conflict.", "currentRevision": exc.current_revision, "currentDocument": exc.current_document}) from exc
+        rebuilt["meta"]["revision"] = saved.revision
+        await documents.append_document_revision(quotation_id=quotation_id, lang=quotation.baseline_lang, revision=saved.revision, document_json=rebuilt, change_source="update_facts")
+        await quotes.create_quotation_request(quotation_id=quotation_id, request_json=canonical.model_dump(mode="json"))
+        await drafts.mark_stale(quotation_id)
+        await session.commit()
+        return _facts_response(quotation=quotation, request_json=canonical.model_dump(mode="json"), document=rebuilt, resolved_facts=resolved)
+
+
+@app.put("/api/v2/quotations/{quotation_id}/facts/media")
+async def put_quotation_fact_media_v2(
+    quotation_id: str,
+    payload: FactsMediaRequest,
+    lang: str | None = None,
+    principal: Principal = Depends(require_editor),
+    _owned=Depends(require_owned_quotation),
+):
+    fields = _validate_v2_fact_media_slots(payload.slots)
+    async with _get_db_session_factory()() as session:
+        quotes, documents = QuotationRepository(session), QuotationDocumentRepository(session)
+        quotation = await quotes.get_quotation_by_id(quotation_id)
+        if quotation is None or quotation.template_name != V2_RENDERER_NAME:
+            raise HTTPException(status_code=404, detail="Quotation was not found.")
+        effective_lang = lang or quotation.baseline_lang
+        current = await documents.get_current_document(quotation_id, effective_lang)
+        if current is None:
+            raise HTTPException(status_code=404, detail="Canonical document was not found.")
+        await _require_active_media_overrides(session, {key: value for key, value in fields.items() if value is not None})
+        next_document = copy.deepcopy(current.document_json)
+        for field_id, value in fields.items():
+            _set_fact_media_field(next_document, field_id, value)
+        try:
+            validated = _normalize_quote_document_structure_or_422(_hydrate_canonical_quote_document(next_document, quotation, lang=effective_lang, revision=payload.baseRevision))
+            saved = await documents.save_current_document(quotation_id=quotation_id, lang=effective_lang, document_json=validated, expected_revision=payload.baseRevision)
+        except DocumentRevisionConflictError as exc:
+            raise HTTPException(status_code=409, detail={"message": "Fact media revision conflict.", "currentRevision": exc.current_revision}) from exc
+        canonical = _hydrate_canonical_quote_document(saved.document_json, quotation, lang=effective_lang, revision=saved.revision)
+        await documents.append_document_revision(quotation_id=quotation_id, lang=effective_lang, revision=saved.revision, document_json=canonical, change_source="update_fact_media")
+        await session.commit()
+    return {"ok": True, "document": canonical, "currentRevision": saved.revision}
+
+
+@app.put("/api/v2/quotations/{quotation_id}/facts/designer")
+async def put_quotation_fact_designer_v2(
+    quotation_id: str,
+    payload: FactsDesignerRequest,
+    lang: str | None = None,
+    principal: Principal = Depends(require_editor),
+    _owned=Depends(require_owned_quotation),
+):
+    """Assign a designer and snapshot only profile-owned identity into every locale."""
+    async with _get_db_session_factory()() as session:
+        quotes, documents, designers = QuotationRepository(session), QuotationDocumentRepository(session), TravelDesignerRepository(session)
+        quotation = await quotes.get_quotation_by_id(quotation_id)
+        profile = await designers.get_profile(payload.designerProfileId)
+        if quotation is None or quotation.template_name != V2_RENDERER_NAME:
+            raise HTTPException(status_code=404, detail="Quotation was not found.")
+        if profile is None or not profile.is_active:
+            raise HTTPException(status_code=422, detail={"message": "Travel Designer is unavailable.", "missingInputs": ["designerProfileId"]})
+        effective_lang = lang or quotation.baseline_lang
+        current = await documents.get_current_document(quotation_id, effective_lang)
+        if current is None:
+            raise HTTPException(status_code=404, detail="Canonical document was not found.")
+        if current.revision != payload.baseRevision:
+            raise HTTPException(status_code=409, detail={"message": "Designer selection revision conflict.", "currentRevision": current.revision})
+        quotation.designer_profile_id = profile.id
+        request_snapshot = await quotes.get_latest_quotation_request(quotation_id)
+        if request_snapshot is not None:
+            next_request = copy.deepcopy(request_snapshot.request_json)
+            next_request.setdefault("presentation_options", {})["travel_designer_id"] = profile.id
+            await quotes.create_quotation_request(quotation_id=quotation_id, request_json=next_request)
+        saved_target = None
+        for stored in await documents.list_current_documents(quotation_id):
+            next_document = copy.deepcopy(stored.document_json)
+            _apply_travel_designer_snapshot(next_document, _serialize_travel_designer(profile))
+            validated = _normalize_quote_document_structure_or_422(_hydrate_canonical_quote_document(next_document, quotation, lang=stored.lang, revision=stored.revision))
+            saved = await documents.save_current_document(quotation_id=quotation_id, lang=stored.lang, document_json=validated, expected_revision=stored.revision)
+            canonical = _hydrate_canonical_quote_document(saved.document_json, quotation, lang=stored.lang, revision=saved.revision)
+            await documents.append_document_revision(quotation_id=quotation_id, lang=stored.lang, revision=saved.revision, document_json=canonical, change_source="update_fact_designer")
+            if stored.lang == effective_lang:
+                saved_target = (canonical, saved.revision)
+        await session.commit()
+    assert saved_target is not None
+    return {"ok": True, "document": saved_target[0], "currentRevision": saved_target[1]}
+
+
+@app.get("/api/v2/quotation-options")
+async def get_quotation_options_v2(brandId: str | None = None, principal: Principal = Depends(require_editor)):
+    async with _get_db_session_factory()() as session:
+        designers = await TravelDesignerRepository(session).list_profiles(active_only=True)
+        active_brands = await BrandRepository(session).list_active()
+    brands = [{"id": item.id, "label": item.display_name} for item in active_brands]
+    return {"brands": brands, "templates": [{"id": "quote-generator", "label": "Brochure", "brandIds": [item["id"] for item in brands]}], "languages": [{"id": value, "label": value.upper()} for value in ("en", "vi", "ar")], "travelDesigners": [{"id": item.id, "name": item.name, "email": item.email, "phone": item.phone, "imageUrl": item.image_url} for item in designers], "editableContract": editable_contract_payload()}
+
+
+class ContentDraftCreateRequest(BaseModel):
+    scope: str = Field(min_length=1, max_length=128)
+    generationMode: Literal["storytelling", "detailed"] = "storytelling"
+    instruction: str = Field(default="", max_length=2000)
+
+
+class ContentDraftPatchRequest(BaseModel):
+    candidate: dict[str, Any]
+
+
+class ContentDraftManualCreateRequest(BaseModel):
+    scope: str = Field(min_length=1, max_length=128)
+    candidate: dict[str, Any]
+    baseRevision: int
+
+
+class ContentDraftApplyRequest(BaseModel):
+    baseRevision: int
+
+
+def _serialize_content_draft(draft) -> dict[str, Any]:
+    return {"id": draft.id, "scope": draft.scope, "generationMode": draft.generation_mode, "status": draft.status, "candidate": draft.candidate_json, "missingInputs": draft.missing_inputs, "generation": draft.generation_metadata, "sourceDocumentRevision": draft.source_document_revision, "factsSnapshot": draft.facts_snapshot, "editor": content_registry_payload(draft.scope).get(draft.scope, {})}
+
+
+async def _load_content_draft_context(quotation_id: str, lang: str):
+    session = _get_db_session_factory()()
+    quotes, documents, drafts = QuotationRepository(session), QuotationDocumentRepository(session), ContentDraftRepository(session)
+    quotation = await quotes.get_quotation_by_id(quotation_id)
+    request = await quotes.get_latest_quotation_request(quotation_id) if quotation else None
+    document = await documents.get_current_document(quotation_id, lang) if quotation else None
+    if quotation is None or request is None or document is None:
+        await session.close()
+        raise HTTPException(status_code=404, detail="Quotation content context was not found.")
+    return session, quotation, CreateQuoteRequestV1.model_validate(normalize_legacy_facts_snapshot(request.request_json)), document, drafts
+
+
+async def _resolve_v2_locale(quotation_id: str, requested_lang: str | None) -> tuple[Any, str]:
+    """Resolve V2 locale from the quotation, never from a hard-coded fallback."""
+    async with _get_db_session_factory()() as session:
+        quotation = await QuotationRepository(session).get_quotation_by_id(quotation_id)
+    if quotation is None:
+        raise HTTPException(status_code=404, detail="Quotation was not found.")
+    effective_lang = (requested_lang or quotation.baseline_lang or "").strip().lower()
+    if effective_lang not in {"en", "vi", "ar"}:
+        raise HTTPException(status_code=422, detail={"message": "Unsupported quotation locale.", "locale": effective_lang})
+    return quotation, effective_lang
+
+
+@app.get("/api/v2/quotations/{quotation_id}/content-drafts")
+async def list_content_drafts_v2(quotation_id: str, lang: str | None = None, principal: Principal = Depends(require_editor), _owned=Depends(require_owned_quotation)):
+    _quotation, lang = await _resolve_v2_locale(quotation_id, lang)
+    async with _get_db_session_factory()() as session:
+        quotation = await QuotationRepository(session).get_quotation_by_id(quotation_id)
+        if quotation is None:
+            raise HTTPException(status_code=404, detail="Quotation was not found.")
+        items = await ContentDraftRepository(session).list(quotation_id, lang)
+        return {"drafts": [_serialize_content_draft(item) for item in items]}
+
+
+@app.post("/api/v2/quotations/{quotation_id}/content-drafts")
+async def create_content_drafts_v2(quotation_id: str, payload: ContentDraftCreateRequest, lang: str | None = None, principal: Principal = Depends(require_editor), _owned=Depends(require_owned_quotation)):
+    _quotation, lang = await _resolve_v2_locale(quotation_id, lang)
+    async with _get_db_session_factory()() as session:
+        quotes, documents, drafts = QuotationRepository(session), QuotationDocumentRepository(session), ContentDraftRepository(session)
+        quotation = await quotes.get_quotation_by_id(quotation_id)
+        request = await quotes.get_latest_quotation_request(quotation_id) if quotation else None
+        document = await documents.get_current_document(quotation_id, lang) if quotation else None
+        if quotation is None or request is None or document is None:
+            raise HTTPException(status_code=404, detail="Quotation content context was not found.")
+        facts, resolved = await _resolve_v2_facts(CreateQuoteRequestV1.model_validate(normalize_legacy_facts_snapshot(request.request_json)))
+        try:
+            brand = await BrandRepository(session).get_active(quotation.brand_id)
+            if brand is None:
+                raise HTTPException(status_code=422, detail={"message": "Brand is unavailable for content generation.", "missingInputs": ["brand_id"]})
+            items = await ContentDraftService(drafts, _brand_generation_profile(brand)).create(quotation_id=quotation_id, payload=facts, facts_hash=resolved["factsHash"], document_revision=document.revision, lang=lang, scope=payload.scope, mode=payload.generationMode, instruction=payload.instruction)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail={"message": str(exc)}) from exc
+        except ContentGenerationError as exc:
+            raise HTTPException(status_code=503, detail={"message": str(exc)}) from exc
+        await session.commit()
+        return {"draft": _serialize_content_draft(items[0])}
+
+
+@app.post("/api/v2/quotations/{quotation_id}/content-drafts/manual")
+async def create_manual_content_draft_v2(quotation_id: str, payload: ContentDraftManualCreateRequest, lang: str | None = None, principal: Principal = Depends(require_editor), _owned=Depends(require_owned_quotation)):
+    _quotation, lang = await _resolve_v2_locale(quotation_id, lang)
+    async with _get_db_session_factory()() as session:
+        quotes, documents, drafts = QuotationRepository(session), QuotationDocumentRepository(session), ContentDraftRepository(session)
+        quotation = await quotes.get_quotation_by_id(quotation_id)
+        request = await quotes.get_latest_quotation_request(quotation_id) if quotation else None
+        document = await documents.get_current_document(quotation_id, lang) if quotation else None
+        if quotation is None or request is None or document is None:
+            raise HTTPException(status_code=404, detail="Quotation content context was not found.")
+        if document.revision != payload.baseRevision:
+            raise HTTPException(status_code=409, detail={"message": "Document revision conflict.", "currentRevision": document.revision})
+        facts, resolved = await _resolve_v2_facts(CreateQuoteRequestV1.model_validate(normalize_legacy_facts_snapshot(request.request_json)))
+        brand = await BrandRepository(session).get_active(quotation.brand_id)
+        if brand is None:
+            raise HTTPException(status_code=422, detail={"message": "Brand is unavailable for Content Studio.", "missingInputs": ["brand_id"]})
+        try:
+            draft = await ContentDraftService(drafts, _brand_generation_profile(brand)).create_manual(quotation_id=quotation_id, payload=facts, facts_hash=resolved["factsHash"], document_revision=document.revision, lang=lang, scope=payload.scope, candidate=payload.candidate)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail={"message": str(exc)}) from exc
+        await session.commit()
+        return {"draft": _serialize_content_draft(draft)}
+
+
+@app.patch("/api/v2/quotations/{quotation_id}/content-drafts/{draft_id}")
+async def patch_content_draft_v2(quotation_id: str, draft_id: str, payload: ContentDraftPatchRequest, principal: Principal = Depends(require_editor), _owned=Depends(require_owned_quotation)):
+    async with _get_db_session_factory()() as session:
+        draft = await ContentDraftRepository(session).get(quotation_id, draft_id)
+        if draft is None:
+            raise HTTPException(status_code=404, detail="Content draft was not found.")
+        if draft.status not in ("draft", "stale"):
+            raise HTTPException(status_code=409, detail={"message": "Only a draft candidate can be edited."})
+        try:
+            draft.candidate_json = ContentDraftService.validate_candidate(draft.scope, payload.candidate)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail={"message": str(exc)}) from exc
+        draft.generation_metadata = {**draft.generation_metadata, "manualEdited": True}
+        await session.commit()
+        return {"draft": _serialize_content_draft(draft)}
+
+
+@app.post("/api/v2/quotations/{quotation_id}/content-drafts/{draft_id}/discard")
+async def discard_content_draft_v2(quotation_id: str, draft_id: str, principal: Principal = Depends(require_editor), _owned=Depends(require_owned_quotation)):
+    async with _get_db_session_factory()() as session:
+        draft = await ContentDraftRepository(session).get(quotation_id, draft_id)
+        if draft is None:
+            raise HTTPException(status_code=404, detail="Content draft was not found.")
+        draft.status = "discarded"
+        await session.commit()
+        return {"draft": _serialize_content_draft(draft)}
+
+
+@app.post("/api/v2/quotations/{quotation_id}/content-drafts/{draft_id}/apply")
+async def apply_content_draft_v2(quotation_id: str, draft_id: str, payload: ContentDraftApplyRequest, principal: Principal = Depends(require_editor), _owned=Depends(require_owned_quotation)):
+    async with _get_db_session_factory()() as session:
+        quotes, documents, drafts = QuotationRepository(session), QuotationDocumentRepository(session), ContentDraftRepository(session)
+        quotation = await quotes.get_quotation_by_id(quotation_id)
+        draft = await drafts.get(quotation_id, draft_id)
+        if quotation is None or draft is None:
+            raise HTTPException(status_code=404, detail="Quotation content draft was not found.")
+        if draft.status not in ("draft", "stale"):
+            raise HTTPException(status_code=409, detail={"message": "Only a current draft candidate can be applied."})
+        current = await documents.get_current_document(quotation_id, draft.lang)
+        if current is None:
+            raise HTTPException(status_code=404, detail="Current document not found.")
+        if payload.baseRevision != current.revision:
+            raise HTTPException(status_code=409, detail={"message": "Document revision conflict.", "currentRevision": current.revision})
+        draft.source_document_revision = current.revision
+        try:
+            merged = ContentDraftService.apply_candidate(copy.deepcopy(current.document_json), draft.scope, draft.candidate_json)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail={"message": str(exc)}) from exc
+        try:
+            saved = await documents.save_current_document(quotation_id=quotation_id, lang=draft.lang, document_json=merged, expected_revision=current.revision)
+        except DocumentRevisionConflictError as exc:
+            raise HTTPException(status_code=409, detail={"message": "Document revision conflict.", "currentRevision": exc.current_revision}) from exc
+        merged.setdefault("meta", {})["revision"] = saved.revision
+        await documents.append_document_revision(quotation_id=quotation_id, lang=draft.lang, revision=saved.revision, document_json=merged, change_source="apply_content_draft")
+        draft.status = "applied"
+        await drafts.mark_pending_drafts_stale(quotation_id)
+        draft.status = "applied"
+        await session.commit()
+        return {"draft": _serialize_content_draft(draft), "currentRevision": saved.revision, "document": merged}
 
 
 # ── GET /published/{quotation_id}/version & /latest — Dynamic version & redirect ──
@@ -6659,6 +7555,37 @@ def filter_and_override_ctx(lang_ctx: dict, existing_keys: set[str], edited_fiel
         for key in HTML_DIRECT_SYNC_FIELDS:
             if key in edited_fields:
                 lang_ctx[key] = edited_fields[key]
+
+        # The landing-page template stores booking terms as indexed editable
+        # blocks, while the PDF template renders the named term_* fields.
+        # Keep both projections in sync so a saved landing-page edit cannot
+        # leave a stale payment-policy section in the generated PDF.
+        booking_terms = copy.deepcopy(lang_ctx.get("booking_terms") or [])
+        booking_term_fields = (
+            ("term_deposit", "payment_label_deposit"),
+            ("term_balance", "payment_label_balance"),
+            ("term_cancellation", "payment_label_cancellation"),
+            ("term_confirmation", "payment_label_confirmation"),
+        )
+        for index, (term_key, label_key) in enumerate(booking_term_fields):
+            body_field = f"booking_term_body_{index}"
+            label_field = f"booking_term_label_{index}"
+            if body_field not in edited_fields and label_field not in edited_fields:
+                continue
+            while len(booking_terms) <= index:
+                booking_terms.append({"label": "", "body": ""})
+            item = booking_terms[index]
+            if not isinstance(item, dict):
+                item = {"label": "", "body": ""}
+                booking_terms[index] = item
+            if body_field in edited_fields:
+                lang_ctx[term_key] = edited_fields[body_field]
+                item["body"] = edited_fields[body_field]
+            if label_field in edited_fields:
+                lang_ctx[label_key] = edited_fields[label_field]
+                item["label"] = edited_fields[label_field]
+        if booking_terms:
+            lang_ctx["booking_terms"] = booking_terms
 
         if "inc_exc_h2" in edited_fields:
             lang_ctx["inclusions_title"] = edited_fields["inc_exc_h2"]
@@ -7736,6 +8663,166 @@ class MediaSyncRequest(BaseModel):
     quotationId: Optional[str] = None
 
 
+class MediaLibraryLocationRequest(BaseModel):
+    kind: Literal["destination", "accommodation", "team"]
+    destinationId: str | None = None
+    destinationName: str | None = None
+    accommodationName: str | None = None
+    accommodationKind: Literal["hotel", "cruise"] | None = None
+    accommodationId: str | None = None
+    accommodationAssetCategory: Literal["exteriors", "interiors"] | None = None
+    travelDesignerId: str | None = None
+
+
+class TravelDesignerProfileRequest(BaseModel):
+    name: str
+    email: str
+    phone: str = ""
+    imageR2Key: str | None = None
+
+
+class AccommodationProfileRequest(BaseModel):
+    destinationId: str
+    name: str
+    room_type: str | None = None
+    check_in: str | None = None
+    check_out: str | None = None
+    intro: str | None = None
+    phone: str | None = None
+    display_city: str | None = None
+    display_date: str | None = None
+    hotel_asset: str | None = None
+    room_asset: str | None = None
+
+
+class AccommodationStatusRequest(BaseModel):
+    isActive: bool
+
+
+class TravelDesignerBrandDefaultRequest(BaseModel):
+    designerProfileId: str
+
+
+def _apply_travel_designer_snapshot(document: dict[str, Any], profile: dict[str, Any] | None) -> None:
+    """Apply only profile-owned designer fields, preserving editorial copy.
+
+    A designer profile supplies identity/contact/image.  The quotation itself
+    owns narrative fields such as quote, kicker, and experience, so changing a
+    profile must never erase an editor's copy.
+    """
+    designer = document.setdefault("designer", {})
+    profile_fields = ("profileId", "name", "email", "phone", "image")
+    if profile is None:
+        for field in profile_fields:
+            designer.pop(field, None)
+        return
+    designer.update(
+        {
+            "profileId": profile["id"],
+            "name": profile.get("name") or "",
+            "email": profile.get("email") or "",
+            "phone": profile.get("phone") or "",
+            "image": {
+                "assetId": profile.get("imageAssetId") or "",
+                "r2Key": profile.get("imageR2Key") or "",
+                "url": profile.get("imageUrl") or "",
+                "status": "ready" if (profile.get("imageAssetId") or profile.get("imageR2Key") or profile.get("imageUrl")) else "empty",
+            },
+        }
+    )
+
+
+_DESTINATION_GEO = {
+    "ha-noi": ("vietnam", "north", "hanoi"), "ninh-binh": ("vietnam", "north", "ninh-binh"), "quang-ninh": ("vietnam", "north", "quang-ninh"), "lao-cai": ("vietnam", "north", "lao-cai"),
+    "da-nang": ("vietnam", "central", "da-nang"), "quang-nam": ("vietnam", "central", "quang-nam"), "thua-thien-hue": ("vietnam", "central", "thua-thien-hue"), "khanh-hoa": ("vietnam", "central", "khanh-hoa"),
+    "ho-chi-minh": ("vietnam", "south", "ho-chi-minh"), "mekong": ("vietnam", "south", "mekong"), "siem-reap": ("cambodia", "northwest", "siem-reap"), "phnom-penh": ("cambodia", "central", "phnom-penh"),
+    "luang-prabang": ("laos", "north", "luang-prabang"), "vientiane": ("laos", "central", "vientiane"), "bangkok": ("thailand", "central", "bangkok"), "chiang-mai": ("thailand", "north", "chiang-mai"), "phuket": ("thailand", "south", "phuket"),
+}
+
+
+async def _seed_destination_catalog(session) -> None:
+    repository = DestinationRepository(session)
+    for slug, profile in DESTINATION_PROFILES.items():
+        if slug == "default":
+            continue
+        geo = _DESTINATION_GEO.get(slug, (None, None, None))
+        await repository.upsert(destination_id=f"dst_{slug}", canonical_name=str(profile.get("label") or slug.title()), slug=slug, aliases=[slug, slug.replace("-", " ")], country_slug=geo[0], region_slug=geo[1], province_slug=geo[2])
+
+
+async def _canonicalize_quote_destinations(payload: CreateQuoteRequestV1) -> tuple[CreateQuoteRequestV1, dict[str, Any]]:
+    """Resolve every user-facing destination before a quotation is generated or persisted."""
+    missing: list[str] = []
+    refs: dict[str, Any] = {"routeDestinationRefs": [], "itinerary": [], "hotels": []}
+    async with _get_db_session_factory()() as session:
+        await _seed_destination_catalog(session)
+        repository = DestinationRepository(session)
+
+        async def resolve(value: str, path: str):
+            item = await repository.resolve(value)
+            if item is None:
+                missing.append(path)
+                return None
+            return {"id": item.id, "name": item.canonical_name, "slug": item.slug}
+
+        route: list[str] = []
+        for index, value in enumerate(payload.trip_facts.destinations):
+            ref = await resolve(value, f"trip_facts.destinations[{index}]")
+            if ref:
+                route.append(ref["name"]); refs["routeDestinationRefs"].append(ref)
+        payload.trip_facts.destinations = route
+        for index, day in enumerate(payload.trip_facts.itinerary):
+            ref = await resolve(day.destination, f"trip_facts.itinerary[{index}].destination") if day.destination else None
+            if ref: day.destination = ref["name"]
+            refs["itinerary"].append({"dayNumber": day.day_number, "destinationRef": ref})
+        for index, hotel in enumerate(payload.service_facts.hotels):
+            ref = await resolve(hotel.destination, f"service_facts.hotels[{index}].destination") if hotel.destination else None
+            if ref: hotel.destination = ref["name"]
+            refs["hotels"].append({"index": index, "destinationRef": ref})
+        if missing:
+            raise HTTPException(status_code=422, detail={"message": "Destination not found in catalog.", "missingInputs": missing})
+        await session.commit()
+    return payload, refs
+
+
+async def _resolve_media_location(session, payload: MediaLibraryLocationRequest):
+    await _seed_destination_catalog(session)
+    destinations = DestinationRepository(session)
+    if payload.kind == "team":
+        if not payload.travelDesignerId:
+            raise HTTPException(status_code=422, detail={"missingInputs": ["travelDesignerId"]})
+        profile = await TravelDesignerRepository(session).get_profile(payload.travelDesignerId)
+        if profile is None:
+            raise HTTPException(status_code=404, detail="Travel Designer profile was not found.")
+        return team_location(profile)
+    if payload.kind == "accommodation" and payload.accommodationId:
+        profile = await AccommodationRepository(session).get_profile(payload.accommodationId)
+        if profile is None:
+            raise HTTPException(status_code=404, detail="Accommodation profile was not found.")
+        if payload.accommodationAssetCategory is None:
+            raise HTTPException(status_code=422, detail={"missingInputs": ["accommodationAssetCategory"]})
+        try:
+            return accommodation_asset_location(
+                asset_prefix=profile.asset_prefix,
+                profile_id=profile.id,
+                destination_id=profile.destination_id,
+                accommodation_slug=profile.storage_slug,
+                asset_category=payload.accommodationAssetCategory,
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail={"message": str(exc), "missingInputs": ["accommodationId"]}) from exc
+    destination = await session.get(__import__("db.models.destination", fromlist=["DestinationCatalog"]).DestinationCatalog, payload.destinationId) if payload.destinationId else await destinations.resolve(payload.destinationName or "")
+    if destination is None:
+        raise HTTPException(status_code=422, detail={"missingInputs": ["destinationId"]})
+    try:
+        if payload.kind == "destination":
+            return destination_location(destination)
+        if not payload.accommodationName or not payload.accommodationKind:
+            raise HTTPException(status_code=422, detail={"missingInputs": ["accommodationName", "accommodationKind"]})
+        return accommodation_location(destination, payload.accommodationName, payload.accommodationKind)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail={"message": str(exc), "missingInputs": ["destination geographic mapping"]}) from exc
+
+
 @app.post("/api/v1/translate-block")
 async def translate_block_endpoint(payload: TranslateBlockRequest):
     """Translates a single block of text into target language."""
@@ -7856,7 +8943,7 @@ async def put_quotation_draft(
 
 
 @app.get("/api/v2/quotations/{quotation_id}/document")
-async def get_quotation_document(quotation_id: str, request: Request, lang: str | None = None, language: str | None = None):
+async def get_quotation_document(quotation_id: str, request: Request, lang: str | None = None, language: str | None = None, principal: Principal = Depends(require_editor), _owned=Depends(require_owned_quotation)):
     target_lang = lang or language
     if target_lang not in ("en", "vi", "ar"):
         target_lang = None
@@ -7864,16 +8951,21 @@ async def get_quotation_document(quotation_id: str, request: Request, lang: str 
     quotation, document, effective_lang = await _load_canonical_quote_document_from_db(quotation_id, target_lang)
     if quotation is None:
         raise HTTPException(status_code=404, detail=f"Quotation '{quotation_id}' not found.")
-    if not _is_brochure_template(quotation.template_name):
-        raise HTTPException(status_code=400, detail="Document editor is only available for brochure quotations.")
+    if quotation.template_name != V2_RENDERER_NAME:
+        raise HTTPException(status_code=400, detail="Document is not a React V2 quotation.")
     if document is None:
         raise HTTPException(status_code=404, detail="No quote document available.")
+    brand = await _require_active_v2_brand(quotation.brand_id)
     return {
-        "document": document,
+        "document": _hydrate_r2_asset_urls(document),
         "lang": effective_lang,
         "documentVersion": ((document.get("meta") or {}).get("version")) or 1,
         "currentRevision": ((document.get("meta") or {}).get("revision")) or 1,
         "sectionRegistry": {key: value.model_dump(mode="json") for key, value in SECTION_REGISTRY.items()},
+        "contentRegistry": content_registry_for_document_payload(document),
+        "contentEditorState": content_editor_state_payload(document),
+        "editableContract": editable_contract_payload(),
+        "brandProfile": _serialize_brand_render_profile(brand),
     }
 
 
@@ -7884,6 +8976,8 @@ async def put_quotation_document(
     request: Request,
     lang: str | None = None,
     language: str | None = None,
+    principal: Principal = Depends(require_editor),
+    _owned=Depends(require_owned_quotation),
 ):
     target_lang = lang or language
     if target_lang not in ("en", "vi", "ar"):
@@ -7900,14 +8994,17 @@ async def put_quotation_document(
                 raise HTTPException(status_code=404, detail=f"Quotation '{quotation_id}' not found.")
 
             effective_lang = target_lang or quotation.baseline_lang
-            if not _is_brochure_template(quotation.template_name):
-                raise HTTPException(status_code=400, detail="Document editor is only available for brochure quotations.")
+            if quotation.template_name != V2_RENDERER_NAME:
+                raise HTTPException(status_code=400, detail="Document is not a React V2 quotation.")
 
             current_document = await document_repository.get_current_document(quotation_id, effective_lang)
             sanitized_document = _sanitize_canonical_asset_state(
                 document,
                 current_document.document_json if current_document is not None else None,
             )
+            # V2 resolves mutable brand identity through brands.id, never document JSON.
+            sanitized_document["brand"] = {}
+            sanitized_document = _hydrate_r2_asset_urls(sanitized_document)
             document = _hydrate_canonical_quote_document(
                 sanitized_document,
                 quotation,
@@ -7954,12 +9051,6 @@ async def put_quotation_document(
             },
         ) from exc
 
-    await _sync_canonical_quote_document_to_ctx(
-        quotation_id,
-        effective_lang,
-        canonical_document,
-        f"Autosave quote document for quotation {quotation_id} ({effective_lang})",
-    )
     return {
         "ok": True,
         "document": canonical_document,
@@ -7969,93 +9060,766 @@ async def put_quotation_document(
     }
 
 
-@app.post("/api/v2/quotations/{quotation_id}/regenerate-narrative")
-async def regenerate_quotation_narrative(
+class PresentationUpsertRequest(BaseModel):
+    """Allowlisted presentation controls for a canonical React V2 document."""
+    model_config = ConfigDict(extra="forbid")
+    baseRevision: int
+    themeId: Literal["brochure"] = "brochure"
+    layoutVersion: Literal[1] = 1
+
+
+class PresentationCopyOverridesRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    baseRevision: int
+    overrides: dict[str, str]
+
+
+class PresentationOverridesRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    baseRevision: int
+    copyOverrides: dict[str, str] = Field(default_factory=dict)
+    identityOverrides: dict[str, Any] = Field(default_factory=dict)
+
+
+class PresentationMediaDefaultsRequest(BaseModel):
+    baseRevision: int
+    dryRun: bool = True
+
+
+def _validate_v2_fact_media_slots(slots: Any) -> dict[str, Any]:
+    if not isinstance(slots, list) or not slots:
+        raise HTTPException(status_code=422, detail={"message": "facts media slots must be a non-empty list."})
+    normalized: dict[str, Any] = {}
+    for slot in slots:
+        if not isinstance(slot, dict) or not isinstance(slot.get("fieldId"), str):
+            raise HTTPException(status_code=422, detail={"message": "Each media slot needs a fieldId and value."})
+        field_id, value = slot["fieldId"], slot.get("value")
+        descriptor = media_slot_descriptor(field_id)
+        if not is_fact_media_field(field_id) or descriptor is None:
+            raise HTTPException(status_code=422, detail={"message": "Unknown or non-Fact media field.", "invalidKeys": [field_id]})
+        if field_id in normalized:
+            raise HTTPException(status_code=422, detail={"message": "A media slot can only be updated once.", "invalidKeys": [field_id]})
+        if value is None:
+            normalized[field_id] = None
+            continue
+        items = value if is_gallery_field(field_id) else [value]
+        max_items = int(descriptor["maxItems"])
+        if not isinstance(items, list) or (not items and not is_gallery_field(field_id)) or len(items) > max_items:
+            raise HTTPException(status_code=422, detail={"message": "Invalid media selection cardinality.", "invalidKeys": [field_id]})
+        result: list[dict[str, str]] = []
+        for item in items:
+            if not isinstance(item, dict) or not isinstance(item.get("r2Key"), str) or not item["r2Key"] or not is_allowed_prefix(item["r2Key"]):
+                raise HTTPException(status_code=422, detail={"message": "Media asset is outside approved media prefixes.", "invalidKeys": [field_id]})
+            alt = item.get("altText", "")
+            if not isinstance(alt, str) or len(alt) > 500:
+                raise HTTPException(status_code=422, detail={"message": "Media alt text is invalid.", "invalidKeys": [field_id]})
+            result.append({"r2Key": item["r2Key"], "status": "ready", "altText": alt.strip(), "source": "manual"})
+        if len({item["r2Key"] for item in result}) != len(result):
+            raise HTTPException(status_code=422, detail={"message": "Duplicate gallery media is not allowed.", "invalidKeys": [field_id]})
+        normalized[field_id] = result if is_gallery_field(field_id) else result[0]
+    return normalized
+
+
+# Transitional test/helper alias; production callers use the slots payload.
+def _validate_v2_fact_media_fields(fields: Any) -> dict[str, Any]:
+    if not isinstance(fields, dict):
+        raise HTTPException(status_code=422, detail={"message": "facts media fields must be an object."})
+    return _validate_v2_fact_media_slots([{"fieldId": field_id, "value": value} for field_id, value in fields.items()])
+
+
+def _set_fact_media_field(document: dict[str, Any], field_id: str, value: Any) -> None:
+    if field_id == "brand.logo":
+        document.setdefault("brand", {})["logo"] = value or {"status": "empty"}
+    elif field_id in {"assets.hero", "assets.itineraryDivider", "assets.hotelDivider"}:
+        document.setdefault("assets", {})[field_id.rsplit(".", 1)[-1]] = value or {"status": "empty"}
+    elif field_id.startswith("itinerary.days."):
+        index = int(field_id.split(".")[2]); days = document.setdefault("itinerary", {}).setdefault("days", [])
+        if index >= len(days): raise HTTPException(status_code=422, detail={"message": "Itinerary image no longer matches a day.", "invalidKeys": [field_id]})
+        days[index].setdefault("images", {})["carousel"] = value or []
+    elif field_id.startswith("stays.hotels."):
+        parts = field_id.split("."); index, key = int(parts[2]), parts[3]; hotels = document.setdefault("stays", {}).setdefault("hotels", [])
+        if index >= len(hotels): raise HTTPException(status_code=422, detail={"message": "Stay image no longer matches a hotel.", "invalidKeys": [field_id]})
+        hotels[index][key] = value or {"status": "empty"}
+    elif field_id == "designer.image":
+        document.setdefault("designer", {})["image"] = value or {"status": "empty"}
+    elif field_id.startswith("assets.themeOrnaments."):
+        document.setdefault("assets", {}).setdefault("themeOrnaments", {})[field_id.rsplit(".", 1)[-1]] = value or {"status": "empty"}
+
+
+def _get_fact_media_field(document: dict[str, Any], field_id: str) -> Any:
+    if field_id == "brand.logo": return (document.get("brand") or {}).get("logo")
+    if field_id.startswith("assets.themeOrnaments."): return ((document.get("assets") or {}).get("themeOrnaments") or {}).get(field_id.rsplit(".", 1)[-1])
+    if field_id.startswith("assets."): return (document.get("assets") or {}).get(field_id.rsplit(".", 1)[-1])
+    if field_id == "designer.image": return (document.get("designer") or {}).get("image")
+    parts = field_id.split(".")
+    if field_id.startswith("itinerary.days.") and len(parts) >= 4:
+        days = ((document.get("itinerary") or {}).get("days") or []); index = int(parts[2])
+        return ((days[index].get("images") or {}).get("carousel")) if index < len(days) else None
+    if field_id.startswith("stays.hotels.") and len(parts) >= 4:
+        hotels = ((document.get("stays") or {}).get("hotels") or []); index = int(parts[2])
+        return hotels[index].get(parts[3]) if index < len(hotels) else None
+    return None
+
+
+def _copy_fact_media_slots(source: dict[str, Any], target: dict[str, Any]) -> None:
+    # Stable document IDs, rather than mutable array indexes, own media during
+    # a Facts rebase. This avoids moving Day/Hotel images onto the next item
+    # when an editor removes or reorders a repeatable fact card.
+    for field_id in expand_media_slot_field_ids(source):
+        value = _get_fact_media_field(source, field_id)
+        if not ((isinstance(value, dict) and value.get("r2Key")) or (isinstance(value, list) and value)):
+            continue
+        target_field_id = field_id
+        parts = field_id.split(".")
+        if field_id.startswith("itinerary.days."):
+            source_days = ((source.get("itinerary") or {}).get("days") or [])
+            target_days = ((target.get("itinerary") or {}).get("days") or [])
+            source_day = source_days[int(parts[2])] if int(parts[2]) < len(source_days) else {}
+            target_index = next((index for index, day in enumerate(target_days) if day.get("id") == source_day.get("id")), None)
+            if target_index is None:
+                continue
+            target_field_id = field_id.replace(f".{parts[2]}.", f".{target_index}.", 1)
+        elif field_id.startswith("stays.hotels."):
+            source_hotels = ((source.get("stays") or {}).get("hotels") or [])
+            target_hotels = ((target.get("stays") or {}).get("hotels") or [])
+            source_hotel = source_hotels[int(parts[2])] if int(parts[2]) < len(source_hotels) else {}
+            target_index = next((index for index, hotel in enumerate(target_hotels) if hotel.get("id") == source_hotel.get("id")), None)
+            if target_index is None:
+                continue
+            target_field_id = field_id.replace(f".{parts[2]}.", f".{target_index}.", 1)
+        _set_fact_media_field(target, target_field_id, copy.deepcopy(value))
+
+
+def _missing_required_fact_media(document: dict[str, Any]) -> list[str]:
+    """Evaluate publish readiness from the registry, never JSX or a second policy."""
+    missing: list[str] = []
+    for field_id in expand_media_slot_field_ids(document):
+        descriptor = media_slot_descriptor(field_id)
+        if not descriptor or not descriptor.get("requiredForPublish"):
+            continue
+        value = _get_fact_media_field(document, field_id)
+        values = value if isinstance(value, list) else [value] if isinstance(value, dict) and value.get("r2Key") else []
+        usable_values = [item for item in values if isinstance(item, dict) and isinstance(item.get("r2Key"), str) and item["r2Key"].strip()]
+        if len(usable_values) < int(descriptor["minItems"]) or len(usable_values) > int(descriptor["maxItems"]):
+            missing.append(field_id)
+    return missing
+
+
+def _pdf_layout_preflight(document: dict[str, Any]) -> list[str]:
+    """Reject content that cannot fit the fixed A4 compositor without shrinking.
+
+    The limits are deliberately based on the compositor's fixed printable
+    regions, not viewport breakpoints.  Keeping this server-side makes a PDF
+    release fail before Chromium can silently clip a page.
+    """
+    errors: list[str] = []
+    itinerary = (document.get("itinerary") or {}).get("days") or []
+    for index, day in enumerate(itinerary):
+        if not isinstance(day, dict):
+            errors.append(f"/itinerary/days/{index}")
+            continue
+        title = str(day.get("title") or "").strip()
+        description = day.get("description") or []
+        description_text = " ".join(str(item) for item in description if isinstance(item, str)) if isinstance(description, list) else str(description)
+        if len(title) > 170:
+            errors.append(f"/itinerary/days/{index}/title")
+        if len(description_text) > 1_150:
+            errors.append(f"/itinerary/days/{index}/description")
+    hotels = (document.get("stays") or {}).get("hotels") or []
+    for index, hotel in enumerate(hotels):
+        if not isinstance(hotel, dict):
+            errors.append(f"/stays/hotels/{index}")
+            continue
+        copy_length = sum(len(str(hotel.get(key) or "")) for key in ("name", "city", "hotelDate", "tel", "roomType", "intro"))
+        if copy_length > 2_100:
+            errors.append(f"/stays/hotels/{index}")
+    return errors
+
+
+async def _require_active_media_overrides(session, overrides: dict[str, Any]) -> None:
+    keys: set[str] = set()
+    for value in overrides.values():
+        if isinstance(value, list):
+            keys.update(str(item.get("r2Key") or "") for item in value if isinstance(item, dict))
+        elif isinstance(value, dict):
+            keys.add(str(value.get("r2Key") or ""))
+    keys.discard("")
+    active = await MediaLibraryRepository(session).get_active_media_keys(keys)
+    missing = sorted(keys - active)
+    if missing:
+        raise HTTPException(status_code=422, detail={"message": "Selected media is no longer active in the R2 catalogue.", "invalidKeys": missing})
+
+
+def _apply_media_default_patch(document: dict[str, Any], patch: dict[str, Any]) -> None:
+    assets = patch.get("assets") or {}
+    if assets:
+        document.setdefault("assets", {}).update(assets)
+    for index, value in (patch.get("itinerary", {}).get("days", {}) or {}).items():
+        days = document.setdefault("itinerary", {}).setdefault("days", [])
+        if int(index) < len(days):
+            days[int(index)].setdefault("images", {}).update(value.get("images") or {})
+    for index, value in (patch.get("stays", {}).get("hotels", {}) or {}).items():
+        hotels = document.setdefault("stays", {}).setdefault("hotels", [])
+        if int(index) < len(hotels):
+            hotels[int(index)].update(value)
+            if "hotelImage" in value:
+                hotel_name = hotels[int(index)].get("name")
+                hotel_city = hotels[int(index)].get("city")
+                for seg in (document.get("route") or {}).get("staySegments") or []:
+                    if (hotel_name and seg.get("hotelName") == hotel_name) or (hotel_city and seg.get("displayName") == hotel_city):
+                        seg["hotelImage"] = value["hotelImage"]
+
+
+async def _apply_missing_media_defaults(session, document: dict[str, Any], quotation_id: str, lang: str) -> dict[str, Any]:
+    catalogue = await MediaLibraryRepository(session).list_active_candidates()
+    resolver = BrochureMediaResolver(
+        Candidate(item.r2_key, item.parent_prefix, item.width, item.height, item.preview_status == "ready")
+        for item in catalogue
+    )
+    result = resolver.resolve_missing(document=document, quotation_id=quotation_id, lang=lang)
+    _apply_media_default_patch(document, result["patch"])
+    document.setdefault("presentation", {})["mediaDefaults"] = {
+        "resolverVersion": result["resolverVersion"], "rationale": result["rationale"],
+    }
+    return result
+
+
+@app.put("/api/v2/quotations/{quotation_id}/presentation")
+async def put_quotation_presentation_v2(
     quotation_id: str,
-    payload: RegenerateNarrativeRequest,
+    payload: PresentationUpsertRequest,
     lang: str | None = None,
-    language: str | None = None,
+    principal: Principal = Depends(require_editor),
+    _owned=Depends(require_owned_quotation),
 ):
-    target_lang = lang or language
-    if target_lang not in ("en", "vi", "ar"):
-        target_lang = None
-
-    quotation, document, effective_lang = await _load_canonical_quote_document_from_db(quotation_id, target_lang)
-    if quotation is None:
-        raise HTTPException(status_code=404, detail=f"Quotation '{quotation_id}' not found.")
-    if not document:
-        raise HTTPException(status_code=404, detail="No brochure document available.")
-
-    request_snapshot = await _load_latest_quote_request_snapshot_from_db(quotation_id)
-    if request_snapshot is None:
-        ctx_data = _load_ctx_data(quotation_id) or {}
-        request_snapshot = ctx_data.get("createQuoteRequestV1")
-    create_request = (
-        CreateQuoteRequestV1.model_validate(request_snapshot)
-        if request_snapshot
-        else _create_quote_request_from_document(document)
-    )
-    service = QuoteGenerationService()
-    brand_profile = BRAND_PROFILES.get(create_request.brand_id, BRAND_PROFILES["vietnam_safar"])
-    narrative, narrative_status, narrative_warnings = await service.narrative_generator.generate(
-        create_request,
-        brand_profile,
-        scopes=payload.scopes,
-        existing_document=document,
-    )
-    regenerated = apply_narrative_result_to_document(document, narrative, payload.scopes)
-    regenerated.setdefault("generationStatus", {})
-    regenerated["generationStatus"]["narrative"] = narrative_status
-    regenerated["generationStatus"]["warnings"] = narrative_warnings
-    regenerated = _validate_quote_document_or_422(
-        _hydrate_canonical_quote_document(
-            regenerated,
-            quotation,
-            lang=effective_lang or quotation.baseline_lang,
-            revision=((document.get("meta") or {}).get("revision")) or 1,
-        )
-    )
-
+    """Persist presentation choices under the same revision lock as the document."""
     async with _get_db_session_factory()() as session:
-        quotation_repository = QuotationRepository(session)
-        document_repository = QuotationDocumentRepository(session)
+        quotes, documents = QuotationRepository(session), QuotationDocumentRepository(session)
+        quotation = await quotes.get_quotation_by_id(quotation_id)
+        if quotation is None:
+            raise HTTPException(status_code=404, detail="Quotation was not found.")
+        if quotation.template_name != V2_RENDERER_NAME:
+            raise HTTPException(status_code=400, detail="Presentation controls are only available for React V2 quotations.")
+        effective_lang = lang or quotation.baseline_lang
+        current = await documents.get_current_document(quotation_id, effective_lang)
+        if current is None:
+            raise HTTPException(status_code=404, detail="Canonical document was not found.")
+        next_document = copy.deepcopy(current.document_json)
+        current_presentation = next_document.get("presentation") or {}
+        next_document["presentation"] = {
+            "renderer": V2_RENDERER_NAME,
+            "themeId": payload.themeId,
+            "layoutVersion": payload.layoutVersion,
+            "copyOverrides": current_presentation.get("copyOverrides") or {},
+            "mediaOverrides": current_presentation.get("mediaOverrides") or {},
+            "mediaDefaults": current_presentation.get("mediaDefaults") or {},
+            "identityOverrides": current_presentation.get("identityOverrides") or {},
+        }
+        try:
+            validated = _validate_quote_document_or_422(_hydrate_canonical_quote_document(next_document, quotation, lang=effective_lang, revision=payload.baseRevision))
+            saved = await documents.save_current_document(quotation_id=quotation_id, lang=effective_lang, document_json=validated, expected_revision=payload.baseRevision)
+        except DocumentRevisionConflictError as exc:
+            raise HTTPException(status_code=409, detail={"message": "Presentation revision conflict.", "currentRevision": exc.current_revision}) from exc
+        canonical = _hydrate_canonical_quote_document(saved.document_json, quotation, lang=effective_lang, revision=saved.revision)
+        await documents.append_document_revision(quotation_id=quotation_id, lang=effective_lang, revision=saved.revision, document_json=canonical, change_source="update_presentation")
+        await session.commit()
+    return {"ok": True, "document": canonical, "currentRevision": saved.revision}
 
-        persisted_quotation = await quotation_repository.get_quotation_by_id(quotation_id)
-        saved_document = await document_repository.save_current_document(
+
+@app.put("/api/v2/quotations/{quotation_id}/presentation/copy-overrides")
+async def put_quotation_presentation_copy_overrides_v2(
+    quotation_id: str,
+    payload: PresentationCopyOverridesRequest,
+    lang: str | None = None,
+    principal: Principal = Depends(require_editor),
+    _owned=Depends(require_owned_quotation),
+):
+    """Patch only allowlisted display copy under the normal document revision lock."""
+    overrides = _validate_v2_copy_overrides(payload.overrides)
+    async with _get_db_session_factory()() as session:
+        quotes, documents = QuotationRepository(session), QuotationDocumentRepository(session)
+        quotation = await quotes.get_quotation_by_id(quotation_id)
+        if quotation is None or quotation.template_name != V2_RENDERER_NAME:
+            raise HTTPException(status_code=404, detail="Quotation was not found.")
+        effective_lang = lang or quotation.baseline_lang
+        current = await documents.get_current_document(quotation_id, effective_lang)
+        if current is None:
+            raise HTTPException(status_code=404, detail="Canonical document was not found.")
+        next_document = copy.deepcopy(current.document_json)
+        presentation = next_document.setdefault("presentation", {})
+        current_overrides = presentation.get("copyOverrides") or {}
+        if not isinstance(current_overrides, dict):
+            current_overrides = {}
+        # Validate the complete persisted object too: a legacy malformed key
+        # must not survive merely because this request patches a different key.
+        presentation["copyOverrides"] = _validate_v2_copy_overrides({**current_overrides, **overrides})
+        try:
+            validated = _validate_quote_document_or_422(
+                _hydrate_canonical_quote_document(next_document, quotation, lang=effective_lang, revision=payload.baseRevision)
+            )
+            saved = await documents.save_current_document(
+                quotation_id=quotation_id,
+                lang=effective_lang,
+                document_json=validated,
+                expected_revision=payload.baseRevision,
+            )
+        except DocumentRevisionConflictError as exc:
+            raise HTTPException(status_code=409, detail={"message": "Presentation copy revision conflict.", "currentRevision": exc.current_revision}) from exc
+        canonical = _hydrate_canonical_quote_document(saved.document_json, quotation, lang=effective_lang, revision=saved.revision)
+        await documents.append_document_revision(
             quotation_id=quotation_id,
-            lang=effective_lang or quotation.baseline_lang,
-            document_json=regenerated,
-            expected_revision=((document.get("meta") or {}).get("revision")) or 1,
-            generation_status=regenerated.get("generationStatus") or {},
-        )
-        stored_document = _hydrate_canonical_quote_document(
-            saved_document.document_json,
-            persisted_quotation,
-            lang=effective_lang or quotation.baseline_lang,
-            revision=saved_document.revision,
-        )
-        await document_repository.append_document_revision(
-            quotation_id=quotation_id,
-            lang=effective_lang or quotation.baseline_lang,
-            revision=saved_document.revision,
-            document_json=stored_document,
-            change_source="regenerate_narrative",
+            lang=effective_lang,
+            revision=saved.revision,
+            document_json=canonical,
+            change_source="update_presentation_copy",
         )
         await session.commit()
+    return {"ok": True, "document": canonical, "currentRevision": saved.revision}
 
-    await _sync_canonical_quote_document_to_ctx(
-        quotation_id,
-        effective_lang or quotation.baseline_lang,
-        stored_document,
-        f"Regenerate brochure narrative for quotation {quotation_id} ({effective_lang or quotation.baseline_lang})",
-    )
+
+@app.put("/api/v2/quotations/{quotation_id}/presentation/overrides")
+async def put_quotation_presentation_overrides_v2(
+    quotation_id: str,
+    payload: PresentationOverridesRequest,
+    lang: str | None = None,
+    principal: Principal = Depends(require_editor),
+    _owned=Depends(require_owned_quotation),
+):
+    """Atomically persist Design-owned copy, identity and media overrides."""
+    copy_overrides = _validate_v2_copy_overrides(payload.copyOverrides)
+    identity = _validate_v2_identity_overrides(payload.identityOverrides)
+
+    async with _get_db_session_factory()() as session:
+        quotes, documents = QuotationRepository(session), QuotationDocumentRepository(session)
+        quotation = await quotes.get_quotation_by_id(quotation_id)
+        if quotation is None or quotation.template_name != V2_RENDERER_NAME:
+            raise HTTPException(status_code=404, detail="Quotation was not found.")
+        effective_lang = lang or quotation.baseline_lang
+        current = await documents.get_current_document(quotation_id, effective_lang)
+        if current is None:
+            raise HTTPException(status_code=404, detail="Canonical document was not found.")
+        next_document = copy.deepcopy(current.document_json)
+        presentation = next_document.setdefault("presentation", {})
+        current_copy = presentation.get("copyOverrides") or {}
+        current_identity = presentation.get("identityOverrides") or {}
+        presentation["copyOverrides"] = _validate_v2_copy_overrides({**current_copy, **copy_overrides})
+        # Preserve frozen legacy media for display compatibility, but never
+        # mutate it through a presentation request.
+        presentation["mediaOverrides"] = presentation.get("mediaOverrides") or {}
+        presentation["identityOverrides"] = {**current_identity, **identity}
+        try:
+            validated = _validate_quote_document_or_422(
+                _hydrate_canonical_quote_document(next_document, quotation, lang=effective_lang, revision=payload.baseRevision)
+            )
+            saved = await documents.save_current_document(
+                quotation_id=quotation_id,
+                lang=effective_lang,
+                document_json=validated,
+                expected_revision=payload.baseRevision,
+            )
+        except DocumentRevisionConflictError as exc:
+            raise HTTPException(status_code=409, detail={"message": "Presentation override revision conflict.", "currentRevision": exc.current_revision}) from exc
+        canonical = _hydrate_canonical_quote_document(saved.document_json, quotation, lang=effective_lang, revision=saved.revision)
+        await documents.append_document_revision(
+            quotation_id=quotation_id,
+            lang=effective_lang,
+            revision=saved.revision,
+            document_json=canonical,
+            change_source="update_presentation_overrides",
+        )
+        await session.commit()
+    return {"ok": True, "document": canonical, "currentRevision": saved.revision}
+
+
+@app.post("/api/v2/quotations/{quotation_id}/facts/media-defaults")
+async def apply_quotation_media_defaults_v2(
+    quotation_id: str,
+    payload: PresentationMediaDefaultsRequest,
+    lang: str | None = None,
+    principal: Principal = Depends(require_editor),
+    _owned=Depends(require_owned_quotation),
+):
+    """Preview or atomically apply deterministic defaults to empty canonical slots."""
+    async with _get_db_session_factory()() as session:
+        quotes, documents = QuotationRepository(session), QuotationDocumentRepository(session)
+        quotation = await quotes.get_quotation_by_id(quotation_id)
+        if quotation is None or quotation.template_name != V2_RENDERER_NAME:
+            raise HTTPException(status_code=404, detail="Quotation was not found.")
+        effective_lang = lang or quotation.baseline_lang
+        current = await documents.get_current_document(quotation_id, effective_lang)
+        if current is None:
+            raise HTTPException(status_code=404, detail="Canonical document was not found.")
+        if current.revision != payload.baseRevision:
+            raise HTTPException(status_code=409, detail={"message": "Media defaults revision conflict.", "currentRevision": current.revision})
+        catalogue = await MediaLibraryRepository(session).list_active_candidates()
+        resolver = BrochureMediaResolver(Candidate(item.r2_key, item.parent_prefix, item.width, item.height, item.preview_status == "ready") for item in catalogue)
+        result = resolver.resolve_missing(document=copy.deepcopy(current.document_json), quotation_id=quotation_id, lang=effective_lang)
+        if payload.dryRun:
+            return {"ok": True, "dryRun": True, **result, "currentRevision": current.revision}
+        next_document = copy.deepcopy(current.document_json)
+        _apply_media_default_patch(next_document, result["patch"])
+        presentation = next_document.setdefault("presentation", {})
+        presentation["mediaDefaults"] = {"resolverVersion": result["resolverVersion"], "rationale": result["rationale"]}
+        validated = _normalize_quote_document_structure_or_422(_hydrate_canonical_quote_document(next_document, quotation, lang=effective_lang, revision=payload.baseRevision))
+        try:
+            saved = await documents.save_current_document(quotation_id=quotation_id, lang=effective_lang, document_json=validated, expected_revision=payload.baseRevision)
+        except DocumentRevisionConflictError as exc:
+            raise HTTPException(status_code=409, detail={"message": "Media defaults revision conflict.", "currentRevision": exc.current_revision}) from exc
+        canonical = _hydrate_canonical_quote_document(saved.document_json, quotation, lang=effective_lang, revision=saved.revision)
+        await documents.append_document_revision(quotation_id=quotation_id, lang=effective_lang, revision=saved.revision, document_json=canonical, change_source="apply_media_defaults")
+        await session.commit()
+    return {"ok": True, "dryRun": False, **result, "document": canonical, "currentRevision": saved.revision}
+
+
+def _serialize_media_sync_run(run) -> dict[str, Any]:
     return {
-        "ok": True,
-        "document": stored_document,
-        "documentVersion": ((stored_document.get("meta") or {}).get("version")) or 1,
-        "currentRevision": ((stored_document.get("meta") or {}).get("revision")) or 1,
-        "generationStatus": stored_document.get("generationStatus") or {},
+        "id": run.id,
+        "status": run.status,
+        "roots": run.prefixes,
+        "scannedCount": run.scanned_count,
+        "indexedCount": run.indexed_count,
+        "previewCount": run.preview_count,
+        "errorCount": run.error_count,
+        "errorMessage": run.error_message,
     }
+
+
+async def _apply_create_fact_media_slots(document: dict[str, Any], slots) -> dict[str, Any]:
+    if not slots:
+        return document
+    normalized = _validate_v2_fact_media_slots([
+        {"fieldId": slot.fieldId, "value": slot.value}
+        for slot in slots
+    ])
+    keys: set[str] = set()
+    for value in normalized.values():
+        values = value if isinstance(value, list) else [value]
+        keys.update(str(item.get("r2Key") or "") for item in values if isinstance(item, dict))
+    keys.discard("")
+    async with _get_db_session_factory()() as session:
+        valid_keys = await MediaLibraryRepository(session).get_active_media_keys(keys)
+    missing = sorted(keys - valid_keys)
+    if missing:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "message": "Selected media is no longer available in the media library.",
+                "missingInputs": [f"factMediaSlots.{key}" for key in missing],
+            },
+        )
+    for field_id, value in normalized.items():
+        _set_fact_media_field(document, field_id, value)
+    return document
+
+
+@app.post("/api/v2/media-library/sync", status_code=202)
+async def sync_media_library(background_tasks: BackgroundTasks, principal: Principal = Depends(require_editor)):
+    service = _get_media_library_service()
+    async with _get_db_session_factory()() as session:
+        repository = MediaLibraryRepository(session)
+        active_run = await repository.get_active_sync_run()
+    if active_run is not None:
+        return {**_serialize_media_sync_run(active_run), "reused": True}
+    try:
+        run_id = await service.create_run()
+    except IntegrityError:
+        async with _get_db_session_factory()() as session:
+            active_run = await MediaLibraryRepository(session).get_active_sync_run()
+        if active_run is None:
+            raise
+        return {**_serialize_media_sync_run(active_run), "reused": True}
+    background_tasks.add_task(service.process_run, run_id)
+    async with _get_db_session_factory()() as session:
+        run = await MediaLibraryRepository(session).get_sync_run(run_id)
+    return {**_serialize_media_sync_run(run), "reused": False}
+
+
+@app.get("/api/v2/media-library/sync/{run_id}")
+async def get_media_library_sync(run_id: str, principal: Principal = Depends(require_editor)):
+    async with _get_db_session_factory()() as session:
+        run = await MediaLibraryRepository(session).get_sync_run(run_id)
+        if run is None:
+            raise HTTPException(status_code=404, detail="Media library sync run not found.")
+        return _serialize_media_sync_run(run)
+
+
+@app.post("/api/v2/media-library/resolve-location")
+async def resolve_media_library_location(payload: MediaLibraryLocationRequest, principal: Principal = Depends(require_editor)):
+    async with _get_db_session_factory()() as session:
+        location = await _resolve_media_location(session, payload)
+        await session.commit()
+    return {"kind": location.kind, "leafPrefix": location.leaf_prefix, "breadcrumbs": location.leaf_prefix.split("/"), "uploadAllowed": True}
+
+
+@app.post("/api/v2/media-library/uploads")
+async def upload_media_library_asset(
+    file: UploadFile = File(...), kind: Literal["destination", "accommodation", "team"] = Form(...), destinationId: str | None = Form(None), destinationName: str | None = Form(None), accommodationName: str | None = Form(None), accommodationKind: Literal["hotel", "cruise"] | None = Form(None), accommodationId: str | None = Form(None), accommodationAssetCategory: Literal["exteriors", "interiors"] | None = Form(None), travelDesignerId: str | None = Form(None), principal: Principal = Depends(require_editor),
+):
+    payload = MediaLibraryLocationRequest(kind=kind, destinationId=destinationId, destinationName=destinationName, accommodationName=accommodationName, accommodationKind=accommodationKind, accommodationId=accommodationId, accommodationAssetCategory=accommodationAssetCategory, travelDesignerId=travelDesignerId)
+    media_service = _get_media_service()
+    prepared = await media_service.prepare_upload(content=await file.read(), declared_mime_type=file.content_type)
+    async with _get_db_session_factory()() as session:
+        location = await _resolve_media_location(session, payload)
+        await session.commit()
+    item = await _get_media_library_service().create_library_asset(location=location, prepared=prepared)
+    storage = _get_media_library_service().storage
+    return {"r2Key": item.r2_key, "previewUrl": storage.build_public_url(item.preview_r2_key), "width": item.width, "height": item.height, "location": location.leaf_prefix}
+
+
+@app.get("/api/v2/media-library/children")
+async def get_media_library_children(prefix: str = "", cursor: int = 0, limit: int = 60, search: str = "", principal: Principal = Depends(require_editor)):
+    requested = normalize_library_prefix(prefix)
+    allowed = settings.media_library_roots
+    if not requested:
+        return {"prefix": "", "folders": [{"prefix": item, "name": item.split("/")[-1]} for item in allowed], "items": [], "nextCursor": None}
+    if not is_allowed_prefix(requested, allowed):
+        raise HTTPException(status_code=422, detail="Media library prefix is not allowed.")
+    async with _get_db_session_factory()() as session:
+        repository = MediaLibraryRepository(session)
+        items = await repository.list_children(prefix=requested, cursor=max(cursor, 0), limit=min(max(limit, 1), 100), search=search.strip())
+        folders = await repository.list_child_prefixes(prefix=requested)
+    storage = _get_media_library_service().storage
+    folder_prefixes = tuple(
+        dict.fromkeys(
+            item for item in folders if item.rsplit("/", 1)[-1] != "preview"
+        )
+    )
+    return {"prefix": requested, "folders": [{"prefix": item, "name": item.rsplit("/", 1)[-1]} for item in folder_prefixes], "items": [{"r2Key": item.r2_key, "fileName": item.file_name, "previewStatus": item.preview_status, "previewUrl": storage.build_public_url(item.preview_r2_key) if item.preview_r2_key else None, "width": item.width, "height": item.height, "classification": _media_classification(item), "mediaKind": item.media_kind} for item in items[:limit]], "nextCursor": cursor + limit if len(items) > limit else None}
+
+
+@app.get("/api/v2/media-library/search")
+async def search_media_library(prefix: str, query: str, cursor: int = 0, limit: int = 60, principal: Principal = Depends(require_editor)):
+    requested = normalize_library_prefix(prefix)
+    allowed = settings.media_library_roots
+    if not is_allowed_prefix(requested, allowed):
+        raise HTTPException(status_code=422, detail="Media library prefix is not allowed.")
+    async with _get_db_session_factory()() as session:
+        items = await MediaLibraryRepository(session).search(prefix=requested, query=query.strip(), cursor=max(cursor, 0), limit=min(max(limit, 1), 100))
+    storage = _get_media_library_service().storage
+    return {"items": [{"r2Key": item.r2_key, "fileName": item.file_name, "previewUrl": storage.build_public_url(item.preview_r2_key) if item.preview_r2_key else None, "width": item.width, "height": item.height, "classification": _media_classification(item), "mediaKind": item.media_kind} for item in items[:limit]], "nextCursor": cursor + limit if len(items) > limit else None}
+
+
+@app.get("/api/v2/destinations")
+async def search_destinations(query: str = "", limit: int = 20, principal: Principal = Depends(require_editor)):
+    async with _get_db_session_factory()() as session:
+        await _seed_destination_catalog(session)
+        await session.commit()
+        rows = await DestinationRepository(session).search(query, limit=max(1, min(limit, 50)))
+        items: list[dict[str, str]] = []
+        seen_ids: set[str] = set()
+        for item, alias in rows:
+            if item.id in seen_ids:
+                continue
+            seen_ids.add(item.id)
+            items.append({"id": item.id, "name": item.canonical_name, "slug": item.slug, "matchedFrom": alias})
+        return {"items": items}
+
+
+def _serialize_travel_designer(profile) -> dict[str, Any]:
+    image_url = profile.image_url
+    if profile.image_r2_key:
+        try:
+            image_url = _get_media_library_service().storage.build_public_url(profile.image_r2_key)
+        except HTTPException:
+            pass
+    return {"id": profile.id, "name": profile.name, "email": profile.email, "phone": profile.phone, "imageAssetId": profile.image_asset_id, "imageUrl": image_url, "imageR2Key": profile.image_r2_key, "isActive": profile.is_active}
+
+
+async def _serialize_accommodation(profile, session) -> dict[str, Any]:
+    destination = await session.get(__import__("db.models.destination", fromlist=["DestinationCatalog"]).DestinationCatalog, profile.destination_id)
+    return {
+        "id": profile.id,
+        "destination_id": profile.destination_id,
+        "destination": destination.canonical_name if destination else "",
+        "destination_ref": {"id": destination.id, "name": destination.canonical_name, "slug": destination.slug} if destination else None,
+        "storage_slug": profile.storage_slug,
+        "asset_prefix": profile.asset_prefix,
+        "name": profile.name,
+        "room_type": profile.room_type,
+        "check_in": profile.check_in,
+        "check_out": profile.check_out,
+        "intro": profile.intro,
+        "phone": profile.phone,
+        "display_city": profile.display_city,
+        "display_date": profile.display_date,
+        "hotel_asset": profile.hotel_asset,
+        "room_asset": profile.room_asset,
+        "is_active": profile.is_active,
+    }
+
+
+async def _validate_accommodation_assets(session, *, asset_prefix: str, hotel_asset: str | None, room_asset: str | None, legacy_keys: set[str] | None = None) -> None:
+    normalized_prefix = asset_prefix.strip().strip("/")
+    slot_prefixes = {
+        "hotel_asset": f"{normalized_prefix}/exteriors/",
+        "room_asset": f"{normalized_prefix}/interiors/",
+    }
+    supplied = {"hotel_asset": hotel_asset, "room_asset": room_asset}
+    permitted_legacy_keys = legacy_keys or set()
+    invalid = [
+        field for field, key in supplied.items()
+        if key and not key.startswith(slot_prefixes[field]) and key not in permitted_legacy_keys
+    ]
+    if invalid:
+        raise HTTPException(status_code=422, detail={"message": "Hotel images must be in /exteriors and room images in /interiors for this accommodation.", "missingInputs": invalid})
+    keys = {key for key in supplied.values() if key}
+    active_keys = await MediaLibraryRepository(session).get_active_media_keys(keys)
+    if keys - active_keys:
+        raise HTTPException(status_code=422, detail={"message": "Accommodation asset is not active in the R2 catalogue.", "missingInputs": ["hotel_asset", "room_asset"]})
+
+
+async def _save_accommodation_profile(session, payload: AccommodationProfileRequest, profile=None):
+    await _seed_destination_catalog(session)
+    destination = await session.get(__import__("db.models.destination", fromlist=["DestinationCatalog"]).DestinationCatalog, payload.destinationId)
+    if destination is None or not destination.is_active:
+        raise HTTPException(status_code=422, detail={"missingInputs": ["destinationId"]})
+    name = payload.name.strip()
+    if not name:
+        raise HTTPException(status_code=422, detail={"missingInputs": ["name"]})
+    if payload.check_in and payload.check_out:
+        try:
+            if date.fromisoformat(payload.check_out) < date.fromisoformat(payload.check_in):
+                raise HTTPException(status_code=422, detail={"missingInputs": ["check_out"]})
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail={"missingInputs": ["check_in", "check_out"]}) from exc
+    if profile is None:
+        location = accommodation_location(destination, name, "hotel")
+        storage_slug_value, asset_prefix = location.accommodation_slug, location.leaf_prefix
+    else:
+        # A stored R2 root is an immutable storage identity, not a derivative of
+        # mutable catalogue fields. This allows correcting names/destinations.
+        storage_slug_value, asset_prefix = profile.storage_slug, profile.asset_prefix
+    await _validate_accommodation_assets(
+        session,
+        asset_prefix=asset_prefix,
+        hotel_asset=payload.hotel_asset,
+        room_asset=payload.room_asset,
+        legacy_keys={key for key in (profile.hotel_asset, profile.room_asset) if key} if profile is not None else None,
+    )
+    values = {"destination_id": destination.id, "storage_slug": storage_slug_value, "asset_prefix": asset_prefix, "name": name, "room_type": payload.room_type, "check_in": payload.check_in, "check_out": payload.check_out, "intro": payload.intro, "phone": payload.phone, "display_city": payload.display_city or destination.canonical_name, "display_date": payload.display_date, "hotel_asset": payload.hotel_asset, "room_asset": payload.room_asset}
+    repository = AccommodationRepository(session)
+    saved = await repository.update_profile(profile, **values) if profile is not None else await repository.create_profile(id=f"acc_{uuid.uuid4().hex[:12]}", **values)
+    return await _serialize_accommodation(saved, session)
+
+
+@app.get("/api/v2/accommodations")
+async def list_accommodations(active: Literal["true", "false", "all"] = "true", query: str = "", destinationId: str | None = None, principal: Principal = Depends(require_editor)):
+    async with _get_db_session_factory()() as session:
+        await _seed_destination_catalog(session)
+        items = await AccommodationRepository(session).list_profiles(active_only={"true": True, "false": False, "all": None}[active], search=query, destination_id=destinationId)
+        return {"items": [await _serialize_accommodation(item, session) for item in items]}
+
+
+@app.get("/api/v2/accommodations/{profile_id}")
+async def get_accommodation(profile_id: str, principal: Principal = Depends(require_editor)):
+    async with _get_db_session_factory()() as session:
+        profile = await AccommodationRepository(session).get_profile(profile_id)
+        if profile is None:
+            raise HTTPException(status_code=404, detail="Accommodation profile was not found.")
+        return await _serialize_accommodation(profile, session)
+
+
+@app.post("/api/v2/accommodations", status_code=201)
+async def create_accommodation(payload: AccommodationProfileRequest, principal: Principal = Depends(require_editor)):
+    async with _get_db_session_factory()() as session:
+        saved = await _save_accommodation_profile(session, payload)
+        await session.commit()
+        return saved
+
+
+@app.put("/api/v2/accommodations/{profile_id}")
+async def update_accommodation(profile_id: str, payload: AccommodationProfileRequest, principal: Principal = Depends(require_editor)):
+    async with _get_db_session_factory()() as session:
+        profile = await AccommodationRepository(session).get_profile(profile_id)
+        if profile is None:
+            raise HTTPException(status_code=404, detail="Accommodation profile was not found.")
+        saved = await _save_accommodation_profile(session, payload, profile)
+        await session.commit()
+        return saved
+
+
+@app.patch("/api/v2/accommodations/{profile_id}/status")
+async def update_accommodation_status(profile_id: str, payload: AccommodationStatusRequest, principal: Principal = Depends(require_editor)):
+    async with _get_db_session_factory()() as session:
+        profile = await AccommodationRepository(session).get_profile(profile_id)
+        if profile is None:
+            raise HTTPException(status_code=404, detail="Accommodation profile was not found.")
+        saved = await AccommodationRepository(session).set_status(profile, is_active=payload.isActive)
+        await session.commit()
+        return await _serialize_accommodation(saved, session)
+
+
+@app.get("/api/v2/travel-designers")
+async def list_travel_designers(request: Request, active: Literal["true", "false", "all"] = "true", search: str = "", principal: Principal = Depends(require_editor)):
+    if active != "true":
+        require_quote_admin(request)
+    async with _get_db_session_factory()() as session:
+        items = await TravelDesignerRepository(session).list_profiles(active_only={"true": True, "false": False, "all": None}[active], search=search)
+        return {"items": [_serialize_travel_designer(item) for item in items]}
+
+
+@app.post("/api/v2/travel-designers", status_code=201)
+async def create_travel_designer(payload: TravelDesignerProfileRequest, principal: Principal = Depends(require_quote_admin)):
+    async with _get_db_session_factory()() as session:
+        repository = TravelDesignerRepository(session)
+        if await repository.get_by_email(payload.email):
+            raise HTTPException(status_code=409, detail="A Travel Designer already uses this email.")
+        profile = await repository.create_profile(profile_id=f"td_{uuid.uuid4().hex[:12]}", email=payload.email, name=payload.name, phone=payload.phone, storage_slug=storage_slug(payload.email.split("@", 1)[0]), image_r2_key=payload.imageR2Key)
+        await session.commit()
+        await session.refresh(profile)
+        return _serialize_travel_designer(profile)
+
+
+@app.put("/api/v2/travel-designers/{profile_id}")
+async def update_travel_designer(profile_id: str, payload: TravelDesignerProfileRequest, principal: Principal = Depends(require_quote_admin)):
+    async with _get_db_session_factory()() as session:
+        repository = TravelDesignerRepository(session)
+        profile = await repository.get_profile(profile_id)
+        if profile is None:
+            raise HTTPException(status_code=404, detail="Travel Designer profile was not found.")
+        profile = await repository.update_profile(profile, email=payload.email, name=payload.name, phone=payload.phone, storage_slug=storage_slug(payload.email.split("@", 1)[0]), image_r2_key=payload.imageR2Key)
+        await session.commit()
+        await session.refresh(profile)
+        return _serialize_travel_designer(profile)
+
+
+@app.patch("/api/v2/travel-designers/{profile_id}/status")
+async def set_travel_designer_status(
+    profile_id: str,
+    payload: dict[str, bool],
+    principal: Principal = Depends(require_quote_admin),
+):
+    if "isActive" not in payload:
+        raise HTTPException(status_code=422, detail="isActive is required")
+    async with _get_db_session_factory()() as session:
+        repository = TravelDesignerRepository(session)
+        profile = await repository.get_profile(profile_id)
+        if profile is None:
+            raise HTTPException(status_code=404, detail="Travel Designer profile was not found.")
+        profile = await repository.set_status(profile, is_active=bool(payload["isActive"]))
+        await session.commit()
+        await session.refresh(profile)
+        return _serialize_travel_designer(profile)
+
+
+@app.put("/api/v2/brands/{brand_id}/travel-designer-default")
+async def set_travel_designer_brand_default(
+    brand_id: str,
+    payload: TravelDesignerBrandDefaultRequest,
+    principal: Principal = Depends(require_quote_admin),
+):
+    """Persist the optional designer fallback without copying it into quotes."""
+    async with _get_db_session_factory()() as session:
+        designers = TravelDesignerRepository(session)
+        try:
+            default = await designers.set_brand_default(
+                brand_id=brand_id,
+                profile_id=payload.designerProfileId,
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        await session.commit()
+        return {"brandId": default.brand_id, "designerProfileId": default.designer_profile_id}
 
 
 @app.post("/api/v2/media/upload")
@@ -8235,6 +9999,20 @@ async def get_quotation(quotation_id: str, request: Request):
     lang = request.query_params.get("lang") or request.query_params.get("language")
     if lang not in ("en", "vi", "ar"):
         lang = None # fallback to baseline
+    async with _get_db_session_factory()() as session:
+        quotation = await QuotationRepository(session).get_quotation_by_id(quotation_id)
+        if quotation is not None and quotation.template_name == V2_RENDERER_NAME:
+            target = await PublicationTargetRepository(session).get_target(
+                quotation_id=quotation_id,
+                brand_id=quotation.brand_id,
+                locale=lang or quotation.baseline_lang,
+            )
+            brand = await BrandRepository(session).get(quotation.brand_id)
+            if target is not None and target.status == "published" and brand is not None:
+                return RedirectResponse(
+                    url=f"https://{brand.hostname}/{target.locale}/q/{target.public_slug}",
+                    status_code=301,
+                )
         
     ctx_data = _load_ctx_data(quotation_id)
     if not ctx_data:
@@ -8654,8 +10432,562 @@ async def publish_quotation(quotation_id: str, body: PublishRequest, request: Re
     return {"published_url": published_url, "version": version, "status": "published"}
 
 
+class CanonicalPublishRequest(BaseModel):
+    baseRevision: int
+    brandId: str | None = None
+
+
+class BrandUpsertRequest(BaseModel):
+    displayName: str
+    hostname: str
+    status: Literal["active", "disabled"]
+    logoAssetKey: str | None = None
+    sellerProfile: dict[str, Any] = Field(default_factory=dict)
+    renderProfile: BrandRenderProfileContract
+
+
+def _build_release_asset_manifest(document: Any) -> dict[str, str]:
+    manifest: dict[str, str] = {}
+
+    def visit(value: Any) -> None:
+        if isinstance(value, dict):
+            r2_key = value.get("r2Key")
+            url = value.get("url")
+            if isinstance(url, str) and url.startswith(("http://", "https://")) and not r2_key:
+                raise HTTPException(status_code=422, detail={"message": "Published assets must use an approved R2 key, not a direct URL."})
+            if isinstance(r2_key, str) and r2_key and r2_key not in manifest.values():
+                if not is_allowed_prefix(r2_key):
+                    raise HTTPException(status_code=422, detail={"message": f"Asset key is outside approved media prefixes: {r2_key}"})
+                manifest[secrets.token_urlsafe(18)] = r2_key
+            for child in value.values():
+                visit(child)
+        elif isinstance(value, list):
+            for child in value:
+                visit(child)
+
+    visit(document)
+    return manifest
+
+
+async def _validate_release_asset_manifest(document: Any) -> dict[str, dict[str, str]]:
+    """Freeze only existing, approved R2 media into a release manifest."""
+    manifest = _build_release_asset_manifest(document)
+    try:
+        storage = R2Storage()
+    except R2StorageConfigurationError as exc:
+        raise HTTPException(status_code=422, detail={"message": "R2 storage must be configured before publishing."}) from exc
+    validated: dict[str, dict[str, str]] = {}
+    for token, r2_key in manifest.items():
+        try:
+            metadata = await asyncio.to_thread(storage.head_object, r2_key)
+        except Exception as exc:
+            raise HTTPException(status_code=422, detail={"message": f"Published asset is missing from R2: {r2_key}"}) from exc
+        validated[token] = {
+            "r2Key": r2_key,
+            "contentType": str(metadata.get("ContentType") or "application/octet-stream"),
+        }
+    return validated
+
+
+async def _inspect_asset_readiness(document: Any) -> dict[str, Any]:
+    """Inspect persisted media references for workflow/review readiness."""
+    required_missing = _missing_required_fact_media(document) if isinstance(document, dict) else []
+    try:
+        manifest = _build_release_asset_manifest(document)
+    except HTTPException as exc:
+        detail = exc.detail if isinstance(exc.detail, dict) else {"message": str(exc.detail)}
+        return {"ready": False, "missing": required_missing, "invalid": [detail], "checkedAt": datetime.now(timezone.utc).isoformat()}
+    if not manifest:
+        return {"ready": not required_missing, "missing": required_missing, "invalid": [], "checkedAt": datetime.now(timezone.utc).isoformat()}
+    try:
+        storage = R2Storage()
+    except R2StorageConfigurationError as exc:
+        return {"ready": False, "missing": required_missing, "invalid": [{"message": str(exc)}], "checkedAt": datetime.now(timezone.utc).isoformat()}
+    semaphore = asyncio.Semaphore(8)
+    missing: list[str] = []
+
+    async def check(key: str) -> None:
+        async with semaphore:
+            try:
+                await asyncio.to_thread(storage.head_object, key)
+            except Exception:
+                missing.append(key)
+
+    await asyncio.gather(*(check(key) for key in manifest.values()))
+    return {
+        "ready": not missing and not required_missing,
+        "missing": sorted({*missing, *required_missing}),
+        "invalid": [],
+        "checkedAt": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+def _manifest_r2_key(value: Any) -> str:
+    return value.get("r2Key", "") if isinstance(value, dict) else value if isinstance(value, str) else ""
+
+
+def _apply_branded_media_urls(document: Any, *, hostname: str, release_id: str, asset_manifest: dict[str, Any], media_origin: str | None = None) -> Any:
+    reverse_manifest = {_manifest_r2_key(entry): token for token, entry in asset_manifest.items()}
+
+    def transform(value: Any) -> Any:
+        if isinstance(value, list):
+            return [transform(item) for item in value]
+        if not isinstance(value, dict):
+            return value
+        result = {key: transform(child) for key, child in value.items()}
+        r2_key = result.get("r2Key")
+        token = reverse_manifest.get(r2_key) if isinstance(r2_key, str) else None
+        if token:
+            base_url = media_origin.rstrip("/") if media_origin else f"https://{hostname}"
+            result["url"] = f"{base_url}/media/{release_id}/{token}"
+        return result
+
+    return transform(document)
+
+
+async def _purge_public_url(urls: str | list[str]) -> None:
+    files = [urls] if isinstance(urls, str) else sorted(set(urls))
+    if not files:
+        return
+    zone_id, token = os.getenv("CLOUDFLARE_ZONE_ID", ""), os.getenv("CLOUDFLARE_API_TOKEN", "")
+    if not zone_id or not token:
+        raise RuntimeError("Cloudflare cache purge credentials are not configured.")
+    import urllib.request
+
+    payload = json.dumps({"files": files}).encode("utf-8")
+    request = urllib.request.Request(
+        f"https://api.cloudflare.com/client/v4/zones/{zone_id}/purge_cache",
+        data=payload,
+        headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        response = await asyncio.to_thread(urllib.request.urlopen, request, timeout=10)
+        body = json.loads(response.read().decode("utf-8"))
+        if not body.get("success"):
+            raise RuntimeError(f"Cloudflare cache purge rejected: {body.get('errors') or body}")
+    except Exception as exc:
+        log.exception("Cloudflare cache purge failed for %s", files)
+        raise RuntimeError("Cloudflare cache purge failed") from exc
+
+
+def _release_cache_urls(*, hostname: str, target: Any, release: Any) -> list[str]:
+    base = f"https://{hostname}/{target.locale}/q/{target.public_slug}"
+    urls = [base, f"{base}/pdf/download"]
+    manifest = release.asset_manifest or {}
+    for token in manifest:
+        urls.append(f"https://{hostname}/media/{release.id}/{token}")
+    return urls
+
+
+def _release_transition_cache_urls(*, hostnames: list[str], target: Any, releases: list[Any | None]) -> list[str]:
+    """Purge both sides of a release-pointer transition, including immutable media URLs."""
+    return sorted({
+        url
+        for hostname in hostnames
+        for release in releases
+        if release is not None
+        for url in _release_cache_urls(hostname=hostname, target=target, release=release)
+    })
+
+
+async def _enqueue_release_purge(
+    repository: PublicationTargetRepository,
+    *,
+    target: Any,
+    releases: list[Any | None],
+    hostnames: list[str],
+    event: str,
+) -> None:
+    urls = _release_transition_cache_urls(hostnames=hostnames, target=target, releases=releases)
+    if not urls:
+        return
+    release = next((item for item in releases if item is not None), None)
+    if release is None:
+        return
+    await repository.create_job(
+        release_id=release.id,
+        job_type="purge_cache",
+        event_key=f"{event}-{uuid.uuid4().hex}",
+        payload_json={"urls": sorted(set(urls))},
+        max_attempts=settings.publication_job_max_attempts,
+    )
+
+
+async def _canonical_review_status(quotation_id: str, lang: str | None = None) -> dict[str, Any]:
+    _quotation, lang = await _resolve_v2_locale(quotation_id, lang)
+    async with _get_db_session_factory()() as session:
+        quotes, documents, drafts, targets = QuotationRepository(session), QuotationDocumentRepository(session), ContentDraftRepository(session), PublicationTargetRepository(session)
+        quotation = await quotes.get_quotation_by_id(quotation_id)
+        request_row = await quotes.get_latest_quotation_request(quotation_id) if quotation else None
+        document = await documents.get_current_document(quotation_id, lang) if quotation else None
+        if quotation is None or request_row is None or document is None:
+            raise HTTPException(status_code=404, detail="Quotation review state was not found.")
+        facts, resolved = await _resolve_v2_facts(CreateQuoteRequestV1.model_validate(normalize_legacy_facts_snapshot(request_row.request_json)))
+        content = await drafts.list(quotation_id, lang)
+        # A pending AI candidate is not a publish blocker by itself. Publish
+        # readiness is determined from the canonical document: every enabled
+        # brochure section must contain its required content.
+        pending_drafts = sorted({item.scope for item in content if item.status in {"draft", "stale"}})
+        content_readiness = resolve_content_readiness(document.document_json, resolved["missingInputs"])
+        content_blockers = [
+            {"sectionId": item["sectionId"], "sectionType": item["sectionType"], "path": missing["path"], "message": missing["message"]}
+            for item in content_readiness if item["status"] is not None
+            for missing in item["missing"]
+        ]
+        presentation_errors: list[str] = []
+        try:
+            presentation = QuoteDocumentV1.model_validate(document.document_json).presentation
+            if presentation.renderer != V2_RENDERER_NAME:
+                presentation_errors.append("presentation.renderer")
+            if presentation.themeId != "brochure":
+                presentation_errors.append("presentation.themeId")
+            if presentation.layoutVersion != 1:
+                presentation_errors.append("presentation.layoutVersion")
+            try:
+                _validate_v2_copy_overrides(presentation.copyOverrides)
+            except HTTPException:
+                presentation_errors.append("presentation.copyOverrides")
+        except ValidationError:
+            presentation_errors.append("presentation")
+        asset_readiness = await _inspect_asset_readiness(document.document_json)
+        pdf_layout_errors = _pdf_layout_preflight(document.document_json)
+        presentation_errors.extend(pdf_layout_errors)
+        publications = await targets.list_targets(quotation_id, locale=lang)
+        summary = [{"targetId": item.id, "brandId": item.brand_id, "status": item.status, "activeReleaseId": item.active_release_id} for item in publications]
+        return {"ready": not resolved["missingInputs"] and not content_blockers and asset_readiness["ready"] and not presentation_errors, "missingInputs": resolved["missingInputs"], "blockingDrafts": pending_drafts, "contentBlockers": content_blockers, "contentReadiness": content_readiness, "presentationErrors": presentation_errors, "assetReadiness": asset_readiness, "currentRevision": document.revision, "publicationTargets": summary}
+
+
+@app.get("/api/v2/quotations/{quotation_id}/review-status")
+async def get_canonical_review_status(quotation_id: str, lang: str | None = None, principal: Principal = Depends(require_editor), _owned=Depends(require_owned_quotation)):
+    return await _canonical_review_status(quotation_id, lang)
+
+
+async def _canonical_workflow(quotation_id: str, lang: str | None = None) -> dict[str, Any]:
+    """The server-owned transition contract for Facts -> Content -> Design -> Review."""
+    async with _get_db_session_factory()() as session:
+        quote = await QuotationRepository(session).get_quotation_by_id(quotation_id)
+    if quote is None:
+        raise HTTPException(status_code=404, detail="Quotation workflow was not found.")
+    effective_lang = (lang or quote.baseline_lang or "").strip().lower()
+    if effective_lang not in {"en", "vi", "ar"}:
+        raise HTTPException(status_code=422, detail={"message": "Unsupported quotation locale.", "locale": effective_lang})
+    review = await _canonical_review_status(quotation_id, effective_lang)
+    unresolved = review["contentBlockers"]
+    facts_ready = not review["missingInputs"]
+    return {
+        "quotationId": quotation_id,
+        "locale": effective_lang,
+        "currentRevision": review["currentRevision"],
+        "facts": {"ready": facts_ready, "missingInputs": review["missingInputs"]},
+        "content": {"ready": not unresolved, "blockingDrafts": review["blockingDrafts"], "contentBlockers": unresolved, "generationOptional": True},
+        # Design is a read/annotate canvas with hand-offs for Fact-owned media.
+        # Missing publish media must still block review/publish, but must not
+        # prevent staff from opening the canvas to see and correct the owner.
+        "design": {"ready": facts_ready and not unresolved and not review["presentationErrors"], "presentationErrors": review["presentationErrors"], "assetReadiness": review["assetReadiness"]},
+        "review": {"ready": review["ready"], "blockers": [*review["missingInputs"], *(item["path"] for item in unresolved), *review["presentationErrors"], *review["assetReadiness"]["missing"], *review["assetReadiness"]["invalid"]]},
+        "publicationTargets": review["publicationTargets"],
+    }
+
+
+@app.get("/api/v2/quotations/{quotation_id}/workflow")
+async def get_canonical_workflow(quotation_id: str, lang: str | None = None, principal: Principal = Depends(require_editor), _owned=Depends(require_owned_quotation)):
+    return await _canonical_workflow(quotation_id, lang)
+
+
+@app.get("/api/internal/v2/quotations/{quotation_id}/workflow")
+async def get_internal_canonical_workflow(
+    quotation_id: str,
+    lang: str | None = None,
+    principal: Principal = Depends(require_editor_or_service),
+):
+    """Server-component bootstrap endpoint; never exposed to the browser."""
+    if not principal.is_service:
+        raise HTTPException(status_code=403, detail="Service authentication is required.")
+    return await _canonical_workflow(quotation_id, lang)
+
+
+@app.get("/api/v2/brands")
+async def list_v2_brands(principal: Principal = Depends(require_editor)):
+    async with _get_db_session_factory()() as session:
+        rows = await BrandRepository(session).list_active()
+    return {"brands": [{"id": row.id, "displayName": row.display_name, "hostname": row.hostname, "status": row.status, "logoAssetKey": row.logo_asset_key, "renderProfile": _serialize_brand_render_profile(row)} for row in rows]}
+
+
+@app.get("/api/internal/v2/brands/editor-bootstrap")
+async def get_editor_brand_bootstrap(principal: Principal = Depends(require_editor_or_service)):
+    if not principal.is_service:
+        raise HTTPException(status_code=403, detail="Service authentication is required.")
+    async with _get_db_session_factory()() as session:
+        brands = await BrandRepository(session).list_active()
+    if not brands:
+        raise HTTPException(status_code=404, detail="No active brand is available for the editor.")
+    return {"brandProfile": _serialize_brand_render_profile(brands[0])}
+
+
+@app.put("/api/v2/brands/{brand_id}")
+async def update_v2_brand(brand_id: str, body: BrandUpsertRequest, principal: Principal = Depends(require_editor)):
+    normalized_hostname = body.hostname.lower().strip().rstrip(".")
+    if not re.fullmatch(r"[a-z0-9.-]+", normalized_hostname):
+        raise HTTPException(status_code=422, detail="hostname is invalid")
+    async with _get_db_session_factory()() as session:
+        brands, targets = BrandRepository(session), PublicationTargetRepository(session)
+        brand = await brands.get(brand_id)
+        if brand is None:
+            raise HTTPException(status_code=404, detail="Brand was not found.")
+        old_hostname = brand.hostname
+        brand.display_name = body.displayName.strip()
+        brand.hostname = normalized_hostname
+        brand.status = body.status
+        brand.logo_asset_key = body.logoAssetKey
+        brand.seller_profile = body.sellerProfile
+        brand.render_profile = body.renderProfile.model_dump(mode="json")
+        try:
+            # Brand identity and cache invalidation form one transaction.  A
+            # hostname/status change must never commit without its durable
+            # purge outbox event.
+            contexts = await targets.list_active_release_contexts_for_brand(brand_id)
+            for target, release in contexts:
+                await targets.lock_target_for_update(target.id)
+                await _enqueue_release_purge(
+                    targets,
+                    target=target,
+                    releases=[release],
+                    hostnames=[old_hostname, normalized_hostname],
+                    event="brand-change",
+                )
+            await session.commit()
+        except IntegrityError as exc:
+            await session.rollback()
+            raise HTTPException(status_code=409, detail="hostname is already assigned to another brand") from exc
+    return {"id": brand.id, "displayName": brand.display_name, "hostname": brand.hostname, "status": brand.status}
+
+
 @app.post("/api/v2/quotations/{quotation_id}/publish")
-async def publish_quotation_document(
+async def publish_canonical_quotation_v2(quotation_id: str, body: CanonicalPublishRequest, lang: str | None = None, principal: Principal = Depends(require_editor), _owned=Depends(require_owned_quotation)):
+    _quotation, effective_lang = await _resolve_v2_locale(quotation_id, lang)
+    review = await _canonical_review_status(quotation_id, effective_lang)
+    if not review["ready"]:
+        raise HTTPException(status_code=422, detail={"message": "Quotation is not ready to publish.", "review": review})
+    if review["currentRevision"] != body.baseRevision:
+        raise HTTPException(status_code=409, detail={"message": "Document revision conflict.", "currentRevision": review["currentRevision"]})
+    async with _get_db_session_factory()() as session:
+        quotes, documents = QuotationRepository(session), QuotationDocumentRepository(session)
+        target_repository, brands = PublicationTargetRepository(session), BrandRepository(session)
+        quotation = await quotes.get_quotation_by_id(quotation_id)
+        if quotation is None:
+            raise HTTPException(status_code=404, detail="Quotation was not found.")
+        brand_id = body.brandId or quotation.brand_id
+        if session.bind.dialect.name == "postgresql":
+            await session.execute(text("SELECT pg_advisory_xact_lock(hashtext(:publication_key))"), {"publication_key": f"{quotation_id}:{brand_id}:{effective_lang}"})
+        document = await documents.get_current_document(quotation_id, effective_lang)
+        if document is None:
+            raise HTTPException(status_code=404, detail="Canonical quotation document was not found.")
+        if document.revision != body.baseRevision:
+            raise HTTPException(status_code=409, detail={"message": "Document revision conflict.", "currentRevision": document.revision})
+        brand = await brands.get_active(brand_id)
+        if brand is None:
+            raise HTTPException(status_code=422, detail={"message": "Brand is unavailable for publishing.", "missingInputs": ["brandId"]})
+        target = await target_repository.create_or_get_target(
+            quotation_id=quotation_id,
+            brand_id=brand.id,
+            locale=effective_lang,
+            public_slug=secrets.token_urlsafe(12).lower(),
+        )
+        release = await target_repository.create_release(
+            target=target,
+            document_revision=document.revision,
+            render_profile_snapshot=_serialize_brand_render_profile(brand),
+            asset_manifest=await _validate_release_asset_manifest(document.document_json),
+        )
+        public_url = f"https://{brand.hostname}/{effective_lang}/q/{target.public_slug}"
+        pdf_key = f"quotations/{quotation_id}/react/{release.id}.pdf"
+        job = await target_repository.create_pdf_job(
+            release_id=release.id,
+            artifact_key=pdf_key,
+            max_attempts=settings.publication_job_max_attempts,
+        )
+        await session.commit()
+    return JSONResponse(status_code=202, content={"status": "queued", "version": release.release_number, "published_url": public_url, "targetId": target.id, "releaseId": release.id, "jobId": job.id})
+
+
+@app.get("/api/v2/publication-jobs/{job_id}")
+async def get_publication_job(job_id: str, principal: Principal = Depends(require_editor)):
+    async with _get_db_session_factory()() as session:
+        job = await PublicationTargetRepository(session).get_job(job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail="Publication job was not found.")
+    return {"id": job.id, "releaseId": job.release_id, "type": job.job_type, "status": job.status, "attempts": job.attempts, "maxAttempts": job.max_attempts, "lockedAt": job.locked_at.isoformat() if job.locked_at else None, "lastError": job.last_error}
+
+
+@app.get("/api/internal/v2/public-quotations/resolve")
+async def resolve_public_quotation_v2(
+    hostname: str,
+    locale: str,
+    slug: str,
+    principal: Principal = Depends(require_editor_or_service),
+):
+    if not principal.is_service:
+        raise HTTPException(status_code=403, detail="Service authentication is required.")
+    if locale not in ("en", "vi", "ar"):
+        raise HTTPException(status_code=404, detail="Published quotation was not found.")
+    async with _get_db_session_factory()() as session:
+        targets, documents = PublicationTargetRepository(session), QuotationDocumentRepository(session)
+        resolved = await targets.get_public_target(hostname=hostname, locale=locale, slug=slug)
+        if resolved is None:
+            raise HTTPException(status_code=404, detail="Published quotation was not found.")
+        brand, target, release = resolved
+        revision = await documents.get_document_revision(target.quotation_id, lang=locale, revision=release.document_revision)
+        if revision is None:
+            raise HTTPException(status_code=404, detail="Published quotation revision was not found.")
+        return {
+            "document": _apply_branded_media_urls(revision.document_json, hostname=brand.hostname, release_id=release.id, asset_manifest=release.asset_manifest or {}),
+            "brandProfile": release.render_profile_snapshot,
+            "release": {"id": release.id, "number": release.release_number, "documentRevision": release.document_revision},
+        }
+
+
+@app.get("/api/internal/v2/public-quotations/releases/{release_id}")
+async def resolve_public_quotation_release_v2(release_id: str, principal: Principal = Depends(require_editor_or_service)):
+    if not principal.is_service:
+        raise HTTPException(status_code=403, detail="Service authentication is required.")
+    async with _get_db_session_factory()() as session:
+        targets, documents = PublicationTargetRepository(session), QuotationDocumentRepository(session)
+        resolved = await targets.get_release_context(release_id)
+        if resolved is None:
+            raise HTTPException(status_code=404, detail="Publication release was not found.")
+        brand, target, release = resolved
+        revision = await documents.get_document_revision(target.quotation_id, lang=target.locale, revision=release.document_revision)
+        if revision is None:
+            raise HTTPException(status_code=404, detail="Published quotation revision was not found.")
+        return {"document": _apply_branded_media_urls(revision.document_json, hostname=brand.hostname, release_id=release.id, asset_manifest=release.asset_manifest or {}, media_origin=os.getenv("QUOTE_GENERATOR_INTERNAL_URL", "http://quote-generator:8115")), "brandProfile": release.render_profile_snapshot, "locale": target.locale}
+
+
+@app.get("/api/internal/v2/public-media/{release_id}/{token}")
+async def resolve_public_media_v2(
+    release_id: str,
+    token: str,
+    hostname: str,
+    principal: Principal = Depends(require_editor_or_service),
+):
+    if not principal.is_service:
+        raise HTTPException(status_code=403, detail="Service authentication is required.")
+    async with _get_db_session_factory()() as session:
+        resolved = await PublicationTargetRepository(session).get_public_media_context(release_id, hostname=hostname)
+        if resolved is None:
+            raise HTTPException(status_code=404, detail="Published media was not found.")
+        _brand, _target, release = resolved
+        r2_key = _manifest_r2_key((release.asset_manifest or {}).get(token))
+    if not r2_key:
+        raise HTTPException(status_code=404, detail="Published media was not found.")
+    try:
+        body = await asyncio.to_thread(R2Storage().download_bytes, r2_key)
+    except Exception as exc:
+        log.exception("Unable to load published media %s", release_id)
+        raise HTTPException(status_code=502, detail="Published media is unavailable.") from exc
+    entry = (release.asset_manifest or {}).get(token)
+    content_type = entry.get("contentType") if isinstance(entry, dict) else "application/octet-stream"
+    return Response(content=body, media_type=content_type or "application/octet-stream", headers={"Cache-Control": "public, max-age=31536000, immutable"})
+
+
+@app.get("/api/internal/v2/public-pdfs/{release_id}")
+async def resolve_public_pdf_v2(release_id: str, principal: Principal = Depends(require_editor_or_service)):
+    if not principal.is_service:
+        raise HTTPException(status_code=403, detail="Service authentication is required.")
+    async with _get_db_session_factory()() as session:
+        resolved = await PublicationTargetRepository(session).get_release_context(release_id)
+        if resolved is None:
+            raise HTTPException(status_code=404, detail="Published PDF was not found.")
+        brand, target, release = resolved
+        if brand.status != "active" or target.status != "published" or release.status != "published" or not release.is_current or not release.pdf_r2_key:
+            raise HTTPException(status_code=404, detail="Published PDF was not found.")
+        r2_key = release.pdf_r2_key
+    try:
+        body = await asyncio.to_thread(R2Storage().download_bytes, r2_key)
+    except Exception as exc:
+        log.exception("Unable to load published PDF %s", release_id)
+        raise HTTPException(status_code=502, detail="Published PDF is unavailable.") from exc
+    return Response(content=body, media_type="application/pdf", headers={"Cache-Control": "public, max-age=31536000, immutable"})
+
+
+@app.get("/api/v2/quotations/{quotation_id}/publications")
+async def list_canonical_publications(quotation_id: str, lang: str | None = None, principal: Principal = Depends(require_editor), _owned=Depends(require_owned_quotation)):
+    _quotation, lang = await _resolve_v2_locale(quotation_id, lang)
+    async with _get_db_session_factory()() as session:
+        targets = await PublicationTargetRepository(session).list_targets(quotation_id, locale=lang)
+        brands = BrandRepository(session)
+        result = []
+        for target in targets:
+            brand = await brands.get(target.brand_id)
+            releases = await PublicationTargetRepository(session).list_releases(target.id)
+            release = next((item for item in releases if item.id == target.active_release_id), None)
+            result.append({"targetId": target.id, "brandId": target.brand_id, "hostname": brand.hostname if brand else None, "locale": target.locale, "slug": target.public_slug, "status": target.status, "release": {"id": release.id, "number": release.release_number, "documentRevision": release.document_revision} if release else None, "releases": [{"id": item.id, "number": item.release_number, "status": item.status, "documentRevision": item.document_revision, "isCurrent": item.is_current, "job": (lambda job: {"id": job.id, "type": job.job_type, "status": job.status, "attempts": job.attempts, "maxAttempts": job.max_attempts, "lastError": job.last_error} if job else None)(await PublicationTargetRepository(session).get_latest_job(item.id))} for item in releases]})
+        return {"publications": result}
+
+
+@app.post("/api/v2/quotations/{quotation_id}/publication-targets/{target_id}/releases/{release_number}/restore")
+async def restore_canonical_publication(quotation_id: str, target_id: str, release_number: int, principal: Principal = Depends(require_editor), _owned=Depends(require_owned_quotation)):
+    async with _get_db_session_factory()() as session:
+        repository, brands = PublicationTargetRepository(session), BrandRepository(session)
+        await session.execute(text("SELECT pg_advisory_xact_lock(hashtext(:target_key))"), {"target_key": target_id})
+        target = await repository.lock_target_for_update(target_id, quotation_id=quotation_id)
+        if target is None:
+            raise HTTPException(status_code=404, detail="Publication target was not found.")
+        restored = await repository.restore_release(target=target, release_number=release_number)
+        brand = await brands.get(target.brand_id)
+        if restored is None or brand is None:
+            raise HTTPException(status_code=404, detail="Publication release was not found.")
+        release, previous_release = restored
+        await _enqueue_release_purge(repository, target=target, releases=[previous_release, release], hostnames=[brand.hostname], event="restore")
+        await session.commit()
+    public_url = f"https://{brand.hostname}/{target.locale}/q/{target.public_slug}"
+    return {"status": "published", "release": release.release_number, "publishedUrl": public_url}
+
+
+@app.post("/api/v2/quotations/{quotation_id}/publication-targets/{target_id}/unpublish")
+async def unpublish_canonical_target(quotation_id: str, target_id: str, principal: Principal = Depends(require_editor), _owned=Depends(require_owned_quotation)):
+    async with _get_db_session_factory()() as session:
+        repository, brands = PublicationTargetRepository(session), BrandRepository(session)
+        await session.execute(text("SELECT pg_advisory_xact_lock(hashtext(:target_key))"), {"target_key": target_id})
+        target = await repository.lock_target_for_update(target_id, quotation_id=quotation_id)
+        if target is None:
+            raise HTTPException(status_code=404, detail="Publication target was not found.")
+        brand = await brands.get(target.brand_id)
+        active_release = await repository.get_release(target.active_release_id) if target.active_release_id else None
+        target.status = "unpublished"
+        target.active_release_id = None
+        if brand is not None and active_release is not None:
+            await _enqueue_release_purge(repository, target=target, releases=[active_release], hostnames=[brand.hostname], event="unpublish")
+        await session.commit()
+    return {"status": "unpublished"}
+
+
+@app.get("/quotations/{quotation_id}/versions/{version}/pdf")
+async def download_canonical_publication_pdf(quotation_id: str, version: int, lang: str = "en"):
+    if _pdf_render_semaphore.locked():
+        raise HTTPException(status_code=503, detail="PDF renderer is busy. Please retry shortly.")
+    async with _pdf_render_semaphore:
+        async with _get_db_session_factory()() as session:
+            publications, documents, quotes = PublicationRepository(session), QuotationDocumentRepository(session), QuotationRepository(session)
+            publication = await publications.get_publication(quotation_id=quotation_id, version=version, lang=lang)
+            quotation = await quotes.get_quotation_by_id(quotation_id)
+            if quotation is not None and quotation.template_name == V2_RENDERER_NAME:
+                raise HTTPException(status_code=410, detail="React V2 PDFs are available only from the branded publication target.")
+            revision = await documents.get_document_revision(quotation_id, lang=lang, revision=publication.document_revision) if publication else None
+            if publication is None or quotation is None or revision is None or publication.status not in {"published", "superseded"}:
+                raise HTTPException(status_code=404, detail="Published quotation version was not found.")
+            print_html = _render_canonical_document_html(revision.document_json, quotation, lang=lang, view="print", version=version)
+        try:
+            pdf = await asyncio.wait_for(asyncio.to_thread(_render_pdf_bytes, print_html), timeout=60)
+        except TimeoutError as exc:
+            raise HTTPException(status_code=503, detail="PDF renderer timed out.") from exc
+        except Exception as exc:
+            raise HTTPException(status_code=503, detail="PDF renderer is unavailable.") from exc
+        return Response(content=pdf, media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="quotation-{quotation_id}-v{version}.pdf"', "Cache-Control": "private, no-store"})
+
+
+@app.post("/api/v2/legacy-quotations/{quotation_id}/publish", include_in_schema=False)
+async def publish_quotation_document_legacy(
     quotation_id: str,
     body: QuoteDocumentPublishRequest,
     request: Request,
@@ -8673,6 +11005,8 @@ async def publish_quotation_document(
     quotation, canonical_document, effective_lang = await _load_canonical_quote_document_from_db(quotation_id, target_lang)
     if quotation is None:
         raise HTTPException(status_code=404, detail=f"Quotation '{quotation_id}' not found.")
+    if quotation.template_name == V2_RENDERER_NAME:
+        raise HTTPException(status_code=410, detail="React V2 quotations publish only through publication targets.")
 
     effective_lang = effective_lang or quotation.baseline_lang
     template_name = body.template_name or quotation.template_name or ctx_data.get("template_name") or "vietnam_luxury_brosure.html"
@@ -10710,4 +13044,6 @@ def get_luxury_hotel_details(hotel_name_or_arr: str, destination: str, checkin: 
 
 @app.api_route("/{path_name:path}", methods=["GET", "POST", "PUT", "DELETE"])
 async def catch_all(request: Request, path_name: str):
+    if path_name.startswith("api/") or request.url.path.startswith("/api/"):
+        raise HTTPException(status_code=404, detail=f"API endpoint '{request.url.path}' not found.")
     return {"url_path": request.url.path, "path_name": path_name, "scope_path": request.scope.get("path")}

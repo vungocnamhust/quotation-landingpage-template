@@ -11,6 +11,9 @@ class DatabaseSchemaMetadataTests(unittest.TestCase):
             "quotation_documents",
             "quotation_document_revisions",
             "quotation_publications",
+            "brands",
+            "publication_targets",
+            "publication_releases",
             "media_assets",
             "media_selections",
         }

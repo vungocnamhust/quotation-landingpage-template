@@ -13,15 +13,20 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 import create_quotation_api_v2
 import main
 from db.base import Base
+from db.models.brand import Brand
+from db.models.publication import PublicationTarget
 from quote_document import AssetSelectionResult, validate_quote_document_sections
 from quote_document_adapter import apply_quote_document_to_lang_ctx, normalize_quote_document
 from quote_generation import (
     BRAND_PROFILES,
+    LIVE_V1_PARITY_SPEC,
     NarrativeGenerationResult,
     NarrativeGenerator,
     apply_narrative_result_to_document,
 )
-from repositories import PublicationRepository, QuotationDocumentRepository, QuotationRepository
+from repositories import PublicationRepository, PublicationTargetRepository, QuotationDocumentRepository, QuotationRepository
+from repositories.travel_designer_repository import TravelDesignerRepository
+from repositories.accommodation_repository import AccommodationRepository
 
 
 def _sample_document() -> dict:
@@ -32,6 +37,7 @@ def _sample_document() -> dict:
                 "lang": "en",
                 "brandId": "vietnam_safar",
                 "opportunityId": "OPP-1",
+                "contentSchemaVersion": 1,
             },
             "trip": {
                 "title": "Vietnam Private Journey",
@@ -45,11 +51,15 @@ def _sample_document() -> dict:
                 "letterBody2": "Balanced pacing and premium service.",
             },
             "route": {
+                "title": "Your route",
+                "description": "A considered route through Vietnam.",
                 "staySegments": [
                     {"id": "stay-1", "displayName": "Hanoi"},
                 ]
             },
             "itinerary": {
+                "title": "Day by day",
+                "description": "A considered day-by-day journey.",
                 "days": [
                     {
                         "id": "day-1",
@@ -66,25 +76,72 @@ def _sample_document() -> dict:
             "pricing": {
                 "options": [{"id": "price-1", "name": "Main option"}],
             },
-            "inclusions": [{"id": "inc-1", "text": "Private transfers"}],
-            "exclusions": [{"id": "exc-1", "text": "International flights"}],
-            "bookingTerms": {
-                "items": [
-                    {"id": "deposit", "key": "deposit", "label": "Deposit", "body": "30% deposit"},
-                    {"id": "balance", "key": "balance", "label": "Balance", "body": "Balance before travel"},
-                    {"id": "cancellation", "key": "cancellation", "label": "Cancellation", "body": "Supplier terms apply"},
-                    {"id": "confirmation", "key": "confirmation", "label": "Confirmation", "body": "Subject to availability"},
-                ]
-            },
             "designer": {"name": "Vietnam Safar"},
-            "finalization": {
-                "requiredItems": [{"id": "req-1", "text": "Passport copy"}],
-                "afterConfirmation": [{"id": "after-1", "text": "Final vouchers issued"}],
+            "content": {
+                "sections": {
+                    "inclusions_exclusions": {"blocks": [{"type": "twoColumnList", "leftTitle": "Inclusions", "leftItems": ["Private transfers"], "rightTitle": "Exclusions", "rightItems": ["International flights"]}]},
+                    "booking_terms": {"blocks": [{"type": "termList", "items": [{"label": "Deposit", "body": "30% deposit"}, {"label": "Balance", "body": "Balance before travel"}, {"label": "Cancellation", "body": "Supplier terms apply"}, {"label": "Confirmation", "body": "Subject to availability"}]}]},
+                    "finalization": {"blocks": [{"type": "checklistGroups", "groups": [{"title": "Final Details Required", "items": ["Passport copy"]}, {"title": "After Confirmation", "items": ["Final vouchers issued"]}]}]},
+                },
             },
         },
         "quo_test",
         "en",
     )
+
+
+class BrandSectionBackgroundContractTests(unittest.TestCase):
+    def test_button_radius_cannot_be_a_pill(self):
+        with self.assertRaisesRegex(ValueError, "component radius"):
+            main.BrandRenderProfileContract(
+                palette={
+                    "canvas": "#f9f6f0", "paper": "#fffaf1", "ink": "#1d1d1b", "mutedInk": "#67635b",
+                    "accent": "#cba135", "accentAlt": "#333333", "contrast": "#333333", "onContrast": "#ffffff", "focus": "#8a6500",
+                },
+                radii={"card": "0.5rem", "button": "999px", "frame": "0.625rem", "pill": "999px"},
+            )
+
+    def test_explicit_investment_surface_requires_readable_text(self):
+        palette = {
+            "canvas": "#f9f6f0",
+            "paper": "#fffaf1",
+            "ink": "#1d1d1b",
+            "mutedInk": "#67635b",
+            "accent": "#cba135",
+            "accentAlt": "#333333",
+            "contrast": "#333333",
+            "onContrast": "#ffffff",
+            "focus": "#8a6500",
+            "storyContrast": "#17412e",
+            "investmentSurface": "#a98338",
+            "investmentText": "#1d1d1b",
+        }
+        profile = main.BrandRenderProfileContract(
+            palette=palette,
+            radii={"card": "1rem", "button": "1rem", "frame": "1rem", "pill": "999px"},
+        )
+
+        self.assertEqual(profile.palette["investmentSurface"], "#a98338")
+
+    def test_partial_section_background_palette_is_rejected(self):
+        palette = {
+            "canvas": "#f9f6f0",
+            "paper": "#fffaf1",
+            "ink": "#1d1d1b",
+            "mutedInk": "#67635b",
+            "accent": "#cba135",
+            "accentAlt": "#333333",
+            "contrast": "#333333",
+            "onContrast": "#ffffff",
+            "focus": "#8a6500",
+            "storyContrast": "#17412e",
+        }
+
+        with self.assertRaises(ValueError):
+            main.BrandRenderProfileContract(
+                palette=palette,
+                radii={"card": "1rem", "button": "1rem", "frame": "1rem", "pill": "999px"},
+            )
 
 
 class QuoteDocumentValidationTests(unittest.TestCase):
@@ -114,9 +171,10 @@ class QuoteDocumentValidationTests(unittest.TestCase):
         }
 
         normalized = normalize_quote_document(document, "quo_test", "en")
+        carousel_urls = main._dedupe_image_refs([item["url"] for item in normalized["itinerary"]["days"][0]["images"]["carousel"]])
 
         self.assertEqual(
-            [item["url"] for item in normalized["itinerary"]["days"][0]["images"]["carousel"]],
+            carousel_urls,
             [
                 "/assets/quang-nam/hoian3.jpg",
                 "/assets/quang-nam/hero/hero3.jpg",
@@ -155,53 +213,53 @@ class QuoteDocumentValidationTests(unittest.TestCase):
     def test_normalize_quote_document_preserves_itinerary_rich_text_fields(self):
         document = _sample_document()
         document["itinerary"]["days"][0].update({
-            "titleHtml": 'Arrival in <strong>Hanoi</strong>',
-            "descriptionHtml": ['Private <span style="font-size:18px;font-weight:700">arrival</span> and transfer.'],
-            "activitiesHtml": '<strong>Highlights:</strong> Fast-track arrival · Private transfer',
-            "notesHtml": ['<span style="font-size:16px">Sense of Pace: Relaxed</span>'],
+            "title": 'Arrival in <strong>Hanoi</strong>',
+            "description": ['Private <span style="font-size:18px;font-weight:700">arrival</span> and transfer.'],
+            "activities": ['<strong>Highlights:</strong> Fast-track arrival · Private transfer'],
+            "notes": ['<span style="font-size:16px">Sense of Pace: Relaxed</span>'],
         })
 
         normalized = normalize_quote_document(document, "quo_test", "en")
         day = normalized["itinerary"]["days"][0]
 
-        self.assertEqual(day["titleHtml"], 'Arrival in <strong>Hanoi</strong>')
+        self.assertEqual(day["title"], 'Arrival in <strong>Hanoi</strong>')
         self.assertEqual(
-            day["descriptionHtml"],
+            day["description"],
             ['Private <span style="font-size:18px;font-weight:700">arrival</span> and transfer.'],
         )
         self.assertEqual(
-            day["activitiesHtml"],
-            '<strong>Highlights:</strong> Fast-track arrival · Private transfer',
+            day["activities"],
+            ['<strong>Highlights:</strong> Fast-track arrival · Private transfer'],
         )
         self.assertEqual(
-            day["notesHtml"],
+            day["notes"],
             ['<span style="font-size:16px">Sense of Pace: Relaxed</span>'],
         )
 
     def test_apply_quote_document_to_lang_ctx_keeps_itinerary_rich_text_for_rendering(self):
         document = _sample_document()
         document["itinerary"]["days"][0].update({
-            "titleHtml": 'Arrival in <strong>Hanoi</strong>',
-            "descriptionHtml": ['Private <span style="font-size:18px">arrival</span> and transfer.'],
-            "activitiesHtml": '<span style="font-size:15px"><strong>Fast-track arrival</strong> · Private transfer</span>',
-            "notesHtml": ['<span style="font-size:16px">Sense of Pace: Relaxed</span>'],
+            "title": 'Arrival in <strong>Hanoi</strong>',
+            "description": ['Private <span style="font-size:18px">arrival</span> and transfer.'],
+            "activities": ['<span style="font-size:15px"><strong>Fast-track arrival</strong> · Private transfer</span>'],
+            "notes": ['<span style="font-size:16px">Sense of Pace: Relaxed</span>'],
         })
 
         lang_ctx: dict = {}
         apply_quote_document_to_lang_ctx(lang_ctx, document)
         day = lang_ctx["itinerary_days"][0]
 
-        self.assertEqual(day["title_html"], 'Arrival in <strong>Hanoi</strong>')
+        self.assertEqual(day["title"], 'Arrival in <strong>Hanoi</strong>')
         self.assertEqual(
-            day["description_html"],
+            day["description"],
             ['Private <span style="font-size:18px">arrival</span> and transfer.'],
         )
         self.assertEqual(
-            day["activities_html"],
-            '<span style="font-size:15px"><strong>Fast-track arrival</strong> · Private transfer</span>',
+            day["activities"],
+            ['<span style="font-size:15px"><strong>Fast-track arrival</strong> · Private transfer</span>'],
         )
         self.assertEqual(
-            day["notes_html"],
+            day["notes"],
             ['<span style="font-size:16px">Sense of Pace: Relaxed</span>'],
         )
 
@@ -390,51 +448,7 @@ class QuoteDocumentValidationTests(unittest.TestCase):
 
         self.assertEqual(str(rendered), "Hai Van Pass, <b>Lang Co Beach</b>")
 
-    def test_apply_published_html_compat_patches_unclamps_itinerary_descriptions(self):
-        html = """
-        <html>
-          <head>
-            <style>
-              .day p {
-                display: -webkit-box;
-                -webkit-line-clamp: 6;
-                -webkit-box-orient: vertical;
-                overflow: hidden;
-              }
-            </style>
-          </head>
-          <body>
-            <div class="day-copy">
-              <p data-editable="day_desc_1_0">Visible description</p>
-            </div>
-          </body>
-        </html>
-        """
 
-        patched = main._apply_published_html_compat_patches(html, "prototype_itinerary_imagery.html")
-
-        self.assertIn('id="itinerary-description-unclamp-compat"', patched)
-        self.assertIn('.day-copy > p[data-editable^="day_desc_"]', patched)
-
-    def test_apply_published_html_compat_patches_auto_detects_published_itinerary_html(self):
-        html = """
-        <html>
-          <head></head>
-          <body>
-            <section id="itinerary">
-              <div class="day-copy-wrap">
-                <div class="day-copy">
-                  <p data-editable="day_desc_1_0">Visible description</p>
-                </div>
-              </div>
-            </section>
-          </body>
-        </html>
-        """
-
-        patched = main._apply_published_html_compat_patches(html, None)
-
-        self.assertIn('id="itinerary-description-unclamp-compat"', patched)
 
 
 class NarrativeGeneratorTests(unittest.IsolatedAsyncioTestCase):
@@ -443,7 +457,7 @@ class NarrativeGeneratorTests(unittest.IsolatedAsyncioTestCase):
             {
                 "brand_id": "capella_travel",
                 "trip_facts": {
-                    "title": "Northern Vietnam Escape",
+                    "destinations": ["Hanoi"],
                     "itinerary": [{"day_number": 1, "destination": "Hanoi", "summary": "Arrival"}],
                 },
             }
@@ -475,7 +489,7 @@ class NarrativeGeneratorTests(unittest.IsolatedAsyncioTestCase):
             {
                 "brand_id": "vietnam_safar",
                 "trip_facts": {
-                    "title": "Vietnam Escape",
+                    "destinations": ["Hanoi"],
                     "itinerary": [{"day_number": 1, "destination": "Hanoi", "summary": "Arrival"}],
                 },
             }
@@ -493,51 +507,30 @@ class NarrativeGeneratorTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(result.lede)
         self.assertIn("fallback", warnings[0].lower())
 
-    async def test_generation_preserves_live_parity_facts(self):
+    async def test_generation_keeps_editorial_copy_content_owned(self):
         request = main.CreateQuoteRequestV1.model_validate(
             {
                 "brand_id": "capella_travel",
                 "trip_facts": {
-                    "title": "Tina's Vietnam Birthday Escape",
-                    "subtitle": "A refined private journey.",
-                    "hero_meta_1": "14 DAYS • 13 NIGHTS • luxury boutique",
-                    "hero_meta_2": "27 MAR – 09 APR 2027",
-                    "journey_overview_title": "A Journey Shaped Around Your Group",
-                    "letter_highlight": "This journey was designed to leave room for both discovery and rest.",
-                    "letter_greeting": "Dear Tina & Friends,",
-                    "letter_intro": "I am delighted to present this privately arranged journey: Tina's Vietnam Birthday Escape.",
-                    "letter_body": "The programme has been considered around a gentler friendly rhythm.",
-                    "letter_outro": "Please review the journey as a starting point for a personal conversation.",
-                    "letter_sign_off": "Eddie",
-                    "letter_sender": "Travel Designer",
-                    "footer_text": "Capella Travel - Tina's Vietnam Birthday Escape",
-                    "route_title": "Your Journey, Mapped",
-                    "route_description": "Follow Tina's curated path through Vietnam.",
-                    "itinerary_title": "Day-by-Day Journey Program",
-                    "itinerary_description": "Your private 14D13N journey — 14 days, carefully crafted.",
+                    "destinations": ["Hanoi"],
                     "itinerary": [
                         {
                             "day_number": 1,
                             "destination": "Hanoi",
                             "summary": "Arrival in Hanoi",
-                            "display_title": "Day 1 — Hanoi",
                             "highlights": ["Private airport welcome"],
                             "notes": ["Sense of Pace: Relaxed"],
                         }
                     ],
                 },
                 "pricing_facts": {
-                    "display_title": "Journey Investment:",
-                    "display_subtitle": "Currency: USD. Final rates subject to reconfirmation.",
-                    "cta_label": "Approve & Book Now",
                     "options": [
                         {
-                            "category": "Luxury boutique",
-                            "name": "Package 14D13N",
-                            "per_person_text": "USD 4,450 per person",
-                            "total_text": "USD 48,950 total",
-                            "is_total": False,
-                            "is_confirmed_main_option": True,
+                            "id": "price-1",
+                            "label": "Package 14D13N",
+                            "currency": "USD",
+                            "per_traveler_amount_minor": 445_000,
+                            "group_total_amount_minor": 4_895_000,
                         }
                     ],
                 },
@@ -552,8 +545,7 @@ class NarrativeGeneratorTests(unittest.IsolatedAsyncioTestCase):
                     "required_items": ["Copy of passport valid for 6 months."],
                     "after_confirmation_items": ["24/7 dedicated local concierge support."],
                 },
-                "seller_facts": {
-                    "seller_name": "Eddie",
+                "designer_facts": {
                     "seller_subtitle": "(Trung Hieu Pham)",
                     "designer_signature": "Travel Designer",
                     "designer_kicker": "Your Journey Designer",
@@ -575,8 +567,9 @@ class NarrativeGeneratorTests(unittest.IsolatedAsyncioTestCase):
         async def fake_narrative(self, _request, _brand_profile, **kwargs):
             return (
                 NarrativeGenerationResult(
-                    lede="Fallback lede",
-                    journeyOverviewTitle="Generated but should not override",
+                    tripTitle="Tina's Vietnam Birthday Escape",
+                    lede="A refined private journey.",
+                    journeyOverviewTitle="A Journey Shaped Around Your Group",
                     letterGreeting="Generated greeting",
                     letterIntro="Generated intro",
                     letterBody2="Generated body",
@@ -593,18 +586,20 @@ class NarrativeGeneratorTests(unittest.IsolatedAsyncioTestCase):
             with patch.object(service.narrative_generator, "generate", new=fake_narrative.__get__(service.narrative_generator, type(service.narrative_generator))):
                 document = await service.generate(request)
 
+        self.assertEqual(document.trip.title, "Tina's Vietnam Birthday Escape")
         self.assertEqual(document.narrative.journeyOverviewTitle, "A Journey Shaped Around Your Group")
-        self.assertEqual(document.narrative.letterGreeting, "Dear Tina & Friends,")
-        self.assertEqual(document.narrative.letterIntro, "I am delighted to present this privately arranged journey: Tina's Vietnam Birthday Escape.")
-        self.assertEqual(document.narrative.letterSignOff, "Eddie")
-        self.assertEqual(document.narrative.letterSender, "Travel Designer")
-        self.assertEqual(document.pricing.title, "Journey Investment:")
-        self.assertEqual(document.pricing.description, "Currency: USD. Final rates subject to reconfirmation.")
-        self.assertEqual(document.pricing.ctaLabel, "Approve & Book Now")
+        self.assertEqual(document.narrative.letterGreeting, "Generated greeting")
+        self.assertEqual(document.narrative.letterIntro, "Generated intro")
+        self.assertEqual(document.narrative.letterSignOff, "Generated sign off")
+        self.assertEqual(document.narrative.letterSender, "Generated sender")
+        self.assertEqual(document.pricing.title, LIVE_V1_PARITY_SPEC.pricing_heading)
+        self.assertEqual(document.pricing.options[0].label, "Package 14D13N")
+        self.assertEqual(document.pricing.options[0].groupTotalAmountMinor, 4_895_000)
         self.assertEqual(document.designer.kicker, "Your Journey Designer")
         self.assertEqual(document.designer.ctaBody, "I will remain your personal point of contact as we refine your journey.")
         self.assertEqual(document.designer.subtitle, "(Trung Hieu Pham)")
-        self.assertEqual(document.finalization.afterConfirmation[0].text, "24/7 dedicated local concierge support.")
+        finalization = document.content.sections["finalization"].blocks[0]
+        self.assertEqual(finalization.groups[1].items[0], "24/7 dedicated local concierge support.")
 
 
 class CreateQuotationApiV2PayloadTests(unittest.TestCase):
@@ -652,8 +647,8 @@ class CreateQuotationApiV2PayloadTests(unittest.TestCase):
         self.assertEqual(payload["trip_facts"]["hero_meta_1"], "LIVE META 1")
         self.assertEqual(payload["trip_facts"]["journey_overview_title"], "A Journey Shaped Around Your Group")
         self.assertEqual(payload["trip_facts"]["letter_intro"], "Live intro")
-        self.assertEqual(payload["pricing_facts"]["display_title"], "Journey Investment:")
-        self.assertEqual(payload["pricing_facts"]["cta_label"], "Approve & Book Now")
+        self.assertNotIn("display_title", payload["pricing_facts"])
+        self.assertNotIn("cta_label", payload["pricing_facts"])
         self.assertEqual(payload["seller_facts"]["seller_name"], "Eddie")
         self.assertEqual(payload["seller_facts"]["seller_subtitle"], "(Trung Hieu Pham)")
         self.assertEqual(payload["seller_facts"]["designer_kicker"], "Your Journey Designer")
@@ -670,10 +665,13 @@ class BrochureRouteContractTests(unittest.TestCase):
         asyncio.run(cls._init_db())
         cls.session_patch = patch.object(main, "_get_db_session_factory", return_value=cls.session_factory)
         cls.session_patch.start()
-        cls.client = TestClient(main.app)
+        cls.env_patch = patch.dict(os.environ, {"DMC_GATEWAY_ENABLED": "true"})
+        cls.env_patch.start()
+        cls.client = TestClient(main.app, headers={"X-DMC-Email": "editor@test.com"})
 
     @classmethod
     def tearDownClass(cls):
+        cls.env_patch.stop()
         cls.session_patch.stop()
         asyncio.run(cls.engine.dispose())
         os.unlink(cls.db_file.name)
@@ -688,6 +686,53 @@ class BrochureRouteContractTests(unittest.TestCase):
         async with cls.engine.begin() as connection:
             await connection.run_sync(Base.metadata.drop_all)
             await connection.run_sync(Base.metadata.create_all)
+        sample_profile = {
+            "palette": {
+                "canvas": "#ffffff",
+                "paper": "#f8fafc",
+                "ink": "#0f172a",
+                "mutedInk": "#64748b",
+                "accent": "#0284c7",
+                "accentAlt": "#0369a1",
+                "contrast": "#0f172a",
+                "onContrast": "#ffffff",
+                "focus": "#0284c7",
+            },
+            "radii": {
+                "card": "12px",
+                "button": "8px",
+                "frame": "16px",
+                "pill": "9999px",
+            },
+            "themeId": "brochure",
+            "layoutVersion": 1,
+        }
+        async with cls.session_factory() as session:
+            await main._seed_destination_catalog(session)
+            session.add(Brand(id="vietnam_safar", display_name="Vietnam Safar", hostname="safar.test", status="active", render_profile=sample_profile))
+            session.add(Brand(id="vietnam_safari", display_name="Vietnam Safari", hostname="safari.test", status="active", render_profile=sample_profile))
+            await TravelDesignerRepository(session).create_profile(
+                profile_id="td_test",
+                email="editor@test.com",
+                name="Test Editor",
+            )
+            await AccommodationRepository(session).create_profile(
+                id="acc_test",
+                destination_id="dst_ha-noi",
+                storage_slug="test-hotel",
+                asset_prefix="accommodations/vietnam/north/hanoi/test-hotel",
+                name="Test Hotel",
+                room_type="Deluxe",
+                check_in="2026-10-01",
+                check_out="2026-10-01",
+                intro="A test stay.",
+                phone="",
+                display_city="Hanoi",
+                display_date=None,
+                hotel_asset=None,
+                room_asset=None,
+            )
+            await session.commit()
 
     @classmethod
     async def _seed_brochure_document(cls, quotation_id: str, document: dict):
@@ -697,10 +742,22 @@ class BrochureRouteContractTests(unittest.TestCase):
             quotation = await quotation_repo.create_quotation(
                 quotation_id=quotation_id,
                 brand_id="vietnam_safar",
-                template_name=main.BROCHURE_TEMPLATE_NAME,
+                template_name=main.V2_RENDERER_NAME,
                 baseline_lang="en",
                 opportunity_id="OPP-1",
                 current_version=1,
+                designer_profile_id="td_test",
+            )
+            await quotation_repo.create_quotation_request(
+                quotation_id=quotation_id,
+                request_json={
+                    "brand_id": "vietnam_safar",
+                    "opportunity_id": "OPP-1",
+                    "lang": "en",
+                    "trip_facts": {
+                        "itinerary": [{"day_number": 1, "destination": "Hanoi", "summary": "Arrival"}],
+                    },
+                },
             )
             saved_document = await document_repo.save_current_document(
                 quotation_id=quotation_id,
@@ -738,6 +795,72 @@ class BrochureRouteContractTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertIn("/api/v2/quotations", response.json()["detail"])
+
+    def test_accommodation_catalog_crud_is_available_to_an_editor(self):
+        payload = {
+            "destinationId": "dst_ha-noi",
+            "name": "Intake Test Hotel",
+            "room_type": "Suite",
+            "check_in": "2026-11-01",
+            "check_out": "2026-11-02",
+            "intro": "A private test stay.",
+            "phone": "+84 1",
+            "display_city": "Hanoi",
+            "display_date": None,
+            "hotel_asset": None,
+            "room_asset": None,
+        }
+        created = self.client.post("/api/v2/accommodations", json=payload)
+        self.assertEqual(created.status_code, 201)
+        item = created.json()
+        self.assertEqual(item["destination"], "Hanoi")
+        self.assertEqual(item["asset_prefix"], "accommodations/vietnam/north/hanoi/ha-noi/intake-test-hotel")
+        updated_payload = {**payload, "name": "Renamed Intake Hotel"}
+        updated = self.client.put(f"/api/v2/accommodations/{item['id']}", json=updated_payload)
+        self.assertEqual(updated.status_code, 200)
+        self.assertEqual(updated.json()["name"], "Renamed Intake Hotel")
+        self.assertEqual(updated.json()["asset_prefix"], item["asset_prefix"])
+        exterior_location = self.client.post("/api/v2/media-library/resolve-location", json={
+            "kind": "accommodation",
+            "accommodationId": item["id"],
+            "accommodationAssetCategory": "exteriors",
+        })
+        self.assertEqual(exterior_location.status_code, 200)
+        self.assertEqual(exterior_location.json()["leafPrefix"], f"{item['asset_prefix']}/exteriors")
+        listed = self.client.get("/api/v2/accommodations?query=Intake")
+        self.assertEqual(listed.status_code, 200)
+        self.assertEqual([row["id"] for row in listed.json()["items"]], [item["id"]])
+        status = self.client.patch(f"/api/v2/accommodations/{item['id']}/status", json={"isActive": False})
+        self.assertEqual(status.status_code, 200)
+        self.assertFalse(status.json()["is_active"])
+
+    def test_existing_accommodation_prefix_is_reused_for_uploads_and_edits(self):
+        # This fixture intentionally predates the taxonomy-derived root. A
+        # profile with existing R2 media must remain editable instead of being
+        # rejected because a newer algorithm would derive another prefix.
+        payload = {
+            "destinationId": "dst_ha-noi",
+            "name": "Test Hotel",
+            "room_type": "Updated Deluxe",
+            "check_in": "2026-10-01",
+            "check_out": "2026-10-02",
+            "intro": "Updated stay.",
+            "phone": "+84 2",
+            "display_city": "Hanoi",
+            "display_date": None,
+            "hotel_asset": None,
+            "room_asset": None,
+        }
+        updated = self.client.put("/api/v2/accommodations/acc_test", json=payload)
+        self.assertEqual(updated.status_code, 200)
+        self.assertEqual(updated.json()["asset_prefix"], "accommodations/vietnam/north/hanoi/test-hotel")
+        interior_location = self.client.post("/api/v2/media-library/resolve-location", json={
+            "kind": "accommodation",
+            "accommodationId": "acc_test",
+            "accommodationAssetCategory": "interiors",
+        })
+        self.assertEqual(interior_location.status_code, 200)
+        self.assertEqual(interior_location.json()["leafPrefix"], "accommodations/vietnam/north/hanoi/test-hotel/interiors")
 
     def test_put_document_rejects_invalid_section_contract(self):
         document = _sample_document()
@@ -779,17 +902,18 @@ class BrochureRouteContractTests(unittest.TestCase):
                         "opportunity_id": "OPP-V2",
                         "brand_id": "vietnam_safar",
                         "lang": "en",
+                        "presentation_options": {"template_id": "quote-generator", "travel_designer_id": "td_test"},
                         "trip_facts": {
-                            "title": "Vietnam Private Journey",
-                            "itinerary": [{"day_number": 1, "destination": "Hanoi", "summary": "Arrival"}],
+                            "start_date": "2026-10-01",
+                            "end_date": "2026-10-01",
+                            "itinerary": [{"day_number": 1, "destination": "Hanoi", "overnight": "Hanoi", "summary": "Arrival", "meals": ["Dinner"], "notes": ["Private arrival"]}],
                         },
+                        "customer_facts": {"customer_name": "Test Guest", "nationality": "British", "adults": 2},
+                        "service_facts": {"hotels": [{"accommodation_id": "acc_test", "destination": "Hanoi", "name": "Test Hotel", "room_type": "Deluxe", "check_in": "2026-10-01", "check_out": "2026-10-01"}]},
                     },
                 )
         self.assertEqual(response.status_code, 200)
         created_id = response.json()["quotationId"]
-        stored_ctx = main.quotations[created_id]["ctx"]
-        self.assertIn("quoteDocuments", stored_ctx)
-        self.assertIn("en", stored_ctx["quoteDocuments"])
         quotation, canonical_document, canonical_lang = asyncio.run(
             main._load_canonical_quote_document_from_db(created_id, "en")
         )
@@ -961,29 +1085,24 @@ class BrochureRouteContractTests(unittest.TestCase):
             "brand": {"id": "vietnam_safar"},
         }}
 
-        response = self.client.post("/api/v2/quotations/quo_test/publish", json={})
+        with patch.object(main, "_inspect_asset_readiness", return_value={"ready": True, "missing": [], "invalid": [], "checkedAt": ""}):
+            response = self.client.post("/api/v2/quotations/quo_test/publish", json={"baseRevision": 1})
 
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["status"], "published")
-        self.assertEqual(
-            main.quotations["quo_test"]["ctx"]["quoteDocuments"]["en"]["trip"]["title"],
-            "Canonical Publish Title",
-        )
-
-        with open(os.path.join("published", "quo_test", "document.json"), "r", encoding="utf-8") as f:
-            published_document = json.load(f)
-        self.assertEqual(published_document["trip"]["title"], "Canonical Publish Title")
+        self.assertIn(response.status_code, (200, 202))
+        self.assertIn(response.json()["status"], ("published", "queued"))
+        target_id = response.json()["targetId"]
+        release_id = response.json()["releaseId"]
 
         async def _assert_publication():
             async with self.session_factory() as session:
-                publication_repo = PublicationRepository(session)
-                publications = await publication_repo.list_publications("quo_test", lang="en")
-                self.assertEqual(len(publications), 1)
-                self.assertEqual(publications[0].version, 1)
-                self.assertEqual(
-                    publications[0].html_r2_key,
-                    "quotations/quo_test/publish/en/v1.html",
-                )
+                target_repo = PublicationTargetRepository(session)
+                target = await session.get(PublicationTarget, target_id)
+                self.assertIsNotNone(target)
+                self.assertEqual(target.brand_id, "vietnam_safar")
+                releases = await target_repo.list_releases(target.id)
+                self.assertEqual(len(releases), 1)
+                self.assertEqual(releases[0].id, release_id)
+                self.assertEqual(releases[0].document_revision, 1)
 
         asyncio.run(_assert_publication())
 

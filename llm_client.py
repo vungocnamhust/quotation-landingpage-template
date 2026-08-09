@@ -36,5 +36,7 @@ def get_model() -> OpenAIChatModel:
 
     return OpenAIChatModel(
         model_name,
-        provider=provider
+        provider=provider,
+        settings={"extra_body": {"thinking": {"type": "disabled"}}},
     )
+

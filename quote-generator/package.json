@@ -1,0 +1,35 @@
+{
+  "name": "quote-generator",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 8115",
+    "build": "next build --webpack",
+    "start": "next start -p 8115",
+    "lint": "eslint && npm run lint:typography && npm run lint:typography-contract && npm run lint:display-system && npm run lint:colors && npm run lint:v2-runtime-imports",
+    "lint:typography": "node scripts/lint-typography.mjs",
+    "lint:typography-contract": "bash ../.agents/skills/quote-generator-display-governor/scripts/audit_typography_usage.sh",
+    "lint:display-system": "node scripts/lint-display-system.mjs",
+    "lint:colors": "node scripts/lint-colors.mjs",
+    "lint:v2-runtime-imports": "node scripts/lint-v2-runtime-imports.mjs"
+  },
+  "dependencies": {
+    "@types/leaflet": "^1.9.21",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^1.29.0",
+    "next": "16.2.12",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "swr": "^2.5.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.12",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

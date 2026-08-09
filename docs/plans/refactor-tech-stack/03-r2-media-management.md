@@ -1,5 +1,12 @@
 # 03. R2 Media Management
 
+> **Superseded write path.** R2 file naming, contextual upload, preview
+> placement and legacy boundaries are defined in
+> [11-r2-media-file-contract.md](./11-r2-media-file-contract.md). New UI/API
+> work uses `/api/v2/media-library/*`, `media_library_objects` and `r2Key`.
+> The `/api/v2/media/*` details below are retained only to document legacy
+> compatibility; do not implement new features against them.
+
 ## 1. Muc tieu
 
 Tich hop Cloudflare R2 de:
@@ -34,7 +41,7 @@ MEDIA_PREVIEW_MAX_HEIGHT=320
 MEDIA_PREVIEW_QUALITY=82
 ```
 
-## 4. R2 key convention
+## 4. R2 key convention (outdated for new writes)
 
 Quy uoc key de tranh lon xon:
 
@@ -273,4 +280,3 @@ Khong log:
 
 - secret key
 - binary data
-

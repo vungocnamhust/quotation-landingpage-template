@@ -63,7 +63,8 @@ Flow:
 
 1. Scan thu muc `published/`
 2. Tim quotation id co pattern `quo_*`
-3. Bo qua item khong co `document.json`
+3. Khong bo qua item chi vi thieu `document.json`: migrate ctx-only item neu
+   co du canonical context, va ghi per-item failure ro rang neu khong the map.
 4. Load `ctx.json`
 5. Load `document.json`
 6. Load `create_request_v2.json` neu co
@@ -86,13 +87,14 @@ Flow:
 
 Khuyen nghi 3 buoc:
 
-### Buoc 1. Dual write tam thoi
+### Buoc 1. Import va verify, khong dual-write canonical state
 
 Trong giai doan chuyen doi:
 
 - quotation v2 moi save vao Postgres
-- co the van ghi file debug local neu can
-- nhung file local khong duoc coi la source of truth
+- import legacy artifacts vao Postgres/R2 mot lan co bao cao per-item
+- co the van ghi file debug local neu can, nhung file local khong duoc coi la
+  source of truth
 
 ### Buoc 2. Read from Postgres only
 
@@ -167,3 +169,5 @@ Neu con write file local, ghi ro:
 - debug only
 - non-canonical
 
+Migration report phai expose item-level reason. Aggregate `migrated=0` khong
+du de ket luan migration thanh cong hoac that bai.

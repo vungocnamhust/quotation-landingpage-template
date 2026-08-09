@@ -1,0 +1,13 @@
+# Dependencies and Next build output are created inside the builder image.
+# Copying host artifacts here defeats npm's lockfile cache and may mix macOS,
+# Linux, or different CPU architectures into the production image.
+node_modules/
+.next/
+coverage/
+.turbo/
+.vercel/
+.env*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.tsbuildinfo
