@@ -1,5 +1,5 @@
 import { headers } from 'next/headers';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import DisplayPage from '../components/DisplayPage';
 import { buildDisplayDocumentFromQuoteDocument } from '../display/runtimePageBuilder';
 import { LANGUAGE_CODES, type LanguageCode } from '../display/contracts';
@@ -18,9 +18,12 @@ export default async function Home({
   const headerStore = await headers();
   const locale = (typeof params.lang === 'string' ? params.lang : 'en') as LanguageCode;
   const slug = typeof params.slug === 'string' ? params.slug : '';
+  if (!slug) {
+    redirect('/workspace');
+  }
   const hostname = (headerStore.get('x-forwarded-host') ?? headerStore.get('host') ?? '')
     .split(',')[0]!.trim().replace(/:\d+$/, '').toLowerCase();
-  if (!slug || !hostname || !LANGUAGE_CODES.includes(locale)) notFound();
+  if (!hostname || !LANGUAGE_CODES.includes(locale)) notFound();
   const payload = await resolvePublicQuotation({ hostname, locale, slug });
   if (!payload) notFound();
   const documentModel = buildDisplayDocumentFromQuoteDocument({
