@@ -10580,6 +10580,19 @@ def _release_cache_urls(*, hostname: str, target: Any, release: Any) -> list[str
     return urls
 
 
+def _fallback_public_url(target: Any) -> str:
+    return f"https://{settings.public_fallback_hostname}/p/{target.fallback_slug}"
+
+
+def _fallback_release_cache_urls(*, target: Any, release: Any) -> list[str]:
+    base = _fallback_public_url(target)
+    urls = [base, f"{base}/pdf/download"]
+    manifest = release.asset_manifest or {}
+    for token in manifest:
+        urls.append(f"https://{settings.public_fallback_hostname}/media/{release.id}/{token}")
+    return urls
+
+
 def _release_transition_cache_urls(*, hostnames: list[str], target: Any, releases: list[Any | None]) -> list[str]:
     """Purge both sides of a release-pointer transition, including immutable media URLs."""
     return sorted({
@@ -10587,7 +10600,10 @@ def _release_transition_cache_urls(*, hostnames: list[str], target: Any, release
         for hostname in hostnames
         for release in releases
         if release is not None
-        for url in _release_cache_urls(hostname=hostname, target=target, release=release)
+        for url in [
+            *_release_cache_urls(hostname=hostname, target=target, release=release),
+            *_fallback_release_cache_urls(target=target, release=release),
+        ]
     })
 
 
@@ -10801,6 +10817,7 @@ async def publish_canonical_quotation_v2(quotation_id: str, body: CanonicalPubli
             asset_manifest=await _validate_release_asset_manifest(document.document_json),
         )
         public_url = f"https://{brand.hostname}/{effective_lang}/q/{target.public_slug}"
+        fallback_url = _fallback_public_url(target)
         pdf_key = f"quotations/{quotation_id}/react/{release.id}.pdf"
         job = await target_repository.create_pdf_job(
             release_id=release.id,
@@ -10808,7 +10825,7 @@ async def publish_canonical_quotation_v2(quotation_id: str, body: CanonicalPubli
             max_attempts=settings.publication_job_max_attempts,
         )
         await session.commit()
-    return JSONResponse(status_code=202, content={"status": "queued", "version": release.release_number, "published_url": public_url, "targetId": target.id, "releaseId": release.id, "jobId": job.id})
+    return JSONResponse(status_code=202, content={"status": "queued", "version": release.release_number, "published_url": public_url, "fallback_url": fallback_url, "targetId": target.id, "releaseId": release.id, "jobId": job.id})
 
 
 @app.get("/api/v2/publication-jobs/{job_id}")
@@ -10847,6 +10864,30 @@ async def resolve_public_quotation_v2(
         }
 
 
+@app.get("/api/internal/v2/public-quotations/fallback/{fallback_slug}")
+async def resolve_public_fallback_quotation_v2(
+    fallback_slug: str,
+    principal: Principal = Depends(require_editor_or_service),
+):
+    if not principal.is_service:
+        raise HTTPException(status_code=403, detail="Service authentication is required.")
+    async with _get_db_session_factory()() as session:
+        targets, documents = PublicationTargetRepository(session), QuotationDocumentRepository(session)
+        resolved = await targets.get_public_fallback_target(fallback_slug=fallback_slug)
+        if resolved is None:
+            raise HTTPException(status_code=404, detail="Published quotation was not found.")
+        brand, target, release = resolved
+        revision = await documents.get_document_revision(target.quotation_id, lang=target.locale, revision=release.document_revision)
+        if revision is None:
+            raise HTTPException(status_code=404, detail="Published quotation revision was not found.")
+        return {
+            "document": _apply_branded_media_urls(revision.document_json, hostname=settings.public_fallback_hostname, release_id=release.id, asset_manifest=release.asset_manifest or {}),
+            "brandProfile": release.render_profile_snapshot,
+            "release": {"id": release.id, "number": release.release_number, "documentRevision": release.document_revision},
+            "locale": target.locale,
+        }
+
+
 @app.get("/api/internal/v2/public-quotations/releases/{release_id}")
 async def resolve_public_quotation_release_v2(release_id: str, principal: Principal = Depends(require_editor_or_service)):
     if not principal.is_service:
@@ -10873,7 +10914,11 @@ async def resolve_public_media_v2(
     if not principal.is_service:
         raise HTTPException(status_code=403, detail="Service authentication is required.")
     async with _get_db_session_factory()() as session:
-        resolved = await PublicationTargetRepository(session).get_public_media_context(release_id, hostname=hostname)
+        resolved = await PublicationTargetRepository(session).get_public_media_context(
+            release_id,
+            hostname=hostname,
+            fallback_hostname=settings.public_fallback_hostname,
+        )
         if resolved is None:
             raise HTTPException(status_code=404, detail="Published media was not found.")
         _brand, _target, release = resolved
@@ -10921,7 +10966,7 @@ async def list_canonical_publications(quotation_id: str, lang: str | None = None
             brand = await brands.get(target.brand_id)
             releases = await PublicationTargetRepository(session).list_releases(target.id)
             release = next((item for item in releases if item.id == target.active_release_id), None)
-            result.append({"targetId": target.id, "brandId": target.brand_id, "hostname": brand.hostname if brand else None, "locale": target.locale, "slug": target.public_slug, "status": target.status, "release": {"id": release.id, "number": release.release_number, "documentRevision": release.document_revision} if release else None, "releases": [{"id": item.id, "number": item.release_number, "status": item.status, "documentRevision": item.document_revision, "isCurrent": item.is_current, "job": (lambda job: {"id": job.id, "type": job.job_type, "status": job.status, "attempts": job.attempts, "maxAttempts": job.max_attempts, "lastError": job.last_error} if job else None)(await PublicationTargetRepository(session).get_latest_job(item.id))} for item in releases]})
+            result.append({"targetId": target.id, "brandId": target.brand_id, "hostname": brand.hostname if brand else None, "locale": target.locale, "slug": target.public_slug, "fallbackUrl": _fallback_public_url(target), "status": target.status, "release": {"id": release.id, "number": release.release_number, "documentRevision": release.document_revision} if release else None, "releases": [{"id": item.id, "number": item.release_number, "status": item.status, "documentRevision": item.document_revision, "isCurrent": item.is_current, "job": (lambda job: {"id": job.id, "type": job.job_type, "status": job.status, "attempts": job.attempts, "maxAttempts": job.max_attempts, "lastError": job.last_error} if job else None)(await PublicationTargetRepository(session).get_latest_job(item.id))} for item in releases]})
         return {"publications": result}
 
 
@@ -10941,7 +10986,7 @@ async def restore_canonical_publication(quotation_id: str, target_id: str, relea
         await _enqueue_release_purge(repository, target=target, releases=[previous_release, release], hostnames=[brand.hostname], event="restore")
         await session.commit()
     public_url = f"https://{brand.hostname}/{target.locale}/q/{target.public_slug}"
-    return {"status": "published", "release": release.release_number, "publishedUrl": public_url}
+    return {"status": "published", "release": release.release_number, "publishedUrl": public_url, "fallbackUrl": _fallback_public_url(target)}
 
 
 @app.post("/api/v2/quotations/{quotation_id}/publication-targets/{target_id}/unpublish")
