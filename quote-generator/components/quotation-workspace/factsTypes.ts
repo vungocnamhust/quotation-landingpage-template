@@ -177,12 +177,32 @@ export type ResolvedFacts = {
   hotels?: Array<{ index: number; destinationRef: DestinationRef | null }>;
 };
 
+const BOOKING_FACT_DISALLOWED_TEXT = /[<>]/;
+
+/**
+ * Creation Facts are plain text. Keep this guard at the client serialization
+ * boundary so a pasted legacy HTML fragment is reported before a request is
+ * sent; the API enforces the same canonical contract for all other clients.
+ */
+export function assertBookingFactsArePlainText(items: BookingItemFact[]): void {
+  const invalidIndex = items.findIndex((item) => {
+    const body = item.body?.trim();
+    return body !== undefined && body !== "" && BOOKING_FACT_DISALLOWED_TEXT.test(body);
+  });
+  if (invalidIndex !== -1) {
+    throw new Error(
+      `Booking term ${invalidIndex + 1} must be plain text. Remove HTML and write “more than” or “less than” instead of angle brackets.`,
+    );
+  }
+}
+
 /** Serialize only transport fields. Null, empty string and empty array remain distinct. */
 export function serializeFactsForApi(
   rawFacts: QuotationFacts,
   factMediaSlots: QuotationCreationPayload["factMediaSlots"] = [],
 ): QuotationCreationPayload {
   const facts = ensureFactsDefaults(rawFacts);
+  assertBookingFactsArePlainText(facts.booking_facts.items);
   const normalizedLines = (items: string[]) => items.map((item) => item.trim()).filter(Boolean);
   const tripFacts = { ...facts.trip_facts };
   delete tripFacts.destination_refs;
@@ -389,7 +409,7 @@ export const BROCHURE_DEFAULT_BOOKING_TERMS: readonly BookingItemFact[] = [
   {
     key: "cancellation",
     label: "Cancellation",
-    body: "Written notice required. Cancellation fees apply based on arrival date:\n- > 45 days prior: Deposit forfeited (30%)\n- 45 – 31 days prior: 50% of total tour cost\n- 30 – 20 days prior: 75% of total tour cost\n- < 20 days prior: 100% of total tour cost\n\nAny non-refundable payments, cancellation charges or penalties imposed by hotels, airlines, cruise operators and other service providers may also apply in addition to the cancellation fees stated above.",
+    body: "Written notice required. Cancellation fees apply based on arrival date:\n- More than 45 days prior: Deposit forfeited (30%)\n- 45 – 31 days prior: 50% of total tour cost\n- 30 – 20 days prior: 75% of total tour cost\n- Less than 20 days prior: 100% of total tour cost\n\nAny non-refundable payments, cancellation charges or penalties imposed by hotels, airlines, cruise operators and other service providers may also apply in addition to the cancellation fees stated above.",
   },
 ];
 

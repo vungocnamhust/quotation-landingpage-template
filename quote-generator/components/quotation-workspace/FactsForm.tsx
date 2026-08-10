@@ -1297,7 +1297,7 @@ export default function FactsForm({
               {booking.items.map((item, index) => (
                 <div id={`booking-term-${index}`} key={item.key ?? index} className="grid gap-3 rounded-[var(--radius-card)] border border-[var(--color-border)] p-3">
                   <Field id={`booking-term-${index}-label`} label="Term label" disabled={readOnly} value={item.label} onChange={(value) => update("booking_facts", { ...booking, items: booking.items.map((current, currentIndex) => currentIndex === index ? { ...current, label: value || null } : current) })} />
-                  <Area label="Term body (rich text HTML)" disabled={readOnly} value={item.body} onChange={(value) => update("booking_facts", { ...booking, items: booking.items.map((current, currentIndex) => currentIndex === index ? { ...current, body: value || null } : current) })} />
+                  <Area label="Term body (plain text)" hint="Plain text only. Use “more than” or “less than”; HTML is not supported." disabled={readOnly} value={item.body} onChange={(value) => update("booking_facts", { ...booking, items: booking.items.map((current, currentIndex) => currentIndex === index ? { ...current, body: value || null } : current) })} />
                 </div>
               ))}
             </div>

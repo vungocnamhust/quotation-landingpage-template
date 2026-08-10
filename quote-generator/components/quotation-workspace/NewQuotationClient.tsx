@@ -34,22 +34,26 @@ export default function NewQuotationClient({ personalWorkspace = false }: { pers
   const options = optionsResponse;
   function createQuotation() {
     startTransition(async () => {
-      const response = await fetch(`${API_BASE}/api/v2/quotations`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(
-          serializeFactsForApi(
-            facts,
-            serializeDraftMediaSelections(draftMediaSelections),
+      try {
+        const response = await fetch(`${API_BASE}/api/v2/quotations`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(
+            serializeFactsForApi(
+              facts,
+              serializeDraftMediaSelections(draftMediaSelections),
+            ),
           ),
-        ),
-      });
-      const payload = await response.json();
-      if (!response.ok) {
-        setMessage(formatApiError(payload.detail, "Quotation could not be created."));
-        return;
+        });
+        const payload = await response.json();
+        if (!response.ok) {
+          setMessage(formatApiError(payload.detail, "Quotation could not be created."));
+          return;
+        }
+        router.push(`${personalWorkspace ? "/workspace/quotations" : "/quotations"}/${payload.quotationId}${personalWorkspace ? "/edit" : "/workspace"}?stage=facts&lang=${encodeURIComponent(payload.baselineLang)}`);
+      } catch (error) {
+        setMessage(apiErrorMessage(error));
       }
-      router.push(`${personalWorkspace ? "/workspace/quotations" : "/quotations"}/${payload.quotationId}${personalWorkspace ? "/edit" : "/workspace"}?stage=facts&lang=${encodeURIComponent(payload.baselineLang)}`);
     });
   }
 

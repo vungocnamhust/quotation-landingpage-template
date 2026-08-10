@@ -1,3 +1,6 @@
+import pytest
+from pydantic import ValidationError
+
 from services.facts_contract import normalize_legacy_facts_snapshot
 from quote_document import CreateQuoteRequestV1
 
@@ -19,3 +22,11 @@ def test_legacy_snapshot_drops_retired_editorial_trip_fields_and_normalizes_book
     assert normalized["booking_facts"]["items"][0]["body"] == "Pay 30% now; less than 20 days is non-refundable."
     assert CreateQuoteRequestV1.model_validate(normalized).trip_facts.destinations == ["Hanoi"]
     assert source["booking_facts"]["items"][0]["body"].startswith("<p>")
+
+
+@pytest.mark.parametrize("body", ["<ul><li>Deposit due.</li></ul>", "> 45 days prior", "< 20 days prior"])
+def test_create_request_rejects_markup_and_angle_brackets_in_booking_fact_text(body):
+    with pytest.raises(ValidationError, match="Booking/payment fact text must be plain text"):
+        CreateQuoteRequestV1.model_validate(
+            {"booking_facts": {"items": [{"label": "Deposit", "body": body}]}}
+        )

@@ -27,6 +27,21 @@ class EditableEditorCoverageTests(unittest.TestCase):
             self.assertIn(symbol, source)
         self.assertEqual(source.count('"Any services not expressly listed as included",'), 1)
 
+    def test_new_quotation_booking_defaults_and_serialization_match_the_plain_text_contract(self):
+        types = (ROOT / "quote-generator/components/quotation-workspace/factsTypes.ts").read_text(encoding="utf-8")
+        form = (ROOT / "quote-generator/components/quotation-workspace/FactsForm.tsx").read_text(encoding="utf-8")
+        client = (ROOT / "quote-generator/components/quotation-workspace/NewQuotationClient.tsx").read_text(encoding="utf-8")
+        defaults = types.split("export const BROCHURE_DEFAULT_BOOKING_TERMS", 1)[1].split("export const BROCHURE_DEFAULT_FINALIZATION", 1)[0]
+        self.assertNotIn("<ul", defaults)
+        self.assertNotIn("<li", defaults)
+        self.assertNotIn("<div", defaults)
+        self.assertNotIn('"- > ', defaults)
+        self.assertNotIn('"- < ', defaults)
+        self.assertIn("assertBookingFactsArePlainText(facts.booking_facts.items)", types)
+        self.assertIn("Term body (plain text)", form)
+        self.assertIn("HTML is not supported.", form)
+        self.assertIn("catch (error)", client)
+
     def test_multiline_fact_drafts_preserve_typing_until_save(self):
         form = (ROOT / "quote-generator/components/quotation-workspace/FactsForm.tsx").read_text(encoding="utf-8")
         types = (ROOT / "quote-generator/components/quotation-workspace/factsTypes.ts").read_text(encoding="utf-8")
