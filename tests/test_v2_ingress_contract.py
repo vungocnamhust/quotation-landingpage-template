@@ -10,15 +10,17 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class V2IngressContractTests(unittest.TestCase):
-    def test_public_branded_hosts_have_no_api_or_internal_proxy(self):
+    def test_public_branded_hosts_allow_only_the_map_tile_api_route(self):
         config = (ROOT / "docker/nginx/default.conf.template").read_text()
         public_server = config.split("server_name ${PUBLIC_BRAND_HOSTS}", 1)[1]
-        self.assertNotIn("location /api/", public_server)
+        self.assertIn("location ^~ /api/map-tiles/", public_server)
+        self.assertNotIn("location ^~ /api/v2/", public_server)
         self.assertNotIn("location /internal/", public_server)
         self.assertIn("location / { return 404; }", public_server)
         fallback = (ROOT / "docker/nginx/default.conf").read_text()
         fallback_public = fallback.split("server_name journeys.capellatravel.com", 1)[1]
-        self.assertNotIn("location /api/", fallback_public)
+        self.assertIn("location ^~ /api/map-tiles/", fallback_public)
+        self.assertNotIn("location ^~ /api/v2/", fallback_public)
         self.assertNotIn("location /internal/", fallback_public)
 
     def test_public_host_allowlist_is_runtime_configured(self):
@@ -27,12 +29,13 @@ class V2IngressContractTests(unittest.TestCase):
         self.assertIn("server_name ${PUBLIC_BRAND_HOSTS};", template)
         self.assertIn("PUBLIC_BRAND_HOSTS", envsh)
 
-    def test_public_fallback_host_exposes_only_release_and_media_routes(self):
+    def test_public_fallback_host_exposes_release_media_and_map_tiles_only(self):
         config = (ROOT / "docker/nginx/default.conf.template").read_text()
         fallback_server = config.split("server_name ${PUBLIC_FALLBACK_HOSTNAME};", 1)[1].split("server_name quote.capellatravel.com;", 1)[0]
         self.assertIn("location ~ ^/p/[^/]+/", fallback_server)
         self.assertIn("location ^~ /media/", fallback_server)
-        self.assertNotIn("/api/", fallback_server)
+        self.assertIn("location ^~ /api/map-tiles/", fallback_server)
+        self.assertNotIn("location ^~ /api/v2/", fallback_server)
         self.assertNotIn("/internal/", fallback_server)
         self.assertIn("location / { return 404; }", fallback_server)
 

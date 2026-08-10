@@ -643,8 +643,8 @@
     },
     {
       "fieldId": "designer.kicker",
-      "source": "/presentation/copyOverrides/designer.kicker",
-      "owner": "design",
+      "source": "/designer/kicker",
+      "owner": "fact",
       "kind": "text",
       "behavior": "inspector",
       "renderer": "quote-generator/display/runtimePageBuilder.ts",
@@ -652,8 +652,8 @@
     },
     {
       "fieldId": "designer.title",
-      "source": "/presentation/copyOverrides/designer.title",
-      "owner": "design",
+      "source": "/designer/title",
+      "owner": "fact",
       "kind": "text",
       "behavior": "inspector",
       "renderer": "quote-generator/display/runtimePageBuilder.ts",
@@ -1024,7 +1024,7 @@
       "source": "/designer/subtitle",
       "owner": "fact",
       "kind": "text",
-      "behavior": "handoff",
+      "behavior": "inspector",
       "renderer": "quote-generator/display/runtimePageBuilder.ts",
       "domAttribute": "data-editable"
     },
@@ -1033,7 +1033,7 @@
       "source": "/designer/signature",
       "owner": "fact",
       "kind": "text",
-      "behavior": "handoff",
+      "behavior": "inspector",
       "renderer": "quote-generator/display/runtimePageBuilder.ts",
       "domAttribute": "data-editable"
     },
@@ -1042,7 +1042,7 @@
       "source": "/designer/quote",
       "owner": "fact",
       "kind": "richText",
-      "behavior": "handoff",
+      "behavior": "inspector",
       "renderer": "quote-generator/display/runtimePageBuilder.ts",
       "domAttribute": "data-editable"
     },
@@ -1051,7 +1051,16 @@
       "source": "/designer/experience",
       "owner": "fact",
       "kind": "text",
-      "behavior": "handoff",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "designer.ctaBody",
+      "source": "/designer/ctaBody",
+      "owner": "fact",
+      "kind": "richText",
+      "behavior": "inspector",
       "renderer": "quote-generator/display/runtimePageBuilder.ts",
       "domAttribute": "data-editable"
     },

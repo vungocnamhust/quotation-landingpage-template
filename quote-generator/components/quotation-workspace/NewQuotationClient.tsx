@@ -1,15 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import useSWR from "swr";
 import { getTypographyClassName } from "../../config/typography";
 import { cn } from "../../utils/cn";
-import { apiErrorMessage, quotationFetch } from "../../lib/apiError";
+import { apiErrorFieldErrors, apiErrorMessage, quotationFetch } from "../../lib/apiError";
+import { useToast } from "../staff-workspace/ToastProvider";
 import QuotationIntakeForm from "./QuotationIntakeForm";
 import {
   createBrochureFacts,
-  formatApiError,
   serializeDraftMediaSelections,
   serializeFactsForApi,
   type DraftMediaSelections,
@@ -26,16 +26,21 @@ export default function NewQuotationClient({ personalWorkspace = false }: { pers
   const [facts, setFacts] = useState<QuotationFacts>(createBrochureFacts);
   const [draftMediaSelections, setDraftMediaSelections] = useState<DraftMediaSelections>({});
   const [message, setMessage] = useState("Complete the short intake, then continue with the full Facts workspace.");
+  const [fieldErrors, setFieldErrors] = useState<Array<{ path: string; message: string }>>([]);
   const [pending, startTransition] = useTransition();
+  const { notify, clearScope } = useToast();
   const { data: optionsResponse, error: optionsError } = useSWR<QuotationOptions>(
     `${API_BASE}/api/v2/quotation-options`,
     fetchJson,
   );
   const options = optionsResponse;
+  useEffect(() => {
+    if (fieldErrors.length) document.getElementById("quotation-intake-errors")?.focus();
+  }, [fieldErrors]);
   function createQuotation() {
     startTransition(async () => {
       try {
-        const response = await fetch(`${API_BASE}/api/v2/quotations`, {
+        const response = await quotationFetch<{ quotationId: string; baselineLang: string }>(`${API_BASE}/api/v2/quotations`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(
@@ -44,15 +49,14 @@ export default function NewQuotationClient({ personalWorkspace = false }: { pers
               serializeDraftMediaSelections(draftMediaSelections),
             ),
           ),
-        });
-        const payload = await response.json();
-        if (!response.ok) {
-          setMessage(formatApiError(payload.detail, "Quotation could not be created."));
-          return;
-        }
-        router.push(`${personalWorkspace ? "/workspace/quotations" : "/quotations"}/${payload.quotationId}${personalWorkspace ? "/edit" : "/workspace"}?stage=facts&lang=${encodeURIComponent(payload.baselineLang)}`);
+        }, "Quotation could not be created.");
+        clearScope("create-quotation");
+        router.push(`${personalWorkspace ? "/workspace/quotations" : "/quotations"}/${response.quotationId}${personalWorkspace ? "/edit" : "/workspace"}?stage=facts&lang=${encodeURIComponent(response.baselineLang)}`);
       } catch (error) {
-        setMessage(apiErrorMessage(error));
+        const message = apiErrorMessage(error);
+        setFieldErrors(apiErrorFieldErrors(error));
+        setMessage(message);
+        notify({ message, type: "error", persistent: true, scope: "create-quotation", action: { label: "Retry", onClick: createQuotation } });
       }
     });
   }
@@ -86,6 +90,7 @@ export default function NewQuotationClient({ personalWorkspace = false }: { pers
           {message}
         </p>
       </header>
+      {fieldErrors.length ? <div id="quotation-intake-errors" tabIndex={-1} role="alert" className={cn(getTypographyClassName("bodySm"), "rounded-[var(--radius-card)] border border-[var(--color-border-strong)] bg-[var(--color-surface-muted)] p-4 text-[var(--color-on-surface)]")}><p>Please correct the following fields:</p><ul className="mt-2 list-disc pl-5">{fieldErrors.map((item, index) => <li key={`${item.path}-${index}`}>{item.path ? `${item.path}: ` : ""}{item.message}</li>)}</ul></div> : null}
       {options ? <QuotationIntakeForm facts={facts} options={options} draftMediaSelections={draftMediaSelections} onDraftMediaSelectionChange={(fieldId, value) => setDraftMediaSelections((current) => ({ ...current, [fieldId]: value }))} onChange={setFacts} onSubmit={createQuotation} pending={pending} /> : <p className={cn(getTypographyClassName("bodyMd"), "text-[var(--color-muted)]")}>{optionsError ? apiErrorMessage(optionsError) : "Loading active brand options…"}</p>}
       {optionsError ? (
         <p

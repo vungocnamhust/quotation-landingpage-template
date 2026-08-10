@@ -261,8 +261,32 @@ export QUOTE_GENERATOR_IMAGE=registry.example/quotation-generator:<git-sha>
 export QUOTE_NGINX_IMAGE=registry.example/quotation-nginx:<git-sha>
 ```
 
+`Warm quote generator build cache` tren GitHub Actions chi cap nhat Buildx
+registry cache tai
+`ghcr.io/<owner>/quotation-landingpage-template-quote-generator:buildcache`.
+No khong publish runtime image de deploy. Cache bao gom multi-stage dependency
+layers (`mode=max`), nen VPS van build image tu source vua `git pull` nhung
+reuse layer `npm ci` neu `quote-generator/package-lock.json` khong doi.
+
 ```bash
-docker compose -f docker-compose.production.yml build
+git pull --ff-only
+
+# Token nay can read/write package GHCR de import/export BuildKit cache.
+printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
+
+# Image nay duoc build tu source hien tai va load vao Docker daemon cua VPS.
+export QUOTE_GENERATOR_IMAGE=quotation-generator:local
+export QUOTE_GENERATOR_BUILD_CACHE=ghcr.io/<owner>/quotation-landingpage-template-quote-generator:buildcache
+scripts/build_quote_generator_deploy.sh
+docker compose -f docker-compose.production.yml up -d --no-deps --force-recreate quote-generator
+```
+
+Khong chay `docker compose build quote-generator` sau script tren: script da
+build source va da load dung image tag vao VPS. Khi can build cac service khac
+tai may deploy, chi ro chung de tranh build lai Next.js:
+
+```bash
+docker compose -f docker-compose.production.yml build migrate app nginx
 ```
 
 Python dependencies duoc cai tu `requirements.lock`, nen cold build khong tu

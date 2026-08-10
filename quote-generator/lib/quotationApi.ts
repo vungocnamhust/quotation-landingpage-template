@@ -1,5 +1,6 @@
 // Production editor requests stay same-origin behind quote.capellatravel.com.
 // Local development opts into a separate API origin through .env.local.
+import { quotationFetch } from './apiError';
 export const QUOTATION_API_BASE = process.env.NEXT_PUBLIC_QUOTATION_API_URL ?? '';
 
 export type TravelDesignerProfile = {
@@ -61,17 +62,12 @@ export type TravelDesignerInput = {
   imageR2Key?: string | null;
 };
 
-async function readResponse<T>(response: Response): Promise<T> {
-  const payload = await response.json().catch(() => null) as T | { detail?: unknown } | null;
-  if (!response.ok) {
-    const detail = payload && typeof payload === 'object' && 'detail' in payload ? payload.detail : null;
-    throw new Error(typeof detail === 'string' ? detail : 'The request could not be completed.');
-  }
-  return payload as T;
-}
-
 function apiUrl(path: string) {
   return `${QUOTATION_API_BASE}${path}`;
+}
+
+function request<T>(path: string, init?: RequestInit) {
+  return quotationFetch<T>(apiUrl(path), init, 'The quotation API request could not be completed.');
 }
 
 export async function listTravelDesigners({
@@ -83,39 +79,39 @@ export async function listTravelDesigners({
 } = {}): Promise<TravelDesignerListResponse> {
   const params = new URLSearchParams({ active });
   if (search.trim()) params.set('search', search.trim());
-  return readResponse<TravelDesignerListResponse>(await fetch(apiUrl(`/api/v2/travel-designers?${params.toString()}`)));
+  return request<TravelDesignerListResponse>(`/api/v2/travel-designers?${params.toString()}`);
 }
 
 export async function createTravelDesigner(input: TravelDesignerInput): Promise<TravelDesignerProfile> {
-  return readResponse<TravelDesignerProfile>(await fetch(apiUrl('/api/v2/travel-designers'), {
+  return request<TravelDesignerProfile>('/api/v2/travel-designers', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
-  }));
+  });
 }
 
 export async function updateTravelDesigner(id: string, input: TravelDesignerInput): Promise<TravelDesignerProfile> {
-  return readResponse<TravelDesignerProfile>(await fetch(apiUrl(`/api/v2/travel-designers/${encodeURIComponent(id)}`), {
+  return request<TravelDesignerProfile>(`/api/v2/travel-designers/${encodeURIComponent(id)}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
-  }));
+  });
 }
 
 export async function updateTravelDesignerStatus(id: string, isActive: boolean): Promise<TravelDesignerProfile> {
-  return readResponse<TravelDesignerProfile>(await fetch(apiUrl(`/api/v2/travel-designers/${encodeURIComponent(id)}/status`), {
+  return request<TravelDesignerProfile>(`/api/v2/travel-designers/${encodeURIComponent(id)}/status`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ isActive }),
-  }));
+  });
 }
 
 export async function setTravelDesignerDefault(brandId: string, designerProfileId: string) {
-  return readResponse<{ brandId: string; designer: TravelDesignerProfile }>(await fetch(apiUrl(`/api/v2/brands/${encodeURIComponent(brandId)}/travel-designer-default`), {
+  return request<{ brandId: string; designer: TravelDesignerProfile }>(`/api/v2/brands/${encodeURIComponent(brandId)}/travel-designer-default`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ designerProfileId }),
-  }));
+  });
 }
 
 export async function uploadTravelDesignerPortrait(file: File, travelDesignerId: string): Promise<{ r2Key: string }> {
@@ -123,10 +119,10 @@ export async function uploadTravelDesignerPortrait(file: File, travelDesignerId:
   form.append('file', file);
   form.append('kind', 'team');
   form.append('travelDesignerId', travelDesignerId);
-  return readResponse<{ r2Key: string }>(await fetch(apiUrl('/api/v2/media-library/uploads'), {
+  return request<{ r2Key: string }>('/api/v2/media-library/uploads', {
     method: 'POST',
     body: form,
-  }));
+  });
 }
 
 export async function assignTravelDesigner({
@@ -140,30 +136,30 @@ export async function assignTravelDesigner({
   baseRevision: number;
   lang: string;
 }) {
-  return readResponse<{ currentRevision: number }>(await fetch(apiUrl(`/api/v2/quotations/${encodeURIComponent(quotationId)}/travel-designer`), {
+  return request<{ currentRevision: number }>(`/api/v2/quotations/${encodeURIComponent(quotationId)}/travel-designer`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ designerProfileId, baseRevision, lang }),
-  }));
+  });
 }
 
 export async function listAccommodations({ active = "true", query = "", destinationId }: { active?: "true" | "false" | "all"; query?: string; destinationId?: string } = {}): Promise<AccommodationListResponse> {
   const params = new URLSearchParams({ active });
   if (query.trim()) params.set("query", query.trim());
   if (destinationId) params.set("destinationId", destinationId);
-  return readResponse<AccommodationListResponse>(await fetch(apiUrl(`/api/v2/accommodations?${params.toString()}`)));
+  return request<AccommodationListResponse>(`/api/v2/accommodations?${params.toString()}`);
 }
 
 export async function createAccommodation(input: AccommodationProfileInput): Promise<AccommodationProfile> {
-  return readResponse<AccommodationProfile>(await fetch(apiUrl("/api/v2/accommodations"), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) }));
+  return request<AccommodationProfile>("/api/v2/accommodations", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) });
 }
 
 export async function updateAccommodation(id: string, input: AccommodationProfileInput): Promise<AccommodationProfile> {
-  return readResponse<AccommodationProfile>(await fetch(apiUrl(`/api/v2/accommodations/${encodeURIComponent(id)}`), { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) }));
+  return request<AccommodationProfile>(`/api/v2/accommodations/${encodeURIComponent(id)}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) });
 }
 
 export async function updateAccommodationStatus(id: string, isActive: boolean): Promise<AccommodationProfile> {
-  return readResponse<AccommodationProfile>(await fetch(apiUrl(`/api/v2/accommodations/${encodeURIComponent(id)}/status`), { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isActive }) }));
+  return request<AccommodationProfile>(`/api/v2/accommodations/${encodeURIComponent(id)}/status`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isActive }) });
 }
 
 export async function uploadAccommodationAsset(file: File, accommodationId: string, category: "exteriors" | "interiors"): Promise<{ r2Key: string }> {
@@ -172,5 +168,5 @@ export async function uploadAccommodationAsset(file: File, accommodationId: stri
   form.append("kind", "accommodation");
   form.append("accommodationId", accommodationId);
   form.append("accommodationAssetCategory", category);
-  return readResponse<{ r2Key: string }>(await fetch(apiUrl("/api/v2/media-library/uploads"), { method: "POST", body: form }));
+  return request<{ r2Key: string }>("/api/v2/media-library/uploads", { method: "POST", body: form });
 }

@@ -34,6 +34,7 @@ export type EditableBrochureContract = {
     source: string;
     editMode: 'inspector' | 'handoff' | 'readonly';
     inspectorControl: 'text' | 'textarea' | 'none';
+    editorSurface?: 'design-inspector';
     handoff?: EditableHandoff;
     handoffStage?: EditableHandoff['stage'];
     handoffSection?: string;

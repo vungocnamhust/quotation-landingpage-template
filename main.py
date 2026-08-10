@@ -83,7 +83,7 @@ from repositories.destination_repository import DestinationRepository
 from repositories.media_library_repository import MediaLibraryRepository
 from repositories.travel_designer_repository import TravelDesignerRepository
 from repositories.accommodation_repository import AccommodationRepository
-from core.auth import Principal, require_editor, require_editor_or_service, require_quote_admin
+from core.auth import Principal, require_editor, require_editor_or_service
 from routers.health import router as health_router
 from core.config import settings
 
@@ -185,10 +185,18 @@ async def require_owned_quotation(
     not reveal the existence of another designer's customer record.
     """
     async with _get_db_session_factory()() as session:
-        quotation = await QuotationRepository(session).get_quotation_by_id(quotation_id)
+        quotations = QuotationRepository(session)
+        designers = TravelDesignerRepository(session)
+        quotation = await quotations.get_quotation_by_id(quotation_id)
+        designer = await designers.get_active_by_email(principal.email) if principal.email else None
         if (
             quotation is None
             or quotation.template_name != V2_RENDERER_NAME
+            or designer is None
+            or (
+                quotation.designer_profile_id != designer.id
+                and quotation.created_by_profile_id != designer.id
+            )
         ):
             raise HTTPException(status_code=404, detail="Quotation was not found.")
     return quotation
@@ -2673,6 +2681,74 @@ async def log_requests(request: Request, call_next):
     return response
 
 
+# ── V2 error envelope — preserves legacy detail while enabling actionable UI ─
+def _v2_error_message(detail: Any, fallback: str) -> str:
+    if isinstance(detail, str) and detail.strip():
+        return detail
+    if isinstance(detail, dict) and isinstance(detail.get("message"), str) and detail["message"].strip():
+        return detail["message"]
+    return fallback
+
+
+def _v2_error_fields(detail: Any) -> list[dict[str, str]]:
+    issues = detail if isinstance(detail, list) else detail.get("errors", []) if isinstance(detail, dict) else []
+    result: list[dict[str, str]] = []
+    for issue in issues:
+        if not isinstance(issue, dict) or not isinstance(issue.get("msg"), str):
+            continue
+        loc = issue.get("loc")
+        path = ".".join(str(part) for part in loc if part != "body") if isinstance(loc, (list, tuple)) else ""
+        result.append({"path": path, "message": issue["msg"]})
+    return result
+
+
+def _v2_error_payload(status_code: int, detail: Any, *, request_id: str) -> dict[str, Any]:
+    record = detail if isinstance(detail, dict) else {}
+    if status_code == 401:
+        code, category, recovery, retryable = "AUTHENTICATION_REQUIRED", "authentication", "sign-in", False
+    elif status_code == 403:
+        code, category, recovery, retryable = "QUOTATION_FORBIDDEN", "authorization", "sign-in", False
+    elif status_code == 404:
+        code, category, recovery, retryable = "RESOURCE_NOT_FOUND", "not_found", None, False
+    elif status_code == 409:
+        code, category, recovery, retryable = "REVISION_CONFLICT", "conflict", "reload", True
+    elif status_code == 503:
+        code, category, recovery, retryable = "DEPENDENCY_UNAVAILABLE", "dependency", "retry", True
+    elif status_code == 422 and "review" in record:
+        code, category, recovery, retryable = "REVIEW_BLOCKED", "review", "open-blockers", False
+    elif status_code == 422 and "missingInputs" in record:
+        code, category, recovery, retryable = "INTAKE_INCOMPLETE", "validation", "open-blockers", False
+    elif status_code == 422:
+        code, category, recovery, retryable = "VALIDATION_FAILED", "validation", None, False
+    else:
+        code, category, recovery, retryable = "REQUEST_FAILED", "server", "retry", status_code >= 500
+    error: dict[str, Any] = {
+        "code": code,
+        "message": _v2_error_message(detail, "The quotation request could not be completed."),
+        "category": category,
+        "fieldErrors": _v2_error_fields(detail),
+        "retryable": retryable,
+        "recovery": recovery,
+        "requestId": request_id,
+    }
+    for key in ("missingInputs", "currentRevision", "review"):
+        if key in record:
+            error[key] = record[key]
+    return {"detail": detail, "error": error}
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    if not request.url.path.startswith("/api/v2/"):
+        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail}, headers=exc.headers)
+    request_id = uuid.uuid4().hex
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=_v2_error_payload(exc.status_code, exc.detail, request_id=request_id),
+        headers={**(exc.headers or {}), "X-Request-ID": request_id},
+    )
+
+
 # ── Validation error handler — surfaces exact Pydantic field errors ──────────
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -2684,19 +2760,24 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         len(errors),
         json.dumps(errors, indent=2, default=str),
     )
-    return JSONResponse(
-        status_code=422,
-        content={
-            "detail": json.loads(json.dumps(errors, default=str)),
-            "hint": "Check the field path in each error's 'loc' to find the missing or invalid field.",
-        },
-    )
+    detail = json.loads(json.dumps(errors, default=str))
+    if request.url.path.startswith("/api/v2/"):
+        request_id = uuid.uuid4().hex
+        return JSONResponse(status_code=422, content=_v2_error_payload(422, detail, request_id=request_id), headers={"X-Request-ID": request_id})
+    return JSONResponse(status_code=422, content={"detail": detail, "hint": "Check the field path in each error's 'loc' to find the missing or invalid field."})
 
 
 # ── Generic error handler — catches any unhandled exceptions ─────────────────
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
     log.exception("UNHANDLED EXCEPTION [%s %s]", request.method, request.url.path)
+    if request.url.path.startswith("/api/v2/"):
+        request_id = uuid.uuid4().hex
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "The quotation service encountered an unexpected error.", "error": {"code": "INTERNAL_ERROR", "message": "The quotation service encountered an unexpected error. Retry the action or contact support with the request ID.", "category": "server", "fieldErrors": [], "retryable": True, "recovery": "retry", "requestId": request_id}},
+            headers={"X-Request-ID": request_id},
+        )
     return JSONResponse(status_code=500, content={"detail": str(exc)})
 
 
@@ -6350,7 +6431,7 @@ async def create_canonical_quotation_v2(payload: CreateQuoteRequestV1, principal
     canonical, resolved = await _resolve_v2_facts(payload)
     await _validate_selected_accommodations(canonical)
     await _require_active_v2_brand(canonical.brand_id)
-    designer = await _resolve_active_travel_designer(principal)
+    creator_designer = await _resolve_active_travel_designer(principal)
     if resolved["missingInputs"]:
         raise HTTPException(status_code=422, detail={"message": "Required quotation facts are missing.", "missingInputs": resolved["missingInputs"]})
     quotation_id, lang = f"quo_{uuid.uuid4().hex[:12]}", canonical.lang or "en"
@@ -6359,13 +6440,15 @@ async def create_canonical_quotation_v2(payload: CreateQuoteRequestV1, principal
     # sends selections as generic contract slots. Validate and materialize them
     # at the same canonical boundary as later /facts/media mutations.
     document = await _apply_create_fact_media_slots(document, canonical.factMediaSlots)
-    selected_designer_id = canonical.presentation_options.travel_designer_id or designer.id
-    if selected_designer_id != designer.id:
+    selected_designer_id = canonical.presentation_options.travel_designer_id or creator_designer.id
+    if selected_designer_id != creator_designer.id:
         async with _get_db_session_factory()() as session:
             selected = await TravelDesignerRepository(session).get_profile(selected_designer_id)
         if selected is None or not selected.is_active:
             raise HTTPException(status_code=422, detail={"message": "Travel Designer is unavailable.", "missingInputs": ["presentation_options.travel_designer_id"]})
         designer = selected
+    else:
+        designer = creator_designer
     # The quotation row and the facts snapshot must agree on the same selected
     # profile. Without this assignment a newly-created quote could snapshot a
     # designer into the document while Facts reloaded a null selector.
@@ -6376,7 +6459,7 @@ async def create_canonical_quotation_v2(payload: CreateQuoteRequestV1, principal
     try:
         async with _get_db_session_factory()() as session:
             quotes, documents = QuotationRepository(session), QuotationDocumentRepository(session)
-            quotation = await quotes.create_quotation(quotation_id=quotation_id, opportunity_id=canonical.opportunity_id, brand_id=canonical.brand_id or "", template_name=V2_RENDERER_NAME, baseline_lang=lang, customer_name=canonical.customer_facts.customer_name, title="Untitled journey", status="draft", source_kind="manual", source_snapshot_at=datetime.now().astimezone(), designer_profile_id=designer.id)
+            quotation = await quotes.create_quotation(quotation_id=quotation_id, opportunity_id=canonical.opportunity_id, brand_id=canonical.brand_id or "", template_name=V2_RENDERER_NAME, baseline_lang=lang, customer_name=canonical.customer_facts.customer_name, title="Untitled journey", status="draft", source_kind="manual", source_snapshot_at=datetime.now().astimezone(), designer_profile_id=designer.id, created_by_profile_id=creator_designer.id)
             await quotes.create_quotation_request(quotation_id=quotation_id, request_json=canonical.model_dump(mode="json"))
             await _apply_missing_media_defaults(session, document, quotation_id, lang)
             saved = await documents.save_current_document(quotation_id=quotation_id, lang=lang, document_json=document, expected_revision=0)
@@ -9751,15 +9834,13 @@ async def update_accommodation_status(profile_id: str, payload: AccommodationSta
 
 @app.get("/api/v2/travel-designers")
 async def list_travel_designers(request: Request, active: Literal["true", "false", "all"] = "true", search: str = "", principal: Principal = Depends(require_editor)):
-    if active != "true":
-        require_quote_admin(request)
     async with _get_db_session_factory()() as session:
         items = await TravelDesignerRepository(session).list_profiles(active_only={"true": True, "false": False, "all": None}[active], search=search)
         return {"items": [_serialize_travel_designer(item) for item in items]}
 
 
 @app.post("/api/v2/travel-designers", status_code=201)
-async def create_travel_designer(payload: TravelDesignerProfileRequest, principal: Principal = Depends(require_quote_admin)):
+async def create_travel_designer(payload: TravelDesignerProfileRequest, principal: Principal = Depends(require_editor)):
     async with _get_db_session_factory()() as session:
         repository = TravelDesignerRepository(session)
         if await repository.get_by_email(payload.email):
@@ -9771,7 +9852,7 @@ async def create_travel_designer(payload: TravelDesignerProfileRequest, principa
 
 
 @app.put("/api/v2/travel-designers/{profile_id}")
-async def update_travel_designer(profile_id: str, payload: TravelDesignerProfileRequest, principal: Principal = Depends(require_quote_admin)):
+async def update_travel_designer(profile_id: str, payload: TravelDesignerProfileRequest, principal: Principal = Depends(require_editor)):
     async with _get_db_session_factory()() as session:
         repository = TravelDesignerRepository(session)
         profile = await repository.get_profile(profile_id)
@@ -9787,7 +9868,7 @@ async def update_travel_designer(profile_id: str, payload: TravelDesignerProfile
 async def set_travel_designer_status(
     profile_id: str,
     payload: dict[str, bool],
-    principal: Principal = Depends(require_quote_admin),
+    principal: Principal = Depends(require_editor),
 ):
     if "isActive" not in payload:
         raise HTTPException(status_code=422, detail="isActive is required")
@@ -9806,7 +9887,7 @@ async def set_travel_designer_status(
 async def set_travel_designer_brand_default(
     brand_id: str,
     payload: TravelDesignerBrandDefaultRequest,
-    principal: Principal = Depends(require_quote_admin),
+    principal: Principal = Depends(require_editor),
 ):
     """Persist the optional designer fallback without copying it into quotes."""
     async with _get_db_session_factory()() as session:
@@ -10831,9 +10912,15 @@ async def publish_canonical_quotation_v2(quotation_id: str, body: CanonicalPubli
 @app.get("/api/v2/publication-jobs/{job_id}")
 async def get_publication_job(job_id: str, principal: Principal = Depends(require_editor)):
     async with _get_db_session_factory()() as session:
-        job = await PublicationTargetRepository(session).get_job(job_id)
+        repository = PublicationTargetRepository(session)
+        job = await repository.get_job(job_id)
+        context = await repository.get_release_context(job.release_id) if job else None
     if job is None:
         raise HTTPException(status_code=404, detail="Publication job was not found.")
+    if context is None:
+        raise HTTPException(status_code=404, detail="Publication job was not found.")
+    _brand, target, _release = context
+    await require_owned_quotation(target.quotation_id, principal)
     return {"id": job.id, "releaseId": job.release_id, "type": job.job_type, "status": job.status, "attempts": job.attempts, "maxAttempts": job.max_attempts, "lockedAt": job.locked_at.isoformat() if job.locked_at else None, "lastError": job.last_error}
 
 

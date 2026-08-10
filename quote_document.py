@@ -351,13 +351,17 @@ class _ContentBlockModel(QuoteBaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+HTML_TAG_RE = re.compile(r"</?([a-zA-Z0-9!][a-zA-Z0-9_-]*)(?:\s[^>]*)?>")
+_HTML_TAG_RE = HTML_TAG_RE
+
+
 def _content_text(value: str) -> str:
     normalized = value.strip()
     if not normalized:
         raise ValueError("Content text cannot be blank.")
     if len(normalized) > 4000:
         raise ValueError("Content block strings cannot exceed 4,000 characters.")
-    if "<" in normalized or ">" in normalized:
+    if HTML_TAG_RE.search(normalized):
         raise ValueError("Rich content blocks cannot contain HTML.")
     return normalized
 
@@ -453,7 +457,7 @@ class QuoteDocumentContent(QuoteBaseModel):
     sections: Dict[str, QuoteDocumentContentSection] = Field(default_factory=dict)
 
 
-_LEGACY_HTML_TAG_RE = re.compile(r"</?([a-zA-Z0-9]+)(?:\s[^>]*)?>")
+_LEGACY_HTML_TAG_RE = HTML_TAG_RE
 _LEGACY_HTML_ALLOWED_TAGS = {"p", "ul", "ol", "li", "strong", "em", "br", "a"}
 
 
@@ -475,7 +479,7 @@ class _LegacyHtmlText(HTMLParser):
 
 def legacy_html_to_plain_text(value: str) -> str:
     """Strict migration-only conversion; unsupported markup is a hard cutoff."""
-    for match in _LEGACY_HTML_TAG_RE.finditer(value):
+    for match in HTML_TAG_RE.finditer(value):
         if match.group(1).lower() not in _LEGACY_HTML_ALLOWED_TAGS:
             raise ValueError(f"Unsupported legacy HTML tag <{match.group(1)}>")
     parser = _LegacyHtmlText()
@@ -844,12 +848,12 @@ class CreateQuoteFinalizationFacts(QuoteBaseModel):
 
 class CreateQuoteDesignerFacts(QuoteBaseModel):
     seller_subtitle: str | None = None
-    designer_signature: str | None = None
-    designer_kicker: str | None = None
-    designer_quote: str | None = None
-    designer_experience: str | None = None
-    designer_title: str | None = None
-    cta_body: str | None = None
+    designer_signature: str | None = "TRAVEL DESIGNER"
+    designer_kicker: str | None = "YOUR JOURNEY DESIGNER"
+    designer_quote: str | None = "I believe the desire to travel is contagious—and it is my privilege to turn that inspiration into thoughtfully designed journeys filled with meaningful experiences, authentic connections, and lasting memories"
+    designer_experience: str | None = "Present throughout the planning, quietly working behind the journey."
+    designer_title: str | None = "Let Us Shape the Final Details Together"
+    cta_body: str | None = ""
 
 
 class CreateQuoteSource(QuoteBaseModel):

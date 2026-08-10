@@ -16,9 +16,12 @@ export type ResolvedInspectorSelection = {
   descriptor: InspectorDescriptor;
   source: string;
   handoff?: ResolvedHandoff;
+  elementTop?: number;
 };
 
 function renderedValue(element: HTMLElement) {
+  const editorValue = element.getAttribute('data-workspace-editor-value');
+  if (editorValue !== null) return editorValue;
   const aria = element.getAttribute('aria-label');
   return (aria || element.textContent || '').trim();
 }
@@ -56,7 +59,10 @@ export default function BoundaryCanvas({
     if (!selection || !element) return false;
     clear('data-workspace-selected');
     element.dataset.workspaceSelected = 'true';
-    onResolve(selection, renderedValue(element));
+    const canvasTop = root.current?.getBoundingClientRect().top ?? 0;
+    const elemTop = element.getBoundingClientRect().top;
+    const relativeTop = Math.max(0, elemTop - canvasTop);
+    onResolve({ ...selection, elementTop: relativeTop }, renderedValue(element));
     return true;
   };
 
@@ -96,7 +102,7 @@ export default function BoundaryCanvas({
         if (select(targetFor(event.target))) { event.preventDefault(); event.stopPropagation(); }
       }}
     >
-      <DisplayPage documentModel={model} />
+      <DisplayPage documentModel={model} workspaceCanvas />
     </div>
   );
 }

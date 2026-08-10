@@ -10,7 +10,7 @@ import {
   type CSSProperties,
   type SetStateAction,
 } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   ClipboardList,
   PenLine,
@@ -80,11 +80,12 @@ export default function QuotationWorkspaceClient({
 }) {
   const router = useRouter();
   const search = useSearchParams();
+  const pathname = usePathname();
   const initialStage = search.get("stage");
   const [stage, setStage] = useState<Stage>(
     stages.includes(initialStage as Stage) ? (initialStage as Stage) : "facts"
   );
-  const { toast } = useToast();
+  const { toast, notify, clearScope } = useToast();
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
   const [fallbackUrl, setFallbackUrl] = useState<string | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
@@ -131,8 +132,8 @@ export default function QuotationWorkspaceClient({
     if (!factsData?.baselineLang || factsData.baselineLang === lang) return;
     const params = new URLSearchParams(search.toString());
     params.set("lang", factsData.baselineLang);
-    router.replace(`/quotations/${quotationId}/workspace?${params.toString()}`);
-  }, [factsData?.baselineLang, lang, quotationId, router, search]);
+    router.replace(`${pathname}?${params.toString()}`);
+  }, [factsData?.baselineLang, lang, pathname, router, search]);
 
   const selectedBrandId =
     publicationBrandId ?? documentData?.brandProfile.id ?? "";
@@ -224,7 +225,8 @@ export default function QuotationWorkspaceClient({
           "Publish failed."
         );
       } catch (error) {
-        toast(apiErrorMessage(error), "error");
+        const message = apiErrorMessage(error);
+        notify({ message, type: "error", persistent: true, scope: "publish:request", action: { label: "Retry", onClick: publish } });
         return;
       }
       setPublishedUrl(payload.published_url ?? null);
@@ -235,12 +237,18 @@ export default function QuotationWorkspaceClient({
         status: payload.status ?? "queued",
         lastError: null,
       });
-      await workspace.refresh();
+      try {
+        await workspace.refresh();
+      } catch (error) {
+        const message = apiErrorMessage(error);
+        notify({ message: `Publication was queued, but the workspace could not refresh: ${message}`, type: "error", persistent: true, scope: "publish:refresh", action: { label: "Retry refresh", onClick: () => void workspace.refresh() } });
+      }
+      clearScope("publish:request");
       toast(
         payload.status === "queued"
           ? "Publication queued while PDF renders."
           : `Published version ${payload.version ?? ""}.`,
-        "success"
+        payload.status === "queued" ? "info" : "success"
       );
     });
   }
@@ -255,13 +263,22 @@ export default function QuotationWorkspaceClient({
           'Unable to refresh publication status.',
         );
         setPublicationJob(job);
-        if (job.status === 'succeeded') await refreshWorkspace();
+        if (job.status === 'succeeded') {
+          await refreshWorkspace();
+          clearScope('publish:job');
+          toast('Publication is live.', 'success');
+        }
+        if (job.status === 'failed') {
+          notify({ message: job.lastError || 'Publication failed before the PDF could be published.', type: 'error', persistent: true, scope: 'publish:job', action: { label: 'Open review', onClick: () => setStage('review') } });
+        }
       } catch (error) {
-        setPublicationJob((current) => current ? { ...current, status: 'failed', lastError: apiErrorMessage(error) } : current);
+        const message = apiErrorMessage(error);
+        setPublicationJob((current) => current ? { ...current, status: 'failed', lastError: message } : current);
+        notify({ message: `Publication status could not be refreshed: ${message}`, type: 'error', persistent: true, scope: 'publish:job', action: { label: 'Retry status', onClick: () => setPublicationJob((current) => current ? { ...current, status: 'queued' } : current) } });
       }
     }, 1500);
     return () => window.clearTimeout(timer);
-  }, [publicationJob, refreshWorkspace]);
+  }, [clearScope, notify, publicationJob, refreshWorkspace, toast]);
 
   const labels: Record<Stage, string> = {
     facts: "Facts",
@@ -324,10 +341,10 @@ export default function QuotationWorkspaceClient({
         }
         params.set("section", section);
       }
-      router.replace(`/quotations/${quotationId}/workspace?${params.toString()}`, { scroll: false });
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
       setStage(target.stage);
     },
-    [documentData?.document, quotationId, router, search],
+    [documentData?.document, pathname, router, search],
   );
 
   return (
@@ -539,7 +556,7 @@ export default function QuotationWorkspaceClient({
               params.delete("section");
               params.delete("focus");
               params.set("factsSection", section === "booking_terms" ? "seller" : section === "inclusions_exclusions" ? "services" : "trip");
-              router.replace(`/quotations/${quotationId}/workspace?${params.toString()}`, { scroll: false });
+              router.replace(`${pathname}?${params.toString()}`, { scroll: false });
               setStage("facts");
             }}
             resources={{
@@ -564,7 +581,15 @@ export default function QuotationWorkspaceClient({
               This preview reads the canonical brochure document. Only applied
               content is visible.
             </p>
-            {liveDocumentModel ? <DesignCanvas quotationId={quotationId} lang={lang} model={liveDocumentModel} document={documentData.document} currentRevision={documentData.currentRevision} contract={documentData.editableContract} onSaved={() => workspace.refresh()} onHandoff={navigateHandoff} /> : null}
+            {liveDocumentModel && factsData ? <DesignCanvas quotationId={quotationId} lang={lang} model={liveDocumentModel} document={documentData.document} currentRevision={documentData.currentRevision} canEditDesignerFacts={editable} contract={documentData.editableContract} onSaved={() => workspace.refresh()} onSaveDesignerFacts={async (next) => {
+              try {
+                await workspace.saveFacts({ ...factsData.facts, designer_facts: { ...factsData.facts.designer_facts, ...next } });
+                toast("Designer presentation copy saved to Facts.", "success");
+              } catch (error) {
+                toast(apiErrorMessage(error), "error");
+                throw error;
+              }
+            }} onHandoff={navigateHandoff} /> : null}
           </div>
         ) : null}
 
@@ -593,6 +618,12 @@ export default function QuotationWorkspaceClient({
                   {reviewData.blockingDrafts.length ? (
                     <li>Content requiring review: {reviewData.blockingDrafts.join(", ")}</li>
                   ) : null}
+                  {reviewData.contentBlockers?.map((blocker) => (
+                    <li key={`${blocker.sectionId}:${blocker.path}`}>{blocker.message}</li>
+                  ))}
+                  {reviewData.presentationErrors?.map((error) => (
+                    <li key={error}>Design or PDF check: {error}</li>
+                  ))}
                 </ul>
               </div>
             ) : null}
@@ -617,6 +648,16 @@ export default function QuotationWorkspaceClient({
               >
                 Review Content Candidates
               </button>
+              {reviewData?.presentationErrors?.length ? <button
+                type="button"
+                onClick={() => goTo("design")}
+                className={cn(
+                  getTypographyClassName("buttonSecondary"),
+                  "rounded-[var(--radius-button)] border border-[var(--color-border-strong)] px-4 py-2.5 text-[var(--color-on-surface)]"
+                )}
+              >
+                Open Design checks
+              </button> : null}
             </div>
           </div>
         ) : null}

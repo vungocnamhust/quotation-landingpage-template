@@ -13,6 +13,7 @@ _HANDOFF_OWNERS = frozenset({"content", "fact", "fact-derived"})
 _HANDOFF_STAGES = frozenset({"facts", "content"})
 _HANDOFF_ITEMS = frozenset({"day", "hotel", "pricingOption", "bookingTerm", "routeSegment"})
 _HANDOFF_KEYS = frozenset({"stage", "section", "anchor", "item", "indexFromSource"})
+_EDITOR_SURFACES = frozenset({"design-inspector"})
 
 
 def _source_segments(source: str) -> tuple[str, ...]:
@@ -82,10 +83,19 @@ def _normalized_fields(contract: dict[str, Any]) -> tuple[dict[str, Any], ...]:
         if not isinstance(source, str):
             raise ValueError(f"Editable contract field {field_id} must declare one canonical source.")
         segments = _source_segments(source)
+        editor_surface = field.get("editorSurface")
+        if editor_surface is not None:
+            if editor_surface not in _EDITOR_SURFACES or owner != "fact" or field.get("kind") not in {"text", "richText"}:
+                raise ValueError(f"Editable contract field {field_id} has an invalid editor surface.")
         handoff = handoffs.get(field_id)
         if owner in _HANDOFF_OWNERS:
             field["handoff"] = _normalized_handoff(field_id, owner, segments, handoff)
-            field["editMode"] = "handoff"
+            # These are still Fact-owned (and retain their canonical Facts
+            # handoff), but the Design Canvas owns the interaction surface.
+            # Advertising them as a generic handoff makes the client render a
+            # non-editable inspector even though a safe, revision-locked Fact
+            # write is available there.
+            field["editMode"] = "inspector" if editor_surface == "design-inspector" else "handoff"
         elif owner == "design":
             if handoff is not None:
                 raise ValueError(f"Design field {field_id} cannot declare a handoff.")
@@ -124,7 +134,7 @@ def editable_contract_payload() -> dict[str, Any]:
         descriptor = dict(field)
         owner = str(descriptor["owner"])
         control_kind = "none"
-        if owner == "design":
+        if owner == "design" or descriptor.get("editorSurface") == "design-inspector":
             control_kind = {"text": "text", "richText": "textarea", "aria": "text", "altText": "text"}.get(str(descriptor["kind"]), "none")
         descriptor.update({
             "inspectorControl": control_kind,

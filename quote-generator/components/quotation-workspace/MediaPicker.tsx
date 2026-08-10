@@ -8,6 +8,7 @@ import useSWR from "swr";
 import { getTypographyClassName } from "../../config/typography";
 import { cn } from "../../utils/cn";
 import { formatApiError } from "./factsTypes";
+import { quotationFetch } from "../../lib/apiError";
 
 const API_BASE = process.env.NEXT_PUBLIC_QUOTATION_API_URL ?? "";
 const PAGE_SIZE = 60;
@@ -38,9 +39,6 @@ function uniqueBy<T>(items: T[], key: (item: T) => string): T[] {
   for (const item of items) if (!unique.has(key(item))) unique.set(key(item), item);
   return [...unique.values()];
 }
-function detailFrom(payload: unknown): unknown {
-  return payload && typeof payload === "object" ? (payload as { detail?: unknown }).detail : undefined;
-}
 function normalizeLibraryPage(payload: unknown, fallbackPrefix: string): Children {
   if (!payload || typeof payload !== "object") throw new Error("Media library returned an invalid response.");
   const response = payload as { detail?: unknown; prefix?: unknown; folders?: unknown; items?: unknown; nextCursor?: unknown };
@@ -54,10 +52,7 @@ function normalizeLibraryPage(payload: unknown, fallbackPrefix: string): Childre
   };
 }
 async function requestJson(url: string, init?: RequestInit): Promise<unknown> {
-  const response = await fetch(url, init);
-  const payload: unknown = await response.json().catch(() => null);
-  if (!response.ok) throw new Error(formatApiError(detailFrom(payload), "Media library request failed."));
-  return payload;
+  return quotationFetch<unknown>(url, init, "Media library request failed.");
 }
 async function fetchLibraryPage(url: string): Promise<Children> {
   const payload = await requestJson(url);

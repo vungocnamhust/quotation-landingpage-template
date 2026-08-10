@@ -12,7 +12,6 @@ class EditableEditorCoverageTests(unittest.TestCase):
         self.assertNotIn("Advanced brochure fact fields JSON", source)
         for control in (
             "Pricing options", "Pricing note", "Booking term details", "After confirmation",
-            "Designer signature",
         ):
             self.assertIn(control, source)
 
@@ -104,6 +103,21 @@ class EditableEditorCoverageTests(unittest.TestCase):
         self.assertIn("onPointerMoveCapture", boundary)
         self.assertIn("onKeyDownCapture", boundary)
         self.assertIn("inspectorControl", inspector)
+
+    def test_designer_fact_fields_are_editable_only_through_the_design_inspector(self):
+        facts_form = (ROOT / "quote-generator/components/quotation-workspace/FactsForm.tsx").read_text(encoding="utf-8")
+        design_canvas = (ROOT / "quote-generator/components/quotation-workspace/DesignCanvas.tsx").read_text(encoding="utf-8")
+        inspector = (ROOT / "quote-generator/components/quotation-workspace/ContextualInspector.tsx").read_text(encoding="utf-8")
+        workspace = (ROOT / "quote-generator/components/quotation-workspace/QuotationWorkspaceClient.tsx").read_text(encoding="utf-8")
+        self.assertNotIn('label="Designer signature"', facts_form)
+        self.assertNotIn('label="Designer subtitle"', facts_form)
+        self.assertNotIn("DesignerPresentationFields", design_canvas)
+        self.assertIn("DESIGNER_FACT_FIELD_BY_DESCRIPTOR", design_canvas)
+        self.assertIn("'designer.subtitle': 'seller_subtitle'", design_canvas)
+        self.assertIn("editorSurface === 'design-inspector'", design_canvas)
+        self.assertIn("directFactInspector", inspector)
+        self.assertIn("Designer copy (saved to Facts)", inspector)
+        self.assertIn("workspace.saveFacts({ ...factsData.facts, designer_facts:", workspace)
 
     def test_design_canvas_resolves_typed_handoffs_and_facts_urls(self):
         handoff = (ROOT / "quote-generator/components/quotation-workspace/editableHandoff.ts").read_text(encoding="utf-8")

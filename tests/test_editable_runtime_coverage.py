@@ -100,9 +100,19 @@ class EditableRuntimeCoverageTests(unittest.TestCase):
         self.assertIn("alt={textValue(viewModel.brandLogoAlt ?? viewModel.brandName)}", nav)
         self.assertIn("aria-label={textValue(route.overviewAriaLabel)} {...editableProps(route.overviewAriaLabel)}", pdf)
 
+    def test_empty_designer_cta_has_a_canvas_only_editable_affordance(self):
+        page = (ROOT / "quote-generator/components/DisplayPage.tsx").read_text(encoding="utf-8")
+        canvas = (ROOT / "quote-generator/components/quotation-workspace/BoundaryCanvas.tsx").read_text(encoding="utf-8")
+        sections = (ROOT / "quote-generator/components/display/sections.tsx").read_text(encoding="utf-8")
+        self.assertIn("workspaceCanvas={workspaceCanvas}", page)
+        self.assertIn("<DisplayPage documentModel={model} workspaceCanvas />", canvas)
+        self.assertIn('data-editable="/designer/ctaBody"', sections)
+        self.assertIn('data-workspace-editor-value=""', sections)
+
     def test_browser_evidence_runner_exercises_owner_handoffs_without_direct_canvas_writes(self):
         browser = (ROOT / "e2e/browser_pdf_compose_v2.py").read_text(encoding="utf-8")
         self.assertIn("def assert_canvas_handoff", browser)
+        self.assertIn("def save_designer_fact_from_canvas", browser)
         self.assertIn("def assert_system_canvas_target_is_read_only", browser)
         for source in (
             "/narrative/letterSignOff",
@@ -120,6 +130,16 @@ class EditableRuntimeCoverageTests(unittest.TestCase):
         self.assertIn("focus=day:{day_id}", browser)
         self.assertIn("focus=hotel:{hotel_id}", browser)
         self.assertIn("focus=pricingOption:{pricing_id}", browser)
+        for source in (
+            "/designer/kicker",
+            "/designer/title",
+            "/designer/subtitle",
+            "/designer/quote",
+            "/designer/signature",
+            "/designer/experience",
+            "/designer/ctaBody",
+        ):
+            self.assertIn(source, browser)
 
 
 if __name__ == "__main__":

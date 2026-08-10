@@ -33,6 +33,7 @@ class QuotationRepository:
         source_version: str | None = None,
         source_snapshot_at: datetime | None = None,
         designer_profile_id: str | None = None,
+        created_by_profile_id: str | None = None,
     ) -> Quotation:
         quotation = Quotation(
             id=quotation_id,
@@ -47,6 +48,7 @@ class QuotationRepository:
             current_version=current_version,
             template_name=template_name,
             designer_profile_id=designer_profile_id,
+            created_by_profile_id=created_by_profile_id or designer_profile_id,
             customer_name=customer_name,
             title=title,
         )
@@ -111,7 +113,12 @@ class QuotationRepository:
         """Keyset-paginated, owner-scoped workspace list."""
         stmt: Select[tuple[Quotation]] = select(Quotation).where(Quotation.template_name == "quote-generator")
         if designer_profile_id:
-            stmt = stmt.where(Quotation.designer_profile_id == designer_profile_id)
+            stmt = stmt.where(
+                or_(
+                    Quotation.designer_profile_id == designer_profile_id,
+                    Quotation.created_by_profile_id == designer_profile_id,
+                )
+            )
         if status:
             stmt = stmt.where(Quotation.status == status)
         term = search.strip()
@@ -128,7 +135,10 @@ class QuotationRepository:
         rows = await self.session.execute(
             select(Quotation.status, func.count(Quotation.id))
             .where(
-                Quotation.designer_profile_id == designer_profile_id,
+                or_(
+                    Quotation.designer_profile_id == designer_profile_id,
+                    Quotation.created_by_profile_id == designer_profile_id,
+                ),
                 Quotation.template_name == "quote-generator",
             )
             .group_by(Quotation.status)

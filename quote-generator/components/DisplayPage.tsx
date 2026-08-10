@@ -6,8 +6,11 @@ import { PdfBrochureDocument } from './display/PdfBrochureDocument';
 
 export default function DisplayPage({
   documentModel,
+  workspaceCanvas = false,
 }: {
   documentModel: DisplayDocument;
+  /** Workspace-only affordances; never enabled by public or PDF routes. */
+  workspaceCanvas?: boolean;
 }) {
   return (
     <main
@@ -28,6 +31,7 @@ export default function DisplayPage({
             viewMode: typeof documentModel.viewMode;
             colorScope: (typeof documentModel.colors.sections)[typeof sectionId];
             pageViewModel?: typeof documentModel.page;
+            workspaceCanvas?: boolean;
           }) => React.JSX.Element;
           const displayConfig = getSectionDisplayConfig(
             documentModel.theme,
@@ -57,6 +61,7 @@ export default function DisplayPage({
                 viewMode={documentModel.viewMode}
                 colorScope={documentModel.colors.sections[sectionId]}
                 pageViewModel={documentModel.page}
+                workspaceCanvas={workspaceCanvas}
               />
             </div>
           );

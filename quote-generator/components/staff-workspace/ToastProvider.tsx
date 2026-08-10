@@ -15,15 +15,22 @@ import { getTypographyClassName } from "../../config/typography";
 import { cn } from "../../utils/cn";
 
 export type ToastType = "success" | "error" | "info";
+export type NotificationAction = { label: string; onClick: () => void };
 
 export type ToastItem = {
   id: string;
   message: string;
   type: ToastType;
+  persistent?: boolean;
+  action?: NotificationAction;
+  scope?: string;
 };
 
 interface ToastContextValue {
   toast: (message: string, type?: ToastType) => void;
+  notify: (input: Omit<ToastItem, "id">) => void;
+  dismiss: (id: string) => void;
+  clearScope: (scope: string) => void;
 }
 
 const ToastContext = createContext<ToastContextValue | null>(null);
@@ -61,21 +68,34 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     return () => document.removeEventListener("keydown", handler);
   }, [toasts.length]);
 
-  const toast = useCallback((message: string, type: ToastType = "info") => {
+  const notify = useCallback((input: Omit<ToastItem, "id">) => {
     const id =
       typeof crypto !== "undefined" && crypto.randomUUID
         ? crypto.randomUUID()
         : Math.random().toString(36).substring(2, 9);
 
-    setToasts((prev) => [...prev, { id, message, type }]);
+    setToasts((prev) => {
+      const retained = input.scope ? prev.filter((item) => item.scope !== input.scope) : prev;
+      return [...retained, { ...input, id }];
+    });
 
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 4000);
+    if (!input.persistent) {
+      setTimeout(() => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+      }, 4000);
+    }
   }, []);
+
+  const toast = useCallback((message: string, type: ToastType = "info") => {
+    notify({ message, type });
+  }, [notify]);
 
   const dismiss = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  const clearScope = useCallback((scope: string) => {
+    setToasts((prev) => prev.filter((item) => item.scope !== scope));
   }, []);
 
   const icons: Record<ToastType, ReactNode> = {
@@ -85,7 +105,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <ToastContext.Provider value={{ toast }}>
+    <ToastContext.Provider value={{ toast, notify, dismiss, clearScope }}>
       {children}
       {mounted
         ? createPortal(
@@ -117,6 +137,15 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                   >
                     {t.message}
                   </p>
+                  {t.action ? (
+                    <button
+                      type="button"
+                      onClick={t.action.onClick}
+                      className={cn(getTypographyClassName("buttonSecondary"), "toast-item__action")}
+                    >
+                      {t.action.label}
+                    </button>
+                  ) : null}
                   <button
                     type="button"
                     onClick={() => dismiss(t.id)}

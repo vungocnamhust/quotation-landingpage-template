@@ -1,4 +1,5 @@
 import { getBrandThemeTokensFromProfile, resolveColorSlotsFromProfile } from '../config/runtimeThemeTokens';
+import { DESIGNER_PRESENTATION_DEFAULTS } from '../config/designerPresentationDefaults';
 import type { AppChromeViewModel, BrandColorPalette, BrandRenderProfile, BrandThemeTokens, EditableText, EditableTextMode, EditableTextOwner, PageViewModel, PublicSectionId, ResolvedColorSlots, ThemeDefinition } from './types';
 import type { LanguageCode, ViewMode } from './contracts';
 import { getLanguageLabels, PRICING_AMOUNT_LABELS } from './labels';
@@ -308,13 +309,14 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
       paymentTerms: { kicker: '', title: editable(labels.bookingTermsTitle, '/labels/bookingTermsTitle', 'system'), description: editable(stringValue(bookingParagraph.text) || labels.bookingTermsDescription, bookingParagraphPath, 'fact', 'richText'), cta: { label: designCopy(overrides, 'bookingTerms.cta', labels.sendEmail, 'actionLabel'), href: email ? `mailto:${email}` : '#designer', emphasis: 'secondary' }, terms: bookingItems.map(({ item, path }) => ({ label: editable(stringValue(item.label), `${path}/label`, 'fact'), bodyRichText: editable(stringValue(item.body), `${path}/body`, 'fact', 'richText') })) },
       finalization: { kicker: designCopy(overrides, 'finalization.kicker', labels.finalizationKicker), title: designCopy(overrides, 'finalization.title', labels.finalizationTitle), description: designCopy(overrides, 'finalization.description', labels.finalizationDescription), required: { title: editable(stringValue(finalizationGroups[0]?.title), '/content/sections/finalization/blocks/0/groups/0/title', 'content'), items: listText(finalizationGroups[0]?.items).map((item, index) => editable(item, `/content/sections/finalization/blocks/0/groups/0/items/${index}`, 'content')) }, afterConfirmation: { title: editable(stringValue(finalizationGroups[1]?.title), '/content/sections/finalization/blocks/0/groups/1/title', 'content'), items: listText(finalizationGroups[1]?.items).map((item, index) => editable(item, `/content/sections/finalization/blocks/0/groups/1/items/${index}`, 'content')) } },
       designer: {
-        kicker: designCopy(overrides, 'designer.kicker', stringValue(designer.kicker) || 'YOUR JOURNEY DESIGNER'),
-        title: designCopy(overrides, 'designer.title', stringValue(designer.title) || 'TRAVEL DESIGNER'),
-        quote: factCopy(stringValue(designer.quote), '/designer/quote', ''),
+        kicker: factCopy(stringValue(designer.kicker), '/designer/kicker', DESIGNER_PRESENTATION_DEFAULTS.kicker),
+        title: factCopy(stringValue(designer.title), '/designer/title', DESIGNER_PRESENTATION_DEFAULTS.title),
+        quote: factCopy(stringValue(designer.quote), '/designer/quote', DESIGNER_PRESENTATION_DEFAULTS.quote),
+        ctaBody: factCopy(stringValue(designer.ctaBody), '/designer/ctaBody', DESIGNER_PRESENTATION_DEFAULTS.ctaBody),
         name: derivedCopy(stringValue(designer.name) || 'Eddie', '/designer/name'),
         subtitle: editable(stringValue(designer.subtitle) || 'Trung Hieu Pham', '/designer/subtitle', 'fact'),
-        signatureLabel: editable(stringValue(designer.signature) || 'TRAVEL DESIGNER', '/designer/signature', 'fact'),
-        experienceNote: editable(stringValue(designer.experience) || 'Present throughout the planning, quietly working behind the journey.', '/designer/experience', 'fact'),
+        signatureLabel: factCopy(stringValue(designer.signature), '/designer/signature', DESIGNER_PRESENTATION_DEFAULTS.signature),
+        experienceNote: factCopy(stringValue(designer.experience), '/designer/experience', DESIGNER_PRESENTATION_DEFAULTS.experience),
         avatar: assetUrl(designer.image) || assetUrl(record(mediaOverrides['designer.avatar'])),
         avatarAlt: assetAlt(designer.image, '/designer/image/altText', stringValue(designer.name)),
         contactActions: [

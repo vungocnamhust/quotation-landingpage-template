@@ -6,6 +6,16 @@ from typing import Any
 from quote_document import CreateQuoteRequestV1, QuoteDocumentV1, build_rich_content_from_fact_sources
 
 
+DESIGNER_PRESENTATION_DEFAULTS = {
+    "kicker": "YOUR JOURNEY DESIGNER",
+    "title": "Let Us Shape the Final Details Together",
+    "quote": "I believe the desire to travel is contagious—and it is my privilege to turn that inspiration into thoughtfully designed journeys filled with meaningful experiences, authentic connections, and lasting memories",
+    "signature": "TRAVEL DESIGNER",
+    "experience": "Present throughout the planning, quietly working behind the journey.",
+    "ctaBody": "",
+}
+
+
 class SkeletonBuilder:
     @staticmethod
     def _hotel_date_range(check_in: str | None, check_out: str | None) -> str:
@@ -79,7 +89,15 @@ class SkeletonBuilder:
                     for i, item in enumerate(pricing.options, 1)
                 ],
             },
-            "designer": {"subtitle": designer.seller_subtitle or "", "signature": designer.designer_signature or "", "kicker": designer.designer_kicker or "", "quote": designer.designer_quote or "", "experience": designer.designer_experience or "", "title": designer.designer_title or "", "ctaBody": designer.cta_body or ""},
+            "designer": {
+                "subtitle": designer.seller_subtitle or "",
+                "signature": designer.designer_signature or DESIGNER_PRESENTATION_DEFAULTS["signature"],
+                "kicker": designer.designer_kicker or DESIGNER_PRESENTATION_DEFAULTS["kicker"],
+                "quote": designer.designer_quote or DESIGNER_PRESENTATION_DEFAULTS["quote"],
+                "experience": designer.designer_experience or DESIGNER_PRESENTATION_DEFAULTS["experience"],
+                "title": designer.designer_title or DESIGNER_PRESENTATION_DEFAULTS["title"],
+                "ctaBody": designer.cta_body or DESIGNER_PRESENTATION_DEFAULTS["ctaBody"],
+            },
         }
         document["content"] = build_rich_content_from_fact_sources({
             "inclusions": list(services.inclusions),

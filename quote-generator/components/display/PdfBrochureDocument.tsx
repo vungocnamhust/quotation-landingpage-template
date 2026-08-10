@@ -151,7 +151,7 @@ function PdfDetails({ documentModel }: { documentModel: DisplayDocument }) {
 
 function PdfDesigner({ documentModel }: { documentModel: DisplayDocument }) {
   const designer = documentModel.page.designer;
-  return <PdfPage documentModel={documentModel} scope="designer" className="pdf-designer"><AvatarFrame src={designer.avatar} alt={designer.avatarAlt} variant="editorial" className="pdf-designer__avatar" /><div><Kicker variant="chapterKicker">{designer.kicker}</Kicker><DisplayTitle as="h2" variant="designerTitle">{designer.title}</DisplayTitle><QuoteText variant="designerQuote">{designer.quote}</QuoteText><DisplayTitle as="h3" variant="signatureName">{designer.name}</DisplayTitle>{designer.subtitle ? <MetaText variant="signatureMeta">{designer.subtitle}</MetaText> : null}<BodyCopy variant="bodyMd">{designer.experienceNote}</BodyCopy></div></PdfPage>;
+  return <PdfPage documentModel={documentModel} scope="designer" className="pdf-designer"><AvatarFrame src={designer.avatar} alt={designer.avatarAlt} variant="editorial" className="pdf-designer__avatar" /><div><Kicker variant="chapterKicker">{designer.kicker}</Kicker><DisplayTitle as="h2" variant="designerTitle">{designer.title}</DisplayTitle><QuoteText variant="designerQuote">{designer.quote}</QuoteText>{designer.ctaBody && textValue(designer.ctaBody) ? <BodyCopy variant="bodyMd">{designer.ctaBody}</BodyCopy> : null}<DisplayTitle as="h3" variant="signatureName">{designer.name}</DisplayTitle>{designer.subtitle ? <MetaText variant="signatureMeta">{designer.subtitle}</MetaText> : null}<BodyCopy variant="bodyMd">{designer.experienceNote}</BodyCopy></div></PdfPage>;
 }
 
 export function PdfBrochureDocument({ documentModel }: { documentModel: DisplayDocument }) {

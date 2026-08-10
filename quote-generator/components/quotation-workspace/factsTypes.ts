@@ -1,3 +1,5 @@
+import { DESIGNER_PRESENTATION_DEFAULTS } from "../../config/designerPresentationDefaults";
+
 export type SourceKind = "manual" | "dmc_handoff";
 export type DestinationRef = {
   id: string;
@@ -381,7 +383,7 @@ export const CURRENCY_OPTIONS = [
 export const BROCHURE_DEFAULT_INCLUSIONS = [
   "Airport transfer, international arrival fast-track assistance",
   "All private transfers with English-speaking guides mentioned in the itinerary",
-  "Experiences, admission fees, and exclusive arrangements mentioned in the detailed itinerary",
+  "Accommodations, experiences, admission fees, and exclusive arrangements mentioned in the detailed itinerary",
   "All meals mentioned in the itinerary",
   "Domestic flights",
 ] as const;
@@ -532,12 +534,12 @@ export const emptyFacts = (): QuotationFacts => ({
   },
   designer_facts: {
     seller_subtitle: null,
-    designer_signature: null,
-    designer_kicker: null,
-    designer_quote: null,
-    designer_experience: null,
-    designer_title: null,
-    cta_body: null,
+    designer_signature: DESIGNER_PRESENTATION_DEFAULTS.signature,
+    designer_kicker: DESIGNER_PRESENTATION_DEFAULTS.kicker,
+    designer_quote: DESIGNER_PRESENTATION_DEFAULTS.quote,
+    designer_experience: DESIGNER_PRESENTATION_DEFAULTS.experience,
+    designer_title: DESIGNER_PRESENTATION_DEFAULTS.title,
+    cta_body: DESIGNER_PRESENTATION_DEFAULTS.ctaBody,
   },
 });
 

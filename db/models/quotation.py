@@ -33,6 +33,11 @@ class Quotation(Base):
         nullable=True,
         index=True,
     )
+    created_by_profile_id: Mapped[str | None] = mapped_column(
+        ForeignKey("travel_designer_profiles.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     customer_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     title: Mapped[str | None] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(

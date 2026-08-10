@@ -63,6 +63,8 @@ interface BaseSectionProps<T> {
   viewMode: ViewMode;
   colorScope: ResolvedColorScope;
   pageViewModel?: PageViewModel;
+  /** Allows the staff-only Canvas to expose an otherwise empty editable slot. */
+  workspaceCanvas?: boolean;
 }
 
 export function getItineraryDayColor(index: number, totalDays: number): 'canvas' | 'borderless' {
@@ -779,6 +781,7 @@ export function DesignerSection({
   displayConfig,
   theme,
   viewMode,
+  workspaceCanvas = false,
 }: BaseSectionProps<DesignerViewModel>) {
   const slots = getLayoutSlots(displayConfig.layoutVariant, viewMode);
 
@@ -800,6 +803,25 @@ export function DesignerSection({
           <QuoteText variant={requireTypographySlot(displayConfig.typographySlots, 'quote')}>
             {viewModel.quote}
           </QuoteText>
+          {viewModel.ctaBody && textValue(viewModel.ctaBody) ? (
+            <BodyCopy variant={requireTypographySlot(displayConfig.typographySlots, 'body')}>
+              {viewModel.ctaBody}
+            </BodyCopy>
+          ) : workspaceCanvas ? (
+            <button
+              type="button"
+              data-editable="/designer/ctaBody"
+              data-edit-owner="fact"
+              data-edit-mode="richText"
+              data-workspace-editor-value=""
+              className={cn(
+                getTypographyClassName(requireTypographySlot(displayConfig.typographySlots, 'body')),
+                'w-fit rounded-[var(--radius-button)] border border-dashed border-[var(--color-border-strong)] px-3 py-2 text-[var(--color-muted)] transition-colors hover:border-[var(--color-accent)] hover:text-[var(--color-on-surface)]',
+              )}
+            >
+              Add supporting CTA message
+            </button>
+          ) : null}
           <ActionGroup actions={viewModel.contactActions} typography={displayConfig.typographySlots} />
           {viewModel.supportBlocks.length > 0 ? (
             <div className={slots.footer}>

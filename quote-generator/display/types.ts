@@ -585,6 +585,7 @@ export interface DesignerViewModel {
   kicker: TextValue;
   title: TextValue;
   quote: TextValue;
+  ctaBody?: TextValue;
   name: TextValue;
   subtitle?: TextValue;
   signatureLabel: TextValue;

@@ -145,6 +145,26 @@ def save_design_value_from_canvas(
     expect(page.locator(selector).first).to_have_attribute(attribute, value)
 
 
+def save_designer_fact_from_canvas(
+    page: Any,
+    *,
+    quotation_id: str,
+    source: str,
+    value: str,
+) -> None:
+    """Prove Fact-owned Designer text uses the Canvas inspector, not a handoff."""
+    page.goto(f"{EDITOR_BASE}/quotations/{quotation_id}/workspace?stage=design&lang=en", wait_until="networkidle")
+    marker = page.locator(f'[data-editable="{source}"]').first
+    expect(marker).to_be_visible()
+    marker.click()
+    input_control = page.get_by_label("Designer copy (saved to Facts)", exact=True)
+    expect(input_control).to_be_visible()
+    input_control.fill(value)
+    page.get_by_role("button", name="Save", exact=True).click()
+    expect(page.get_by_text("Designer copy saved to Facts.", exact=True)).to_be_visible()
+    expect(page.locator(f'[data-editable="{source}"]').first).to_contain_text(value)
+
+
 def assert_system_canvas_target_is_read_only(page: Any, *, quotation_id: str, source: str) -> None:
     page.goto(f"{EDITOR_BASE}/quotations/{quotation_id}/workspace?stage=design&lang=en", wait_until="networkidle")
     marker = page.locator(f'[data-editable="{source}"]').first
@@ -274,6 +294,14 @@ def main() -> int:
             assert_canvas_handoff(page, quotation_id=quotation_id, source="/route/staySegments/0/displayName", stage="facts", section="programme")
             assert_system_canvas_target_is_read_only(page, quotation_id=quotation_id, source="/labels/classic")
             report["canvasAssertions"].extend(["fact-derived-designer", "fact-derived-route", "system-read-only"])
+            save_designer_fact_from_canvas(page, quotation_id=quotation_id, source="/designer/kicker", value="E2E DESIGNER KICKER")
+            save_designer_fact_from_canvas(page, quotation_id=quotation_id, source="/designer/title", value="E2E DESIGNER TITLE")
+            save_designer_fact_from_canvas(page, quotation_id=quotation_id, source="/designer/subtitle", value="E2E DESIGNER SUBTITLE")
+            save_designer_fact_from_canvas(page, quotation_id=quotation_id, source="/designer/quote", value="E2E Designer quote")
+            save_designer_fact_from_canvas(page, quotation_id=quotation_id, source="/designer/signature", value="E2E DESIGNER SIGNATURE")
+            save_designer_fact_from_canvas(page, quotation_id=quotation_id, source="/designer/experience", value="E2E designer experience")
+            save_designer_fact_from_canvas(page, quotation_id=quotation_id, source="/designer/ctaBody", value="E2E CTA body")
+            report["canvasAssertions"].append("designer-fact-inspector-writes")
 
             page.goto(f"{EDITOR_BASE}/quotations/{quotation_id}/workspace?stage=facts&factsSection=programme&focus=day:{day_id}&lang=en", wait_until="networkidle")
             expect(page.locator("#day-0-number")).to_be_focused()

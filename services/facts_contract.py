@@ -12,10 +12,10 @@ import html
 import re
 from typing import Any
 
+from quote_document import HTML_TAG_RE
 from services.pricing_contract import normalize_legacy_pricing_facts
 
 
-_TAG_RE = re.compile(r"<[^>]+>")
 _TRIP_FACT_KEYS = {
     "destinations", "start_date", "end_date", "duration_days", "duration_nights",
     "itinerary", "special_requirements", "display_route_text", "display_travel_dates",
@@ -33,7 +33,7 @@ def _plain_text(value: Any) -> str | None:
     # Decode entities only after tags are removed: legacy cancellation terms
     # often use &lt; / &gt; as comparison prose, which must remain valid plain
     # text under the current booking Facts contract.
-    text = html.unescape(_TAG_RE.sub(" ", str(value)))
+    text = html.unescape(HTML_TAG_RE.sub(" ", str(value)))
     text = text.replace(">", "more than ").replace("<", "less than ")
     return " ".join(text.split())
 

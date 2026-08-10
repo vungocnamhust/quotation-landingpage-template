@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { getTypographyClassName } from '../../config/typography';
 import { cn } from '../../utils/cn';
 import { apiErrorMessage, quotationFetch } from '../../lib/apiError';
+import { useToast } from '../staff-workspace/ToastProvider';
 
 import CustomSelect from '../ui/CustomSelect';
 
@@ -15,14 +16,20 @@ export default function PublicationTargetManager({ quotationId, brandId, onBrand
   const brands = brandsData?.brands ?? [];
   const targets = publications?.publications ?? [];
   const [message, setMessage] = useState<string | null>(null);
+  const { toast, notify, clearScope } = useToast();
   async function action(targetId: string, actionName: 'unpublish' | 'restore', release?: number) {
     const suffix = actionName === 'restore' ? `/releases/${release}/restore` : '/unpublish';
     try {
       await quotationFetch(`${API_BASE}/api/v2/quotations/${quotationId}/publication-targets/${targetId}${suffix}`, { method: 'POST' }, `${actionName} failed.`);
       if (refresh) await refresh();
-      setMessage(actionName === 'restore' ? 'Release restored and cache synchronization queued.' : 'Publication target unpublished and cache synchronization queued.');
+      const success = actionName === 'restore' ? 'Release restored and cache synchronization queued.' : 'Publication target unpublished and cache synchronization queued.';
+      clearScope(`publication-target:${targetId}`);
+      setMessage(success);
+      toast(success, 'info');
     } catch (error) {
-      setMessage(apiErrorMessage(error));
+      const failure = apiErrorMessage(error);
+      setMessage(failure);
+      notify({ message: failure, type: 'error', persistent: true, scope: `publication-target:${targetId}`, action: { label: 'Retry', onClick: () => void action(targetId, actionName, release) } });
     }
   }
   return <section className="flex flex-col gap-3 rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-4">

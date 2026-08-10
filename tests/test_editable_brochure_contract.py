@@ -47,6 +47,11 @@ class EditableBrochureContractTests(unittest.TestCase):
         self.assertEqual(descriptors["identity.logoAlt"]["inspectorControl"], "text")
         self.assertEqual(descriptors["trip.title"]["editMode"], "handoff")
         self.assertEqual(descriptors["trip.title"]["inspectorControl"], "none")
+        for field_id in ("designer.kicker", "designer.title", "designer.subtitle", "designer.quote", "designer.signature", "designer.experience", "designer.ctaBody"):
+            self.assertEqual(descriptors[field_id]["owner"], "fact")
+            self.assertEqual(descriptors[field_id]["editorSurface"], "design-inspector")
+            self.assertEqual(descriptors[field_id]["editMode"], "inspector")
+            self.assertIn(descriptors[field_id]["inspectorControl"], {"text", "textarea"})
         self.assertEqual(descriptors["trip.title"]["handoff"], {"stage": "content", "section": "hero"})
         self.assertEqual(descriptors["itinerary.days.*.dayNumber"]["owner"], "fact-derived")
         self.assertEqual(descriptors["itinerary.days.*.dayNumber"]["handoff"], {"stage": "facts", "section": "programme", "anchor": "day", "item": "day", "indexFromSource": 2})
@@ -219,6 +224,11 @@ class EditableBrochureContractTests(unittest.TestCase):
         system_handoff["handoffs"]["labels.classic"] = {"stage": "content", "section": "hero"}
         with self.assertRaisesRegex(ValueError, "System field"):
             _normalized_fields(system_handoff)
+
+        invalid_editor_surface = deepcopy(EDITABLE_BROCHURE_CONTRACT)
+        invalid_editor_surface["fields"][0]["editorSurface"] = "design-inspector"
+        with self.assertRaisesRegex(ValueError, "invalid editor surface"):
+            _normalized_fields(invalid_editor_surface)
 
     def test_contract_validator_rejects_intersecting_sources_and_invalid_handoff_shape(self):
         duplicate_exact = deepcopy(EDITABLE_BROCHURE_CONTRACT)

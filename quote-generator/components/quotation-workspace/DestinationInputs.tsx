@@ -4,6 +4,7 @@ import { useDeferredValue, useId, useState } from "react";
 import useSWR from "swr";
 import { getTypographyClassName } from "../../config/typography";
 import { cn } from "../../utils/cn";
+import { quotationFetch } from "../../lib/apiError";
 import type { DestinationRef } from "./factsTypes";
 
 const API_BASE =
@@ -11,9 +12,7 @@ const API_BASE =
 export type { DestinationRef } from "./factsTypes";
 type SearchResponse = { items: DestinationRef[] };
 const fetchJson = async <T,>(url: string): Promise<T> => {
-  const response = await fetch(url);
-  if (!response.ok) throw new Error("Destination search failed.");
-  return response.json() as Promise<T>;
+  return quotationFetch<T>(url, undefined, "Destination search failed.");
 };
 const inputClass = cn(
   getTypographyClassName("bodyMd"),

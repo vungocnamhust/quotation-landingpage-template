@@ -326,6 +326,7 @@ const DayEditor = memo(function DayEditor({
   const complete = Boolean(
     day.destination && (day.summary || day.highlights.length),
   );
+  const derivedDate = day.display_date || dateForItineraryDay(startDate, day.day_number ?? index + 1);
   return (
     <article
       id={`facts-day-${index}`}
@@ -354,7 +355,7 @@ const DayEditor = memo(function DayEditor({
               "block text-[var(--color-on-surface)]",
             )}
           >
-            Day {day.day_number ?? index + 1}
+            Day {day.day_number ?? index + 1}{derivedDate ? ` · ${derivedDate}` : ""}
           </span>
           <span
             className={cn(
@@ -426,7 +427,7 @@ const DayEditor = memo(function DayEditor({
 
           <Field label="Sense of pace" disabled={readOnly} value={day.sense_of_pace} onChange={(value) => patch("sense_of_pace", value || null)} />
           <Field label="Overnight" disabled={readOnly} value={day.overnight} onChange={(value) => patch("overnight", value || null)} />
-          <Field label="Date" type="date" disabled value={day.display_date} onChange={() => undefined} />
+          <Field label="Date" disabled value={derivedDate} onChange={() => undefined} />
           <div className="sm:col-span-2">
             <Area label="Notes" disabled={readOnly} value={lines(day.notes)} onChange={(value) => patch("notes", toLines(value))} />
           </div>
@@ -623,7 +624,6 @@ export default function FactsForm({
   const pricing = facts.pricing_facts;
   const booking = facts.booking_facts;
   const finalization = facts.finalization_facts;
-  const designer = facts.designer_facts;
   const presentation = facts.presentation_options;
 
   const [activeDay, setActiveDay] = useState<number | null>(
@@ -893,7 +893,7 @@ export default function FactsForm({
       },
       {
         id: "seller",
-        label: "Seller & booking",
+        label: "Booking & payment terms",
         detail:
           presentation.travel_designer_id || booking.description
             ? "Contact details added"
@@ -1262,7 +1262,7 @@ export default function FactsForm({
         </FactCard>
         <FactCard
           id="seller"
-          title="Seller & booking"
+          title="BOOKING & PAYMENT TERMS"
           subtitle="Booking terms, confirmation checklist, and travel designer profile copy."
           status={status("seller")}
         >
@@ -1293,30 +1293,56 @@ export default function FactsForm({
               />
             </div>
             <div className="sm:col-span-2 flex flex-col gap-3">
-              <p className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>Booking term details</p>
+              <div className="flex items-center justify-between">
+                <p className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>Booking term details (Key & Value)</p>
+                {!readOnly ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      update("booking_facts", {
+                        ...booking,
+                        items: [...booking.items, { key: null, label: "Deposit", body: null }],
+                      })
+                    }
+                    className={cn(
+                      getTypographyClassName("buttonSecondary"),
+                      "min-h-8 rounded-[var(--radius-button)] border border-[var(--color-border)] px-3 py-1 text-[var(--color-on-surface)] hover:bg-[var(--color-surface-muted)] transition-colors",
+                    )}
+                  >
+                    + Add term
+                  </button>
+                ) : null}
+              </div>
               {booking.items.map((item, index) => (
-                <div id={`booking-term-${index}`} key={item.key ?? index} className="grid gap-3 rounded-[var(--radius-card)] border border-[var(--color-border)] p-3">
-                  <Field id={`booking-term-${index}-label`} label="Term label" disabled={readOnly} value={item.label} onChange={(value) => update("booking_facts", { ...booking, items: booking.items.map((current, currentIndex) => currentIndex === index ? { ...current, label: value || null } : current) })} />
-                  <Area label="Term body (plain text)" hint="Plain text only. Use “more than” or “less than”; HTML is not supported." disabled={readOnly} value={item.body} onChange={(value) => update("booking_facts", { ...booking, items: booking.items.map((current, currentIndex) => currentIndex === index ? { ...current, body: value || null } : current) })} />
+                <div id={`booking-term-${index}`} key={item.key ?? index} className="grid gap-3 rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface-white)] p-4 shadow-2xs sm:grid-cols-12 items-start">
+                  <div className="sm:col-span-4 flex flex-col gap-2">
+                    <Field id={`booking-term-${index}-label`} label="Term label (Key)" disabled={readOnly} value={item.label} onChange={(value) => update("booking_facts", { ...booking, items: booking.items.map((current, currentIndex) => currentIndex === index ? { ...current, label: value || null } : current) })} />
+                    {!readOnly ? (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        <button type="button" onClick={() => update("booking_facts", { ...booking, items: booking.items.map((c, i) => i === index ? { ...c, label: "Deposit" } : c) })} className={cn(getTypographyClassName("caption"), "px-2 py-0.5 rounded-[var(--radius-button)] border border-[var(--color-border)] bg-[var(--color-surface-muted)] text-[var(--color-muted)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-on-surface)] transition-colors")}>+ Deposit</button>
+                        <button type="button" onClick={() => update("booking_facts", { ...booking, items: booking.items.map((c, i) => i === index ? { ...c, label: "Balance" } : c) })} className={cn(getTypographyClassName("caption"), "px-2 py-0.5 rounded-[var(--radius-button)] border border-[var(--color-border)] bg-[var(--color-surface-muted)] text-[var(--color-muted)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-on-surface)] transition-colors")}>+ Balance</button>
+                        <button type="button" onClick={() => update("booking_facts", { ...booking, items: booking.items.map((c, i) => i === index ? { ...c, label: "Cancellation" } : c) })} className={cn(getTypographyClassName("caption"), "px-2 py-0.5 rounded-[var(--radius-button)] border border-[var(--color-border)] bg-[var(--color-surface-muted)] text-[var(--color-muted)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-on-surface)] transition-colors")}>+ Cancellation</button>
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="sm:col-span-8 flex flex-col gap-2">
+                    <Area label="Term details (Value)" hint="Plain text details." disabled={readOnly} value={item.body} onChange={(value) => update("booking_facts", { ...booking, items: booking.items.map((current, currentIndex) => currentIndex === index ? { ...current, body: value || null } : current) })} />
+                    {!readOnly ? (
+                      <div className="flex justify-end mt-1">
+                        <button type="button" onClick={() => update("booking_facts", { ...booking, items: booking.items.filter((_, i) => i !== index) })} className={cn(getTypographyClassName("caption"), "text-rose-600 hover:underline")}>Remove term</button>
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
               ))}
             </div>
 
             <div className="sm:col-span-2 grid gap-4 sm:grid-cols-2">
-              <Field label="Designer subtitle" disabled={readOnly} value={designer.seller_subtitle} onChange={(value) => update("designer_facts", { ...designer, seller_subtitle: value || null })} />
               <Field label="Booking terms title" disabled={readOnly} value={booking.title} onChange={(value) => update("booking_facts", { ...booking, title: value || null })} />
               <Field label="Required-items title" disabled={readOnly} value={finalization.required_title} onChange={(value) => update("finalization_facts", { ...finalization, required_title: value || null })} />
               <Field label="After-confirmation title" disabled={readOnly} value={finalization.after_confirmation_title} onChange={(value) => update("finalization_facts", { ...finalization, after_confirmation_title: value || null })} />
               <div className="sm:col-span-2">
                 <Area label="After confirmation" disabled={readOnly} value={lines(finalization.after_confirmation_items)} onChange={(value) => update("finalization_facts", { ...finalization, after_confirmation_items: toLines(value) })} hint="One follow-up item per line." />
-              </div>
-              <Field label="Designer signature" disabled={readOnly} value={designer.designer_signature} onChange={(value) => update("designer_facts", { ...designer, designer_signature: value || null })} />
-              <Field label="Designer title" disabled={readOnly} value={designer.designer_title} onChange={(value) => update("designer_facts", { ...designer, designer_title: value || null })} />
-              <Field label="Designer kicker" disabled={readOnly} value={designer.designer_kicker} onChange={(value) => update("designer_facts", { ...designer, designer_kicker: value || null })} />
-              <Field label="Designer CTA body" disabled={readOnly} value={designer.cta_body} onChange={(value) => update("designer_facts", { ...designer, cta_body: value || null })} />
-              <div className="sm:col-span-2 flex flex-col gap-4">
-                <Area label="Designer quote" disabled={readOnly} value={designer.designer_quote} onChange={(value) => update("designer_facts", { ...designer, designer_quote: value || null })} />
-                <Area label="Designer experience" disabled={readOnly} value={designer.designer_experience} onChange={(value) => update("designer_facts", { ...designer, designer_experience: value || null })} />
               </div>
             </div>
           </div>

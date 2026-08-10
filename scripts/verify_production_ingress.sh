@@ -53,8 +53,12 @@ if printf '%s' "$direct_rendered" | grep -q 'proxy_pass http://dmc-auth-proxy'; 
 fi
 for rendered in "$direct_rendered" "$gateway_rendered"; do
   printf '%s' "$rendered" | grep -q 'location / { return 404; }'
-  if printf '%s' "$rendered" | grep -A24 'server_name .*journeys' | grep -q 'location /api/'; then
-    echo 'public branded hosts must not proxy /api/' >&2
+  if ! printf '%s' "$rendered" | grep -A48 'server_name .*journeys' | grep -q 'location \^~ /api/map-tiles/'; then
+    echo 'public branded hosts must proxy the constrained map tile route' >&2
+    exit 1
+  fi
+  if printf '%s' "$rendered" | grep -A48 'server_name .*journeys' | grep -q 'location \^~ /api/v2/'; then
+    echo 'public branded hosts must not proxy the FastAPI v2 route' >&2
     exit 1
   fi
 done
@@ -66,8 +70,8 @@ if printf '%s' "$gateway_rendered" | grep -q 'proxy_set_header X-DMC-Email \$htt
   echo 'client DMC identity headers must never be forwarded' >&2
   exit 1
 fi
-if printf '%s' "$direct_rendered" | grep -q 'location /api/'; then
-  echo 'public branded hosts must not proxy /api/' >&2
+if ! printf '%s' "$direct_rendered" | grep -q 'location \^~ /api/map-tiles/'; then
+  echo 'rendered ingress must retain the constrained map tile route' >&2
   exit 1
 fi
 docker compose -f "$compose_file" config --format json | python -c '
