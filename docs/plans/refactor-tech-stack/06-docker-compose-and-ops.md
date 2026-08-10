@@ -244,6 +244,15 @@ Neu can:
 - chi app container noi bo noi voi postgres
 - rotate R2 credentials neu lo
 
+### DMC Tunnel ingress
+
+On the shared DMC VPS, the quotation `nginx` service joins `dmc-network` with
+the alias `quotation-ingress`; it is not published to the host. The existing
+Cloudflare Tunnel targets `dmc-gateway` on loopback port 8008, and DMC routes
+the staff and public hosts to that alias. `quote.capellatravel.com` remains
+Cloudflare Access protected while `quotes.capellatravel.com` is public but
+limited by the quotation ingress to fallback brochure and media routes.
+
 > **Deployment status.** Compose manifests and Dockerfile exist in this repo,
 > but a real VPS/gateway/browser smoke is not established by local lint or
 > build. Treat the following as the required deployment gate, not completed

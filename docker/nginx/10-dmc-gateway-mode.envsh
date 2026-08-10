@@ -22,7 +22,8 @@ esac
 # backed active-brand check. Keep a safe default for local mounts while making
 # the production list explicit through PUBLIC_BRAND_HOSTS.
 export PUBLIC_BRAND_HOSTS="${PUBLIC_BRAND_HOSTS:-journeys.capellatravel.com my.selvarajourneys.com journeys.vietnamsafar.vn}"
+export PUBLIC_FALLBACK_HOSTNAME="${PUBLIC_FALLBACK_HOSTNAME:-quotes.capellatravel.com}"
 
 # The official Nginx envsubst entrypoint runs after this script. Restrict it to
 # our placeholders so normal Nginx variables such as $host stay intact.
-export NGINX_ENVSUBST_FILTER='DMC_AUTH_REQUEST_URI|DMC_AUTH_PROXY_URL|PUBLIC_BRAND_HOSTS|PUBLICATION_PREVIEW_HOSTNAME'
+export NGINX_ENVSUBST_FILTER='DMC_AUTH_REQUEST_URI|DMC_AUTH_PROXY_URL|PUBLIC_BRAND_HOSTS|PUBLIC_FALLBACK_HOSTNAME|PUBLICATION_PREVIEW_HOSTNAME'

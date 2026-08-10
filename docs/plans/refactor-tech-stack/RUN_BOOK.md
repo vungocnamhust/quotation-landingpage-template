@@ -159,6 +159,79 @@ docker compose -f docker-compose.local.yml down -v
 
 ## 5. Chay production
 
+### First production start — commands only
+
+```bash
+cd /opt/quotation-landingpage-template
+cp -n .env.production.example .env.production
+${EDITOR:-vi} .env.production
+
+docker network inspect dmc-network
+docker compose -f docker-compose.production.yml config --quiet
+docker compose -f docker-compose.production.yml build
+docker compose -f docker-compose.production.yml up -d postgres
+docker compose -f docker-compose.production.yml run --rm migrate
+
+export DESIGNER_ID=td_initial_designer
+export DESIGNER_EMAIL=staff@capellatravel.com
+export DESIGNER_NAME='Initial Travel Designer'
+export DESIGNER_PHONE=''
+export DESIGNER_STORAGE_SLUG=initial-travel-designer
+
+docker compose -f docker-compose.production.yml exec -T postgres \
+  psql -v ON_ERROR_STOP=1 -U quotation -d quotation \
+  -v designer_id="$DESIGNER_ID" \
+  -v designer_email="$DESIGNER_EMAIL" \
+  -v designer_name="$DESIGNER_NAME" \
+  -v designer_phone="$DESIGNER_PHONE" \
+  -v designer_storage_slug="$DESIGNER_STORAGE_SLUG" <<'SQL'
+INSERT INTO travel_designer_profiles
+  (id, email, name, phone, storage_slug, is_active)
+VALUES
+  (:'designer_id', lower(:'designer_email'), :'designer_name', :'designer_phone', :'designer_storage_slug', true)
+ON CONFLICT (email) DO UPDATE
+SET name = EXCLUDED.name,
+    phone = EXCLUDED.phone,
+    storage_slug = EXCLUDED.storage_slug,
+    is_active = true;
+
+INSERT INTO travel_designer_brand_defaults (brand_id, designer_profile_id)
+SELECT brand_id, :'designer_id'
+FROM unnest(ARRAY['capella_travel', 'selvara', 'vietnam_safar']) AS brand_id
+WHERE EXISTS (SELECT 1 FROM brands WHERE brands.id = brand_id)
+ON CONFLICT (brand_id) DO UPDATE
+SET designer_profile_id = EXCLUDED.designer_profile_id;
+SQL
+
+docker compose -f docker-compose.production.yml up -d app quote-generator publication-worker nginx
+
+cd /opt/dmc-agentic-ai
+python scripts/generate-nginx-config.py --output docker/dmc-gateway/nginx.prod.conf
+docker exec dmc-gateway nginx -t
+docker exec dmc-gateway nginx -s reload
+
+curl --fail --show-error -H 'Host: quote.capellatravel.com' http://127.0.0.1:8008/health/live
+curl --fail --show-error -H 'Host: quote.capellatravel.com' http://127.0.0.1:8008/health/ready
+test "$(curl --silent --output /dev/null --write-out '%{http_code}' -H 'Host: quotes.capellatravel.com' http://127.0.0.1:8008/not-allowed)" = 404
+```
+
+### Public ingress qua DMC Cloudflare Tunnel
+
+Production khong expose port cua quotation Compose ra Internet. DMC's existing
+Cloudflare Tunnel forwards both hosts to `http://localhost:8008`, where
+`dmc-gateway` forwards them to the `quotation-ingress` Docker alias:
+
+- `quote.capellatravel.com`: Cloudflare Access application required; this is
+  the staff workspace host.
+- `quotes.capellatravel.com`: no Cloudflare Access application; this is the
+  customer-facing fallback host and may serve only `/p/<fallback-slug>` and
+  `/media/*`.
+
+After changing `dmc-agentic-ai/configs/route-registry.yml`, regenerate and
+reload the DMC gateway config, then add both hostname routes in the existing
+Cloudflare Tunnel dashboard/config. Do not add a second tunnel or open VPS
+ports 80/443 for the quotation stack.
+
 ### Buoc 1. Tao file env
 
 ```bash

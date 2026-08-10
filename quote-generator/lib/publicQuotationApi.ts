@@ -22,6 +22,10 @@ export type PublicQuotationPayload = {
   release: { id: string; number: number; documentRevision: number };
 };
 
+export type PublicFallbackQuotationPayload = PublicQuotationPayload & {
+  locale: LanguageCode;
+};
+
 export type WorkspaceWorkflowBootstrap = {
   locale: LanguageCode;
   currentRevision: number;
@@ -73,6 +77,18 @@ export async function resolvePublicQuotation({
   if (response.status === 404) return null;
   if (!response.ok) throw new Error('Unable to resolve published quotation.');
   return response.json() as Promise<PublicQuotationPayload>;
+}
+
+export async function resolvePublicFallbackQuotation(
+  fallbackSlug: string,
+): Promise<PublicFallbackQuotationPayload | null> {
+  const response = await fetch(
+    `${INTERNAL_API_BASE}/api/internal/v2/public-quotations/fallback/${encodeURIComponent(fallbackSlug)}`,
+    { headers: serviceHeaders(), cache: 'no-store' },
+  );
+  if (response.status === 404) return null;
+  if (!response.ok) throw new Error('Unable to resolve fallback published quotation.');
+  return response.json() as Promise<PublicFallbackQuotationPayload>;
 }
 
 export const resolvePublicationRelease = cache(async function resolvePublicationRelease(releaseId: string): Promise<(PublicQuotationPayload & { locale: LanguageCode }) | null> {

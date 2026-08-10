@@ -27,6 +27,21 @@ class V2IngressContractTests(unittest.TestCase):
         self.assertIn("server_name ${PUBLIC_BRAND_HOSTS};", template)
         self.assertIn("PUBLIC_BRAND_HOSTS", envsh)
 
+    def test_public_fallback_host_exposes_only_release_and_media_routes(self):
+        config = (ROOT / "docker/nginx/default.conf.template").read_text()
+        fallback_server = config.split("server_name ${PUBLIC_FALLBACK_HOSTNAME};", 1)[1].split("server_name quote.capellatravel.com;", 1)[0]
+        self.assertIn("location ~ ^/p/[^/]+/", fallback_server)
+        self.assertIn("location ^~ /media/", fallback_server)
+        self.assertNotIn("/api/", fallback_server)
+        self.assertNotIn("/internal/", fallback_server)
+        self.assertIn("location / { return 404; }", fallback_server)
+
+    def test_fallback_hostname_is_templated_and_quote_ingress_has_dmc_alias(self):
+        envsh = (ROOT / "docker/nginx/10-dmc-gateway-mode.envsh").read_text()
+        compose = (ROOT / "docker-compose.production.yml").read_text()
+        self.assertIn("PUBLIC_FALLBACK_HOSTNAME", envsh)
+        self.assertIn("quotation-ingress", compose)
+
     def test_production_direct_cloudflare_mode_is_validated(self):
         with patch.dict(
             os.environ,
@@ -38,6 +53,7 @@ class V2IngressContractTests(unittest.TestCase):
                 "QUOTE_SERVICE_TOKEN": "a-real-secret",
                 "V2_PRODUCTION_FRESH_START": "true",
                 "PUBLIC_BRAND_HOSTS": "journeys.example.com",
+                "PUBLIC_FALLBACK_HOSTNAME": "quotes.example.com",
             },
             clear=True,
         ):

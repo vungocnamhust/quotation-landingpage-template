@@ -38,6 +38,44 @@ server {
 
 server {
     listen 80;
+    server_name ${PUBLIC_FALLBACK_HOSTNAME};
+
+    # Customer fallback host: it may render only an active public release and
+    # its release-scoped media. Never let this host fall through to staff/API.
+    location ~ ^/p/[^/]+/ {
+        proxy_pass http://quote-generator:8115;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location ~ ^/p/[^/]+$ {
+        proxy_pass http://quote-generator:8115;
+        proxy_hide_header Cache-Control;
+        add_header Cache-Control "public, s-maxage=300, stale-while-revalidate=86400" always;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location ^~ /media/ {
+        proxy_pass http://quote-generator:8115;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location / { return 404; }
+}
+
+server {
+    listen 80;
     server_name quote.capellatravel.com;
 
     client_max_body_size 20M;

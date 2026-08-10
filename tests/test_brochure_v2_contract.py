@@ -1090,6 +1090,7 @@ class BrochureRouteContractTests(unittest.TestCase):
 
         self.assertIn(response.status_code, (200, 202))
         self.assertIn(response.json()["status"], ("published", "queued"))
+        self.assertTrue(response.json()["fallback_url"].startswith("https://quotes.capellatravel.com/p/"))
         target_id = response.json()["targetId"]
         release_id = response.json()["releaseId"]
 
@@ -1099,12 +1100,46 @@ class BrochureRouteContractTests(unittest.TestCase):
                 target = await session.get(PublicationTarget, target_id)
                 self.assertIsNotNone(target)
                 self.assertEqual(target.brand_id, "vietnam_safar")
+                self.assertTrue(target.fallback_slug)
                 releases = await target_repo.list_releases(target.id)
                 self.assertEqual(len(releases), 1)
                 self.assertEqual(releases[0].id, release_id)
                 self.assertEqual(releases[0].document_revision, 1)
 
         asyncio.run(_assert_publication())
+
+    def test_public_fallback_resolves_only_active_published_target(self):
+        document = _sample_document()
+        asyncio.run(self._seed_brochure_document("quo_test", copy.deepcopy(document)))
+        with patch.object(main, "_inspect_asset_readiness", return_value={"ready": True, "missing": [], "invalid": [], "checkedAt": ""}):
+            published = self.client.post("/api/v2/quotations/quo_test/publish", json={"baseRevision": 1}).json()
+
+        async def _activate_and_get_slug():
+            async with self.session_factory() as session:
+                repository = PublicationTargetRepository(session)
+                target = await session.get(PublicationTarget, published["targetId"])
+                release = await repository.get_release(published["releaseId"])
+                self.assertIsNotNone(target)
+                self.assertIsNotNone(release)
+                release.pdf_r2_key = "quotations/quo_test/react/test.pdf"
+                await repository.activate_release(target=target, release=release)
+                await session.commit()
+                return target.fallback_slug
+
+        fallback_slug = asyncio.run(_activate_and_get_slug())
+        with patch.dict(os.environ, {"QUOTE_SERVICE_TOKEN": "test-service-token"}):
+            resolved = self.client.get(
+                f"/api/internal/v2/public-quotations/fallback/{fallback_slug}",
+                headers={"X-Quote-Service-Token": "test-service-token"},
+            )
+            missing = self.client.get(
+                "/api/internal/v2/public-quotations/fallback/not-a-publication",
+                headers={"X-Quote-Service-Token": "test-service-token"},
+            )
+        self.assertEqual(resolved.status_code, 200)
+        self.assertEqual(resolved.json()["locale"], "en")
+        self.assertEqual(resolved.json()["document"]["trip"]["title"], "Vietnam Private Journey")
+        self.assertEqual(missing.status_code, 404)
 
 
 if __name__ == "__main__":

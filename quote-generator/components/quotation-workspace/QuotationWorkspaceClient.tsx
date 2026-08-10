@@ -86,6 +86,7 @@ export default function QuotationWorkspaceClient({
   );
   const { toast } = useToast();
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
+  const [fallbackUrl, setFallbackUrl] = useState<string | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [publicationBrandId, setPublicationBrandId] = useState<string | null>(
     null
@@ -96,6 +97,7 @@ export default function QuotationWorkspaceClient({
   );
   const [pending, startTransition] = useTransition();
   const workspace = useQuotationWorkspace(quotationId, lang);
+  const refreshWorkspace = workspace.refresh;
   const { data: factsData } = workspace.facts;
   const { data: documentData } = workspace.document;
   const { data: reviewData } = workspace.review;
@@ -112,6 +114,7 @@ export default function QuotationWorkspaceClient({
     [documentData?.document, search],
   );
   const [publicationJob, setPublicationJob] = useState<{
+    id: string;
     status: string;
     lastError: string | null;
   } | null>(null);
@@ -199,6 +202,7 @@ export default function QuotationWorkspaceClient({
     startTransition(async () => {
       let payload: {
         published_url?: string;
+        fallback_url?: string;
         pdfUrl?: string;
         jobId?: string;
         status?: string;
@@ -224,8 +228,10 @@ export default function QuotationWorkspaceClient({
         return;
       }
       setPublishedUrl(payload.published_url ?? null);
+      setFallbackUrl(payload.fallback_url ?? null);
       setPdfUrl(payload.pdfUrl ?? null);
       setPublicationJob({
+        id: payload.jobId ?? '',
         status: payload.status ?? "queued",
         lastError: null,
       });
@@ -238,6 +244,24 @@ export default function QuotationWorkspaceClient({
       );
     });
   }
+
+  useEffect(() => {
+    if (!publicationJob?.id || !['queued', 'running'].includes(publicationJob.status)) return;
+    const timer = window.setTimeout(async () => {
+      try {
+        const job = await quotationFetch<{ id: string; status: string; lastError: string | null }>(
+          `${API_BASE}/api/v2/publication-jobs/${publicationJob.id}`,
+          undefined,
+          'Unable to refresh publication status.',
+        );
+        setPublicationJob(job);
+        if (job.status === 'succeeded') await refreshWorkspace();
+      } catch (error) {
+        setPublicationJob((current) => current ? { ...current, status: 'failed', lastError: apiErrorMessage(error) } : current);
+      }
+    }, 1500);
+    return () => window.clearTimeout(timer);
+  }, [publicationJob, refreshWorkspace]);
 
   const labels: Record<Stage, string> = {
     facts: "Facts",
@@ -647,19 +671,8 @@ export default function QuotationWorkspaceClient({
               publications={workspace.publications.data}
               refresh={workspace.refresh}
             />
-            {publishedUrl ? (
-              <a
-                href={publishedUrl}
-                target="_blank"
-                rel="noreferrer"
-                className={cn(
-                  getTypographyClassName("bodyMd"),
-                  "text-[var(--color-accent)]"
-                )}
-              >
-                Open published quotation
-              </a>
-            ) : null}
+            {publishedUrl ? publicationJob?.status === 'succeeded' ? <a href={publishedUrl} target="_blank" rel="noreferrer" className={cn(getTypographyClassName("bodyMd"), "text-[var(--color-accent)]")}>Canonical URL</a> : <span className={cn(getTypographyClassName("bodyMd"), "text-[var(--color-muted)]")}>Canonical URL · Preparing</span> : null}
+            {fallbackUrl ? publicationJob?.status === 'succeeded' ? <a href={fallbackUrl} target="_blank" rel="noreferrer" className={cn(getTypographyClassName("bodyMd"), "text-[var(--color-accent)]")}>Customer fallback URL</a> : <span className={cn(getTypographyClassName("bodyMd"), "text-[var(--color-muted)]")}>Customer fallback URL · Preparing</span> : null}
             {publicationJob ? (
               <p
                 className={cn(

@@ -54,6 +54,9 @@ class PublicationTarget(Base):
     brand_id: Mapped[str] = mapped_column(ForeignKey("brands.id", ondelete="RESTRICT"), nullable=False)
     locale: Mapped[str] = mapped_column(String(5), nullable=False)
     public_slug: Mapped[str] = mapped_column(String(128), nullable=False)
+    # Unlike ``public_slug`` (which is scoped to a brand and locale), this
+    # token is globally unique and backs the public fallback hostname.
+    fallback_slug: Mapped[str] = mapped_column(String(128), nullable=False, unique=True)
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="draft", server_default="draft")
     active_release_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())

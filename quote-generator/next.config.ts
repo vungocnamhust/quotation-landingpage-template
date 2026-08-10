@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
         source: '/:locale(en|vi|ar)/q/:slug',
         headers: [{ key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=86400' }],
       },
+      {
+        source: '/p/:fallbackSlug',
+        headers: [{ key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=86400' }],
+      },
     ];
   },
   images: {

@@ -47,7 +47,7 @@ export type ContentReadiness = { sectionId: string; sectionType: string; label: 
 export type WorkflowResponse = { locale: string; currentRevision: number; facts: { ready: boolean; missingInputs: string[] }; content: { ready: boolean; blockingDrafts: string[]; contentBlockers: ContentBlocker[]; generationOptional: boolean }; design: { ready: boolean; presentationErrors: string[] }; review: { ready: boolean; blockers: string[] } };
 export type BrandResponse = { brands: Array<{ id: string; displayName: string; hostname: string; status: 'active' | 'disabled'; renderProfile: BrandRenderProfile }> };
 export type ReviewResponse = { ready: boolean; missingInputs: string[]; blockingDrafts: string[]; contentBlockers?: ContentBlocker[]; contentReadiness?: ContentReadiness[]; presentationErrors?: string[] };
-export type PublicationResponse = { publications: Array<{ targetId: string; brandId: string; hostname: string; locale: string; slug: string; status: string; release?: { number: number } | null; releases: Array<{ number: number; status: string; isCurrent: boolean; job?: { type: string; status: string; attempts: number; maxAttempts: number; lastError: string | null } | null }> }> };
+export type PublicationResponse = { publications: Array<{ targetId: string; brandId: string; hostname: string; locale: string; slug: string; fallbackUrl: string; status: string; release?: { number: number } | null; releases: Array<{ number: number; status: string; isCurrent: boolean; job?: { type: string; status: string; attempts: number; maxAttempts: number; lastError: string | null } | null }> }> };
 
 const getJson = <T,>(url: string) => quotationFetch<T>(url, undefined, 'The quotation could not be loaded.');
 

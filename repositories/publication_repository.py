@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import secrets
 from datetime import datetime, timezone
 from typing import Any
 
@@ -162,6 +163,23 @@ class PublicationTargetRepository:
         row = (await self.session.execute(stmt)).one_or_none()
         return tuple(row) if row is not None else None
 
+    async def get_public_fallback_target(self, *, fallback_slug: str) -> tuple[Brand, PublicationTarget, PublicationRelease] | None:
+        """Resolve the active release behind the globally unique fallback URL."""
+        stmt = (
+            select(Brand, PublicationTarget, PublicationRelease)
+            .join(PublicationTarget, PublicationTarget.brand_id == Brand.id)
+            .join(PublicationRelease, PublicationRelease.id == PublicationTarget.active_release_id)
+            .where(
+                PublicationTarget.fallback_slug == fallback_slug,
+                Brand.status == "active",
+                PublicationTarget.status == "published",
+                PublicationRelease.status == "published",
+                PublicationRelease.is_current.is_(True),
+            )
+        )
+        row = (await self.session.execute(stmt)).one_or_none()
+        return tuple(row) if row is not None else None
+
     async def create_or_get_target(
         self, *, quotation_id: str, brand_id: str, locale: str, public_slug: str
     ) -> PublicationTarget:
@@ -184,6 +202,7 @@ class PublicationTargetRepository:
                         brand_id=brand_id,
                         locale=locale,
                         public_slug=public_slug,
+                        fallback_slug=secrets.token_urlsafe(18).lower(),
                     )
                     self.session.add(target)
                     await self.session.flush()
@@ -284,17 +303,30 @@ class PublicationTargetRepository:
         )).one_or_none()
         return tuple(row) if row is not None else None
 
-    async def get_public_media_context(self, release_id: str, *, hostname: str) -> tuple[Brand, PublicationTarget, PublicationRelease] | None:
+    async def get_public_media_context(
+        self,
+        release_id: str,
+        *,
+        hostname: str,
+        fallback_hostname: str | None = None,
+    ) -> tuple[Brand, PublicationTarget, PublicationRelease] | None:
+        normalized_hostname = hostname.lower().rstrip(".")
+        allowed_host = Brand.hostname == normalized_hostname
+        if fallback_hostname and normalized_hostname == fallback_hostname.lower().rstrip("."):
+            # The fallback host is deliberately brand-neutral. Publication
+            # state below remains the authority for its release and media.
+            allowed_host = PublicationTarget.fallback_slug.is_not(None)
         row = (await self.session.execute(
             select(Brand, PublicationTarget, PublicationRelease)
             .join(PublicationTarget, PublicationTarget.brand_id == Brand.id)
             .join(PublicationRelease, PublicationRelease.target_id == PublicationTarget.id)
             .where(
                 PublicationRelease.id == release_id,
-                Brand.hostname == hostname.lower().rstrip("."),
+                allowed_host,
                 Brand.status == "active",
                 PublicationTarget.status == "published",
-                PublicationRelease.status.in_(("published", "superseded")),
+                PublicationRelease.status == "published",
+                PublicationRelease.is_current.is_(True),
             )
         )).one_or_none()
         return tuple(row) if row is not None else None
