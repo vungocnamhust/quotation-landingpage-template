@@ -12,6 +12,7 @@ x-migration-build: &migration-build
 
 services:
   postgres:
+    container_name: quotation-production-postgres
     image: postgres:16
     env_file:
       - .env.production
@@ -113,8 +114,10 @@ services:
     env_file:
       - .env.production
     networks:
-      - quotation_net
-      - dmc-network
+      quotation_net: {}
+      dmc-network:
+        aliases:
+          - quotation-ingress
     depends_on:
       app:
         condition: service_healthy
