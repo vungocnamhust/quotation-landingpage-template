@@ -2687,7 +2687,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     return JSONResponse(
         status_code=422,
         content={
-            "detail": errors,
+            "detail": json.loads(json.dumps(errors, default=str)),
             "hint": "Check the field path in each error's 'loc' to find the missing or invalid field.",
         },
     )

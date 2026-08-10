@@ -379,17 +379,17 @@ export const BROCHURE_DEFAULT_BOOKING_TERMS: readonly BookingItemFact[] = [
   {
     key: "deposit",
     label: "Deposit",
-    body: "<ul><li>A deposit of 30% of the total tour cost is required upon confirmation of the booking. This deposit is non-refundable.</li><li>For bookings confirmed within 60 days of arrival, full payment of 100% of the total tour cost is required at the time of confirmation.</li></ul>",
+    body: "- A deposit of 30% of the total tour cost is required upon confirmation of the booking. This deposit is non-refundable.\n- For bookings confirmed within 60 days of arrival, full payment of 100% of the total tour cost is required at the time of confirmation.",
   },
   {
     key: "balance",
     label: "Balance",
-    body: "<ul><li>The remaining 70% balance must be paid no later than 60 days prior to the scheduled arrival date.</li></ul>",
+    body: "- The remaining 70% balance must be paid no later than 60 days prior to the scheduled arrival date.",
   },
   {
     key: "cancellation",
     label: "Cancellation",
-    body: "<div>Written notice required. Cancellation fees apply based on arrival date:</div><ul><li>&gt; 45 days prior: Deposit forfeited (30%)</li><li>45 – 31 days prior: 50% of total tour cost</li><li>30 – 20 days prior: 75% of total tour cost</li><li>&lt; 20 days prior: 100% of total tour cost</li></ul><div>Any non-refundable payments, cancellation charges or penalties imposed by hotels, airlines, cruise operators and other service providers may also apply in addition to the cancellation fees stated above.</div>",
+    body: "Written notice required. Cancellation fees apply based on arrival date:\n- > 45 days prior: Deposit forfeited (30%)\n- 45 – 31 days prior: 50% of total tour cost\n- 30 – 20 days prior: 75% of total tour cost\n- < 20 days prior: 100% of total tour cost\n\nAny non-refundable payments, cancellation charges or penalties imposed by hotels, airlines, cruise operators and other service providers may also apply in addition to the cancellation fees stated above.",
   },
 ];
 
