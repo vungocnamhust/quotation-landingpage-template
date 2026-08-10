@@ -97,6 +97,11 @@ class V2IngressContractTests(unittest.TestCase):
         auth = (ROOT / "core/auth.py").read_text()
         self.assertIn("not _is_dmc_gateway_enabled()", auth)
 
+    def test_workspace_route_does_not_trigger_nginx_trailing_slash_redirect(self):
+        config = (ROOT / "docker/nginx/default.conf.template").read_text()
+        self.assertIn("location ~ ^/workspace(?:/|$) {", config)
+        self.assertNotIn("location ^~ /workspace/ {", config)
+
     def test_template_has_no_direct_service_token_or_identity_header_passthrough(self):
         config = (ROOT / "docker/nginx/default.conf.template").read_text()
         self.assertGreaterEqual(config.count('proxy_set_header X-Quote-Service-Token "";'), 4)

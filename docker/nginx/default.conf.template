@@ -131,7 +131,11 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    location ^~ /workspace/ {
+    # Do not use a prefix location ending in `/` here.  Nginx otherwise
+    # canonicalizes `/workspace` to an absolute `http://` URL before proxying;
+    # Cloudflare then upgrades it to HTTPS while Next canonicalizes the trailing
+    # slash back to `/workspace`, creating a redirect loop.
+    location ~ ^/workspace(?:/|$) {
         auth_request ${DMC_AUTH_REQUEST_URI};
         auth_request_set $auth_email $upstream_http_x_dmc_email;
         auth_request_set $auth_person $upstream_http_x_dmc_person_id;
