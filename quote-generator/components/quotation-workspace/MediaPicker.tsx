@@ -61,7 +61,8 @@ async function requestJson(url: string, init?: RequestInit): Promise<unknown> {
 }
 async function fetchLibraryPage(url: string): Promise<Children> {
   const payload = await requestJson(url);
-  const prefix = new URL(url).searchParams.get("prefix") ?? "";
+  const search = url.includes("?") ? url.slice(url.indexOf("?") + 1) : "";
+  const prefix = new URLSearchParams(search).get("prefix") ?? "";
   return normalizeLibraryPage(payload, prefix);
 }
 const isActiveSync = (status?: SyncRun["status"]) => status === "queued" || status === "indexing" || status === "previewing";
