@@ -120,15 +120,19 @@ function PdfDivider({ documentModel, image, imageAlt, kicker, title, tagline, sc
 }
 
 function PdfHotels({ documentModel }: { documentModel: DisplayDocument }) {
-  return <>{documentModel.page.hotels.cards.map((hotel, index) => {
+  const roomNotes = documentModel.page.hotels.roomNotes;
+  const cards = documentModel.page.hotels.cards;
+  return <>{cards.map((hotel, index) => {
     const telephone = hotel.telephone;
     const telephonePrefix = hotel.telephonePrefix;
+    const isLast = index === cards.length - 1;
     return <PdfPage key={textValue(hotel.name)} documentModel={documentModel} scope="hotels" className="pdf-hotel" slogan>
     <article className={`pdf-hotel__card ${hotel.layoutParity === 'even' ? 'is-even' : ''}`} data-hotel-index={index}>
       <header><MetaText variant="hotelMeta">{hotel.city}</MetaText><DisplayTitle as="h2" variant="hotelTitle">{hotel.name}</DisplayTitle><MetaText variant="hotelMeta">{hotel.dateRanges.map(textValue).filter(Boolean).join(' · ')}</MetaText></header>
       <div className="pdf-hotel__images"><ImageFrame src={hotel.hotelImage} alt={hotel.hotelImageAlt} variant="editorial" /><div><ImageFrame src={hotel.roomImage} alt={hotel.roomImageAlt} variant="editorial" /><MetaText variant="hotelMeta">{hotel.roomType}</MetaText></div></div>
       {hotel.intro ? <BodyCopy variant="hotelBody">{hotel.intro}</BodyCopy> : null}
       {telephone && textValue(telephone) ? <div className={getTypographyClassName('hotelMeta')}><span {...(typeof telephonePrefix === 'string' || !telephonePrefix ? {} : { 'data-editable': telephonePrefix.path, 'data-edit-owner': telephonePrefix.owner, 'data-edit-mode': telephonePrefix.mode })}>{textValue(telephonePrefix)}</span>{' '}<span {...(typeof telephone === 'string' ? {} : { 'data-editable': telephone.path, 'data-edit-owner': telephone.owner, 'data-edit-mode': telephone.mode })}>{textValue(telephone)}</span></div> : null}
+      {isLast && roomNotes && textValue(roomNotes) ? <p style={{ marginTop: '15px' }}><strong>Room Notes &amp; Special Requests:</strong> <span {...(typeof roomNotes === 'string' ? {} : { 'data-editable': roomNotes.path, 'data-edit-owner': roomNotes.owner, 'data-edit-mode': roomNotes.mode })}>{textValue(roomNotes)}</span></p> : null}
     </article>
   </PdfPage>; })}</>;
 }

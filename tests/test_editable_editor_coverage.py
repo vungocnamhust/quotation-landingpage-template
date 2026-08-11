@@ -117,7 +117,7 @@ class EditableEditorCoverageTests(unittest.TestCase):
         self.assertIn("editorSurface === 'design-inspector'", design_canvas)
         self.assertIn("directFactInspector", inspector)
         self.assertIn("Designer copy (saved to Facts)", inspector)
-        self.assertIn("workspace.saveFacts({", workspace)
+        self.assertIn("workspace.saveFacts(", workspace)
         self.assertIn("designer_facts:", workspace)
 
     def test_design_canvas_resolves_typed_handoffs_and_facts_urls(self):

@@ -18,31 +18,75 @@ export function editableProps(value: TextValue) {
 interface TypographyAtomProps { children: TextValue; variant: TypographyVariant; className?: string; tone?: 'default' | 'muted' | 'accent' | 'inverse'; }
 
 export function Kicker({ children, variant = 'chapterKicker', className, tone = 'accent' }: TypographyAtomProps) {
-  return <div className={cn(getTypographyClassName(variant), toneClassName(tone), 'inline-flex items-center gap-2', className)} {...editableProps(children)}>{textValue(children)}</div>;
+  return <div className={cn(getTypographyClassName(variant), toneClassName(tone), 'inline-flex items-center gap-2', className)} {...editableProps(children)}>{parseFormattedContent(children)}</div>;
 }
 
 interface DisplayTitleProps extends TypographyAtomProps { as?: 'h1' | 'h2' | 'h3' | 'h4' | 'span'; }
 export function DisplayTitle({ as: Tag = 'h2', children, variant, className, tone = 'default' }: DisplayTitleProps) {
-  return <Tag className={cn(getTypographyClassName(variant), toneClassName(tone), className)} {...editableProps(children)}>{textValue(children)}</Tag>;
+  return <Tag className={cn(getTypographyClassName(variant), toneClassName(tone), className)} {...editableProps(children)}>{parseFormattedContent(children)}</Tag>;
 }
+export function parseFormattedContent(value: TextValue): ReactNode {
+  const str = textValue(value);
+  if (!str) return null;
+  if (!/(\*\*|__|\*|_|<mark>|<b>|<i>|\n)/.test(str)) {
+    return str;
+  }
+  const lines = str.split('\n');
+  return lines.map((line, lineIndex) => {
+    const tokens: ReactNode[] = [];
+    let lastIndex = 0;
+    const regex = /(\*\*|__)(.*?)\1|(\*|_)(.*?)\3|<mark>(.*?)<\/mark>|<b>(.*?)<\/b>|<i>(.*?)<\/i>/g;
+    let match: RegExpExecArray | null;
+
+    while ((match = regex.exec(line)) !== null) {
+      if (match.index > lastIndex) {
+        tokens.push(line.slice(lastIndex, match.index));
+      }
+      if (match[2]) {
+        tokens.push(<strong key={match.index}>{match[2]}</strong>);
+      } else if (match[4]) {
+        tokens.push(<em key={match.index}>{match[4]}</em>);
+      } else if (match[5]) {
+        tokens.push(<mark key={match.index} className="rounded bg-[var(--color-accent-wash)] px-1 text-[var(--color-accent)]">{match[5]}</mark>);
+      } else if (match[6]) {
+        tokens.push(<strong key={match.index}>{match[6]}</strong>);
+      } else if (match[7]) {
+        tokens.push(<em key={match.index}>{match[7]}</em>);
+      }
+      lastIndex = regex.lastIndex;
+    }
+
+    if (lastIndex < line.length) {
+      tokens.push(line.slice(lastIndex));
+    }
+
+    return (
+      <span key={lineIndex}>
+        {lineIndex > 0 ? <br /> : null}
+        {tokens}
+      </span>
+    );
+  });
+}
+
 export function BodyCopy({ children, variant, className, tone = 'muted' }: TypographyAtomProps) {
-  return <p className={cn(getTypographyClassName(variant), toneClassName(tone), className)} {...editableProps(children)}>{textValue(children)}</p>;
+  return <p className={cn(getTypographyClassName(variant), toneClassName(tone), className)} {...editableProps(children)}>{parseFormattedContent(children)}</p>;
 }
 export function MetaText({ children, variant, className, tone = 'muted' }: TypographyAtomProps) {
-  return <div className={cn(getTypographyClassName(variant), toneClassName(tone), className)} {...editableProps(children)}>{textValue(children)}</div>;
+  return <div className={cn(getTypographyClassName(variant), toneClassName(tone), className)} {...editableProps(children)}>{parseFormattedContent(children)}</div>;
 }
 export function PriceText({ children, variant = 'investmentValue', className, tone = 'accent' }: TypographyAtomProps) {
   return <div className={cn(getTypographyClassName(variant), toneClassName(tone), className)} {...editableProps(children)}>{textValue(children)}</div>;
 }
 export function LabelText({ children, variant = 'label', className, tone = 'accent' }: Omit<TypographyAtomProps, 'variant'> & { variant?: TypographyVariant }) {
-  return <div className={cn(getTypographyClassName(variant), toneClassName(tone), className)} {...editableProps(children)}>{textValue(children)}</div>;
+  return <div className={cn(getTypographyClassName(variant), toneClassName(tone), className)} {...editableProps(children)}>{parseFormattedContent(children)}</div>;
 }
 function isTextValue(value: unknown): value is TextValue {
   return typeof value === 'string' || (typeof value === 'object' && value !== null && 'value' in value && 'path' in value && 'owner' in value && 'mode' in value);
 }
 
 export function QuoteText({ children, variant = 'quote', className, tone = 'default' }: Omit<TypographyAtomProps, 'children'> & { children: TextValue | ReactNode }) {
-  return <blockquote className={cn(getTypographyClassName(variant), toneClassName(tone), className)} {...(isTextValue(children) ? editableProps(children) : {})}>{isTextValue(children) ? textValue(children) : children}</blockquote>;
+  return <blockquote className={cn(getTypographyClassName(variant), toneClassName(tone), className)} {...(isTextValue(children) ? editableProps(children) : {})}>{isTextValue(children) ? parseFormattedContent(children) : children}</blockquote>;
 }
 
 export function Badge({ children, className }: { children: ReactNode; className?: string }) {
@@ -56,10 +100,10 @@ export function IconChip({ children, className }: { children: ReactNode; classNa
 }
 
 export function ActionButton({ children, className, colorRole = 'primary', typographyVariant = 'buttonPrimary', ...props }: Omit<ComponentPropsWithoutRef<'a'>, 'children'> & { children: TextValue; colorRole?: ComponentColorRole; typographyVariant?: TypographyVariant }) {
-  return <a className={cn(getTypographyClassName(typographyVariant), 'inline-flex items-center justify-center gap-2 px-[1.188rem] py-[0.813rem] transition-all duration-200 hover:-translate-y-0.5', colorRole === 'primary' ? 'rounded-none border border-[var(--color-action-primary-border)] bg-[var(--color-action-primary-surface)] !text-[var(--color-action-primary-text)] shadow-[0_8px_24px_color-mix(in_srgb,var(--color-contrast)_15%,transparent)]' : 'rounded-none border border-[var(--color-action-secondary-border)] bg-[var(--color-action-secondary-surface)] !text-[var(--color-action-secondary-text)]', className)} {...editableProps(children)} {...props}>{textValue(children)}</a>;
+  return <a className={cn(getTypographyClassName(typographyVariant), 'inline-flex items-center justify-center gap-2 px-[1.188rem] py-[0.813rem] transition-all duration-200 hover:-translate-y-0.5', colorRole === 'primary' ? 'rounded-none border border-[var(--color-action-primary-border)] bg-[var(--color-action-primary-surface)] !text-[var(--color-action-primary-text)] shadow-[0_8px_24px_color-mix(in_srgb,var(--color-contrast)_15%,transparent)]' : 'rounded-none border border-[var(--color-action-secondary-border)] bg-[var(--color-action-secondary-surface)] !text-[var(--color-action-secondary-text)]', className)} {...editableProps(children)} {...props}>{parseFormattedContent(children)}</a>;
 }
 export function TextLink({ children, className, typographyVariant, colorRole = 'secondary', ...props }: Omit<ComponentPropsWithoutRef<'a'>, 'children'> & { children: TextValue; typographyVariant: TypographyVariant; colorRole?: Extract<ComponentColorRole, 'primary' | 'secondary'> }) {
-  return <a className={cn(getTypographyClassName(typographyVariant), colorRole === 'primary' ? 'text-[var(--color-action-primary-text)] underline-offset-4 transition-colors hover:underline' : 'text-[var(--color-action-secondary-text)] underline-offset-4 transition-colors hover:text-[var(--color-accent)] hover:underline', className)} {...editableProps(children)} {...props}>{textValue(children)}</a>;
+  return <a className={cn(getTypographyClassName(typographyVariant), colorRole === 'primary' ? 'text-[var(--color-action-primary-text)] underline-offset-4 transition-colors hover:underline' : 'text-[var(--color-action-secondary-text)] underline-offset-4 transition-colors hover:text-[var(--color-accent)] hover:underline', className)} {...editableProps(children)} {...props}>{parseFormattedContent(children)}</a>;
 }
 
 interface ImageFrameProps { src: string; alt: TextValue; className?: string; sizes?: string; priority?: boolean; variant?: 'card' | 'editorial'; }

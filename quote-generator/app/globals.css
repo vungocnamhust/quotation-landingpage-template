@@ -1649,7 +1649,12 @@ img {
 .display-route-map-marker--classic:hover .display-route-map-marker__capsule {
   transform: translateY(-2px);
   border-color: var(--color-map-marker-active);
-  box-shadow: 0 6px 18px color-mix(in srgb, var(--color-contrast) 18%, transparent);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--color-map-marker-active) 25%, transparent);
+}
+
+.display-route-map-marker--classic:active .display-route-map-marker__capsule {
+  transform: translateY(0) scale(0.96);
+  transition-duration: 0.1s;
 }
 
 .display-route-map-marker--classic.is-active {
@@ -1658,14 +1663,15 @@ img {
 
 .display-route-map-marker--classic.is-active .display-route-map-marker__capsule {
   transform: translateY(-3px) scale(1.06);
-  border-color: var(--color-map-marker-active);
-  box-shadow: 0 8px 22px color-mix(in srgb, var(--color-map-marker-active) 25%, transparent), 0 4px 10px color-mix(in srgb, var(--color-contrast) 14%, transparent);
+  border-color: var(--color-accent);
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--color-map-marker-active) 30%, transparent), 0 4px 10px color-mix(in srgb, var(--color-accent) 18%, transparent);
   background: var(--color-surface);
 }
 
 .display-route-map-marker--classic.is-active .display-route-map-marker__badge {
-  background: var(--color-map-marker-active);
-  color: var(--color-on-contrast);
+  background: var(--color-map-marker-active) !important;
+  color: var(--color-on-contrast) !important;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-map-marker-active) 40%, transparent);
 }
 
 .display-route-map-marker--classic.is-active .display-route-map-marker__label {

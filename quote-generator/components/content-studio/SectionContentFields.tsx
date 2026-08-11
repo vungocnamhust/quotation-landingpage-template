@@ -3,6 +3,7 @@
 import { cn } from '../../utils/cn';
 import { getTypographyClassName } from '../../config/typography';
 import type { ContentCandidate, ContentEditorField } from '../quotation-workspace/useQuotationWorkspace';
+import { RichTextEditor } from '../ui/RichTextEditor';
 
 export function cloneCandidate(value: ContentCandidate): ContentCandidate {
   return JSON.parse(JSON.stringify(value)) as ContentCandidate;
@@ -35,7 +36,6 @@ function FieldEditor({
   onChange: (value: ContentCandidate) => void;
   document?: Record<string, unknown>;
 }) {
-  const common = cn(getTypographyClassName('bodySm'), 'w-full rounded-[var(--radius-button)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[var(--color-on-surface)]');
 
   if (field.control === 'string-list') {
     const items = Array.isArray(readValue(candidate, field.path)) ? (readValue(candidate, field.path) as unknown[]).map(String) : [];
@@ -54,16 +54,16 @@ function FieldEditor({
             return (
               <div key={`${field.id}-${index}`} className="grid gap-1.5">
                 <span className={cn(getTypographyClassName('caption'), 'text-[var(--color-muted)]')}>Item {index + 1}</span>
-                <div className="flex gap-2">
-                  <textarea
-                    value={item}
-                    maxLength={field.maxLength}
-                    rows={2}
-                    onChange={(event) =>
-                      onChange(writeValue(candidate, field.path, items.map((current, currentIndex) => currentIndex === index ? event.target.value : current)))
-                    }
-                    className={cn(common, 'min-w-0 flex-1')}
-                  />
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+                  <div className="min-w-0 flex-1">
+                    <RichTextEditor
+                      value={item}
+                      minHeight="4rem"
+                      onChange={(nextVal) =>
+                        onChange(writeValue(candidate, field.path, items.map((current, currentIndex) => currentIndex === index ? nextVal : current)))
+                      }
+                    />
+                  </div>
                   <button
                     type="button"
                     onClick={() => onChange(writeValue(candidate, field.path, items.filter((_, currentIndex) => currentIndex !== index)))}
@@ -119,15 +119,13 @@ function FieldEditor({
                 <label className={cn(getTypographyClassName('label'), 'text-[var(--color-muted)]')}>
                   Description for brochure map & timeline
                 </label>
-                <textarea
+                <RichTextEditor
                   value={item}
                   placeholder={fallbackDesc ? `Default preview: "${fallbackDesc}"` : 'Write custom description for this stop...'}
-                  maxLength={field.maxLength}
-                  rows={3}
-                  onChange={(event) =>
-                    onChange(writeValue(candidate, field.path, items.map((current, currentIndex) => currentIndex === index ? event.target.value : current)))
+                  minHeight="5rem"
+                  onChange={(nextVal) =>
+                    onChange(writeValue(candidate, field.path, items.map((current, currentIndex) => currentIndex === index ? nextVal : current)))
                   }
-                  className={cn(common, 'min-w-0 flex-1')}
                 />
                 {!item && fallbackDesc ? (
                   <p className={cn(getTypographyClassName('caption'), 'text-[var(--color-muted)] opacity-80')}>
@@ -161,9 +159,9 @@ function FieldEditor({
     <label className="grid gap-1.5">
       <span className={cn(getTypographyClassName('label'), 'text-[var(--color-muted)]')}>{field.label}</span>
       {field.control === 'textarea' ? (
-        <textarea value={value} maxLength={field.maxLength} rows={5} onChange={(event) => onChange(writeValue(candidate, field.path, event.target.value))} className={common} />
+        <RichTextEditor value={value} minHeight="6rem" onChange={(nextVal) => onChange(writeValue(candidate, field.path, nextVal))} />
       ) : (
-        <input value={value} maxLength={field.maxLength} onChange={(event) => onChange(writeValue(candidate, field.path, event.target.value))} className={common} />
+        <RichTextEditor value={value} singleLine onChange={(nextVal) => onChange(writeValue(candidate, field.path, nextVal))} />
       )}
     </label>
   );

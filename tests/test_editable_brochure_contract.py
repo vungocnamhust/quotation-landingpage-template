@@ -200,6 +200,7 @@ class EditableBrochureContractTests(unittest.TestCase):
         descriptors = {item["fieldId"]: item for item in EDITABLE_BROCHURE_FIELDS}
         for field_id in (
             "itinerary.days.*.dayNumber",
+            "itinerary.days.*.meals",
             "stays.hotels.*.name",
             "pricing.options.*.label",
             "bookingTerms.item",
@@ -208,6 +209,19 @@ class EditableBrochureContractTests(unittest.TestCase):
             handoff = descriptors[field_id]["handoff"]
             self.assertIn("item", handoff, field_id)
             self.assertIn("indexFromSource", handoff, field_id)
+
+    def test_itinerary_meals_field_resolves_to_programme_facts_handoff(self):
+        descriptors = {item["fieldId"]: item for item in EDITABLE_BROCHURE_FIELDS}
+        descriptor = descriptors["itinerary.days.*.meals"]
+        self.assertEqual(descriptor["owner"], "fact")
+        self.assertEqual(descriptor["source"], "/itinerary/days/*/meals")
+        self.assertEqual(descriptor["handoff"], {
+            "stage": "facts",
+            "section": "programme",
+            "anchor": "day",
+            "item": "day",
+            "indexFromSource": 2,
+        })
 
     def test_contract_validator_rejects_invalid_wildcards_and_owner_handoffs(self):
         invalid_wildcard = deepcopy(EDITABLE_BROCHURE_CONTRACT)

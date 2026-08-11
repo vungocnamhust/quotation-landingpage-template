@@ -43,19 +43,28 @@ function buildClassicMarkerMarkup({
   label,
   isActive,
   typographyClassName,
+  markerColor,
+  activeMarkerColor,
 }: {
   dayLabel: string;
   label: string;
   isActive: boolean;
   typographyClassName: string;
+  markerColor?: string;
+  activeMarkerColor?: string;
 }) {
+  const badgeBg = isActive ? (activeMarkerColor || markerColor) : markerColor;
+  const badgeStyle = badgeBg ? `style="background-color: ${badgeBg} !important;"` : '';
+  const labelColor = isActive ? (activeMarkerColor || markerColor) : (markerColor || 'var(--color-accent)');
+  const labelStyle = labelColor ? `style="color: ${labelColor} !important;"` : '';
+
   return `
     <div class="display-route-map-marker display-route-map-marker--classic${isActive ? ' is-active' : ''}">
       <div class="display-route-map-marker__capsule">
-        <div class="display-route-map-marker__badge ${typographyClassName}">${dayLabel}</div>
-        <div class="display-route-map-marker__label ${typographyClassName}">${label}</div>
+        <div class="display-route-map-marker__badge ${typographyClassName}" ${badgeStyle}>${dayLabel}</div>
+        <div class="display-route-map-marker__label ${typographyClassName}" ${labelStyle}>${label}</div>
       </div>
-      <div class="display-route-map-marker__pointer"></div>
+      <div class="display-route-map-marker__pointer" ${badgeStyle}></div>
     </div>
   `;
 }
@@ -65,14 +74,18 @@ function buildMarkerIcon({
   label,
   isActive,
   typographyClassName,
+  markerColor,
+  activeMarkerColor,
 }: {
   dayLabel: string;
   label: string;
   isActive: boolean;
   typographyClassName: string;
+  markerColor?: string;
+  activeMarkerColor?: string;
 }) {
   return L.divIcon({
-    html: buildClassicMarkerMarkup({ dayLabel, label, isActive, typographyClassName }),
+    html: buildClassicMarkerMarkup({ dayLabel, label, isActive, typographyClassName, markerColor, activeMarkerColor }),
     className: 'display-route-map-marker-icon',
     iconSize: [220, 42],
     iconAnchor: [20, 38],
@@ -228,6 +241,8 @@ export default function RouteMapExperience({
           label: textValue(segment.city),
           isActive: segment.sequence === activeSequence,
           typographyClassName: getTypographyClassName(requireTypographySlot(typography, 'metaSecondary')),
+          markerColor: mapColors.marker,
+          activeMarkerColor: mapColors.activeMarker,
         }),
       })
         .addTo(map)

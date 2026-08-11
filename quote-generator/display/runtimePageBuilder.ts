@@ -136,11 +136,20 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
   const labels = getLanguageLabels(lang);
   const theme = getThemeDefinition(profile.themeId ?? 'brochure');
   const trip = record(document.trip);
+  const customer = record(document.customer);
+  const customer_facts = record(document.customer_facts);
+  const customerFacts = record(document.customerFacts);
+  const booking = record(document.booking);
+  const booking_facts = record(document.booking_facts);
+  const bookingFacts = record(document.bookingFacts);
   const narrative = record(document.narrative);
   const route = record(document.route);
   const itinerary = record(document.itinerary);
   const stays = record(document.stays);
   const pricing = record(document.pricing);
+  const customerGreeting = stringValue(customer.greetingName) || stringValue(customer.greeting_name) || stringValue(customer_facts.greeting_name) || stringValue(customer_facts.greetingName) || stringValue(customerFacts.greeting_name) || stringValue(customerFacts.greetingName);
+  const customerParty = stringValue(customer.partyLabel) || stringValue(customer.party_label) || stringValue(customer_facts.party_label) || stringValue(customer_facts.partyLabel) || stringValue(customerFacts.party_label) || stringValue(customerFacts.partyLabel);
+  const bookingTitleText = stringValue(booking.title) || stringValue(booking_facts.title) || stringValue(bookingFacts.title);
   const contentSections = record(record(document.content).sections);
   const inclusionsBlock = contentBlock(contentBlocks(contentSections, 'inclusions_exclusions'), 'twoColumnList');
   const bookingBlocks = contentBlocks(contentSections, 'booking_terms');
@@ -275,7 +284,7 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
     appChrome: { brandOptions: [{ key: profile.id, label: brandName, logoSrc: logoUrl }] },
     viewMode,
     lang,
-    quotationNumber: stringValue(trip.quotationNumber),
+    quotationNumber: stringValue(document.quotationNumber) || stringValue(document.quotation_number) || stringValue(document.id),
     pdfWhitespaceSlogan: designCopy(overrides, 'pdf.whitespaceSlogan', labels.pdfWhitespaceSlogan),
     page: {
       nav: {
@@ -306,9 +315,9 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
       letter: {
         chapterKicker: designCopy(overrides, 'letter.kicker', labels.journeyOverviewKicker),
         title: contentCopy(stringValue(narrative.journeyOverviewTitle), '/narrative/journeyOverviewTitle', labels.journeyOverviewTitle),
-        highlight: contentCopy(stringValue(narrative.letterHighlight), '/narrative/letterHighlight', ''),
+        highlight: editable(customerParty || stringValue(narrative.letterHighlight), '/customer/partyLabel', 'fact'),
         decorAsset: assetUrl(assets.letterDecor) || assetUrl(record(mediaOverrides['assets.letterDecor'])) || '/assets/brands/indochine_icon/ruong_bac_thang.svg',
-        greeting: contentCopy(stringValue(narrative.letterGreeting), '/narrative/letterGreeting', ''),
+        greeting: editable(customerGreeting || stringValue(narrative.letterGreeting), '/customer/greetingName', 'fact'),
         intro: contentCopy(stringValue(narrative.letterIntro), '/narrative/letterIntro', ''),
         body: [stringValue(narrative.letterBody2)].filter(Boolean).map((item) => contentCopy(item, '/narrative/letterBody2', '')),
         outro: contentCopy(stringValue(narrative.letterOutro), '/narrative/letterOutro', ''),
@@ -330,7 +339,7 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
       staysDivider: { image: assetUrl(assets.hotelDivider) || assetUrl(record(mediaOverrides['assets.hotelDivider'])), imageAlt: assetAlt(assets.hotelDivider, '/assets/hotelDivider/altText', labels.staysDividerTitle), kicker: designCopy(overrides, 'stays.kicker', labels.stayPlanning), title: designCopy(overrides, 'stays.title', labels.staysDividerTitle), tagline: designCopy(overrides, 'stays.tagline', labels.staysDividerTagline), closing: designCopy(overrides, 'stays.closing', labels.staysDividerClosing), pdfTitle: designCopy(overrides, 'stays.pdfTitle', labels.consideredInFull) },
       pricing: { kicker: designCopy(overrides, 'pricing.kicker', ''), title: designCopy(overrides, 'pricing.title', labels.pricingTitle), description: designCopy(overrides, 'pricing.description', labels.pricingDescription), importantNote: editable(listText(pricing.conditions).join(' · '), '/pricing/conditions', 'fact'), importantNoteLabel: designCopy(overrides, 'pricing.importantNoteLabel', labels.importantNote), confirmedMainOptionLabel: designCopy(overrides, 'pricing.confirmedMainOption', labels.confirmedMainOption), options: recordList(pricing.options).map((option, index) => { const currency = stringValue(option.currency).toUpperCase(); const perTravelerAmountMinor = positiveInteger(option.perTravelerAmountMinor); const groupTotalAmountMinor = positiveInteger(option.groupTotalAmountMinor); const legacyPerTraveler = stringValue(option.legacyPerPersonText) || stringValue(option.perPersonText); const legacyGroupTotal = stringValue(option.legacyTotalText) || stringValue(option.totalText); const typed = Boolean(stringValue(option.label).trim() && currency && perTravelerAmountMinor && groupTotalAmountMinor); const legacy = Boolean((stringValue(option.name) || stringValue(option.category)).trim() && legacyPerTraveler && legacyGroupTotal); if (!typed && !legacy) return null; return { index: index + 1, displayIndex: editable(String(index + 1).padStart(2, '0'), `/pricing/options/${index}`, 'fact'), label: editable(stringValue(option.label).trim() || stringValue(option.name).trim() || stringValue(option.category).trim() || `Option ${String(index + 1).padStart(2, '0')}`, `/pricing/options/${index}/label`, 'fact'), groupTotalPrice: editable(typed ? formatPriceMinor(groupTotalAmountMinor, currency, lang, PRICING_AMOUNT_LABELS[lang].total) : legacyGroupTotal, `/pricing/options/${index}/groupTotalAmountMinor`, 'fact'), perTravelerPrice: editable(typed ? formatPriceMinor(perTravelerAmountMinor, currency, lang, PRICING_AMOUNT_LABELS[lang].perTraveler) : legacyPerTraveler, `/pricing/options/${index}/perTravelerAmountMinor`, 'fact'), isConfirmedMainOption: option.isConfirmedMainOption === true || option.confirmedMainOption === true || (index === 0 && option.isMainOption !== false), isAlternativeOption: option.isAlternativeOption === true }; }).filter((option): option is NonNullable<typeof option> => option !== null) },
       inclusionsExclusions: { title: designCopy(overrides, 'inclusions.title', labels.inclusionsSectionTitle), inclusionsTitle: designCopy(overrides, 'inclusions.inclusionsTitle', stringValue(inclusionsBlock.leftTitle) || labels.inclusionsTitle), exclusionsTitle: designCopy(overrides, 'inclusions.exclusionsTitle', stringValue(inclusionsBlock.rightTitle) || labels.exclusionsTitle), inclusionsLead: designCopy(overrides, 'inclusions.lead', labels.inclusionsDescription), exclusionsLead: designCopy(overrides, 'exclusions.lead', ''), inclusions: listText(inclusionsBlock.leftItems).map((item, index) => editable(item, `/content/sections/inclusions_exclusions/blocks/0/leftItems/${index}`, 'fact')), exclusions: listText(inclusionsBlock.rightItems).map((item, index) => editable(item, `/content/sections/inclusions_exclusions/blocks/0/rightItems/${index}`, 'fact')) },
-      paymentTerms: { kicker: '', title: editable(labels.bookingTermsTitle, '/labels/bookingTermsTitle', 'system'), description: editable(stringValue(bookingParagraph.text) || labels.bookingTermsDescription, bookingParagraphPath, 'fact', 'richText'), cta: { label: designCopy(overrides, 'bookingTerms.cta', labels.sendEmail, 'actionLabel'), href: email ? `mailto:${email}` : '#designer', emphasis: 'secondary' }, terms: bookingItems.map(({ item, path }) => ({ label: editable(stringValue(item.label), `${path}/label`, 'fact'), bodyRichText: editable(stringValue(item.body), `${path}/body`, 'fact', 'richText') })) },
+      paymentTerms: { kicker: '', title: editable(bookingTitleText || labels.bookingTermsTitle, '/content/sections/booking_terms/title', 'fact'), description: editable(stringValue(bookingParagraph.text) || labels.bookingTermsDescription, bookingParagraphPath, 'fact', 'richText'), cta: { label: designCopy(overrides, 'bookingTerms.cta', labels.sendEmail, 'actionLabel'), href: email ? `mailto:${email}` : '#designer', emphasis: 'secondary' }, terms: bookingItems.map(({ item, path }) => ({ label: editable(stringValue(item.label), `${path}/label`, 'fact'), bodyRichText: editable(stringValue(item.body), `${path}/body`, 'fact', 'richText') })) },
       finalization: { kicker: designCopy(overrides, 'finalization.kicker', labels.finalizationKicker), title: designCopy(overrides, 'finalization.title', labels.finalizationTitle), description: designCopy(overrides, 'finalization.description', labels.finalizationDescription), required: { title: editable(stringValue(finalizationGroups[0]?.title), '/content/sections/finalization/blocks/0/groups/0/title', 'content'), items: listText(finalizationGroups[0]?.items).map((item, index) => editable(item, `/content/sections/finalization/blocks/0/groups/0/items/${index}`, 'content')) }, afterConfirmation: { title: editable(stringValue(finalizationGroups[1]?.title), '/content/sections/finalization/blocks/0/groups/1/title', 'content'), items: listText(finalizationGroups[1]?.items).map((item, index) => editable(item, `/content/sections/finalization/blocks/0/groups/1/items/${index}`, 'content')) } },
       designer: {
         kicker: factCopy(stringValue(designer.kicker), '/designer/kicker', DESIGNER_PRESENTATION_DEFAULTS.kicker),

@@ -22,6 +22,7 @@ import { DestinationInput, DestinationMultiSelect } from "./DestinationInputs";
 import TravelDesignerPicker from "./TravelDesignerPicker";
 import AccommodationPicker from "./AccommodationPicker";
 import CustomSelect from "../ui/CustomSelect";
+import { RichTextEditor } from "../ui/RichTextEditor";
 import type {
   HotelFact,
   ItineraryDayFact,
@@ -37,9 +38,7 @@ import {
   inferCommercialPerTraveler,
   inferCommercialTotal,
   inferDefaultCurrency,
-  inferGreetingName,
   inferOvernightDestination,
-  inferPartyLabel,
   validateHotelDates,
 } from "../../lib/prefillRules";
 import {
@@ -172,7 +171,7 @@ function Area({
   aiHint?: string;
 }) {
   return (
-    <label className="flex flex-col gap-2">
+    <label className="flex flex-col gap-1.5">
       <span
         className={cn(
           getTypographyClassName("label"),
@@ -198,11 +197,10 @@ function Area({
           {hint}
         </span>
       ) : null}
-      <textarea
-        className={cn(inputClass, "min-h-24 p-3 rounded-[var(--radius-card)]")}
-        disabled={disabled}
+      <RichTextEditor
         value={value ?? ""}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={onChange}
+        minHeight="5rem"
       />
     </label>
   );
@@ -1203,54 +1201,6 @@ export default function FactsForm({
                 update("customer_facts", { ...customer, market: value || null })
               }
             />
-            <div className="flex flex-col gap-1.5">
-              <Field
-                label="Party label"
-                disabled={readOnly}
-                value={customer.party_label}
-                onChange={(value) =>
-                  update("customer_facts", { ...customer, party_label: value || null })
-                }
-              />
-              {!readOnly ? (
-                <button
-                  type="button"
-                  onClick={() =>
-                    update("customer_facts", {
-                      ...customer,
-                      party_label: inferPartyLabel(customer.customer_name, customer.adults, customer.children),
-                    })
-                  }
-                  className={cn(getTypographyClassName("caption"), "w-fit text-[var(--color-accent)] hover:underline")}
-                >
-                  Auto-generate party label
-                </button>
-              ) : null}
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Field
-                label="Greeting name"
-                disabled={readOnly}
-                value={customer.greeting_name}
-                onChange={(value) =>
-                  update("customer_facts", { ...customer, greeting_name: value || null })
-                }
-              />
-              {!readOnly ? (
-                <button
-                  type="button"
-                  onClick={() =>
-                    update("customer_facts", {
-                      ...customer,
-                      greeting_name: inferGreetingName(customer.customer_name),
-                    })
-                  }
-                  className={cn(getTypographyClassName("caption"), "w-fit text-[var(--color-accent)] hover:underline")}
-                >
-                  Auto-generate greeting
-                </button>
-              ) : null}
-            </div>
           </div>
         </FactCard>
         <FactCard
@@ -1364,7 +1314,7 @@ export default function FactsForm({
               />
             </div>
             <Area
-              label="Room notes"
+              label="Room Notes & Special Requests"
               disabled={readOnly}
               value={services.room_notes}
               onChange={(value) =>
@@ -1421,22 +1371,6 @@ export default function FactsForm({
           status={status("seller")}
         >
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="sm:col-span-2 grid gap-4 sm:grid-cols-2">
-              <Field label="Booking terms title" disabled={readOnly} value={booking.title} onChange={(value) => update("booking_facts", { ...booking, title: value || null })} />
-            </div>
-            <div className="sm:col-span-2 flex flex-col gap-4">
-              <Area
-                label="Booking information"
-                disabled={readOnly}
-                value={booking.description}
-                onChange={(value) =>
-                  update("booking_facts", {
-                    ...booking,
-                    description: value,
-                  })
-                }
-              />
-            </div>
             <div className="sm:col-span-2 flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <p className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>Booking term details (Key & Value)</p>

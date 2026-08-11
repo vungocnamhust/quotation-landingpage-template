@@ -611,11 +611,6 @@ export function HotelsSection({
       <div className={slots.container}>
         <div className={slots.header}>
           <SectionHeader title={viewModel.title} body={viewModel.description} typography={displayConfig.typographySlots} />
-          {viewModel.roomNotes ? (
-            <BodyCopy variant={requireTypographySlot(displayConfig.typographySlots, 'body')}>
-              {viewModel.roomNotes}
-            </BodyCopy>
-          ) : null}
         </div>
         <div className={slots.items}>
           {viewModel.cards.map((item) => (
@@ -626,6 +621,16 @@ export function HotelsSection({
             />
           ))}
         </div>
+        {viewModel.roomNotes && textValue(viewModel.roomNotes) ? (
+          <div className="mt-8 p-4.5 rounded-none border border-dashed border-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_6%,transparent)]">
+            <strong className={cn(getTypographyClassName('overline'), 'block mb-1.5 text-[var(--color-accent)]')}>
+              Room Notes &amp; Special Requests
+            </strong>
+            <BodyCopy variant={requireTypographySlot(displayConfig.typographySlots, 'body')}>
+              {viewModel.roomNotes}
+            </BodyCopy>
+          </div>
+        ) : null}
       </div>
     </section>
   );

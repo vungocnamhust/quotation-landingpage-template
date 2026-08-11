@@ -543,11 +543,47 @@
       "domAttribute": "data-editable"
     },
     {
+      "fieldId": "bookingTerms.title",
+      "source": "/content/sections/booking_terms/title",
+      "owner": "fact",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
       "fieldId": "bookingTerms.body",
       "source": "/content/sections/booking_terms/blocks/*/text",
       "owner": "fact",
       "kind": "richText",
-      "behavior": "handoff",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "customer.market",
+      "source": "/customer/market",
+      "owner": "fact",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "customer.greetingName",
+      "source": "/customer/greetingName",
+      "owner": "fact",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "customer.partyLabel",
+      "source": "/customer/partyLabel",
+      "owner": "fact",
+      "kind": "text",
+      "behavior": "inspector",
       "renderer": "quote-generator/display/runtimePageBuilder.ts",
       "domAttribute": "data-editable"
     },
@@ -931,7 +967,7 @@
     },
     {
       "fieldId": "itinerary.days.*.meals",
-      "source": "/itinerary/days/*/meals/*",
+      "source": "/itinerary/days/*/meals",
       "owner": "fact",
       "kind": "text",
       "behavior": "handoff",

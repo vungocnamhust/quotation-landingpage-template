@@ -7,6 +7,7 @@ import { cn } from "../../utils/cn";
 import type { AccommodationProfileInput } from "../../lib/quotationApi";
 import { DestinationInput, type DestinationRef } from "./DestinationInputs";
 import MediaDrawer from "./MediaDrawer";
+import { RichTextEditor } from "../ui/RichTextEditor";
 
 const inputClass = cn(
   getTypographyClassName("bodyMd"),
@@ -150,10 +151,10 @@ export default function AccommodationProfileForm({
         >
           Introduction
         </span>
-        <textarea
-          className={cn(inputClass, "min-h-24 py-3")}
+        <RichTextEditor
           value={draft.intro ?? ""}
-          onChange={(event) => set("intro", event.target.value || null)}
+          minHeight="5rem"
+          onChange={(val) => set("intro", val || null)}
         />
       </label>
 

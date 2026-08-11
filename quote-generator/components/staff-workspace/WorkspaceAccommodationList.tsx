@@ -185,7 +185,7 @@ export default function WorkspaceAccommodationList() {
                   getTypographyClassName("caption"),
                   "rounded-[calc(var(--radius-button)-2px)] px-3 py-1.5 transition-all",
                   activeFilter === tab.value
-                    ? "bg-[var(--color-contrast)] text-white shadow-2xs"
+                    ? "bg-[var(--color-accent)] text-white shadow-2xs"
                     : "text-[var(--color-muted)] hover:text-[var(--color-on-surface)]"
                 )}
               >
@@ -292,8 +292,8 @@ export default function WorkspaceAccommodationList() {
                       getTypographyClassName("caption"),
                       "flex items-center gap-1 rounded-full px-2.5 py-0.5 shrink-0",
                       profile.is_active
-                        ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
-                        : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                        ? "bg-[var(--color-accent-wash)] text-[var(--color-accent)] border border-[color-mix(in_srgb,var(--color-accent)_30%,transparent)] shadow-2xs"
+                        : "bg-[var(--color-surface-muted)] text-[var(--color-muted)] border border-[var(--color-border)]"
                     )}
                   >
                     {profile.is_active ? (
@@ -414,7 +414,7 @@ export default function WorkspaceAccommodationList() {
                 onClick={() => setIsDrawerOpen(false)}
                 className={cn(
                   getTypographyClassName("buttonSecondary"),
-                  "rounded-[var(--radius-button)] bg-[var(--color-contrast)] px-3.5 py-2 text-white shadow-2xs transition-all hover:opacity-90"
+                  "rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3.5 py-2 text-[var(--color-on-surface)] transition-all hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)]"
                 )}
               >
                 Close

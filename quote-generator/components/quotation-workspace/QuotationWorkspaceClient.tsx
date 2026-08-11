@@ -25,6 +25,7 @@ import { getTypographyClassName } from "../../config/typography";
 import { cn } from "../../utils/cn";
 import FactsForm from "./FactsForm";
 import {
+  ensureFactsDefaults,
   hydrateDestinationRefs,
   type QuotationFacts,
 } from "./factsTypes";
@@ -417,7 +418,7 @@ export default function QuotationWorkspaceClient({
               }}
               className={cn(
                 getTypographyClassName("buttonSecondary"),
-                "flex items-center gap-2 min-h-11 rounded-[var(--radius-button)] bg-[var(--color-contrast)] !text-white hover:opacity-90 px-4 shadow-2xs transition-all"
+                "flex items-center gap-2 min-h-11 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-on-surface)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)] px-4 transition-all"
               )}
             >
               <RefreshCw size={14} aria-hidden="true" />
@@ -613,17 +614,31 @@ export default function QuotationWorkspaceClient({
                   currentRevision={documentData.currentRevision}
                   canEditDesignerFacts={editable}
                   contract={documentData.editableContract}
+                  facts={factsData?.facts}
                   onSaved={() => workspace.refresh()}
                   onSaveDesignerFacts={async (next) => {
                     try {
-                      await workspace.saveFacts({
-                        ...factsData.facts,
+                      const safeFacts = ensureFactsDefaults(factsData.facts);
+                      const updatedFacts = {
+                        ...safeFacts,
+                        booking_facts: {
+                          ...safeFacts.booking_facts,
+                          ...(next.booking_title !== undefined ? { title: next.booking_title } : {}),
+                          ...(next.booking_description !== undefined ? { description: next.booking_description } : {}),
+                        },
+                        customer_facts: {
+                          ...safeFacts.customer_facts,
+                          ...(next.customer_market !== undefined ? { market: next.customer_market } : {}),
+                          ...(next.customer_greeting_name !== undefined ? { greeting_name: next.customer_greeting_name } : {}),
+                          ...(next.customer_party_label !== undefined ? { party_label: next.customer_party_label } : {}),
+                        },
                         designer_facts: {
-                          ...factsData.facts.designer_facts,
+                          ...safeFacts.designer_facts,
                           ...next,
                         },
-                      });
-                      toast("Designer presentation copy saved to Facts.", "success");
+                      };
+                      await workspace.saveFacts(updatedFacts);
+                      toast("Presentation copy saved to Facts.", "success");
                     } catch (error) {
                       toast(apiErrorMessage(error), "error");
                       throw error;

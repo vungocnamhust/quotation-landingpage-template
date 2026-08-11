@@ -12,6 +12,16 @@ import { useToast } from '../staff-workspace/ToastProvider';
 
 const API_BASE = process.env.NEXT_PUBLIC_QUOTATION_API_URL ?? '';
 
+export type FactInspectorPatch = Partial<
+  Pick<QuotationFacts['designer_facts'], 'seller_subtitle' | 'designer_kicker' | 'designer_title' | 'designer_quote' | 'designer_signature' | 'designer_experience' | 'cta_body'>
+> & {
+  booking_title?: string | null;
+  booking_description?: string | null;
+  customer_market?: string | null;
+  customer_greeting_name?: string | null;
+  customer_party_label?: string | null;
+};
+
 const DESIGNER_FACT_FIELD_BY_DESCRIPTOR = {
   'designer.kicker': 'designer_kicker',
   'designer.title': 'designer_title',
@@ -20,9 +30,13 @@ const DESIGNER_FACT_FIELD_BY_DESCRIPTOR = {
   'designer.signature': 'designer_signature',
   'designer.experience': 'designer_experience',
   'designer.ctaBody': 'cta_body',
+  'bookingTerms.title': 'booking_title',
+  'bookingTerms.body': 'booking_description',
+  'customer.greetingName': 'customer_greeting_name',
+  'customer.partyLabel': 'customer_party_label',
 } as const;
 
-export default function DesignCanvas({ quotationId, lang, model, document, currentRevision, canEditDesignerFacts, contract, onSaved, onSaveDesignerFacts, onHandoff }: {
+export default function DesignCanvas({ quotationId, lang, model, document, currentRevision, canEditDesignerFacts, contract, facts, onSaved, onSaveDesignerFacts, onHandoff }: {
   quotationId: string;
   lang: string;
   model: DisplayDocument;
@@ -30,8 +44,9 @@ export default function DesignCanvas({ quotationId, lang, model, document, curre
   currentRevision: number;
   canEditDesignerFacts: boolean;
   contract?: EditableBrochureContract;
+  facts?: QuotationFacts;
   onSaved: () => Promise<unknown> | void;
-  onSaveDesignerFacts: (next: Pick<QuotationFacts['designer_facts'], 'seller_subtitle' | 'designer_kicker' | 'designer_title' | 'designer_quote' | 'designer_signature' | 'designer_experience' | 'cta_body'>) => Promise<void>;
+  onSaveDesignerFacts: (next: FactInspectorPatch) => Promise<void>;
   onHandoff: (target: ResolvedHandoff) => void;
 }) {
   const { toast, notify, clearScope } = useToast();
@@ -45,8 +60,8 @@ export default function DesignCanvas({ quotationId, lang, model, document, curre
   const save = async (descriptor: InspectorDescriptor, value: string) => {
     const factField = DESIGNER_FACT_FIELD_BY_DESCRIPTOR[descriptor.fieldId as keyof typeof DESIGNER_FACT_FIELD_BY_DESCRIPTOR];
     if (descriptor.owner === 'fact' && descriptor.editorSurface === 'design-inspector' && factField) {
-      if (!canEditDesignerFacts) throw new Error('Designer Facts are read-only for this quotation source.');
-      await onSaveDesignerFacts({ [factField]: value } as Pick<QuotationFacts['designer_facts'], typeof factField>);
+      if (!canEditDesignerFacts) throw new Error('Facts are read-only for this quotation source.');
+      await onSaveDesignerFacts({ [factField]: value });
       return;
     }
     if (descriptor.owner !== 'design' || descriptor.inspectorControl === 'none') throw new Error('This field is not editable from Design.');
@@ -96,7 +111,7 @@ export default function DesignCanvas({ quotationId, lang, model, document, curre
         ref={inspectorRef}
         className="transition-transform duration-200 ease-out xl:[transform:translateY(var(--inspector-offset,0px))]"
       >
-        <ContextualInspector selected={selected} resolvedHandoff={resolvedHandoff} renderedValue={renderedValue} onSave={save} onHandoff={onHandoff} canEditFactInspector={canEditDesignerFacts} />
+        <ContextualInspector selected={selected} resolvedHandoff={resolvedHandoff} renderedValue={renderedValue} onSave={save} onHandoff={onHandoff} canEditFactInspector={canEditDesignerFacts} facts={facts} onSaveFactFields={onSaveDesignerFacts} />
       </div>
     </div>
   </section>;

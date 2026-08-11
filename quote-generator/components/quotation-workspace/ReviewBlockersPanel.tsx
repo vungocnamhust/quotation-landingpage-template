@@ -352,7 +352,7 @@ export function ReviewBlockersPanel({
                           onClick={item.onAction}
                           className={cn(
                             getTypographyClassName("buttonSecondary"),
-                            "inline-flex items-center gap-1.5 rounded-[var(--radius-button)] bg-[var(--color-contrast)] !text-white hover:opacity-90 px-3 py-1.5 shadow-2xs transition-all"
+                            "inline-flex items-center gap-1.5 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-on-surface)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)] px-3 py-1.5 transition-all"
                           )}
                         >
                           <span>{item.ctaLabel}</span>
