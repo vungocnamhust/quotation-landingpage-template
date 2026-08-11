@@ -16,19 +16,69 @@ class DestinationRepository:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
-    async def upsert(self, *, destination_id: str, canonical_name: str, slug: str, aliases: list[str], country_slug: str | None = None, region_slug: str | None = None, province_slug: str | None = None) -> DestinationCatalog:
+    async def upsert(self, *, destination_id: str, canonical_name: str, slug: str, aliases: list[str], country_slug: str | None = None, region_slug: str | None = None, province_slug: str | None = None, latitude: float | None = None, longitude: float | None = None) -> DestinationCatalog:
         item = await self.session.get(DestinationCatalog, destination_id)
         if item is None:
-            item = DestinationCatalog(id=destination_id, canonical_name=canonical_name, slug=slug, country_slug=country_slug, region_slug=region_slug, province_slug=province_slug)
+            item = DestinationCatalog(id=destination_id, canonical_name=canonical_name, slug=slug, country_slug=country_slug, region_slug=region_slug, province_slug=province_slug, latitude=latitude, longitude=longitude)
             self.session.add(item)
         else:
-            item.canonical_name, item.slug, item.is_active = canonical_name, slug, True
-            item.country_slug, item.region_slug, item.province_slug = country_slug, region_slug, province_slug
+            # Seed calls are intentionally non-destructive: once an administrator
+            # manages a destination, its identity and map anchor remain DB-owned.
+            if item.latitude is None and latitude is not None:
+                item.latitude = latitude
+            if item.longitude is None and longitude is not None:
+                item.longitude = longitude
         for alias in {normalize_destination(value) for value in [canonical_name, slug, *aliases] if normalize_destination(value)}:
             existing = await self.session.scalar(select(DestinationAlias).where(DestinationAlias.normalized_alias == alias))
             if existing is None:
                 digest = hashlib.sha256(alias.encode("utf-8")).hexdigest()[:20]
                 self.session.add(DestinationAlias(id=f"dal_{digest}", destination_id=destination_id, normalized_alias=alias))
+        await self.session.flush()
+        return item
+
+    async def get(self, destination_id: str) -> DestinationCatalog | None:
+        return await self.session.get(DestinationCatalog, destination_id)
+
+    async def aliases_for(self, destination_id: str) -> list[str]:
+        rows = await self.session.scalars(
+            select(DestinationAlias.normalized_alias)
+            .where(DestinationAlias.destination_id == destination_id)
+            .order_by(DestinationAlias.normalized_alias.asc())
+        )
+        return list(rows)
+
+    async def conflicting_alias(self, values: list[str], *, destination_id: str | None = None) -> str | None:
+        for value in {normalize_destination(item) for item in values if normalize_destination(item)}:
+            existing = await self.session.scalar(
+                select(DestinationAlias).where(DestinationAlias.normalized_alias == value)
+            )
+            if existing is not None and existing.destination_id != destination_id:
+                return value
+        return None
+
+    async def create(self, *, destination_id: str, canonical_name: str, slug: str, aliases: list[str], country_slug: str | None, region_slug: str | None, province_slug: str | None, latitude: float, longitude: float) -> DestinationCatalog:
+        item = DestinationCatalog(id=destination_id, canonical_name=canonical_name, slug=slug, country_slug=country_slug, region_slug=region_slug, province_slug=province_slug, latitude=latitude, longitude=longitude, is_active=True)
+        self.session.add(item)
+        for alias in {normalize_destination(value) for value in [canonical_name, slug, *aliases] if normalize_destination(value)}:
+            digest = hashlib.sha256(alias.encode("utf-8")).hexdigest()[:20]
+            self.session.add(DestinationAlias(id=f"dal_{digest}", destination_id=destination_id, normalized_alias=alias))
+        await self.session.flush()
+        return item
+
+    async def update(self, item: DestinationCatalog, *, canonical_name: str, aliases: list[str], country_slug: str | None, region_slug: str | None, province_slug: str | None, latitude: float, longitude: float) -> DestinationCatalog:
+        item.canonical_name = canonical_name
+        item.country_slug, item.region_slug, item.province_slug = country_slug, region_slug, province_slug
+        item.latitude, item.longitude = latitude, longitude
+        for alias in {normalize_destination(value) for value in [canonical_name, item.slug, *aliases] if normalize_destination(value)}:
+            existing = await self.session.scalar(select(DestinationAlias).where(DestinationAlias.normalized_alias == alias))
+            if existing is None:
+                digest = hashlib.sha256(alias.encode("utf-8")).hexdigest()[:20]
+                self.session.add(DestinationAlias(id=f"dal_{digest}", destination_id=item.id, normalized_alias=alias))
+        await self.session.flush()
+        return item
+
+    async def set_status(self, item: DestinationCatalog, *, is_active: bool) -> DestinationCatalog:
+        item.is_active = is_active
         await self.session.flush()
         return item
 

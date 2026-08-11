@@ -175,6 +175,7 @@ export type ResolvedFacts = {
   itinerary?: Array<{
     dayNumber: number | null;
     destinationRef: DestinationRef | null;
+    overnightRef: DestinationRef | null;
   }>;
   hotels?: Array<{ index: number; destinationRef: DestinationRef | null }>;
 };
@@ -416,8 +417,8 @@ export const BROCHURE_DEFAULT_BOOKING_TERMS: readonly BookingItemFact[] = [
 ];
 
 export const BROCHURE_DEFAULT_FINALIZATION = {
-  required_title: "Final Details Required",
-  after_confirmation_title: "After Confirmation",
+  required_title: null as string | null,
+  after_confirmation_title: null as string | null,
   required_items: [] as string[],
   after_confirmation_items: [] as string[],
 } as const;
@@ -443,7 +444,15 @@ export function minorAmountToInput(value: number | null, currency: string | null
 
 export function formatMinorAmount(value: number | null, currency: string | null, locale: string): string {
   if (value === null || value <= 0 || !currency) return "";
-  return new Intl.NumberFormat(locale, { style: "currency", currency }).format(value / 10 ** currencyFractionDigits(currency));
+  const divisor = 10 ** currencyFractionDigits(currency);
+  const amount = value / divisor;
+  const minDigits = amount % 1 === 0 ? 0 : currencyFractionDigits(currency);
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency,
+    minimumFractionDigits: minDigits,
+    maximumFractionDigits: currencyFractionDigits(currency),
+  }).format(amount);
 }
 
 export function createPricingOption(index = 1): PricingOptionFact {

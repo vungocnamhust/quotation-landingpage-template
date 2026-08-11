@@ -35,6 +35,7 @@ const I18N_LABELS = {
     routeMapTitle: 'Your Journey, Mapped',
     routeMapLead:
       'Follow a curated path through Vietnam, from timeless landmarks to refined luxury stopovers. Select a destination on the map or list to explore the highlights along the way.',
+    routeMapUnavailable: 'Route coordinates will be available after the itinerary facts are updated.',
     daySingular: 'DAY',
     dayPlural: 'DAYS',
     highlights: 'Highlights',
@@ -65,6 +66,7 @@ const I18N_LABELS = {
     routeMapTitle: 'Hành Trình Được Vẽ Thành Bản Đồ',
     routeMapLead:
       'Theo dấu một hành trình được tuyển chọn qua Việt Nam, từ những địa danh vượt thời gian đến các điểm dừng nghỉ sang trọng. Hãy chọn một điểm trên bản đồ hoặc trong danh sách để khám phá các điểm nhấn dọc đường.',
+    routeMapUnavailable: 'Tọa độ hành trình sẽ có sau khi dữ liệu lịch trình được cập nhật.',
     daySingular: 'NGÀY',
     dayPlural: 'NGÀY',
     highlights: 'Điểm nhấn',
@@ -95,6 +97,7 @@ const I18N_LABELS = {
     routeMapTitle: 'رحلتك مرسومة على الخريطة',
     routeMapLead:
       'اتبع مسارا منسقا عبر فيتنام، من المعالم الخالدة إلى محطات التوقف الفاخرة. اختر وجهة من الخريطة أو من القائمة لاستكشاف أبرز اللحظات على الطريق.',
+    routeMapUnavailable: 'ستتوفر إحداثيات المسار بعد تحديث بيانات برنامج الرحلة.',
     daySingular: 'اليوم',
     dayPlural: 'الأيام',
     highlights: 'أبرز المحطات',
@@ -217,7 +220,7 @@ function buildRouteTimelineSegments({
   segments,
   labels,
 }: {
-  segments: RouteSegmentViewModel[];
+  segments: Array<Omit<RouteSegmentViewModel, 'dayLabel'>>;
   labels: ReturnType<typeof getLanguageLabels>;
 }) {
   let runningDay = 1;
@@ -237,6 +240,7 @@ function buildRouteTimelineSegments({
     return {
       ...segment,
       sidebarLabel,
+      dayLabel: sidebarLabel,
     };
   });
 }
@@ -335,10 +339,13 @@ export function buildPageViewModel({
       ],
       defaultMode: 'classic',
       initialActiveSegment: routeSegments[0]?.sequence ?? '01',
+      isInteractiveAvailable: routeSegments.length > 0,
+      unavailableMessage: labels.routeMapUnavailable,
       mapViewport: buildMapViewport(routeSegments),
       interactiveMarkers: routeSegments.map((segment) => ({
         sequence: segment.sequence,
         coordinates: segment.coordinates,
+        dayLabel: segment.dayLabel,
         title: segment.title,
         city: segment.city,
       })),

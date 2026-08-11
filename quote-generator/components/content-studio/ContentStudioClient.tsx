@@ -1,8 +1,8 @@
 'use client';
 
-import { memo, useCallback, useMemo, useState, useTransition } from 'react';
+import { useCallback, useMemo, useState, useTransition } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { CheckCircle2, AlertCircle, Circle } from 'lucide-react';
+import SectionOutlineNav, { type SectionOutlineItem } from '../ui/SectionOutlineNav';
 import { getTypographyClassName } from '../../config/typography';
 import { getLanguageLabels } from '../../display/labels';
 import { cn } from '../../utils/cn';
@@ -17,6 +17,7 @@ type Props = {
   quotationId: string;
   lang: string;
   onEditFacts?: (section?: string) => void;
+  onProceedToDesign?: () => void;
   resources: {
     documentData?: DocumentResponse;
     draftsData?: DraftsResponse;
@@ -31,8 +32,10 @@ type Mode = 'storytelling' | 'detailed';
 const labels: Record<string, string> = {
   hero: 'Hero', overview_letter: 'Overview letter', route_map: 'Route map', itinerary: 'Itinerary',
   hotel_plan: 'Hotel plan', pricing: 'Pricing', inclusions_exclusions: 'Inclusions & exclusions',
-  booking_terms: 'Booking & payment terms', designer: 'Designer', finalization: 'Final details',
+  booking_terms: 'Booking & payment terms', designer: 'Designer',
 };
+
+const SCOPE_BY_SECTION_TYPE: Record<string, string> = { route_map: 'route' };
 
 function defaultRouteCandidate(candidate: ContentCandidate | undefined, lang: string): ContentCandidate | undefined {
   if (!candidate) return candidate;
@@ -47,58 +50,32 @@ function defaultRouteCandidate(candidate: ContentCandidate | undefined, lang: st
   return { ...candidate, route: { ...routeValues, title: title || copy.routeMapTitle, description: description || copy.routeMapDescription } };
 }
 
-const BookingTermsTablePreview = memo(function BookingTermsTablePreview({ blocks }: { blocks: Array<Record<string, unknown>> }) {
-  const termItems = blocks.flatMap((block) => {
-    if (Array.isArray(block.items)) {
-      return block.items as Array<{ label?: string; body?: string; key?: string }>;
-    }
-    if (typeof block.label === 'string' || typeof block.body === 'string' || typeof block.text === 'string') {
-      return [{ label: block.label as string, body: (block.body ?? block.text) as string }];
-    }
-    return [];
-  });
 
+
+function FactOwnedNotice() {
   return (
-    <div className="overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-2xs">
-      <div className="grid grid-cols-[minmax(8rem,1fr)_2fr] border-b border-[var(--color-border)] bg-[var(--color-surface-muted)] px-4 py-2.5">
-        <span className={cn(getTypographyClassName('caption'), 'text-[var(--color-muted)]')}>Term (Key)</span>
-        <span className={cn(getTypographyClassName('caption'), 'text-[var(--color-muted)]')}>Details (Value)</span>
-      </div>
-      <div className="divide-y divide-[var(--color-border)]">
-        {termItems.length > 0 ? (
-          termItems.map((item, index) => (
-            <div key={index} className="grid grid-cols-[minmax(8rem,1fr)_2fr] items-start gap-4 px-4 py-3 hover:bg-[var(--color-surface-muted)]/50 transition-colors">
-              <div className="flex min-w-0 items-center">
-                <span className={cn(getTypographyClassName('termLabel'), 'inline-block rounded-[var(--radius-button)] border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-2.5 py-1 text-[var(--color-on-surface)]')}>
-                  {item.label || item.key || `Term ${index + 1}`}
-                </span>
-              </div>
-              <p className={cn(getTypographyClassName('termBody'), 'text-[var(--color-on-surface)]')}>
-                {item.body || 'No details provided.'}
-              </p>
-            </div>
-          ))
-        ) : (
-          <div className="p-4 text-center">
-            <p className={cn(getTypographyClassName('bodySm'), 'text-[var(--color-muted)]')}>No booking terms added yet.</p>
-          </div>
-        )}
-      </div>
+    <div className="rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-4">
+      <p className={cn(getTypographyClassName('bodySm'), 'text-[var(--color-muted)]')}>
+        This section is derived directly from approved Facts and cannot be edited manually.
+      </p>
     </div>
   );
-});
-
-function FactOwnedPreview({ sectionType, document }: { sectionType: string; document?: Record<string, unknown> }) {
-  const content = document?.content as { sections?: Record<string, { blocks?: Array<Record<string, unknown>> }> } | undefined;
-  const key = sectionType === 'inclusions_exclusions' ? 'inclusions_exclusions' : sectionType === 'booking_terms' ? 'booking_terms' : '';
-  const blocks = content?.sections?.[key]?.blocks ?? [];
-  if (sectionType === 'inclusions_exclusions') {
-    const block = blocks.find((item) => item.type === 'twoColumnList');
-    return <div className="grid gap-3 rounded-[var(--radius-card)] border border-[var(--color-border)] p-4 sm:grid-cols-2"><div><p className={cn(getTypographyClassName('label'), 'text-[var(--color-muted)]')}>Included</p><ul className={cn(getTypographyClassName('bodySm'), 'mt-2 grid gap-1 text-[var(--color-on-surface)]')}>{Array.isArray(block?.leftItems) ? block.leftItems.map((item, index) => <li key={index}>{String(item)}</li>) : null}</ul></div><div><p className={cn(getTypographyClassName('label'), 'text-[var(--color-muted)]')}>Not included</p><ul className={cn(getTypographyClassName('bodySm'), 'mt-2 grid gap-1 text-[var(--color-on-surface)]')}>{Array.isArray(block?.rightItems) ? block.rightItems.map((item, index) => <li key={index}>{String(item)}</li>) : null}</ul></div></div>;
-  }
-  if (sectionType === 'booking_terms') return <BookingTermsTablePreview blocks={blocks} />;
-  return <p className={cn(getTypographyClassName('bodySm'), 'rounded-[var(--radius-card)] border border-[var(--color-border)] p-4 text-[var(--color-muted)]')}>This fixed brochure layout is sourced from approved Facts.</p>;
 }
+
+function FactsIncompleteBanner({ onEditFacts }: { onEditFacts: () => void }) {
+  return (
+    <div role="alert" className="mb-4 grid gap-2 rounded-[var(--radius-card)] border border-amber-500/30 bg-amber-500/10 p-4">
+      <p className={cn(getTypographyClassName('bodySm'), 'text-amber-800')}>
+        Required Facts are missing for this section. Please update Facts to proceed.
+      </p>
+      <button type="button" onClick={onEditFacts} className={cn(getTypographyClassName('buttonSecondary'), 'min-h-9 w-fit rounded-[var(--radius-button)] border border-amber-500/30 px-3 py-1 text-amber-900')}>
+        Edit Facts
+      </button>
+    </div>
+  );
+}
+
+
 
 function ContentContractUnavailable({ onRetry }: { onRetry: () => void }) {
   return <div role="alert" className="grid gap-3 rounded-[var(--radius-card)] border border-[var(--color-border-strong)] bg-[var(--color-surface-muted)] p-4"><div><h3 className={cn(getTypographyClassName('cardTitle'), 'text-[var(--color-on-surface)]')}>Content workspace is unavailable</h3><p className={cn(getTypographyClassName('bodySm'), 'mt-1 text-[var(--color-muted)]')}>The document response is missing the Content editor contract. Fields cannot be safely guessed because the registry is their source of truth.</p></div><button type="button" onClick={onRetry} className={cn(getTypographyClassName('buttonSecondary'), 'min-h-11 w-fit rounded-[var(--radius-button)] border border-[var(--color-border)] px-4 py-2')}>Retry loading workspace</button></div>;
@@ -108,7 +85,7 @@ function DeterministicFactsPanel({ factInputs, facts }: { factInputs: ContentFac
   return <aside className="grid h-fit gap-4 rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 xl:sticky xl:top-4"><div><h3 className={cn(getTypographyClassName('cardTitle'), 'text-[var(--color-on-surface)]')}>Approved checklist</h3><p className={cn(getTypographyClassName('bodySm'), 'mt-1 text-[var(--color-muted)]')}>This section is derived deterministically from approved Facts. It does not use AI generation.</p></div><FactsUsed factInputs={factInputs} facts={facts} /></aside>;
 }
 
-export default function ContentStudioClient({ quotationId, lang, onEditFacts, resources }: Props) {
+export default function ContentStudioClient({ quotationId, lang, onEditFacts, onProceedToDesign, resources }: Props) {
   const router = useRouter();
   const search = useSearchParams();
   const [mode, setMode] = useState<Mode>('storytelling');
@@ -134,8 +111,7 @@ export default function ContentStudioClient({ quotationId, lang, onEditFacts, re
   }), [resources.factsData, resources.reviewData?.contentReadiness]);
   const selectedId = search.get('section') ?? readiness[0]?.sectionId ?? '';
   const selected = readiness.find((item) => item.sectionId === selectedId) ?? readiness[0];
-  const scopeBySectionType: Record<string, string> = { route_map: 'route' };
-  const scope = selected?.sectionId.startsWith('itinerary:day:') ? selected.sectionId : selected ? (scopeBySectionType[selected.sectionType] ?? selected.sectionType) : null;
+  const scope = selected?.sectionId.startsWith('itinerary:day:') ? selected.sectionId : selected ? (SCOPE_BY_SECTION_TYPE[selected.sectionType] ?? selected.sectionType) : null;
   const editor = scope ? resources.documentData?.contentRegistry?.[scope] : undefined;
   const factOwned = editor?.owner === 'fact';
   const persistedDraft = useMemo(() => scope ? (resources.draftsData?.drafts ?? []).find((item) => item.scope === scope && item.status === 'draft') : undefined, [resources.draftsData, scope]);
@@ -178,7 +154,6 @@ export default function ContentStudioClient({ quotationId, lang, onEditFacts, re
       } : {},
     };
   }, [facts, resources.factsData?.resolvedFacts, scope]);
-  const hasContentContract = Boolean(resources.documentData?.contentRegistry && resources.documentData?.contentEditorState);
 
   const setCustomInstruction = useCallback((value: string | null) => setCustomInstructionState(value === null || !scope ? null : { scope, mode, value }), [mode, scope]);
   const setWorkingCandidate = useCallback((candidate: ContentCandidate) => { if (scope) setLocalCandidate({ scope, candidate }); }, [scope]);
@@ -221,11 +196,27 @@ export default function ContentStudioClient({ quotationId, lang, onEditFacts, re
     });
   }, [clearScope, draft, lang, quotationId, reportFailure, resources, scope, setWorkingCandidate, toast, workingCandidate]);
   const apply = useCallback(() => {
-    if (!draft || !workingCandidate) return;
+    if (!workingCandidate || !scope) return;
     startTransition(async () => {
       try {
-        const patched = await resources.request<{ draft: ContentDraft }>(`/api/v2/quotations/${quotationId}/content-drafts/${draft.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ candidate: workingCandidate }) });
-        await resources.request(`/api/v2/quotations/${quotationId}/content-drafts/${patched.draft.id}/apply`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ baseRevision: resources.documentData?.currentRevision ?? draft.sourceDocumentRevision }) });
+        let activeDraft = draft;
+        if (!activeDraft) {
+          const created = await resources.request<{ draft: ContentDraft }>(
+            `/api/v2/quotations/${quotationId}/content-drafts/manual?lang=${encodeURIComponent(lang)}`,
+            { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ scope, candidate: workingCandidate, baseRevision: resources.documentData?.currentRevision }) }
+          );
+          activeDraft = created.draft;
+        } else {
+          const patched = await resources.request<{ draft: ContentDraft }>(
+            `/api/v2/quotations/${quotationId}/content-drafts/${activeDraft.id}`,
+            { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ candidate: workingCandidate }) }
+          );
+          activeDraft = patched.draft;
+        }
+        await resources.request(
+          `/api/v2/quotations/${quotationId}/content-drafts/${activeDraft.id}/apply`,
+          { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ baseRevision: resources.documentData?.currentRevision ?? activeDraft.sourceDocumentRevision }) }
+        );
         await resources.refresh();
         setGeneratedDraft(null);
         setLocalCandidate(null);
@@ -234,7 +225,7 @@ export default function ContentStudioClient({ quotationId, lang, onEditFacts, re
         toast('Content applied to the canonical brochure.', 'success');
       } catch (error) { reportFailure('apply', error); }
     });
-  }, [clearScope, draft, quotationId, reportFailure, resources, toast, workingCandidate]);
+  }, [clearScope, draft, lang, quotationId, reportFailure, resources, scope, toast, workingCandidate]);
   const discard = useCallback(() => {
     if (!draft) return;
     startTransition(async () => {
@@ -250,106 +241,123 @@ export default function ContentStudioClient({ quotationId, lang, onEditFacts, re
     });
   }, [clearScope, draft, quotationId, reportFailure, resources, toast]);
 
+  const handleProceedToDesign = useCallback(() => {
+    startTransition(async () => {
+      if (workingCandidate && scope) {
+        try {
+          let activeDraft = draft;
+          if (!activeDraft) {
+            const created = await resources.request<{ draft: ContentDraft }>(
+              `/api/v2/quotations/${quotationId}/content-drafts/manual?lang=${encodeURIComponent(lang)}`,
+              { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ scope, candidate: workingCandidate, baseRevision: resources.documentData?.currentRevision }) }
+            );
+            activeDraft = created.draft;
+          } else {
+            const patched = await resources.request<{ draft: ContentDraft }>(
+              `/api/v2/quotations/${quotationId}/content-drafts/${activeDraft.id}`,
+              { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ candidate: workingCandidate }) }
+            );
+            activeDraft = patched.draft;
+          }
+          await resources.request(
+            `/api/v2/quotations/${quotationId}/content-drafts/${activeDraft.id}/apply`,
+            { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ baseRevision: resources.documentData?.currentRevision ?? activeDraft.sourceDocumentRevision }) }
+          );
+          await resources.refresh();
+          setGeneratedDraft(null);
+          setLocalCandidate(null);
+          clearScope('content:apply');
+          toast('Content applied to canonical brochure.', 'success');
+        } catch (error) {
+          reportFailure('apply', error);
+          return;
+        }
+      }
+      onProceedToDesign?.();
+    });
+  }, [clearScope, draft, lang, onProceedToDesign, quotationId, reportFailure, resources, scope, toast, workingCandidate]);
+
+  const outlineItems: SectionOutlineItem[] = useMemo(
+    () =>
+      readiness.map((item) => {
+        const isSelected = selected?.sectionId === item.sectionId;
+        const labelText = item.sectionId.startsWith('itinerary:day:')
+          ? item.label
+          : labels[item.sectionType] ?? item.label;
+        const itemScope = item.sectionId.startsWith('itinerary:day:')
+          ? item.sectionId
+          : SCOPE_BY_SECTION_TYPE[item.sectionType] ?? item.sectionType;
+        const hasUnreviewedDraft = Boolean(
+          (resources.draftsData?.drafts ?? []).find(
+            (d) => d.scope === itemScope && d.status === 'draft'
+          )
+        );
+
+        return {
+          id: item.sectionId,
+          label: labelText,
+          isSelected,
+          status: item.status,
+          badge: hasUnreviewedDraft ? { text: 'Draft' } : undefined,
+        };
+      }),
+    [readiness, selected?.sectionId, resources.draftsData?.drafts]
+  );
+
+  const outlineFooter = onProceedToDesign ? (
+    <button
+      type="button"
+      onClick={handleProceedToDesign}
+      disabled={pending}
+      className={cn(
+        getTypographyClassName('buttonPrimary'),
+        'min-h-11 w-full rounded-[var(--radius-button)] bg-[var(--color-accent)] !text-white hover:bg-[color-mix(in_srgb,var(--color-accent)_85%,black)] px-4 shadow-md transition-all disabled:opacity-50'
+      )}
+    >
+      {pending ? 'Applying content…' : (draft || workingCandidate) ? 'Apply & proceed to Design' : 'Proceed to Design'}
+    </button>
+  ) : undefined;
+
   return (
     <section className="grid min-w-0 gap-5 lg:grid-cols-[17rem_minmax(0,1fr)]">
-      <aside className="rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
-        <div className="flex items-center justify-between pb-3 border-b border-[var(--color-border)]">
-          <span className={cn(getTypographyClassName('overline'), 'text-[var(--color-muted)]')}>
-            CONTENT STUDIO
-          </span>
-          <span className={cn(getTypographyClassName('caption'), 'text-[var(--color-muted)]')}>
-            {complete}/{readiness.length} ready
-          </span>
-        </div>
-        <div className="mt-3 flex flex-col gap-1.5" role="navigation" aria-label="Content sections">
-          {readiness.map((item) => {
-            const isSelected = selected?.sectionId === item.sectionId;
-            const labelText = item.sectionId.startsWith('itinerary:day:')
-              ? item.label
-              : labels[item.sectionType] ?? item.label;
-
-            return (
-              <button
-                key={item.sectionId}
-                type="button"
-                aria-current={isSelected ? 'page' : undefined}
-                onClick={() => select(item.sectionId)}
-                className={cn(
-                  getTypographyClassName('buttonSecondary'),
-                  'group flex items-center justify-between min-h-11 w-full rounded-[var(--radius-button)] px-3.5 py-2.5 text-left transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)] cursor-pointer',
-                  isSelected
-                    ? 'border border-[var(--color-border-strong)] bg-[var(--color-accent-wash)] text-[var(--color-on-surface)] shadow-2xs'
-                    : 'border border-transparent text-[var(--color-muted)] hover:bg-[color-mix(in_srgb,var(--color-accent-wash)_35%,transparent)] hover:border-[var(--color-border-strong)] hover:text-[var(--color-on-surface)]'
-                )}
-              >
-                <span className="truncate">{labelText}</span>
-                <span className="shrink-0 ml-2 flex items-center">
-                  {item.status === null ? (
-                    <CheckCircle2
-                      size={16}
-                      className={cn(
-                        'transition-colors',
-                        isSelected ? 'text-[var(--color-accent)]' : 'text-[var(--color-accent)] opacity-80 group-hover:opacity-100'
-                      )}
-                      aria-hidden="true"
-                    />
-                  ) : item.status === 'can_thong_tin' ? (
-                    <AlertCircle
-                      size={16}
-                      className="text-amber-500 transition-colors"
-                      aria-hidden="true"
-                    />
-                  ) : (
-                    <Circle
-                      size={16}
-                      className="text-[var(--color-muted)] transition-colors group-hover:text-[var(--color-on-surface)]"
-                      aria-hidden="true"
-                    />
-                  )}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </aside>
+      <SectionOutlineNav
+        title="CONTENT STUDIO"
+        completedCount={complete}
+        totalCount={readiness.length}
+        counterLabel="ready"
+        items={outlineItems}
+        onSelect={select}
+        ariaLabel="Content sections"
+        footer={outlineFooter}
+      />
       <main className="min-w-0 rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
         <p aria-live="polite" className={cn(getTypographyClassName('bodySm'), 'text-[var(--color-muted)]')}>
           {message}
         </p>
-        {selected ? (
-          <div className="mt-4 grid gap-5">
-            <div>
-              <h2 className={cn(getTypographyClassName('cardTitle'), 'text-[var(--color-on-surface)]')}>
-                {selected.label || labels[selected.sectionType]}
-              </h2>
-              <p className={cn(getTypographyClassName('bodySm'), 'mt-1 text-[var(--color-muted)]')}>
-                Review and write brochure copy here. Facts and AI generation never publish automatically.
-              </p>
-            </div>
-            {selected.missing.map((item) => (
-              <p key={item.path} className={cn(getTypographyClassName('bodySm'), 'text-[var(--color-accent-alt)]')}>
-                {item.message}
-              </p>
-            ))}
-            {!hasContentContract ? (
-              <ContentContractUnavailable onRetry={() => { void resources.refresh(); }} />
-            ) : factOwned || selected.targetStage === 'facts' ? (
-              <>
-                <FactOwnedPreview sectionType={selected.sectionType} document={resources.documentData?.document} />
-                <button
-                  type="button"
-                  onClick={() => onEditFacts?.(selected.sectionId)}
-                  className={cn(getTypographyClassName('buttonSecondary'), 'min-h-11 w-fit rounded-[var(--radius-button)] border border-[var(--color-border)] px-4 py-2')}
-                >
-                  Open approved Facts
-                </button>
-              </>
-            ) : workingCandidate && editor ? (
-              <div className="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(20rem,0.85fr)]">
-                <div className="grid gap-4">
-                  <SectionContentFields scope={scope ?? ''} fields={editor.fields} candidate={workingCandidate} onChange={setWorkingCandidate} />
-                  <ContentDraftActions hasDraft={Boolean(draft)} pending={pending} onSave={saveDraft} onApply={apply} onDiscard={discard} />
-                </div>
+        <div className="mt-4">
+          {selected?.status === 'can_thong_tin' && factOwned ? (
+            <FactsIncompleteBanner onEditFacts={() => onEditFacts?.(selected.sectionId)} />
+          ) : null}
+          {factOwned ? (
+            <>
+              <FactOwnedNotice />
+              <div className="mt-5">
+                <SectionContentFields scope={scope ?? ''} fields={editor?.fields ?? []} candidate={workingCandidate ?? {}} onChange={setWorkingCandidate} document={resources.documentData?.document} />
+              </div>
+              <button
+                type="button"
+                onClick={() => onEditFacts?.(selected.sectionId)}
+                className={cn(getTypographyClassName('buttonSecondary'), 'min-h-11 w-fit rounded-[var(--radius-button)] border border-[var(--color-border)] px-4 py-2')}
+              >
+                Open approved Facts
+              </button>
+            </>
+          ) : workingCandidate && editor ? (
+            <div className="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(20rem,0.85fr)]">
+              <div className="grid gap-4">
+                <SectionContentFields scope={scope ?? ''} fields={editor.fields} candidate={workingCandidate} onChange={setWorkingCandidate} document={resources.documentData?.document} />
+                <ContentDraftActions hasDraft={Boolean(draft)} canApply={Boolean(workingCandidate)} pending={pending} onSave={saveDraft} onApply={apply} onDiscard={discard} />
+              </div>
                 {editor.generation ? (
                   <ContentGenerationPanel
                     mode={mode}
@@ -372,7 +380,6 @@ export default function ContentStudioClient({ quotationId, lang, onEditFacts, re
               <ContentContractUnavailable onRetry={() => { void resources.refresh(); }} />
             )}
           </div>
-        ) : null}
       </main>
     </section>
   );

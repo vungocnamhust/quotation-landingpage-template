@@ -573,8 +573,8 @@ export const BRANDS_DATA: Record<BrandKey, BrandInfo> = {
         onContrast: '#ffffff',
         focus: '#a98338',
         storyContrast: '#333333',
-        investmentSurface: '#a98338',
-        investmentText: '#171511',
+        investmentSurface: '#333333',
+        investmentText: '#ffffff',
       },
       radii: {
         card: '0.5rem',
@@ -928,8 +928,8 @@ export const BRANDS_DATA: Record<BrandKey, BrandInfo> = {
         onContrast: '#ffffff',
         focus: '#a98338',
         storyContrast: '#0d3f32',
-        investmentSurface: '#a98338',
-        investmentText: '#11130f',
+        investmentSurface: '#0d3f32',
+        investmentText: '#ffffff',
       },
       radii: {
         card: '0.5rem',

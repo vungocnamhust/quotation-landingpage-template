@@ -76,7 +76,11 @@ function formatDisplayDate(value: string, lang: LanguageCode): string {
 function formatPriceMinor(value: number | null, currency: string, lang: LanguageCode, suffix: string): string {
   if (value === null || !currency) return '';
   const locale = lang === 'vi' ? 'vi-VN' : lang === 'ar' ? 'ar' : 'en-US';
-  return `${new Intl.NumberFormat(locale, { style: 'currency', currency }).format(value / (currency === 'VND' ? 1 : 100))} ${suffix}`;
+  const divisor = currency === 'VND' ? 1 : 100;
+  const amount = value / divisor;
+  const minimumFractionDigits = amount % 1 === 0 ? 0 : (currency === 'VND' ? 0 : 2);
+  const maximumFractionDigits = currency === 'VND' ? 0 : 2;
+  return `${new Intl.NumberFormat(locale, { style: 'currency', currency, minimumFractionDigits, maximumFractionDigits }).format(amount)} ${suffix}`;
 }
 
 function editable(value: string, path: string, owner: EditableTextOwner, mode: EditableTextMode = 'plainText'): EditableText {
@@ -162,17 +166,34 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
   const phone = stringValue(designer.phone);
   const whatsappHref = phone ? `https://wa.me/${phone.replace(/[^\d]/g, '').replace(/^00/, '')}` : '';
 
-  const routeSegments = recordList(route.staySegments).map((segment, index) => {
-    const coords = Array.isArray(segment.coords) && segment.coords.length === 2 ? [Number(segment.coords[0]), Number(segment.coords[1])] as [number, number] : [0, 0] as [number, number];
+  const routeSegments = recordList(route.staySegments).flatMap((segment, index) => {
+    const rawCoordinates = Array.isArray(segment.coords) && segment.coords.length === 2 ? [Number(segment.coords[0]), Number(segment.coords[1])] as [number, number] : null;
+    const coords = rawCoordinates && Number.isFinite(rawCoordinates[0]) && Number.isFinite(rawCoordinates[1]) && rawCoordinates[0] >= -90 && rawCoordinates[0] <= 90 && rawCoordinates[1] >= -180 && rawCoordinates[1] <= 180 ? rawCoordinates : null;
+    if (!coords) return [];
     const base = `/route/staySegments/${index}`;
+    const dayStart = Number(segment.dayStart);
+    const dayEnd = Number(segment.dayEnd);
+    const hasDayRange = Number.isSafeInteger(dayStart) && dayStart > 0 && Number.isSafeInteger(dayEnd) && dayEnd >= dayStart;
+    const dayLabel = hasDayRange ? `${dayEnd === dayStart ? labels.daySingular : labels.dayPlural} ${dayStart}${dayEnd === dayStart ? '' : `–${dayEnd}`}` : stringValue(segment.daysLabel);
+    const activityPreviews = recordList(segment.activityPreviews);
+    const activityFallback = activityPreviews
+      .map((item) => {
+        const lbl = stringValue(item.label);
+        const sum = stringValue(item.summary);
+        return lbl && sum ? `${lbl}: ${sum}` : sum || lbl;
+      })
+      .filter(Boolean)
+      .join(' ');
+    const rawDesc = stringValue(segment.mapSegmentDesc) || activityFallback;
     return {
       sequence: String(index + 1).padStart(2, '0'),
       title: derivedCopy(stringValue(segment.displayName), `${base}/displayName`),
-      description: contentCopy(stringValue(segment.mapSegmentDesc), `${base}/mapSegmentDesc`, ''),
+      description: contentCopy(rawDesc, `${base}/mapSegmentDesc`, ''),
       sidebarLabel: derivedCopy(stringValue(segment.daysLabel) || stringValue(segment.mapSegmentDuration), `${base}/daysLabel`),
       duration: derivedCopy(stringValue(segment.nightsLabel) || stringValue(segment.mapSegmentDuration), `${base}/nightsLabel`),
       hotelName: derivedCopy(stringValue(segment.hotelName), `${base}/hotelName`),
       coordinates: coords,
+      dayLabel: derivedCopy(dayLabel, `${base}/dayStart`),
       city: derivedCopy(stringValue(segment.displayName), `${base}/displayName`),
       image: assetUrl(segment.hotelImage),
     };
@@ -243,7 +264,9 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
       introVisibility: 'full' as const,
     };
   });
-  const mapCenter = routeSegments[0]?.coordinates ?? [0, 0] as [number, number];
+  const sourceSegments = recordList(route.staySegments);
+  const mapCenter = routeSegments[0]?.coordinates;
+  const isInteractiveAvailable = sourceSegments.length > 0 && routeSegments.length === sourceSegments.length && Boolean(mapCenter);
 
   return {
     theme,
@@ -284,6 +307,7 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
         chapterKicker: designCopy(overrides, 'letter.kicker', labels.journeyOverviewKicker),
         title: contentCopy(stringValue(narrative.journeyOverviewTitle), '/narrative/journeyOverviewTitle', labels.journeyOverviewTitle),
         highlight: contentCopy(stringValue(narrative.letterHighlight), '/narrative/letterHighlight', ''),
+        decorAsset: assetUrl(assets.letterDecor) || assetUrl(record(mediaOverrides['assets.letterDecor'])) || '/assets/brands/indochine_icon/ruong_bac_thang.svg',
         greeting: contentCopy(stringValue(narrative.letterGreeting), '/narrative/letterGreeting', ''),
         intro: contentCopy(stringValue(narrative.letterIntro), '/narrative/letterIntro', ''),
         body: [stringValue(narrative.letterBody2)].filter(Boolean).map((item) => contentCopy(item, '/narrative/letterBody2', '')),
@@ -295,10 +319,10 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
       routeMap: {
         title: contentCopy(stringValue(route.title), '/route/title', labels.routeMapTitle),
         description: contentCopy(stringValue(route.description), '/route/description', labels.routeMapDescription),
-        segments: routeSegments, overviewAriaLabel: designCopy(overrides, 'a11y.routeMapOverview', labels.routeMapOverview, 'ariaLabel'), mapModes: [editable(labels.classic, '/labels/classic', 'system')],
+        segments: routeSegments, overviewAriaLabel: designCopy(overrides, 'a11y.routeMapOverview', labels.routeMapOverview, 'ariaLabel'), isInteractiveAvailable, unavailableMessage: designCopy(overrides, 'route.unavailableMessage', labels.routeMapUnavailable), mapModes: [editable(labels.classic, '/labels/classic', 'system')],
         mapModeOptions: [{ id: 'classic', label: editable(labels.classic, '/labels/classic', 'system') }], defaultMode: 'classic', initialActiveSegment: routeSegments[0]?.sequence ?? '01',
         mapViewport: { center: mapCenter, latSpan: 8, lngSpan: 8 },
-        interactiveMarkers: routeSegments.map(({ sequence, coordinates, title, city }) => ({ sequence, coordinates, title, city })),
+        interactiveMarkers: routeSegments.map(({ sequence, coordinates, title, city, dayLabel }) => ({ sequence, coordinates, title, city, dayLabel })),
       },
       itineraryDivider: { kicker: designCopy(overrides, 'itinerary.kicker', labels.itineraryNav), title: contentCopy(stringValue(itinerary.title), '/itinerary/title', labels.itineraryTitle), tagline: contentCopy(stringValue(itinerary.description), '/itinerary/description', labels.itineraryDescription), image: assetUrl(assets.itineraryDivider) || assetUrl(record(mediaOverrides['assets.itineraryDivider'])), imageAlt: assetAlt(assets.itineraryDivider, '/assets/itineraryDivider/altText', stringValue(itinerary.title)), exploreLabel: designCopy(overrides, 'itinerary.explore', labels.explore, 'actionLabel'), exploreHref: '#itinerary' },
       itinerary: { kicker: designCopy(overrides, 'itinerary.kicker', labels.itineraryNav), title: contentCopy(stringValue(itinerary.title), '/itinerary/title', labels.itineraryTitle), description: contentCopy(stringValue(itinerary.description), '/itinerary/description', labels.itineraryDescription), days },

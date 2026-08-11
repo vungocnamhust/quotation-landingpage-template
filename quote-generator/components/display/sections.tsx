@@ -163,11 +163,18 @@ function StaticRouteMapPanel({
   viewModel: RouteMapViewModel;
   typography: TypographySlotMap;
 }) {
+  if (!viewModel.isInteractiveAvailable) {
+    return <div className="display-route-map__unavailable" role="status">{textValue(viewModel.unavailableMessage)}</div>;
+  }
+  const mapCenter = viewModel.mapViewport.center;
+  if (!mapCenter) {
+    return <div className="display-route-map__unavailable" role="status">{textValue(viewModel.unavailableMessage)}</div>;
+  }
   const projectedPoints = viewModel.interactiveMarkers.map((marker) => ({
     ...marker,
     ...normalizePoint(
       marker.coordinates,
-      viewModel.mapViewport.center,
+      mapCenter,
       viewModel.mapViewport.latSpan,
       viewModel.mapViewport.lngSpan
     ),
@@ -206,7 +213,7 @@ function StaticRouteMapPanel({
                   )}
                 />
                 <text x={point.x} y={point.y - 5} textAnchor="middle" className={cn('display-route-map__marker-label', getTypographyClassName(requireTypographySlot(typography, 'index')))}>
-                  {point.sequence}
+                  {textValue(point.dayLabel)}
                 </text>
               </g>
             ))}
@@ -218,7 +225,7 @@ function StaticRouteMapPanel({
         {viewModel.segments.map((segment, index) => (
           <div key={segment.sequence} className="display-route-map__pdf-step">
             <div role="listitem" className="display-route-map__pdf-step-card">
-              <div className={cn('display-route-map__pdf-step-index', getTypographyClassName(requireTypographySlot(typography, 'index')))}>{index + 1}</div>
+              <div className={cn('display-route-map__pdf-step-index', getTypographyClassName(requireTypographySlot(typography, 'index')))}>{textValue(segment.dayLabel)}</div>
               <div className="display-route-map__pdf-step-copy">
                 <DisplayTitle as="h3" variant={requireTypographySlot(typography, 'metaPrimary')}>
                   {segment.city}
@@ -346,6 +353,7 @@ export function OpenLetterSection({
           <aside className={slots.aside}>
             <QuoteText
               variant={requireTypographySlot(displayConfig.typographySlots, 'quote')}
+              tone="accent"
               className="display-letter__highlight"
             >
               {viewModel.highlight}
@@ -843,6 +851,9 @@ export function FinalizationSection({
   theme,
   viewMode,
 }: BaseSectionProps<FinalizationViewModel>) {
+  if (!viewModel || ((viewModel.required?.items?.length ?? 0) === 0 && (viewModel.afterConfirmation?.items?.length ?? 0) === 0)) {
+    return null;
+  }
   const slots = getLayoutSlots(displayConfig.layoutVariant, viewMode);
   return (
     <section id="finalization" className={shellProps(sectionId, displayConfig, viewMode)}>

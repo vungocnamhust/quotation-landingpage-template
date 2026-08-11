@@ -5,6 +5,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   useTransition,
   type CSSProperties,
@@ -19,7 +20,6 @@ import {
   Lock,
   CheckCircle2,
   RefreshCw,
-  AlertCircle,
 } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography";
 import { cn } from "../../utils/cn";
@@ -38,6 +38,9 @@ import {
   serializeFactsFocus,
   type ResolvedHandoff,
 } from "./editableHandoff";
+import { ReviewBlockersPanel } from "./ReviewBlockersPanel";
+import DesignPreviewToolbar from "./DesignPreviewToolbar";
+import BrochurePreviewModal from "./BrochurePreviewModal";
 
 const ContentStudioClient = dynamic(
   () => import("../content-studio/ContentStudioClient"),
@@ -92,7 +95,8 @@ export default function QuotationWorkspaceClient({
   const [publicationBrandId, setPublicationBrandId] = useState<string | null>(
     null
   );
-  const [previewMode] = useState<ViewMode>("desktop");
+  const [previewMode, setPreviewMode] = useState<ViewMode>("desktop");
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [editableFacts, setEditableFacts] = useState<QuotationFacts | null>(
     null
   );
@@ -119,7 +123,6 @@ export default function QuotationWorkspaceClient({
     status: string;
     lastError: string | null;
   } | null>(null);
-  const contentReady = workflowData?.content.ready ?? false;
   const reviewReady = workflowData?.review.ready ?? false;
   const loadError =
     workspace.facts.error ??
@@ -153,21 +156,32 @@ export default function QuotationWorkspaceClient({
     [documentData, lang, previewMode, previewProfile]
   );
 
+  const blockersRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBlockers = useCallback(() => {
+    setStage("review");
+    window.setTimeout(() => {
+      blockersRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+  }, []);
+
   const goTo = useCallback(
     (next: Stage) => {
-      const allowed = next === "review" ? reviewReady : true;
-      if (!allowed) {
-        toast(
-          next === "review"
-            ? "Resolve the server-reported review blockers before publishing."
-            : "Resolve the server-reported blockers before continuing.",
-          "error"
-        );
-        return;
-      }
       setStage(next);
+      if (next === "review" && !reviewReady) {
+        notify({
+          message: "Resolve the server-reported review blockers before publishing.",
+          type: "error",
+          persistent: true,
+          scope: "review:blockers",
+          action: {
+            label: "Open blockers",
+            onClick: scrollToBlockers,
+          },
+        });
+      }
     },
-    [reviewReady, toast]
+    [notify, reviewReady, scrollToBlockers]
   );
 
   function saveFacts(facts: QuotationFacts) {
@@ -290,10 +304,10 @@ export default function QuotationWorkspaceClient({
   const isLocked = (item: Stage) => item === "review" ? !reviewReady : false;
 
   const isComplete = (item: Stage) => {
-    if (item === "facts") return contentReady;
-    if (item === "content") return contentReady;
-    if (item === "design") return reviewReady;
-    if (item === "review") return reviewReady && (publishedUrl !== null || (workspace.publications.data?.publications ?? []).length > 0);
+    if (item === "facts") return workflowData?.facts.ready ?? false;
+    if (item === "content") return workflowData?.content.ready ?? false;
+    if (item === "design") return workflowData?.design.ready ?? false;
+    if (item === "review") return workflowData?.review.ready ?? false;
     return false;
   };
 
@@ -559,6 +573,7 @@ export default function QuotationWorkspaceClient({
               router.replace(`${pathname}?${params.toString()}`, { scroll: false });
               setStage("facts");
             }}
+            onProceedToDesign={() => setStage("design")}
             resources={{
               documentData,
               draftsData: workspace.drafts.data,
@@ -571,94 +586,75 @@ export default function QuotationWorkspaceClient({
         ) : null}
 
         {stage === "design" && documentData ? (
-          <div className="flex flex-col gap-4 rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
-            <p
-              className={cn(
-                getTypographyClassName("bodyMd"),
-                "text-[var(--color-muted)]"
-              )}
-            >
-              This preview reads the canonical brochure document. Only applied
-              content is visible.
-            </p>
-            {liveDocumentModel && factsData ? <DesignCanvas quotationId={quotationId} lang={lang} model={liveDocumentModel} document={documentData.document} currentRevision={documentData.currentRevision} canEditDesignerFacts={editable} contract={documentData.editableContract} onSaved={() => workspace.refresh()} onSaveDesignerFacts={async (next) => {
-              try {
-                await workspace.saveFacts({ ...factsData.facts, designer_facts: { ...factsData.facts.designer_facts, ...next } });
-                toast("Designer presentation copy saved to Facts.", "success");
-              } catch (error) {
-                toast(apiErrorMessage(error), "error");
-                throw error;
-              }
-            }} onHandoff={navigateHandoff} /> : null}
+          <div className="flex flex-col gap-5">
+            <DesignPreviewToolbar
+              viewMode={previewMode}
+              onViewModeChange={setPreviewMode}
+              onOpenPreview={() => setIsPreviewModalOpen(true)}
+              themeName={previewProfile?.themeId ?? documentData.brandProfile.themeId ?? "Brochure"}
+            />
+
+            <div className="flex flex-col gap-4 rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+              <p
+                className={cn(
+                  getTypographyClassName("bodyMd"),
+                  "text-[var(--color-muted)]"
+                )}
+              >
+                This preview reads the canonical brochure document. Only applied
+                content is visible. Click elements on the canvas to edit presentation copy.
+              </p>
+              {liveDocumentModel && factsData ? (
+                <DesignCanvas
+                  quotationId={quotationId}
+                  lang={lang}
+                  model={liveDocumentModel}
+                  document={documentData.document}
+                  currentRevision={documentData.currentRevision}
+                  canEditDesignerFacts={editable}
+                  contract={documentData.editableContract}
+                  onSaved={() => workspace.refresh()}
+                  onSaveDesignerFacts={async (next) => {
+                    try {
+                      await workspace.saveFacts({
+                        ...factsData.facts,
+                        designer_facts: {
+                          ...factsData.facts.designer_facts,
+                          ...next,
+                        },
+                      });
+                      toast("Designer presentation copy saved to Facts.", "success");
+                    } catch (error) {
+                      toast(apiErrorMessage(error), "error");
+                      throw error;
+                    }
+                  }}
+                  onHandoff={navigateHandoff}
+                />
+              ) : null}
+            </div>
+
+            {liveDocumentModel ? (
+              <BrochurePreviewModal
+                isOpen={isPreviewModalOpen}
+                onClose={() => setIsPreviewModalOpen(false)}
+                documentModel={liveDocumentModel}
+                initialViewMode={previewMode}
+                publishedUrl={publishedUrl}
+              />
+            ) : null}
           </div>
         ) : null}
 
         {stage === "review" && !reviewReady ? (
-          <div className="flex flex-col gap-4 rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-[var(--elevation-card)]">
-            <div className="flex items-start gap-3">
-              <AlertCircle size={24} className="mt-0.5 text-[var(--color-accent-alt)] shrink-0" aria-hidden="true" />
-              <div className="flex flex-col gap-1">
-                <h2 className={cn(getTypographyClassName("cardTitle"), "text-[var(--color-on-surface)]")}>
-                  Quotation is not ready for review
-                </h2>
-                <p className={cn(getTypographyClassName("bodyMd"), "text-[var(--color-muted)]")}>
-                  Resolve the remaining factual or content-review checks before reviewing and publishing.
-                </p>
-              </div>
-            </div>
-            {reviewData?.missingInputs.length || reviewData?.blockingDrafts.length ? (
-              <div className="rounded-[var(--radius-button)] border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-4 flex flex-col gap-2">
-                <span className={cn(getTypographyClassName("label"), "text-[var(--color-on-surface)]")}>
-                  Blockers to resolve:
-                </span>
-                <ul className={cn(getTypographyClassName("bodySm"), "list-disc list-inside text-[var(--color-muted)] flex flex-col gap-1")}>
-                  {reviewData.missingInputs.length ? (
-                    <li>Missing facts: {reviewData.missingInputs.join(", ")}</li>
-                  ) : null}
-                  {reviewData.blockingDrafts.length ? (
-                    <li>Content requiring review: {reviewData.blockingDrafts.join(", ")}</li>
-                  ) : null}
-                  {reviewData.contentBlockers?.map((blocker) => (
-                    <li key={`${blocker.sectionId}:${blocker.path}`}>{blocker.message}</li>
-                  ))}
-                  {reviewData.presentationErrors?.map((error) => (
-                    <li key={error}>Design or PDF check: {error}</li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-            <div className="flex flex-wrap gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => goTo("facts")}
-                className={cn(
-                  getTypographyClassName("buttonSecondary"),
-                  "rounded-[var(--radius-button)] bg-[var(--color-contrast)] !text-white hover:opacity-90 px-4 py-2.5 shadow-2xs transition-all"
-                )}
-              >
-                Edit Facts
-              </button>
-              <button
-                type="button"
-                onClick={() => goTo("content")}
-                className={cn(
-                  getTypographyClassName("buttonPrimary"),
-                  "rounded-[var(--radius-button)] bg-[var(--color-accent)] !text-white hover:bg-[color-mix(in_srgb,var(--color-accent)_85%,black)] px-4 py-2.5 shadow-xs transition-all"
-                )}
-              >
-                Review Content Candidates
-              </button>
-              {reviewData?.presentationErrors?.length ? <button
-                type="button"
-                onClick={() => goTo("design")}
-                className={cn(
-                  getTypographyClassName("buttonSecondary"),
-                  "rounded-[var(--radius-button)] border border-[var(--color-border-strong)] px-4 py-2.5 text-[var(--color-on-surface)]"
-                )}
-              >
-                Open Design checks
-              </button> : null}
-            </div>
+          <div ref={blockersRef}>
+            <ReviewBlockersPanel
+              reviewData={reviewData}
+              workflowData={workflowData}
+              publicationJob={publicationJob}
+              onSetStage={(stg) => setStage(stg)}
+              onNavigateHandoff={navigateHandoff}
+            />
           </div>
         ) : null}
 

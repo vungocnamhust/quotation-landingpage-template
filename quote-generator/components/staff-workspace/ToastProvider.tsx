@@ -140,7 +140,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                   {t.action ? (
                     <button
                       type="button"
-                      onClick={t.action.onClick}
+                      onClick={() => {
+                        t.action?.onClick();
+                        dismiss(t.id);
+                      }}
                       className={cn(getTypographyClassName("buttonSecondary"), "toast-item__action")}
                     >
                       {t.action.label}

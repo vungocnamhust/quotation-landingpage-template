@@ -20,6 +20,7 @@ import FactsNavigator, {
 } from "./FactsNavigator";
 import { DestinationInput, DestinationMultiSelect } from "./DestinationInputs";
 import TravelDesignerPicker from "./TravelDesignerPicker";
+import AccommodationPicker from "./AccommodationPicker";
 import CustomSelect from "../ui/CustomSelect";
 import type {
   HotelFact,
@@ -30,7 +31,7 @@ import type {
 } from "./factsTypes";
 import { CURRENCY_OPTIONS, MAX_COMMERCIAL_OPTIONS, createItineraryDay, createPricingOption, dateForItineraryDay, ensureFactsDefaults, formatMinorAmount, isRenderablePricingOption, minorAmountFromInput, minorAmountToInput, routeDestinationRefsFromItinerary } from "./factsTypes";
 import { BrochureAssetsEditor, MediaSlotRenderer, type MediaWorkspace } from "./MediaSlotRenderer";
-import type { TravelDesignerProfile } from "../../lib/quotationApi";
+import type { AccommodationProfile, TravelDesignerProfile } from "../../lib/quotationApi";
 import type { FactsDeepLink } from "./editableHandoff";
 
 type Props = {
@@ -450,6 +451,24 @@ const DayEditor = memo(function DayEditor({
     </article>
   );
 });
+function hotelFromProfile(profile: AccommodationProfile): HotelFact {
+  return {
+    accommodation_id: profile.id,
+    destination: profile.destination,
+    destination_ref: profile.destination_ref,
+    name: profile.name,
+    room_type: profile.room_type,
+    check_in: profile.check_in,
+    check_out: profile.check_out,
+    intro: profile.intro,
+    phone: profile.phone,
+    display_city: profile.display_city,
+    display_date: profile.display_date,
+    hotel_asset: profile.hotel_asset,
+    room_asset: profile.room_asset,
+  };
+}
+
 const HotelEditor = memo(function HotelEditor({
   hotel,
   index,
@@ -525,6 +544,21 @@ const HotelEditor = memo(function HotelEditor({
       </button>
       {open ? (
         <div className="facts-accordion-body grid gap-4 border-t border-[var(--color-border-strong)] bg-[var(--color-surface-white)] p-4 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <AccommodationPicker
+              value={hotel.accommodation_id}
+              name={hotel.name}
+              destination={hotel.destination || hotel.display_city}
+              disabled={readOnly}
+              onChange={(profile) => {
+                if (profile) {
+                  onPatch(index, hotelFromProfile(profile));
+                } else {
+                  patch("accommodation_id", null);
+                }
+              }}
+            />
+          </div>
           {/* ESSENTIAL FIELDS */}
           <DestinationInput
             label={`Hotel ${index + 1} destination`}
@@ -623,7 +657,6 @@ export default function FactsForm({
   const services = facts.service_facts;
   const pricing = facts.pricing_facts;
   const booking = facts.booking_facts;
-  const finalization = facts.finalization_facts;
   const presentation = facts.presentation_options;
 
   const [activeDay, setActiveDay] = useState<number | null>(
@@ -917,8 +950,17 @@ export default function FactsForm({
     sections.find((item) => item.id === id)!;
   const canSubmit = Boolean(onSubmit && (!readOnly || allowSubmitWhenReadOnly));
   return (
-    <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_18rem]">
-      <div className="order-2 flex min-w-0 flex-col gap-5 lg:order-1">
+    <div className="grid min-w-0 gap-5 lg:grid-cols-[17rem_minmax(0,1fr)]">
+      <div className="order-1 lg:order-1">
+        <FactsNavigator
+          sections={sections}
+          activeSection={deepLink?.section}
+          onSubmit={canSubmit ? onSubmit : undefined}
+          submitLabel={submitLabel}
+          pending={pending}
+        />
+      </div>
+      <div className="order-2 flex min-w-0 flex-col gap-5 lg:order-2">
         {sourceNote ? (
           <p
             className={cn(
@@ -1279,18 +1321,6 @@ export default function FactsForm({
                   })
                 }
               />
-              <Area
-                label="Required before confirmation"
-                disabled={readOnly}
-                value={lines(finalization.required_items)}
-                onChange={(value) =>
-                  update("finalization_facts", {
-                    ...finalization,
-                    required_items: toLines(value),
-                  })
-                }
-                hint="One requirement per line."
-              />
             </div>
             <div className="sm:col-span-2 flex flex-col gap-3">
               <div className="flex items-center justify-between">
@@ -1326,7 +1356,7 @@ export default function FactsForm({
                     ) : null}
                   </div>
                   <div className="sm:col-span-8 flex flex-col gap-2">
-                    <Area label="Term details (Value)" hint="Plain text details." disabled={readOnly} value={item.body} onChange={(value) => update("booking_facts", { ...booking, items: booking.items.map((current, currentIndex) => currentIndex === index ? { ...current, body: value || null } : current) })} />
+                    <Area label="Term body (plain text)" hint="HTML is not supported." disabled={readOnly} value={item.body} onChange={(value) => update("booking_facts", { ...booking, items: booking.items.map((current, currentIndex) => currentIndex === index ? { ...current, body: value || null } : current) })} />
                     {!readOnly ? (
                       <div className="flex justify-end mt-1">
                         <button type="button" onClick={() => update("booking_facts", { ...booking, items: booking.items.filter((_, i) => i !== index) })} className={cn(getTypographyClassName("caption"), "text-rose-600 hover:underline")}>Remove term</button>
@@ -1339,11 +1369,6 @@ export default function FactsForm({
 
             <div className="sm:col-span-2 grid gap-4 sm:grid-cols-2">
               <Field label="Booking terms title" disabled={readOnly} value={booking.title} onChange={(value) => update("booking_facts", { ...booking, title: value || null })} />
-              <Field label="Required-items title" disabled={readOnly} value={finalization.required_title} onChange={(value) => update("finalization_facts", { ...finalization, required_title: value || null })} />
-              <Field label="After-confirmation title" disabled={readOnly} value={finalization.after_confirmation_title} onChange={(value) => update("finalization_facts", { ...finalization, after_confirmation_title: value || null })} />
-              <div className="sm:col-span-2">
-                <Area label="After confirmation" disabled={readOnly} value={lines(finalization.after_confirmation_items)} onChange={(value) => update("finalization_facts", { ...finalization, after_confirmation_items: toLines(value) })} hint="One follow-up item per line." />
-              </div>
             </div>
           </div>
         </FactCard>
@@ -1362,15 +1387,6 @@ export default function FactsForm({
             </button>
           </div>
         ) : null}
-      </div>
-      <div className="order-1 lg:order-2">
-        <FactsNavigator
-          sections={sections}
-          activeSection={deepLink?.section}
-          onSubmit={canSubmit ? onSubmit : undefined}
-          submitLabel={submitLabel}
-          pending={pending}
-        />
       </div>
     </div>
   );

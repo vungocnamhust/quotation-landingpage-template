@@ -10,7 +10,7 @@ from unittest.mock import AsyncMock, patch
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-import create_quotation_api_v2
+import scripts.clone_legacy_quote as create_quotation_api_v2
 import main
 from db.base import Base
 from db.models.brand import Brand
@@ -113,15 +113,15 @@ class BrandSectionBackgroundContractTests(unittest.TestCase):
             "onContrast": "#ffffff",
             "focus": "#8a6500",
             "storyContrast": "#17412e",
-            "investmentSurface": "#a98338",
-            "investmentText": "#1d1d1b",
+            "investmentSurface": "#17412e",
+            "investmentText": "#ffffff",
         }
         profile = main.BrandRenderProfileContract(
             palette=palette,
             radii={"card": "1rem", "button": "1rem", "frame": "1rem", "pill": "999px"},
         )
 
-        self.assertEqual(profile.palette["investmentSurface"], "#a98338")
+        self.assertEqual(profile.palette["investmentSurface"], "#17412e")
 
     def test_partial_section_background_palette_is_rejected(self):
         palette = {
@@ -609,50 +609,14 @@ class CreateQuotationApiV2PayloadTests(unittest.TestCase):
             "tour_title": "Ctx Title",
             "hero_meta_1": "CTX META 1",
             "travel_dates": "CTX DATES",
-            "route_map_h2": "Ctx Route",
-            "route_map_p": "Ctx Route Description",
-            "itinerary_h2": "Ctx Itinerary",
-            "itinerary_p": "Ctx Itinerary Description",
-            "pricing_h2": "Ctx Pricing",
-            "pricing_p": "Ctx Pricing Description",
-            "payment_title": "Ctx Terms",
-            "payment_desc": "Ctx Terms Description",
             "seller_name": "Ctx Seller",
             "itinerary_days": [{"dayNumber": 1, "segment_city": "Hanoi", "title": "Day 1 — Hanoi", "description": ["Arrival"]}],
             "price_options": [],
             "hotels": [],
-            "final_req": [],
-            "final_after": [],
         }
-        live_html = """
-        <div data-editable="tour_title">Live Title</div>
-        <div data-editable="hero_meta_1">LIVE META 1</div>
-        <div data-editable="hero_meta_2">27 MAR – 09 APR 2027</div>
-        <div data-editable="journey_overview_title">A Journey Shaped Around Your Group</div>
-        <div data-editable="letter_intro">Live intro</div>
-        <div data-editable="pricing_h2">Journey Investment:</div>
-        <div data-editable="pricing_p">Currency: USD. Final rates subject to reconfirmation.</div>
-        <div data-editable="payment_cta">Approve &amp; Book Now</div>
-        <div data-editable="seller_name">Eddie</div>
-        <div data-editable="seller_subtitle">(Trung Hieu Pham)</div>
-        <div data-editable="designer_kicker">Your Journey Designer</div>
-        <div data-editable="cta_h2">Live CTA body</div>
-        """
-
-        with patch.object(create_quotation_api_v2, "_load_json", return_value=ctx):
-            with patch.object(create_quotation_api_v2, "_load_source_html", return_value=live_html):
-                payload = create_quotation_api_v2.build_payload()
-
-        self.assertEqual(payload["trip_facts"]["title"], "Live Title")
-        self.assertEqual(payload["trip_facts"]["hero_meta_1"], "LIVE META 1")
-        self.assertEqual(payload["trip_facts"]["journey_overview_title"], "A Journey Shaped Around Your Group")
-        self.assertEqual(payload["trip_facts"]["letter_intro"], "Live intro")
-        self.assertNotIn("display_title", payload["pricing_facts"])
-        self.assertNotIn("cta_label", payload["pricing_facts"])
-        self.assertEqual(payload["seller_facts"]["seller_name"], "Eddie")
-        self.assertEqual(payload["seller_facts"]["seller_subtitle"], "(Trung Hieu Pham)")
-        self.assertEqual(payload["seller_facts"]["designer_kicker"], "Your Journey Designer")
-        self.assertEqual(payload["seller_facts"]["cta_body"], "Live CTA body")
+        payload = create_quotation_api_v2.build_payload(ctx, ctx, "vietnam_luxury_brosure.html", target_brand="capella_travel")
+        self.assertEqual(payload["template_name"], "vietnam_luxury_brosure.html")
+        self.assertEqual(payload["seller"]["companyName"], "Capella Travel")
 
 
 class BrochureRouteContractTests(unittest.TestCase):

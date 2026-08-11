@@ -54,6 +54,11 @@ class V2WorkspaceLocaleContractTests(unittest.TestCase):
         self.assertIn("Depends(require_editor_or_service)", route_source)
         self.assertIn("if not principal.is_service", route_source)
 
+    def test_canonical_review_status_filters_pending_drafts_to_active_draft_status(self):
+        api = (ROOT / "main.py").read_text()
+        review_source = api.split("async def _canonical_review_status", 1)[1].split("\n\n", 1)[0]
+        self.assertIn('pending_drafts = sorted({item.scope for item in content if item.status == "draft"})', review_source)
+
 
 if __name__ == "__main__":
     unittest.main()

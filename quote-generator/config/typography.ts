@@ -304,7 +304,7 @@ const BASE_VARIANTS: Record<TypographyVariant, TypographyRule> = {
   },
   letterHighlight: {
     fontFamilyRole: 'heading',
-    fontSize: 'clamp(1.25rem, 2.2vw, 1.5rem)',
+    fontSize: '1rem',
     lineHeight: '1.4',
     fontWeight: 500,
     letterSpacing: '0em',
@@ -626,7 +626,7 @@ const THEME_VIEW_MODE_OVERRIDES: Record<
         fontSize: '19pt',
       },
       letterHighlight: {
-        fontSize: '12pt',
+        fontSize: '10pt',
       },
       letterBody: {
         fontSize: '10pt',

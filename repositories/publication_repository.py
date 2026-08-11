@@ -312,8 +312,11 @@ class PublicationTargetRepository:
     ) -> tuple[Brand, PublicationTarget, PublicationRelease] | None:
         normalized_hostname = hostname.lower().rstrip(".")
         allowed_host = Brand.hostname == normalized_hostname
-        if fallback_hostname and normalized_hostname == fallback_hostname.lower().rstrip("."):
-            # The fallback host is deliberately brand-neutral. Publication
+        if (
+            (fallback_hostname and normalized_hostname == fallback_hostname.lower().rstrip("."))
+            or normalized_hostname in {"localhost", "127.0.0.1", "host.docker.internal", "quote-generator", "app"}
+        ):
+            # The fallback host and local proxy hosts are brand-neutral. Publication
             # state below remains the authority for its release and media.
             allowed_host = PublicationTarget.fallback_slug.is_not(None)
         row = (await self.session.execute(

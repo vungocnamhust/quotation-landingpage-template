@@ -36,6 +36,13 @@ class ReactPublicationContractTests(unittest.TestCase):
         rendered = main._apply_branded_media_urls(document, hostname="journeys.capellatravel.com", release_id="pr_1", asset_manifest=manifest)
         self.assertEqual(rendered["assets"]["hero"]["url"], f"https://journeys.capellatravel.com/media/pr_1/{token}")
 
+    def test_release_manifest_rewrites_media_to_relative_url(self):
+        document = {"assets": {"hero": {"r2Key": "vietnam/hero.jpg", "url": "https://r2.example/hero.jpg"}}}
+        manifest = main._build_release_asset_manifest(document)
+        token = next(iter(manifest))
+        rendered = main._apply_branded_media_urls(document, hostname="journeys.capellatravel.com", release_id="pr_1", asset_manifest=manifest, media_origin="")
+        self.assertEqual(rendered["assets"]["hero"]["url"], f"/media/pr_1/{token}")
+
     def test_presentation_controls_only_accept_the_v2_allowlist(self):
         request = main.PresentationUpsertRequest.model_validate({"baseRevision": 7, "themeId": "brochure", "layoutVersion": 1})
         self.assertEqual(request.themeId, "brochure")
@@ -75,14 +82,17 @@ class ReactPublicationContractTests(unittest.TestCase):
     def test_skeleton_builder_derives_route_segments_from_facts(self):
         segments = SkeletonBuilder._build_stay_segments(
             [
-                {"dayNumber": 1, "segmentCity": "Hanoi", "overnight": "Hanoi"},
-                {"dayNumber": 2, "segmentCity": "Hanoi", "overnight": "Hanoi"},
-                {"dayNumber": 3, "segmentCity": "Hue", "overnight": "Hue"},
+                {"dayNumber": 1, "segmentCity": "Hanoi", "overnight": "Hanoi", "destinationRef": {"id": "dst_hanoi", "name": "Hanoi", "coordinates": [21.0285, 105.8542]}},
+                {"dayNumber": 2, "segmentCity": "Hanoi", "overnight": "Hanoi", "destinationRef": {"id": "dst_hanoi", "name": "Hanoi", "coordinates": [21.0285, 105.8542]}},
+                {"dayNumber": 3, "segmentCity": "Hue", "overnight": "Hue", "destinationRef": {"id": "dst_hue", "name": "Hue", "coordinates": [16.4637, 107.5909]}},
             ],
             [{"city": "Hanoi", "name": "Hotel Hanoi", "hotelDate": "01–03 Oct"}],
         )
         self.assertEqual([item["displayName"] for item in segments], ["Hanoi", "Hue"])
         self.assertEqual(segments[0]["hotelName"], "Hotel Hanoi")
+        self.assertEqual(segments[0]["coords"], [21.0285, 105.8542])
+        self.assertEqual((segments[0]["dayStart"], segments[0]["dayEnd"]), (1, 2))
+        self.assertEqual(segments[0]["mapSegmentDesc"], "Days 1–2 — Hanoi. Stay at Hotel Hanoi.")
 
 
 if __name__ == "__main__":

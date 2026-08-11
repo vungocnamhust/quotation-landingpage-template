@@ -21,8 +21,14 @@ class FactsResolutionError(ValueError):
         self.missing_inputs = missing_inputs
 
 
-def _as_ref(item: Any) -> dict[str, str]:
-    return {"id": item.id, "name": item.canonical_name, "slug": item.slug}
+def _as_ref(item: Any) -> dict[str, Any]:
+    latitude, longitude = getattr(item, "latitude", None), getattr(item, "longitude", None)
+    return {
+        "id": item.id,
+        "name": item.canonical_name,
+        "slug": item.slug,
+        "coordinates": [float(latitude), float(longitude)] if latitude is not None and longitude is not None else None,
+    }
 
 
 def _date_label(start: str | None, end: str | None) -> tuple[str, int | None, int | None]:
@@ -44,14 +50,18 @@ class FactsResolver:
         missing: list[str] = []
         refs: dict[str, Any] = {"routeDestinationRefs": [], "itinerary": [], "hotels": []}
 
-        async def resolve_destination(value: str | None, path: str) -> dict[str, str] | None:
+        async def resolve_destination(value: str | None, path: str) -> dict[str, Any] | None:
             if value in (None, ""):
                 return None
             item = await lookup(value)
             if item is None:
                 missing.append(path)
                 return None
-            return _as_ref(item)
+            ref = _as_ref(item)
+            if ref["coordinates"] is None:
+                missing.append(f"{path}.coordinates")
+                return None
+            return ref
 
         route: list[str] = []
         for index, value in enumerate(canonical.trip_facts.destinations):
@@ -68,7 +78,7 @@ class FactsResolver:
             overnight_ref = await resolve_destination(day.overnight, f"trip_facts.itinerary[{index}].overnight")
             if overnight_ref:
                 day.overnight = overnight_ref["name"]
-            refs["itinerary"].append({"dayNumber": day.day_number, "destinationRef": ref})
+            refs["itinerary"].append({"dayNumber": day.day_number, "destinationRef": ref, "overnightRef": overnight_ref})
         for index, hotel in enumerate(canonical.service_facts.hotels):
             ref = await resolve_destination(hotel.destination, f"service_facts.hotels[{index}].destination")
             if ref:

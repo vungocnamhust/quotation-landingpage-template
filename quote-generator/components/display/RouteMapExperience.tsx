@@ -39,39 +39,39 @@ const TILE_PROVIDERS: readonly TileProvider[] = [
 ];
 
 function buildClassicMarkerMarkup({
-  index,
+  dayLabel,
   label,
   isActive,
   typographyClassName,
 }: {
-  index: number;
+  dayLabel: string;
   label: string;
   isActive: boolean;
   typographyClassName: string;
 }) {
   return `
     <div class="display-route-map-marker display-route-map-marker--classic${isActive ? ' is-active' : ''}">
-      <div class="display-route-map-marker__badge ${typographyClassName}">${index + 1}</div>
+      <div class="display-route-map-marker__badge ${typographyClassName}">${dayLabel}</div>
       <div class="display-route-map-marker__label ${typographyClassName}">${label}</div>
     </div>
   `;
 }
 
 function buildMarkerIcon({
-  index,
+  dayLabel,
   label,
   isActive,
   typographyClassName,
 }: {
-  index: number;
+  dayLabel: string;
   label: string;
   isActive: boolean;
   typographyClassName: string;
 }) {
   return L.divIcon({
-    html: buildClassicMarkerMarkup({ index, label, isActive, typographyClassName }),
+    html: buildClassicMarkerMarkup({ dayLabel, label, isActive, typographyClassName }),
     className: 'display-route-map-marker-icon',
-    iconSize: [148, 36],
+    iconSize: [210, 36],
     iconAnchor: [16, 18],
   });
 }
@@ -221,10 +221,10 @@ export default function RouteMapExperience({
       }
     }
 
-    viewModel.segments.forEach((segment, index) => {
+    viewModel.segments.forEach((segment) => {
       const marker = L.marker(segment.coordinates as LatLngExpression, {
         icon: buildMarkerIcon({
-          index,
+          dayLabel: textValue(segment.dayLabel),
           label: textValue(segment.city),
           isActive: segment.sequence === activeSequence,
           typographyClassName: getTypographyClassName(requireTypographySlot(typography, 'metaSecondary')),

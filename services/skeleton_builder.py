@@ -22,12 +22,38 @@ class SkeletonBuilder:
         return " – ".join(value for value in (check_in, check_out) if value)
 
     @staticmethod
-    def _build_stay_segments(days: list[dict[str, Any]], hotels: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def _route_stop_default(*, group: list[dict[str, Any]], city: str, hotel_name: str, lang: str) -> str:
+        start, end = group[0]["dayNumber"], group[-1]["dayNumber"]
+        activities = list(dict.fromkeys(
+            value.strip()
+            for day in group
+            for value in [str(day.get("factSummary") or ""), *[str(item) for item in day.get("factHighlights") or []]]
+            if value and value.strip()
+        ))
+        activity_copy = " ".join(activities)
+        if lang == "vi":
+            day_label = f"Ngày {start}" if start == end else f"Ngày {start}–{end}"
+            stay_copy = f"Lưu trú tại {hotel_name}." if hotel_name else ""
+        elif lang == "ar":
+            day_label = f"اليوم {start}" if start == end else f"الأيام {start}–{end}"
+            stay_copy = f"الإقامة في {hotel_name}." if hotel_name else ""
+        else:
+            day_label = f"Day {start}" if start == end else f"Days {start}–{end}"
+            stay_copy = f"Stay at {hotel_name}." if hotel_name else ""
+        activity_copy = activity_copy if activity_copy.endswith((".", "!", "?")) else f"{activity_copy}." if activity_copy else ""
+        return " ".join(part for part in (f"{day_label} — {city}.", stay_copy, activity_copy) if part)
+
+    @classmethod
+    def _build_stay_segments(cls, days: list[dict[str, Any]], hotels: list[dict[str, Any]], *, lang: str = "en") -> list[dict[str, Any]]:
         """Derive the route map from immutable Facts, never from generated copy."""
         grouped: list[list[dict[str, Any]]] = []
         for day in days:
-            city = day.get("overnight") or day.get("segmentCity") or ""
-            if grouped and (grouped[-1][-1].get("overnight") or grouped[-1][-1].get("segmentCity") or "") == city:
+            point = day.get("overnightRef") or day.get("destinationRef") or {}
+            destination_id = point.get("id") or day.get("overnight") or day.get("segmentCity") or ""
+            previous = grouped[-1][-1] if grouped else None
+            previous_point = (previous.get("overnightRef") or previous.get("destinationRef") or {}) if previous else {}
+            previous_id = previous_point.get("id") or (previous.get("overnight") if previous else "") or (previous.get("segmentCity") if previous else "") or ""
+            if grouped and previous_id == destination_id:
                 grouped[-1].append(day)
             else:
                 grouped.append([day])
@@ -36,37 +62,47 @@ class SkeletonBuilder:
         hotel_cursor = 0
         for index, group in enumerate(grouped, 1):
             first, last = group[0], group[-1]
-            city = last.get("overnight") or last.get("segmentCity") or ""
+            point = last.get("overnightRef") or last.get("destinationRef") or {}
+            city = point.get("name") or last.get("overnight") or last.get("segmentCity") or ""
             hotel = next((item for item in hotels[hotel_cursor:] if item.get("city") == city), None)
             if hotel is not None:
                 hotel_cursor = hotels.index(hotel) + 1
             start, end = first["dayNumber"], last["dayNumber"]
             day_label = f"Day {start}" if start == end else f"Days {start}–{end}"
             nights = max(1, end - start + 1)
+            hotel_name = (hotel or {}).get("name") or ""
             segments.append({
                 "id": f"stay-{index}",
+                "destinationId": point.get("id") or "",
+                "dayStart": start,
+                "dayEnd": end,
                 "displayName": city,
                 "daysLabel": day_label,
                 "nightsLabel": f"{nights} Night" if nights == 1 else f"{nights} Nights",
-                "hotelName": (hotel or {}).get("name") or "",
+                "hotelName": hotel_name,
                 "hotelDateRange": (hotel or {}).get("hotelDate") or "",
                 "hotelImage": (hotel or {}).get("hotelImage") or {},
-                "mapSegmentDesc": "",
+                "mapSegmentDesc": cls._route_stop_default(group=group, city=city, hotel_name=hotel_name, lang=lang),
                 "mapSegmentDuration": "",
-                "coords": [],
+                "coords": list(point.get("coordinates") or []),
             })
         return segments
 
     def build(self, *, quotation_id: str, payload: CreateQuoteRequestV1, resolved_facts: dict[str, Any], template: str) -> dict[str, Any]:
         trip, customer, pricing, services, designer = payload.trip_facts, payload.customer_facts, payload.pricing_facts, payload.service_facts, payload.designer_facts
+        resolved_itinerary = resolved_facts.get("itinerary") or []
         days = []
         for index, day in enumerate(trip.itinerary, 1):
             number = day.day_number or index
-            days.append({"id": f"day-{number}", "dayNumber": number, "dayDate": day.display_date or "", "segmentCity": day.destination or "", "title": "", "description": [], "overnight": day.overnight or "", "meals": day.meals, "activities": [], "notes": day.notes, "labelHighlights": "", "labelNotes": ""})
+            refs = resolved_itinerary[index - 1] if index - 1 < len(resolved_itinerary) else {}
+            days.append({"id": f"day-{number}", "dayNumber": number, "dayDate": day.display_date or "", "segmentCity": day.destination or "", "destinationRef": refs.get("destinationRef"), "overnightRef": refs.get("overnightRef"), "factSummary": day.summary or "", "factHighlights": list(day.highlights), "title": "", "description": [], "overnight": day.overnight or "", "meals": day.meals, "activities": [], "notes": day.notes, "labelHighlights": "", "labelNotes": ""})
         hotels = []
         for index, hotel in enumerate(services.hotels, 1):
             hotels.append({"id": f"hotel-{index}", "city": hotel.display_city or hotel.destination or "", "name": hotel.name or "", "introduction": hotel.intro or "", "hotelDate": hotel.display_date or self._hotel_date_range(hotel.check_in, hotel.check_out), "tel": hotel.phone or "", "roomType": hotel.room_type or "", "hotelImage": {"r2Key": hotel.hotel_asset or ""}, "roomImage": {"r2Key": hotel.room_asset or ""}})
-        stay_segments = self._build_stay_segments(days, hotels)
+        stay_segments = self._build_stay_segments(days, hotels, lang=payload.lang or "en")
+        for day in days:
+            day.pop("factSummary", None)
+            day.pop("factHighlights", None)
         document = {
             "meta": {"quotationId": quotation_id, "opportunityId": payload.opportunity_id or "", "lang": payload.lang or "en", "brandId": payload.brand_id or "", "template": "quote-generator", "revision": 1, "status": "draft", "contentSchemaVersion": 1},
             "presentation": {"renderer": "quote-generator", "themeId": payload.presentation_options.theme_id, "layoutVersion": payload.presentation_options.layout_version},

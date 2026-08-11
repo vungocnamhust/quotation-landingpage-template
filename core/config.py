@@ -99,6 +99,7 @@ class Settings:
     publication_job_lease_seconds: int = _get_int("PUBLICATION_JOB_LEASE_SECONDS", 300)
     publication_worker_poll_seconds: int = _get_int("PUBLICATION_WORKER_POLL_SECONDS", 2)
     public_fallback_hostname: str = os.getenv("PUBLIC_FALLBACK_HOSTNAME", "quotes.capellatravel.com").strip().lower().rstrip(".")
+    public_media_origin: str | None = os.getenv("PUBLIC_MEDIA_ORIGIN") if os.getenv("PUBLIC_MEDIA_ORIGIN") else None
     dmc_gateway_enabled: bool = _get_bool("DMC_GATEWAY_ENABLED", False)
     dmc_auth_proxy_url: str = os.getenv("DMC_AUTH_PROXY_URL", "").strip()
     cloudflare_access_team_domain: str = os.getenv("CLOUDFLARE_ACCESS_TEAM_DOMAIN", "").strip().lower()

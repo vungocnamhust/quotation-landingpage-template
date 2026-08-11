@@ -467,6 +467,10 @@ img {
   break-after: avoid;
 }
 
+[data-view-mode="mobile"] .display-nav__links {
+  display: none !important;
+}
+
 [data-view-mode="pdf"] .display-page-root {
   padding: 1.5rem 0 3rem;
   background: var(--color-border);
@@ -1259,7 +1263,7 @@ img {
 
 .display-letter__highlight {
   margin: 0;
-  color: var(--color-accent-alt);
+  color: var(--color-accent);
 }
 
 .display-letter__decor-image {
@@ -1463,6 +1467,17 @@ img {
   border: 1px solid var(--color-border);
 }
 
+.display-route-map__unavailable {
+  display: grid;
+  min-height: 25rem;
+  place-items: center;
+  padding: 2rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-map-surface);
+  color: var(--color-muted);
+  text-align: center;
+}
+
 .display-route-map__path {
   fill: none;
   stroke: color-mix(in srgb, var(--color-map-route) 82%, var(--color-on-contrast));
@@ -1587,8 +1602,9 @@ img {
 
 .display-route-map-marker__badge {
   display: inline-flex;
-  width: 28px;
+  min-width: 28px;
   height: 28px;
+  padding: 0 0.45rem;
   align-items: center;
   justify-content: center;
   border: 2px solid var(--color-on-contrast) !important;

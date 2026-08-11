@@ -394,6 +394,7 @@ export interface RouteSegmentViewModel {
   duration?: TextValue;
   hotelName?: TextValue;
   coordinates: [number, number];
+  dayLabel: TextValue;
   city: TextValue;
   image?: string;
 }
@@ -412,15 +413,18 @@ export interface RouteMapViewModel {
   }>;
   defaultMode: string;
   initialActiveSegment: string;
+  isInteractiveAvailable: boolean;
+  unavailableMessage: TextValue;
   overviewAriaLabel: TextValue;
   mapViewport: {
-    center: [number, number];
+    center: [number, number] | null;
     latSpan: number;
     lngSpan: number;
   };
   interactiveMarkers: Array<{
     sequence: string;
     coordinates: [number, number];
+    dayLabel: TextValue;
     title: TextValue;
     city: TextValue;
   }>;
@@ -625,7 +629,7 @@ export interface PageViewModel {
   pricing: PricingViewModel;
   inclusionsExclusions: InclusionsExclusionsViewModel;
   paymentTerms: PaymentTermsViewModel;
-  finalization: FinalizationViewModel;
+  finalization?: FinalizationViewModel;
   designer: DesignerViewModel;
   footer: FooterViewModel;
   states: StateViewModels;

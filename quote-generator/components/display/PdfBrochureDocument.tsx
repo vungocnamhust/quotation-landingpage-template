@@ -82,7 +82,7 @@ function PdfRouteMap({ documentModel }: { documentModel: DisplayDocument }) {
     <div className="pdf-route__map">
       <svg viewBox="0 0 1000 250" role="img" aria-label={textValue(route.overviewAriaLabel)} {...editableProps(route.overviewAriaLabel)}>
         <path d="M90 145 C260 35, 390 220, 560 105 S790 70, 910 135" className="pdf-route__line" />
-        {route.segments.map((segment, index) => <g key={segment.sequence} transform={`translate(${count === 1 ? 500 : 90 + (820 * index) / (count - 1)} ${count === 1 ? 125 : 135})`}><circle r="18" className="pdf-route__marker" /><text y="6" textAnchor="middle" className="pdf-route__marker-text">{segment.sequence}</text></g>)}
+        {route.segments.map((segment, index) => <g key={segment.sequence} transform={`translate(${count === 1 ? 500 : 90 + (820 * index) / (count - 1)} ${count === 1 ? 125 : 135})`}><circle r="18" className="pdf-route__marker" /><text y="6" textAnchor="middle" className="pdf-route__marker-text">{textValue(segment.dayLabel)}</text></g>)}
       </svg>
     </div>
     <div className={`pdf-route__summary pdf-route__summary--${count === 1 ? 'single' : 'multiple'}`}>

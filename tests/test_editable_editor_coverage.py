@@ -11,7 +11,7 @@ class EditableEditorCoverageTests(unittest.TestCase):
         self.assertNotIn("Advanced brochure fields", source)
         self.assertNotIn("Advanced brochure fact fields JSON", source)
         for control in (
-            "Pricing options", "Pricing note", "Booking term details", "After confirmation",
+            "Pricing options", "Pricing note", "Booking term details",
         ):
             self.assertIn(control, source)
 
@@ -99,7 +99,7 @@ class EditableEditorCoverageTests(unittest.TestCase):
         self.assertNotIn("MediaPicker", design)
         self.assertNotIn("mediaOverrides:", design)
         self.assertNotIn("/facts/media", design)
-        self.assertIn("<DisplayPage documentModel={model} />", boundary)
+        self.assertIn("<DisplayPage documentModel={model}", boundary)
         self.assertIn("onPointerMoveCapture", boundary)
         self.assertIn("onKeyDownCapture", boundary)
         self.assertIn("inspectorControl", inspector)

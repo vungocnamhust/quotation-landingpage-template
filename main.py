@@ -25,6 +25,7 @@ from datetime import date, datetime, timezone
 from github_publish import publish_to_github, publish_file_to_github
 from image_selector import select_landing_image
 from destination_profiles import DESTINATION_PROFILES, get_profile, get_layout_images_for_destination, get_available_images_for_destination, SOFT_TRANSITIONS
+from destination_catalog_seed import BASELINE_DESTINATION_COORDINATES
 from quote_document import (
     BrandContentPolicy,
     BrandProfile,
@@ -83,7 +84,7 @@ from repositories.destination_repository import DestinationRepository
 from repositories.media_library_repository import MediaLibraryRepository
 from repositories.travel_designer_repository import TravelDesignerRepository
 from repositories.accommodation_repository import AccommodationRepository
-from core.auth import Principal, require_editor, require_editor_or_service
+from core.auth import Principal, require_editor, require_editor_or_service, require_quote_admin
 from routers.health import router as health_router
 from core.config import settings
 
@@ -4624,6 +4625,7 @@ def _build_brochure_draft_from_lang_ctx(lang_ctx: dict, quotation_id: str, lang:
             "hotelImage": _safe_asset_ref(segment.get("hotelImage")),
             "mapSegmentDesc": segment.get("mapSegmentDesc") or "",
             "mapSegmentDuration": segment.get("mapSegmentDuration") or "",
+            "activityPreviews": copy.deepcopy(segment.get("activityPreviews") or []),
             "coords": copy.deepcopy(segment.get("coords") or []),
         })
 
@@ -6393,7 +6395,23 @@ def _facts_response(*, quotation, request_json: dict[str, Any], document: dict[s
 def _preserve_content_owned_values(current: dict[str, Any], rebuilt: dict[str, Any]) -> None:
     """A Facts save can rebuild only Facts/fact-derived values, never editorial copy."""
     for path in content_owned_targets():
-        if ".*." in path:
+        if path == "route.staySegments.*.mapSegmentDesc":
+            previous_segments = ((current.get("route") or {}).get("staySegments") or [])
+            rebuilt_segments = ((rebuilt.get("route") or {}).get("staySegments") or [])
+            previous_by_identity = {
+                (item.get("destinationId"), item.get("dayStart"), item.get("dayEnd")): item
+                for item in previous_segments
+            }
+            for next_segment in rebuilt_segments:
+                previous = previous_by_identity.get((
+                    next_segment.get("destinationId"),
+                    next_segment.get("dayStart"),
+                    next_segment.get("dayEnd"),
+                ))
+                if previous is not None and "mapSegmentDesc" in previous:
+                    next_segment["mapSegmentDesc"] = copy.deepcopy(previous["mapSegmentDesc"])
+            continue
+        if path in {"itinerary.days.*.title", "itinerary.days.*.description", "itinerary.days.*.activities"}:
             # Itinerary content is keyed by day number, so a route change does
             # not accidentally attach an old narrative to a new day position.
             current_days = ((current.get("itinerary") or {}).get("days") or [])
@@ -6489,6 +6507,7 @@ async def list_workspace_quotations(
     updated_before, id_before = _parse_workspace_cursor(cursor)
     async with _get_db_session_factory()() as session:
         quotes = QuotationRepository(session)
+        documents = QuotationDocumentRepository(session)
         items = await quotes.list_for_designer(
             status=status,
             search=q,
@@ -6497,23 +6516,48 @@ async def list_workspace_quotations(
             limit=min(max(limit, 1), 100) + 1,
         )
         summary = await quotes.status_summary_workspace()
-    has_next = len(items) > min(max(limit, 1), 100)
-    visible = items[: min(max(limit, 1), 100)]
+        has_next = len(items) > min(max(limit, 1), 100)
+        visible = items[: min(max(limit, 1), 100)]
+        docs_map = {}
+        for q_item in visible:
+            doc = await documents.get_current_document(q_item.id, q_item.baseline_lang)
+            if doc and isinstance(doc.document_json, dict):
+                docs_map[q_item.id] = doc.document_json
+
+    out_items = []
+    for item in visible:
+        doc_json = docs_map.get(item.id, {})
+        tf = doc_json.get("trip_facts") if isinstance(doc_json.get("trip_facts"), dict) else {}
+        cf = doc_json.get("customer_facts") if isinstance(doc_json.get("customer_facts"), dict) else {}
+
+        out_items.append({
+            "id": item.id,
+            "title": item.title,
+            "customerName": item.customer_name or cf.get("customer_name") or None,
+            "brandId": item.brand_id,
+            "status": item.status,
+            "locale": item.baseline_lang,
+            "createdAt": item.created_at.isoformat(),
+            "updatedAt": item.updated_at.isoformat(),
+            "currentRevision": item.current_revision,
+            "currentVersion": item.current_version,
+            "tripFacts": {
+                "destinations": tf.get("destinations") if isinstance(tf.get("destinations"), list) else [],
+                "startDate": tf.get("start_date") or None,
+                "endDate": tf.get("end_date") or None,
+                "durationDays": tf.get("duration_days") or None,
+                "durationNights": tf.get("duration_nights") or None,
+                "displayTravelDates": tf.get("display_travel_dates") or None,
+                "displayRouteText": tf.get("display_route_text") or None,
+            },
+            "customerFacts": {
+                "adults": cf.get("adults") if isinstance(cf.get("adults"), int) else None,
+                "children": cf.get("children") if isinstance(cf.get("children"), int) else None,
+            },
+        })
+
     return {
-        "items": [
-            {
-                "id": item.id,
-                "title": item.title,
-                "customerName": item.customer_name,
-                "brandId": item.brand_id,
-                "status": item.status,
-                "locale": item.baseline_lang,
-                "updatedAt": item.updated_at.isoformat(),
-                "currentRevision": item.current_revision,
-                "currentVersion": item.current_version,
-            }
-            for item in visible
-        ],
+        "items": out_items,
         "nextCursor": _workspace_cursor(visible[-1]) if has_next and visible else None,
         "summary": summary,
     }
@@ -8782,6 +8826,43 @@ class AccommodationStatusRequest(BaseModel):
     isActive: bool
 
 
+class DestinationCatalogRequest(BaseModel):
+    canonicalName: str
+    slug: str
+    aliases: list[str] = Field(default_factory=list)
+    countrySlug: str | None = None
+    regionSlug: str | None = None
+    provinceSlug: str | None = None
+    latitude: float
+    longitude: float
+
+    @field_validator("canonicalName", "slug")
+    @classmethod
+    def require_value(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("must not be empty")
+        return value
+
+    @field_validator("latitude")
+    @classmethod
+    def validate_latitude(cls, value: float) -> float:
+        if not -90 <= value <= 90:
+            raise ValueError("must be between -90 and 90")
+        return value
+
+    @field_validator("longitude")
+    @classmethod
+    def validate_longitude(cls, value: float) -> float:
+        if not -180 <= value <= 180:
+            raise ValueError("must be between -180 and 180")
+        return value
+
+
+class DestinationStatusRequest(BaseModel):
+    isActive: bool
+
+
 class TravelDesignerBrandDefaultRequest(BaseModel):
     designerProfileId: str
 
@@ -8829,7 +8910,8 @@ async def _seed_destination_catalog(session) -> None:
         if slug == "default":
             continue
         geo = _DESTINATION_GEO.get(slug, (None, None, None))
-        await repository.upsert(destination_id=f"dst_{slug}", canonical_name=str(profile.get("label") or slug.title()), slug=slug, aliases=[slug, slug.replace("-", " ")], country_slug=geo[0], region_slug=geo[1], province_slug=geo[2])
+        coordinates = BASELINE_DESTINATION_COORDINATES.get(slug)
+        await repository.upsert(destination_id=f"dst_{slug}", canonical_name=str(profile.get("label") or slug.title()), slug=slug, aliases=[slug, slug.replace("-", " ")], country_slug=geo[0], region_slug=geo[1], province_slug=geo[2], latitude=coordinates[0] if coordinates else None, longitude=coordinates[1] if coordinates else None)
 
 
 async def _canonicalize_quote_destinations(payload: CreateQuoteRequestV1) -> tuple[CreateQuoteRequestV1, dict[str, Any]]:
@@ -9223,6 +9305,12 @@ def _set_fact_media_field(document: dict[str, Any], field_id: str, value: Any) -
         parts = field_id.split("."); index, key = int(parts[2]), parts[3]; hotels = document.setdefault("stays", {}).setdefault("hotels", [])
         if index >= len(hotels): raise HTTPException(status_code=422, detail={"message": "Stay image no longer matches a hotel.", "invalidKeys": [field_id]})
         hotels[index][key] = value or {"status": "empty"}
+        if key == "hotelImage":
+            hotel_name = hotels[index].get("name")
+            hotel_city = hotels[index].get("city")
+            for seg in (document.get("route") or {}).get("staySegments") or []:
+                if (hotel_name and seg.get("hotelName") == hotel_name) or (hotel_city and seg.get("displayName") == hotel_city):
+                    seg["hotelImage"] = value or {"status": "empty"}
     elif field_id == "designer.image":
         document.setdefault("designer", {})["image"] = value or {"status": "empty"}
     elif field_id.startswith("assets.themeOrnaments."):
@@ -9682,20 +9770,106 @@ async def search_media_library(prefix: str, query: str, cursor: int = 0, limit: 
     return {"items": [{"r2Key": item.r2_key, "fileName": item.file_name, "previewUrl": storage.build_public_url(item.preview_r2_key) if item.preview_r2_key else None, "width": item.width, "height": item.height, "classification": _media_classification(item), "mediaKind": item.media_kind} for item in items[:limit]], "nextCursor": cursor + limit if len(items) > limit else None}
 
 
+async def _serialize_destination(repository: DestinationRepository, item, *, matched_from: str | None = None) -> dict[str, Any]:
+    payload = {
+        "id": item.id,
+        "name": item.canonical_name,
+        "slug": item.slug,
+        "countrySlug": item.country_slug,
+        "regionSlug": item.region_slug,
+        "provinceSlug": item.province_slug,
+        "latitude": float(item.latitude) if item.latitude is not None else None,
+        "longitude": float(item.longitude) if item.longitude is not None else None,
+        "isActive": item.is_active,
+        "aliases": await repository.aliases_for(item.id),
+    }
+    if matched_from is not None:
+        payload["matchedFrom"] = matched_from
+    return payload
+
+
+async def _save_destination(session, payload: DestinationCatalogRequest, item=None):
+    repository = DestinationRepository(session)
+    alias_conflict = await repository.conflicting_alias(
+        [payload.canonicalName, payload.slug, *payload.aliases],
+        destination_id=item.id if item is not None else None,
+    )
+    if alias_conflict is not None:
+        raise HTTPException(status_code=409, detail={"message": "Destination slug or alias already exists.", "alias": alias_conflict})
+    if item is None:
+        return await repository.create(
+            destination_id=f"dst_{uuid.uuid4().hex[:12]}",
+            canonical_name=payload.canonicalName,
+            slug=payload.slug,
+            aliases=payload.aliases,
+            country_slug=payload.countrySlug,
+            region_slug=payload.regionSlug,
+            province_slug=payload.provinceSlug,
+            latitude=payload.latitude,
+            longitude=payload.longitude,
+        )
+    if payload.slug != item.slug:
+        raise HTTPException(status_code=422, detail={"message": "Destination slug is immutable.", "missingInputs": ["slug"]})
+    return await repository.update(item, canonical_name=payload.canonicalName, aliases=payload.aliases, country_slug=payload.countrySlug, region_slug=payload.regionSlug, province_slug=payload.provinceSlug, latitude=payload.latitude, longitude=payload.longitude)
+
+
 @app.get("/api/v2/destinations")
 async def search_destinations(query: str = "", limit: int = 20, principal: Principal = Depends(require_editor)):
     async with _get_db_session_factory()() as session:
         await _seed_destination_catalog(session)
         await session.commit()
         rows = await DestinationRepository(session).search(query, limit=max(1, min(limit, 50)))
-        items: list[dict[str, str]] = []
+        items: list[dict[str, Any]] = []
         seen_ids: set[str] = set()
         for item, alias in rows:
             if item.id in seen_ids:
                 continue
             seen_ids.add(item.id)
-            items.append({"id": item.id, "name": item.canonical_name, "slug": item.slug, "matchedFrom": alias})
+            items.append(await _serialize_destination(DestinationRepository(session), item, matched_from=alias))
         return {"items": items}
+
+
+@app.get("/api/v2/destinations/{destination_id}")
+async def get_destination(destination_id: str, principal: Principal = Depends(require_editor)):
+    async with _get_db_session_factory()() as session:
+        await _seed_destination_catalog(session)
+        item = await DestinationRepository(session).get(destination_id)
+        if item is None:
+            raise HTTPException(status_code=404, detail="Destination was not found.")
+        return await _serialize_destination(DestinationRepository(session), item)
+
+
+@app.post("/api/v2/destinations", status_code=201)
+async def create_destination(payload: DestinationCatalogRequest, principal: Principal = Depends(require_quote_admin)):
+    async with _get_db_session_factory()() as session:
+        saved = await _save_destination(session, payload)
+        await session.commit()
+        return await _serialize_destination(DestinationRepository(session), saved)
+
+
+@app.put("/api/v2/destinations/{destination_id}")
+async def update_destination(destination_id: str, payload: DestinationCatalogRequest, principal: Principal = Depends(require_quote_admin)):
+    async with _get_db_session_factory()() as session:
+        item = await DestinationRepository(session).get(destination_id)
+        if item is None:
+            raise HTTPException(status_code=404, detail="Destination was not found.")
+        saved = await _save_destination(session, payload, item)
+        await session.commit()
+        return await _serialize_destination(DestinationRepository(session), saved)
+
+
+@app.patch("/api/v2/destinations/{destination_id}/status")
+async def update_destination_status(destination_id: str, payload: DestinationStatusRequest, principal: Principal = Depends(require_quote_admin)):
+    async with _get_db_session_factory()() as session:
+        repository = DestinationRepository(session)
+        item = await repository.get(destination_id)
+        if item is None:
+            raise HTTPException(status_code=404, detail="Destination was not found.")
+        if payload.isActive and (item.latitude is None or item.longitude is None):
+            raise HTTPException(status_code=422, detail={"message": "An active destination requires coordinates.", "missingInputs": ["latitude", "longitude"]})
+        saved = await repository.set_status(item, is_active=payload.isActive)
+        await session.commit()
+        return await _serialize_destination(repository, saved)
 
 
 def _serialize_travel_designer(profile) -> dict[str, Any]:
@@ -10609,6 +10783,7 @@ def _manifest_r2_key(value: Any) -> str:
 
 def _apply_branded_media_urls(document: Any, *, hostname: str, release_id: str, asset_manifest: dict[str, Any], media_origin: str | None = None) -> Any:
     reverse_manifest = {_manifest_r2_key(entry): token for token, entry in asset_manifest.items()}
+    effective_media_origin = media_origin if media_origin is not None else settings.public_media_origin
 
     def transform(value: Any) -> Any:
         if isinstance(value, list):
@@ -10619,7 +10794,7 @@ def _apply_branded_media_urls(document: Any, *, hostname: str, release_id: str, 
         r2_key = result.get("r2Key")
         token = reverse_manifest.get(r2_key) if isinstance(r2_key, str) else None
         if token:
-            base_url = media_origin.rstrip("/") if media_origin else f"https://{hostname}"
+            base_url = effective_media_origin.rstrip("/") if effective_media_origin is not None else f"https://{hostname}"
             result["url"] = f"{base_url}/media/{release_id}/{token}"
         return result
 
@@ -10662,7 +10837,8 @@ def _release_cache_urls(*, hostname: str, target: Any, release: Any) -> list[str
 
 
 def _fallback_public_url(target: Any) -> str:
-    return f"https://{settings.public_fallback_hostname}/p/{target.fallback_slug}"
+    slug = getattr(target, "fallback_slug", None) or getattr(target, "public_slug", "")
+    return f"https://{settings.public_fallback_hostname}/p/{slug}"
 
 
 def _fallback_release_cache_urls(*, target: Any, release: Any) -> list[str]:
@@ -10724,8 +10900,7 @@ async def _canonical_review_status(quotation_id: str, lang: str | None = None) -
         content = await drafts.list(quotation_id, lang)
         # A pending AI candidate is not a publish blocker by itself. Publish
         # readiness is determined from the canonical document: every enabled
-        # brochure section must contain its required content.
-        pending_drafts = sorted({item.scope for item in content if item.status in {"draft", "stale"}})
+        pending_drafts = sorted({item.scope for item in content if item.status == "draft"})
         content_readiness = resolve_content_readiness(document.document_json, resolved["missingInputs"])
         content_blockers = [
             {"sectionId": item["sectionId"], "sectionType": item["sectionType"], "path": missing["path"], "message": missing["message"]}
@@ -10945,7 +11120,13 @@ async def resolve_public_quotation_v2(
         if revision is None:
             raise HTTPException(status_code=404, detail="Published quotation revision was not found.")
         return {
-            "document": _apply_branded_media_urls(revision.document_json, hostname=brand.hostname, release_id=release.id, asset_manifest=release.asset_manifest or {}),
+            "document": _apply_branded_media_urls(
+                revision.document_json,
+                hostname=brand.hostname,
+                release_id=release.id,
+                asset_manifest=release.asset_manifest or {},
+                media_origin=settings.public_media_origin if settings.public_media_origin is not None else "",
+            ),
             "brandProfile": release.render_profile_snapshot,
             "release": {"id": release.id, "number": release.release_number, "documentRevision": release.document_revision},
         }
@@ -10968,7 +11149,13 @@ async def resolve_public_fallback_quotation_v2(
         if revision is None:
             raise HTTPException(status_code=404, detail="Published quotation revision was not found.")
         return {
-            "document": _apply_branded_media_urls(revision.document_json, hostname=settings.public_fallback_hostname, release_id=release.id, asset_manifest=release.asset_manifest or {}),
+            "document": _apply_branded_media_urls(
+                revision.document_json,
+                hostname=settings.public_fallback_hostname,
+                release_id=release.id,
+                asset_manifest=release.asset_manifest or {},
+                media_origin=settings.public_media_origin if settings.public_media_origin is not None else "",
+            ),
             "brandProfile": release.render_profile_snapshot,
             "release": {"id": release.id, "number": release.release_number, "documentRevision": release.document_revision},
             "locale": target.locale,
@@ -12094,11 +12281,10 @@ async def approve_itinerary(itinerary_id: str, body: ApproveRequest):
 
 # ── Landing page (static demo) ───────────────────────────────────────────────
 
-@app.get("/", response_class=HTMLResponse)
+@app.get("/")
 async def serve_landing_page():
-    # Serve the original static demo file directly
-    with open("vietnam-heritage-luxury-landingpage.html", "r", encoding="utf-8") as f:
-        return HTMLResponse(content=f.read())
+    return RedirectResponse(url="/workspace", status_code=307)
+
 
 
 @app.get("/favicon.ico", include_in_schema=False)

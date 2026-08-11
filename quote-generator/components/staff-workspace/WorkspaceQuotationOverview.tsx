@@ -20,10 +20,10 @@ type Overview = {
     updatedAt: string;
   };
   workflow: {
-    facts: { ready: boolean };
-    content: { ready: boolean };
-    design: { ready: boolean };
-    review: { ready: boolean; blockers: string[] };
+    facts: { ready: boolean; missingInputs?: string[] };
+    content: { ready: boolean; contentBlockers?: Array<{ path: string; message: string }> };
+    design: { ready: boolean; presentationErrors?: string[] };
+    review: { ready: boolean; blockers?: string[] };
   };
   publications: Array<{ targetId: string; status: string }>;
 };
@@ -83,11 +83,52 @@ export default function WorkspaceQuotationOverview({
   }
 
   const { quotation, workflow, publications } = data;
+  const factsMissing = workflow.facts.missingInputs?.length ?? 0;
+  const contentMissing = workflow.content.contentBlockers?.length ?? 0;
+  const designErrors = workflow.design.presentationErrors?.length ?? 0;
+  const reviewBlockers = workflow.review.blockers?.length ?? 0;
+
   const stages = [
-    { label: "Facts", ready: workflow.facts.ready, stageKey: "facts" },
-    { label: "Content", ready: workflow.content.ready, stageKey: "content" },
-    { label: "Design", ready: workflow.design.ready, stageKey: "design" },
-    { label: "Review", ready: workflow.review.ready, stageKey: "review" },
+    {
+      label: "Facts",
+      ready: workflow.facts.ready,
+      stageKey: "facts",
+      detailText: workflow.facts.ready
+        ? "Ready"
+        : factsMissing > 0
+        ? `${factsMissing} missing input${factsMissing > 1 ? "s" : ""}`
+        : "Needs attention",
+    },
+    {
+      label: "Content",
+      ready: workflow.content.ready,
+      stageKey: "content",
+      detailText: workflow.content.ready
+        ? "Ready"
+        : contentMissing > 0
+        ? `${contentMissing} item${contentMissing > 1 ? "s" : ""} incomplete`
+        : "Needs attention",
+    },
+    {
+      label: "Design",
+      ready: workflow.design.ready,
+      stageKey: "design",
+      detailText: workflow.design.ready
+        ? "Ready"
+        : designErrors > 0
+        ? `${designErrors} layout issue${designErrors > 1 ? "s" : ""}`
+        : "Needs attention",
+    },
+    {
+      label: "Review",
+      ready: workflow.review.ready,
+      stageKey: "review",
+      detailText: workflow.review.ready
+        ? "Ready"
+        : reviewBlockers > 0
+        ? `${reviewBlockers} blocker${reviewBlockers > 1 ? "s" : ""} remaining`
+        : "Needs attention",
+    },
   ] as const;
 
   const readyCount = stages.filter((s) => s.ready).length;
@@ -255,7 +296,7 @@ export default function WorkspaceQuotationOverview({
 
       {/* Stage Cards */}
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stages.map(({ label, ready, stageKey }, index) => (
+        {stages.map(({ label, ready, stageKey, detailText }, index) => (
           <Link
             key={label}
             href={`/workspace/quotations/${encodeURIComponent(quotationId)}/edit?stage=${stageKey}`}
@@ -300,7 +341,7 @@ export default function WorkspaceQuotationOverview({
                 ready ? "text-[var(--color-accent)]" : "text-[var(--color-muted)]"
               )}
             >
-              {ready ? "Ready" : "Needs attention"}
+              {detailText}
             </p>
           </Link>
         ))}

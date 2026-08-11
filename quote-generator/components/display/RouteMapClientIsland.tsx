@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import type { RouteMapViewModel, TypographySlotMap } from '../../display/types';
+import { textValue } from '../../display/types';
 import type { ViewMode } from '../../display/contracts';
 
 const RouteMapExperience = dynamic(() => import('./RouteMapExperience'), {
@@ -20,6 +21,10 @@ export default function RouteMapClientIsland({
   mapColors: { route: string };
   viewMode: Exclude<ViewMode, 'pdf'>;
 }) {
+  if (!viewModel.isInteractiveAvailable) {
+    return <div className="display-route-map__unavailable" role="status">{textValue(viewModel.unavailableMessage)}</div>;
+  }
+
   const islandKey = `${viewMode}:${viewModel.defaultMode}:${viewModel.initialActiveSegment}:${viewModel.segments
     .map((segment) => segment.sequence)
     .join('-')}`;

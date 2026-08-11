@@ -324,7 +324,6 @@ export const brochureTheme: ThemeDefinition = {
     'pricing',
     'inclusionsExclusions',
     'paymentTerms',
-    'finalization',
     'designer',
     'footer',
   ],

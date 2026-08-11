@@ -240,6 +240,9 @@ class QuoteDocumentNarrative(QuoteBaseModel):
 
 class QuoteDocumentRouteSegment(QuoteBaseModel):
     id: str
+    destinationId: str = ""
+    dayStart: int | None = None
+    dayEnd: int | None = None
     displayName: str = ""
     daysLabel: str = ""
     nightsLabel: str = ""
@@ -990,7 +993,7 @@ SECTION_REGISTRY: Dict[str, SectionDefinition] = {
         label="Finalization",
         web_anchor="finalization",
         pdf_anchor="finalization",
-        required_document_paths=["content.sections.finalization.blocks"],
+        required_document_paths=[],
         editor_schema={"fields": ["content.sections.finalization.blocks"]},
     ),
 }
