@@ -20,6 +20,7 @@
 - Use TypeScript in `quote-generator/`; keep components server-first unless interaction is required.
 - Prefer direct imports over barrels in the display system.
 - Typography must come from `quote-generator/config/typography.ts` via `typo-*` classes; do not hardcode `text-*`, `tracking-*`, or `font-*` in brochure UI.
+- Prefill & Data Derivation Engine: Follow the 3-Layered Architecture (`factsTypes.ts` schema -> `prefillRules.ts` pure business rules -> `prefillEngine.ts` single-pass facade updaters). Call atomic facade updaters in React components (`setFacts(current => updateCustomerName(current, value))`) rather than executing multi-step inline state patches. Use `getDefaultMealsForLang(lang)` for localized default meals (EN, VI, AR).
 - File naming: React components in `PascalCase.tsx`, utilities in `camelCase.ts`, tests as `test_<feature>.py`.
 
 ## Testing Guidelines
@@ -40,6 +41,7 @@
 ## Quote Generator Skills
 - Prefer the repo-local skills in `./.agents/skills/` whenever a task touches `quote-generator/`.
 - Use `quote-generator-display-governor` first for display-system changes.
+- Use `quote-generator-prefill-governor` for prefill, default value assignment, duration/date calculations, party labels, or hotel/pricing data derivations.
 - Use `quote-generator-typography-ssot` for any typography, button text, nav text, CTA, or print text changes.
 - Use `quote-generator-section-builder` when adding or refactoring sections, layouts, or section-facing components.
 - Use `quote-generator-parity-review` for prototype drift, parity audits, and responsive/PDF comparison work.

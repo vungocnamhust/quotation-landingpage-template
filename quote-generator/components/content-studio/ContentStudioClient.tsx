@@ -12,6 +12,7 @@ import { ContentDraftActions } from './ContentDraftActions';
 import { ContentGenerationPanel, FactsUsed } from './ContentGenerationPanel';
 import { cloneCandidate, SectionContentFields } from './SectionContentFields';
 import type { ContentCandidate, ContentDraft, ContentFactInput, DocumentResponse, DraftsResponse, FactsResponse, ReviewResponse } from '../quotation-workspace/useQuotationWorkspace';
+import { getDefaultMealsForLang } from '../../lib/prefillRules';
 
 type Props = {
   quotationId: string;
@@ -149,11 +150,11 @@ export default function ContentStudioClient({ quotationId, lang, onEditFacts, on
         destination: day.destination ?? '',
         summary: day.summary ?? '',
         highlights: day.highlights ?? [],
-        meals: day.meals ?? [],
+        meals: day.meals?.length ? day.meals : getDefaultMealsForLang(lang as "en" | "vi" | "ar"),
         overnight: day.overnight ?? '',
       } : {},
     };
-  }, [facts, resources.factsData?.resolvedFacts, scope]);
+  }, [facts, lang, resources.factsData?.resolvedFacts, scope]);
 
   const setCustomInstruction = useCallback((value: string | null) => setCustomInstructionState(value === null || !scope ? null : { scope, mode, value }), [mode, scope]);
   const setWorkingCandidate = useCallback((candidate: ContentCandidate) => { if (scope) setLocalCandidate({ scope, candidate }); }, [scope]);

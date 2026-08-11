@@ -14,7 +14,7 @@ import { DisplayTitle, MetaText } from './atoms';
 interface RouteMapExperienceProps {
   viewModel: RouteMapViewModel;
   typography: TypographySlotMap;
-  mapColors: { route: string };
+  mapColors: { route: string; marker?: string; activeMarker?: string };
   viewMode: Exclude<ViewMode, 'pdf'>;
 }
 

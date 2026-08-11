@@ -10,18 +10,21 @@ import AccommodationPicker from "./AccommodationPicker";
 import type { AccommodationProfile, TravelDesignerProfile } from "../../lib/quotationApi";
 import { BrochureAssetsEditor, MediaSlotRenderer, type MediaSlotValue, type MediaWorkspace } from "./MediaSlotRenderer";
 import {
-  deriveStaySegmentsFromItinerary,
   inferCommercialPerTraveler,
   inferCommercialTotal,
   inferDefaultCurrency,
   inferGreetingName,
-  inferOvernightDestination,
   inferPartyLabel,
-  syncHotelsFromStaySegments,
   validateHotelDates,
 } from "../../lib/prefillRules";
 import {
-  createItineraryDay,
+  applyRouteDates,
+  syncHotelsFromItineraryOvernights,
+  updateCustomerCounts,
+  updateCustomerName,
+  updateItineraryDayDestination,
+} from "../../lib/prefillEngine";
+import {
   createPricingOption,
   CURRENCY_OPTIONS,
   dateForItineraryDay,
@@ -30,6 +33,7 @@ import {
   minorAmountFromInput,
   minorAmountToInput,
   routeDestinationRefsFromItinerary,
+  type DestinationRef,
   type ItineraryDayFact,
   type HotelFact,
   MAX_COMMERCIAL_OPTIONS,
@@ -95,16 +99,8 @@ export default function QuotationIntakeForm({ facts: inputFacts, options, pendin
   const mediaWorkspace = useMemo<MediaWorkspace>(() => ({ contract: options.editableContract, draftSelections: draftMediaSelections, onDraftSelectionChange: onDraftMediaSelectionChange }), [draftMediaSelections, onDraftMediaSelectionChange, options.editableContract]);
 
   const patchFacts = useCallback((patch: (current: QuotationFacts) => QuotationFacts) => onChange((current) => patch(ensureFactsDefaults(current))), [onChange]);
-  const applyRouteDates = useCallback((startDate: string | null, endDate: string | null, nextLength: number) => {
-    patchFacts((current) => {
-      const currentDays = current.trip_facts.itinerary;
-      const itinerary = Array.from({ length: nextLength }, (_, index) => {
-        const existing = currentDays[index];
-        return existing ? { ...existing, day_number: index + 1, display_date: dateForItineraryDay(startDate, index + 1) } : createItineraryDay({ index, startDate });
-      });
-      const destination_refs = routeDestinationRefsFromItinerary(itinerary);
-      return { ...current, trip_facts: { ...current.trip_facts, start_date: startDate, end_date: endDate, itinerary, destination_refs, destinations: destination_refs.map((ref) => ref.name) } };
-    });
+  const applyRouteDatesHandler = useCallback((startDate: string | null, endDate: string | null, nextLength: number) => {
+    patchFacts((current) => applyRouteDates(current, startDate, endDate, nextLength));
   }, [patchFacts]);
   const changeDate = useCallback((field: "start_date" | "end_date", value: string) => {
     const nextStartDate = field === "start_date" ? value || null : trip.start_date;
@@ -118,13 +114,13 @@ export default function QuotationIntakeForm({ facts: inputFacts, options, pendin
       setPendingRouteReduction({ startDate: nextStartDate, endDate: nextEndDate, length: nextLength });
       return;
     }
-    applyRouteDates(nextStartDate, nextEndDate, nextLength);
-  }, [applyRouteDates, patchFacts, trip.end_date, trip.itinerary, trip.start_date]);
+    applyRouteDatesHandler(nextStartDate, nextEndDate, nextLength);
+  }, [applyRouteDatesHandler, patchFacts, trip.end_date, trip.itinerary, trip.start_date]);
   const confirmRouteReduction = useCallback(() => {
     if (!pendingRouteReduction) return;
-    applyRouteDates(pendingRouteReduction.startDate, pendingRouteReduction.endDate, pendingRouteReduction.length);
+    applyRouteDatesHandler(pendingRouteReduction.startDate, pendingRouteReduction.endDate, pendingRouteReduction.length);
     setPendingRouteReduction(null);
-  }, [applyRouteDates, pendingRouteReduction]);
+  }, [applyRouteDatesHandler, pendingRouteReduction]);
 
   const patchDay = useCallback((index: number, patch: Partial<ItineraryDayFact>) => patchFacts((current) => {
     const rawDays = current.trip_facts.itinerary;
@@ -134,22 +130,16 @@ export default function QuotationIntakeForm({ facts: inputFacts, options, pendin
     return { ...current, trip_facts: { ...current.trip_facts, itinerary, destination_refs, destinations: destination_refs.map((ref) => ref.name) } };
   }), [patchFacts]);
 
+  const updateDayDestinationHandler = useCallback((index: number, destination: string | null, ref?: DestinationRef | null) => {
+    patchFacts((current) => updateItineraryDayDestination(current, index, destination, ref));
+  }, [patchFacts]);
+
   const patchHotel = useCallback((index: number, patch: Partial<HotelFact>) => patchFacts((current) => ({ ...current, service_facts: { ...current.service_facts, hotels: current.service_facts.hotels.map((hotel, hotelIndex) => hotelIndex === index ? { ...hotel, ...patch } : hotel) } })), [patchFacts]);
   const addHotel = useCallback(() => patchFacts((current) => ({ ...current, service_facts: { ...current.service_facts, hotels: [...current.service_facts.hotels, emptyHotel()] } })), [patchFacts]);
   const removeHotel = useCallback((index: number) => patchFacts((current) => ({ ...current, service_facts: { ...current.service_facts, hotels: current.service_facts.hotels.filter((_, hotelIndex) => hotelIndex !== index) } })), [patchFacts]);
 
   const syncHotelsFromItinerary = useCallback(() => {
-    patchFacts((current) => {
-      const segments = deriveStaySegmentsFromItinerary(current.trip_facts.itinerary, current.trip_facts.start_date, current.trip_facts.end_date);
-      const syncedHotels = syncHotelsFromStaySegments(current.service_facts.hotels, segments);
-      return {
-        ...current,
-        service_facts: {
-          ...current.service_facts,
-          hotels: syncedHotels,
-        },
-      };
-    });
+    patchFacts((current) => syncHotelsFromItineraryOvernights(current));
   }, [patchFacts]);
 
   const seedProfileMedia = useCallback((fieldId: string, r2Key: string | null | undefined) => {
@@ -178,7 +168,7 @@ export default function QuotationIntakeForm({ facts: inputFacts, options, pendin
 
     <IntakeCard title="Trip" description="Set the travel dates, then assign a destination to each day in the route." alternateBg={false}>
       <div className="grid gap-4 sm:grid-cols-2"><Field label="Start date" required type="date" value={trip.start_date} onChange={(value) => changeDate("start_date", value)} /><Field label="End date" required type="date" value={trip.end_date} onChange={(value) => changeDate("end_date", value)} /><div className="flex flex-col gap-2"><span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>Duration</span><p className={cn(getTypographyClassName("bodyMd"), "flex min-h-11 items-center rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface-muted)] px-3 text-[var(--color-on-surface)]")}>{durationDays === null ? "Choose travel dates" : `${durationDays} days / ${Math.max(durationDays - 1, 0)} nights`}</p></div></div>
-      <div className="mt-5 flex flex-col gap-3"><div><h3 className={cn(getTypographyClassName("cardTitle"), "text-[var(--color-on-surface)]")}>Brief Route</h3><p className={cn(getTypographyClassName("bodySm"), "mt-1 text-[var(--color-muted)]")}>Each day requires factual programme details and an overnight destination.</p></div>{trip.itinerary.map((day, index) => { const derivedDate = day.display_date || dateForItineraryDay(trip.start_date, index + 1); return <div key={index} className="grid items-end gap-3 rounded-[var(--radius-card)] border border-[var(--color-border-strong)] bg-[var(--color-surface-muted)] p-4 shadow-2xs sm:grid-cols-2"><p className={cn(getTypographyClassName("bodyMd"), "sm:col-span-2 text-[var(--color-on-surface)]")}>{`Day ${index + 1}${derivedDate ? ` · ${derivedDate}` : ""}`}</p><DestinationInput label="Destination" value={day.destination} onChange={(destination) => patchDay(index, { destination, destination_ref: null, overnight: inferOvernightDestination(destination, day.overnight) })} onSelect={(destinationRef) => patchDay(index, { destination: destinationRef?.name ?? null, destination_ref: destinationRef, overnight: inferOvernightDestination(destinationRef?.name ?? null, day.overnight) })} /><DestinationInput label="Overnight" value={day.overnight} onChange={(overnight) => patchDay(index, { overnight })} onSelect={(ref) => patchDay(index, { overnight: ref?.name ?? null })} /><label className="sm:col-span-2 flex flex-col gap-1.5"><span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>Program summary</span><textarea className={cn(inputClass, "min-h-24 py-3")} value={day.summary ?? ""} onChange={(event) => patchDay(index, { summary: event.target.value || null })} /></label><label className="flex flex-col gap-1.5"><span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>Meals</span><textarea className={cn(inputClass, "min-h-20 py-3")} value={day.meals.join("\n")} onChange={(event) => patchDay(index, { meals: event.target.value.split("\n") })} /></label><label className="flex flex-col gap-1.5"><span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>Notes</span><textarea className={cn(inputClass, "min-h-20 py-3")} value={day.notes.join("\n")} onChange={(event) => patchDay(index, { notes: event.target.value.split("\n") })} /></label><MediaSlotRenderer workspace={mediaWorkspace} editorRoute="facts.programme.day" context={{ index, destinationId: day.destination_ref?.id }} /></div>; })}</div>
+      <div className="mt-5 flex flex-col gap-3"><div><h3 className={cn(getTypographyClassName("cardTitle"), "text-[var(--color-on-surface)]")}>Brief Route</h3><p className={cn(getTypographyClassName("bodySm"), "mt-1 text-[var(--color-muted)]")}>Each day requires factual programme details and an overnight destination.</p></div>{trip.itinerary.map((day, index) => { const derivedDate = day.display_date || dateForItineraryDay(trip.start_date, index + 1); return <div key={index} className="grid items-end gap-3 rounded-[var(--radius-card)] border border-[var(--color-border-strong)] bg-[var(--color-surface-muted)] p-4 shadow-2xs sm:grid-cols-2"><p className={cn(getTypographyClassName("bodyMd"), "sm:col-span-2 text-[var(--color-on-surface)]")}>{`Day ${index + 1}${derivedDate ? ` · ${derivedDate}` : ""}`}</p><DestinationInput label="Destination" value={day.destination} onChange={(destination) => updateDayDestinationHandler(index, destination)} onSelect={(destinationRef) => updateDayDestinationHandler(index, destinationRef?.name ?? null, destinationRef)} /><DestinationInput label="Overnight" value={day.overnight} onChange={(overnight) => patchDay(index, { overnight })} onSelect={(ref) => patchDay(index, { overnight: ref?.name ?? null })} /><label className="sm:col-span-2 flex flex-col gap-1.5"><span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>Program summary</span><textarea className={cn(inputClass, "min-h-24 py-3")} value={day.summary ?? ""} onChange={(event) => patchDay(index, { summary: event.target.value || null })} /></label><label className="flex flex-col gap-1.5"><span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>Meals</span><textarea className={cn(inputClass, "min-h-20 py-3")} value={day.meals.join("\n")} onChange={(event) => patchDay(index, { meals: event.target.value.split("\n") })} /></label><label className="flex flex-col gap-1.5"><span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>Notes</span><textarea className={cn(inputClass, "min-h-20 py-3")} value={day.notes.join("\n")} onChange={(event) => patchDay(index, { notes: event.target.value.split("\n") })} /></label><MediaSlotRenderer workspace={mediaWorkspace} editorRoute="facts.programme.day" context={{ index, destinationId: day.destination_ref?.id }} /></div>; })}</div>
     </IntakeCard>
 
     <IntakeCard title="Accommodations" description="Select the stays for this quotation. You can sync accommodation slots from your Brief Route." alternateBg={true}>
@@ -199,10 +189,10 @@ export default function QuotationIntakeForm({ facts: inputFacts, options, pendin
 
     <IntakeCard title="Travellers" description="These facts personalize the quotation and guide its language and recommendations." alternateBg={true}>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Customer name" required value={customer.customer_name} onChange={(customerName) => patchFacts((current) => ({ ...current, customer_facts: { ...current.customer_facts, customer_name: customerName || null, party_label: current.customer_facts.party_label || inferPartyLabel(customerName, current.customer_facts.adults, current.customer_facts.children), greeting_name: current.customer_facts.greeting_name || inferGreetingName(customerName) } }))} />
+        <Field label="Customer name" required value={customer.customer_name} onChange={(customerName) => patchFacts((current) => updateCustomerName(current, customerName))} />
         <Field label="Nationality" required value={customer.nationality} onChange={(nationality) => patchFacts((current) => ({ ...current, customer_facts: { ...current.customer_facts, nationality: nationality || null } }))} />
-        <Field label="Adults" required min={1} type="number" value={customer.adults} onChange={(adults) => patchFacts((current) => { const adultNum = adults ? Number(adults) : null; return { ...current, customer_facts: { ...current.customer_facts, adults: adultNum, party_label: current.customer_facts.party_label || inferPartyLabel(current.customer_facts.customer_name, adultNum, current.customer_facts.children) } }; })} />
-        <Field label="Children" min={0} type="number" value={customer.children ?? 0} onChange={(children) => patchFacts((current) => { const childNum = children ? Number(children) : 0; return { ...current, customer_facts: { ...current.customer_facts, children: childNum, party_label: current.customer_facts.party_label || inferPartyLabel(current.customer_facts.customer_name, current.customer_facts.adults, childNum) } }; })} />
+        <Field label="Adults" required min={1} type="number" value={customer.adults} onChange={(adults) => patchFacts((current) => updateCustomerCounts(current, { adults: adults ? Number(adults) : null }))} />
+        <Field label="Children" min={0} type="number" value={customer.children ?? 0} onChange={(children) => patchFacts((current) => updateCustomerCounts(current, { children: children ? Number(children) : 0 }))} />
         <Field label="Guest profile" value={customer.guest_profile} onChange={(guestProfile) => patchFacts((current) => ({ ...current, customer_facts: { ...current.customer_facts, guest_profile: guestProfile || null } }))} />
         <div className="flex flex-col gap-1.5"><Field label="Party label" value={customer.party_label} onChange={(partyLabel) => patchFacts((current) => ({ ...current, customer_facts: { ...current.customer_facts, party_label: partyLabel || null } }))} /><button type="button" onClick={() => patchFacts((current) => ({ ...current, customer_facts: { ...current.customer_facts, party_label: inferPartyLabel(current.customer_facts.customer_name, current.customer_facts.adults, current.customer_facts.children) } }))} className={cn(getTypographyClassName("caption"), "w-fit text-[var(--color-accent)] hover:underline")}>Auto-generate party label</button></div>
         <div className="flex flex-col gap-1.5"><Field label="Greeting name" value={customer.greeting_name} onChange={(greetingName) => patchFacts((current) => ({ ...current, customer_facts: { ...current.customer_facts, greeting_name: greetingName || null } }))} /><button type="button" onClick={() => patchFacts((current) => ({ ...current, customer_facts: { ...current.customer_facts, greeting_name: inferGreetingName(current.customer_facts.customer_name) } }))} className={cn(getTypographyClassName("caption"), "w-fit text-[var(--color-accent)] hover:underline")}>Auto-generate greeting</button></div>

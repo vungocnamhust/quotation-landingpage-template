@@ -200,7 +200,7 @@ SELECT brand_id, :'designer_id'
 FROM unnest(ARRAY['capella_travel', 'selvara', 'vietnam_safar']) AS brand_id
 WHERE EXISTS (SELECT 1 FROM brands WHERE brands.id = brand_id)
 ON CONFLICT (brand_id) DO UPDATE
-SET designer_profile_id = EXCLUDED.designer_profile_id;
+SET designer_profile_id = EXCLUDED.designer_profile_id;prefillEn
 SQL
 
 docker compose -f docker-compose.production.yml up -d app quote-generator publication-worker nginx

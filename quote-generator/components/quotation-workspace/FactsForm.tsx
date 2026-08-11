@@ -29,21 +29,25 @@ import type {
   QuotationOptions,
   ResolvedFacts,
 } from "./factsTypes";
-import { CURRENCY_OPTIONS, MAX_COMMERCIAL_OPTIONS, createItineraryDay, createPricingOption, dateForItineraryDay, ensureFactsDefaults, formatMinorAmount, isRenderablePricingOption, minorAmountFromInput, minorAmountToInput, routeDestinationRefsFromItinerary } from "./factsTypes";
+import { CURRENCY_OPTIONS, MAX_COMMERCIAL_OPTIONS, createPricingOption, dateForItineraryDay, ensureFactsDefaults, formatMinorAmount, isRenderablePricingOption, minorAmountFromInput, minorAmountToInput, routeDestinationRefsFromItinerary } from "./factsTypes";
 import { BrochureAssetsEditor, MediaSlotRenderer, type MediaWorkspace } from "./MediaSlotRenderer";
 import type { AccommodationProfile, TravelDesignerProfile } from "../../lib/quotationApi";
 import type { FactsDeepLink } from "./editableHandoff";
 import {
-  deriveStaySegmentsFromItinerary,
   inferCommercialPerTraveler,
   inferCommercialTotal,
   inferDefaultCurrency,
   inferGreetingName,
   inferOvernightDestination,
   inferPartyLabel,
-  syncHotelsFromStaySegments,
   validateHotelDates,
 } from "../../lib/prefillRules";
+import {
+  createItineraryDayWithDefaults,
+  syncHotelsFromItineraryOvernights,
+  updateCustomerCounts,
+  updateCustomerName,
+} from "../../lib/prefillEngine";
 
 
 type Props = {
@@ -818,7 +822,7 @@ export default function FactsForm({
         ...safe,
         trip_facts: {
           ...safe.trip_facts,
-          itinerary: [...safe.trip_facts.itinerary, createItineraryDay({ index, startDate: safe.trip_facts.start_date })],
+          itinerary: [...safe.trip_facts.itinerary, createItineraryDayWithDefaults({ index, startDate: safe.trip_facts.start_date, lang: safe.lang })],
         },
       };
     });
@@ -843,25 +847,7 @@ export default function FactsForm({
     });
   }, [onChange]);
   const syncHotelsFromItinerary = useCallback(() => {
-    onChange((current) => {
-      const safe = ensureFactsDefaults(current);
-      const segments = deriveStaySegmentsFromItinerary(
-        safe.trip_facts.itinerary,
-        safe.trip_facts.start_date,
-        safe.trip_facts.end_date,
-      );
-      const syncedHotels = syncHotelsFromStaySegments(
-        safe.service_facts.hotels,
-        segments,
-      );
-      return {
-        ...safe,
-        service_facts: {
-          ...safe.service_facts,
-          hotels: syncedHotels,
-        },
-      };
-    });
+    onChange((current) => syncHotelsFromItineraryOvernights(current));
   }, [onChange]);
 
   const addPricingOption = useCallback(() => {
@@ -1171,42 +1157,21 @@ export default function FactsForm({
               label="Customer name"
               disabled={readOnly}
               value={customer.customer_name}
-              onChange={(value) =>
-                update("customer_facts", {
-                  ...customer,
-                  customer_name: value || null,
-                  party_label: customer.party_label || inferPartyLabel(value, customer.adults, customer.children),
-                  greeting_name: customer.greeting_name || inferGreetingName(value),
-                })
-              }
+              onChange={(value) => onChange((current) => updateCustomerName(current, value))}
             />
             <Field
               label="Adults"
               type="number"
               disabled={readOnly}
               value={customer.adults}
-              onChange={(value) => {
-                const adultNum = value ? Number(value) : null;
-                update("customer_facts", {
-                  ...customer,
-                  adults: adultNum,
-                  party_label: customer.party_label || inferPartyLabel(customer.customer_name, adultNum, customer.children),
-                });
-              }}
+              onChange={(value) => onChange((current) => updateCustomerCounts(current, { adults: value ? Number(value) : null }))}
             />
             <Field
               label="Children"
               type="number"
               disabled={readOnly}
               value={customer.children}
-              onChange={(value) => {
-                const childNum = value ? Number(value) : null;
-                update("customer_facts", {
-                  ...customer,
-                  children: childNum,
-                  party_label: customer.party_label || inferPartyLabel(customer.customer_name, customer.adults, childNum),
-                });
-              }}
+              onChange={(value) => onChange((current) => updateCustomerCounts(current, { children: value ? Number(value) : null }))}
             />
             <Field
               label="Nationality"

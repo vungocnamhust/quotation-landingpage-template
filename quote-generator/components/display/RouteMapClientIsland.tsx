@@ -18,7 +18,7 @@ export default function RouteMapClientIsland({
 }: {
   viewModel: RouteMapViewModel;
   typography: TypographySlotMap;
-  mapColors: { route: string };
+  mapColors: { route: string; marker?: string; activeMarker?: string };
   viewMode: Exclude<ViewMode, 'pdf'>;
 }) {
   if (!viewModel.isInteractiveAvailable) {

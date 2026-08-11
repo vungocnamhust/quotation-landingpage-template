@@ -256,3 +256,20 @@ export function inferDefaultCurrency(brandId: string | null, market: string | nu
 
   return "USD";
 }
+
+export const MULTILINGUAL_DEFAULT_MEALS: Record<"en" | "vi" | "ar", string[]> = {
+  en: ["Breakfast", "Lunch", "Dinner"],
+  vi: ["Bữa sáng", "Bữa trưa", "Bữa tối"],
+  ar: ["الإفطار", "الغداء", "العشاء"],
+};
+
+/**
+ * Get localized default meal items based on selected quotation language.
+ */
+export function getDefaultMealsForLang(lang?: "en" | "vi" | "ar" | null): string[] {
+  if (!lang || !MULTILINGUAL_DEFAULT_MEALS[lang]) {
+    return [...MULTILINGUAL_DEFAULT_MEALS.en];
+  }
+  return [...MULTILINGUAL_DEFAULT_MEALS[lang]];
+}
+

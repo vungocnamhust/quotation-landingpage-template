@@ -62,8 +62,17 @@ function resolveScope({ id, palette, recipe, viewMode, tokens }: {
   const primary = resolved.action.primary;
   const secondary = resolved.action.secondary;
   const focus = resolved.surface === 'contrast' || resolved.surface === 'accent' || resolved.surface === 'storyContrast' ? 'onContrast' : resolved.surface === 'investmentSurface' ? 'investmentText' : 'focus';
+  const primarySurfaceHex = primary.surface === 'transparent' ? 'transparent' : palette[primary.surface];
+  const preferredTextRef = primary.text;
+  const primaryTextRef =
+    primarySurfaceHex === 'transparent' || preferredTextRef === 'transparent' || getContrastRatio(palette[preferredTextRef], primarySurfaceHex) >= 4.5
+      ? preferredTextRef
+      : getContrastRatio(palette.onContrast, primarySurfaceHex) >= getContrastRatio(palette.ink, primarySurfaceHex)
+        ? 'onContrast'
+        : 'ink';
+
   assertContrast(resolved.onSurface, resolved.surface, palette, `${id} surface text`, 4.5);
-  assertContrast(primary.text, primary.surface, palette, `${id} primary action`, 4.5);
+  assertContrast(primaryTextRef, primary.surface, palette, `${id} primary action`, 4.5);
   assertContrast('onContrast', 'contrast', palette, `${id} contrast text`, 4.5);
   assertContrast(focus, resolved.surface, palette, `${id} focus ring`, 3);
   return {
@@ -74,7 +83,7 @@ function resolveScope({ id, palette, recipe, viewMode, tokens }: {
       '--color-accent': resolveReference(palette, resolved.accent), '--color-accent-alt': resolveReference(palette, resolved.accentAlt),
       '--color-contrast': palette.contrast, '--color-on-contrast': palette.onContrast, '--color-accent-wash': withOpacity(palette.accent, 0.1),
       '--color-border': withOpacity(palette[resolved.border.color], resolved.border.opacity), '--color-border-strong': withOpacity(palette[resolved.strongBorder.color], resolved.strongBorder.opacity),
-      '--color-action-primary-surface': resolveReference(palette, primary.surface), '--color-action-primary-text': resolveReference(palette, primary.text), '--color-action-primary-border': withOpacity(palette[primary.border.color], primary.border.opacity),
+      '--color-action-primary-surface': resolveReference(palette, primary.surface), '--color-action-primary-text': resolveReference(palette, primaryTextRef), '--color-action-primary-border': withOpacity(palette[primary.border.color], primary.border.opacity),
       '--color-action-secondary-surface': resolveReference(palette, secondary.surface), '--color-action-secondary-text': resolveReference(palette, secondary.text), '--color-action-secondary-border': withOpacity(palette[secondary.border.color], secondary.border.opacity),
       '--color-focus': resolveReference(palette, focus), '--color-map-surface': resolveReference(palette, resolved.surface),
       '--color-map-route': palette[resolved.timeline.route], '--color-map-marker': palette[resolved.timeline.marker], '--color-map-marker-active': palette[resolved.timeline.active],
