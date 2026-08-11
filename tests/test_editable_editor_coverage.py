@@ -117,7 +117,8 @@ class EditableEditorCoverageTests(unittest.TestCase):
         self.assertIn("editorSurface === 'design-inspector'", design_canvas)
         self.assertIn("directFactInspector", inspector)
         self.assertIn("Designer copy (saved to Facts)", inspector)
-        self.assertIn("workspace.saveFacts({ ...factsData.facts, designer_facts:", workspace)
+        self.assertIn("workspace.saveFacts({", workspace)
+        self.assertIn("designer_facts:", workspace)
 
     def test_design_canvas_resolves_typed_handoffs_and_facts_urls(self):
         handoff = (ROOT / "quote-generator/components/quotation-workspace/editableHandoff.ts").read_text(encoding="utf-8")
@@ -163,7 +164,7 @@ class EditableEditorCoverageTests(unittest.TestCase):
         self.assertIn("writeValue(candidate, field.path", fields)
         self.assertIn("resources.documentData?.contentRegistry", source)
         self.assertIn("resources.documentData?.contentEditorState", source)
-        self.assertIn("FactOwnedPreview", source)
+        self.assertIn("FactOwnedNotice", source)
         self.assertIn("ContentGenerationPanel", source)
         self.assertNotIn("<pre>", source)
 

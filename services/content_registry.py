@@ -119,8 +119,18 @@ CONTENT_SECTION_REGISTRY: dict[str, ContentSectionSpec] = {
 }
 
 
+ITINERARY_DAY_CANONICAL_TARGETS: tuple[str, ...] = (
+    "itinerary.days.*.title",
+    "itinerary.days.*.description",
+    "itinerary.days.*.activities",
+    "trip.priceBasis",
+)
+
+
 def content_owned_targets() -> tuple[str, ...]:
-    return tuple(target for spec in CONTENT_SECTION_REGISTRY.values() if spec.owner == "content" for target in spec.canonical_targets)
+    registry_targets = [target for spec in CONTENT_SECTION_REGISTRY.values() if spec.owner == "content" for target in spec.canonical_targets]
+    return tuple(registry_targets + list(ITINERARY_DAY_CANONICAL_TARGETS))
+
 
 
 def scope_spec(scope: str) -> ContentSectionSpec:

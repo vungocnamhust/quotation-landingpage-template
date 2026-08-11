@@ -51,8 +51,11 @@ function buildClassicMarkerMarkup({
 }) {
   return `
     <div class="display-route-map-marker display-route-map-marker--classic${isActive ? ' is-active' : ''}">
-      <div class="display-route-map-marker__badge ${typographyClassName}">${dayLabel}</div>
-      <div class="display-route-map-marker__label ${typographyClassName}">${label}</div>
+      <div class="display-route-map-marker__capsule">
+        <div class="display-route-map-marker__badge ${typographyClassName}">${dayLabel}</div>
+        <div class="display-route-map-marker__label ${typographyClassName}">${label}</div>
+      </div>
+      <div class="display-route-map-marker__pointer"></div>
     </div>
   `;
 }
@@ -71,21 +74,12 @@ function buildMarkerIcon({
   return L.divIcon({
     html: buildClassicMarkerMarkup({ dayLabel, label, isActive, typographyClassName }),
     className: 'display-route-map-marker-icon',
-    iconSize: [210, 36],
-    iconAnchor: [16, 18],
+    iconSize: [220, 42],
+    iconAnchor: [20, 38],
   });
 }
 
-function getDistance(c1: [number, number], c2: [number, number]) {
-  const R = 6371;
-  const dLat = ((c2[0] - c1[0]) * Math.PI) / 180;
-  const dLon = ((c2[1] - c1[1]) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((c1[0] * Math.PI) / 180) * Math.cos((c2[0] * Math.PI) / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
+
 
 function getBezierPoints(p1: [number, number], p2: [number, number], count = 30): LatLngExpression[] {
   const midLat = (p1[0] + p2[0]) / 2;
@@ -94,7 +88,7 @@ function getBezierPoints(p1: [number, number], p2: [number, number], count = 30)
   const dy = p2[0] - p1[0];
   const len = Math.sqrt(dx * dx + dy * dy);
   if (len === 0) return [p1, p2];
-  const scale = len * 0.15;
+  const scale = Math.max(0.04, Math.min(0.25, len * 0.15));
   const ctrlLat = midLat - (dx / len) * scale;
   const ctrlLng = midLng + (dy / len) * scale;
   const points: LatLngExpression[] = [];
@@ -206,18 +200,24 @@ export default function RouteMapExperience({
         const p2 = points[i + 1];
         if (!p1 || !p2) continue;
 
-        const dist = getDistance(p1, p2);
-        const isLongDist = dist > 150;
-        const pathPoints = isLongDist ? getBezierPoints(p1, p2) : [p1, p2];
+        const pathPoints = getBezierPoints(p1, p2);
+        const segmentSeq = viewModel.segments[i + 1]?.sequence;
+        const isActiveSegment = activeSequence === segmentSeq || activeSequence === viewModel.segments[i]?.sequence;
+
+        const bgPoly = L.polyline(pathPoints, {
+          color: mapColors.route,
+          weight: isActiveSegment ? 6 : 4,
+          opacity: isActiveSegment ? 0.35 : 0.15,
+        }).addTo(map);
 
         const poly = L.polyline(pathPoints, {
           color: mapColors.route,
-          weight: 3,
-          opacity: 0.85,
-          dashArray: isLongDist ? '6, 8' : 'none',
+          weight: isActiveSegment ? 3.5 : 2.5,
+          opacity: isActiveSegment ? 1 : 0.8,
+          dashArray: '6, 6',
         }).addTo(map);
 
-        polylinesRef.current.push(poly);
+        polylinesRef.current.push(bgPoly, poly);
       }
     }
 

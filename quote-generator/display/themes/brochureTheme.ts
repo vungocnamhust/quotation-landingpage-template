@@ -114,7 +114,7 @@ const colorRecipe: ThemeColorRecipe = {
         primary: { surface: 'contrast', text: 'onContrast', border: { color: 'contrast', opacity: 1 } },
         secondary: { surface: 'transparent', text: 'ink', border: { color: 'accentAlt', opacity: 0.42 } },
       },
-      timeline: { route: 'accentAlt', marker: 'contrast', active: 'accentAlt' },
+      timeline: { route: 'accentAlt', marker: 'accent', active: 'accentAlt' },
       shadow: { color: 'ink', opacity: 0.14 }, ornamentOpacity: 0.14,
       viewModeAdjustments: { pdf: { shadow: { color: 'ink', opacity: 0 }, ornamentOpacity: 0.1 } },
     },

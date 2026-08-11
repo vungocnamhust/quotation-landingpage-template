@@ -6420,9 +6420,13 @@ def _preserve_content_owned_values(current: dict[str, Any], rebuilt: dict[str, A
                 previous = next((item for item in current_days if item.get("dayNumber") == next_day.get("dayNumber")), None)
                 if previous is None:
                     continue
-                for key in ("title", "description", "activities"):
+                for key in ("title", "description", "activities", "labelHighlights", "labelNotes"):
                     if key in previous:
                         next_day[key] = copy.deepcopy(previous[key])
+            continue
+        if path == "trip.priceBasis":
+            if isinstance(current.get("trip"), dict) and "priceBasis" in current["trip"]:
+                rebuilt.setdefault("trip", {})["priceBasis"] = copy.deepcopy(current["trip"]["priceBasis"])
             continue
         source: Any = current
         target: Any = rebuilt
@@ -6638,6 +6642,8 @@ async def put_quotation_facts_v2(quotation_id: str, payload: CreateQuoteRequestV
             _apply_travel_designer_snapshot(rebuilt, _serialize_travel_designer(profile))
         # Rebase facts without deleting Design-owned copy overrides or Fact-owned media.
         rebuilt["presentation"] = copy.deepcopy((current.document_json.get("presentation") or {}))
+        if "viewOverrides" in current.document_json:
+            rebuilt["viewOverrides"] = copy.deepcopy(current.document_json["viewOverrides"])
         _copy_fact_media_slots(current.document_json, rebuilt)
         await _apply_missing_media_defaults(session, rebuilt, quotation_id, quotation.baseline_lang)
         try:

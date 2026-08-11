@@ -33,6 +33,18 @@ import { CURRENCY_OPTIONS, MAX_COMMERCIAL_OPTIONS, createItineraryDay, createPri
 import { BrochureAssetsEditor, MediaSlotRenderer, type MediaWorkspace } from "./MediaSlotRenderer";
 import type { AccommodationProfile, TravelDesignerProfile } from "../../lib/quotationApi";
 import type { FactsDeepLink } from "./editableHandoff";
+import {
+  deriveStaySegmentsFromItinerary,
+  inferCommercialPerTraveler,
+  inferCommercialTotal,
+  inferDefaultCurrency,
+  inferGreetingName,
+  inferOvernightDestination,
+  inferPartyLabel,
+  syncHotelsFromStaySegments,
+  validateHotelDates,
+} from "../../lib/prefillRules";
+
 
 type Props = {
   facts: QuotationFacts;
@@ -85,6 +97,8 @@ function Field({
   required,
   id,
   aiHint,
+  min,
+  max,
 }: {
   label: string;
   value: string | number | null;
@@ -94,6 +108,8 @@ function Field({
   required?: boolean;
   id?: string;
   aiHint?: string;
+  min?: string | number;
+  max?: string | number;
 }) {
   return (
     <label className="flex flex-col gap-2">
@@ -127,6 +143,8 @@ function Field({
         aria-required={required}
         className={inputClass}
         type={type}
+        min={min}
+        max={max}
         disabled={disabled}
         value={value ?? ""}
         onChange={(event) => onChange(event.target.value)}
@@ -398,8 +416,15 @@ const DayEditor = memo(function DayEditor({
             label={`Day ${day.day_number ?? index + 1} destination`}
             disabled={readOnly}
             value={day.destination}
-            onChange={(value) => patch("destination", value)}
-            onSelect={(ref) => patch("destination_ref", ref)}
+            onChange={(value) => onPatch(index, { destination: value, destination_ref: null, overnight: inferOvernightDestination(value, day.overnight) })}
+            onSelect={(ref) => onPatch(index, { destination: ref?.name ?? null, destination_ref: ref, overnight: inferOvernightDestination(ref?.name ?? null, day.overnight) })}
+          />
+          <DestinationInput
+            label="Overnight"
+            disabled={readOnly}
+            value={day.overnight}
+            onChange={(value) => patch("overnight", value)}
+            onSelect={(ref) => patch("overnight", ref?.name ?? null)}
           />
           <div className="sm:col-span-2 grid gap-4 sm:grid-cols-2">
             <Area
@@ -427,7 +452,6 @@ const DayEditor = memo(function DayEditor({
           </div>
 
           <Field label="Sense of pace" disabled={readOnly} value={day.sense_of_pace} onChange={(value) => patch("sense_of_pace", value || null)} />
-          <Field label="Overnight" disabled={readOnly} value={day.overnight} onChange={(value) => patch("overnight", value || null)} />
           <Field label="Date" disabled value={derivedDate} onChange={() => undefined} />
           <div className="sm:col-span-2">
             <Area label="Notes" disabled={readOnly} value={lines(day.notes)} onChange={(value) => patch("notes", toLines(value))} />
@@ -472,6 +496,8 @@ function hotelFromProfile(profile: AccommodationProfile): HotelFact {
 const HotelEditor = memo(function HotelEditor({
   hotel,
   index,
+  startDate,
+  endDate,
   open,
   readOnly,
   onToggle,
@@ -481,6 +507,8 @@ const HotelEditor = memo(function HotelEditor({
 }: {
   hotel: HotelFact;
   index: number;
+  startDate?: string | null;
+  endDate?: string | null;
   open: boolean;
   readOnly: boolean;
   onToggle: (index: number) => void;
@@ -491,6 +519,7 @@ const HotelEditor = memo(function HotelEditor({
   const patch = <K extends keyof HotelFact>(key: K, value: HotelFact[K]) =>
     onPatch(index, { [key]: value } as Partial<HotelFact>);
   const complete = Boolean(hotel.name && hotel.destination);
+  const dateValidation = validateHotelDates(hotel.check_in, hotel.check_out, startDate ?? null, endDate ?? null);
   return (
     <article
       id={`facts-hotel-${index}`}
@@ -583,6 +612,8 @@ const HotelEditor = memo(function HotelEditor({
           <Field
             label="Check-in"
             type="date"
+            min={startDate ?? undefined}
+            max={endDate ?? undefined}
             disabled={readOnly}
             value={hotel.check_in}
             onChange={(value) => patch("check_in", value || null)}
@@ -590,10 +621,17 @@ const HotelEditor = memo(function HotelEditor({
           <Field
             label="Check-out"
             type="date"
+            min={hotel.check_in ?? startDate ?? undefined}
+            max={endDate ?? undefined}
             disabled={readOnly}
             value={hotel.check_out}
             onChange={(value) => patch("check_out", value || null)}
           />
+          {!dateValidation.valid ? (
+            <p className={cn(getTypographyClassName("caption"), "sm:col-span-2 rounded-[var(--radius-button)] border border-rose-500/30 bg-rose-500/10 p-2 text-rose-700")}>
+              {dateValidation.message}
+            </p>
+          ) : null}
           <div className="sm:col-span-2">
             <Area
               label="Stay notes"
@@ -804,6 +842,28 @@ export default function FactsForm({
       };
     });
   }, [onChange]);
+  const syncHotelsFromItinerary = useCallback(() => {
+    onChange((current) => {
+      const safe = ensureFactsDefaults(current);
+      const segments = deriveStaySegmentsFromItinerary(
+        safe.trip_facts.itinerary,
+        safe.trip_facts.start_date,
+        safe.trip_facts.end_date,
+      );
+      const syncedHotels = syncHotelsFromStaySegments(
+        safe.service_facts.hotels,
+        segments,
+      );
+      return {
+        ...safe,
+        service_facts: {
+          ...safe.service_facts,
+          hotels: syncedHotels,
+        },
+      };
+    });
+  }, [onChange]);
+
   const addPricingOption = useCallback(() => {
     onChange((current) => {
       const safe = ensureFactsDefaults(current);
@@ -1115,6 +1175,8 @@ export default function FactsForm({
                 update("customer_facts", {
                   ...customer,
                   customer_name: value || null,
+                  party_label: customer.party_label || inferPartyLabel(value, customer.adults, customer.children),
+                  greeting_name: customer.greeting_name || inferGreetingName(value),
                 })
               }
             />
@@ -1123,24 +1185,28 @@ export default function FactsForm({
               type="number"
               disabled={readOnly}
               value={customer.adults}
-              onChange={(value) =>
+              onChange={(value) => {
+                const adultNum = value ? Number(value) : null;
                 update("customer_facts", {
                   ...customer,
-                  adults: value ? Number(value) : null,
-                })
-              }
+                  adults: adultNum,
+                  party_label: customer.party_label || inferPartyLabel(customer.customer_name, adultNum, customer.children),
+                });
+              }}
             />
             <Field
               label="Children"
               type="number"
               disabled={readOnly}
               value={customer.children}
-              onChange={(value) =>
+              onChange={(value) => {
+                const childNum = value ? Number(value) : null;
                 update("customer_facts", {
                   ...customer,
-                  children: value ? Number(value) : null,
-                })
-              }
+                  children: childNum,
+                  party_label: customer.party_label || inferPartyLabel(customer.customer_name, customer.adults, childNum),
+                });
+              }}
             />
             <Field
               label="Nationality"
@@ -1172,6 +1238,54 @@ export default function FactsForm({
                 update("customer_facts", { ...customer, market: value || null })
               }
             />
+            <div className="flex flex-col gap-1.5">
+              <Field
+                label="Party label"
+                disabled={readOnly}
+                value={customer.party_label}
+                onChange={(value) =>
+                  update("customer_facts", { ...customer, party_label: value || null })
+                }
+              />
+              {!readOnly ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    update("customer_facts", {
+                      ...customer,
+                      party_label: inferPartyLabel(customer.customer_name, customer.adults, customer.children),
+                    })
+                  }
+                  className={cn(getTypographyClassName("caption"), "w-fit text-[var(--color-accent)] hover:underline")}
+                >
+                  Auto-generate party label
+                </button>
+              ) : null}
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Field
+                label="Greeting name"
+                disabled={readOnly}
+                value={customer.greeting_name}
+                onChange={(value) =>
+                  update("customer_facts", { ...customer, greeting_name: value || null })
+                }
+              />
+              {!readOnly ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    update("customer_facts", {
+                      ...customer,
+                      greeting_name: inferGreetingName(customer.customer_name),
+                    })
+                  }
+                  className={cn(getTypographyClassName("caption"), "w-fit text-[var(--color-accent)] hover:underline")}
+                >
+                  Auto-generate greeting
+                </button>
+              ) : null}
+            </div>
           </div>
         </FactCard>
         <FactCard
@@ -1217,11 +1331,27 @@ export default function FactsForm({
           status={status("services")}
         >
           <div className="flex flex-col gap-4">
+            {!readOnly ? (
+              <div className="flex justify-end mb-1">
+                <button
+                  type="button"
+                  onClick={syncHotelsFromItinerary}
+                  className={cn(
+                    getTypographyClassName("buttonSecondary"),
+                    "min-h-9 rounded-[var(--radius-button)] border border-[var(--color-border)] px-3 py-1 text-[var(--color-accent)] hover:bg-[var(--color-accent-wash)] transition-colors",
+                  )}
+                >
+                  ✨ Sync Accommodations from Itinerary Overnights
+                </button>
+              </div>
+            ) : null}
             {services.hotels.map((hotel, index) => (
               <HotelEditor
                 key={index}
                 hotel={hotel}
                 index={index}
+                startDate={trip.start_date}
+                endDate={trip.end_date}
                 open={activeHotel === index}
                 readOnly={readOnly}
                 onToggle={toggleHotel}
@@ -1290,15 +1420,32 @@ export default function FactsForm({
         >
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between gap-3"><span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>Pricing options ({pricing.options.length}/{MAX_COMMERCIAL_OPTIONS})</span><button type="button" disabled={readOnly || pricing.options.length >= MAX_COMMERCIAL_OPTIONS} onClick={addPricingOption} className={cn(getTypographyClassName("buttonSecondary"), "min-h-10 rounded-[var(--radius-button)] bg-[var(--color-accent)] !text-white hover:bg-[color-mix(in_srgb,var(--color-accent)_85%,black)] px-3.5 shadow-2xs border border-transparent transition-all disabled:opacity-50")}>Add option</button></div>
-            {pricing.options.map((option, index) => { const expectedTotal = customer.adults && option.per_traveler_amount_minor ? option.per_traveler_amount_minor * customer.adults : null; const inconsistent = expectedTotal !== null && option.group_total_amount_minor !== null && expectedTotal !== option.group_total_amount_minor; return <div id={`pricing-option-${index}`} key={option.id} className="grid gap-3 rounded-[var(--radius-card)] border border-[var(--color-border-strong)] bg-[var(--color-surface-white)] p-4 shadow-2xs sm:grid-cols-2">
-              <Field id={`pricing-${index}-label`} label="Option label" required disabled={readOnly} value={option.label} onChange={(value) => patchPricingOption(index, { label: value })} />
-              <SelectField label="Currency" disabled={readOnly} value={option.currency} options={CURRENCY_OPTIONS} onChange={(value) => patchPricingOption(index, { currency: value })} />
-              <Field label="Per traveler price" required type="number" disabled={readOnly} value={minorAmountToInput(option.per_traveler_amount_minor, option.currency)} onChange={(value) => patchPricingOption(index, { per_traveler_amount_minor: minorAmountFromInput(value, option.currency) })} />
-              <Field label="Group total price" required type="number" disabled={readOnly} value={minorAmountToInput(option.group_total_amount_minor, option.currency)} onChange={(value) => patchPricingOption(index, { group_total_amount_minor: minorAmountFromInput(value, option.currency) })} />
-              {inconsistent ? <p className={cn(getTypographyClassName("caption"), "sm:col-span-2 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface-muted)] p-3 text-[var(--color-muted)]")}>{`For ${customer.adults} adults, the per traveler price equals ${formatMinorAmount(expectedTotal, option.currency, facts.lang ?? "en")}; the entered group total is kept unchanged.`}</p> : null}
-              <p className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>{isRenderablePricingOption(option) ? "Will appear in the brochure." : "Complete the option before it can be saved."}</p>
-              {!readOnly ? <button type="button" onClick={() => removePricingOption(index)} className={cn(getTypographyClassName("buttonSecondary"), "min-h-10 w-fit rounded-[var(--radius-button)] bg-rose-700 !text-white hover:bg-rose-800 px-3.5 shadow-2xs border border-transparent transition-all")}>Remove option</button> : null}
-            </div>; })}
+            {pricing.options.map((option, index) => {
+              const defaultCurr = option.currency || inferDefaultCurrency(facts.brand_id, customer.market);
+              const expectedTotal = customer.adults && option.per_traveler_amount_minor ? inferCommercialTotal(option.per_traveler_amount_minor, customer.adults) : null;
+              const expectedPerTraveler = customer.adults && option.group_total_amount_minor ? inferCommercialPerTraveler(option.group_total_amount_minor, customer.adults) : null;
+              const inconsistent = expectedTotal !== null && option.group_total_amount_minor !== null && expectedTotal !== option.group_total_amount_minor;
+              return <div id={`pricing-option-${index}`} key={option.id} className="grid gap-3 rounded-[var(--radius-card)] border border-[var(--color-border-strong)] bg-[var(--color-surface-white)] p-4 shadow-2xs sm:grid-cols-2">
+                <Field id={`pricing-${index}-label`} label="Option label" required disabled={readOnly} value={option.label} onChange={(value) => patchPricingOption(index, { label: value })} />
+                <SelectField label="Currency" disabled={readOnly} value={option.currency || defaultCurr} options={CURRENCY_OPTIONS} onChange={(value) => patchPricingOption(index, { currency: value })} />
+                <Field label="Per traveler price" required type="number" disabled={readOnly} value={minorAmountToInput(option.per_traveler_amount_minor, option.currency || defaultCurr)} onChange={(value) => { const perTraveler = minorAmountFromInput(value, option.currency || defaultCurr); const autoTotal = option.group_total_amount_minor === null ? inferCommercialTotal(perTraveler, customer.adults) : option.group_total_amount_minor; patchPricingOption(index, { currency: option.currency || defaultCurr, per_traveler_amount_minor: perTraveler, group_total_amount_minor: autoTotal }); }} />
+                <Field label="Group total price" required type="number" disabled={readOnly} value={minorAmountToInput(option.group_total_amount_minor, option.currency || defaultCurr)} onChange={(value) => { const groupTotal = minorAmountFromInput(value, option.currency || defaultCurr); const autoPerTraveler = option.per_traveler_amount_minor === null ? inferCommercialPerTraveler(groupTotal, customer.adults) : option.per_traveler_amount_minor; patchPricingOption(index, { currency: option.currency || defaultCurr, group_total_amount_minor: groupTotal, per_traveler_amount_minor: autoPerTraveler }); }} />
+                {inconsistent ? (
+                  <div className="sm:col-span-2 flex flex-col gap-2 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface-muted)] p-3 text-[var(--color-muted)]">
+                    <p className={cn(getTypographyClassName("caption"))}>{`For ${customer.adults} adults, the per traveler price equals ${formatMinorAmount(expectedTotal, option.currency || defaultCurr, facts.lang ?? "en")}; the entered group total is ${formatMinorAmount(option.group_total_amount_minor, option.currency || defaultCurr, facts.lang ?? "en")}.`}</p>
+                    {!readOnly ? (
+                      <div className="flex gap-2">
+                        <button type="button" onClick={() => patchPricingOption(index, { group_total_amount_minor: expectedTotal })} className={cn(getTypographyClassName("caption"), "px-2 py-1 rounded-[var(--radius-button)] border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-on-surface)] hover:bg-[var(--color-accent-wash)]")}>Apply calculated total ({formatMinorAmount(expectedTotal, option.currency || defaultCurr, facts.lang ?? "en")})</button>
+                        {expectedPerTraveler !== null ? (
+                          <button type="button" onClick={() => patchPricingOption(index, { per_traveler_amount_minor: expectedPerTraveler })} className={cn(getTypographyClassName("caption"), "px-2 py-1 rounded-[var(--radius-button)] border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-on-surface)] hover:bg-[var(--color-accent-wash)]")}>Apply calculated per traveler ({formatMinorAmount(expectedPerTraveler, option.currency || defaultCurr, facts.lang ?? "en")})</button>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+                <p className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>{isRenderablePricingOption(option) ? "Will appear in the brochure." : "Complete the option before it can be saved."}</p>
+                {!readOnly ? <button type="button" onClick={() => removePricingOption(index)} className={cn(getTypographyClassName("buttonSecondary"), "min-h-10 w-fit rounded-[var(--radius-button)] bg-rose-700 !text-white hover:bg-rose-800 px-3.5 shadow-2xs border border-transparent transition-all")}>Remove option</button> : null}
+              </div>; })}
             <Area label="Pricing note" disabled={readOnly} value={lines(pricing.conditions)} onChange={(value) => update("pricing_facts", { ...pricing, conditions: toLines(value) })} hint="Optional. One factual note per line; the brochure hides this block when empty." />
           </div>
         </FactCard>
@@ -1309,6 +1456,9 @@ export default function FactsForm({
           status={status("seller")}
         >
           <div className="grid gap-4 sm:grid-cols-2">
+            <div className="sm:col-span-2 grid gap-4 sm:grid-cols-2">
+              <Field label="Booking terms title" disabled={readOnly} value={booking.title} onChange={(value) => update("booking_facts", { ...booking, title: value || null })} />
+            </div>
             <div className="sm:col-span-2 flex flex-col gap-4">
               <Area
                 label="Booking information"
@@ -1365,10 +1515,6 @@ export default function FactsForm({
                   </div>
                 </div>
               ))}
-            </div>
-
-            <div className="sm:col-span-2 grid gap-4 sm:grid-cols-2">
-              <Field label="Booking terms title" disabled={readOnly} value={booking.title} onChange={(value) => update("booking_facts", { ...booking, title: value || null })} />
             </div>
           </div>
         </FactCard>

@@ -183,9 +183,19 @@ function StaticRouteMapPanel({
   const activeSegment =
     viewModel.segments.find((segment) => segment.sequence === viewModel.initialActiveSegment) ?? viewModel.segments[0];
 
-  const routePath = projectedPoints
-    .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`)
-    .join(' ');
+  const routePath = projectedPoints.reduce((pathStr, point, index) => {
+    if (index === 0) return `M ${point.x} ${point.y}`;
+    const prev = projectedPoints[index - 1];
+    const midX = (prev.x + point.x) / 2;
+    const midY = (prev.y + point.y) / 2;
+    const dx = point.x - prev.x;
+    const dy = point.y - prev.y;
+    const len = Math.sqrt(dx * dx + dy * dy);
+    const offset = Math.max(1.5, Math.min(6, len * 0.12));
+    const ctrlX = midX - (dy / (len || 1)) * offset;
+    const ctrlY = midY + (dx / (len || 1)) * offset;
+    return `${pathStr} Q ${ctrlX.toFixed(2)} ${ctrlY.toFixed(2)} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`;
+  }, '');
 
   return (
     <div className="display-route-map display-route-map--pdf">
