@@ -41,6 +41,7 @@ import {
   inferOvernightDestination,
   validateHotelDates,
 } from "../../lib/prefillRules";
+import TravelStyleInput from "./TravelStyleInput";
 import {
   createItineraryDayWithDefaults,
   syncHotelsFromItineraryOvernights,
@@ -1182,14 +1183,14 @@ export default function FactsForm({
                 })
               }
             />
-            <Field
-              label="Guest profile"
+            <TravelStyleInput
               disabled={readOnly}
-              value={customer.guest_profile}
+              value={customer.travel_style ?? customer.guest_profile}
               onChange={(value) =>
                 update("customer_facts", {
                   ...customer,
                   guest_profile: value || null,
+                  travel_style: value || null,
                 })
               }
             />

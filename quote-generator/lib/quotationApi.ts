@@ -170,3 +170,28 @@ export async function uploadAccommodationAsset(file: File, accommodationId: stri
   form.append("accommodationAssetCategory", category);
   return request<{ r2Key: string }>("/api/v2/media-library/uploads", { method: "POST", body: form });
 }
+
+export type TravelStyleTagItem = {
+  id: string;
+  category: string;
+  name_en: string;
+  name_vi: string;
+  slug: string;
+  display_order: number;
+};
+
+export type TravelStyleCategoryGroup = {
+  category_id: string;
+  title_en: string;
+  title_vi: string;
+  tags: TravelStyleTagItem[];
+};
+
+export type TravelStyleResponse = {
+  categories: TravelStyleCategoryGroup[];
+};
+
+export async function listTravelStyles(): Promise<TravelStyleResponse> {
+  return request<TravelStyleResponse>("/api/v2/travel-styles");
+}
+

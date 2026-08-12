@@ -208,6 +208,7 @@ class QuoteDocumentAssets(QuoteBaseModel):
 class QuoteDocumentTraveler(QuoteBaseModel):
     customerName: str = ""
     guestProfile: str = ""
+    travelStyle: str = ""
     nationality: str = ""
     adults: int = 0
     children: int = 0

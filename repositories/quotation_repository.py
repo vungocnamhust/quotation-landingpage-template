@@ -124,7 +124,13 @@ class QuotationRepository:
         term = search.strip()
         if term:
             pattern = f"%{term}%"
-            stmt = stmt.where(or_(Quotation.title.ilike(pattern), Quotation.customer_name.ilike(pattern)))
+            stmt = stmt.where(
+                or_(
+                    Quotation.id.ilike(pattern),
+                    Quotation.title.ilike(pattern),
+                    Quotation.customer_name.ilike(pattern),
+                )
+            )
         if updated_before is not None and id_before:
             stmt = stmt.where(or_(Quotation.updated_at < updated_before, and_(Quotation.updated_at == updated_before, Quotation.id < id_before)))
         stmt = stmt.order_by(Quotation.updated_at.desc(), Quotation.id.desc()).limit(max(1, min(limit, 100)))

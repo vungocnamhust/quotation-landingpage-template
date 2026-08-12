@@ -122,6 +122,7 @@ export type QuotationFacts = {
     children: number | null;
     nationality: string | null;
     guest_profile: string | null;
+    travel_style?: string | null;
     market: string | null;
     party_label: string | null;
     greeting_name: string | null;
@@ -521,6 +522,7 @@ export const emptyFacts = (): QuotationFacts => ({
     children: null,
     nationality: null,
     guest_profile: null,
+    travel_style: null,
     market: null,
     party_label: null,
     greeting_name: null,
@@ -586,6 +588,8 @@ export function ensureFactsDefaults(facts?: Partial<QuotationFacts> | null): Quo
     customer_facts: {
       ...base.customer_facts,
       ...(facts.customer_facts ?? {}),
+      travel_style: facts.customer_facts?.travel_style ?? facts.customer_facts?.guest_profile ?? base.customer_facts.travel_style,
+      guest_profile: facts.customer_facts?.travel_style ?? facts.customer_facts?.guest_profile ?? base.customer_facts.guest_profile,
     },
     service_facts: {
       ...base.service_facts,

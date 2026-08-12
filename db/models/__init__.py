@@ -9,6 +9,7 @@ from db.models.quotation import (
     QuotationDocumentRevision,
     QuotationRequest,
 )
+from db.models.travel_style import TravelStyleTag
 
 __all__ = [
     "Brand",
@@ -25,4 +26,6 @@ __all__ = [
     "PublicationRelease",
     "PublicationJob",
     "PublicationTarget",
+    "TravelStyleTag",
 ]
+

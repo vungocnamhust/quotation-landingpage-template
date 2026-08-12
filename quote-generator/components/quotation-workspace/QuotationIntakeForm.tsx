@@ -16,12 +16,14 @@ import {
   inferDefaultCurrency,
   validateHotelDates,
 } from "../../lib/prefillRules";
+import TravelStyleInput from "./TravelStyleInput";
 import {
   applyRouteDates,
   syncHotelsFromItineraryOvernights,
   updateCustomerCounts,
   updateCustomerName,
   updateItineraryDayDestination,
+  updateTravelStyle,
 } from "../../lib/prefillEngine";
 import {
   createPricingOption,
@@ -192,7 +194,7 @@ export default function QuotationIntakeForm({ facts: inputFacts, options, pendin
         <Field label="Nationality" required value={customer.nationality} onChange={(nationality) => patchFacts((current) => ({ ...current, customer_facts: { ...current.customer_facts, nationality: nationality || null } }))} />
         <Field label="Adults" required min={1} type="number" value={customer.adults} onChange={(adults) => patchFacts((current) => updateCustomerCounts(current, { adults: adults ? Number(adults) : null }))} />
         <Field label="Children" min={0} type="number" value={customer.children ?? 0} onChange={(children) => patchFacts((current) => updateCustomerCounts(current, { children: children ? Number(children) : 0 }))} />
-        <Field label="Guest profile" value={customer.guest_profile} onChange={(guestProfile) => patchFacts((current) => ({ ...current, customer_facts: { ...current.customer_facts, guest_profile: guestProfile || null } }))} />
+        <div className="sm:col-span-2"><TravelStyleInput value={customer.travel_style ?? customer.guest_profile} onChange={(travelStyle) => patchFacts((current) => updateTravelStyle(current, travelStyle))} /></div>
       </div>
       <div className="mt-4 flex flex-col gap-2"><span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>Special requirements</span><span className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>Optional. Add factual requirements.</span><RichTextEditor value={trip.special_requirements.join("\n")} minHeight="5rem" onChange={(reqsVal) => patchFacts((current) => ({ ...current, trip_facts: { ...current.trip_facts, special_requirements: reqsVal.split("\n") } }))} /></div>
     </IntakeCard>

@@ -86,6 +86,8 @@ from repositories.travel_designer_repository import TravelDesignerRepository
 from repositories.accommodation_repository import AccommodationRepository
 from core.auth import Principal, require_editor, require_editor_or_service, require_quote_admin
 from routers.health import router as health_router
+from routers.travel_styles import router as travel_styles_router
+
 from core.config import settings
 
 if os.getenv("ENVIRONMENT", "local").strip().lower() in {"local", "development", "dev"} and os.path.exists(".env.local"):
@@ -363,6 +365,8 @@ def _get_media_library_service() -> MediaLibraryService:
 
 app = FastAPI(title="Quotation Webhook API")
 app.include_router(health_router)
+app.include_router(travel_styles_router)
+
 
 # CORS — required for ChatGPT Custom GPT Actions to reach the API
 app.add_middleware(
@@ -4501,6 +4505,8 @@ def _create_quote_request_from_document(document: dict[str, Any]) -> CreateQuote
                 "children": quote_document.traveler.children,
                 "nationality": quote_document.traveler.nationality,
                 "guest_profile": quote_document.traveler.guestProfile,
+                "travel_style": quote_document.traveler.guestProfile,
+
             },
             "service_facts": {
                 "hotels": hotels,
@@ -6531,13 +6537,21 @@ async def list_workspace_quotations(
     out_items = []
     for item in visible:
         doc_json = docs_map.get(item.id, {})
-        tf = doc_json.get("trip_facts") if isinstance(doc_json.get("trip_facts"), dict) else {}
-        cf = doc_json.get("customer_facts") if isinstance(doc_json.get("customer_facts"), dict) else {}
+        trip = doc_json.get("trip") if isinstance(doc_json.get("trip"), dict) else {}
+        cf = doc_json.get("traveler") if isinstance(doc_json.get("traveler"), dict) else {}
+        route = doc_json.get("route") if isinstance(doc_json.get("route"), dict) else {}
+
+        stay_segments = route.get("staySegments") if isinstance(route.get("staySegments"), list) else []
+        destinations = [
+            s.get("displayName")
+            for s in stay_segments
+            if isinstance(s, dict) and s.get("displayName")
+        ]
 
         out_items.append({
             "id": item.id,
-            "title": item.title,
-            "customerName": item.customer_name or cf.get("customer_name") or None,
+            "title": trip.get("title") or item.title,
+            "customerName": item.customer_name or cf.get("customerName") or cf.get("customer_name") or None,
             "brandId": item.brand_id,
             "status": item.status,
             "locale": item.baseline_lang,
@@ -6546,17 +6560,21 @@ async def list_workspace_quotations(
             "currentRevision": item.current_revision,
             "currentVersion": item.current_version,
             "tripFacts": {
-                "destinations": tf.get("destinations") if isinstance(tf.get("destinations"), list) else [],
-                "startDate": tf.get("start_date") or None,
-                "endDate": tf.get("end_date") or None,
-                "durationDays": tf.get("duration_days") or None,
-                "durationNights": tf.get("duration_nights") or None,
-                "displayTravelDates": tf.get("display_travel_dates") or None,
-                "displayRouteText": tf.get("display_route_text") or None,
+                "destinations": destinations,
+                "startDate": None,
+                "endDate": None,
+                "durationDays": None,
+                "durationNights": None,
+                "displayTravelDates": trip.get("travelDates") or None,
+                "displayRouteText": trip.get("routeText") or (" → ".join(destinations) if destinations else None),
+                "durationText": trip.get("durationText") or None,
             },
             "customerFacts": {
                 "adults": cf.get("adults") if isinstance(cf.get("adults"), int) else None,
                 "children": cf.get("children") if isinstance(cf.get("children"), int) else None,
+                "nationality": cf.get("nationality") if isinstance(cf.get("nationality"), str) else None,
+                "guestProfile": cf.get("travelStyle") or cf.get("guestProfile") or None,
+                "travelStyle": cf.get("travelStyle") or cf.get("guestProfile") or None,
             },
         })
 

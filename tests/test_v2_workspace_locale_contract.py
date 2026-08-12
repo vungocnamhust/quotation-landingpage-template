@@ -59,6 +59,13 @@ class V2WorkspaceLocaleContractTests(unittest.TestCase):
         review_source = api.split("async def _canonical_review_status", 1)[1].split("\n\n", 1)[0]
         self.assertIn('pending_drafts = sorted({item.scope for item in content if item.status == "draft"})', review_source)
 
+    def test_workspace_list_quotations_includes_customer_nationality(self):
+        api = (ROOT / "main.py").read_text()
+        list_source = api.split('@app.get("/api/v2/workspace/quotations")', 1)[1].split('@app.', 1)[0]
+        self.assertIn('"nationality": cf.get("nationality")', list_source)
+
 
 if __name__ == "__main__":
     unittest.main()
+
+

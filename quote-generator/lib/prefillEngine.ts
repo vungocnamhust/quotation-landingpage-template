@@ -229,3 +229,21 @@ export function patchPricingOptionWithInference(
     },
   };
 }
+
+/**
+ * Single-pass updater when changing travel style.
+ * Updates both travel_style and guest_profile to guarantee backward compatibility.
+ */
+export function updateTravelStyle(input: QuotationFacts, rawStyle: string | null): QuotationFacts {
+  const current = ensureFactsDefaults(input);
+  const style = rawStyle?.trim() || null;
+  return {
+    ...current,
+    customer_facts: {
+      ...current.customer_facts,
+      travel_style: style,
+      guest_profile: style,
+    },
+  };
+}
+
