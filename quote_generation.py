@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import random
 from datetime import datetime
+from collections.abc import Callable
 from typing import Any, List, Literal
 
 from pydantic import BaseModel, Field
@@ -250,13 +251,18 @@ def _hotel_date_display(hotel: Any) -> str:
     return _format_travel_date_range(hotel.check_in, hotel.check_out)
 
 
-def _build_hotel_asset_images(hotel: Any, index: int, lang: str) -> tuple[str, str]:
+def _build_hotel_asset_images(
+    hotel: Any,
+    index: int,
+    lang: str,
+    hotel_details_resolver: Callable[..., dict[str, Any]] | None,
+) -> tuple[str, str]:
     if hotel.hotel_asset or hotel.room_asset:
         return hotel.hotel_asset or hotel.room_asset, hotel.room_asset or hotel.hotel_asset
+    if hotel_details_resolver is None:
+        return "", ""
     try:
-        import main as quotation_main
-
-        details = quotation_main.get_luxury_hotel_details(
+        details = hotel_details_resolver(
             hotel.name,
             hotel.destination,
             hotel.check_in,
@@ -650,8 +656,9 @@ def apply_narrative_result_to_document(
 
 
 class QuoteGenerationService:
-    def __init__(self) -> None:
+    def __init__(self, *, hotel_details_resolver: Callable[..., dict[str, Any]] | None = None) -> None:
         self.narrative_generator = NarrativeGenerator()
+        self.hotel_details_resolver = hotel_details_resolver
 
     async def generate(self, request: CreateQuoteRequestV1) -> QuoteDocumentV1:
         brand_profile = BRAND_PROFILES.get(request.brand_id, BRAND_PROFILES["vietnam_safar"])
@@ -665,7 +672,12 @@ class QuoteGenerationService:
         hotels = []
         for index, hotel in enumerate(request.service_facts.hotels, 1):
             image_pack = assets.hotels.get(hotel.destination or hotel.name) or {}
-            hotel_asset, room_asset = _build_hotel_asset_images(hotel, index - 1, request.lang)
+            hotel_asset, room_asset = _build_hotel_asset_images(
+                hotel,
+                index - 1,
+                request.lang,
+                self.hotel_details_resolver,
+            )
             hotels.append(
                 {
                     "id": f"hotel-{index}",

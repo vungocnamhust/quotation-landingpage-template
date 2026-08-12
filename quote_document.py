@@ -7,11 +7,13 @@ import re
 from urllib.parse import urlparse
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, TypeAdapter, field_validator, model_validator
-
-
-class QuoteBaseModel(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-
+from schemas.quote_document.brand import (
+    AssetSelectionResult,
+    BrandContentPolicy,
+    BrandProfile,
+    GenerationStatus,
+    QuoteBaseModel,
+)
 
 SECTION_TYPES = (
     "hero",
@@ -25,37 +27,6 @@ SECTION_TYPES = (
     "designer",
     "finalization",
 )
-
-
-class BrandContentPolicy(QuoteBaseModel):
-    tone: str = ""
-    vocabulary: List[str] = Field(default_factory=list)
-    avoid: List[str] = Field(default_factory=list)
-    legal_default: str = ""
-    image_style: str = ""
-
-
-class BrandProfile(QuoteBaseModel):
-    brand_id: str
-    display_name: str
-    domain: str = ""
-    logo: str = ""
-    colors: Dict[str, str] = Field(default_factory=dict)
-    fonts: Dict[str, str] = Field(default_factory=dict)
-    content_policy: BrandContentPolicy = Field(default_factory=BrandContentPolicy)
-
-
-class GenerationStatus(QuoteBaseModel):
-    narrative: Literal["generated", "fallback", "manual"] = "fallback"
-    assets: Literal["generated", "fallback", "manual"] = "fallback"
-    warnings: List[str] = Field(default_factory=list)
-
-
-class AssetSelectionResult(QuoteBaseModel):
-    hero: str = ""
-    destinations: Dict[str, List[str]] = Field(default_factory=dict)
-    hotels: Dict[str, Dict[str, str]] = Field(default_factory=dict)
-    dividers: Dict[str, str] = Field(default_factory=dict)
 
 
 class QuoteAssetRef(QuoteBaseModel):
@@ -73,89 +44,47 @@ class QuoteListItem(QuoteBaseModel):
     text: str = ""
 
 
-class _SafeTermHtml(HTMLParser):
-    allowed_tags = {"p", "ul", "ol", "li", "strong", "em", "br", "a"}
-
-    def __init__(self) -> None:
-        super().__init__(convert_charrefs=True)
-        self.parts: list[str] = []
-
-    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        if tag not in self.allowed_tags:
-            return
-        if tag != "a":
-            self.parts.append(f"<{tag}>")
-            return
-        href = next((value or "" for name, value in attrs if name == "href"), "")
-        parsed = urlparse(href)
-        if parsed.scheme not in {"http", "https", "mailto"}:
-            self.parts.append("<a>")
-            return
-        self.parts.append(f'<a href="{escape(href, quote=True)}">')
-
-    def handle_endtag(self, tag: str) -> None:
-        if tag in self.allowed_tags and tag != "br":
-            self.parts.append(f"</{tag}>")
-
-    def handle_data(self, data: str) -> None:
-        self.parts.append(escape(data))
-
-
-def sanitize_term_html(value: str) -> str:
-    parser = _SafeTermHtml()
-    parser.feed(value)
-    parser.close()
-    return "".join(parser.parts)
-
-
-class QuoteTermItem(QuoteBaseModel):
-    id: str
-    key: str = ""
-    label: str = ""
-    body: str = ""
-
-    @field_validator("body")
-    @classmethod
-    def sanitize_body(cls, value: str) -> str:
-        return sanitize_term_html(value)
+from schemas.v2.content_blocks import (
+    BulletListContentBlock,
+    CalloutContentBlock,
+    ChecklistGroup,
+    ChecklistGroupsContentBlock,
+    ContentText,
+    HTML_TAG_RE,
+    ParagraphContentBlock,
+    PaymentScheduleContentBlock,
+    PaymentScheduleItem,
+    QuoteContentBlock,
+    QuoteTermItem,
+    TermListContentBlock,
+    TermListItem,
+    TwoColumnListContentBlock,
+    _ContentBlockModel,
+    _HTML_TAG_RE,
+    _SafeTermHtml,
+    _content_text,
+    sanitize_term_html,
+    validate_quote_content_block,
+)
+from services.section_registry import (
+    SECTION_REGISTRY,
+    SECTION_TYPES,
+    QuoteSection,
+    SectionDefinition,
+    SectionValidationError,
+    build_default_sections,
+    validate_quote_document_sections,
+)
+from adapters.legacy_rich_content import (
+    LEGACY_RICH_DOCUMENT_FIELDS,
+    build_rich_content_from_fact_sources,
+    build_rich_content_from_legacy,
+    legacy_html_to_plain_text,
+    rich_content_values,
+    strip_legacy_rich_document_fields,
+)
 
 
-class QuoteSection(QuoteBaseModel):
-    id: str
-    type: Literal[
-        "hero",
-        "overview_letter",
-        "route_map",
-        "itinerary",
-        "hotel_plan",
-        "pricing",
-        "inclusions_exclusions",
-        "booking_terms",
-        "designer",
-        "finalization",
-    ]
-    enabled: bool = True
-    order: int = 0
-    props: Dict[str, Any] = Field(default_factory=dict)
-
-
-class SectionDefinition(QuoteBaseModel):
-    type: str
-    label: str
-    props_schema: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
-    editor_schema: Dict[str, Any] = Field(default_factory=dict)
-    web_anchor: str = ""
-    pdf_anchor: str = ""
-    required_document_paths: List[str] = Field(default_factory=list)
-    allow_multiple: bool = False
-
-
-class SectionValidationError(QuoteBaseModel):
-    sectionId: str
-    sectionType: str
-    code: str
-    message: str
-    path: str
 
 
 class RendererAdapter(QuoteBaseModel):
@@ -349,110 +278,6 @@ class QuoteDocumentPricing(QuoteBaseModel):
     options: List[QuoteDocumentPricingOption] = Field(default_factory=list)
 
 
-class _ContentBlockModel(QuoteBaseModel):
-    """Base class for the canonical, layout-independent content block union."""
-
-    model_config = ConfigDict(extra="forbid")
-
-
-HTML_TAG_RE = re.compile(r"</?([a-zA-Z0-9!][a-zA-Z0-9_-]*)(?:\s[^>]*)?>")
-_HTML_TAG_RE = HTML_TAG_RE
-
-
-def _content_text(value: str) -> str:
-    normalized = value.strip()
-    if not normalized:
-        raise ValueError("Content text cannot be blank.")
-    if len(normalized) > 4000:
-        raise ValueError("Content block strings cannot exceed 4,000 characters.")
-    if HTML_TAG_RE.search(normalized):
-        raise ValueError("Rich content blocks cannot contain HTML.")
-    return normalized
-
-
-ContentText = Annotated[str, BeforeValidator(_content_text), Field(min_length=1, max_length=4000)]
-
-
-class ParagraphContentBlock(_ContentBlockModel):
-    type: Literal["paragraph"]
-    text: ContentText
-
-
-class BulletListContentBlock(_ContentBlockModel):
-    type: Literal["bulletList"]
-    items: List[ContentText] = Field(min_length=1, max_length=40)
-
-
-class TwoColumnListContentBlock(_ContentBlockModel):
-    type: Literal["twoColumnList"]
-    leftTitle: ContentText
-    leftItems: List[ContentText] = Field(default_factory=list, max_length=40)
-    rightTitle: ContentText
-    rightItems: List[ContentText] = Field(default_factory=list, max_length=40)
-
-    @model_validator(mode="after")
-    def require_a_column_item(self) -> "TwoColumnListContentBlock":
-        if not self.leftItems and not self.rightItems:
-            raise ValueError("A twoColumnList block requires at least one column item.")
-        return self
-
-
-class TermListItem(_ContentBlockModel):
-    label: ContentText
-    body: ContentText
-
-
-class TermListContentBlock(_ContentBlockModel):
-    type: Literal["termList"]
-    items: List[TermListItem] = Field(min_length=1, max_length=24)
-
-
-class PaymentScheduleItem(_ContentBlockModel):
-    label: ContentText
-    body: ContentText
-
-
-class PaymentScheduleContentBlock(_ContentBlockModel):
-    type: Literal["paymentSchedule"]
-    items: List[PaymentScheduleItem] = Field(min_length=1, max_length=24)
-
-
-class CalloutContentBlock(_ContentBlockModel):
-    type: Literal["callout"]
-    text: ContentText
-
-
-class ChecklistGroup(_ContentBlockModel):
-    title: ContentText
-    items: List[ContentText] = Field(min_length=1, max_length=40)
-
-
-
-class ChecklistGroupsContentBlock(_ContentBlockModel):
-    type: Literal["checklistGroups"]
-    groups: List[ChecklistGroup] = Field(min_length=1, max_length=12)
-
-
-QuoteContentBlock = Annotated[
-    Union[
-        ParagraphContentBlock,
-        BulletListContentBlock,
-        TwoColumnListContentBlock,
-        TermListContentBlock,
-        PaymentScheduleContentBlock,
-        CalloutContentBlock,
-        ChecklistGroupsContentBlock,
-    ],
-    Field(discriminator="type"),
-]
-_QUOTE_CONTENT_BLOCK_ADAPTER = TypeAdapter(QuoteContentBlock)
-
-
-def validate_quote_content_block(value: Any) -> Any:
-    """Validate one canonical block; used for generated, patched, and migrated values."""
-    return _QUOTE_CONTENT_BLOCK_ADAPTER.validate_python(value)
-
-
 class QuoteDocumentContentSection(QuoteBaseModel):
     blocks: List[QuoteContentBlock] = Field(default_factory=list)
 
@@ -460,138 +285,6 @@ class QuoteDocumentContentSection(QuoteBaseModel):
 class QuoteDocumentContent(QuoteBaseModel):
     sections: Dict[str, QuoteDocumentContentSection] = Field(default_factory=dict)
 
-
-_LEGACY_HTML_TAG_RE = HTML_TAG_RE
-_LEGACY_HTML_ALLOWED_TAGS = {"p", "ul", "ol", "li", "strong", "em", "br", "a"}
-
-
-class _LegacyHtmlText(HTMLParser):
-    def __init__(self) -> None:
-        super().__init__(convert_charrefs=True)
-        self.parts: list[str] = []
-
-    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        if tag in {"p", "li", "br"} and self.parts:
-            self.parts.append("\n")
-
-    def handle_data(self, data: str) -> None:
-        self.parts.append(data)
-
-    def value(self) -> str:
-        return "\n".join(line.strip() for line in "".join(self.parts).splitlines() if line.strip()).strip()
-
-
-def legacy_html_to_plain_text(value: str) -> str:
-    """Strict migration-only conversion; unsupported markup is a hard cutoff."""
-    for match in HTML_TAG_RE.finditer(value):
-        if match.group(1).lower() not in _LEGACY_HTML_ALLOWED_TAGS:
-            raise ValueError(f"Unsupported legacy HTML tag <{match.group(1)}>")
-    parser = _LegacyHtmlText()
-    parser.feed(unescape(value))
-    parser.close()
-    return parser.value()
-
-
-def build_rich_content_from_legacy(value: Dict[str, Any]) -> Dict[str, Any]:
-    """Migration-only conversion of allowlisted legacy markup.
-
-    Runtime creation and rendering must use ``build_rich_content_from_fact_sources``;
-    keeping this function separate prevents legacy HTML from silently re-entering
-    the canonical document after cutover.
-    """
-    def legacy_plain(item: Any) -> str:
-        raw = str(item.get("text") if isinstance(item, dict) else item or "").strip()
-        return legacy_html_to_plain_text(raw) if raw else ""
-
-    inclusions = [legacy_plain(item) for item in value.get("inclusions") or []]
-    exclusions = [legacy_plain(item) for item in value.get("exclusions") or []]
-    terms = value.get("bookingTerms") if isinstance(value.get("bookingTerms"), dict) else {}
-    finalization = value.get("finalization") if isinstance(value.get("finalization"), dict) else {}
-    term_items = [
-        {"label": str(item.get("label") or item.get("key") or "").strip(), "body": legacy_html_to_plain_text(str(item.get("body") or ""))}
-        for item in terms.get("items") or [] if isinstance(item, dict)
-    ]
-    term_items = [item for item in term_items if item["label"] and item["body"]]
-    required = [legacy_plain(item) for item in finalization.get("requiredItems") or []]
-    after = [legacy_plain(item) for item in finalization.get("afterConfirmation") or []]
-    sections: Dict[str, Any] = {}
-    if inclusions or exclusions:
-        sections["inclusions_exclusions"] = {"blocks": [{"type": "twoColumnList", "leftTitle": "Inclusions", "leftItems": [item for item in inclusions if item], "rightTitle": "Exclusions", "rightItems": [item for item in exclusions if item]}]}
-    booking_blocks: list[dict[str, Any]] = []
-    if str(terms.get("description") or "").strip():
-        booking_blocks.append({"type": "paragraph", "text": legacy_html_to_plain_text(str(terms.get("description") or ""))})
-    if term_items:
-        booking_blocks.append({"type": "termList", "items": term_items})
-    if booking_blocks:
-        sections["booking_terms"] = {"blocks": booking_blocks}
-    groups = []
-    if required:
-        groups.append({"title": legacy_plain(finalization.get("requiredTitle") or "Final Details Required"), "items": required})
-    if after:
-        groups.append({"title": legacy_plain(finalization.get("afterConfirmationTitle") or "After Confirmation"), "items": after})
-    if groups:
-        sections["finalization"] = {"blocks": [{"type": "checklistGroups", "groups": groups}]}
-    return {"sections": sections}
-
-
-LEGACY_RICH_DOCUMENT_FIELDS = ("inclusions", "exclusions", "bookingTerms", "finalization")
-
-
-def strip_legacy_rich_document_fields(value: Dict[str, Any]) -> Dict[str, Any]:
-    """Remove retired rich-content fields after the one-time migration."""
-    normalized = dict(value)
-    for field in LEGACY_RICH_DOCUMENT_FIELDS:
-        normalized.pop(field, None)
-    return normalized
-
-
-def build_rich_content_from_fact_sources(value: Dict[str, Any]) -> Dict[str, Any]:
-    """Materialize structured presentation blocks from approved Fact values only.
-
-    This boundary accepts plain factual/legal source strings, never HTML. It is
-    intentionally deterministic: no editorial text is copied from trip facts.
-    """
-    inclusions = [str(item.get("text") if isinstance(item, dict) else item or "").strip() for item in value.get("inclusions") or []]
-    exclusions = [str(item.get("text") if isinstance(item, dict) else item or "").strip() for item in value.get("exclusions") or []]
-    terms = value.get("bookingTerms") if isinstance(value.get("bookingTerms"), dict) else {}
-    finalization = value.get("finalization") if isinstance(value.get("finalization"), dict) else {}
-
-    def plain(value: Any) -> str:
-        return _content_text(str(value or ""))
-
-    sections: Dict[str, Any] = {}
-    if inclusions or exclusions:
-        sections["inclusions_exclusions"] = {"blocks": [{
-            "type": "twoColumnList",
-            "leftTitle": "Inclusions",
-            "leftItems": [plain(item) for item in inclusions if item],
-            "rightTitle": "Exclusions",
-            "rightItems": [plain(item) for item in exclusions if item],
-        }]}
-
-    booking_blocks: list[dict[str, Any]] = []
-    if str(terms.get("description") or "").strip():
-        booking_blocks.append({"type": "paragraph", "text": plain(terms.get("description"))})
-    term_items = [
-        {"label": plain(item.get("label") or item.get("key")), "body": plain(item.get("body"))}
-        for item in terms.get("items") or []
-        if isinstance(item, dict) and (item.get("label") or item.get("key")) and item.get("body")
-    ]
-    if term_items:
-        booking_blocks.append({"type": "termList", "items": term_items})
-    if booking_blocks:
-        sections["booking_terms"] = {"blocks": booking_blocks}
-
-    required = [str(item.get("text") if isinstance(item, dict) else item or "").strip() for item in finalization.get("requiredItems") or []]
-    after = [str(item.get("text") if isinstance(item, dict) else item or "").strip() for item in finalization.get("afterConfirmation") or []]
-    groups = []
-    if required:
-        groups.append({"title": plain(finalization.get("requiredTitle") or "Final Details Required"), "items": [plain(item) for item in required if item]})
-    if after:
-        groups.append({"title": plain(finalization.get("afterConfirmationTitle") or "After Confirmation"), "items": [plain(item) for item in after if item]})
-    if groups:
-        sections["finalization"] = {"blocks": [{"type": "checklistGroups", "groups": groups}]}
-    return {"sections": sections}
 
 
 class QuoteDocumentDesigner(QuoteBaseModel):
@@ -898,241 +591,4 @@ class CreateQuoteRequestV1(QuoteBaseModel):
         return self
 
 
-def build_default_sections() -> List[QuoteSection]:
-    return [
-        QuoteSection(id="hero", type="hero", enabled=True, order=1),
-        QuoteSection(id="overview_letter", type="overview_letter", enabled=True, order=2),
-        QuoteSection(id="route_map", type="route_map", enabled=True, order=3),
-        QuoteSection(id="itinerary", type="itinerary", enabled=True, order=4),
-        QuoteSection(id="hotel_plan", type="hotel_plan", enabled=True, order=5),
-        QuoteSection(id="pricing", type="pricing", enabled=True, order=6),
-        QuoteSection(id="inclusions_exclusions", type="inclusions_exclusions", enabled=True, order=7),
-        QuoteSection(id="booking_terms", type="booking_terms", enabled=True, order=8),
-        QuoteSection(id="designer", type="designer", enabled=True, order=9),
-        QuoteSection(id="finalization", type="finalization", enabled=True, order=10),
-    ]
 
-
-SECTION_REGISTRY: Dict[str, SectionDefinition] = {
-    "hero": SectionDefinition(
-        type="hero",
-        label="Hero",
-        web_anchor="hero",
-        pdf_anchor="hero",
-        # V2 canonical documents store selected media as an approved R2 key.
-        # A public release resolves that key to a branded opaque media URL, so
-        # requiring a pre-resolved external URL would reject a valid V2 asset.
-        required_document_paths=["trip.title", "trip.lede", "assets.hero"],
-        editor_schema={"fields": ["trip.title", "trip.lede", "assets.hero"]},
-    ),
-    "overview_letter": SectionDefinition(
-        type="overview_letter",
-        label="Overview Letter",
-        web_anchor="overview_letter",
-        pdf_anchor="overview_letter",
-        required_document_paths=["narrative.letterIntro", "narrative.letterBody2"],
-        editor_schema={"fields": ["narrative.letterGreeting", "narrative.letterIntro", "narrative.letterBody2", "narrative.letterOutro"]},
-    ),
-    "route_map": SectionDefinition(
-        type="route_map",
-        label="Route Map",
-        web_anchor="route_map",
-        pdf_anchor="route_map",
-        required_document_paths=["route.staySegments"],
-        editor_schema={"fields": ["route.title", "route.description", "route.staySegments"]},
-    ),
-    "itinerary": SectionDefinition(
-        type="itinerary",
-        label="Itinerary",
-        web_anchor="itinerary",
-        pdf_anchor="itinerary",
-        required_document_paths=["itinerary.days"],
-        editor_schema={"fields": ["itinerary.title", "itinerary.description", "itinerary.days"]},
-    ),
-    "hotel_plan": SectionDefinition(
-        type="hotel_plan",
-        label="Hotel Plan",
-        web_anchor="hotel_plan",
-        pdf_anchor="hotel_plan",
-        required_document_paths=["stays.hotels"],
-        editor_schema={"fields": ["stays.hotels", "stays.roomNotes"]},
-    ),
-    "pricing": SectionDefinition(
-        type="pricing",
-        label="Pricing",
-        web_anchor="pricing",
-        pdf_anchor="pricing",
-        required_document_paths=["pricing.options"],
-        editor_schema={"fields": ["pricing.conditions", "pricing.options"]},
-    ),
-    "inclusions_exclusions": SectionDefinition(
-        type="inclusions_exclusions",
-        label="Inclusions & Exclusions",
-        web_anchor="inclusions_exclusions",
-        pdf_anchor="inclusions_exclusions",
-        required_document_paths=["content.sections.inclusions_exclusions.blocks"],
-        editor_schema={"fields": ["content.sections.inclusions_exclusions.blocks"]},
-    ),
-    "booking_terms": SectionDefinition(
-        type="booking_terms",
-        label="Booking Terms",
-        web_anchor="booking_terms",
-        pdf_anchor="booking_terms",
-        required_document_paths=["content.sections.booking_terms.blocks"],
-        editor_schema={"fields": ["content.sections.booking_terms.blocks"]},
-    ),
-    "designer": SectionDefinition(
-        type="designer",
-        label="Designer",
-        web_anchor="designer",
-        pdf_anchor="designer",
-        required_document_paths=["designer.name"],
-        editor_schema={"fields": ["designer.name", "designer.signature", "designer.title", "designer.experience", "designer.quote", "designer.phone", "designer.email", "designer.image"]},
-    ),
-    "finalization": SectionDefinition(
-        type="finalization",
-        label="Finalization",
-        web_anchor="finalization",
-        pdf_anchor="finalization",
-        required_document_paths=[],
-        editor_schema={"fields": ["content.sections.finalization.blocks"]},
-    ),
-}
-
-
-def _path_exists(payload: Any, path: str) -> bool:
-    current = payload
-    for part in path.split("."):
-        if isinstance(current, BaseModel):
-            current = getattr(current, part, None)
-            continue
-        if isinstance(current, dict):
-            current = current.get(part)
-            continue
-        if isinstance(current, list):
-            if not part.isdigit():
-                return bool(current)
-            index = int(part)
-            current = current[index] if 0 <= index < len(current) else None
-            continue
-        return False
-    if isinstance(current, list):
-        return len(current) > 0
-    if isinstance(current, BaseModel):
-        current = current.model_dump(mode="json")
-    if isinstance(current, dict) and {"assetId", "r2Key", "url"}.intersection(current):
-        return bool(current.get("assetId") or current.get("r2Key") or current.get("url"))
-    return current not in (None, "", {}, [])
-
-
-def validate_quote_document_sections(document: QuoteDocumentV1 | dict[str, Any]) -> List[SectionValidationError]:
-    errors: List[SectionValidationError] = []
-    if isinstance(document, dict):
-        raw_sections = (((document.get("layout") or {}).get("sections")) if isinstance(document.get("layout"), dict) else None) or []
-        seen_types: Dict[str, str] = {}
-        for index, raw_section in enumerate(raw_sections):
-            if not isinstance(raw_section, dict):
-                errors.append(
-                    SectionValidationError(
-                        sectionId=f"section-{index + 1}",
-                        sectionType="",
-                        code="invalid_section_payload",
-                        message="Each section must be an object payload.",
-                        path=f"layout.sections.{index}",
-                    )
-                )
-                continue
-            section_type = str(raw_section.get("type") or "")
-            section_id = str(raw_section.get("id") or section_type or f"section-{index + 1}")
-            definition = SECTION_REGISTRY.get(section_type)
-            if definition is None:
-                errors.append(
-                    SectionValidationError(
-                        sectionId=section_id,
-                        sectionType=section_type,
-                        code="unknown_section_type",
-                        message=f"Section type '{section_type}' is not registered.",
-                        path=f"layout.sections.{index}.type",
-                    )
-                )
-                continue
-            if not definition.allow_multiple and section_type in seen_types:
-                errors.append(
-                    SectionValidationError(
-                        sectionId=section_id,
-                        sectionType=section_type,
-                        code="duplicate_section_type",
-                        message=f"Section type '{section_type}' can only appear once.",
-                        path=f"layout.sections.{index}.type",
-                    )
-                )
-            else:
-                seen_types[section_type] = section_id
-        if errors:
-            return errors
-
-    quote_document = document if isinstance(document, QuoteDocumentV1) else QuoteDocumentV1.model_validate(document)
-    seen_types: Dict[str, str] = {}
-
-    for index, section in enumerate(quote_document.layout.sections):
-        definition = SECTION_REGISTRY.get(section.type)
-        path_prefix = f"layout.sections.{index}"
-        if definition is None:
-            errors.append(
-                SectionValidationError(
-                    sectionId=section.id,
-                    sectionType=section.type,
-                    code="unknown_section_type",
-                    message=f"Section type '{section.type}' is not registered.",
-                    path=f"{path_prefix}.type",
-                )
-            )
-            continue
-        if not definition.allow_multiple and section.type in seen_types:
-            errors.append(
-                SectionValidationError(
-                    sectionId=section.id,
-                    sectionType=section.type,
-                    code="duplicate_section_type",
-                    message=f"Section type '{section.type}' can only appear once.",
-                    path=f"{path_prefix}.type",
-                )
-            )
-        else:
-            seen_types[section.type] = section.id
-        if not definition.web_anchor or not definition.pdf_anchor:
-            errors.append(
-                SectionValidationError(
-                    sectionId=section.id,
-                    sectionType=section.type,
-                    code="missing_renderer_anchor",
-                    message=f"Section type '{section.type}' is missing a web/pdf renderer anchor.",
-                    path=f"{path_prefix}.type",
-                )
-            )
-        allowed_props = set(definition.props_schema.keys())
-        extra_props = sorted(set(section.props.keys()) - allowed_props)
-        if extra_props:
-            errors.append(
-                SectionValidationError(
-                    sectionId=section.id,
-                    sectionType=section.type,
-                    code="invalid_props",
-                    message=f"Section type '{section.type}' does not accept props: {', '.join(extra_props)}.",
-                    path=f"{path_prefix}.props",
-                )
-            )
-        if not section.enabled:
-            continue
-        for required_path in definition.required_document_paths:
-            if not _path_exists(quote_document, required_path):
-                errors.append(
-                    SectionValidationError(
-                        sectionId=section.id,
-                        sectionType=section.type,
-                        code="missing_required_document_data",
-                        message=f"Section type '{section.type}' requires '{required_path}' to be populated.",
-                        path=required_path,
-                    )
-                )
-    return errors

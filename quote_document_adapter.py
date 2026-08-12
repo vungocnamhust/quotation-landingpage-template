@@ -521,3 +521,133 @@ def apply_quote_document_to_lang_ctx(lang_ctx: dict, document: dict) -> None:
     lang_ctx["show_finalization_section"] = section_enabled.get("finalization", True)
     lang_ctx["quote_document"] = quote_document.model_dump(mode="json")
     lang_ctx["brochure_draft"] = quote_document.model_dump(mode="json")
+
+
+def _build_compatibility_payload_from_quote_request(request_payload: Any, document: dict) -> dict[str, Any]:
+    from quote_generation import BRAND_PROFILES
+    quote_document = QuoteDocumentV1.model_validate(document)
+    rich_content = rich_content_values(quote_document)
+    itinerary = []
+    for day in quote_document.itinerary.days:
+        itinerary.append({
+            "dayNumber": day.dayNumber,
+            "destination": day.segmentCity or day.title or "Vietnam",
+            "summary": day.title or (day.description[0] if day.description else ""),
+            "mainInclusions": " • ".join(day.activities or day.meals) or (day.description[0] if day.description else "Private arrangements as outlined."),
+            "senseOfPace": "Private paced journey",
+            "dining": ", ".join(day.meals) if day.meals else "As arranged",
+        })
+
+    hotels = []
+    for hotel in request_payload.service_facts.hotels:
+        hotels.append({
+            "destination": hotel.destination,
+            "checkInDate": hotel.check_in or "",
+            "checkOutDate": hotel.check_out or "",
+            "hotelArrangement": hotel.intro or hotel.name or f"Selected stay in {hotel.destination or 'Vietnam'}",
+        })
+    if not hotels:
+        for hotel in quote_document.stays.hotels:
+            hotels.append({
+                "destination": hotel.city,
+                "checkInDate": hotel.hotelDate.split(" - ")[0] if " - " in hotel.hotelDate else "",
+                "checkOutDate": hotel.hotelDate.split(" - ")[1] if " - " in hotel.hotelDate else "",
+                "hotelArrangement": hotel.introduction or hotel.name,
+            })
+
+    booking_item_map = {str(item["label"]).strip().lower(): str(item["body"]) for item in rich_content["bookingItems"]}
+    pricing_options = request_payload.pricing_facts.options
+    first_pricing_option = pricing_options[0] if pricing_options else None
+    currency = first_pricing_option.currency if first_pricing_option else "USD"
+    currency_divisor = 1 if currency == "VND" else 100
+    total_budget = (first_pricing_option.group_total_amount_minor / currency_divisor) if first_pricing_option else 0.0
+    return {
+        "quotationNarrative": "\n".join(filter(None, [
+            quote_document.trip.lede,
+            quote_document.narrative.letterIntro,
+            quote_document.narrative.letterBody2,
+            quote_document.narrative.letterOutro,
+        ])),
+        "programOverview": {
+            "heading": "PROGRAM OVERVIEW",
+            "paragraphs": [item for item in [
+                quote_document.trip.lede,
+                quote_document.narrative.letterIntro,
+                quote_document.narrative.letterBody2,
+            ] if item],
+        },
+        "landingpageContent": {
+            "heroSection": {
+                "headline": quote_document.trip.title or "Vietnam Private Journey",
+                "subtitle": quote_document.trip.title or "Vietnam Private Journey",
+            },
+            "visualDescription": quote_document.brand.name or "Luxury travel brochure",
+        },
+        "journeyGlance": {
+            "market": request_payload.customer_facts.market or quote_document.traveler.nationality or "International",
+            "guestProfile": quote_document.traveler.guestProfile or "Private guests",
+            "hotelStandard": "Luxury",
+            "mealPreference": "As arranged",
+            "priceType": "Indicative",
+            "tourCode": request_payload.opportunity_id or quote_document.trip.quotationNumber or quote_document.meta.quotationId,
+            "domesticFlights": "On request",
+            "priceBasis": quote_document.trip.priceBasis,
+            "partnerNote": BRAND_PROFILES.get(quote_document.meta.brandId, BRAND_PROFILES["vietnam_safar"]).content_policy.tone,
+            "validity": "Subject to final confirmation and availability.",
+        },
+        "whyWorks": {
+            "privateFlexible": "Private pacing and curated service remain central throughout the journey.",
+            "comfort": "Selected stays, private transfers, and considered transitions are built into the experience.",
+            "muslimFriendly": "Guest preferences and service details can be tailored during final confirmation.",
+            "balancedHighlights": "The route balances signature moments with quieter pauses and comfortable movement.",
+        },
+        "itinerary": itinerary,
+        "hotelPlan": {
+            "hotels": hotels,
+            "roomNotes": quote_document.stays.roomNotes or "",
+        },
+        "optionalEnhancements": [],
+        "bookingTerms": {
+            "deposit": booking_item_map.get("deposit") or "As per standard booking policy.",
+            "balance": booking_item_map.get("balance") or "Payable prior to tour commencement.",
+            "cancellation": booking_item_map.get("cancellation") or "Subject to cancellation charges as per terms.",
+            "confirmation": booking_item_map.get("confirmation") or "Subject to availability upon payment.",
+        },
+        "finalization": {
+            "finalDetailsRequired": "\n".join(rich_content["finalizationGroups"][0]["items"]) if rich_content["finalizationGroups"] else "",
+            "afterConfirmation": "\n".join(rich_content["finalizationGroups"][1]["items"]) if len(rich_content["finalizationGroups"]) > 1 else "",
+        },
+        "pricing": {
+            "currency": currency,
+            "pricingTitle": "PRICE QUOTATION – INDICATIVE",
+            "basis": quote_document.trip.priceBasis,
+            "priceOptions": [
+                {
+                    "label": option.label or f"Option {index:02d}",
+                    "notes": "",
+                    "amount": (option.groupTotalAmountMinor / (1 if option.currency == "VND" else 100)) if option.groupTotalAmountMinor else None,
+                }
+                for index, option in enumerate(quote_document.pricing.options, 1)
+            ] or [{
+                "label": "Option 01",
+                "notes": quote_document.trip.priceBasis or "",
+                "amount": None,
+            }],
+            "subtotal": total_budget or None,
+            "discountTotal": None,
+            "taxTotal": None,
+            "grandTotal": total_budget or None,
+        },
+        "retrievalStatus": {
+            "hotel": "pending",
+            "activity": "pending",
+            "guide": "pending",
+            "transfer": "pending",
+            "flight": "pending",
+        },
+        "candidateBlocks": [],
+        "inclusions": rich_content["inclusions"],
+        "exclusions": rich_content["exclusions"],
+        "quotationNumber": request_payload.opportunity_id or quote_document.trip.quotationNumber or quote_document.meta.quotationId,
+    }
+

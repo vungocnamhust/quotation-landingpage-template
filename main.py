@@ -1,6 +1,5 @@
 import uuid
 import json
-import base64
 import logging
 import os
 import asyncio
@@ -68,13 +67,7 @@ from services.content_draft_service import ContentDraftService
 from services.content_registry import content_owned_targets, content_registry_payload, content_editor_state_payload, content_registry_for_document_payload
 from services.section_content_generator import ContentGenerationError
 from services.content_readiness_service import resolve_content_readiness
-from services.media_service import (
-    MediaNotFoundError,
-    MediaSelectionError,
-    MediaService,
-    MediaSyncPathError,
-    MediaValidationError,
-)
+from services.media_service import MediaService
 from services.storage.local_media_storage import LocalMediaStorage
 from services.storage.r2_storage import R2Storage, R2StorageConfigurationError
 from services.media_library_service import MediaLibraryService, is_allowed_prefix, normalize_library_prefix
@@ -85,8 +78,35 @@ from repositories.media_library_repository import MediaLibraryRepository
 from repositories.travel_designer_repository import TravelDesignerRepository
 from repositories.accommodation_repository import AccommodationRepository
 from core.auth import Principal, require_editor, require_editor_or_service, require_quote_admin
+from api.dependencies import (
+    DbSessionDep,
+    EditorOrServicePrincipalDep,
+    EditorPrincipalDep,
+    OwnedV2QuotationDep,
+    QuoteAdminPrincipalDep,
+    configure_session_factory_provider,
+    get_active_travel_designer,
+    require_owned_v2_quotation,
+)
+from api.runtime import configure_v2_runtime
+from schemas.v2.media import MediaSelectionRequest, MediaSyncRequest
+from services.publication_runtime import (
+    purge_public_urls as _purge_public_url,
+    release_transition_cache_urls as _publication_release_transition_cache_urls,
+    render_react_pdf_bytes as _render_react_pdf_bytes,
+)
 from routers.health import router as health_router
 from routers.travel_styles import router as travel_styles_router
+from routers.v2.quotation_options import router as quotation_options_router
+from routers.v2.media import router as legacy_media_router
+from routers.v2.workspace import router as workspace_router
+from routers.v2.quotation_facts import router as quotation_facts_router
+from routers.v2.quotation_document import router as quotation_document_router
+from routers.v2.destinations import router as destinations_router
+from routers.v2.accommodations import router as accommodations_router
+from routers.v2.travel_designers import router as travel_designers_router
+from routers.v1.translations import router as translations_router
+from routers.public_brochure import router as public_brochure_router
 
 from core.config import settings
 
@@ -113,53 +133,44 @@ class FactsDesignerRequest(BaseModel):
     baseRevision: int
     designerProfileId: str
 
-# These keys are display chrome only. Facts and reviewed narrative never pass
-# through presentation.copyOverrides, which prevents Design from becoming a
-# second owner of operational quotation data.
-def _validate_v2_copy_overrides(overrides: Any) -> dict[str, str]:
-    if not isinstance(overrides, dict):
-        raise HTTPException(status_code=422, detail={"message": "copyOverrides must be an object."})
-    invalid = [key for key, value in overrides.items()
-               if not is_design_copy_field(key) or not isinstance(value, str)
-               or not value.strip() or len(value) > 500]
-    if invalid:
-        raise HTTPException(status_code=422, detail={
-            "message": "copyOverrides contains an invalid presentation key or value.",
-            "invalidKeys": sorted(str(key) for key in invalid),
-        })
-    return {key: value.strip() for key, value in overrides.items()}
-
-
-def _validate_v2_media_overrides(overrides: Any) -> dict[str, Any]:
-    if not isinstance(overrides, dict):
-        raise HTTPException(status_code=422, detail={"message": "mediaOverrides must be an object."})
-    if overrides:
-        raise HTTPException(status_code=422, detail={"message": "mediaOverrides is legacy read-only. Save quotation media through /facts/media slots."})
-    return {}
-
-
-def _validate_v2_identity_overrides(overrides: Any) -> dict[str, str]:
-    """Validate identity writes through the same Design registry as the UI.
-
-    Media identity has no Design descriptor. Quotation media is Fact-owned and
-    must use its existing canonical Facts media route.
-    """
-    if not isinstance(overrides, dict):
-        raise HTTPException(status_code=422, detail={"message": "identityOverrides must be an object."})
-    invalid: list[str] = []
-    normalized: dict[str, str] = {}
-    for key, value in overrides.items():
-        limit = 160 if key == "brandName" else 500
-        if design_identity_field(str(key)) is None or not isinstance(value, str) or not value.strip() or len(value) > limit:
-            invalid.append(str(key))
-            continue
-        normalized[str(key)] = value.strip()
-    if invalid:
-        raise HTTPException(status_code=422, detail={
-            "message": "identityOverrides contains an invalid Design field or value.",
-            "invalidKeys": sorted(invalid),
-        })
-    return normalized
+from core.brands import (
+    BRAND_LOGO_ASSETS,
+    BRAND_OWNED_CTX_FIELDS,
+    BRAND_OWNED_EDITABLE_FIELDS,
+    BRANDS,
+    LEGACY_BRAND_PLACEHOLDER_ASSETS,
+    _brand_config_from_quote_document,
+    _capture_brand_owned_fields,
+    _default_brand_logo,
+    _is_brand_placeholder_image,
+    _is_brand_switched,
+    _restore_brand_owned_fields,
+    resolve_brand,
+)
+from core.constants.coordinates import SLUG_COORDS
+from core.constants.day_templates import LUXURY_DAY_TEMPLATES, get_luxury_day_title
+from core.i18n import STATIC_DICTIONARY
+from schemas.brand_contract import (
+    BrandRenderProfileContract,
+    _brand_generation_profile,
+    _contrast_ratio,
+    _relative_luminance,
+    _require_active_v2_brand,
+    _serialize_brand_render_profile,
+)
+from services.media_factory import (
+    get_media_library_service as _get_media_library_service,
+    get_media_service as _get_media_service,
+    _media_service,
+    _media_library_service,
+)
+from services.quotation_validation import (
+    _sanitize_html_sync_payload,
+    _validate_v2_copy_overrides,
+    _validate_v2_identity_overrides,
+    _validate_v2_media_overrides,
+)
+from quote_document_adapter import _build_compatibility_payload_from_quote_request
 
 
 def _media_classification(item) -> str:
@@ -167,205 +178,31 @@ def _media_classification(item) -> str:
     return next((tag for tag in ("exterior", "interior", "room", "hero", "ornament") if tag in value), "generic")
 
 
-async def _resolve_active_travel_designer(principal: Principal):
-    """Map the trusted interactive identity to the one workspace owner row."""
-    if not principal.email:
-        raise HTTPException(status_code=403, detail="An active Travel Designer profile is required. Contact a DMC administrator.")
-    async with _get_db_session_factory()() as session:
-        profile = await TravelDesignerRepository(session).get_active_by_email(principal.email)
-    if profile is None:
-        raise HTTPException(status_code=403, detail="An active Travel Designer profile is required. Contact a DMC administrator.")
-    return profile
-
-
-async def require_owned_quotation(
-    quotation_id: str,
-    principal: Principal = Depends(require_editor),
-):
-    """Ownership is enforced server-side for every interactive quote action.
-
-    Return 404 for unassigned and foreign quotes so a manually entered ID does
-    not reveal the existence of another designer's customer record.
-    """
-    async with _get_db_session_factory()() as session:
-        quotations = QuotationRepository(session)
-        designers = TravelDesignerRepository(session)
-        quotation = await quotations.get_quotation_by_id(quotation_id)
-        designer = await designers.get_active_by_email(principal.email) if principal.email else None
-        if (
-            quotation is None
-            or quotation.template_name != V2_RENDERER_NAME
-            or designer is None
-            or (
-                quotation.designer_profile_id != designer.id
-                and quotation.created_by_profile_id != designer.id
-            )
-        ):
-            raise HTTPException(status_code=404, detail="Quotation was not found.")
-    return quotation
-
-
-def _workspace_cursor(quotation) -> str:
-    payload = json.dumps({"updatedAt": quotation.updated_at.isoformat(), "id": quotation.id}, separators=(",", ":"))
-    return base64.urlsafe_b64encode(payload.encode()).decode().rstrip("=")
-
-
-def _parse_workspace_cursor(cursor: str | None) -> tuple[datetime | None, str | None]:
-    if not cursor:
-        return None, None
-    try:
-        padded = cursor + "=" * (-len(cursor) % 4)
-        payload = json.loads(base64.urlsafe_b64decode(padded).decode())
-        return datetime.fromisoformat(payload["updatedAt"]), str(payload["id"])
-    except (ValueError, KeyError, TypeError, UnicodeDecodeError, json.JSONDecodeError):
-        raise HTTPException(status_code=422, detail="Invalid workspace cursor") from None
-
-
-def _relative_luminance(hex_color: str) -> float:
-    """Return WCAG relative luminance for an already-validated #RRGGBB value."""
-    channels = [int(hex_color[index : index + 2], 16) / 255 for index in (1, 3, 5)]
-    normalized = [
-        channel / 12.92 if channel <= 0.03928 else ((channel + 0.055) / 1.055) ** 2.4
-        for channel in channels
-    ]
-    return 0.2126 * normalized[0] + 0.7152 * normalized[1] + 0.0722 * normalized[2]
-
-
-def _contrast_ratio(foreground: str, background: str) -> float:
-    lighter = max(_relative_luminance(foreground), _relative_luminance(background))
-    darker = min(_relative_luminance(foreground), _relative_luminance(background))
-    return (lighter + 0.05) / (darker + 0.05)
-
-
-class BrandRenderProfileContract(BaseModel):
-    """Mutable brand configuration; release snapshots use the serialized form."""
-
-    model_config = ConfigDict(extra="allow")
-    palette: dict[str, str]
-    radii: dict[str, str]
-    themeId: Literal["brochure"] = "brochure"
-    layoutVersion: int = 1
-
-    @field_validator("palette")
-    @classmethod
-    def validate_palette(cls, palette: dict[str, str]) -> dict[str, str]:
-        required = {"canvas", "paper", "ink", "mutedInk", "accent", "accentAlt", "contrast", "onContrast", "focus"}
-        section_backgrounds = {"storyContrast", "investmentSurface", "investmentText"}
-        if missing := required.difference(palette):
-            raise ValueError(f"palette is missing required colors: {', '.join(sorted(missing))}")
-        if section_backgrounds.intersection(palette):
-            if missing := section_backgrounds.difference(palette):
-                raise ValueError(
-                    "palette section-background colors must be supplied together: "
-                    f"{', '.join(sorted(missing))}"
-                )
-        if invalid := [key for key, value in palette.items() if not re.fullmatch(r"#[0-9a-fA-F]{6}", value)]:
-            raise ValueError(f"palette contains invalid #RRGGBB values: {', '.join(sorted(invalid))}")
-        checks = (
-            ("ink", "canvas", 4.5, "body text"),
-            ("onContrast", "contrast", 4.5, "contrast text"),
-            ("focus", "canvas", 3.0, "focus ring"),
-        )
-        if section_backgrounds.issubset(palette):
-            checks += (
-                ("onContrast", "storyContrast", 4.5, "story contrast text"),
-                ("investmentText", "investmentSurface", 4.5, "investment text"),
-            )
-        for foreground, background, minimum, label in checks:
-            ratio = _contrast_ratio(palette[foreground], palette[background])
-            if ratio < minimum:
-                raise ValueError(
-                    f"{label} contrast is {ratio:.2f}:1; required minimum is {minimum}:1"
-                )
-        return palette
-
-    @field_validator("radii")
-    @classmethod
-    def validate_radii(cls, radii: dict[str, str]) -> dict[str, str]:
-        required = {"card", "button", "frame", "pill"}
-        if missing := required.difference(radii):
-            raise ValueError(f"radii is missing required values: {', '.join(sorted(missing))}")
-        if any(not value.strip() for value in radii.values()):
-            raise ValueError("radii values must not be empty")
-        if re.fullmatch(r"\s*(?:999+px|50%|100%)\s*", radii["button"], flags=re.IGNORECASE):
-            raise ValueError("radii.button must be a component radius, not a pill radius")
-        return radii
-
-    @model_validator(mode="after")
-    def validate_layout(self):
-        if self.layoutVersion != 1:
-            raise ValueError("layoutVersion 1 is the only supported V2 layout")
-        return self
-
-
-def _serialize_brand_render_profile(brand: Any) -> dict[str, Any]:
-    profile = copy.deepcopy(brand.render_profile or {})
-    BrandRenderProfileContract.model_validate(profile)
-    profile.update({
-        "id": brand.id,
-        "displayName": brand.display_name,
-        "hostname": brand.hostname,
-        "logoUrl": profile.get("logoUrl") or brand.logo_asset_key or "",
-    })
-    return profile
-
-
-def _brand_generation_profile(brand: Any) -> BrandProfile:
-    profile = _serialize_brand_render_profile(brand)
-    content_policy = profile.get("contentPolicy") if isinstance(profile.get("contentPolicy"), dict) else {}
-    return BrandProfile(
-        brand_id=brand.id,
-        display_name=brand.display_name,
-        domain=brand.hostname,
-        logo=profile.get("logoUrl") or "",
-        colors=profile.get("palette") if isinstance(profile.get("palette"), dict) else {},
-        fonts=profile.get("typography") if isinstance(profile.get("typography"), dict) else {},
-        content_policy=BrandContentPolicy.model_validate(content_policy),
-    )
-
-
-async def _require_active_v2_brand(brand_id: str | None) -> Any:
-    if not brand_id:
-        raise HTTPException(status_code=422, detail={"message": "An active brand is required.", "missingInputs": ["brand_id"]})
-    async with _get_db_session_factory()() as session:
-        brand = await BrandRepository(session).get_active(brand_id)
-        if brand is None:
-            raise HTTPException(status_code=422, detail={"message": "Brand is unavailable for V2.", "missingInputs": ["brand_id"]})
-        return brand
+# Compatibility exports for existing scripts/tests. New V2 handlers import
+# aliases from api.dependencies rather than defining policy in this module.
+_resolve_active_travel_designer = get_active_travel_designer
+require_owned_quotation = require_owned_v2_quotation
 
 
 def _get_db_session_factory():
     return get_session_factory()
 
 
-_media_service: MediaService | None = None
-_media_library_service: MediaLibraryService | None = None
-_pdf_render_semaphore = asyncio.Semaphore(1)
-
-
-def _get_media_service() -> MediaService:
-    global _media_service
-    media_backend = (os.getenv("MEDIA_STORAGE_BACKEND") or "").strip().lower()
-    use_r2_storage = media_backend == "r2" or (not media_backend and settings.has_r2_configuration)
-    desired_storage_class = R2Storage if use_r2_storage else LocalMediaStorage
-
-    if _media_service is None or not isinstance(_media_service.storage, desired_storage_class):
-        storage = desired_storage_class()
-        _media_service = MediaService(storage=storage)
-    return _media_service
-
-
-def _get_media_library_service() -> MediaLibraryService:
-    global _media_library_service
-    if not settings.has_r2_configuration:
-        raise HTTPException(status_code=503, detail="R2 media library is not configured.")
-    if _media_library_service is None:
-        _media_library_service = MediaLibraryService(storage=R2Storage(), session_factory=_get_db_session_factory())
-    return _media_library_service
+configure_session_factory_provider(lambda: _get_db_session_factory())
 
 app = FastAPI(title="Quotation Webhook API")
 app.include_router(health_router)
 app.include_router(travel_styles_router)
+app.include_router(quotation_options_router)
+app.include_router(legacy_media_router)
+app.include_router(workspace_router)
+app.include_router(quotation_facts_router)
+app.include_router(quotation_document_router)
+app.include_router(destinations_router)
+app.include_router(accommodations_router)
+app.include_router(travel_designers_router)
+app.include_router(translations_router)
+app.include_router(public_brochure_router)
 
 
 # CORS — required for ChatGPT Custom GPT Actions to reach the API
@@ -537,1449 +374,7 @@ def _field_supports_word_paste_typography_cleanup(field_name: str) -> bool:
         return False
     return any(field_name.startswith(prefix) for prefix in WORD_PASTE_TYPOGRAPHY_PREFIXES)
 
-# Multi-brand configurations
-BRANDS = {
-    "vietnam_safar": {
-        "id": "vietnam_safar",
-        "name": "Vietnam Safar",
-        "domain": "journeys.vietnamsafar.vn",
-        "logo": "/assets/brands/vietnam_safar.png",
-        "color_primary": "#17412e",
-        "color_primary_dark": "#0e2f22",
-        "color_accent": "#b7894b",
-        "color_accent_light": "#d8bd85",
-        "font_serif": "Cormorant Garamond",
-        "font_sans": "Montserrat",
-        "font_accent": "Allura"
-    },
-    "capella_travel": {
-        "id": "capella_travel",
-        "name": "Capella Travel",
-        "domain": "journeys.capellatravel.com",
-        "logo": "/assets/brands/capella_travel.png",
-        "color_primary": "#CBA135",
-        "color_primary_dark": "#B7894B",
-        "color_accent": "#333333",
-        "color_accent_light": "#4F4F4F",
-        "font_serif": "Cormorant Garamond",
-        "font_sans": "Montserrat",
-        "font_accent": "Cormorant Garamond"
-    },
-    "selvara": {
-        "id": "selvara",
-        "name": "Selvara Journeys",
-        "domain": "my.selvarajourneys.com",
-        "logo": "/assets/brands/selvara.svg",
-        "color_primary": "#A98338",
-        "color_primary_dark": "#8C6A29",
-        "color_accent": "#4F5D4E",
-        "color_accent_light": "#6B7A6A",
-        "font_serif": "Cormorant Garamond",
-        "font_sans": "Jost",
-        "font_accent": "Cormorant Garamond"
-    }
-}
 
-BRAND_LOGO_ASSETS = {
-    brand_cfg.get("logo")
-    for brand_cfg in BRANDS.values()
-    if brand_cfg.get("logo")
-}
-
-LEGACY_BRAND_PLACEHOLDER_ASSETS = frozenset({
-    "/assets/vietnam-safar-logo.png",
-})
-
-def resolve_brand(request: Optional[Request], payload_dict: dict = None) -> dict:
-    """Resolve brand based on query param, seller name, or content match."""
-    brand_id = None
-    if request is not None:
-        try:
-            brand_id = request.query_params.get("brand")
-        except AttributeError:
-            pass
-    if brand_id and brand_id in BRANDS:
-        return BRANDS[brand_id]
-    
-    if payload_dict:
-        # Check seller companyName
-        seller = payload_dict.get("seller") or {}
-        comp_name = seller.get("companyName", "").lower() if isinstance(seller, dict) else ""
-        if "capella" in comp_name:
-            return BRANDS["capella_travel"]
-        elif "selvara" in comp_name:
-            return BRANDS["selvara"]
-            
-        # General string match fallback in payload representation
-        try:
-            payload_str = json.dumps(payload_dict).lower()
-            if "capella" in payload_str:
-                return BRANDS["capella_travel"]
-            elif "selvara" in payload_str:
-                return BRANDS["selvara"]
-        except Exception:
-            pass
-            
-    return BRANDS["vietnam_safar"]
-
-def _capture_brand_owned_fields(lang_ctx: dict) -> dict:
-    return {
-        key: lang_ctx.get(key)
-        for key in BRAND_OWNED_CTX_FIELDS
-    }
-
-def _restore_brand_owned_fields(lang_ctx: dict, brand_owned_fields: dict):
-    for key, value in (brand_owned_fields or {}).items():
-        if value:
-            lang_ctx[key] = value
-
-def _is_brand_switched(ctx_data: dict, brand_config: dict) -> bool:
-    stored_brand = ctx_data.get("brand") if isinstance(ctx_data, dict) else {}
-    stored_brand_id = stored_brand.get("id") if isinstance(stored_brand, dict) else None
-    requested_brand_id = (brand_config or {}).get("id")
-    return bool(stored_brand_id and requested_brand_id and stored_brand_id != requested_brand_id)
-
-def _sanitize_html_sync_payload(
-    existing_keys: set[str] | None,
-    edited_fields: dict | None,
-    composite_fields: dict | None = None,
-):
-    safe_existing_keys = {
-        key for key in (existing_keys or set())
-        if key not in BRAND_OWNED_EDITABLE_FIELDS
-    }
-    safe_edited_fields = {
-        key: value
-        for key, value in (edited_fields or {}).items()
-        if key not in BRAND_OWNED_EDITABLE_FIELDS
-    }
-
-    safe_composite_fields = copy.deepcopy(composite_fields or {})
-    top_level = safe_composite_fields.get("top_level", {})
-    if top_level:
-        safe_top_level = {
-            key: value
-            for key, value in top_level.items()
-            if key not in BRAND_OWNED_CTX_FIELDS
-        }
-        if safe_top_level:
-            safe_composite_fields["top_level"] = safe_top_level
-        else:
-            safe_composite_fields.pop("top_level", None)
-
-    return safe_existing_keys, safe_edited_fields, safe_composite_fields
-
-def _default_brand_logo(brand_config: dict | None) -> str:
-    return (brand_config or {}).get("logo") or "/assets/vietnam-safar-logo.png"
-
-
-def _brand_config_from_quote_document(document: dict) -> dict:
-    quote_document = QuoteDocumentV1.model_validate(document)
-    brand_id = quote_document.meta.brandId or "vietnam_safar"
-    base_brand = copy.deepcopy(BRANDS.get(brand_id) or BRANDS["vietnam_safar"])
-    base_brand.update({
-        "id": brand_id,
-        "name": quote_document.brand.name or base_brand.get("name"),
-        "domain": quote_document.brand.domain or base_brand.get("domain"),
-        "logo": quote_document.brand.logo.url or base_brand.get("logo"),
-        "color_primary": quote_document.brand.colors.get("primary") or base_brand.get("color_primary"),
-        "color_primary_dark": quote_document.brand.colors.get("primaryDark") or base_brand.get("color_primary_dark"),
-        "color_accent": quote_document.brand.colors.get("accent") or base_brand.get("color_accent"),
-        "color_accent_light": quote_document.brand.colors.get("accentLight") or base_brand.get("color_accent_light"),
-        "color_bg_main": quote_document.brand.colors.get("bgMain") or base_brand.get("color_bg_main"),
-        "color_bg_alt": quote_document.brand.colors.get("bgAlt") or base_brand.get("color_bg_alt"),
-        "color_text_main": quote_document.brand.colors.get("textMain") or base_brand.get("color_text_main"),
-        "color_text_muted": quote_document.brand.colors.get("textMuted") or base_brand.get("color_text_muted"),
-        "color_text_light": quote_document.brand.colors.get("textLight") or base_brand.get("color_text_light"),
-        "font_serif": quote_document.brand.fonts.get("serif") or base_brand.get("font_serif"),
-        "font_sans": quote_document.brand.fonts.get("sans") or base_brand.get("font_sans"),
-        "font_accent": quote_document.brand.fonts.get("accent") or base_brand.get("font_accent"),
-    })
-    return base_brand
-
-
-def _build_seed_destinations_from_quote_document(document: dict) -> list[dict[str, Any]]:
-    quote_document = QuoteDocumentV1.model_validate(document)
-    seen: set[str] = set()
-    destinations: list[dict[str, Any]] = []
-    for day in quote_document.itinerary.days:
-        name = (day.segmentCity or day.title or "").strip()
-        if not name or name.lower() in seen:
-            continue
-        seen.add(name.lower())
-        carousel = [item.url for item in day.images.carousel if item.url]
-        hero = day.images.hero.url or quote_document.assets.hero.url
-        destinations.append({
-            "name": name,
-            "slug": "",
-            "image_url": hero,
-            "images": carousel or ([hero] if hero else []),
-        })
-    return destinations
-
-
-def _build_compatibility_payload_from_quote_request(request_payload: CreateQuoteRequestV1, document: dict) -> dict[str, Any]:
-    quote_document = QuoteDocumentV1.model_validate(document)
-    rich_content = rich_content_values(quote_document)
-    itinerary = []
-    for day in quote_document.itinerary.days:
-        itinerary.append({
-            "dayNumber": day.dayNumber,
-            "destination": day.segmentCity or day.title or "Vietnam",
-            "summary": day.title or (day.description[0] if day.description else ""),
-            "mainInclusions": " • ".join(day.activities or day.meals) or (day.description[0] if day.description else "Private arrangements as outlined."),
-            "senseOfPace": "Private paced journey",
-            "dining": ", ".join(day.meals) if day.meals else "As arranged",
-        })
-
-    hotels = []
-    for hotel in request_payload.service_facts.hotels:
-        hotels.append({
-            "destination": hotel.destination,
-            "checkInDate": hotel.check_in or "",
-            "checkOutDate": hotel.check_out or "",
-            "hotelArrangement": hotel.intro or hotel.name or f"Selected stay in {hotel.destination or 'Vietnam'}",
-        })
-    if not hotels:
-        for hotel in quote_document.stays.hotels:
-            hotels.append({
-                "destination": hotel.city,
-                "checkInDate": hotel.hotelDate.split(" - ")[0] if " - " in hotel.hotelDate else "",
-                "checkOutDate": hotel.hotelDate.split(" - ")[1] if " - " in hotel.hotelDate else "",
-                "hotelArrangement": hotel.introduction or hotel.name,
-            })
-
-    booking_item_map = {str(item["label"]).strip().lower(): str(item["body"]) for item in rich_content["bookingItems"]}
-    pricing_options = request_payload.pricing_facts.options
-    first_pricing_option = pricing_options[0] if pricing_options else None
-    currency = first_pricing_option.currency if first_pricing_option else "USD"
-    currency_divisor = 1 if currency == "VND" else 100
-    total_budget = (first_pricing_option.group_total_amount_minor / currency_divisor) if first_pricing_option else 0.0
-    return {
-        "quotationNarrative": "\n".join(filter(None, [
-            quote_document.trip.lede,
-            quote_document.narrative.letterIntro,
-            quote_document.narrative.letterBody2,
-            quote_document.narrative.letterOutro,
-        ])),
-        "programOverview": {
-            "heading": "PROGRAM OVERVIEW",
-            "paragraphs": [item for item in [
-                quote_document.trip.lede,
-                quote_document.narrative.letterIntro,
-                quote_document.narrative.letterBody2,
-            ] if item],
-        },
-        "landingpageContent": {
-            "heroSection": {
-                "headline": quote_document.trip.title or "Vietnam Private Journey",
-                "subtitle": quote_document.trip.title or "Vietnam Private Journey",
-            },
-            "visualDescription": quote_document.brand.name or "Luxury travel brochure",
-        },
-        "journeyGlance": {
-            "market": request_payload.customer_facts.market or quote_document.traveler.nationality or "International",
-            "guestProfile": quote_document.traveler.guestProfile or "Private guests",
-            "hotelStandard": "Luxury",
-            "mealPreference": "As arranged",
-            "priceType": "Indicative",
-            "tourCode": request_payload.opportunity_id or quote_document.trip.quotationNumber or quote_document.meta.quotationId,
-            "domesticFlights": "On request",
-            "priceBasis": quote_document.trip.priceBasis,
-            "partnerNote": BRAND_PROFILES.get(quote_document.meta.brandId, BRAND_PROFILES["vietnam_safar"]).content_policy.tone,
-            "validity": "Subject to final confirmation and availability.",
-        },
-        "whyWorks": {
-            "privateFlexible": "Private pacing and curated service remain central throughout the journey.",
-            "comfort": "Selected stays, private transfers, and considered transitions are built into the experience.",
-            "muslimFriendly": "Guest preferences and service details can be tailored during final confirmation.",
-            "balancedHighlights": "The route balances signature moments with quieter pauses and comfortable movement.",
-        },
-        "itinerary": itinerary,
-        "hotelPlan": {
-            "hotels": hotels,
-            "roomNotes": quote_document.stays.roomNotes or "",
-        },
-        "optionalEnhancements": [],
-        "bookingTerms": {
-            "deposit": booking_item_map.get("deposit") or "As per standard booking policy.",
-            "balance": booking_item_map.get("balance") or "Payable prior to tour commencement.",
-            "cancellation": booking_item_map.get("cancellation") or "Subject to cancellation charges as per terms.",
-            "confirmation": booking_item_map.get("confirmation") or "Subject to availability upon payment.",
-        },
-        "finalization": {
-            "finalDetailsRequired": "\n".join(rich_content["finalizationGroups"][0]["items"]) if rich_content["finalizationGroups"] else "",
-            "afterConfirmation": "\n".join(rich_content["finalizationGroups"][1]["items"]) if len(rich_content["finalizationGroups"]) > 1 else "",
-        },
-        "pricing": {
-            "currency": currency,
-            "pricingTitle": "PRICE QUOTATION – INDICATIVE",
-            "basis": quote_document.trip.priceBasis,
-            "priceOptions": [
-                {
-                    "label": option.label or f"Option {index:02d}",
-                    "notes": "",
-                    "amount": (option.groupTotalAmountMinor / (1 if option.currency == "VND" else 100)) if option.groupTotalAmountMinor else None,
-                }
-                for index, option in enumerate(quote_document.pricing.options, 1)
-            ] or [{
-                "label": "Option 01",
-                "notes": quote_document.trip.priceBasis or "",
-                "amount": None,
-            }],
-            "subtotal": total_budget or None,
-            "discountTotal": None,
-            "taxTotal": None,
-            "grandTotal": total_budget or None,
-        },
-        "retrievalStatus": {
-            "hotel": "pending",
-            "activity": "pending",
-            "guide": "pending",
-            "transfer": "pending",
-            "flight": "pending",
-        },
-        "candidateBlocks": [],
-        "inclusions": rich_content["inclusions"],
-        "exclusions": rich_content["exclusions"],
-        "quotationNumber": request_payload.opportunity_id or quote_document.trip.quotationNumber or quote_document.meta.quotationId,
-    }
-
-def _is_brand_placeholder_image(image_url: str | None) -> bool:
-    return bool(image_url) and (
-        image_url in BRAND_LOGO_ASSETS
-        or image_url in LEGACY_BRAND_PLACEHOLDER_ASSETS
-    )
-
-# ── Luxury Day Title Templates ────────────────────────────────────────────────
-LUXURY_DAY_TEMPLATES = [
-    {
-        "en": "Behind Closed Doors: The {city} Chapter",
-        "vi": "Đằng sau những cánh cửa: Chương {city}",
-        "ar": "خلف الأبواب المغلقة: فصل {city}"
-    },
-    {
-        "en": "{city} Unveiled: A Private Insider Expedition",
-        "vi": "Hé lộ {city}: Hành trình khám phá riêng tư",
-        "ar": "كشف أسرار {city}: رحلة استكشافية خاصة"
-    },
-    {
-        "en": "The Living Heritage of {city}",
-        "vi": "Di sản sống của {city}",
-        "ar": "التراث الحي لـ {city}"
-    },
-    {
-        "en": "Exclusive Perspectives: Inside {city}",
-        "vi": "Góc nhìn độc bản: Bên trong {city}",
-        "ar": "آفاق حصرية: داخل {city}"
-    },
-    {
-        "en": "The Masterclasses of {city}",
-        "vi": "Những lớp học bậc thầy tại {city}",
-        "ar": "دروس احترافية في {city}"
-    },
-    {
-        "en": "The {city} Collection: A Curated Sojourn",
-        "vi": "Bộ sưu tập {city}: Kỳ nghỉ được chọn lọc",
-        "ar": "مجموعة {city}: إقامة منسقة"
-    },
-    {
-        "en": "An Elegant Portrait of {city}",
-        "vi": "Chân dung thanh lịch của {city}",
-        "ar": "صورة أنيقة لـ {city}"
-    },
-    {
-        "en": "The Anatomy of {city}: Culture & Contrast",
-        "vi": "Giải phẫu {city}: Văn hóa và Sự tương phản",
-        "ar": "تفاصيل {city}: الثقافة والتناقض"
-    },
-    {
-        "en": "A Design-Led Journey Through {city}",
-        "vi": "Hành trình nghệ thuật qua {city}",
-        "ar": "رحلة مستوحاة من التصميم عبر {city}"
-    },
-    {
-        "en": "The {city} Dossier: A Tailored Agenda",
-        "vi": "Hồ sơ {city}: Lịch trình thiết kế riêng",
-        "ar": "ملف {city}: جدول أعمال مخصص"
-    },
-    {
-        "en": "Vignettes of {city}",
-        "vi": "Những mảnh ghép ký ức {city}",
-        "ar": "لوحات قصيرة من {city}"
-    },
-    {
-        "en": "{city} in Frames: A Visual Narrative",
-        "vi": "Khung cảnh {city}: Tường thuật thị giác",
-        "ar": "{city} في إطارات: سرد مرئي"
-    },
-    {
-        "en": "Echoes of {city}",
-        "vi": "Âm vang {city}",
-        "ar": "أصداء {city}"
-    },
-    {
-        "en": "The Soul and Substance of {city}",
-        "vi": "Hồn cốt và Bản sắc của {city}",
-        "ar": "روح وجوهر {city}"
-    },
-    {
-        "en": "Impressions of {city}: A Paced Exploration",
-        "vi": "Ấn tượng {city}: Khám phá thư thái",
-        "ar": "انطباعات عن {city}: استكشاف متأنٍ"
-    },
-    {
-        "en": "{city} Redefined: Tradition & Innovation",
-        "vi": "Định nghĩa lại {city}: Truyền thống và Đổi mới",
-        "ar": "إعادة تعريف {city}: بين الأصالة والتجديد"
-    },
-    {
-        "en": "From Ancient Streets to Modern Beats: The {city} Landscape",
-        "vi": "Từ phố cổ đến nhịp điệu hiện đại: Cảnh sắc {city}",
-        "ar": "من الشوارع القديمة إلى الإيقاعات الحديثة: مشهد {city}"
-    },
-    {
-        "en": "The Spirit of {city}: Between Silence and Splendor",
-        "vi": "Tâm hồn {city}: Giữa tĩnh lặng và Huy hoàng",
-        "ar": "روح {city}: بين السكون والجمال"
-    }
-]
-
-def get_luxury_day_title(city: str, day_number: int, lang: str) -> str:
-    if not city:
-        city = "Vietnam"
-    tpl_idx = (day_number - 1) % len(LUXURY_DAY_TEMPLATES)
-    tpl = LUXURY_DAY_TEMPLATES[tpl_idx]
-    lang_key = lang if lang in ("en", "vi", "ar") else "en"
-    raw_tpl = tpl.get(lang_key, tpl["en"])
-    return raw_tpl.format(city=city)
-
-# Coordinates mapping for Vietnam travel destinations (matches Leaflet SLUG_COORDS)
-SLUG_COORDS = {
-    "ha-noi": [21.0285, 105.8542],
-    "quang-ninh": [20.9599, 107.0436],
-    "lao-cai": [22.3364, 103.8438],
-    "da-nang": [16.0544, 108.2022],
-    "quang-nam": [15.8801, 108.3380],
-    "lam-dong": [11.9404, 108.4583],
-    "ho-chi-minh": [10.8231, 106.6297],
-    "khanh-hoa": [12.2388, 109.1967],
-    "ninh-binh": [20.2539, 105.9750],
-    "thua-thien-hue": [16.4637, 107.5909],
-    "kien-giang": [10.2899, 103.9840],
-    "binh-thuan": [10.9333, 108.1000],
-    "can-tho": [10.0401, 105.7882],
-    "mekong": [10.2435, 106.3756],
-    "ha-giang": [22.8233, 104.9836],
-    "nghe-an": [18.6736, 105.6811],
-    "quang-binh": [17.4833, 106.6000],
-    "hai-phong": [20.8449, 106.6881],
-    "dak-lak": [12.6667, 108.0500],
-    "gia-lai": [13.9833, 108.0000],
-    "kon-tum": [14.3500, 108.0000],
-    "ba-ria-vung-tau": [10.4114, 107.1363],
-    "thanh-hoa": [19.8075, 105.7764],
-    "phu-yen": [13.0881, 109.3025],
-    "binh-dinh": [13.7753, 109.2294],
-    "dien-bien": [21.3833, 103.0167],
-    "son-la": [21.3333, 103.9167],
-    "lai-chau": [22.4000, 103.4500],
-    "yen-bai": [21.7000, 104.8667],
-    "hoa-binh": [20.8167, 105.3333],
-    "lang-son": [21.8500, 106.7500],
-    "dong-nai": [10.9574, 106.8427],
-    "binh-duong": [11.0000, 106.6667],
-    "tien-giang": [10.3592, 106.3653],
-    "dong-thap": [10.4500, 105.6333],
-    "vinh-long": [10.2500, 105.9667],
-    "an-giang": [10.3833, 105.4333],
-    "cao-bang": [22.6667, 106.2500]
-}
-
-# ── Translation System ────────────────────────────────────────────────────────
-STATIC_DICTIONARY = {
-    "Timeline": {
-        "vi": "Lịch Trình Chi Tiết",
-        "ar": "الجدول الزمني"
-    },
-    "Vietnam Safar": {
-        "vi": "Vietnam Safar — Đề Xuất Hành Trình",
-        "ar": "Vietnam Safar — مقترح سفر"
-    },
-    "Journey Specifications": {
-        "vi": "Thông Số Hành Trình",
-        "ar": "مواصفات الرحلة"
-    },
-    "Core parameters of this B2B travel proposal.": {
-        "vi": "Các thông số cơ bản của đề xuất hành trình này.",
-        "ar": "المعايير الأساسية لمقترح السفر."
-    },
-    "Market & Nationality": {
-        "vi": "Thị Trường & Quốc Tịch",
-        "ar": "السوق والجنسية"
-    },
-    "Guest Profile": {
-        "vi": "Thông Chi Tiết Thượng Khách",
-        "ar": "ملف الضيوف"
-    },
-    "Hotel Standard": {
-        "vi": "Tiêu Chuẩn Khách Sạn",
-        "ar": "فئة الفندق"
-    },
-    "Meal Preference": {
-        "vi": "Tùy Chọn Bữa Ăn",
-        "ar": "تفضيلات الوجبات"
-    },
-    "Tour Type": {
-        "vi": "Loại Hình Trải Nghiệm",
-        "ar": "نوع الجولة"
-    },
-    "Route Sequence": {
-        "vi": "Tuyến Đường Hành Trình",
-        "ar": "تسلسل المسار"
-    },
-    "Section 1 — Journey at a Glance": {
-        "vi": "Phần 1 — Khái Quát Hành Trình",
-        "ar": "القسم 1 — لمحة سريعة عن الرحلة"
-    },
-    "Section 2 — Journey Overview": {
-        "vi": "Phần 2 — Tổng Quan Kỳ Nghỉ",
-        "ar": "القسم 2 — نظرة عامة على الرحلة"
-    },
-    "Section 3 — Your Journey, Mapped": {
-        "vi": "Phần 3 — Hành Trình Trên Bản Đồ",
-        "ar": "القسم 3 — مسار رحلتك على الخريطة"
-    },
-    "Section 6 — Selected Hotel Plan": {
-        "vi": "Phần 6 — Kế Hoạch Khách Sạn",
-        "ar": "القسم 6 — خطة الفنادق المختارة"
-    },
-    "Service Program": {
-        "vi": "Chương Trình Trải Nghiệm",
-        "ar": "برنامج الخدمة"
-    },
-    "B2B Package Pricing": {
-        "vi": "Bảng Giá Chi Tiết",
-        "ar": "أسعار الباقة"
-    },
-    "Package Inclusions & Exclusions": {
-        "vi": "Danh Mục Dịch Vụ Bao Gồm & Loại Trừ",
-        "ar": "الخدمات المشمولة والمستثناة من الباقة"
-    },
-    "Destination Gallery": {
-        "vi": "Bộ Sưu Tập Hình Ảnh",
-        "ar": "معرض الصور"
-    },
-    "Booking Terms": {
-        "vi": "Điều Khoản Đặt Chỗ",
-        "ar": "شروط الحجز"
-    },
-    "Finalization Checklist": {
-        "vi": "Thông Tin Xác Nhận",
-        "ar": "قائمة التحقق النهائية"
-    },
-    "Best for": {
-        "vi": "Thành Viên",
-        "ar": "مناسب لـ"
-    },
-    "Travel pace": {
-        "vi": "Nhịp Độ",
-        "ar": "وتيرة السفر"
-    },
-    "Service": {
-        "vi": "Dịch Vụ",
-        "ar": "الخدمة"
-    },
-    "B2B Partners": {
-        "vi": "Đối Tác & Khách Hàng",
-        "ar": "الشركاء والضيوف"
-    },
-    "Relaxed": {
-        "vi": "Thư Thái",
-        "ar": "مريح"
-    },
-    "Private": {
-        "vi": "Riêng Tư",
-        "ar": "خاص"
-    },
-    "Private Services": {
-        "vi": "Dịch Vụ Riêng Tư",
-        "ar": "خدمات خاصة"
-    },
-    "What is Included": {
-        "vi": "Dịch Vụ Bao Gồm",
-        "ar": "ما يشمله البرنامج"
-    },
-    "Detailed list of inclusions and exclusions for this proposal.": {
-        "vi": "Danh sách chi tiết các dịch vụ bao gồm và không bao gồm của đề xuất này.",
-        "ar": "قائمة مفصلة بالخدمات المشمولة والمستثناة من هذا المقترح."
-    },
-    "Halal & Prayer Coordination": {
-        "vi": "Điều Phối Halal & Giờ Cầu Nguyện",
-        "ar": "تنسيق الحلال والصلاة"
-    },
-    "This document is a confidential quotation prepared exclusively for": {
-        "vi": "Tài liệu này là báo giá bảo mật được chuẩn bị cho",
-        "ar": "هذا عرض سعر سري مخصص لـ"
-    },
-    "Confidential B2B": {
-        "vi": "Báo Giá Bảo Mật",
-        "ar": "عرض سعر سري"
-    },
-    "Confidential B2B Proposal": {
-        "vi": "Đề Xuất Báo Giá Bảo Mật",
-        "ar": "مقترح سفر سري"
-    },
-    "Vietnam Safar can assist with halal-friendly meal planning where available, no-pork meal notes, seafood or vegetarian alternatives where halal-certified restaurants are limited, and flexible prayer stops during touring days where practical. Halal-certified restaurants are more available in major cities such as Hanoi, Da Nang and Ho Chi Minh City. In mountain, cruise or countryside destinations, suitable seafood, vegetarian or no-pork meals may be recommended.": {
-        "vi": "Vietnam Safar có thể hỗ trợ lên kế hoạch cho các bữa ăn thân thiện với người Hồi giáo khi có sẵn, lưu ý không thịt lợn, các giải pháp thay thế bằng hải sản hoặc đồ chay tại những nơi hạn chế nhà hàng chứng nhận Halal, và các điểm dừng cầu nguyện linh hoạt trong những ngày tham quan khi thực tế cho phép. Các nhà hàng được chứng nhận Halal có sẵn nhiều hơn ở các thành phố lớn như Hà Nội, Đà Nẵng và Thành phố Hồ Chí Minh. Tại các điểm đến vùng núi, du thuyền hoặc vùng nông thôn, các bữa ăn hải sản, đồ chay hoặc không thịt lợn phù hợp có thể được khuyên dùng.",
-        "ar": "يمكن لـ Vietnam Safar المساعدة في التخطيط لوجبات الطعام الصديقة للمسلمين عند توفرها، مع ملاحظة عدم تقديم لحم الخنزير، والبدائل من المأكولات البحرية أو النباتية عندما تكون المطاعم المعتمدة للحلال محدودة، وتنسيق محطات مرنة لأوقات الصلاة خلال أيام الجولات السياحية عندما يكون ذلك عملياً."
-    },
-    "Hotel arrangements will be tailored and detailed here for your specific travel dates.": {
-        "vi": "Kế hoạch khách sạn sẽ được tùy chỉnh và chi tiết tại đây dựa trên ngày đi cụ thể của bạn.",
-        "ar": "سيتم تصميم تفاصيل خطة الفنادق وتخصيصها هنا بناءً على تواريخ سفرك المحددة."
-    },
-    "Fully private tour with flexible pacing to suit your needs.": {
-        "vi": "Hành trình hoàn toàn riêng tư với nhịp độ linh hoạt theo nhu cầu của bạn.",
-        "ar": "جولة خاصة بالكامل مع وتيرة مرنة لتناسب احتياجاتك."
-    },
-    "Premium A/C vehicle transport and handpicked hotels.": {
-        "vi": "Vận chuyển bằng xe máy lạnh cao cấp và các khách sạn được tuyển chọn kỹ lưỡng.",
-        "ar": "وسائل نقل برية خاصة مكيفة وفنادق مختارة بعناية."
-    },
-    "Dietary requests, meal planning, and specific preferences are carefully coordinated.": {
-        "vi": "Các yêu cầu về chế độ ăn uống, kế hoạch bữa ăn và sở thích đặc biệt đều được điều phối chu đáo.",
-        "ar": "تنسيق متطلبات النظام الغذائي والوجبات والتفضيلات الخاصة بعناية."
-    },
-    "Optimized itinerary balancing iconic sites with leisure time.": {
-        "vi": "Lộ trình tối ưu hóa giúp cân bằng giữa các điểm tham quan biểu tượng và thời gian nghỉ ngơi.",
-        "ar": "مسار رحلة محسّن يوازن بين المعالم الشهيرة وأوقات الراحة."
-    },
-    "As per standard booking policy.": {
-        "vi": "Theo chính sách đặt chỗ tiêu chuẩn.",
-        "ar": "وفقًا لسياسة الحجز القياسية."
-    },
-    "Payable prior to tour commencement.": {
-        "vi": "Thanh toán trước khi hành trình bắt đầu.",
-        "ar": "مستحق الدفع trước khi بدء الرحلة."
-    },
-    "Subject to cancellation charges as per terms.": {
-        "vi": "Áp dụng phí hủy theo các điều khoản quy định.",
-        "ar": "تخضع لرسوم الإلغاء وفقًا للشروط."
-    },
-    "Subject to availability upon payment.": {
-        "vi": "Tùy thuộc vào tình trạng phòng trống tại thời điểm thanh toán.",
-        "ar": "خاضع للتوافر عند الدفع."
-    },
-    "Passport copies and flight details required for booking.": {
-        "vi": "Yêu cầu cung cấp bản sao hộ chiếu và thông tin chuyến bay để đặt dịch vụ.",
-        "ar": "مطلوب نسخ من جواز السفر وتفاصيل الرحلة للحجز."
-    },
-    "Our operations team will coordinate vouchers and guide details.": {
-        "vi": "Đội ngũ vận hành của chúng tôi sẽ điều phối voucher và thông tin hướng dẫn viên.",
-        "ar": "سيعمل فريق العمليات لدينا على تنسيق القسائم وتفاصيل المرشد."
-    },
-    "5-star (Luxury)": {
-        "vi": "5 sao (Sang trọng)",
-        "ar": "5 نجوم (فاخر)"
-    },
-    "Twin/Double Sharing Basis": {
-        "vi": "Cơ sở chia sẻ phòng đôi/hai giường",
-        "ar": "على أساس المشاركة المزدوجة/التوأم"
-    },
-    "Subject to availability and confirmation": {
-        "vi": "Tùy thuộc vào tình trạng sẵn có và xác nhận",
-        "ar": "خاضع للتوافر والتأكيد"
-    },
-    "Not Included": {
-        "vi": "Không bao gồm",
-        "ar": "غير مشمول"
-    },
-    "Included": {
-        "vi": "Được bao gồm",
-        "ar": "مشمول"
-    },
-    "Twin-sharing basis": {
-        "vi": "Cơ sở chia sẻ phòng đôi/hai giường",
-        "ar": "على أساس المشاركة المزدوجة/التوأم"
-    },
-    "Balanced Highlights": {
-        "vi": "Điểm Nhấn Cân Bằng",
-        "ar": "أبرز الفعاليات المتوازنة"
-    },
-    "Selected Hotel Plan": {
-        "ar": "خطة الفنادق المختارة",
-        "vi": "Kế Hoạch Khách Sạn"
-    },
-    "Proposed hotels and luxury cruises selected for your journey. Subject to availability at confirmation.": {
-        "ar": "الفنادق والرحلات البحرية الفاخرة المختارة لرحلتك. تخضع للتوافر عند التأكيد.",
-        "vi": "Các khách sạn và du thuyền sang trọng được tuyển chọn cho hành trình của bạn."
-    },
-    "Room Notes & Special Requests": {
-        "ar": "ملاحظات الغرفة والطلبات الخاصة",
-        "vi": "Ghi Chú Phòng & Yêu Cầu Đặc Biệt"
-    },
-    "What Your Journey Includes": {
-        "ar": "ما يشمله برنامج رحلتك",
-        "vi": "Những Gì Hành Trình Bao Gồm"
-    },
-    "Inclusions": {
-        "ar": "ما يشمله البرنامج",
-        "vi": "Dịch Vụ Bao Gồm"
-    },
-    "Exclusions": {
-        "ar": "ما لا يشمله البرنامج",
-        "vi": "Dịch Vụ Không Bao Gồm"
-    },
-    "Muslim-Friendly Travel Care": {
-        "ar": "الرعاية الصديقة للمسلمين",
-        "vi": "Dịch Vụ Thân Thiện Với Người Hồi Giáo"
-    },
-    "Booking & Payment Terms": {
-        "ar": "شروط الحجز والدفع",
-        "vi": "Điều Khoản Đặt Chỗ & Thanh Toán"
-    },
-    "Commercial conditions, deposits, and cancellation policy for this booking.": {
-        "ar": "الشروط التجارية والودائع وسياسة الإلغاء لهذا الحجز.",
-        "vi": "Điều kiện thương mại, đặt cọc và chính sách hủy cho đặt chỗ này."
-    },
-    "Term": { "ar": "البند", "vi": "Điều Khoản" },
-    "Condition": { "ar": "الشرط", "vi": "Điều Kiện" },
-    "Deposit": { "ar": "الدفعة المقدمة", "vi": "Đặt Cọc" },
-    "Balance": { "ar": "المبلغ المتبقي", "vi": "Số Dư" },
-    "Cancellation": { "ar": "الإلغاء", "vi": "Hủy Bỏ" },
-    "Confirmation": { "ar": "التأكيد", "vi": "Xác Nhận" },
-    "Meet Your Travel Specialist": {
-        "ar": "تعرّف على مصمم رحلتك",
-        "vi": "Gặp Gỡ Chuyên Gia Thiết Kế Hành Trình"
-    },
-    "Your Dedicated Specialist": {
-        "ar": "مستشارك المتخصص",
-        "vi": "Chuyên Viên Riêng Của Bạn"
-    },
-    "Expertise:": { "ar": "التخصص:", "vi": "Chuyên Môn:" },
-    "Experience:": { "ar": "الخبرة:", "vi": "Kinh Nghiệm:" },
-    "Your Travel Specialist": {
-        "ar": "Anh Son Le",
-        "vi": "Le",
-        "en": "Anh Son Le"
-    },
-    "Next step": { "ar": "الخطوة التالية", "vi": "Bước Tiếp Theo" },
-    "Confirm dates, then refine the luxury layer.": {
-        "ar": "أكّد التواريخ ثم اضبط مستوى الفخامة.",
-        "vi": "Xác nhận ngày, sau đó tinh chỉnh lớp dịch vụ sang trọng."
-    },
-    "Final Details Required": { "ar": "التفاصيل النهائية المطلوبة", "vi": "Thông Tin Cần Thiết" },
-    "After Confirmation": { "ar": "بعد التأكيد", "vi": "Sau Khi Xác Nhận" },
-    "Website": { "ar": "الموقع الإلكتروني", "vi": "Website" },
-    "WhatsApp": { "ar": "واتساب", "vi": "WhatsApp" },
-    "Prepared by": { "ar": "أُعدّ بواسطة", "vi": "Được Chuẩn Bị Bởi" },
-    "Request final confirmation": { "ar": "طلب التأكيد النهائي", "vi": "Yêu Cầu Xác Nhận Cuối" },
-    "per person": { "ar": "للشخص الواحد", "vi": "mỗi người" },
-    "Total:": { "ar": "الإجمالي:", "vi": "Tổng:" },
-    "Important Note": { "ar": "ملاحظة مهمة", "vi": "Lưu Ý Quan Trọng" },
-    "✓ CONFIRMED MAIN OPTION": { "ar": "✓ الخيار المؤكد الرئيسي", "vi": "✓ LỰA CHỌN ĐÃ XÁC NHẬN" },
-    "Highlights:": { "ar": "أبرز الفعاليات:", "vi": "Điểm Nổi Bật:" },
-    "Notes:": { "ar": "ملاحظات:", "vi": "Ghi Chú:" },
-    "Overnight": { "ar": "المبيت", "vi": "Qua Đêm" },
-    "Meals": { "ar": "الوجبات", "vi": "Bữa Ăn" },
-
-    # Inclusions, Exclusions new structured formats
-    "What Your Journey Includes": {
-        "vi": "Những Gì Hành Trình Bao Gồm",
-        "ar": "ما تشمله برنامج رحلتك"
-    },
-    "Your journey has been thoughtfully arranged to ensure a seamless and comfortable experience throughout.": {
-        "vi": "Hành trình của bạn đã được sắp xếp chu đáo để đảm bảo trải nghiệm suôn sẻ và thoải mái trong suốt chuyến đi.",
-        "ar": "لقد تم ترتيب رحلتك بعناية لضمان تجربة سلسة ومريحة طوال الوقت."
-    },
-    "Handpicked Accommodation": {
-        "vi": "Khách Sạn Được Lựa Chọn Cẩn Thận",
-        "ar": "إقامة مختارة بعناية"
-    },
-    "Carefully selected hotels and stays as detailed in your journey proposal.": {
-        "vi": "Các khách sạn và nơi lưu trú được lựa chọn kỹ lưỡng như chi tiết trong đề xuất hành trình.",
-        "ar": "فنادق وإقامات مختارة بعناية كما هو مفصل في مقترح رحلتك."
-    },
-    "Private Transportation": {
-        "vi": "Phương Tiện Vận Chuyển Riêng Tư",
-        "ar": "وسائل نقل خاصة"
-    },
-    "Private ground transportation and scheduled transfers throughout the journey, as specified in the itinerary.": {
-        "vi": "Phương tiện vận chuyển mặt đất riêng tư và đưa đón theo lịch trình suốt hành trình, như quy định trong lịch trình.",
-        "ar": "وسائل نقل برية خاصة وتنقلات مجدولة طوال الرحلة، كما هو حدد في مسار الرحلة."
-    },
-    "Curated Experiences": {
-        "vi": "Trải Nghiệm Được Thiết Kế Riêng",
-        "ar": "تجارب منسقة"
-    },
-    "Entrance arrangements and experiences included as outlined in your itinerary.": {
-        "vi": "Bố trí lối vào và các trải nghiệm được bao gồm như phác thảo trong lịch trình của bạn.",
-        "ar": "رسوم الدخول والأنشطة المشمولة والموضحة في مسار رحلتك."
-    },
-    "Expert Local Guidance": {
-        "vi": "Hướng Dẫn Viên Địa Phương Chuyên Nghiệp",
-        "ar": "إرشاد محلي خبير"
-    },
-    "Services of carefully selected, licensed local guides where specified.": {
-        "vi": "Dịch vụ của hướng dẫn viên địa phương có giấy phép được lựa chọn cẩn thận khi được chỉ định.",
-        "ar": "خدمات مرشدين محليين مرخصين ومختارين بعناية عند تحديد ذلك."
-    },
-    "Dining Experiences": {
-        "vi": "Trải Nghiệm Ẩm Thực",
-        "ar": "تجارب تناول الطعام"
-    },
-    "Meals and dining arrangements as detailed in the itinerary.": {
-        "vi": "Các bữa ăn và bố trí ăn uống như chi tiết trong lịch trình.",
-        "ar": "الوجبات وترتيبات تناول الطعام كما هي مفصلة في مسار الرحلة."
-    },
-    "Journey Connections": {
-        "vi": "Kết Nối Hành Trình",
-        "ar": "روابط التنقل"
-    },
-    "Domestic flights, rail journeys, ferries, or other transportation included where specifically stated in the itinerary.": {
-        "vi": "Các chuyến bay nội địa, hành trình đường sắt, phà hoặc phương tiện vận chuyển khác được bao gồm khi được ghi rõ trong lịch trình.",
-        "ar": "رحلات الطيران الداخلية، أو السكك الحديدية، أو العبّارات، أو غيرها من وسائل النقل المشمولة عند ذكرها بوضوح في مسار الرحلة."
-    },
-    "What Your Journey Excludes": {
-        "vi": "Những Gì Không Bao Gồm",
-        "ar": "الخدمات غير المشمولة"
-    },
-    "To keep your journey transparent and clearly defined, the following are not included unless specifically stated otherwise:": {
-        "vi": "Để giữ cho hành trình của bạn minh bạch và rõ ràng, các khoản sau đây không được bao gồm trừ khi có tuyên bố cụ thể khác:",
-        "ar": "للحفاظ على شفافية ووضوح رحلتك، لا تشمل الرحلة الخدمات التالية ما لم يُنص على خلاف ذلك:"
-    },
-    "Visa fees and travel documentation": {
-        "vi": "Lệ phí visa và giấy tờ du lịch",
-        "ar": "رسوم التأشيرة ووثائق السفر"
-    },
-    "Personal expenses": {
-        "vi": "Chi phí cá nhân",
-        "ar": "المصاريف الشخصية"
-    },
-    "Optional experiences not specified in the itinerary": {
-        "vi": "Các trải nghiệm tùy chọn không được chỉ định trong lịch trình",
-        "ar": "التجارب الاختيارية غير المحددة في مسار الرحلة"
-    },
-    "Tips and gratuities": {
-        "vi": "Tiền tips và tiền boa",
-        "ar": "البقشيش والإكراميات"
-    },
-    "Any services not expressly listed as included": {
-        "vi": "Bất kỳ dịch vụ nào không được liệt kê rõ ràng là bao gồm",
-        "ar": "أي خدمات أخرى لم يتم ذكرها صراحة ضمن الخدمات المشمولة"
-    },
-    "Day-by-Day Journey Program": {
-        "vi": "Chương Trình Hành Trình Chi Tiết",
-        "ar": "برنامج الرحلة يومًا بيوم"
-    },
-    "Translating Journey...": {
-        "vi": "Đang Dịch Hành Trình...",
-        "ar": "جاري ترجمة الرحلة..."
-    },
-    "CANCEL": {
-        "vi": "HỦY BỎ",
-        "ar": "إلغاء"
-    },
-    # Inclusions & Exclusions & Conditions
-    "Private air-conditioned transportation throughout": {
-        "vi": "Phương tiện vận chuyển riêng tư có điều hòa suốt hành trình",
-        "ar": "وسائل نقل خاصة مكيفة طوال الرحلة"
-    },
-    "Accommodation with daily breakfast": {
-        "vi": "Lưu trú kèm bữa ăn sáng hàng ngày",
-        "ar": "الإقامة مع وجبة إفطار يومية"
-    },
-    "Meals as mentioned in the program": {
-        "vi": "Các bữa ăn theo chương trình",
-        "ar": "الوجبات كما هي مذكورة في البرنامج"
-    },
-    "All sightseeing entrance fees as mentioned": {
-        "vi": "Toàn bộ vé tham quan các điểm theo chương trình",
-        "ar": "جميع رسوم دخول المعالم السياحية المذكورة"
-    },
-    "English-speaking local guide": {
-        "vi": "Hướng dẫn viên bản địa nói tiếng Anh",
-        "ar": "مرشد محلي يتحدث الإنجليزية"
-    },
-    "International flights": {
-        "vi": "Vé máy bay quốc tế",
-        "ar": "رحلات الطيران الدولية"
-    },
-    "Vietnam visa and visa processing fees": {
-        "vi": "Lệ phí cấp và xử lý visa Việt Nam",
-        "ar": "تأشيرة فيتنام ورسوم معالجة التأشيرة"
-    },
-    "Travel insurance": {
-        "vi": "Bảo hiểm du lịch",
-        "ar": "التأمين على السفر"
-    },
-    "Personal expenses, laundry, beverages and tips": {
-        "vi": "Chi phí cá nhân, giặt ủi, đồ uống và tiền tip",
-        "ar": "المصاريف الشخصية والغسيل والمشروبات والإكراميات"
-    },
-    "Optional activities not mentioned in the program": {
-        "vi": "Các hoạt động tùy chọn ngoài chương trình",
-        "ar": "الأنشطة الاختيارية غير المذكورة في البرنامج"
-    },
-    "Rates are B2B net indicative and subject to reconfirmation at the time of booking.": {
-        "vi": "Giá đề xuất mang tính chất tham khảo và sẽ được xác nhận lại khi đặt dịch vụ.",
-        "ar": "الأسعار التقديرية وتخضع لإعادة التأكيد عند الحجز."
-    },
-    "Final price may vary depending on hotel availability, resort category, cruise selection, domestic flight fare, rooming arrangement, child policy, and final travel services confirmed.": {
-        "vi": "Giá cuối cùng có thể thay đổi tùy thuộc vào tình trạng phòng khách sạn, hạng phòng, lựa chọn du thuyền, giá vé máy bay nội địa, cách sắp xếp phòng, chính sách trẻ em và các dịch vụ du lịch được xác nhận cuối cùng.",
-        "ar": "قد يختلف السعر النهائي اعتمادًا على توفر الفنادق، فئة المنتجع، اختيار الكروز، أسعار الطيران الداخلي، ترتيبات الغرف، سياسة الأطفال، والخدمات المؤكدة نهائياً."
-    },
-
-    # Template static text & headings
-    "Behind the Itinerary Curation": {
-        "vi": "Hậu Trường Thiết Kế Hành Trình",
-        "ar": "خلف كواليس تصميم المسار"
-    },
-    "Why This Journey Inspires": {
-        "vi": "Tại Sao Hành Trình Này Đầy Cảm Hứng",
-        "ar": "لماذا تلهم هذه الرحلة"
-    },
-    "The Anatomy of the Experience": {
-        "vi": "Chi Tiết Trải Nghiệm",
-        "ar": "تفاصيل التجربة"
-    },
-    "A Perfectly Paced Journey": {
-        "vi": "Một Hành Trình Có Nhịp Độ Hoàn Hảo",
-        "ar": "رحلة ذات وتيرة مثالية"
-    },
-    "Value Propositions": {
-        "vi": "Giá Trị Cốt Lõi",
-        "ar": "مزايا الرحلة"
-    },
-    "Tailored care, balanced pacing, and seamless logistics designed specifically for your group.": {
-        "vi": "Dịch vụ được cá nhân hóa, nhịp độ cân bằng và hậu cần liền mạch được thiết kế riêng cho đoàn của bạn.",
-        "ar": "رعاية مخصصة، وتيرة متوازنة، ولوجستيات سلسة مصممة خصيصًا لمجموعتكم."
-    },
-    "Muslim-Friendly Travel Care": {
-        "vi": "Dịch Vụ Thân Thiện Với Người Hồi Giáo",
-        "ar": "الرعاية الصديقة للمسلمين"
-    },
-    "Carefully coordinated services ensuring comfort, halal-friendly meals, and prayer mindfulness.": {
-        "vi": "Các dịch vụ được điều phối cẩn thận đảm bảo sự thoải mái, bữa ăn thân thiện với người Hồi giáo và thời gian cầu nguyện thích hợp.",
-        "ar": "خدمات منسقة بعناية تضمن الراحة، ووجبات صديقة للمسلمين، ومراعاة أوقات الصلاة."
-    },
-    "Crafting a bespoke luxury narrative in": {
-        "vi": "Đang kiến tạo hành trình sang trọng độc bản tại",
-        "ar": "جاري صياغة مسار رحلة فاخر مخصص في"
-    },
-
-    # PWA Notifications Prompt
-    "Stay Updated": {
-        "vi": "Cập Nhật Thông Tin",
-        "ar": "ابق على اطلاع"
-    },
-    "Enable notifications to get live updates for your itinerary, guide details, and booking status.": {
-        "vi": "Bật thông báo để nhận cập nhật trực tiếp về lịch trình, thông tin hướng dẫn viên và trạng thái đặt chỗ.",
-        "ar": "قم بتمكين الإشعارات للحصول على تحديثات مباشرة لمسار رحلتك وتفاصيل المرشد وحالة الحجز."
-    },
-    "Later": {
-        "vi": "Để sau",
-        "ar": "لاحقاً"
-    },
-    "Enable": {
-        "vi": "Bật",
-        "ar": "تمكين"
-    },
-    "Notifications Active": {
-        "vi": "Đã Bật Thông Báo",
-        "ar": "الإشعارات نشطة"
-    },
-    "You'll receive live itinerary updates here.": {
-        "vi": "Bạn sẽ nhận được cập nhật lịch trình trực tiếp tại đây.",
-        "ar": "ستتلقى تحديثات مباشرة لمسار الرحلة هنا."
-    },
-    "Vịnh Hạ Long": {
-        "en": "Halong Bay",
-        "ar": "Halong Bay",
-        "vi": "Vịnh Hạ Long"
-    },
-    "Hạ Long": {
-        "en": "Halong",
-        "ar": "Halong",
-        "vi": "Hạ Long"
-    },
-    "Hà Nội": {
-        "en": "Hanoi",
-        "ar": "Hanoi",
-        "vi": "Hà Nội"
-    },
-    "Đà Nẵng": {
-        "en": "Da Nang",
-        "ar": "Da Nang",
-        "vi": "Đà Nẵng"
-    },
-    "Hội An": {
-        "en": "Hoi An",
-        "ar": "Hoi An",
-        "vi": "Hội An"
-    },
-    "Hồ Chí Minh": {
-        "en": "Ho Chi Minh City",
-        "ar": "Ho Chi Minh City",
-        "vi": "Hồ Chí Minh"
-    },
-    "Thành phố Hồ Chí Minh": {
-        "en": "Ho Chi Minh City",
-        "ar": "Ho Chi Minh City",
-        "vi": "Thành phố Hồ Chí Minh"
-    },
-    "Sa Pa": {
-        "en": "Sapa",
-        "ar": "Sapa",
-        "vi": "Sa Pa"
-    },
-    "Ninh Bình": {
-        "en": "Ninh Binh",
-        "ar": "Ninh Binh",
-        "vi": "Ninh Bình"
-    },
-    "Đồng bằng sông Cửu Long": {
-        "en": "Mekong Delta",
-        "ar": "Mekong Delta",
-        "vi": "Đồng bằng sông Cửu Long"
-    },
-    # Interactive Map Section
-    "Your Journey, Mapped": {
-        "ar": "رحلتك على الخريطة",
-        "vi": "Hành Trình Của Bạn Trên Bản Đồ"
-    },
-    "An interactive map showing your curated path through Vietnam's iconic landmarks and luxury stopovers. Click on a destination in the list or the map to explore highlights.": {
-        "ar": "خريطة تفاعلية تعرض مسارك المنسق عبر معالم فيتنام الشهيرة ومحطات التوقف الفاخرة. انقر على وجهة في القائمة أو الخريطة لاستكشاف المعالم البارزة.",
-        "vi": "Bản đồ tương tác hiển thị lộ trình được thiết kế riêng của bạn qua các địa danh mang tính biểu tượng và điểm dừng chân sang trọng của Việt Nam. Nhấp vào một điểm đến trong danh sách hoặc bản đồ để khám phá các điểm nổi bật."
-    },
-    "Classic": {
-        "ar": "كلاسيكي",
-        "vi": "Bản đồ"
-    },
-    "Image": {
-        "ar": "صورة",
-        "vi": "Hình ảnh"
-    },
-    "Loading Interactive Route Map...": {
-        "ar": "جاري تحميل الخريطة التفاعلية...",
-        "vi": "Đang Tải Bản Đồ Lộ Trình Tương Tác..."
-    },
-    "Journey Overview": {
-        "ar": "نظرة عامة على الرحلة",
-        "vi": "Tổng Quan Hành Trình"
-    },
-    "Route Map": {
-        "ar": "خريطة المسار",
-        "vi": "Bản đồ lộ trình"
-    },
-    "Itinerary": {
-        "ar": "برنامج الرحلة",
-        "vi": "Lịch trình"
-    },
-    "Quotation": {
-        "ar": "عرض السعر",
-        "vi": "Báo giá"
-    },
-    "Terms": {
-        "ar": "الشروط",
-        "vi": "Điều khoản"
-    },
-    "PDF Preview": {
-        "ar": "معاينة PDF",
-        "vi": "Xem trước PDF"
-    },
-    "View Luxury Rates": {
-        "ar": "عرض الأسعار الفاخرة",
-        "vi": "Xem giá cao cấp"
-    },
-    "Explore the Journey": {
-        "ar": "استكشف الرحلة",
-        "vi": "Khám phá hành trình"
-    },
-    "Overview": {
-        "ar": "نظرة عامة",
-        "vi": "Tổng quan"
-    },
-    "Guests": {
-        "ar": "الضيوف",
-        "vi": "Khách"
-    },
-    "Travel dates": {
-        "ar": "تواريخ السفر",
-        "vi": "Ngày đi"
-    },
-    "Route": {
-        "ar": "المسار",
-        "vi": "Tuyến đường"
-    },
-    "Style": {
-        "ar": "النمط",
-        "vi": "Phong cách"
-    },
-    "Ref.": {
-        "ar": "الرقم المرجعي",
-        "vi": "Mã tham chiếu"
-    },
-    "Contact": {
-        "ar": "التواصل",
-        "vi": "Liên hệ"
-    },
-    "Interactive Route map": {
-        "ar": "خريطة المسار التفاعلية",
-        "vi": "Bản đồ lộ trình tương tác"
-    },
-    "Luxury Quotation": {
-        "ar": "عرض سعر فاخر",
-        "vi": "Báo giá cao cấp"
-    },
-    "B2B Travel Proposal": {
-        "ar": "مقترح سفر",
-        "vi": "Đề xuất du lịch"
-    },
-    "Confidential B2B Proposal": {
-        "ar": "مقترح سفر سري",
-        "vi": "Đề xuất báo giá bảo mật"
-    },
-    "Enable Notifications": {
-        "ar": "تفعيل الإشعارات",
-        "vi": "Bật thông báo"
-    },
-    "Previous image": {
-        "ar": "الصورة السابقة",
-        "vi": "Ảnh trước"
-    },
-    "Next image": {
-        "ar": "الصورة التالية",
-        "vi": "Ảnh tiếp theo"
-    },
-    "Go to slide": {
-        "ar": "الانتقال إلى الشريحة",
-        "vi": "Chuyển đến slide"
-    },
-    "Editing": {
-        "ar": "قيد التحرير",
-        "vi": "Đang chỉnh sửa"
-    },
-    "Publish to Web": {
-        "ar": "نشر على الويب",
-        "vi": "Xuất bản lên web"
-    },
-    "Publishing...": {
-        "ar": "جارٍ النشر...",
-        "vi": "Đang xuất bản..."
-    },
-    "Committing to GitHub...": {
-        "ar": "جارٍ حفظ التغييرات على GitHub...",
-        "vi": "Đang lưu lên GitHub..."
-    },
-    "Translate this block": {
-        "ar": "ترجمة هذا المقطع",
-        "vi": "Dịch đoạn này"
-    },
-    "Change": {
-        "ar": "تغيير",
-        "vi": "Đổi"
-    },
-    "Remove this block": {
-        "ar": "إزالة هذا القسم",
-        "vi": "Xóa khối này"
-    },
-    "Remove this block? This action cannot be undone.": {
-        "ar": "هل تريد إزالة هذا القسم؟ لا يمكن التراجع عن هذا الإجراء.",
-        "vi": "Xóa khối này? Hành động này không thể hoàn tác."
-    },
-    "Itinerary Update": {
-        "ar": "تحديث برنامج الرحلة",
-        "vi": "Cập nhật lịch trình"
-    },
-    "Your private guide has been assigned: Mr. Minh (Phone: +84 911 538 738).": {
-        "ar": "تم تعيين مرشدك الخاص: Mr. Minh (Phone: +84 911 538 738).",
-        "vi": "Hướng dẫn viên riêng của bạn đã được chỉ định: Mr. Minh (Phone: +84 911 538 738)."
-    },
-    "English": {
-        "ar": "الإنجليزية",
-        "vi": "Tiếng Anh"
-    },
-    "Arabic": {
-        "ar": "العربية",
-        "vi": "Tiếng Ả Rập"
-    },
-    "Vietnamese": {
-        "ar": "الفيتنامية",
-        "vi": "Tiếng Việt"
-    },
-    "TEL:": {
-        "ar": "هاتف:",
-        "vi": "ĐT:"
-    },
-    "Please enable notifications in your browser settings to receive updates.": {
-        "ar": "يرجى تفعيل الإشعارات من إعدادات المتصفح لتلقي التحديثات.",
-        "vi": "Vui lòng bật thông báo trong trình duyệt để nhận cập nhật."
-    },
-
-    # Value Propositions (Why it works)
-    "Private & Flexible": {
-        "ar": "خصوصية ومرونة",
-        "vi": "Riêng Tư & Linh Hoạt"
-    },
-    "Comfort & Pacing": {
-        "ar": "الراحة والوتيرة",
-        "vi": "Thoải Mái & Nhịp Độ"
-    },
-    "Muslim-Friendly Care": {
-        "ar": "الرعاية الصديقة للمسلمين",
-        "vi": "Dịch Vụ Thân Thiện Với Người Hồi Giáo"
-    },
-    "Dietary & Special Care": {
-        "ar": "الرعاية الغذائية والخاصة",
-        "vi": "Chế Độ Ăn & Chăm Sóc Đặc Biệt"
-    },
-    "Balanced Highlights": {
-        "ar": "أبرز الفعاليات المتوازنة",
-        "vi": "Điểm Nhấn Cân Bằng"
-    },
-
-    # Destination Gallery Labels
-    "The city collection": {
-        "ar": "مجموعة المدينة",
-        "vi": "Bộ sưu tập đô thị"
-    },
-    "Cinematic destination panels crafted for a premium travel proposal.": {
-        "ar": "لوحات وجهة سينمائية تم إعدادها لمقترح سفر متميز.",
-        "vi": "Hình ảnh điểm đến đậm chất điện ảnh được thiết kế cho đề xuất du lịch cao cấp."
-    },
-    "Destination imagery woven into the quotation.": {
-        "ar": "صور الوجهات منسوجة بعناية داخل عرض السعر.",
-        "vi": "Hình ảnh điểm đến được đan cài tinh tế trong báo giá."
-    },
-    "Destination Gallery": {
-        "ar": "معرض الصور",
-        "vi": "Bộ Sưu Tập Hình Ảnh"
-    },
-    "Highlight": {
-        "ar": "أبرز المعالم",
-        "vi": "Điểm Nổi Bật"
-    },
-    "Experience": {
-        "ar": "التجربة",
-        "vi": "Trải Nghiệm"
-    },
-    "Journey": {
-        "ar": "الرحلة",
-        "vi": "Hành Trình"
-    },
-    "Destination": {
-        "ar": "الوجهة",
-        "vi": "Điểm Đến"
-    },
-
-    # Day Pacing
-    "Sense of Pace: Active": {
-        "ar": "وتيرة السفر: نشطة",
-        "vi": "Nhịp độ: Năng động"
-    },
-    "Sense of Pace: Moderate": {
-        "ar": "وتيرة السفر: معتدلة",
-        "vi": "Nhịp độ: Vừa phải"
-    },
-    "Minasi Premium Hotel is a boutique luxury hotel nestled in Hanoi's historic quarters, offering elegant design, personalized service, and modern comforts.": {
-        "vi": "Minasi Premium Hotel là khách sạn boutique sang trọng tọa lạc tại khu phố cổ lịch sử của Hà Nội, mang đến thiết kế thanh lịch, dịch vụ cá nhân hóa và tiện nghi hiện đại.",
-        "ar": "يُعد Minasi Premium Hotel فندقًا فاخرًا يقع في الأحياء التاريخية بمدينة Hanoi، ويتميز بتصميم أنيق وخدمة مخصصة ووسائل راحة حديثة."
-    },
-    "La Casta Cruise is a luxury 5-star cruise on Halong Bay, offering spacious junior suites with private ocean-view balconies and high-class amenities.": {
-        "vi": "Du thuyền La Casta là du thuyền 5 sao sang trọng trên Vịnh Hạ Long, cung cấp các phòng suite rộng rãi với ban công riêng hướng biển và các tiện nghi cao cấp.",
-        "ar": "يُعد La Casta Cruise كروزًا فاخرًا من فئة 5 نجوم في Halong Bay، ويوفر أجنحة Junior واسعة مع شرفات خاصة مطلة على البحر ووسائل راحة راقية."
-    },
-    "Bora Hotel in Sapa offers breathtaking mountain views and stylish, cozy accommodations for travelers exploring the beautiful northern highlands.": {
-        "vi": "Bora Hotel tại Sapa mang đến tầm nhìn ra núi non ngoạn mục cùng không gian lưu trú phong cách, ấm cúng cho du khách khám phá vùng cao phía bắc xinh đẹp.",
-        "ar": "يوفر Bora Hotel في Sapa إطلالات جبلية خلابة وأماكن إقامة أنيقة ومريحة للمسافرين الذين يستكشفون المرتفعات الشمالية الجميلة."
-    },
-    "CICILIA Rouge Dalat brings colonial vintage charm and sophisticated boutique luxury to the misty streets of Dalat.": {
-        "vi": "CICILIA Rouge Dalat mang nét quyến rũ cổ điển thời thuộc địa và sự sang trọng tinh tế của boutique đến những con phố sương mù của Đà Lạt.",
-        "ar": "يضفي CICILIA Rouge Dalat سحرًا عتيقًا من العهد الاستعماري وفخامة راقية على شوارع Dalat الضبابية."
-    },
-    "Minh Toan SAFI Ocean Hotel overlooks the stunning My Khe Beach in Da Nang, offering spacious ocean-view rooms and premium seaside hospitality.": {
-        "vi": "Khách sạn Minh Toàn SAFI Ocean hướng tầm nhìn ra bãi biển Mỹ Khê tuyệt đẹp ở Đà Nẵng, cung cấp các phòng rộng rãi hướng biển và dịch vụ nghỉ dưỡng cao cấp ven biển.",
-        "ar": "يطل Minh Toan SAFI Ocean Hotel على شاطئ My Khe المذهل في Da Nang، ويتميز بغرف واسعة مطلة على البحر وضيافة راقية على شاطئ البحر."
-    },
-    "Cicilia Saigon Center offers elegant and contemporary accommodations in the heart of District 1, Ho Chi Minh City.": {
-        "vi": "Cicilia Saigon Center cung cấp chỗ nghỉ thanh lịch và hiện đại ngay tại trung tâm Quận 1, Thành phố Hồ Chí Minh.",
-        "ar": "يوفر Cicilia Saigon Center أماكن إقامة أنيقة وعصرية في قلب المنطقة 1 بمدينة Ho Chi Minh City."
-    },
-    "offers refined luxury accommodations, personalized service, and modern comforts.": {
-        "vi": "mang đến chỗ nghỉ sang trọng tinh tế, dịch vụ cá nhân hóa và các tiện nghi hiện đại.",
-        "ar": "يقدم أماكن إقامة فاخرة وخدمات مخصصة ووسائل راحة حديثة."
-    },
-    "The cities in frames": {
-        "vi": "Những Thành Phố Trong Khung Cảnh",
-        "ar": "المدن في إطارات"
-    },
-    "Through Local Eyes": {
-        "vi": "Qua Góc Nhìn Bản Địa",
-        "ar": "من خلال عيون محلية"
-    },
-    "The city collection": {
-        "vi": "Bộ Sưu Tập Thành Phố",
-        "ar": "مجموعة المدينة"
-    },
-    "Sense of Pace: Immersive": {
-        "ar": "وتيرة السفر: غامرة",
-        "vi": "Nhịp độ: Trải nghiệm sâu"
-    },
-    "Sense of Pace: Balanced": {
-        "ar": "وتيرة السفر: متوازنة",
-        "vi": "Nhịp độ: Cân bằng"
-    },
-    "Sense of Pace: Relaxed": {
-        "ar": "وتيرة السفر: مريحة",
-        "vi": "Nhịp độ: Thư thái"
-    },
-
-    # Pricing Headers
-    "Journey Investment": {
-        "ar": "الاستثمار في الرحلة",
-        "vi": "Hành Trình Đầu Tư"
-    },
-    "Total": {
-        "ar": "الإجمالي",
-        "vi": "Tổng"
-    },
-    "Currency": {
-        "ar": "العملة",
-        "vi": "Tiền tệ"
-    },
-    "Final rates subject to reconfirmation.": {
-        "ar": "الأسعار النهائية تخضع لإعادة التأكيد.",
-        "vi": "Giá cuối cùng có thể thay đổi khi xác nhận."
-    },
-
-    # Day Title Prefix
-    "Day": {
-        "ar": "يوم",
-        "vi": "Ngày"
-    },
-    "DAY": {
-        "ar": "يوم",
-        "vi": "NGÀY"
-    },
-
-    # Vietnamese Destinations translations
-    "Hanoi": {
-        "vi": "Hà Nội",
-        "ar": "Hanoi"
-    },
-    "Ha Long Bay": {
-        "vi": "Vịnh Hạ Long",
-        "ar": "Ha Long Bay"
-    },
-    "Halong Bay": {
-        "vi": "Vịnh Hạ Long",
-        "ar": "Halong Bay"
-    },
-    "Halong": {
-        "vi": "Hạ Long",
-        "ar": "Halong"
-    },
-    "Sapa": {
-        "vi": "Sa Pa",
-        "ar": "Sapa"
-    },
-    "Da Nang": {
-        "vi": "Đà Nẵng",
-        "ar": "Da Nang"
-    },
-    "Hoi An": {
-        "vi": "Hội An",
-        "ar": "Hoi An"
-    },
-    "Dalat": {
-        "vi": "Đà Lạt",
-        "ar": "Dalat"
-    },
-    "Da Lat": {
-        "vi": "Đà Lạt",
-        "ar": "Da Lat"
-    },
-    "Ninh Binh": {
-        "vi": "Ninh Bình",
-        "ar": "Ninh Binh"
-    },
-    "Ninh Bình": {
-        "vi": "Ninh Bình",
-        "ar": "Ninh Binh"
-    },
-    "Mekong Delta": {
-        "vi": "Đồng bằng sông Cửu Long",
-        "ar": "Mekong Delta"
-    },
-    "Ho Chi Minh City": {
-        "vi": "Hồ Chí Minh",
-        "ar": "Ho Chi Minh City"
-    },
-    "Ho Chi Minh": {
-        "vi": "Hồ Chí Minh",
-        "ar": "Ho Chi Minh"
-    },
-    "Saigon": {
-        "vi": "Hồ Chí Minh",
-        "ar": "Ho Chi Minh City"
-    },
-
-    # Specialist Section
-    "Custom Itineraries, Luxury Travel, Local Experiences": {
-        "vi": "Thiết kế lịch trình riêng, Du lịch sang trọng, Trải nghiệm bản địa",
-        "ar": "مسارات مخصصة، سفر فاخر، تجارب محلية"
-    },
-    "Years designing bespoke journeys": {
-        "vi": "Nhiều năm thiết kế các hành trình độc bản",
-        "ar": "سنوات من الخبرة في تصميم الرحلات المخصصة"
-    },
-    "Your Dedicated Specialist": {
-        "vi": "Chuyên Viên Riêng Của Bạn",
-        "ar": "مستشارك المتخصص"
-    },
-    "Meet Your Travel Specialist": {
-        "vi": "Gặp Gỡ Chuyên Gia Thiết Kế Hành Trình",
-        "ar": "تعرّف على مصمم رحلتك"
-    },
-    "I am your dedicated travel specialist. I handpicked every hotel, private transfer, and local guide on this itinerary to ensure you experience the true depth of Vietnam in comfort, privacy, and at your own pace. I will personally oversee your journey from behind the scenes.": {
-        "vi": "Tôi là chuyên gia thiết kế hành trình riêng của bạn. Tôi đã tự tay chọn lọc từng khách sạn, chuyến xe riêng tư và hướng dẫn viên bản địa trong lịch trình này để đảm bảo bạn được trải nghiệm chiều sâu thực sự của Việt Nam một cách thoải mái, riêng tư nhất và theo nhịp độ của riêng bạn. Tôi sẽ đích thân đồng hành và giám sát chuyến đi của bạn.",
-        "ar": "أنا مصمم رحلتك المخصص. لقد اخترت بنفسي كل فندق، وسيلة نقل خاصة، ومرشد محلي في هذا المسار لضمان تجربتك للعمق الحقيقي لفيتنام بكل راحة وخصوصية وبوتيرتك الخاصة. سأشرف شخصيًا على رحلتك خلف الكواليس."
-    },
-    "Private Luxury Quotation": {
-        "ar": "عرض سعر خاص فاخر",
-        "vi": "Báo giá sang trọng riêng tư"
-    },
-    "Prepared for": {
-        "ar": "مُعدّ لصالح",
-        "vi": "Chuẩn bị cho"
-    },
-    "Luxury quotation prepared for": {
-        "ar": "عرض سعر فاخر مُعدّ لصالح",
-        "vi": "Báo giá sang trọng được chuẩn bị cho"
-    },
-    "Refer to Booking & Payment terms below.": {
-        "ar": "يرجى الرجوع إلى شروط الحجز والدفع أدناه.",
-        "vi": "Vui lòng tham khảo các điều khoản Đặt chỗ & Thanh toán bên dưới."
-    },
-    "Share travel dates, preferred hotel tier, rooming list and any dietary or mobility requirements. We will reconfirm availability and return a finalized quotation.": {
-        "ar": "يرجى مشاركة تواريخ السفر، فئة الفندق المفضلة، قائمة توزيع الغرف، وأي متطلبات غذائية أو حركية. سنقوم بتأكيد الإمكانية وإرسال عرض السعر النهائي.",
-        "vi": "Hãy chia sẻ ngày đi, hạng khách sạn mong muốn, danh sách phòng và bất kỳ yêu cầu ăn uống hoặc đi lại nào. Chúng tôi sẽ xác nhận tình trạng dịch vụ và gửi báo giá hoàn chỉnh."
-    },
-
-    "Confirmed Booking Itinerary": {
-        "ar": "برنامج الرحلة المؤكد",
-        "vi": "Hành trình đặt chỗ đã xác nhận"
-    },
-    "Detailed booking itinerary prepared for": {
-        "ar": "برنامج رحلة مفصل مُعدّ لصالح",
-        "vi": "Hành trình chi tiết được chuẩn bị cho"
-    },
-    "PROGRAM OVERVIEW": {
-        "ar": "نظرة عامة على البرنامج",
-        "vi": "TỔNG QUAN CHƯƠNG TRÌNH"
-    }
-}
 
 def translate_filter(text: str, lang: str = "en") -> str:
     if not text:
@@ -4559,7 +2954,7 @@ def _draft_items_to_simple_list(items: list[Any]) -> list[str]:
     return simple_items
 
 
-def _build_brochure_draft_from_lang_ctx(lang_ctx: dict, quotation_id: str, lang: str) -> dict:
+def _legacy_build_brochure_draft_from_lang_ctx(lang_ctx: dict, quotation_id: str, lang: str) -> dict:
     brand = copy.deepcopy(lang_ctx.get("brand") or BRANDS["vietnam_safar"])
     hero_url = lang_ctx.get("hero_img_custom") or lang_ctx.get("img_0") or _default_brand_logo(brand)
     itinerary_days = copy.deepcopy(lang_ctx.get("itinerary_days") or [])
@@ -4746,7 +3141,7 @@ def _build_brochure_draft_from_lang_ctx(lang_ctx: dict, quotation_id: str, lang:
     }
 
 
-def _store_brochure_draft(ctx_data: dict, target_lang: str, draft: dict) -> dict:
+def _legacy_store_brochure_draft(ctx_data: dict, target_lang: str, draft: dict) -> dict:
     brochure_drafts = ctx_data.setdefault("brochureDrafts", {})
     brochure_drafts[target_lang] = copy.deepcopy(draft)
     ctx_data["brochureDraft"] = copy.deepcopy(draft)
@@ -4781,7 +3176,7 @@ def _store_brochure_draft(ctx_data: dict, target_lang: str, draft: dict) -> dict
     return draft
 
 
-def _get_stored_brochure_draft(ctx_data: dict, target_lang: str) -> dict | None:
+def _legacy_get_stored_brochure_draft(ctx_data: dict, target_lang: str) -> dict | None:
     brochure_drafts = ctx_data.get("brochureDrafts") or {}
     draft = brochure_drafts.get(target_lang)
     if draft:
@@ -4793,7 +3188,7 @@ def _get_stored_brochure_draft(ctx_data: dict, target_lang: str) -> dict | None:
     return None
 
 
-def _ensure_brochure_draft(ctx_data: dict, quotation_id: str, target_lang: str, lang_ctx: dict, *, force_brand_from_ctx: bool = False) -> dict:
+def _legacy_ensure_brochure_draft(ctx_data: dict, quotation_id: str, target_lang: str, lang_ctx: dict, *, force_brand_from_ctx: bool = False) -> dict:
     draft = _get_stored_brochure_draft(ctx_data, target_lang)
     if not draft:
         draft = _build_brochure_draft_from_lang_ctx(lang_ctx, quotation_id, target_lang)
@@ -4805,7 +3200,7 @@ def _ensure_brochure_draft(ctx_data: dict, quotation_id: str, target_lang: str, 
     return copy.deepcopy(draft)
 
 
-def _apply_brochure_draft_to_lang_ctx(lang_ctx: dict, draft: dict):
+def _legacy_apply_brochure_draft_to_lang_ctx(lang_ctx: dict, draft: dict):
     brand = copy.deepcopy(lang_ctx.get("brand") or BRANDS["vietnam_safar"])
     draft_brand = draft.get("brand") or {}
     draft_colors = draft_brand.get("colors") or {}
@@ -5172,7 +3567,7 @@ def _render_pdf_bytes(print_html: str) -> bytes:
             browser.close()
 
 
-def _render_react_pdf_bytes(*, hostname: str, release_id: str) -> bytes:
+def _legacy_render_react_pdf_bytes(*, hostname: str, release_id: str) -> bytes:
     """Print the private React SSR route; V2 never converts through Jinja.
 
     The private route resolves its immutable release by ID, not by public host.
@@ -5430,6 +3825,20 @@ async def _store_uploaded_draft_asset(
         "height": prepared.height,
         "storageMode": "draft_assets",
     }
+
+
+# Router modules receive all legacy-compatible runtime hooks here.  Lambdas
+# deliberately resolve attributes at request time so the established test and
+# Compose override seams remain intact without a router importing ``main``.
+configure_v2_runtime(
+    media_service_provider=lambda: _get_media_service(),
+    session_factory_provider=lambda: _get_db_session_factory(),
+    load_context_provider=lambda quotation_id: _load_ctx_data(quotation_id),
+    database_unavailable_predicate=lambda exc: _is_database_unavailable_error(exc),
+    draft_asset_store=lambda **kwargs: _store_uploaded_draft_asset(**kwargs),
+    travel_designer_serializer=lambda profile: _serialize_travel_designer(profile),
+    quotation_workflow_loader=lambda quotation_id: _canonical_workflow(quotation_id),
+)
 
 
 def _build_itinerary_ctx(itinerary_id: str, payload: DetailItineraryPayload, hero_image_url: str, destinations: list[dict], lang: str = "en", template_name: str = "detail_itinerary_landingpage_template.html"):
@@ -6500,266 +4909,13 @@ async def create_canonical_quotation_v2(payload: CreateQuoteRequestV1, principal
     return {"quotationId": quotation_id, "status": "draft", "currentRevision": 1, "baselineLang": lang, "resolvedFacts": resolved}
 
 
-@app.get("/api/v2/workspace/me")
-async def get_workspace_me(principal: Principal = Depends(require_editor)):
-    profile = await _resolve_active_travel_designer(principal)
-    return {"profile": _serialize_travel_designer(profile), "capabilities": {"createQuotation": True}}
-
-
-@app.get("/api/v2/workspace/quotations")
-async def list_workspace_quotations(
-    status: str | None = None,
-    q: str = "",
-    cursor: str | None = None,
-    limit: int = 20,
-    principal: Principal = Depends(require_editor),
-):
-    updated_before, id_before = _parse_workspace_cursor(cursor)
-    async with _get_db_session_factory()() as session:
-        quotes = QuotationRepository(session)
-        documents = QuotationDocumentRepository(session)
-        items = await quotes.list_for_designer(
-            status=status,
-            search=q,
-            updated_before=updated_before,
-            id_before=id_before,
-            limit=min(max(limit, 1), 100) + 1,
-        )
-        summary = await quotes.status_summary_workspace()
-        has_next = len(items) > min(max(limit, 1), 100)
-        visible = items[: min(max(limit, 1), 100)]
-        docs_map = {}
-        for q_item in visible:
-            doc = await documents.get_current_document(q_item.id, q_item.baseline_lang)
-            if doc and isinstance(doc.document_json, dict):
-                docs_map[q_item.id] = doc.document_json
-
-    out_items = []
-    for item in visible:
-        doc_json = docs_map.get(item.id, {})
-        trip = doc_json.get("trip") if isinstance(doc_json.get("trip"), dict) else {}
-        cf = doc_json.get("traveler") if isinstance(doc_json.get("traveler"), dict) else {}
-        route = doc_json.get("route") if isinstance(doc_json.get("route"), dict) else {}
-
-        stay_segments = route.get("staySegments") if isinstance(route.get("staySegments"), list) else []
-        destinations = [
-            s.get("displayName")
-            for s in stay_segments
-            if isinstance(s, dict) and s.get("displayName")
-        ]
-
-        out_items.append({
-            "id": item.id,
-            "title": trip.get("title") or item.title,
-            "customerName": item.customer_name or cf.get("customerName") or cf.get("customer_name") or None,
-            "brandId": item.brand_id,
-            "status": item.status,
-            "locale": item.baseline_lang,
-            "createdAt": item.created_at.isoformat(),
-            "updatedAt": item.updated_at.isoformat(),
-            "currentRevision": item.current_revision,
-            "currentVersion": item.current_version,
-            "tripFacts": {
-                "destinations": destinations,
-                "startDate": None,
-                "endDate": None,
-                "durationDays": None,
-                "durationNights": None,
-                "displayTravelDates": trip.get("travelDates") or None,
-                "displayRouteText": trip.get("routeText") or (" → ".join(destinations) if destinations else None),
-                "durationText": trip.get("durationText") or None,
-            },
-            "customerFacts": {
-                "adults": cf.get("adults") if isinstance(cf.get("adults"), int) else None,
-                "children": cf.get("children") if isinstance(cf.get("children"), int) else None,
-                "nationality": cf.get("nationality") if isinstance(cf.get("nationality"), str) else None,
-                "guestProfile": cf.get("travelStyle") or cf.get("guestProfile") or None,
-                "travelStyle": cf.get("travelStyle") or cf.get("guestProfile") or None,
-            },
-        })
-
-    return {
-        "items": out_items,
-        "nextCursor": _workspace_cursor(visible[-1]) if has_next and visible else None,
-        "summary": summary,
-    }
-
-
-@app.get("/api/v2/workspace/quotations/{quotation_id}/overview")
-async def get_workspace_quotation_overview(
-    quotation_id: str,
-    _owned=Depends(require_owned_quotation),
-):
-    workflow = await _canonical_workflow(quotation_id)
-    async with _get_db_session_factory()() as session:
-        quote = await QuotationRepository(session).get_quotation_by_id(quotation_id)
-        targets = await PublicationTargetRepository(session).list_targets(quotation_id, locale=quote.baseline_lang)
-    return {
-        "quotation": {
-            "id": quote.id,
-            "title": quote.title,
-            "customerName": quote.customer_name,
-            "brandId": quote.brand_id,
-            "status": quote.status,
-            "locale": quote.baseline_lang,
-            "updatedAt": quote.updated_at.isoformat(),
-            "currentRevision": quote.current_revision,
-            "currentVersion": quote.current_version,
-        },
-        "workflow": workflow,
-        "publications": [
-            {"targetId": target.id, "brandId": target.brand_id, "status": target.status, "activeReleaseId": target.active_release_id}
-            for target in targets
-        ],
-    }
-
-
-@app.get("/api/v2/quotations/{quotation_id}/facts")
-async def get_quotation_facts_v2(quotation_id: str, principal: Principal = Depends(require_editor), _owned=Depends(require_owned_quotation)):
-    async with _get_db_session_factory()() as session:
-        quotes, documents = QuotationRepository(session), QuotationDocumentRepository(session)
-        quotation = await quotes.get_quotation_by_id(quotation_id)
-        request = await quotes.get_latest_quotation_request(quotation_id)
-        if quotation is None or request is None:
-            raise HTTPException(status_code=404, detail="Quotation facts were not found.")
-        document = await documents.get_current_document(quotation_id, quotation.baseline_lang)
-        payload = CreateQuoteRequestV1.model_validate(normalize_legacy_facts_snapshot(request.request_json))
-        canonical, resolved = await _resolve_v2_facts(payload)
-        # Legacy/newly-created snapshots may have the profile only on the
-        # quotation row. Rehydrate the Fact selector from that authoritative
-        # assignment so an editor never sees a false empty state.
-        if canonical.presentation_options.travel_designer_id is None and quotation.designer_profile_id:
-            canonical.presentation_options.travel_designer_id = quotation.designer_profile_id
-        return _facts_response(quotation=quotation, request_json=canonical.model_dump(mode="json"), document=(document.document_json if document else {}), resolved_facts=resolved)
-
-
-@app.put("/api/v2/quotations/{quotation_id}/facts")
-async def put_quotation_facts_v2(quotation_id: str, payload: CreateQuoteRequestV1, baseRevision: int, principal: Principal = Depends(require_editor), _owned=Depends(require_owned_quotation)):
-    canonical, resolved = await _resolve_v2_facts(payload)
-    if resolved["missingInputs"]:
-        raise HTTPException(status_code=422, detail={"message": "Required quotation facts are missing.", "missingInputs": resolved["missingInputs"]})
-    async with _get_db_session_factory()() as session:
-        quotes, documents, drafts, designers = QuotationRepository(session), QuotationDocumentRepository(session), ContentDraftRepository(session), TravelDesignerRepository(session)
-        quotation = await quotes.get_quotation_by_id(quotation_id)
-        if quotation is None:
-            raise HTTPException(status_code=404, detail="Quotation was not found.")
-        if quotation.source_kind != "manual":
-            raise HTTPException(status_code=403, detail="Facts are read-only for this quotation source.")
-        if canonical.brand_id != quotation.brand_id:
-            raise HTTPException(status_code=422, detail={"message": "A quotation brand is immutable. Create a publication target to render another brand.", "missingInputs": ["brand_id"]})
-        current = await documents.get_current_document(quotation_id, quotation.baseline_lang)
-        if current is None:
-            raise HTTPException(status_code=404, detail="Canonical document was not found.")
-        rebuilt = SkeletonBuilder().build(quotation_id=quotation_id, payload=canonical, resolved_facts=resolved, template=quotation.template_name)
-        _preserve_content_owned_values(current.document_json, rebuilt)
-        if canonical.presentation_options.travel_designer_id:
-            profile = await designers.get_profile(canonical.presentation_options.travel_designer_id)
-            if profile is None or not profile.is_active:
-                raise HTTPException(status_code=422, detail={"message": "Travel Designer is unavailable.", "missingInputs": ["presentation_options.travel_designer_id"]})
-            quotation.designer_profile_id = profile.id
-            _apply_travel_designer_snapshot(rebuilt, _serialize_travel_designer(profile))
-        # Rebase facts without deleting Design-owned copy overrides or Fact-owned media.
-        rebuilt["presentation"] = copy.deepcopy((current.document_json.get("presentation") or {}))
-        if "viewOverrides" in current.document_json:
-            rebuilt["viewOverrides"] = copy.deepcopy(current.document_json["viewOverrides"])
-        _copy_fact_media_slots(current.document_json, rebuilt)
-        await _apply_missing_media_defaults(session, rebuilt, quotation_id, quotation.baseline_lang)
-        try:
-            saved = await documents.save_current_document(quotation_id=quotation_id, lang=quotation.baseline_lang, document_json=rebuilt, expected_revision=baseRevision)
-        except DocumentRevisionConflictError as exc:
-            raise HTTPException(status_code=409, detail={"message": "Facts revision conflict.", "currentRevision": exc.current_revision, "currentDocument": exc.current_document}) from exc
-        rebuilt["meta"]["revision"] = saved.revision
-        await documents.append_document_revision(quotation_id=quotation_id, lang=quotation.baseline_lang, revision=saved.revision, document_json=rebuilt, change_source="update_facts")
-        await quotes.create_quotation_request(quotation_id=quotation_id, request_json=canonical.model_dump(mode="json"))
-        await drafts.mark_stale(quotation_id)
-        await session.commit()
-        return _facts_response(quotation=quotation, request_json=canonical.model_dump(mode="json"), document=rebuilt, resolved_facts=resolved)
-
-
-@app.put("/api/v2/quotations/{quotation_id}/facts/media")
-async def put_quotation_fact_media_v2(
-    quotation_id: str,
-    payload: FactsMediaRequest,
-    lang: str | None = None,
-    principal: Principal = Depends(require_editor),
-    _owned=Depends(require_owned_quotation),
-):
-    fields = _validate_v2_fact_media_slots(payload.slots)
-    async with _get_db_session_factory()() as session:
-        quotes, documents = QuotationRepository(session), QuotationDocumentRepository(session)
-        quotation = await quotes.get_quotation_by_id(quotation_id)
-        if quotation is None or quotation.template_name != V2_RENDERER_NAME:
-            raise HTTPException(status_code=404, detail="Quotation was not found.")
-        effective_lang = lang or quotation.baseline_lang
-        current = await documents.get_current_document(quotation_id, effective_lang)
-        if current is None:
-            raise HTTPException(status_code=404, detail="Canonical document was not found.")
-        await _require_active_media_overrides(session, {key: value for key, value in fields.items() if value is not None})
-        next_document = copy.deepcopy(current.document_json)
-        for field_id, value in fields.items():
-            _set_fact_media_field(next_document, field_id, value)
-        try:
-            validated = _normalize_quote_document_structure_or_422(_hydrate_canonical_quote_document(next_document, quotation, lang=effective_lang, revision=payload.baseRevision))
-            saved = await documents.save_current_document(quotation_id=quotation_id, lang=effective_lang, document_json=validated, expected_revision=payload.baseRevision)
-        except DocumentRevisionConflictError as exc:
-            raise HTTPException(status_code=409, detail={"message": "Fact media revision conflict.", "currentRevision": exc.current_revision}) from exc
-        canonical = _hydrate_canonical_quote_document(saved.document_json, quotation, lang=effective_lang, revision=saved.revision)
-        await documents.append_document_revision(quotation_id=quotation_id, lang=effective_lang, revision=saved.revision, document_json=canonical, change_source="update_fact_media")
-        await session.commit()
-    return {"ok": True, "document": canonical, "currentRevision": saved.revision}
-
-
-@app.put("/api/v2/quotations/{quotation_id}/facts/designer")
-async def put_quotation_fact_designer_v2(
-    quotation_id: str,
-    payload: FactsDesignerRequest,
-    lang: str | None = None,
-    principal: Principal = Depends(require_editor),
-    _owned=Depends(require_owned_quotation),
-):
-    """Assign a designer and snapshot only profile-owned identity into every locale."""
-    async with _get_db_session_factory()() as session:
-        quotes, documents, designers = QuotationRepository(session), QuotationDocumentRepository(session), TravelDesignerRepository(session)
-        quotation = await quotes.get_quotation_by_id(quotation_id)
-        profile = await designers.get_profile(payload.designerProfileId)
-        if quotation is None or quotation.template_name != V2_RENDERER_NAME:
-            raise HTTPException(status_code=404, detail="Quotation was not found.")
-        if profile is None or not profile.is_active:
-            raise HTTPException(status_code=422, detail={"message": "Travel Designer is unavailable.", "missingInputs": ["designerProfileId"]})
-        effective_lang = lang or quotation.baseline_lang
-        current = await documents.get_current_document(quotation_id, effective_lang)
-        if current is None:
-            raise HTTPException(status_code=404, detail="Canonical document was not found.")
-        if current.revision != payload.baseRevision:
-            raise HTTPException(status_code=409, detail={"message": "Designer selection revision conflict.", "currentRevision": current.revision})
-        quotation.designer_profile_id = profile.id
-        request_snapshot = await quotes.get_latest_quotation_request(quotation_id)
-        if request_snapshot is not None:
-            next_request = copy.deepcopy(request_snapshot.request_json)
-            next_request.setdefault("presentation_options", {})["travel_designer_id"] = profile.id
-            await quotes.create_quotation_request(quotation_id=quotation_id, request_json=next_request)
-        saved_target = None
-        for stored in await documents.list_current_documents(quotation_id):
-            next_document = copy.deepcopy(stored.document_json)
-            _apply_travel_designer_snapshot(next_document, _serialize_travel_designer(profile))
-            validated = _normalize_quote_document_structure_or_422(_hydrate_canonical_quote_document(next_document, quotation, lang=stored.lang, revision=stored.revision))
-            saved = await documents.save_current_document(quotation_id=quotation_id, lang=stored.lang, document_json=validated, expected_revision=stored.revision)
-            canonical = _hydrate_canonical_quote_document(saved.document_json, quotation, lang=stored.lang, revision=saved.revision)
-            await documents.append_document_revision(quotation_id=quotation_id, lang=stored.lang, revision=saved.revision, document_json=canonical, change_source="update_fact_designer")
-            if stored.lang == effective_lang:
-                saved_target = (canonical, saved.revision)
-        await session.commit()
-    assert saved_target is not None
-    return {"ok": True, "document": saved_target[0], "currentRevision": saved_target[1]}
-
-
-@app.get("/api/v2/quotation-options")
-async def get_quotation_options_v2(brandId: str | None = None, principal: Principal = Depends(require_editor)):
-    async with _get_db_session_factory()() as session:
-        designers = await TravelDesignerRepository(session).list_profiles(active_only=True)
-        active_brands = await BrandRepository(session).list_active()
-    brands = [{"id": item.id, "label": item.display_name} for item in active_brands]
-    return {"brands": brands, "templates": [{"id": "quote-generator", "label": "Brochure", "brandIds": [item["id"] for item in brands]}], "languages": [{"id": value, "label": value.upper()} for value in ("en", "vi", "ar")], "travelDesigners": [{"id": item.id, "name": item.name, "email": item.email, "phone": item.phone, "imageUrl": item.image_url} for item in designers], "editableContract": editable_contract_payload()}
+from routers.v2.quotation_facts import (
+    apply_quotation_media_defaults_v2,
+    get_quotation_facts_v2,
+    put_quotation_fact_designer_v2,
+    put_quotation_fact_media_v2,
+    put_quotation_facts_v2,
+)
 
 
 class ContentDraftCreateRequest(BaseModel):
@@ -6810,124 +4966,19 @@ async def _resolve_v2_locale(quotation_id: str, requested_lang: str | None) -> t
     return quotation, effective_lang
 
 
-@app.get("/api/v2/quotations/{quotation_id}/content-drafts")
-async def list_content_drafts_v2(quotation_id: str, lang: str | None = None, principal: Principal = Depends(require_editor), _owned=Depends(require_owned_quotation)):
-    _quotation, lang = await _resolve_v2_locale(quotation_id, lang)
-    async with _get_db_session_factory()() as session:
-        quotation = await QuotationRepository(session).get_quotation_by_id(quotation_id)
-        if quotation is None:
-            raise HTTPException(status_code=404, detail="Quotation was not found.")
-        items = await ContentDraftRepository(session).list(quotation_id, lang)
-        return {"drafts": [_serialize_content_draft(item) for item in items]}
-
-
-@app.post("/api/v2/quotations/{quotation_id}/content-drafts")
-async def create_content_drafts_v2(quotation_id: str, payload: ContentDraftCreateRequest, lang: str | None = None, principal: Principal = Depends(require_editor), _owned=Depends(require_owned_quotation)):
-    _quotation, lang = await _resolve_v2_locale(quotation_id, lang)
-    async with _get_db_session_factory()() as session:
-        quotes, documents, drafts = QuotationRepository(session), QuotationDocumentRepository(session), ContentDraftRepository(session)
-        quotation = await quotes.get_quotation_by_id(quotation_id)
-        request = await quotes.get_latest_quotation_request(quotation_id) if quotation else None
-        document = await documents.get_current_document(quotation_id, lang) if quotation else None
-        if quotation is None or request is None or document is None:
-            raise HTTPException(status_code=404, detail="Quotation content context was not found.")
-        facts, resolved = await _resolve_v2_facts(CreateQuoteRequestV1.model_validate(normalize_legacy_facts_snapshot(request.request_json)))
-        try:
-            brand = await BrandRepository(session).get_active(quotation.brand_id)
-            if brand is None:
-                raise HTTPException(status_code=422, detail={"message": "Brand is unavailable for content generation.", "missingInputs": ["brand_id"]})
-            items = await ContentDraftService(drafts, _brand_generation_profile(brand)).create(quotation_id=quotation_id, payload=facts, facts_hash=resolved["factsHash"], document_revision=document.revision, lang=lang, scope=payload.scope, mode=payload.generationMode, instruction=payload.instruction)
-        except ValueError as exc:
-            raise HTTPException(status_code=422, detail={"message": str(exc)}) from exc
-        except ContentGenerationError as exc:
-            raise HTTPException(status_code=503, detail={"message": str(exc)}) from exc
-        await session.commit()
-        return {"draft": _serialize_content_draft(items[0])}
-
-
-@app.post("/api/v2/quotations/{quotation_id}/content-drafts/manual")
-async def create_manual_content_draft_v2(quotation_id: str, payload: ContentDraftManualCreateRequest, lang: str | None = None, principal: Principal = Depends(require_editor), _owned=Depends(require_owned_quotation)):
-    _quotation, lang = await _resolve_v2_locale(quotation_id, lang)
-    async with _get_db_session_factory()() as session:
-        quotes, documents, drafts = QuotationRepository(session), QuotationDocumentRepository(session), ContentDraftRepository(session)
-        quotation = await quotes.get_quotation_by_id(quotation_id)
-        request = await quotes.get_latest_quotation_request(quotation_id) if quotation else None
-        document = await documents.get_current_document(quotation_id, lang) if quotation else None
-        if quotation is None or request is None or document is None:
-            raise HTTPException(status_code=404, detail="Quotation content context was not found.")
-        if document.revision != payload.baseRevision:
-            raise HTTPException(status_code=409, detail={"message": "Document revision conflict.", "currentRevision": document.revision})
-        facts, resolved = await _resolve_v2_facts(CreateQuoteRequestV1.model_validate(normalize_legacy_facts_snapshot(request.request_json)))
-        brand = await BrandRepository(session).get_active(quotation.brand_id)
-        if brand is None:
-            raise HTTPException(status_code=422, detail={"message": "Brand is unavailable for Content Studio.", "missingInputs": ["brand_id"]})
-        try:
-            draft = await ContentDraftService(drafts, _brand_generation_profile(brand)).create_manual(quotation_id=quotation_id, payload=facts, facts_hash=resolved["factsHash"], document_revision=document.revision, lang=lang, scope=payload.scope, candidate=payload.candidate)
-        except ValueError as exc:
-            raise HTTPException(status_code=422, detail={"message": str(exc)}) from exc
-        await session.commit()
-        return {"draft": _serialize_content_draft(draft)}
-
-
-@app.patch("/api/v2/quotations/{quotation_id}/content-drafts/{draft_id}")
-async def patch_content_draft_v2(quotation_id: str, draft_id: str, payload: ContentDraftPatchRequest, principal: Principal = Depends(require_editor), _owned=Depends(require_owned_quotation)):
-    async with _get_db_session_factory()() as session:
-        draft = await ContentDraftRepository(session).get(quotation_id, draft_id)
-        if draft is None:
-            raise HTTPException(status_code=404, detail="Content draft was not found.")
-        if draft.status not in ("draft", "stale"):
-            raise HTTPException(status_code=409, detail={"message": "Only a draft candidate can be edited."})
-        try:
-            draft.candidate_json = ContentDraftService.validate_candidate(draft.scope, payload.candidate)
-        except ValueError as exc:
-            raise HTTPException(status_code=422, detail={"message": str(exc)}) from exc
-        draft.generation_metadata = {**draft.generation_metadata, "manualEdited": True}
-        await session.commit()
-        return {"draft": _serialize_content_draft(draft)}
-
-
-@app.post("/api/v2/quotations/{quotation_id}/content-drafts/{draft_id}/discard")
-async def discard_content_draft_v2(quotation_id: str, draft_id: str, principal: Principal = Depends(require_editor), _owned=Depends(require_owned_quotation)):
-    async with _get_db_session_factory()() as session:
-        draft = await ContentDraftRepository(session).get(quotation_id, draft_id)
-        if draft is None:
-            raise HTTPException(status_code=404, detail="Content draft was not found.")
-        draft.status = "discarded"
-        await session.commit()
-        return {"draft": _serialize_content_draft(draft)}
-
-
-@app.post("/api/v2/quotations/{quotation_id}/content-drafts/{draft_id}/apply")
-async def apply_content_draft_v2(quotation_id: str, draft_id: str, payload: ContentDraftApplyRequest, principal: Principal = Depends(require_editor), _owned=Depends(require_owned_quotation)):
-    async with _get_db_session_factory()() as session:
-        quotes, documents, drafts = QuotationRepository(session), QuotationDocumentRepository(session), ContentDraftRepository(session)
-        quotation = await quotes.get_quotation_by_id(quotation_id)
-        draft = await drafts.get(quotation_id, draft_id)
-        if quotation is None or draft is None:
-            raise HTTPException(status_code=404, detail="Quotation content draft was not found.")
-        if draft.status not in ("draft", "stale"):
-            raise HTTPException(status_code=409, detail={"message": "Only a current draft candidate can be applied."})
-        current = await documents.get_current_document(quotation_id, draft.lang)
-        if current is None:
-            raise HTTPException(status_code=404, detail="Current document not found.")
-        if payload.baseRevision != current.revision:
-            raise HTTPException(status_code=409, detail={"message": "Document revision conflict.", "currentRevision": current.revision})
-        draft.source_document_revision = current.revision
-        try:
-            merged = ContentDraftService.apply_candidate(copy.deepcopy(current.document_json), draft.scope, draft.candidate_json)
-        except ValueError as exc:
-            raise HTTPException(status_code=422, detail={"message": str(exc)}) from exc
-        try:
-            saved = await documents.save_current_document(quotation_id=quotation_id, lang=draft.lang, document_json=merged, expected_revision=current.revision)
-        except DocumentRevisionConflictError as exc:
-            raise HTTPException(status_code=409, detail={"message": "Document revision conflict.", "currentRevision": exc.current_revision}) from exc
-        merged.setdefault("meta", {})["revision"] = saved.revision
-        await documents.append_document_revision(quotation_id=quotation_id, lang=draft.lang, revision=saved.revision, document_json=merged, change_source="apply_content_draft")
-        draft.status = "applied"
-        await drafts.mark_pending_drafts_stale(quotation_id)
-        draft.status = "applied"
-        await session.commit()
-        return {"draft": _serialize_content_draft(draft), "currentRevision": saved.revision, "document": merged}
+from routers.v2.quotation_document import (
+    apply_content_draft_v2,
+    create_content_drafts_v2,
+    create_manual_content_draft_v2,
+    discard_content_draft_v2,
+    get_quotation_document,
+    list_content_drafts_v2,
+    patch_content_draft_v2,
+    put_quotation_document,
+    put_quotation_presentation_copy_overrides_v2,
+    put_quotation_presentation_overrides_v2,
+    put_quotation_presentation_v2,
+)
 
 
 # ── GET /published/{quotation_id}/version & /latest — Dynamic version & redirect ──
@@ -8800,20 +6851,6 @@ class QuoteDocumentPublishRequest(BaseModel):
     baseRevision: Optional[int] = None
 
 
-class MediaSelectionRequest(BaseModel):
-    quotationId: str
-    lang: str = "all"
-    sectionKey: str
-    slotKey: str
-    displayOrder: int = Field(default=0, ge=0)
-
-
-class MediaSyncRequest(BaseModel):
-    folder: str = ""
-    recursive: bool = True
-    quotationId: Optional[str] = None
-
-
 class MediaLibraryLocationRequest(BaseModel):
     kind: Literal["destination", "accommodation", "team"]
     destinationId: str | None = None
@@ -9012,58 +7049,13 @@ async def _resolve_media_location(session, payload: MediaLibraryLocationRequest)
         raise HTTPException(status_code=422, detail={"message": str(exc), "missingInputs": ["destination geographic mapping"]}) from exc
 
 
-@app.post("/api/v1/translate-block")
-async def translate_block_endpoint(payload: TranslateBlockRequest):
-    """Translates a single block of text into target language."""
-    if payload.target_lang not in ("en", "vi", "ar"):
-        raise HTTPException(status_code=400, detail="Unsupported language")
-    
-    if not payload.text.strip():
-        return {"translated_text": ""}
-
-    from pydantic_ai import Agent
-    import llm_client
-    
-    target_lang_name = {
-        "en": "English",
-        "vi": "Vietnamese (Tiếng Việt)",
-        "ar": "Arabic (العربية)"
-    }.get(payload.target_lang, payload.target_lang.upper())
-    
-    system_prompt = (
-        "You are an expert multilingual Luxury Travel Copywriter.\n"
-        f"Your task is to translate the given travel text string into {target_lang_name}.\n\n"
-        "RULES FOR PREMIUM & LUXURY TRANSLATION:\n"
-        "1. Tone and vocabulary:\n"
-        "   - English ('en'): Evoke bespoke elegance, exclusive privileges, and poetic serenity (e.g., 'Serene sanctuary', 'Heritage journey', 'Curated experiences').\n"
-        "   - Vietnamese ('vi'): Use elegant, respectful, and sophisticated Sino-Vietnamese phrasing (e.g., 'Thượng khách', 'Kiệt tác trú ẩn', 'Hành trình di sản', 'Điểm hẹn yên bình').\n"
-        "   - Arabic ('ar'): Use Royal Modern Standard Arabic (Fusha) with respectful honorifics (e.g., 'الضيوف الكرام', 'رحلة منسقة خصيصاً', 'ملاذات هادئة'). Ensure proper Right-to-Left layout flow.\n"
-        "2. Output format:\n"
-        "   - Return ONLY the translation of the input text. Keep HTML tags intact if any exist in the source.\n"
-        "   - Do NOT wrap the translation in quotes or code fences. Do NOT include any chat preamble, comments, or explanations."
-    )
-    
-    try:
-        agent = Agent(
-            model=llm_client.get_model(),
-            system_prompt=system_prompt
-        )
-        res = await agent.run(payload.text)
-        translated_text = res.output.strip()
-        
-        # Clean up any potential markdown code blocks returned by the model
-        if translated_text.startswith("```"):
-            lines = translated_text.splitlines()
-            if lines[0].startswith("```"):
-                lines = lines[1:]
-            if lines[-1].startswith("```"):
-                lines = lines[:-1]
-            translated_text = "\n".join(lines).strip()
-            
-        return {"translated_text": translated_text}
-    except Exception as e:
-        log.exception("[translate-block] Block translation failed: %s", e)
-        raise HTTPException(status_code=500, detail=str(e))
+from routers.v1.translations import (
+    get_itinerary_translation_status,
+    get_quotation_translation_status,
+    translate_block_endpoint,
+    translate_itinerary_endpoint,
+    translate_quotation_endpoint,
+)
 
 
 @app.get("/api/v1/quotations/{quotation_id}/draft")
@@ -9837,63 +7829,13 @@ async def _save_destination(session, payload: DestinationCatalogRequest, item=No
     return await repository.update(item, canonical_name=payload.canonicalName, aliases=payload.aliases, country_slug=payload.countrySlug, region_slug=payload.regionSlug, province_slug=payload.provinceSlug, latitude=payload.latitude, longitude=payload.longitude)
 
 
-@app.get("/api/v2/destinations")
-async def search_destinations(query: str = "", limit: int = 20, principal: Principal = Depends(require_editor)):
-    async with _get_db_session_factory()() as session:
-        await _seed_destination_catalog(session)
-        await session.commit()
-        rows = await DestinationRepository(session).search(query, limit=max(1, min(limit, 50)))
-        items: list[dict[str, Any]] = []
-        seen_ids: set[str] = set()
-        for item, alias in rows:
-            if item.id in seen_ids:
-                continue
-            seen_ids.add(item.id)
-            items.append(await _serialize_destination(DestinationRepository(session), item, matched_from=alias))
-        return {"items": items}
-
-
-@app.get("/api/v2/destinations/{destination_id}")
-async def get_destination(destination_id: str, principal: Principal = Depends(require_editor)):
-    async with _get_db_session_factory()() as session:
-        await _seed_destination_catalog(session)
-        item = await DestinationRepository(session).get(destination_id)
-        if item is None:
-            raise HTTPException(status_code=404, detail="Destination was not found.")
-        return await _serialize_destination(DestinationRepository(session), item)
-
-
-@app.post("/api/v2/destinations", status_code=201)
-async def create_destination(payload: DestinationCatalogRequest, principal: Principal = Depends(require_quote_admin)):
-    async with _get_db_session_factory()() as session:
-        saved = await _save_destination(session, payload)
-        await session.commit()
-        return await _serialize_destination(DestinationRepository(session), saved)
-
-
-@app.put("/api/v2/destinations/{destination_id}")
-async def update_destination(destination_id: str, payload: DestinationCatalogRequest, principal: Principal = Depends(require_quote_admin)):
-    async with _get_db_session_factory()() as session:
-        item = await DestinationRepository(session).get(destination_id)
-        if item is None:
-            raise HTTPException(status_code=404, detail="Destination was not found.")
-        saved = await _save_destination(session, payload, item)
-        await session.commit()
-        return await _serialize_destination(DestinationRepository(session), saved)
-
-
-@app.patch("/api/v2/destinations/{destination_id}/status")
-async def update_destination_status(destination_id: str, payload: DestinationStatusRequest, principal: Principal = Depends(require_quote_admin)):
-    async with _get_db_session_factory()() as session:
-        repository = DestinationRepository(session)
-        item = await repository.get(destination_id)
-        if item is None:
-            raise HTTPException(status_code=404, detail="Destination was not found.")
-        if payload.isActive and (item.latitude is None or item.longitude is None):
-            raise HTTPException(status_code=422, detail={"message": "An active destination requires coordinates.", "missingInputs": ["latitude", "longitude"]})
-        saved = await repository.set_status(item, is_active=payload.isActive)
-        await session.commit()
-        return await _serialize_destination(repository, saved)
+from routers.v2.destinations import (
+    create_destination,
+    get_destination,
+    search_destinations,
+    update_destination,
+    update_destination_status,
+)
 
 
 def _serialize_travel_designer(profile) -> dict[str, Any]:
@@ -10099,153 +8041,6 @@ async def set_travel_designer_brand_default(
             raise HTTPException(status_code=422, detail=str(exc)) from exc
         await session.commit()
         return {"brandId": default.brand_id, "designerProfileId": default.designer_profile_id}
-
-
-@app.post("/api/v2/media/upload")
-async def upload_media_asset(
-    file: UploadFile = File(...),
-    quotationId: str | None = Form(None),
-):
-    media_service = _get_media_service()
-    asset = None
-    fallback_ctx_exists = bool(quotationId and _load_ctx_data(quotationId))
-    try:
-        content = await file.read()
-        if fallback_ctx_exists:
-            try:
-                async with _get_db_session_factory()() as session:
-                    quotation = await QuotationRepository(session).get_quotation_by_id(quotationId)
-                    if quotation is None:
-                        log.info(
-                            "[media.upload] Falling back to draft asset storage for %s because no DB quotation row exists.",
-                            quotationId,
-                        )
-                        return await _store_uploaded_draft_asset(
-                            quotation_id=quotationId,
-                            file_name=file.filename or "upload",
-                            content=content,
-                            declared_mime_type=file.content_type,
-                        )
-            except Exception as exc:
-                if _is_database_unavailable_error(exc):
-                    log.warning(
-                        "[media.upload] Falling back to draft asset storage for %s because database is unavailable: %s",
-                        quotationId,
-                        exc,
-                    )
-                    return await _store_uploaded_draft_asset(
-                        quotation_id=quotationId,
-                        file_name=file.filename or "upload",
-                        content=content,
-                        declared_mime_type=file.content_type,
-                    )
-                raise
-        async with _get_db_session_factory()() as session:
-            if quotationId:
-                quotation = await QuotationRepository(session).get_quotation_by_id(quotationId)
-                if quotation is None:
-                    raise HTTPException(status_code=404, detail=f"Quotation '{quotationId}' not found.")
-            asset = await media_service.create_media_asset(
-                session,
-                original_filename=file.filename or "upload",
-                content=content,
-                declared_mime_type=file.content_type,
-                quotation_id=quotationId,
-                source_type="editor_upload",
-            )
-            await session.commit()
-    except HTTPException:
-        raise
-    except MediaValidationError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-    except R2StorageConfigurationError as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
-    except Exception:
-        if asset is not None:
-            await media_service.delete_objects(asset.r2_key, asset.preview_r2_key)
-        raise
-
-    payload = media_service.serialize_media_asset(asset)
-    return {
-        "assetId": payload["id"],
-        "quotationId": payload["quotationId"],
-        "status": payload["status"],
-        "originalUrl": payload["originalUrl"],
-        "previewUrl": payload["previewUrl"],
-        "width": payload["width"],
-        "height": payload["height"],
-    }
-
-
-@app.get("/api/v2/media")
-async def list_media_assets(
-    quotationId: str | None = None,
-    sourceType: str | None = None,
-    status: str | None = None,
-    search: str | None = None,
-    page: int = 1,
-    pageSize: int = 24,
-):
-    media_service = _get_media_service()
-    normalized_page = max(page, 1)
-    normalized_page_size = min(max(pageSize, 1), 100)
-    try:
-        async with _get_db_session_factory()() as session:
-            return await media_service.list_media_assets(
-                session,
-                quotation_id=quotationId,
-                source_type=sourceType,
-                status=status,
-                search=search,
-                page=normalized_page,
-                page_size=normalized_page_size,
-            )
-    except R2StorageConfigurationError as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
-
-
-@app.post("/api/v2/media/{asset_id}/select")
-async def select_media_asset(asset_id: str, payload: MediaSelectionRequest):
-    media_service = _get_media_service()
-    try:
-        async with _get_db_session_factory()() as session:
-            await media_service.select_media_asset(
-                session,
-                asset_id=asset_id,
-                quotation_id=payload.quotationId,
-                lang=payload.lang,
-                section_key=payload.sectionKey,
-                slot_key=payload.slotKey,
-                display_order=payload.displayOrder,
-            )
-            await session.commit()
-    except MediaNotFoundError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-    except MediaSelectionError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-
-    return {"ok": True}
-
-
-@app.post("/api/v2/media/sync")
-async def sync_media_assets(payload: MediaSyncRequest):
-    media_service = _get_media_service()
-    try:
-        async with _get_db_session_factory()() as session:
-            result = await media_service.sync_media_folder(
-                session,
-                folder=payload.folder,
-                recursive=payload.recursive,
-                quotation_id=payload.quotationId,
-            )
-            await session.commit()
-            return result
-    except MediaSyncPathError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-    except MediaValidationError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-    except R2StorageConfigurationError as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
 @app.post("/api/v1/assets")
@@ -10825,7 +8620,7 @@ def _apply_branded_media_urls(document: Any, *, hostname: str, release_id: str, 
     return transform(document)
 
 
-async def _purge_public_url(urls: str | list[str]) -> None:
+async def _legacy_purge_public_url(urls: str | list[str]) -> None:
     files = [urls] if isinstance(urls, str) else sorted(set(urls))
     if not files:
         return
@@ -10876,16 +8671,12 @@ def _fallback_release_cache_urls(*, target: Any, release: Any) -> list[str]:
 
 def _release_transition_cache_urls(*, hostnames: list[str], target: Any, releases: list[Any | None]) -> list[str]:
     """Purge both sides of a release-pointer transition, including immutable media URLs."""
-    return sorted({
-        url
-        for hostname in hostnames
-        for release in releases
-        if release is not None
-        for url in [
-            *_release_cache_urls(hostname=hostname, target=target, release=release),
-            *_fallback_release_cache_urls(target=target, release=release),
-        ]
-    })
+    return _publication_release_transition_cache_urls(
+        hostnames=hostnames,
+        target=target,
+        releases=releases,
+        fallback_hostname=settings.public_fallback_hostname,
+    )
 
 
 async def _enqueue_release_purge(

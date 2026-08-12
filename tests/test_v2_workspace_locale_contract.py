@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 class V2WorkspaceLocaleContractTests(unittest.TestCase):
     def test_v2_api_has_no_hardcoded_en_query_defaults(self):
-        api = (ROOT / "main.py").read_text()
+        api = (ROOT / "main.py").read_text() + (ROOT / "routers/v2/quotation_document.py").read_text()
         for route in (
             "list_content_drafts_v2",
             "create_content_drafts_v2",
@@ -60,12 +60,10 @@ class V2WorkspaceLocaleContractTests(unittest.TestCase):
         self.assertIn('pending_drafts = sorted({item.scope for item in content if item.status == "draft"})', review_source)
 
     def test_workspace_list_quotations_includes_customer_nationality(self):
-        api = (ROOT / "main.py").read_text()
-        list_source = api.split('@app.get("/api/v2/workspace/quotations")', 1)[1].split('@app.', 1)[0]
-        self.assertIn('"nationality": cf.get("nationality")', list_source)
+        service = (ROOT / "services/workspace_service.py").read_text()
+        self.assertIn('"nationality": traveler.get("nationality")', service)
 
 
 if __name__ == "__main__":
     unittest.main()
-
 

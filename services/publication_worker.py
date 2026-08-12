@@ -15,6 +15,11 @@ from db.models.publication import PublicationJob
 from db.session import get_session_factory
 from repositories import PublicationTargetRepository, QuotationRepository
 from services.storage.r2_storage import R2Storage
+from services.publication_runtime import (
+    purge_public_urls,
+    release_transition_cache_urls,
+    render_react_pdf_bytes,
+)
 
 
 log = logging.getLogger(__name__)
@@ -47,7 +52,6 @@ async def _claim_job() -> PublicationJob | None:
 
 
 async def _run_pdf(job: PublicationJob) -> None:
-    from main import _release_transition_cache_urls, _render_react_pdf_bytes
     async with get_session_factory()() as session:
         repository = PublicationTargetRepository(session)
         context = await repository.get_release_context(job.release_id)
@@ -61,7 +65,7 @@ async def _run_pdf(job: PublicationJob) -> None:
             job.status, job.last_error = "failed", "Release is no longer publishable."
             await session.commit(); return
     try:
-        pdf = await asyncio.to_thread(_render_react_pdf_bytes, hostname=brand.hostname, release_id=job.release_id)
+        pdf = await asyncio.to_thread(render_react_pdf_bytes, hostname=brand.hostname, release_id=job.release_id)
         await asyncio.to_thread(R2Storage().upload_bytes, job.artifact_key, pdf, "application/pdf", cache_control="public, max-age=31536000, immutable")
     except Exception as exc:
         async with get_session_factory()() as session:
@@ -113,10 +117,11 @@ async def _run_pdf(job: PublicationJob) -> None:
             job_type="purge_cache",
             event_key=f"publish-{uuid.uuid4().hex}",
             payload_json={
-                "urls": _release_transition_cache_urls(
+                "urls": release_transition_cache_urls(
                     hostnames=[_brand.hostname],
                     target=target,
                     releases=[previous_release, release],
+                    fallback_hostname=settings.public_fallback_hostname,
                 )
             },
             max_attempts=settings.publication_job_max_attempts,
@@ -125,7 +130,6 @@ async def _run_pdf(job: PublicationJob) -> None:
 
 
 async def _run_cache_purge(job: PublicationJob) -> None:
-    from main import _purge_public_url
     async with get_session_factory()() as session:
         repository = PublicationTargetRepository(session)
         current = await session.get(PublicationJob, job.id)
@@ -135,7 +139,7 @@ async def _run_cache_purge(job: PublicationJob) -> None:
         brand, target, _release = context
         try:
             urls = current.payload_json.get("urls") if isinstance(current.payload_json, dict) else None
-            await _purge_public_url(urls or [f"https://{brand.hostname}/{target.locale}/q/{target.public_slug}"])
+            await purge_public_urls(urls or [f"https://{brand.hostname}/{target.locale}/q/{target.public_slug}"])
         except Exception as exc:
             current.last_error = str(exc)[:4000]
             current.status = "failed" if current.attempts >= current.max_attempts else "queued"

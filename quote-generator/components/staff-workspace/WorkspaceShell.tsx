@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import useSWR from "swr";
-import { LayoutDashboard, FileText, Plus, Building2 } from "lucide-react";
+import { LayoutDashboard, FileText, Plus, Boxes } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography";
 import { apiErrorMessage, quotationFetch } from "../../lib/apiError";
 import { cn } from "../../utils/cn";
@@ -20,7 +20,7 @@ type Me = {
 const nav = [
   { label: "Desk", href: "/workspace", icon: LayoutDashboard },
   { label: "My quotations", href: "/workspace/quotations", icon: FileText },
-  { label: "Accommodations", href: "/workspace/accommodations", icon: Building2 },
+  { label: "Components", href: "/workspace/components", icon: Boxes },
   { label: "New quotation", href: "/workspace/quotations/new", icon: Plus },
 ] as const;
 
@@ -63,7 +63,7 @@ export default function WorkspaceShell({
                   "text-[var(--color-on-surface)] transition-colors hover:text-[var(--color-accent)]"
                 )}
               >
-                Travel Desk
+                DIASgroup Desk
               </Link>
             </div>
             <p
@@ -93,7 +93,9 @@ export default function WorkspaceShell({
               aria-label="Staff workspace"
             >
               {nav.map(({ label, href, icon: Icon }) => {
-                const isActive = pathname === href;
+                const isActive =
+                  pathname === href ||
+                  (href !== "/workspace" && pathname.startsWith(href));
                 return (
                   <Link
                     key={href}
