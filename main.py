@@ -10,7 +10,7 @@ import socket
 import secrets
 from functools import partial
 from dotenv import load_dotenv
-from fastapi import BackgroundTasks, Depends, FastAPI, Request, HTTPException, UploadFile, File, Form
+from fastapi import BackgroundTasks, Depends, FastAPI, Request, HTTPException, UploadFile, File, Form, Path
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, RedirectResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.templating import Jinja2Templates
@@ -19,7 +19,7 @@ from markupsafe import Markup, escape
 from pydantic import BaseModel, ConfigDict, ValidationError, Field, field_validator, model_validator
 from sqlalchemy import func, text
 from sqlalchemy.exc import IntegrityError
-from typing import Any, List, Optional, Literal
+from typing import Annotated, Any, List, Optional, Literal
 from datetime import date, datetime, timezone
 from github_publish import publish_to_github, publish_file_to_github
 from image_selector import select_landing_image
@@ -4984,7 +4984,7 @@ from routers.v2.quotation_document import (
 # ── GET /published/{quotation_id}/version & /latest — Dynamic version & redirect ──
 
 @app.get("/published/{quotation_id}/version")
-async def get_published_version(quotation_id: str):
+async def get_published_version(quotation_id: Annotated[str, Path(description="Quotation ID")]):
     from github_publish import get_next_version
     try:
         next_ver = await get_next_version(quotation_id)
@@ -5006,7 +5006,7 @@ async def get_published_version(quotation_id: str):
 
 @app.get("/published/{quotation_id}")
 @app.get("/published/{quotation_id}/latest")
-async def redirect_to_latest_published(quotation_id: str):
+async def redirect_to_latest_published(quotation_id: Annotated[str, Path(description="Quotation ID")]):
     from fastapi.responses import RedirectResponse
     from github_publish import get_next_version
     try:
@@ -5029,16 +5029,21 @@ async def redirect_to_latest_published(quotation_id: str):
 # ── GET /published/{file_path:path} — Dynamic static files ────────────────────
 
 @app.get("/published/{file_path:path}")
-async def get_published_file(file_path: str):
+async def get_published_file(file_path: Annotated[str, Path(description="Relative path inside published directory")]):
     """
     Serve files from the local 'published' directory if they exist.
-    On Vercel (where no rebuild happens and local file might be missing),
-    fetch the file directly from GitHub API and serve it.
+    If local file is missing, try fetching directly from GitHub API,
+    cache it locally to VPS disk for future requests, and serve it.
     """
     import mimetypes
     from fastapi.responses import Response, FileResponse
 
-    local_path = os.path.join("published", file_path)
+    # Prevent directory traversal attacks
+    safe_path = os.path.normpath(file_path).lstrip("/\\")
+    if safe_path.startswith(".."):
+        raise HTTPException(status_code=400, detail="Invalid file path.")
+
+    local_path = os.path.join("published", safe_path)
     no_cache_headers = {
         "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0, s-maxage=0",
         "Pragma": "no-cache",
@@ -5047,31 +5052,38 @@ async def get_published_file(file_path: str):
     if os.path.isfile(local_path):
         return FileResponse(local_path, headers=no_cache_headers)
         
-    # File not found locally - if we are on Vercel, try fetching from GitHub
-    ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
-    if ENVIRONMENT == "production":
-        import httpx
-        repo = os.getenv("GITHUB_REPO")
-        token = os.getenv("GITHUB_TOKEN")
-        if repo and token:
-            async with httpx.AsyncClient(timeout=10) as client:
-                headers = {
-                    "Authorization": f"token {token}", 
-                    "Accept": "application/vnd.github.v3.raw"
-                }
-                gh_url = f"https://api.github.com/repos/{repo}/contents/published/{file_path}"
-                resp = await client.get(gh_url, headers=headers)
-                if resp.status_code == 401:
-                    log.warning("[/published] GITHUB_TOKEN unauthorized (401), trying without token")
-                    resp = await client.get(gh_url)
-                if resp.status_code == 200:
-                    log.info("[/published] Fetched %s from GitHub API", file_path)
-                    mt, _ = mimetypes.guess_type(file_path)
-                    if not mt:
-                        mt = "application/octet-stream"
-                    return Response(content=resp.content, media_type=mt, headers=no_cache_headers)
+    # File not found locally - attempt fetching from GitHub API
+    import httpx
+    repo = os.getenv("GITHUB_REPO")
+    token = os.getenv("GITHUB_TOKEN")
+    if repo:
+        headers = {"Accept": "application/vnd.github.v3.raw"}
+        if token:
+            headers["Authorization"] = f"token {token}"
+            
+        gh_url = f"https://api.github.com/repos/{repo}/contents/published/{safe_path}"
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.get(gh_url, headers=headers)
+            if resp.status_code == 401 and token:
+                log.warning("[/published] GITHUB_TOKEN unauthorized (401), trying without token")
+                resp = await client.get(gh_url, headers={"Accept": "application/vnd.github.v3.raw"})
+            if resp.status_code == 200:
+                log.info("[/published] Fetched %s from GitHub API", safe_path)
+                # Cache on VPS disk so future requests serve instantly from local disk
+                try:
+                    os.makedirs(os.path.dirname(local_path), exist_ok=True)
+                    with open(local_path, "wb") as f:
+                        f.write(resp.content)
+                except Exception as exc:
+                    log.warning("[/published] Could not save %s to local cache: %s", safe_path, exc)
+
+                mt, _ = mimetypes.guess_type(safe_path)
+                if not mt:
+                    mt = "application/octet-stream"
+                return Response(content=resp.content, media_type=mt, headers=no_cache_headers)
                     
     raise HTTPException(status_code=404, detail=f"File {file_path} not found.")
+
 
 
 # ── GET /quotations/{id}/pdf — A4-optimised PDF view ─────────────────────
