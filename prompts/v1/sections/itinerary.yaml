@@ -1,0 +1,10 @@
+# Section Rule & Prompt Configuration: Itinerary Overview
+
+scope: "itinerary"
+title: "Itinerary High-Level Introduction"
+rules:
+  - "Provide a high-level narrative overview of the full day-by-day itinerary."
+  - "Set expectations for curated experiences and pace across the journey."
+output_fields:
+  - "title"
+  - "description"

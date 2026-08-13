@@ -24,13 +24,27 @@ def _fact_value(payload: CreateQuoteRequestV1, path: str) -> Any:
     return _json_fact_value(value)
 
 
+def _clean_none_values(val: Any) -> Any:
+    if isinstance(val, dict):
+        cleaned = {}
+        for k, v in val.items():
+            res = _clean_none_values(v)
+            if res is not None and res != "" and res != [] and res != {}:
+                cleaned[k] = res
+        return cleaned
+    if isinstance(val, list):
+        cleaned = [_clean_none_values(item) for item in val]
+        return [item for item in cleaned if item is not None and item != "" and item != [] and item != {}]
+    return val
+
+
 def _json_fact_value(value: Any) -> Any:
     if hasattr(value, "model_dump"):
-        return _json_fact_value(value.model_dump(mode="json"))
+        return _clean_none_values(value.model_dump(mode="json", exclude_none=True))
     if isinstance(value, list):
-        return [_json_fact_value(item) for item in value]
+        return _clean_none_values([_json_fact_value(item) for item in value])
     if isinstance(value, dict):
-        return {str(key): _json_fact_value(item) for key, item in value.items()}
+        return _clean_none_values({str(key): _json_fact_value(item) for key, item in value.items()})
     return value
 
 
@@ -187,7 +201,21 @@ class ContentDraftService:
         started = time.perf_counter()
         candidate, generation = await self.generator.generate(spec=spec, brand=self.brand_profile, facts_snapshot=snapshot, mode=mode, instruction=normalized_instruction)
         self.validate_candidate(scope, candidate)
-        return [await self.repository.create(id=f"cd_{uuid.uuid4().hex[:20]}", quotation_id=quotation_id, lang=lang, scope=scope, generation_mode=mode, status="draft", facts_hash=facts_hash, source_document_revision=document_revision, prompt_version=prompt_version, facts_snapshot=snapshot, candidate_json=candidate, missing_inputs=[], generation_metadata={**metadata, "instructionSource": generation["instructionSource"], "llmCalled": True, "generationStatus": "generated", "latencyMs": round((time.perf_counter() - started) * 1000), "warnings": []})]
+        return [await self.repository.create(id=f"cd_{uuid.uuid4().hex[:20]}", quotation_id=quotation_id, lang=lang, scope=scope, generation_mode=mode, status="draft", facts_hash=facts_hash, source_document_revision=document_revision, prompt_version=prompt_version, facts_snapshot=snapshot, candidate_json=candidate, missing_inputs=[], generation_metadata={**metadata, "instructionSource": generation["instructionSource"], "systemPrompt": generation.get("systemPrompt", ""), "userPrompt": generation.get("userPrompt", ""), "promptVersion": generation.get("promptVersion", "v1"), "llmCalled": True, "generationStatus": "generated", "latencyMs": round((time.perf_counter() - started) * 1000), "warnings": []})]
+
+    def preview_prompt(self, payload: CreateQuoteRequestV1, scope: str, mode: str, instruction: str = "") -> dict[str, Any]:
+        spec = scope_spec(scope)
+        if spec.owner != "content":
+            raise ValueError(f"{scope} is Fact-owned and has no prompt preview.")
+        snapshot = self.facts_snapshot(payload, scope)
+        bundle = self.generator.build_prompt_bundle(
+            scope=spec.scope,
+            brand=self.brand_profile,
+            facts_snapshot=snapshot,
+            mode=mode,
+            instruction=instruction,
+        )
+        return bundle.public_payload()
 
     async def create_manual(self, *, quotation_id: str, payload: CreateQuoteRequestV1, facts_hash: str, document_revision: int, lang: str, scope: str, candidate: dict[str, Any]) -> Any:
         spec = scope_spec(scope)
@@ -202,3 +230,4 @@ class ContentDraftService:
             facts_snapshot=self.facts_snapshot(payload, scope), candidate_json=validated, missing_inputs=[],
             generation_metadata={"generationStatus": "manual", "llmCalled": False, "warnings": [], "recipeVersion": spec.recipe_version, "schemaVersion": spec.schema_version, "brandPolicyVersion": BRAND_POLICY_VERSION, "instructionSource": "manual"},
         )
+

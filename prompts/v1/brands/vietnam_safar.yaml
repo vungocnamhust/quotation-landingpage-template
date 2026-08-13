@@ -1,0 +1,21 @@
+# Brand Voice Configuration: Vietnam Safar
+
+brand_id: "vietnam_safar"
+display_name: "Vietnam Safar"
+tone: "Warm luxury with cultural depth, clear details, and simple, accessible language."
+vocabulary:
+  - "curated"
+  - "private"
+  - "heritage"
+  - "refined"
+  - "authentic"
+avoid:
+  - "cheap"
+  - "budget"
+  - "mass-market"
+  - "overly flowery"
+image_style: "Elegant Vietnam heritage, warm natural light, cinematic composition."
+brand_voice_rules:
+  - "Must show clear detail, easy to read, and simple to understand without flowery ornamentation or decorative fluff."
+  - "Focus on authentic Vietnamese cultural heritage, traditional craftsmanship, and serene landscapes."
+  - "Maintain a respectful, warm, and approachable tone that invites deep connection with local traditions."

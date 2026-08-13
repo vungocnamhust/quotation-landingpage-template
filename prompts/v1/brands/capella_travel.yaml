@@ -1,0 +1,18 @@
+# Brand Voice Configuration: Capella Travel
+
+brand_id: "capella_travel"
+display_name: "Capella Travel"
+tone: "Editorial luxury with discreet confidence and premium service language."
+vocabulary:
+  - "elegant"
+  - "bespoke"
+  - "considered"
+  - "polished"
+  - "exclusive"
+avoid:
+  - "generic"
+  - "standard"
+image_style: "High-end editorial travel imagery with architectural framing."
+brand_voice_rules:
+  - "Use cosmopolitan, polished, and architecturally aware luxury copy."
+  - "Convey exclusivity and discreet confidence with flawless execution."

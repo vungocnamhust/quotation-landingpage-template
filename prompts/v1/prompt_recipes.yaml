@@ -1,0 +1,104 @@
+# Modular Prompt Recipes Configuration
+# Defines how prompt bundles are composed for each section scope.
+
+version: "v1"
+
+recipes:
+  hero:
+    name: "Hero Section Recipe"
+    description: "Composition recipe for hero headline & subtitle content generation"
+    components:
+      - role_base
+      - brand_voice
+      - mode_style
+      - ground_rules
+      - section_rules
+      - base_constraints
+      - validation
+    default_facts:
+      - trip.title
+      - trip.destinations
+      - trip.duration_days
+    available_modes:
+      - storytelling
+      - detailed
+
+  overview_letter:
+    name: "Overview Letter Recipe"
+    description: "Composition recipe for welcome & overview letter generation"
+    components:
+      - role_base
+      - brand_voice
+      - mode_style
+      - ground_rules
+      - section_rules
+      - base_constraints
+      - validation
+    default_facts:
+      - customer.name
+      - customer.travel_style
+      - trip.title
+      - trip.destinations
+      - trip.duration_days
+    available_modes:
+      - storytelling
+      - detailed
+
+  route:
+    name: "Route Summary Recipe"
+    description: "Composition recipe for geographic & route summary"
+    components:
+      - role_base
+      - brand_voice
+      - mode_style
+      - ground_rules
+      - section_rules
+      - base_constraints
+      - validation
+    default_facts:
+      - trip.destinations
+      - trip.duration_days
+    available_modes:
+      - storytelling
+      - detailed
+
+  itinerary:
+    name: "Itinerary Overview Recipe"
+    description: "Composition recipe for multi-day itinerary overview"
+    components:
+      - role_base
+      - brand_voice
+      - mode_style
+      - ground_rules
+      - section_rules
+      - base_constraints
+      - validation
+    default_facts:
+      - trip.title
+      - trip.destinations
+      - trip.duration_days
+    available_modes:
+      - storytelling
+      - detailed
+
+  itinerary_day:
+    name: "Itinerary Day Recipe"
+    description: "Composition recipe for daily itinerary description"
+    components:
+      - role_base
+      - brand_voice
+      - mode_style
+      - ground_rules
+      - section_rules
+      - base_constraints
+      - validation
+    default_facts:
+      - day_number
+      - destination
+      - summary
+      - activities
+      - highlights
+      - hotel
+    available_modes:
+      - storytelling
+      - detailed

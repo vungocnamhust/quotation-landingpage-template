@@ -72,11 +72,14 @@ def _fact(id: str, label: str, *path: str | int, required: bool = False) -> Fact
     return FactInput(id=id, label=label, path=path, required=required)
 
 
-def _brief(scope_label: str) -> DefaultInstructions:
+def _brief(scope: str) -> DefaultInstructions:
+    from prompts.loader import get_prompt_loader
+    loader = get_prompt_loader()
     return DefaultInstructions(
-        storytelling=f"Write only the {scope_label} content. Use an evocative but restrained luxury rhythm. Interpret only the supplied facts.",
-        detailed=f"Write only the {scope_label} content. Use concise, precise editorial copy. Preserve the supplied sequence and avoid adding logistics.",
+        storytelling=loader.get_default_instruction(scope, "storytelling"),
+        detailed=loader.get_default_instruction(scope, "detailed"),
     )
+
 
 
 CONTENT_SECTION_REGISTRY: dict[str, ContentSectionSpec] = {
@@ -106,10 +109,10 @@ CONTENT_SECTION_REGISTRY: dict[str, ContentSectionSpec] = {
             _fact("end-date", "End date", "trip_facts", "end_date"),
             _fact("duration", "Duration", "trip_facts", "duration_days"),
         ),
-        default_instructions=_brief("overview letter"),
+        default_instructions=_brief("overview_letter"),
     ),
-    "route": ContentSectionSpec("route", "content", ("route.title", "route.description", "route.staySegments.*.mapSegmentDesc"), ("trip_facts.destinations", "trip_facts.itinerary"), ("trip_facts.destinations",), "narrative", generation=True, recipe_version="v5", schema_version="v2", editor_fields=(_field("route-title", "Route title", "route", "title", max_length=160), _field("route-description", "Route introduction", "route", "description", control="textarea"), _field("route-stop-descriptions", "Route-stop descriptions", "route", "mapSegmentDescriptions", control="string-list", max_length=500)), fact_inputs=(_fact("destinations", "Destinations", "trip_facts", "destinations", required=True), _fact("itinerary", "Itinerary days", "trip_facts", "itinerary")), default_instructions=_brief("route introduction and route-stop descriptions")),
-    "itinerary": ContentSectionSpec("itinerary", "content", ("itinerary.title", "itinerary.description"), ("trip_facts.itinerary",), ("trip_facts.itinerary",), "narrative", generation=True, recipe_version="v4", schema_version="v1", editor_fields=(_field("itinerary-title", "Itinerary title", "itinerary", "title", max_length=160), _field("itinerary-description", "Itinerary introduction", "itinerary", "description", control="textarea")), fact_inputs=(_fact("itinerary", "Itinerary days", "trip_facts", "itinerary", required=True),), default_instructions=_brief("itinerary introduction")),
+    "route": ContentSectionSpec("route", "content", ("route.title", "route.description", "route.staySegments.*.mapSegmentDesc"), ("trip_facts.destinations", "trip_facts.itinerary"), ("trip_facts.destinations",), "narrative", generation=True, recipe_version="v5", schema_version="v2", editor_fields=(_field("route-title", "Route title", "route", "title", max_length=160), _field("route-description", "Route introduction", "route", "description", control="textarea"), _field("route-stop-descriptions", "Route-stop descriptions", "route", "mapSegmentDescriptions", control="string-list", max_length=500)), fact_inputs=(_fact("destinations", "Destinations", "trip_facts", "destinations", required=True), _fact("itinerary", "Itinerary days", "trip_facts", "itinerary")), default_instructions=_brief("route")),
+    "itinerary": ContentSectionSpec("itinerary", "content", ("itinerary.title", "itinerary.description"), ("trip_facts.itinerary",), ("trip_facts.itinerary",), "narrative", generation=True, recipe_version="v4", schema_version="v1", editor_fields=(_field("itinerary-title", "Itinerary title", "itinerary", "title", max_length=160), _field("itinerary-description", "Itinerary introduction", "itinerary", "description", control="textarea")), fact_inputs=(_fact("itinerary", "Itinerary days", "trip_facts", "itinerary", required=True),), default_instructions=_brief("itinerary")),
     "hotel_plan": ContentSectionSpec("hotel_plan", "fact", ("stays.hotels", "stays.roomNotes"), ("service_facts.hotels",), ("service_facts.hotels",), "fact-preview"),
     "pricing": ContentSectionSpec("pricing", "fact", ("pricing.options", "pricing.conditions"), ("pricing_facts.options",), ("pricing_facts.options",), "fact-preview"),
     "inclusions_exclusions": ContentSectionSpec("inclusions_exclusions", "fact", ("content.sections.inclusions_exclusions",), ("service_facts.inclusions", "service_facts.exclusions"), ("service_facts.inclusions", "service_facts.exclusions"), "fact-preview", ("twoColumnList",)),
@@ -135,7 +138,8 @@ def content_owned_targets() -> tuple[str, ...]:
 
 def scope_spec(scope: str) -> ContentSectionSpec:
     if scope.startswith("itinerary:day:") and scope.rsplit(":", 1)[-1].isdigit():
-        return ContentSectionSpec(scope, "content", ("itinerary.days.*.title", "itinerary.days.*.description", "itinerary.days.*.activities"), ("trip_facts.itinerary",), ("trip_facts.itinerary",), "narrative", generation=True, recipe_version="v4", schema_version="v1", editor_fields=(_field("day-title", "Day title", "title", max_length=160), _field("day-description", "Day narrative paragraphs", "description", control="string-list", max_length=1200), _field("day-activities", "Activities", "activities", control="string-list", max_length=400)), fact_inputs=(_fact("day-destination", "Destination", "itineraryDay", "destination", required=True), _fact("day-summary", "Day summary", "itineraryDay", "summary", required=True), _fact("day-highlights", "Highlights", "itineraryDay", "highlights")), default_instructions=_brief("day narrative"))
+        return ContentSectionSpec(scope, "content", ("itinerary.days.*.title", "itinerary.days.*.description", "itinerary.days.*.activities"), ("trip_facts.itinerary",), ("trip_facts.itinerary",), "narrative", generation=True, recipe_version="v4", schema_version="v1", editor_fields=(_field("day-title", "Day title", "title", max_length=160), _field("day-description", "Day narrative paragraphs", "description", control="string-list", max_length=1200), _field("day-activities", "Activities", "activities", control="string-list", max_length=400)), fact_inputs=(_fact("day-destination", "Destination", "itineraryDay", "destination", required=True), _fact("day-summary", "Day summary", "itineraryDay", "summary", required=True), _fact("day-highlights", "Highlights", "itineraryDay", "highlights")), default_instructions=_brief("itinerary_day"))
+
     try:
         return CONTENT_SECTION_REGISTRY[scope]
     except KeyError as exc:

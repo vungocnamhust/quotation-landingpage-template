@@ -1,0 +1,12 @@
+# Section Rule & Prompt Configuration: Route Map
+
+scope: "route"
+title: "Route & Geographic Map Overview"
+rules:
+  - "Summarize the geographic flow and spatial narrative between trip destinations."
+  - "Provide a clear route title and introduction."
+  - "Provide individual segment descriptions for each stay/stop along the route."
+output_fields:
+  - "title"
+  - "description"
+  - "mapSegmentDescriptions"

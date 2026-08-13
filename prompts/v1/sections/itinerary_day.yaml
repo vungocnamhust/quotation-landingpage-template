@@ -1,0 +1,16 @@
+# Section Rule & Prompt Configuration: Itinerary Day Narrative
+
+scope: "itinerary_day"
+title: "Day-by-Day Detailed Narrative & Activities"
+rules:
+  - "Ground Rule #1 (70/30 Protocol): Balance structured discovery with relaxing buffer."
+  - "Ground Rule #2 (Day Naming): Title MUST follow formula '[Adjective] + [City]' or '[Pace: Relaxed/Active/Immersive] + [Place] + [Highlights]'."
+  - "Ground Rule #2 (Full-Day Tour): ~120 words split into 2 paragraphs (Morning and Afternoon). Highlight main attractions in bold (e.g., **Temple of Literature**)."
+  - "Ground Rule #2 (City-Only Entry): When entry specifies ONLY a city/destination name without listed attractions, write a ~120-word 2-paragraph city introduction. No bold highlights required."
+  - "Ground Rule #2 (Overnight Accommodation): Whenever an accommodation (Hotel, Cruise, Villa, Resort, Lodge, Overnight Train, etc.) is mentioned, include a ~30-word description highlighting key features, style, and amenities."
+  - "Ground Rule #2 (Free Morning / Free Afternoon): Kept to 2 sentences, explicitly stating that it is at leisure and no service is arranged."
+  - "Ground Rule #2 (Full Free Day): ~120-word description explicitly stating it is a free day at leisure (no service arranged), followed by curated recommendations of where to visit in the city."
+output_fields:
+  - "title"
+  - "description"
+  - "activities"

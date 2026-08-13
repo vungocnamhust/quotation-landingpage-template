@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState, useTransition } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Loader2, Sparkles } from 'lucide-react';
 import SectionOutlineNav, { type SectionOutlineItem } from '../ui/SectionOutlineNav';
 import { getTypographyClassName } from '../../config/typography';
 import { getLanguageLabels } from '../../display/labels';
@@ -11,7 +12,8 @@ import { useToast } from '../staff-workspace/ToastProvider';
 import { ContentDraftActions } from './ContentDraftActions';
 import { ContentGenerationPanel, FactsUsed } from './ContentGenerationPanel';
 import { cloneCandidate, SectionContentFields } from './SectionContentFields';
-import type { ContentCandidate, ContentDraft, ContentFactInput, DocumentResponse, DraftsResponse, FactsResponse, ReviewResponse } from '../quotation-workspace/useQuotationWorkspace';
+import type { ContentCandidate, ContentDraft, ContentFactInput, DocumentResponse, DraftsResponse, FactsResponse, PromptPreview, ReviewResponse } from '../quotation-workspace/useQuotationWorkspace';
+
 import { getDefaultMealsForLang } from '../../lib/prefillRules';
 
 type Props = {
@@ -102,7 +104,16 @@ export default function ContentStudioClient({ quotationId, lang, onEditFacts, on
     notify({ message, type: 'error', persistent: true, scope: `content:${action}`, action: { label: 'Reload', onClick: () => window.location.reload() } });
   }, [notify]);
 
+  const [promptPreview, setPromptPreview] = useState<PromptPreview | undefined>(undefined);
+  const [batchState, setBatchState] = useState<{
+    isRunning: boolean;
+    generatingScope: string | null;
+    completedCount: number;
+    totalCount: number;
+  }>({ isRunning: false, generatingScope: null, completedCount: 0, totalCount: 0 });
+
   const readiness = useMemo(() => (resources.reviewData?.contentReadiness ?? []).flatMap((item) => {
+
     if (item.sectionType !== 'itinerary') return [item];
     const days = resources.factsData?.facts.trip_facts.itinerary ?? [];
     return [item, ...days.map((day, index) => {
@@ -125,6 +136,24 @@ export default function ContentStudioClient({ quotationId, lang, onEditFacts, on
   const defaultInstruction = editor?.defaultInstructions?.[mode] ?? '';
   const activeCustomInstruction = customInstruction?.scope === scope && customInstruction.mode === mode ? customInstruction.value : null;
   const instruction = activeCustomInstruction ?? defaultInstruction;
+
+  const handleRequestPromptPreview = useCallback(async () => {
+    if (!scope) return;
+    try {
+      const res = await resources.request<{ promptPreview: PromptPreview }>(
+        `/api/v2/quotations/${quotationId}/content-drafts/prompt-preview?lang=${encodeURIComponent(lang)}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ scope, generationMode: mode, instruction: activeCustomInstruction ?? '' }),
+        }
+      );
+      setPromptPreview(res.promptPreview);
+    } catch (err) {
+      console.error('Failed to preview prompt', err);
+    }
+  }, [activeCustomInstruction, lang, mode, quotationId, resources, scope]);
+
   const complete = readiness.filter((item) => item.status === null).length;
   const facts = resources.factsData?.facts as unknown as Record<string, unknown> | undefined;
   const factsForPanel = useMemo(() => {
@@ -180,6 +209,66 @@ export default function ContentStudioClient({ quotationId, lang, onEditFacts, on
       } catch (error) { reportFailure('generate', error); }
     });
   }, [activeCustomInstruction, clearScope, editor?.generation, lang, mode, quotationId, reportFailure, resources, scope, setWorkingCandidate, toast]);
+
+  const handleBatchGenerateAll = useCallback(() => {
+    const eligibleItems = readiness.filter((item) => {
+      const itemScope = item.sectionId.startsWith('itinerary:day:')
+        ? item.sectionId
+        : SCOPE_BY_SECTION_TYPE[item.sectionType] ?? item.sectionType;
+      const itemEditor = resources.documentData?.contentRegistry?.[itemScope];
+      return item.generator !== false && item.status !== 'can_thong_tin' && itemEditor?.owner !== 'fact';
+    });
+
+    const uniqueScopes = Array.from(
+      new Set(
+        eligibleItems.map((item) =>
+          item.sectionId.startsWith('itinerary:day:')
+            ? item.sectionId
+            : SCOPE_BY_SECTION_TYPE[item.sectionType] ?? item.sectionType
+        )
+      )
+    );
+
+    if (!uniqueScopes.length) {
+      toast('No AI content sections are ready for generation. Check missing Facts.', 'info');
+      return;
+    }
+
+    setBatchState({ isRunning: true, generatingScope: uniqueScopes[0], completedCount: 0, totalCount: uniqueScopes.length });
+    setMessage(`Batch generating ${uniqueScopes.length} content sections…`);
+
+    startTransition(async () => {
+      let completed = 0;
+      for (const scopeItem of uniqueScopes) {
+        setBatchState({ isRunning: true, generatingScope: scopeItem, completedCount: completed, totalCount: uniqueScopes.length });
+        try {
+          const itemEditor = resources.documentData?.contentRegistry?.[scopeItem];
+          const defaultInst = itemEditor?.defaultInstructions?.[mode] ?? '';
+          const customInst = customInstruction?.scope === scopeItem && customInstruction.mode === mode ? customInstruction.value : null;
+
+          await resources.request<{ draft: ContentDraft }>(
+            `/api/v2/quotations/${quotationId}/content-drafts?lang=${encodeURIComponent(lang)}`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ scope: scopeItem, generationMode: mode, instruction: customInst ?? defaultInst }),
+            }
+          );
+        } catch (err) {
+          console.error(`Batch generation failed for scope ${scopeItem}`, err);
+        }
+        completed++;
+        setBatchState({ isRunning: true, generatingScope: scopeItem, completedCount: completed, totalCount: uniqueScopes.length });
+      }
+
+      setBatchState({ isRunning: false, generatingScope: null, completedCount: completed, totalCount: uniqueScopes.length });
+      await resources.refresh();
+      clearScope('content:generate');
+      setMessage(`Batch generation completed (${completed}/${uniqueScopes.length} sections ready). Click any section to review.`);
+      toast(`All ${uniqueScopes.length} content sections generated successfully!`, 'success');
+    });
+  }, [clearScope, customInstruction, lang, mode, quotationId, readiness, resources, toast]);
+
   const saveDraft = useCallback(() => {
     if (!scope || !workingCandidate) return;
     startTransition(async () => {
@@ -293,23 +382,53 @@ export default function ContentStudioClient({ quotationId, lang, onEditFacts, on
             (d) => d.scope === itemScope && d.status === 'draft'
           )
         );
+        const isCurrentlyGenerating = batchState.isRunning && batchState.generatingScope === itemScope;
 
         return {
           id: item.sectionId,
           label: labelText,
           isSelected,
+          isGenerating: isCurrentlyGenerating,
           status: item.status,
-          badge: hasUnreviewedDraft ? { text: 'Draft' } : undefined,
+          badge: isCurrentlyGenerating
+            ? { text: 'Generating…', variant: 'generating' as const }
+            : hasUnreviewedDraft
+            ? { text: 'Draft', variant: 'draft' as const }
+            : undefined,
         };
       }),
-    [readiness, selected?.sectionId, resources.draftsData?.drafts]
+    [readiness, selected?.sectionId, resources.draftsData?.drafts, batchState.isRunning, batchState.generatingScope]
+  );
+
+  const batchHeaderAction = (
+    <button
+      type="button"
+      onClick={handleBatchGenerateAll}
+      disabled={batchState.isRunning || pending}
+      className={cn(
+        getTypographyClassName('buttonPrimary'),
+        'min-h-10 w-full rounded-[var(--radius-button)] bg-[color-mix(in_srgb,var(--color-accent)_90%,black)] hover:bg-[var(--color-accent)] !text-white px-3 py-2 flex items-center justify-center gap-2 shadow-xs transition-all disabled:opacity-50 cursor-pointer'
+      )}
+    >
+      {batchState.isRunning ? (
+        <>
+          <Loader2 size={15} className="animate-spin text-white shrink-0" />
+          <span>Generating ({batchState.completedCount}/{batchState.totalCount})…</span>
+        </>
+      ) : (
+        <>
+          <Sparkles size={15} className="text-amber-200 shrink-0" />
+          <span>Generate all sections</span>
+        </>
+      )}
+    </button>
   );
 
   const outlineFooter = onProceedToDesign ? (
     <button
       type="button"
       onClick={handleProceedToDesign}
-      disabled={pending}
+      disabled={pending || batchState.isRunning}
       className={cn(
         getTypographyClassName('buttonPrimary'),
         'min-h-11 w-full rounded-[var(--radius-button)] bg-[var(--color-accent)] !text-white hover:bg-[color-mix(in_srgb,var(--color-accent)_85%,black)] px-4 shadow-md transition-all disabled:opacity-50'
@@ -329,6 +448,16 @@ export default function ContentStudioClient({ quotationId, lang, onEditFacts, on
         items={outlineItems}
         onSelect={select}
         ariaLabel="Content sections"
+        headerAction={batchHeaderAction}
+        batchProgress={
+          batchState.isRunning
+            ? {
+                current: batchState.completedCount,
+                total: batchState.totalCount,
+                isRunning: true,
+              }
+            : undefined
+        }
         footer={outlineFooter}
       />
       <main className="min-w-0 rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
@@ -361,6 +490,7 @@ export default function ContentStudioClient({ quotationId, lang, onEditFacts, on
               </div>
                 {editor.generation ? (
                   <ContentGenerationPanel
+                    scope={scope ?? ''}
                     mode={mode}
                     onModeChange={setMode}
                     instruction={instruction}
@@ -372,7 +502,12 @@ export default function ContentStudioClient({ quotationId, lang, onEditFacts, on
                     onGenerate={generate}
                     pending={pending}
                     disabled={selected?.status === 'can_thong_tin'}
+                    promptPreview={promptPreview}
+                    draftSystemPrompt={draft?.generation?.systemPrompt}
+                    draftUserPrompt={draft?.generation?.userPrompt}
+                    onRequestPreview={handleRequestPromptPreview}
                   />
+
                 ) : (
                   <DeterministicFactsPanel factInputs={editor.factInputs} facts={factsForPanel} />
                 )}

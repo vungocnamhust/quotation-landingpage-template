@@ -413,7 +413,41 @@ async def create_content_drafts_v2(
         return {"draft": h._serialize_content_draft(items[0])}
 
 
+@router.post("/{quotation_id}/content-drafts/prompt-preview")
+async def preview_content_draft_prompt_v2(
+    quotation_id: str,
+    payload: ContentDraftCreateRequest,
+    lang: str | None = None,
+    principal: Principal = Depends(require_editor),
+):
+    h = _get_helpers()
+    await h.require_owned_quotation(quotation_id, principal)
+    _quotation, lang = await h._resolve_v2_locale(quotation_id, lang)
+    async with h._get_db_session_factory()() as session:
+        quotes, documents, drafts = QuotationRepository(session), QuotationDocumentRepository(session), ContentDraftRepository(session)
+        quotation = await quotes.get_quotation_by_id(quotation_id)
+        request = await quotes.get_latest_quotation_request(quotation_id) if quotation else None
+        document = await documents.get_current_document(quotation_id, lang) if quotation else None
+        if quotation is None or request is None or document is None:
+            raise HTTPException(status_code=404, detail="Quotation content context was not found.")
+        facts, _resolved = await h._resolve_v2_facts(CreateQuoteRequestV1.model_validate(h.normalize_legacy_facts_snapshot(request.request_json)))
+        try:
+            brand = await BrandRepository(session).get_active(quotation.brand_id)
+            if brand is None:
+                raise HTTPException(status_code=422, detail={"message": "Brand is unavailable for content generation.", "missingInputs": ["brand_id"]})
+            preview = ContentDraftService(drafts, h._brand_generation_profile(brand)).preview_prompt(
+                payload=facts,
+                scope=payload.scope,
+                mode=payload.generationMode,
+                instruction=payload.instruction,
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail={"message": str(exc)}) from exc
+        return {"promptPreview": preview}
+
+
 @router.post("/{quotation_id}/content-drafts/manual")
+
 async def create_manual_content_draft_v2(
     quotation_id: str,
     payload: ContentDraftManualCreateRequest,

@@ -1,0 +1,17 @@
+# Writing Mode Configuration: Detailed Mode
+
+mode: "detailed"
+display_name: "Detailed Mode"
+mode_contract: >
+  Detailed mode: Prefer concise, precise editorial copy. Preserve the exact sequence of events
+  and avoid adding unnecessary logistics or decorative fluff.
+style_rules:
+  - "Precision: Focus on clear, direct information, exact sequencing, and crisp descriptions."
+  - "Efficiency: Keep sentences punchy, eliminating decorative adjectives or non-factual filler."
+  - "Logistics restraint: Do not invent flight numbers, exact timings, or pick-up instructions."
+default_instructions:
+  hero: "Write a concise, high-impact hero cover title and intro using precise editorial copy."
+  overview_letter: "Write a clear, structured welcome letter outlining the trip's key focus and 70/30 protocol."
+  route: "Provide a clear geographic summary and segment-by-segment stop descriptions."
+  itinerary: "Provide a direct, structured introduction summarizing the itinerary."
+  itinerary_day: "Write a crisp, chronologically precise day description (~120 words for tour) with bold attraction highlights."

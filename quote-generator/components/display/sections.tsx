@@ -771,6 +771,13 @@ export function PaymentTermsSection({
 }: BaseSectionProps<PaymentTermsViewModel>) {
   const slots = getLayoutSlots(displayConfig.layoutVariant, viewMode);
 
+  const ctaElement = (
+    <span className="display-payment-terms__cta">
+      <TextLink href={viewModel.cta.href} colorRole="secondary" typographyVariant={requireTypographySlot(displayConfig.typographySlots, 'action')}>{viewModel.cta.label}</TextLink>
+      <span aria-hidden="true">→</span>
+    </span>
+  );
+
   return (
     <section id="payment-terms" className={shellProps(sectionId, displayConfig, viewMode)}>
       {sectionOrnaments(theme, displayConfig.ornaments)}
@@ -784,10 +791,11 @@ export function PaymentTermsSection({
               typography={displayConfig.typographySlots}
             />
           </div>
-          <span className="display-payment-terms__cta">
-            <TextLink href={viewModel.cta.href} colorRole="secondary" typographyVariant={requireTypographySlot(displayConfig.typographySlots, 'action')}>{viewModel.cta.label}</TextLink>
-            <span aria-hidden="true">→</span>
-          </span>
+          {viewMode !== 'mobile' ? (
+            <div className="hidden lg:block">
+              {ctaElement}
+            </div>
+          ) : null}
         </aside>
 
         <div className={slots.content}>
@@ -795,6 +803,16 @@ export function PaymentTermsSection({
             <TermRow key={textValue(term.label)} term={term} typography={displayConfig.typographySlots} />
           ))}
         </div>
+
+        {viewMode === 'mobile' ? (
+          <div className="pt-2">
+            {ctaElement}
+          </div>
+        ) : (
+          <div className="block lg:hidden pt-2">
+            {ctaElement}
+          </div>
+        )}
       </div>
     </section>
   );

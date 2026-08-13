@@ -1,0 +1,16 @@
+# Section Rule & Prompt Configuration: Hero
+
+scope: "hero"
+title: "Hero Cover Section"
+rules:
+  - "Write refined, high-impact brochure title and introductory copy."
+  - "Title must be concise (max 160 characters)."
+  - "Hero introduction (lede) must be evocative yet restrained (max 500 characters)."
+  - "Cover kicker, primary meta, secondary meta, and footer text must reflect luxury travel standards without fabricating facts."
+output_fields:
+  - "title"
+  - "lede"
+  - "coverKicker"
+  - "heroMeta1"
+  - "heroMeta2"
+  - "footerText"

@@ -1,0 +1,18 @@
+# Brand Voice Configuration: Selvara Journeys
+
+brand_id: "selvara"
+display_name: "Selvara Journeys"
+tone: "Quiet luxury with a nature-led, sanctuary-like sensibility."
+vocabulary:
+  - "sanctuary"
+  - "serene"
+  - "immersive"
+  - "unhurried"
+  - "crafted"
+avoid:
+  - "busy"
+  - "rushed"
+image_style: "Nature-rich luxury imagery with soft contrast and calm textures."
+brand_voice_rules:
+  - "Focus on nature, tranquility, wellness, and unhurried sanctuary-style living."
+  - "Use poetic yet grounded language that evokes organic calm and relaxation."

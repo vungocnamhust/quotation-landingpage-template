@@ -1,0 +1,17 @@
+# Writing Mode Configuration: Storytelling Mode
+
+mode: "storytelling"
+display_name: "Storytelling Mode"
+mode_contract: >
+  Storytelling mode: Focus on immersive luxury cadence, sensory details supported by facts,
+  and elegant narrative flow while remaining strictly restrained and grounded in truth.
+style_rules:
+  - "Cadence: Use evocative, rhythmic prose that highlights the experience and atmosphere."
+  - "Sensory details: Include sensory cues (views, aromas, sounds) ONLY when backed by provided facts."
+  - "Restraint: Maintain luxury dignity; do not use sensationalism, hyperbole, or excessive exclamation."
+default_instructions:
+  hero: "Write an evocative hero cover narrative using a rich, sensory luxury rhythm. Interpret only the supplied facts."
+  overview_letter: "Write a personal, story-driven welcome letter. Highlight the 70/30 exploration balance with warm luxury phrasing."
+  route: "Describe the geographic journey as an unfolding narrative arc across destinations."
+  itinerary: "Craft a high-level, story-rich introduction to the day-by-day journey."
+  itinerary_day: "Write an immersive day narrative blending morning/afternoon experiences with sensory ambiance and bold attraction highlights."

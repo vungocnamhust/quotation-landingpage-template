@@ -81,10 +81,8 @@ def normalize_instruction(instruction: str) -> str:
 
 
 def default_instruction(scope: str, mode: str) -> str:
-    instructions = scope_spec(scope).default_instructions
-    if instructions is None:
-        raise ValueError(f"{scope} has no AI generation instruction.")
-    return instructions.for_mode(mode)
+    from prompts.loader import get_prompt_loader
+    return get_prompt_loader().get_default_instruction(scope, mode)
 
 
 class SectionContentGenerator:
@@ -101,15 +99,41 @@ class SectionContentGenerator:
         return DayOutput if scope.startswith("itinerary:day:") else self._models[scope]
 
     @staticmethod
-    def _system_prompt(brand: BrandProfile) -> str:
+    def build_prompt_bundle(
+        *,
+        scope: str,
+        brand: BrandProfile,
+        facts_snapshot: dict[str, Any],
+        mode: str,
+        instruction: str,
+    ) -> PromptBundle:
+        from prompts.loader import get_prompt_loader
+        loader = get_prompt_loader()
         policy = brand.content_policy
-        return (
-            "Role: senior luxury travel copywriter for premium clients from the US, UK, and Australia.\n"
-            f"Brand: {brand.display_name}. Tone: {policy.tone}\n"
-            f"Preferred vocabulary: {', '.join(policy.vocabulary) or 'None'}. Avoid: {', '.join(policy.avoid) or 'None'}.\n"
-            "Goal: return brochure-ready plain-text fields that are elegant, concrete, and culturally respectful.\n"
-            "Constraints: supplied input data is the only source of truth. Never invent hotels, services, timings, prices, legal terms, availability, or destinations. Never emit HTML, markdown, commentary, or fields outside the response schema.\n"
-            "Validation: satisfy the structured output schema exactly."
+        effective_instruction = normalize_instruction(instruction) or default_instruction(scope, mode)
+        return loader.build_prompt_bundle(
+            scope=scope,
+            brand_name=brand.display_name,
+            brand_tone=policy.tone,
+            vocabulary=list(policy.vocabulary),
+            avoid=list(policy.avoid),
+            mode=mode,
+            effective_instruction=effective_instruction,
+            facts_snapshot=facts_snapshot,
+            brand_id=brand.brand_id,
+        )
+
+
+    @staticmethod
+    def _system_prompt(brand: BrandProfile, scope: str = "hero") -> str:
+        from prompts.loader import get_prompt_loader
+        policy = brand.content_policy
+        return get_prompt_loader().build_system_prompt(
+            scope=scope,
+            brand_name=brand.display_name,
+            brand_tone=policy.tone,
+            vocabulary=list(policy.vocabulary),
+            avoid=list(policy.avoid),
         )
 
     @staticmethod
@@ -149,22 +173,33 @@ class SectionContentGenerator:
         facts_snapshot: dict[str, Any],
         mode: str,
         instruction: str,
-    ) -> tuple[dict[str, Any], dict[str, str]]:
+    ) -> tuple[dict[str, Any], dict[str, Any]]:
         effective_instruction = normalize_instruction(instruction) or default_instruction(spec.scope, mode)
         source = "custom" if normalize_instruction(instruction) else "default"
+        bundle = self.build_prompt_bundle(
+            scope=spec.scope,
+            brand=brand,
+            facts_snapshot=facts_snapshot,
+            mode=mode,
+            instruction=effective_instruction,
+        )
         model = self._output_model(spec.scope)
         agent = Agent(
             model=llm_client.get_model(),
             output_type=model,
-            system_prompt=self._system_prompt(brand),
+            system_prompt=bundle.system_prompt,
             retries=2,
         )
         try:
-            result = await agent.run(self._prompt(scope=spec.scope, mode=mode, effective_instruction=effective_instruction, facts_snapshot=facts_snapshot))
+            result = await agent.run(bundle.user_prompt)
         except Exception as exc:
             raise ContentGenerationError("Content generation did not return a valid draft. Please retry.") from exc
         return self._candidate(spec.scope, result.output), {
             "instructionSource": source,
             "effectiveInstruction": effective_instruction,
             "brandPolicyVersion": BRAND_POLICY_VERSION,
+            "systemPrompt": bundle.system_prompt,
+            "userPrompt": bundle.user_prompt,
+            "promptVersion": bundle.version,
         }
+

@@ -1,0 +1,17 @@
+# Section Rule & Prompt Configuration: Overview Letter
+
+scope: "overview_letter"
+title: "Overview & Personal Welcome Letter"
+rules:
+  - "Apply Ground Rule #1 (The 70/30 Exploration Protocol): Frame the journey around 70% structured discovery (must-see spots, top-tier dining, smooth transfers) and 30% open buffer (spontaneous detours, relaxing breaks, zero rush)."
+  - "Adopt the tone of a personal, highly attentive luxury travel consultant."
+  - "Highlight key themes of the trip in a warm, welcoming greeting and intro."
+output_fields:
+  - "journeyOverviewTitle"
+  - "letterHighlight"
+  - "letterGreeting"
+  - "letterIntro"
+  - "letterBody2"
+  - "letterOutro"
+  - "letterSignOff"
+  - "letterSender"

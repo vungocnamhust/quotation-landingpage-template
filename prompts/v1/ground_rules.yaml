@@ -1,0 +1,53 @@
+# Ground Rules Configuration: Standardized & Modular Rule-ID Indexing
+
+rules:
+  - id: "GR-7030"
+    name: "The 70/30 Exploration Protocol"
+    category: "trip_philosophy"
+    scopes: ["overview_letter", "itinerary_day"]
+    text: >
+      Every travel plan aims for 70% structured discovery (must-see spots, top-tier local eats, smooth transit)
+      and 30% open buffer (spontaneous detours, relaxing coffee breaks, zero rush).
+
+  - id: "GR-DAY-NAMING"
+    name: "Day Naming Formula"
+    category: "titling"
+    scopes: ["itinerary_day"]
+    text: >
+      Every day receives a brief, structured title following formulas like [Adjective] + [City] or
+      [Pace: Relaxed/Active/Immersive] + [Place] + [Highlights].
+
+  - id: "GR-TOUR-FULLDAY"
+    name: "Full-Day Tour Specification"
+    category: "day_narrative"
+    scopes: ["itinerary_day"]
+    text: >
+      ~120 words split into 2 paragraphs (Morning and Afternoon). Highlight main attractions in bold (e.g. **Temple of Literature**).
+
+  - id: "GR-CITY-INTRO"
+    name: "City Introduction Entry"
+    category: "day_narrative"
+    scopes: ["itinerary_day"]
+    text: >
+      When a day entry specifies only a city/destination name without listed attractions, write a full-day overview and city introduction (~120 words in 2 paragraphs). No bold highlights required.
+
+  - id: "GR-ACCOMMODATION"
+    name: "Overnight Accommodation Description"
+    category: "accommodation"
+    scopes: ["itinerary_day"]
+    text: >
+      ~30-word description highlighting key features, style, and amenities whenever an accommodation (Hotel, Cruise, Villa, Resort, Lodge, Overnight Train) is mentioned.
+
+  - id: "GR-FREE-HALF-DAY"
+    name: "Free Morning / Afternoon Rule"
+    category: "free_time"
+    scopes: ["itinerary_day"]
+    text: >
+      Kept to exactly 2 sentences, explicitly stating that it is at leisure with no service arranged.
+
+  - id: "GR-FREE-FULL-DAY"
+    name: "Full Free Day Specification"
+    category: "free_time"
+    scopes: ["itinerary_day"]
+    text: >
+      ~120-word description explicitly stating a free day at leisure (no service arranged), followed by curated recommendations of where to visit.
