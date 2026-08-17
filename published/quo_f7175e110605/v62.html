@@ -37,7 +37,7 @@
   
 
   <script id="brand-data" type="application/json">
-    {"color_accent": "#b7894b", "color_accent_light": "#d8bd85", "color_primary": "#17412e", "color_primary_dark": "#0e2f22", "domain": "journeys.vietnamsafar.vn", "font_accent": "Allura", "font_sans": "Montserrat", "font_serif": "Cormorant Garamond", "id": "vietnam_safar", "logo": "/assets/brands/vietnam_safar.png", "name": "Vietnam Safar"}
+    {"color_accent": "#333333", "color_accent_light": "#4F4F4F", "color_primary": "#CBA135", "color_primary_dark": "#B7894B", "domain": "journeys.capellatravel.com", "font_accent": "Cormorant Garamond", "font_sans": "Montserrat", "font_serif": "Cormorant Garamond", "id": "capella_travel", "logo": "/assets/brands/capella_travel.png", "name": "Capella Travel"}
   </script>
   <!-- Premium Typography Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -48,9 +48,9 @@
 
   <!-- PWA Metadata -->
   <link rel="manifest"
-    href="/manifest.json?id=quo_f7175e110605&type=quotations&brand=vietnam_safar" />
-  <meta name="theme-color" content="#17412e" />
-  <link rel="apple-touch-icon" href="/assets/brands/vietnam_safar.png" />
+    href="/manifest.json?id=quo_f7175e110605&type=quotations&brand=capella_travel" />
+  <meta name="theme-color" content="#CBA135" />
+  <link rel="apple-touch-icon" href="/assets/brands/capella_travel.png" />
   <!-- Leaflet CSS & JS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
@@ -58,10 +58,10 @@
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <style>
     :root {
-      --primary: #17412e;
-      --primary-dark: #0e2f22;
-      --accent: #b7894b;
-      --accent-light: #d8bd85;
+      --primary: #CBA135;
+      --primary-dark: #B7894B;
+      --accent: #333333;
+      --accent-light: #4F4F4F;
       --bg-main: #f9f6f0;
       --bg-alt: #fffaf1;
       --text-main: #11130f;
@@ -73,7 +73,7 @@
       --sans: "Montserrat",
       "Outfit",
       sans-serif;
-      --accent-font: "Allura",
+      --accent-font: "Cormorant Garamond",
       cursive;
       --shadow: 0 30px 80px rgba(0, 0, 0, 0.08);
       --serif: 'Cormorant Garamond',
@@ -84,7 +84,7 @@
       Arial,
       Helvetica,
       sans-serif;
-      --font-accent: 'Allura',
+      --font-accent: 'Cormorant Garamond',
       'Playfair Display',
       serif;
       --section-padding: clamp(40px, 6vw, 72px);
@@ -3275,9 +3275,9 @@
   <nav class="nav no-print">
     <div class="container nav-inner">
       <a class="brand" href="#top">
-        <img src="/assets/brands/vietnam_safar.png"
-          alt="Vietnam Safar" />
-        <span>Vietnam Safar</span>
+        <img src="/assets/brands/capella_travel.png"
+          alt="Capella Travel" />
+        <span>Capella Travel</span>
       </a>
       <div class="nav-links">
         <a href="#route-map">Route Map</a>
@@ -3308,7 +3308,7 @@
           </svg>
         </button>
         <a class="btn btn-primary"
-          href="/quotations/quo_f7175e110605/pdf?lang=en&brand=vietnam_safar"
+          href="/quotations/quo_f7175e110605/pdf?lang=en&brand=capella_travel"
           target="_blank" id="btn-pdf-view" style="display: none !important;">📄 <span class="pdf-btn-text">PDF Download</span></a>
       </div>
     </div>
@@ -3339,7 +3339,7 @@
 
           <div class="hero-footer no-print"
             style="display: flex; justify-content: space-between; font-size: 12px; letter-spacing: .1em; color: rgba(255,255,255,0.6); text-transform: uppercase; width: 100%;">
-            <div class="hf-left" data-editable="hero_footer">Vietnam Safar •
+            <div class="hf-left" data-editable="hero_footer">Capella Travel •
               VN-2027-LUX</div>
           </div>
         </div>
@@ -6809,12 +6809,12 @@ and unparalleled views of the Saigon River.</p>
         <span class="template-text" style="font-weight:600;">Prototype Theme</span>
       </button>
       <select id="select-domain" class="no-print" style="display: none !important;">
-        <option value="https://journeys.vietnamsafar.vn">Production</option>
+        <option value="https://journeys.capellatravel.com">Production</option>
       </select>
       <button id="btn-select-domain" onclick="openDomainModal(event)" title="Select Brand">
-        <img src="/assets/brands/vietnam_safar.png"
+        <img src="/assets/brands/capella_travel.png"
           style="width:16px; height:16px; border-radius:50%; object-fit:contain; background:white; margin-right:4px;" />
-        <span class="domain-text" style="font-weight:600;">Vietnam Safar</span>
+        <span class="domain-text" style="font-weight:600;">Capella Travel</span>
       </button>
       <button id="btn-view-live" onclick="redirectToLiveVersion(event)" title="View Live Version">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -6839,7 +6839,7 @@ and unparalleled views of the Saigon River.</p>
         
         
         
-        <div class="pb-domain-item active" data-brand="vietnam_safar"
+        <div class="pb-domain-item " data-brand="vietnam_safar"
           onclick="selectBrandOption('vietnam_safar')"
           style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
           <div style="display:flex; align-items:center; gap:12px;">
@@ -6851,11 +6851,11 @@ and unparalleled views of the Saigon River.</p>
             </div>
           </div>
           <span class="pb-domain-check"
-            style="visibility: visible; color:var(--primary); font-weight:bold;">✓</span>
+            style="visibility: hidden; color:var(--primary); font-weight:bold;">✓</span>
         </div>
         
         
-        <div class="pb-domain-item " data-brand="capella_travel"
+        <div class="pb-domain-item active" data-brand="capella_travel"
           onclick="selectBrandOption('capella_travel')"
           style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; border-bottom:1px solid rgba(0,0,0,0.05);">
           <div style="display:flex; align-items:center; gap:12px;">
@@ -6867,7 +6867,7 @@ and unparalleled views of the Saigon River.</p>
             </div>
           </div>
           <span class="pb-domain-check"
-            style="visibility: hidden; color:var(--primary); font-weight:bold;">✓</span>
+            style="visibility: visible; color:var(--primary); font-weight:bold;">✓</span>
         </div>
         
         
@@ -7107,7 +7107,7 @@ and unparalleled views of the Saigon River.</p>
     function redirectToLiveVersion(event) {
       if (event) event.stopPropagation();
 
-      const brandDomain = "journeys.vietnamsafar.vn";
+      const brandDomain = "journeys.capellatravel.com";
       const targetOrigin = `https://${brandDomain}`;
 
       if (window.location.pathname.includes('/published/')) {
@@ -7794,7 +7794,7 @@ and unparalleled views of the Saigon River.</p>
     document.addEventListener("DOMContentLoaded", function () {
       const selectDomain = document.getElementById('select-domain');
       if (selectDomain) {
-        selectDomain.value = "https://journeys.vietnamsafar.vn";
+        selectDomain.value = "https://journeys.capellatravel.com";
       }
       try {
         const brandDataEl = document.getElementById('brand-data');
@@ -8402,7 +8402,7 @@ and unparalleled views of the Saigon River.</p>
         id: segment.segmentId || `stay-${idx + 1}`,
         coords: resolvedCoords,
         displayCoords: resolvedCoords,
-        img: segment.hotelImage || ((slug && destImages[slug]) ? destImages[slug] : '/assets/brands/vietnam_safar.png')
+        img: segment.hotelImage || ((slug && destImages[slug]) ? destImages[slug] : '/assets/brands/capella_travel.png')
       };
     }).filter(segment => Array.isArray(segment.coords) && segment.coords.length === 2);
 
@@ -8778,8 +8778,8 @@ and unparalleled views of the Saigon River.</p>
 
         const options = {
           body: body,
-          icon: '/assets/brands/vietnam_safar.png',
-          badge: '/assets/brands/vietnam_safar.png',
+          icon: '/assets/brands/capella_travel.png',
+          badge: '/assets/brands/capella_travel.png',
           vibrate: [100, 50, 100],
           data: {
             url: window.location.href
