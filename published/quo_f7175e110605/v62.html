@@ -1756,8 +1756,13 @@
       }
     }
 
+    #btn-pdf-view {
+      display: none !important;
+    }
+
     /* ── Publish Bar ────────────────────────────────────────────── */
     #publish-bar {
+      display: none !important;
       position: fixed;
       bottom: 24px;
       left: 0;
@@ -3025,6 +3030,10 @@
         justify-content: center;
       }
 
+      #btn-pdf-view {
+        display: none !important;
+      }
+
       #btn-pdf-view .pdf-btn-text,
       .nav-actions .pdf-btn-text {
         display: none;
@@ -3050,22 +3059,55 @@
       }
     }
 
-    /* Investment (Package Pricing) List Styles - Vibrant Light */
-    #quotation.quotation-vibrant-light {
+    /* Investment (Package Pricing) & Flight List Styles - Vibrant Light */
+    #quotation.quotation-vibrant-light,
+    #flights.quotation-vibrant-light {
       background: color-mix(in srgb, var(--primary) 8%, var(--bg-main));
       padding: var(--section-padding) 0;
     }
 
-    #quotation.quotation-vibrant-light .kicker {
+    #quotation.quotation-vibrant-light .kicker,
+    #flights.quotation-vibrant-light .kicker {
       color: var(--primary-dark) !important;
     }
 
-    #quotation.quotation-vibrant-light h2 {
+    #quotation.quotation-vibrant-light h2,
+    #flights.quotation-vibrant-light h2 {
       color: var(--text-main) !important;
     }
 
-    #quotation.quotation-vibrant-light p {
+    #quotation.quotation-vibrant-light p,
+    #flights.quotation-vibrant-light p {
       color: var(--text-muted) !important;
+    }
+
+    #flights .investment-row {
+      grid-template-columns: 50px 1.2fr auto auto;
+      gap: 24px;
+      align-items: center;
+    }
+
+    #flights .flight-leg-col {
+      white-space: nowrap;
+      text-align: right;
+      align-items: flex-end;
+      padding: 12px 18px;
+      background: color-mix(in srgb, var(--bg-main) 70%, transparent);
+      border: 1px solid color-mix(in srgb, var(--primary) 18%, transparent);
+      border-radius: 6px;
+      min-width: 230px;
+    }
+
+    @media (max-width: 1024px) {
+      #flights .investment-row {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      #flights .flight-leg-col {
+        text-align: left !important;
+        align-items: flex-start !important;
+        min-width: unset;
+      }
     }
 
     .investment-header {
@@ -3169,7 +3211,8 @@
       color: var(--text-muted);
     }
 
-    #quotation.quotation-vibrant-light .no-print button {
+    #quotation.quotation-vibrant-light .no-print button,
+    #flights.quotation-vibrant-light .no-print button {
       background: var(--primary-dark) !important;
       color: var(--bg-main) !important;
       border: none !important;
@@ -3177,16 +3220,19 @@
       box-shadow: 0 8px 20px color-mix(in srgb, var(--primary-dark) 20%, transparent);
     }
 
-    #quotation.quotation-vibrant-light .no-print button:hover {
+    #quotation.quotation-vibrant-light .no-print button:hover,
+    #flights.quotation-vibrant-light .no-print button:hover {
       background: color-mix(in srgb, var(--primary-dark) 80%, #000) !important;
     }
 
-    #quotation.quotation-vibrant-light .important-note-container {
+    #quotation.quotation-vibrant-light .important-note-container,
+    #flights.quotation-vibrant-light .important-note-container {
       border-top: 1px dashed color-mix(in srgb, var(--primary) 30%, transparent) !important;
       color: var(--text-main) !important;
     }
 
-    #quotation.quotation-vibrant-light .important-note-container strong {
+    #quotation.quotation-vibrant-light .important-note-container strong,
+    #flights.quotation-vibrant-light .important-note-container strong {
       color: var(--primary) !important;
     }
 
@@ -3263,7 +3309,7 @@
         </button>
         <a class="btn btn-primary"
           href="/quotations/quo_f7175e110605/pdf?lang=en&brand=vietnam_safar"
-          target="_blank" id="btn-pdf-view">📄 <span class="pdf-btn-text">PDF Download</span></a>
+          target="_blank" id="btn-pdf-view" style="display: none !important;">📄 <span class="pdf-btn-text">PDF Download</span></a>
       </div>
     </div>
   </nav>
@@ -3982,7 +4028,7 @@
           <div class="day-copy-wrap">
             <div class="day-kicker">
               <span class="destination">Hanoi</span>
-              <span>DAY 1</span>
+              <span>DAY 1 · 27 Mar 2027</span>
             </div>
             <h4 class="day-title" data-editable="day_title_1"><b>Day 1 - Graceful Hanoi Arrival & Welcome Dinner</b></h4>
             <div class="day-copy" style="margin-top:24px;">
@@ -4085,7 +4131,7 @@
           <div class="day-copy-wrap">
             <div class="day-kicker">
               <span class="destination">Hanoi</span>
-              <span>DAY 2</span>
+              <span>DAY 2 · 28 Mar 2027</span>
             </div>
             <h4 class="day-title" data-editable="day_title_2"><b>Day 2 - Heritage Hanoi: Mausoleum, Pagoda & Temple</b></h4>
             <div class="day-copy" style="margin-top:24px;">
@@ -4188,7 +4234,7 @@
           <div class="day-copy-wrap">
             <div class="day-kicker">
               <span class="destination">Hanoi</span>
-              <span>DAY 3</span>
+              <span>DAY 3 · 29 Mar 2027</span>
             </div>
             <h4 class="day-title" data-editable="day_title_3"><b>Day 3 - Local Hanoi by Jeep: Cuisine, Backstreets & Train Street</b></h4>
             <div class="day-copy" style="margin-top:24px;">
@@ -4291,7 +4337,7 @@
           <div class="day-copy-wrap">
             <div class="day-kicker">
               <span class="destination">Halong Bay</span>
-              <span>DAY 4</span>
+              <span>DAY 4 · 30 Mar 2027</span>
             </div>
             <h4 class="day-title" data-editable="day_title_4"><b>Day 4 - Scenic Ha Long: Luxury Cruise & Limestone Seascape</b></h4>
             <div class="day-copy" style="margin-top:24px;">
@@ -4394,12 +4440,17 @@
           <div class="day-copy-wrap">
             <div class="day-kicker">
               <span class="destination">Hoi An</span>
-              <span>DAY 5</span>
+              <span>DAY 5 · 31 Mar 2027</span>
             </div>
             <h4 class="day-title" data-editable="day_title_5"><b>Day 5 - Seamless Hoi An: Coastal Flight & Bespoke Tailoring</b></h4>
             <div class="day-copy" style="margin-top:24px;">
               
-              <p data-editable="day_desc_5_0">Begin the day with the calm atmosphere of <b>Ha Long Bay</b>, where the cruise may include a light onboard activity, final scenic passage, or relaxed time on deck. After disembarkation, you transfer for a domestic flight to <b>Da Nang</b>, continuing the journey from northern seascapes to Central Vietnam.<br /><br />Upon arrival, your private chauffeur provides a seamless transfer to <b>Anantara Hoi An Resort</b>. Later, you enjoy a premium bespoke tailoring consultation in <b>Hoi An</b>, a hallmark experience of this historic trading port. The session introduces selected fabrics, silhouettes, and personal styling, creating a refined connection to the town’s artisan tradition.</p>
+              <p data-editable="day_desc_5_0">Your morning begins in the peaceful <b>Trà Quế Vegetable Village</b> for an organic farm-to-table cooking class. Guided by a
+              local chef, you will harvest fresh herbs and learn to prepare authentic central Vietnamese dishes. In the afternoon,
+              transition into a private <b>Vietnamese Folk Dance</b> session, where professional instructors guide your group through
+              expressive movements using props like conical hats, fans, and lanterns, culminating in a fun final performance.<br /><br />As dusk approaches, embark on a specialized <b>photography experience</b> through Hoi An Ancient Town. Timed perfectly for late
+              afternoon, a professional photographer will capture stunning portraits of your group set against glowing lantern-lit
+              streets, historic heritage façades, and the picturesque Thu Bồn River.</p>
               
               
               <p style="font-size:13px;color: var(--text-muted);margin-top:8px"
@@ -4497,7 +4548,7 @@
           <div class="day-copy-wrap">
             <div class="day-kicker">
               <span class="destination">Hoi An</span>
-              <span>DAY 6</span>
+              <span>DAY 6 · 01 Apr 2027</span>
             </div>
             <h4 class="day-title" data-editable="day_title_6"><b>Day 6 - Immersive Hoi An: Ancient Town, Lanterns & Riverfront</b></h4>
             <div class="day-copy" style="margin-top:24px;">
@@ -4609,9 +4660,9 @@
           <div class="day-copy-wrap">
             <div class="day-kicker">
               <span class="destination">Hoi An</span>
-              <span>DAY 7</span>
+              <span>DAY 7 · 02 Apr 2027</span>
             </div>
-            <h4 class="day-title" data-editable="day_title_7"><b>Day 7 - Relaxed Hoi An: Memories & Traditional Dance</b></h4>
+            <h4 class="day-title" data-editable="day_title_7"><b>Day 7 - Relaxed Hoi An: Memories & Tradition</b></h4>
             <div class="day-copy" style="margin-top:24px;">
               
               <p data-editable="day_desc_7_0">The day begins with a specialized photography experience in <b>Hoi An Ancient Town</b>, arranged during the best available light for portraits of you and your friends. The session captures your group against lantern-lined streets, heritage façades, quiet alleys, and the riverside scenery of the <b>Thu Bon River</b>, creating a personal visual memory of the journey.<b></b><br /><br />On the afternoon, the day speeds up by a private traditional dance session. The <strong data-start="4" data-end="48">Premium Vietnamese Folk Dance Experience</strong> invites your group into the grace and colour of Vietnamese tradition through movement, music, costume and storytelling. Guided by professional instructors and a bilingual host, participants learn simple folk dance gestures using conical hats, fans, scarves and lanterns, then come together for a joyful final performance.</p>
@@ -4621,7 +4672,7 @@
                 data-deletable="day_activities_7">
                 <strong style="color: var(--primary);letter-spacing:.06em"
                   data-editable="day_label_highlights_7">Highlights:</strong>
-                <span data-editable="day_highlights_7">Hoi An Ancient Town, Photography experience, Folk Dance Experience</span>
+                <span data-editable="day_highlights_7">Tra Que Vegetable Village, Photography experience, Folk Dance Experience</span>
               </p>
               
               
@@ -4632,7 +4683,7 @@
                   data-editable="day_label_notes_7">Notes:</strong>
                 <ul style="margin: 4px 0 0; padding-left: 15px; list-style-type: disc;">
                   
-                  <li style="margin-bottom: 2px;" data-editable="day_note_7_0">Starts at <b>09:00am</b> for about <b>8 hours </b></li>
+                  <li style="margin-bottom: 2px;" data-editable="day_note_7_0">Starts at <b>09:00am</b> for about <b>9 hours </b></li>
                   
                 </ul>
               </div>
@@ -4712,7 +4763,7 @@
           <div class="day-copy-wrap">
             <div class="day-kicker">
               <span class="destination">Da Nang</span>
-              <span>DAY 8</span>
+              <span>DAY 8 · 03 Apr 2027</span>
             </div>
             <h4 class="day-title" data-editable="day_title_8"><b>Day 8 - Coastal Da Nang: Farewell Moment & Spa Experience</b></h4>
             <div class="day-copy" style="margin-top:24px;">
@@ -4815,7 +4866,7 @@
           <div class="day-copy-wrap">
             <div class="day-kicker">
               <span class="destination">Da Nang</span>
-              <span>DAY 9</span>
+              <span>DAY 9 · 04 Apr 2027</span>
             </div>
             <h4 class="day-title" data-editable="day_title_9"><b>Day 9 - Elevated Ba Na: Golden Bridge & French Village </b></h4>
             <div class="day-copy" style="margin-top:24px;">
@@ -4918,7 +4969,7 @@
           <div class="day-copy-wrap">
             <div class="day-kicker">
               <span class="destination">Hue</span>
-              <span>DAY 10</span>
+              <span>DAY 10 · 05 Apr 2027</span>
             </div>
             <h4 class="day-title" data-editable="day_title_10"><b>Day 10 – Imperial Hue: Citadel, Royal Tombs & River Heritage</b></h4>
             <div class="day-copy" style="margin-top:24px;">
@@ -5021,7 +5072,7 @@
           <div class="day-copy-wrap">
             <div class="day-kicker">
               <span class="destination">Da Nang</span>
-              <span>DAY 11</span>
+              <span>DAY 11 · 06 Apr 2027</span>
             </div>
             <h4 class="day-title" data-editable="day_title_11"><b>Day 11 - Relaxed Da Nang: Ocean Yacht & Barbecue Dinner</b></h4>
             <div class="day-copy" style="margin-top:24px;">
@@ -5132,7 +5183,7 @@
           <div class="day-copy-wrap">
             <div class="day-kicker">
               <span class="destination">Ho Chi Minh City</span>
-              <span>DAY 12</span>
+              <span>DAY 12 · 07 Apr 2027</span>
             </div>
             <h4 class="day-title" data-editable="day_title_12"><b>Day 12 - Meaningful Saigon: Cu Chi Tunnels & Veteran Encounter</b></h4>
             <div class="day-copy" style="margin-top:24px;">
@@ -5235,7 +5286,7 @@
           <div class="day-copy-wrap">
             <div class="day-kicker">
               <span class="destination">Ho Chi Minh City</span>
-              <span>DAY 13</span>
+              <span>DAY 13 · 08 Apr 2027</span>
             </div>
             <h4 class="day-title" data-editable="day_title_13"><b>Day 13 - Immersive Mekong: Private River Journey & Local Crafts</b></h4>
             <div class="day-copy" style="margin-top:24px;">
@@ -5338,7 +5389,7 @@
           <div class="day-copy-wrap">
             <div class="day-kicker">
               <span class="destination">Departure</span>
-              <span>DAY 14</span>
+              <span>DAY 14 · 09 Apr 2027</span>
             </div>
             <h4 class="day-title" data-editable="day_title_14"><b>Day 14 - Leisurely Saigon: Riverside Morning & Departure</b></h4>
             <div class="day-copy" style="margin-top:24px;">
@@ -6044,6 +6095,152 @@ and unparalleled views of the Saigon River.</p>
       </div>
     </section>
 
+    <!-- ── Flight Recommendations ───────────────────────── -->
+    <section id="flights" class="quotation-vibrant-light indochine-shell indochine-shellline">
+      <div class="indochine-watermark indochine-watermark--cloud quotation-watermark" aria-hidden="true"></div>
+      <div class="container">
+
+        <div class="investment-header">
+          <div>
+            <div class="kicker"
+              style="color: var(--accent); margin-bottom: 8px; font-size: 11px; letter-spacing: 0.16em; font-weight: 700; text-transform: uppercase;"
+              data-editable="flight_kicker">International Flight Routing</div>
+            <h2 style="margin-bottom: 0;" data-editable="flight_h2">Flight Recommendations:</h2>
+          </div>
+        </div>
+
+        <div class="investment-list">
+          
+          <!-- Flight 1: ORD -> HAN -->
+          <div class="investment-row">
+            <div class="investment-num">01</div>
+
+            <div class="investment-col" style="gap: 6px;">
+              <div class="investment-title" data-editable="flight_route_1" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span>Chicago (ORD) ➔ Hanoi (HAN)</span>
+                <span style="font-size: 12px; font-weight: 600; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); padding: 2px 8px; border-radius: 4px;">EVA Air · BR</span>
+              </div>
+              
+              <div class="investment-desc" data-editable="flight_desc_1" style="font-size: 13px; line-height: 1.5; color: var(--text-muted);">
+                <div>Inbound sector arriving in Hanoi on Day 1 for tour commencement.</div>
+                <div style="color: var(--primary); font-size: 12px; font-weight: 600; margin-top: 4px;">🔄 Transit in Taipei (TPE): 4 hours 10 minutes</div>
+              </div>
+            </div>
+
+            <!-- Leg 1 Column -->
+            <div class="investment-col flight-leg-col">
+              <div style="font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px;">Leg 1 · Flight BR 55</div>
+              <div class="investment-price" style="font-size: 17px; line-height: 1.2;">
+                <span class="ltr-token" data-editable="flight_time_1_leg1">12:30 AM ➔ 04:55 AM</span>
+              </div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 3px;" data-editable="flight_subtime_1_leg1">Fri 26 Mar (ORD) → Sat 27 Mar (TPE)</div>
+              <div style="font-size: 11px; color: var(--accent); margin-top: 2px;">Late Thu night departure</div>
+            </div>
+
+            <!-- Leg 2 Column -->
+            <div class="investment-col flight-leg-col">
+              <div style="font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px;">Leg 2 · Flight BR 397</div>
+              <div class="investment-price" style="font-size: 17px; line-height: 1.2;">
+                <span class="ltr-token" data-editable="flight_time_1_leg2">09:05 AM ➔ 11:05 AM</span>
+              </div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 3px;" data-editable="flight_subtime_1_leg2">Sat 27 Mar (TPE) → Sat 27 Mar (HAN)</div>
+              <div style="font-size: 11px; color: var(--primary); margin-top: 2px;">Mid-day Hanoi arrival</div>
+            </div>
+          </div>
+            
+          <!-- Flight 2: DAD -> ORD -->
+          <div class="investment-row">
+            <div class="investment-num">02</div>
+
+            <div class="investment-col" style="gap: 6px;">
+              <div class="investment-title" data-editable="flight_route_2" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span>Da Nang (DAD) ➔ Chicago (ORD)</span>
+                <span style="font-size: 12px; font-weight: 600; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); padding: 2px 8px; border-radius: 4px;">EVA Air · BR</span>
+              </div>
+              
+              <div class="investment-desc" data-editable="flight_desc_2" style="font-size: 13px; line-height: 1.5; color: var(--text-muted);">
+                <div>8-Day 7-Night early return option departing from Da Nang on Day 8.</div>
+                <div style="color: var(--primary); font-size: 12px; font-weight: 600; margin-top: 4px;">🔄 Transit in Taipei (TPE): 2 hours 35 minutes</div>
+              </div>
+            </div>
+
+            <!-- Leg 1 Column -->
+            <div class="investment-col flight-leg-col">
+              <div style="font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px;">Leg 1 · Flight BR 384</div>
+              <div class="investment-price" style="font-size: 17px; line-height: 1.2;">
+                <span class="ltr-token" data-editable="flight_time_2_leg1">02:15 PM ➔ 06:00 PM</span>
+              </div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 3px;" data-editable="flight_subtime_2_leg1">Sat 03 Apr (DAD) → Sat 03 Apr (TPE)</div>
+              <div style="font-size: 11px; color: var(--accent); margin-top: 2px;">Mid-day Da Nang departure</div>
+            </div>
+
+            <!-- Leg 2 Column -->
+            <div class="investment-col flight-leg-col">
+              <div style="font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px;">Leg 2 · Flight BR 56</div>
+              <div class="investment-price" style="font-size: 17px; line-height: 1.2;">
+                <span class="ltr-token" data-editable="flight_time_2_leg2">08:35 PM ➔ 09:00 PM</span>
+              </div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 3px;" data-editable="flight_subtime_2_leg2">Sat 03 Apr (TPE) → Sat 03 Apr (ORD)</div>
+              <div style="font-size: 11px; color: var(--primary); margin-top: 2px;">Same-day Chicago arrival</div>
+            </div>
+          </div>
+            
+          <!-- Flight 3: SGN -> ORD -->
+          <div class="investment-row">
+            <div class="investment-num">03</div>
+
+            <div class="investment-col" style="gap: 6px;">
+              <div class="investment-title" data-editable="flight_route_3" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span>Ho Chi Minh City (SGN) ➔ Chicago (ORD)</span>
+                <span style="font-size: 12px; font-weight: 600; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); padding: 2px 8px; border-radius: 4px;">EVA Air · BR</span>
+              </div>
+              
+              <div class="investment-desc" data-editable="flight_desc_3" style="font-size: 13px; line-height: 1.5; color: var(--text-muted);">
+                <div>14-Day 13-Night main return sector departing from Saigon on Day 14.</div>
+                <div style="color: var(--primary); font-size: 12px; font-weight: 600; margin-top: 4px;">🔄 Transit in Taipei (TPE): 3 hours 10 minutes</div>
+              </div>
+            </div>
+
+            <!-- Leg 1 Column -->
+            <div class="investment-col flight-leg-col">
+              <div style="font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px;">Leg 1 · Flight BR 392</div>
+              <div class="investment-price" style="font-size: 17px; line-height: 1.2;">
+                <span class="ltr-token" data-editable="flight_time_3_leg1">12:55 PM ➔ 05:25 PM</span>
+              </div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 3px;" data-editable="flight_subtime_3_leg1">Fri 09 Apr (SGN) → Fri 09 Apr (TPE)</div>
+              <div style="font-size: 11px; color: var(--accent); margin-top: 2px;">Mid-day Saigon departure</div>
+            </div>
+
+            <!-- Leg 2 Column -->
+            <div class="investment-col flight-leg-col">
+              <div style="font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px;">Leg 2 · Flight BR 56</div>
+              <div class="investment-price" style="font-size: 17px; line-height: 1.2;">
+                <span class="ltr-token" data-editable="flight_time_3_leg2">08:35 PM ➔ 09:00 PM</span>
+              </div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 3px;" data-editable="flight_subtime_3_leg2">Fri 09 Apr (TPE) → Fri 09 Apr (ORD)</div>
+              <div style="font-size: 11px; color: var(--primary); margin-top: 2px;">Same-day Chicago arrival</div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="no-print" style="margin-top: 32px; text-align: center;">
+          <button type="button" onclick="addFlightOption()"
+            style="background: var(--bg-alt); color: var(--text-main); border: 1px dashed var(--line); padding: 12px 24px; border-radius: 4px; font-size: 13px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+            + Add Flight Option
+          </button>
+        </div>
+
+        <div class="important-note-container"
+          style="margin-top: 48px; padding-top: 24px; border-top: 1px solid color-mix(in srgb, var(--primary) 20%, transparent); font-size: 14px; color: var(--text-main); line-height: 1.6; text-align: left;">
+          <strong
+            style="color: var(--primary); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.15em; font-size: 11px; font-weight: 700;">Flight Notice &amp; Connection Information</strong>
+          <p style="margin: 0;" data-editable="flight_cond_first">Flight schedules, aircraft types, and transit durations are based on current EVA Air timetables and are subject to carrier reconfirmation at time of booking. Checked baggage and seat selection will align with EVA Air international ticket conditions.</p>
+        </div>
+        
+      </div>
+    </section>
+
     <!-- ── Chapter Divider: THE STAYS ───────────────────── -->
     <section id="divider-hotels" class="stays-intro-section no-print indochine-shell indochine-shell--no-border"
       style="background: var(--bg-main); padding: 0 0 var(--section-padding) 0; position: relative; overflow: hidden;">
@@ -6169,7 +6366,7 @@ and unparalleled views of the Saigon River.</p>
                 <div class="investment-col">
                   
                   <div class="investment-price">
-                    <span class="ltr-token" data-editable="price_pax_1">USD 4,741/ person</span>
+                    <span class="ltr-token" data-editable="price_pax_1">USD 4,760/ person</span>
                   </div>
                   
                 </div>
@@ -6198,7 +6395,7 @@ and unparalleled views of the Saigon River.</p>
                 <div class="investment-col">
                   
                   <div class="investment-price">
-                    <span class="ltr-token" data-editable="price_pax_2">USD 2,421/ person</span>
+                    <span class="ltr-token" data-editable="price_pax_2">USD 2,440/ person</span>
                   </div>
                   
                 </div>
@@ -6590,7 +6787,7 @@ and unparalleled views of the Saigon River.</p>
   </footer>
 
   <!-- ── Publish Bar ─────────────────────────────────────────── -->
-  <div id="publish-bar" class="no-print">
+  <div id="publish-bar" class="no-print" style="display: none !important;">
     <div class="pb-left">
       <div class="pb-dot"></div>
       <div class="pb-label">
@@ -7217,7 +7414,7 @@ and unparalleled views of the Saigon River.</p>
     }
 
     function addPriceOption() {
-      const list = document.querySelector('.investment-list');
+      const list = document.querySelector('#quotation .investment-list') || document.querySelector('.investment-list');
       if (!list) return;
 
       const rows = list.querySelectorAll('.investment-row');
@@ -7257,6 +7454,55 @@ and unparalleled views of the Saigon River.</p>
 
       const badge = newRow.querySelector('.investment-badge');
       if (badge) badge.remove();
+
+      list.appendChild(newRow);
+
+      newRow.classList.remove('removable-block');
+      newRow.querySelectorAll('.block-delete-btn').forEach(btn => btn.remove());
+
+      if (typeof window.initEditableElements === 'function') {
+        window.initEditableElements(newRow);
+      }
+
+      if (typeof initRemovableBlocks === 'function') {
+        initRemovableBlocks();
+      }
+    }
+
+    function addFlightOption() {
+      const list = document.querySelector('#flights .investment-list');
+      if (!list) return;
+
+      const rows = list.querySelectorAll('.investment-row');
+      const count = rows.length;
+      if (count === 0) return;
+      const newIndex = count + 1;
+
+      const lastRow = rows[count - 1];
+      const newRow = lastRow.cloneNode(true);
+
+      newRow.querySelectorAll('.btn-inline-translate').forEach(btn => btn.remove());
+      newRow.querySelectorAll('.luxury-editable-wrapper').forEach(wrapper => {
+        const parent = wrapper.parentNode;
+        while (wrapper.firstChild) {
+          parent.insertBefore(wrapper.firstChild, wrapper);
+        }
+        parent.removeChild(wrapper);
+      });
+
+      const numEl = newRow.querySelector('.investment-num');
+      if (numEl) {
+        numEl.innerText = newIndex < 10 ? '0' + newIndex : newIndex;
+      }
+
+      newRow.querySelectorAll('[data-editable]').forEach(el => {
+        const attr = el.getAttribute('data-editable');
+        if (attr) {
+          const newAttr = attr.replace(/_\d+$/, '_' + newIndex);
+          el.setAttribute('data-editable', newAttr);
+          el.innerText = 'New Flight Details';
+        }
+      });
 
       list.appendChild(newRow);
 
