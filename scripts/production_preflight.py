@@ -1,8 +1,8 @@
-"""Fail closed before a fresh-start V2 production migration.
+"""Validate production runtime settings and explicit fresh-start cutovers.
 
-This repository deliberately does not backfill legacy quotations.  A production
-database with quotation rows must be reviewed outside the automatic deploy
-path, rather than being silently converted by a later migration.
+Routine deployments must not inspect or rewrite canonical quotation data.  The
+fresh-start guard remains fail-closed, but is reserved for the operator-run
+cutover job that provisions a new V2 database.
 """
 from __future__ import annotations
 
@@ -37,7 +37,7 @@ def _strict_env_bool(name: str, *, default: bool = False) -> bool:
 
 
 def validate_runtime_security() -> None:
-    """Validate mutually-exclusive ingress/auth settings before migrations.
+    """Validate mutually-exclusive ingress/auth settings.
 
     This is deliberately independent from the imported Settings singleton so a
     deployment preflight observes the actual process environment and tests can
@@ -45,10 +45,6 @@ def validate_runtime_security() -> None:
     """
     gateway_enabled = _strict_env_bool("DMC_GATEWAY_ENABLED")
     trust_cloudflare = _strict_env_bool("QUOTE_TRUST_CLOUDFLARE_ACCESS_HEADERS")
-    fresh_start = _strict_env_bool("V2_PRODUCTION_FRESH_START")
-    if not fresh_start:
-        raise RuntimeError("V2_PRODUCTION_FRESH_START=true is required for a fresh V2 production database.")
-
     service_token = os.getenv("QUOTE_SERVICE_TOKEN", "").strip()
     if not service_token or service_token in {"replace_me", "change-me", "changeme"}:
         raise RuntimeError("QUOTE_SERVICE_TOKEN must be a non-placeholder secret in production.")
@@ -78,14 +74,22 @@ def validate_runtime_security() -> None:
         raise RuntimeError("PUBLIC_FALLBACK_HOSTNAME must not be an active brand hostname.")
 
 
+def validate_fresh_start_intent() -> None:
+    """Require an explicit acknowledgement before inspecting a fresh database."""
+    if not _strict_env_bool("V2_PRODUCTION_FRESH_START"):
+        raise RuntimeError("V2_PRODUCTION_FRESH_START=true is required for a fresh V2 production database.")
+
+
 async def _table_exists(session, table: str) -> bool:
     return bool(await session.scalar(text("SELECT to_regclass(:table) IS NOT NULL"), {"table": f"public.{table}"}))
 
 
-async def main() -> None:
+async def validate_fresh_start_database() -> None:
+    """Fail if an explicit fresh-start cutover targets existing quotation data."""
     if os.getenv("ENVIRONMENT", "local").strip().lower() != "production":
         return
     validate_runtime_security()
+    validate_fresh_start_intent()
     async with get_session_factory()() as session:
         legacy_tables = [table for table in ("quotations", "quotation_publications") if await _table_exists(session, table)]
         for table in legacy_tables:
@@ -95,6 +99,10 @@ async def main() -> None:
                     f"Production V2 fresh-start preflight failed: {table} contains {count} row(s). "
                     "This deploy never migrates legacy quotations; provision a clean database or perform an approved manual archive."
                 )
+
+
+async def main() -> None:
+    await validate_fresh_start_database()
 
 
 if __name__ == "__main__":

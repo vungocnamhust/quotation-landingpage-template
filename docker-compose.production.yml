@@ -12,10 +12,10 @@ x-migration-build: &migration-build
 
 services:
   postgres:
-    container_name: quotation-production-postgres
+    container_name: ${QUOTE_PRODUCTION_POSTGRES_CONTAINER_NAME:-quotation-production-postgres}
     image: postgres:16
     env_file:
-      - .env.production
+      - ${QUOTE_PRODUCTION_ENV_FILE:-.env.production}
     environment:
       POSTGRES_DB: quotation
       POSTGRES_USER: quotation
@@ -34,23 +34,64 @@ services:
     image: ${QUOTE_MIGRATE_IMAGE:-quotation-migrate:local}
     build: *migration-build
     env_file:
-      - .env.production
+      - ${QUOTE_PRODUCTION_ENV_FILE:-.env.production}
     networks:
       - quotation_net
     depends_on:
       postgres:
         condition: service_healthy
-    # Do the ownership cutover before any API/worker can load a document.  The
-    # second pass is an assertion that the persisted state is now schema-v1,
-    # not merely a best-effort conversion.
-    command: ["/bin/sh", "-c", "python -m scripts.production_preflight && alembic upgrade head && python scripts/migrate_v2_rich_content.py --apply && python scripts/migrate_v2_rich_content.py"]
+    # Routine deploys only advance and verify the Alembic schema.  Canonical
+    # document conversion is an operator-approved cutover job below.
+    command: ["/bin/sh", "-c", "alembic upgrade head && alembic current --check-heads"]
+    restart: "no"
+
+  v2-cutover-preflight:
+    image: ${QUOTE_MIGRATE_IMAGE:-quotation-migrate:local}
+    build: *migration-build
+    env_file:
+      - ${QUOTE_PRODUCTION_ENV_FILE:-.env.production}
+    networks:
+      - quotation_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["python", "-m", "scripts.production_preflight"]
+    profiles: ["cutover"]
+    restart: "no"
+
+  v2-rich-content-report:
+    image: ${QUOTE_MIGRATE_IMAGE:-quotation-migrate:local}
+    build: *migration-build
+    env_file:
+      - ${QUOTE_PRODUCTION_ENV_FILE:-.env.production}
+    networks:
+      - quotation_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["python", "scripts/migrate_v2_rich_content.py"]
+    profiles: ["cutover"]
+    restart: "no"
+
+  v2-rich-content-apply:
+    image: ${QUOTE_MIGRATE_IMAGE:-quotation-migrate:local}
+    build: *migration-build
+    env_file:
+      - ${QUOTE_PRODUCTION_ENV_FILE:-.env.production}
+    networks:
+      - quotation_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["/bin/sh", "-c", "python scripts/migrate_v2_rich_content.py --apply && python scripts/migrate_v2_rich_content.py"]
+    profiles: ["cutover"]
     restart: "no"
 
   app:
     image: ${QUOTE_APP_IMAGE:-quotation-app:local}
     build: *pdf-app-build
     env_file:
-      - .env.production
+      - ${QUOTE_PRODUCTION_ENV_FILE:-.env.production}
     networks:
       - quotation_net
       - dmc-network
@@ -75,7 +116,7 @@ services:
       context: ./quote-generator
       dockerfile: ../docker/quote-generator/Dockerfile
     env_file:
-      - .env.production
+      - ${QUOTE_PRODUCTION_ENV_FILE:-.env.production}
     environment:
       QUOTATION_INTERNAL_API_URL: http://app:8111
     networks:
@@ -93,7 +134,7 @@ services:
   publication-worker:
     image: ${QUOTE_APP_IMAGE:-quotation-app:local}
     env_file:
-      - .env.production
+      - ${QUOTE_PRODUCTION_ENV_FILE:-.env.production}
     environment:
       QUOTE_GENERATOR_INTERNAL_URL: http://quote-generator:8115
     networks:
@@ -112,7 +153,7 @@ services:
       context: ./docker/nginx
       dockerfile: Dockerfile
     env_file:
-      - .env.production
+      - ${QUOTE_PRODUCTION_ENV_FILE:-.env.production}
     networks:
       quotation_net: {}
       dmc-network:
@@ -129,7 +170,7 @@ networks:
   quotation_net:
   dmc-network:
     external: true
-    name: dmc-network
+    name: ${DMC_NETWORK_NAME:-dmc-network}
 
 volumes:
   postgres_data:

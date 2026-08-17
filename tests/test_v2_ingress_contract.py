@@ -1,9 +1,11 @@
 from pathlib import Path
+import re
 import unittest
 from unittest.mock import patch
 import os
 
-from scripts.production_preflight import validate_runtime_security
+from scripts.production_preflight import validate_fresh_start_intent, validate_runtime_security
+import scripts.production_preflight as production_preflight
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -54,7 +56,6 @@ class V2IngressContractTests(unittest.TestCase):
                 "CLOUDFLARE_ACCESS_TEAM_DOMAIN": "team.example.cloudflareaccess.com",
                 "CLOUDFLARE_ACCESS_AUDIENCE": "audience-1",
                 "QUOTE_SERVICE_TOKEN": "a-real-secret",
-                "V2_PRODUCTION_FRESH_START": "true",
                 "PUBLIC_BRAND_HOSTS": "journeys.example.com",
                 "PUBLIC_FALLBACK_HOSTNAME": "quotes.example.com",
             },
@@ -70,14 +71,13 @@ class V2IngressContractTests(unittest.TestCase):
                 "DMC_AUTH_PROXY_URL": "http://dmc-auth-proxy:8120/verify",
                 "QUOTE_TRUST_CLOUDFLARE_ACCESS_HEADERS": "true",
                 "QUOTE_SERVICE_TOKEN": "a-real-secret",
-                "V2_PRODUCTION_FRESH_START": "true",
             },
             clear=True,
         ):
             with self.assertRaisesRegex(RuntimeError, "must not enable"):
                 validate_runtime_security()
 
-    def test_production_preflight_rejects_missing_fresh_start_and_placeholder_secret(self):
+    def test_fresh_start_intent_is_an_explicit_cutover_requirement(self):
         with patch.dict(
             os.environ,
             {
@@ -85,13 +85,59 @@ class V2IngressContractTests(unittest.TestCase):
                 "QUOTE_TRUST_CLOUDFLARE_ACCESS_HEADERS": "true",
                 "CLOUDFLARE_ACCESS_TEAM_DOMAIN": "team.example.cloudflareaccess.com",
                 "CLOUDFLARE_ACCESS_AUDIENCE": "audience-1",
-                "QUOTE_SERVICE_TOKEN": "replace_me",
+                "QUOTE_SERVICE_TOKEN": "a-real-secret",
                 "V2_PRODUCTION_FRESH_START": "false",
             },
             clear=True,
         ):
+            validate_runtime_security()
             with self.assertRaisesRegex(RuntimeError, "FRESH_START"):
-                validate_runtime_security()
+                validate_fresh_start_intent()
+
+    def test_fresh_start_cutover_rejects_existing_quotation_rows(self):
+        class FakeSession:
+            async def scalar(self, statement, *_args, **_kwargs):
+                return 1 if "COUNT" in str(statement) else True
+
+            async def __aenter__(self):
+                return self
+
+            async def __aexit__(self, *_args):
+                return None
+
+        class FakeSessionFactory:
+            def __call__(self):
+                return FakeSession()
+
+        cutover_env = {
+            "ENVIRONMENT": "production",
+            "DMC_GATEWAY_ENABLED": "false",
+            "QUOTE_TRUST_CLOUDFLARE_ACCESS_HEADERS": "true",
+            "CLOUDFLARE_ACCESS_TEAM_DOMAIN": "team.example.cloudflareaccess.com",
+            "CLOUDFLARE_ACCESS_AUDIENCE": "audience-1",
+            "QUOTE_SERVICE_TOKEN": "a-real-secret",
+            "V2_PRODUCTION_FRESH_START": "true",
+            "PUBLIC_BRAND_HOSTS": "journeys.example.com",
+            "PUBLIC_FALLBACK_HOSTNAME": "quotes.example.com",
+        }
+        with patch.dict(os.environ, cutover_env, clear=True), patch.object(production_preflight, "get_session_factory", return_value=FakeSessionFactory()):
+            with self.assertRaisesRegex(RuntimeError, "quotations contains 1 row"):
+                import asyncio
+
+                asyncio.run(production_preflight.validate_fresh_start_database())
+
+    def test_production_manifest_keeps_cutover_jobs_out_of_runtime_dependencies(self):
+        compose = (ROOT / "docker-compose.production.yml").read_text()
+        migrate = compose.split("  migrate:\n", 1)[1].split("\n  v2-cutover-preflight:", 1)[0]
+        self.assertIn("alembic upgrade head && alembic current --check-heads", migrate)
+        self.assertNotIn("production_preflight", migrate)
+        self.assertNotIn("migrate_v2_rich_content", migrate)
+        for service in ("v2-cutover-preflight", "v2-rich-content-report", "v2-rich-content-apply"):
+            match = re.search(rf"^  {re.escape(service)}:(.*?)(?=^  \S|\Z)", compose, re.MULTILINE | re.DOTALL)
+            self.assertIsNotNone(match)
+            block = match.group(1)
+            self.assertIn('profiles: ["cutover"]', block)
+            self.assertNotIn("dmc-network", block)
 
     def test_editor_identity_uses_one_feature_flagged_auth_boundary(self):
         config = (ROOT / "docker/nginx/default.conf.template").read_text()

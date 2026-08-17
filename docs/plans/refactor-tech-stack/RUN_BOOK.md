@@ -308,6 +308,10 @@ docker compose -f docker-compose.production.yml run --rm migrate
 
 Chi chay app sau khi migration thanh cong.
 
+`migrate` chi nang schema Alembic va xac nhan database dang o `head`. No khong
+duoc doc, archive, hay chuyen doi canonical quotation state; do do co the chay
+lai an toan trong moi deployment/recreate.
+
 ### Buoc 5. Start app, renderer va worker
 
 ```bash
@@ -384,6 +388,32 @@ docker compose -f docker-compose.production.yml run --rm migrate
 
 ## 8. Data migration sau khi deploy
 
+### V2 cutover co phe duyet
+
+Khong coi restart/deploy la cutover. Truoc khi cutover mot database hien co,
+operator phai export backup, phan loai toan bo quotation legacy, va chi archive
+thu cong sau khi co phe duyet. Khong xoa row hay doi co moi truong de bypass
+preflight.
+
+Voi database V2 moi, chay fresh-start gate tường minh (co nay khong nam trong
+`.env.production` thuong):
+
+```bash
+docker compose -f docker-compose.production.yml --profile cutover run --rm \
+  -e V2_PRODUCTION_FRESH_START=true v2-cutover-preflight
+```
+
+Voi rich-content conversion da duoc phe duyet, luon xem report truoc; chi chay
+apply sau khi report sach va phe duyet da duoc ghi nhan:
+
+```bash
+docker compose -f docker-compose.production.yml --profile cutover run --rm v2-rich-content-report
+docker compose -f docker-compose.production.yml --profile cutover run --rm v2-rich-content-apply
+```
+
+Ca ba job tren la one-shot profile `cutover`; khong service runtime nao phu
+thuoc vao chung.
+
 Neu can migrate du lieu cu:
 
 ### Migrate quotation
@@ -423,6 +453,36 @@ Sau khi stack da len, can check:
 - publish duoc 1 quotation
 
 ## 10. Troubleshooting
+
+### Quotation ingress down sau khi recreate fail
+
+Khong chay them `docker compose up --force-recreate` cho full stack. Start lai
+truc tiep cac runtime container dang `Exited`/`Created`, khong kich hoat job
+`migrate`:
+
+```bash
+cd ~/quotation-landingpage-template
+docker ps -a --filter name=quotation-production
+docker start quotation-production-app-1
+docker start quotation-production-quote-generator-1
+docker start quotation-production-nginx-1
+```
+
+Bo qua loi `already started`. Xac nhan Nginx co alias tren DMC network, reload
+gateway, sau do probe ca staff va sale host:
+
+```bash
+docker network inspect dmc-network \
+  --format '{{range $id, $c := .Containers}}{{println $c.Name $c.IPv4Address}}{{end}}' \
+  | grep quotation-production-nginx
+docker exec dmc-gateway getent hosts quotation-ingress
+docker exec dmc-gateway nginx -t && docker exec dmc-gateway nginx -s reload
+curl -i -H 'Host: quote.capellatravel.com' http://127.0.0.1:8008/
+curl -i -H 'Host: sale.capellatravel.com' http://127.0.0.1:8008/
+```
+
+`getent` phai tra mot IP `172.19.x.x`. VPS gateway/browser probes la gate van
+hanh sau deploy, khong duoc thay the bang unit test local.
 
 ### `/health/ready` fail
 

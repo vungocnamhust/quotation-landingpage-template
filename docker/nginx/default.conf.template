@@ -233,6 +233,15 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
+    location ^~ /published/ {
+        proxy_pass http://app:8111;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
     location ^~ /api/v2/ {
         auth_request ${DMC_AUTH_REQUEST_URI};
         auth_request_set $auth_email $upstream_http_x_dmc_email;

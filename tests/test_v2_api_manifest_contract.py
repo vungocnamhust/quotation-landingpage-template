@@ -36,6 +36,7 @@ EXPECTED_V2_OPERATIONS = {
     ("/api/v2/quotations/{quotation_id}/content-drafts", "GET"),
     ("/api/v2/quotations/{quotation_id}/content-drafts", "POST"),
     ("/api/v2/quotations/{quotation_id}/content-drafts/manual", "POST"),
+    ("/api/v2/quotations/{quotation_id}/content-drafts/prompt-preview", "POST"),
     ("/api/v2/quotations/{quotation_id}/content-drafts/{draft_id}", "PATCH"),
     ("/api/v2/quotations/{quotation_id}/content-drafts/{draft_id}/apply", "POST"),
     ("/api/v2/quotations/{quotation_id}/content-drafts/{draft_id}/discard", "POST"),
