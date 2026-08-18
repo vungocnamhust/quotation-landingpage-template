@@ -1,59 +1,71 @@
 "use client";
 
-import { useDeferredValue, useMemo, useState } from "react";
-import useSWR from "swr";
+import { AccommodationSelect } from "../accommodation/AccommodationSelect";
+import type { AccommodationProfile, AccommodationProfileInput } from "../accommodation/types";
 import { getTypographyClassName } from "../../config/typography";
 import { cn } from "../../utils/cn";
-import { createAccommodation, listAccommodations, updateAccommodation, updateAccommodationStatus, uploadAccommodationAsset, type AccommodationProfile, type AccommodationProfileInput } from "../../lib/quotationApi";
-import AccommodationProfileForm from "./AccommodationProfileForm";
-import type { DestinationRef } from "./DestinationInputs";
 
-type Props = { value: string | null; name?: string | null; destination?: string | null; disabled?: boolean; onChange: (profile: AccommodationProfile | null) => void };
-type DrawerMode = "create" | "edit" | "manage" | null;
+type Props = {
+  value: string | null;
+  name?: string | null;
+  destination?: string | null;
+  destinationId?: string | null;
+  disabled?: boolean;
+  onChange: (profile: AccommodationProfile | null) => void;
+};
 
-export const blankInput = (): AccommodationProfileInput => ({ destinationId: "", name: "", room_type: null, check_in: null, check_out: null, intro: null, phone: null, display_city: null, display_date: null, hotel_asset: null, room_asset: null });
-export const inputClass = cn(getTypographyClassName("bodyMd"), "min-h-11 w-full rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3 text-[var(--color-on-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus)]");
+export const blankInput = (): AccommodationProfileInput => ({
+  destinationId: "",
+  name: "",
+  room_type: null,
+  intro: null,
+  phone: null,
+  display_city: null,
+  display_date: null,
+  hotel_asset: null,
+  room_asset: null,
+});
+
+export const inputClass = cn(
+  getTypographyClassName("bodyMd"),
+  "min-h-11 w-full rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3 text-[var(--color-on-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus)]"
+);
 
 export function profileInput(profile: AccommodationProfile): AccommodationProfileInput {
-  return { destinationId: profile.destination_id, name: profile.name, room_type: profile.room_type, check_in: profile.check_in, check_out: profile.check_out, intro: profile.intro, phone: profile.phone, display_city: profile.display_city, display_date: profile.display_date, hotel_asset: profile.hotel_asset, room_asset: profile.room_asset };
+  return {
+    destinationId: profile.destination_id,
+    name: profile.name,
+    room_type: profile.room_type,
+    intro: profile.intro,
+    phone: profile.phone,
+    display_city: profile.display_city,
+    display_date: profile.display_date,
+    hotel_asset: profile.hotel_asset,
+    room_asset: profile.room_asset,
+  };
 }
 
-export default function AccommodationPicker({ value, name, destination, disabled = false, onChange }: Props) {
-  const [open, setOpen] = useState(false);
-  const [drawerMode, setDrawerMode] = useState<DrawerMode>(null);
-  const [search, setSearch] = useState("");
-  const [editing, setEditing] = useState<AccommodationProfile | null>(null);
-  const [draft, setDraft] = useState<AccommodationProfileInput>(blankInput);
-  const [destinationRef, setDestinationRef] = useState<DestinationRef | null>(null);
-  const [message, setMessage] = useState("");
-  const [pending, setPending] = useState(false);
-  const deferredSearch = useDeferredValue(search);
-
-  const queryKey = open || drawerMode === "manage" ? ["accommodations", drawerMode === "manage" ? "all" : "true", deferredSearch] : null;
-  const { data: profileResponse, error: profilesError, isLoading: profilesLoading, mutate: mutateProfiles } = useSWR(queryKey, ([, active, query]) => listAccommodations({ active: active as "true" | "all", query }));
-  const profiles = useMemo(() => profileResponse?.items ?? [], [profileResponse]);
-  const selected = useMemo(() => profiles.find((profile) => profile.id === value) ?? null, [profiles, value]);
-  const displayName = selected?.name ?? name ?? null;
-  const displayDest = selected?.destination ?? destination ?? null;
-  const displayText = displayName ? `${displayName}${displayDest ? ` · ${displayDest}` : ""}` : "Select accommodation";
-
-  const openCreate = () => { setEditing(null); setDraft(blankInput()); setDestinationRef(null); setDrawerMode("create"); setMessage(""); };
-  const openEdit = (profile: AccommodationProfile) => { setEditing(profile); setDraft(profileInput(profile)); setDestinationRef(profile.destination_ref); setDrawerMode("edit"); setMessage(""); };
-  const save = async () => {
-    if (!destinationRef || !draft.name.trim()) { setMessage("Destination and accommodation name are required."); return; }
-    setPending(true);
-    try { const input = { ...draft, destinationId: destinationRef.id }; const saved = editing ? await updateAccommodation(editing.id, input) : await createAccommodation(input); await mutateProfiles(); onChange(saved); setDrawerMode(null); setOpen(false); }
-    catch (error) { setMessage(error instanceof Error ? error.message : "Accommodation could not be saved."); }
-    finally { setPending(false); }
-  };
-  const upload = async (target: "hotel_asset" | "room_asset", file: File) => {
-    if (!editing) return;
-    setPending(true);
-    try { const uploaded = await uploadAccommodationAsset(file, editing.id, target === "hotel_asset" ? "exteriors" : "interiors"); setDraft((current) => ({ ...current, [target]: uploaded.r2Key })); setMessage("Asset uploaded. Save the profile to use it as the default."); }
-    catch (error) { setMessage(error instanceof Error ? error.message : "Accommodation asset could not be uploaded."); }
-    finally { setPending(false); }
-  };
-  const toggleStatus = async (profile: AccommodationProfile) => { setPending(true); try { const saved = await updateAccommodationStatus(profile.id, !profile.is_active); await mutateProfiles(); if (!saved.is_active && value === saved.id) onChange(null); } catch (error) { setMessage(error instanceof Error ? error.message : "Accommodation status could not be updated."); } finally { setPending(false); } };
-
-  return <div className="flex flex-col gap-2"><span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>Accommodation</span><div className="flex flex-wrap gap-2"><button type="button" disabled={disabled} onClick={() => setOpen(true)} className={cn(getTypographyClassName("bodyMd"), "flex min-h-11 min-w-[16rem] flex-1 items-center rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3 text-left text-[var(--color-on-surface)] disabled:opacity-60")}>{displayText}</button>{!disabled ? <button type="button" onClick={openCreate} className={cn(getTypographyClassName("buttonSecondary"), "min-h-11 rounded-[var(--radius-button)] bg-[var(--color-contrast)] !text-white hover:opacity-90 px-4 shadow-2xs border border-transparent transition-all")}>Add new</button> : null}</div>{open ? <div role="presentation" className="fixed inset-0 z-50 flex justify-end bg-[color-mix(in_srgb,var(--color-contrast)_35%,transparent)]"><section role="dialog" aria-modal="true" aria-label="Select accommodation" className="h-full w-full max-w-xl overflow-y-auto border-l border-[var(--color-border-strong)] bg-[var(--color-surface)] p-5 shadow-[var(--elevation-card)]"><div className="flex items-start justify-between gap-4"><div><h2 className={cn(getTypographyClassName("cardTitle"), "text-[var(--color-on-surface)]")}>Select Accommodation</h2><p className={cn(getTypographyClassName("bodySm"), "mt-1 text-[var(--color-muted)]")}>Selecting a profile snapshots its factual stay details into this quotation.</p></div><button type="button" onClick={() => setOpen(false)} className={cn(getTypographyClassName("buttonSecondary"), "min-h-11 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-on-surface)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)] px-3.5 transition-all")}>Close</button></div><div className="mt-5 flex gap-2"><input autoFocus value={search} placeholder="Search accommodation or city" onChange={(event) => setSearch(event.target.value)} className={cn(inputClass, "min-w-0 flex-1")} /><button type="button" onClick={() => setDrawerMode("manage")} className={cn(getTypographyClassName("buttonSecondary"), "min-h-11 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-on-surface)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)] px-3.5 transition-all")}>Manage</button></div>{profilesError ? <p className={cn(getTypographyClassName("bodySm"), "mt-3 text-[var(--color-accent)]")}>Accommodation catalog is unavailable.</p> : null}<div role="listbox" aria-label="Accommodations" className="mt-3 flex flex-col gap-1">{profiles.filter((profile) => profile.is_active).map((profile) => <button key={profile.id} type="button" role="option" aria-selected={profile.id === value} onClick={() => { onChange(profile); setOpen(false); }} className="rounded-[var(--radius-button)] p-3 text-left hover:bg-[var(--color-surface-muted)]"><span className={cn(getTypographyClassName("bodyMd"), "block text-[var(--color-on-surface)]")}>{profile.name}</span><span className={cn(getTypographyClassName("caption"), "block text-[var(--color-muted)]")}>{profile.destination}{profile.room_type ? ` · ${profile.room_type}` : ""}</span></button>)}{!pending && !profilesLoading && !profiles.filter((profile) => profile.is_active).length ? <p className={cn(getTypographyClassName("bodySm"), "p-2 text-[var(--color-muted)]")}>No Accommodation matches this search.</p> : null}</div><div className="mt-4"><button type="button" onClick={openCreate} className={cn(getTypographyClassName("buttonSecondary"), "min-h-11 rounded-[var(--radius-button)] bg-[var(--color-accent)] !text-white hover:bg-[color-mix(in_srgb,var(--color-accent)_85%,black)] px-4 shadow-xs border border-transparent transition-all")}>Add accommodation</button></div></section></div> : null}{drawerMode ? <div role="dialog" aria-modal="true" aria-label="Accommodation profile" className="fixed inset-0 z-50 flex justify-end bg-[color-mix(in_srgb,var(--color-contrast)_35%,transparent)]"><section className="h-full w-full max-w-2xl overflow-y-auto border-l border-[var(--color-border-strong)] bg-[var(--color-surface)] p-5 shadow-[var(--elevation-card)]"><div className="flex items-start justify-between gap-4"><div><h2 className={cn(getTypographyClassName("cardTitle"), "text-[var(--color-on-surface)]")}>{drawerMode === "manage" ? "Manage Accommodations" : editing ? "Edit Accommodation" : "Add Accommodation"}</h2></div><button type="button" onClick={() => setDrawerMode(null)} className={cn(getTypographyClassName("buttonSecondary"), "min-h-11 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-on-surface)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)] px-3.5 transition-all")}>Close</button></div>{drawerMode === "manage" ? <div className="mt-5 flex flex-col gap-2">{profiles.map((profile) => <article key={profile.id} className="flex items-center justify-between gap-3 rounded-[var(--radius-card)] border border-[var(--color-border-strong)] bg-[var(--color-surface-white)] p-3 shadow-2xs"><span><span className={cn(getTypographyClassName("bodyMd"), "block text-[var(--color-on-surface)]")}>{profile.name}</span><span className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>{profile.is_active ? "Active" : "Inactive"}</span></span><span className="flex gap-2"><button type="button" onClick={() => openEdit(profile)} className={cn(getTypographyClassName("buttonSecondary"), "min-h-10 rounded-[var(--radius-button)] bg-[var(--color-contrast)] !text-white hover:opacity-90 px-3 shadow-2xs border border-transparent transition-all")}>Edit</button><button type="button" onClick={() => void toggleStatus(profile)} className={cn(getTypographyClassName("buttonSecondary"), profile.is_active ? "min-h-10 rounded-[var(--radius-button)] bg-rose-700 !text-white hover:bg-rose-800 px-3 shadow-2xs border border-transparent transition-all" : "min-h-10 rounded-[var(--radius-button)] bg-[var(--color-accent)] !text-white hover:bg-[color-mix(in_srgb,var(--color-accent)_85%,black)] px-3 shadow-2xs border border-transparent transition-all")}>{profile.is_active ? "Deactivate" : "Activate"}</button></span></article>)}</div> : <><AccommodationProfileForm draft={draft} destinationRef={destinationRef} profileId={editing?.id ?? null} onChange={setDraft} onDestinationChange={setDestinationRef} onUpload={(target, file) => void upload(target, file)} /><div className="mt-5 flex justify-end"><button type="button" disabled={pending} onClick={() => void save()} className={cn(getTypographyClassName("buttonPrimary"), "min-h-11 rounded-[var(--radius-button)] bg-[var(--color-accent)] !text-white hover:bg-[color-mix(in_srgb,var(--color-accent)_85%,black)] px-5 shadow-md border border-transparent transition-all disabled:opacity-50")}>{pending ? "Saving…" : "Save Accommodation"}</button></div></>}{message ? <p aria-live="polite" className={cn(getTypographyClassName("bodySm"), "mt-3 text-[var(--color-accent)]")}>{message}</p> : null}</section></div> : null}</div>;
+/**
+ * Backward-compatible adapter wrapper for AccommodationPicker.
+ * Delegating all logic to the standardized AccommodationSelect component.
+ */
+export default function AccommodationPicker({
+  value,
+  name,
+  destination,
+  destinationId,
+  disabled = false,
+  onChange,
+}: Props) {
+  return (
+    <AccommodationSelect
+      label="Accommodation"
+      value={value}
+      name={name}
+      destination={destination}
+      destinationId={destinationId}
+      disabled={disabled}
+      onChange={onChange}
+    />
+  );
 }

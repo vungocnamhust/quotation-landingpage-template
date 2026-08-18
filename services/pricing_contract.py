@@ -6,30 +6,19 @@ import re
 from typing import Any
 
 
-_SUPPORTED_CURRENCIES = {"USD", "VND", "EUR", "GBP", "AUD"}
+from core.rules import (
+    SUPPORTED_CURRENCIES,
+    currency_divisor,
+    parse_legacy_amount_minor,
+)
+
+_SUPPORTED_CURRENCIES = SUPPORTED_CURRENCIES
 _CURRENCY_RE = re.compile(r"\b(USD|VND|EUR|GBP|AUD)\b", re.IGNORECASE)
 _AMOUNT_RE = re.compile(r"([0-9][0-9,]*(?:\.[0-9]+)?)")
 _LEGACY_KEYS = {
     "currency", "total_budget", "price_basis", "option_label", "kicker",
     "display_title", "display_subtitle", "cta_label",
 }
-
-
-def currency_divisor(currency: str) -> int:
-    return 1 if currency == "VND" else 100
-
-
-def parse_legacy_amount_minor(value: Any, currency: str) -> int | None:
-    match = _AMOUNT_RE.search(str(value or ""))
-    if match is None:
-        return None
-    try:
-        amount = float(match.group(1).replace(",", ""))
-    except ValueError:
-        return None
-    if amount <= 0:
-        return None
-    return round(amount * currency_divisor(currency))
 
 
 def normalize_legacy_pricing_facts(payload: dict[str, Any]) -> dict[str, Any]:

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from datetime import date
-
+from core.rules import parse_iso_date
 from quote_document import CreateQuoteRequestV1
 
 
@@ -19,7 +18,7 @@ def quotation_intake_missing_inputs(payload: CreateQuoteRequestV1) -> list[str]:
         missing.append("lang")
     if not payload.presentation_options.travel_designer_id:
         missing.append("presentation_options.travel_designer_id")
-    start_date, end_date = _parse_date(trip.start_date), _parse_date(trip.end_date)
+    start_date, end_date = parse_iso_date(trip.start_date), parse_iso_date(trip.end_date)
     if start_date is None:
         missing.append("trip_facts.start_date")
     if end_date is None:
@@ -55,7 +54,7 @@ def quotation_intake_missing_inputs(payload: CreateQuoteRequestV1) -> list[str]:
             missing.append(f"service_facts.hotels[{index}].name")
         if not (hotel.room_type or "").strip():
             missing.append(f"service_facts.hotels[{index}].room_type")
-        check_in, check_out = _parse_date(hotel.check_in), _parse_date(hotel.check_out)
+        check_in, check_out = parse_iso_date(hotel.check_in), parse_iso_date(hotel.check_out)
         if check_in is None:
             missing.append(f"service_facts.hotels[{index}].check_in")
         if check_out is None or (check_in is not None and check_out < check_in):
@@ -70,12 +69,3 @@ def quotation_intake_missing_inputs(payload: CreateQuoteRequestV1) -> list[str]:
     if customer.children is not None and customer.children < 0:
         missing.append("customer_facts.children")
     return missing
-
-
-def _parse_date(value: str | None) -> date | None:
-    if not value:
-        return None
-    try:
-        return date.fromisoformat(value)
-    except ValueError:
-        return None

@@ -20,7 +20,6 @@ import type {
   StaysDividerViewModel,
   ThemeDefinition,
   TypographySlotMap,
-  FinalizationViewModel,
 } from '../../display/types';
 import { textValue } from '../../display/types';
 import type { ViewMode } from '../../display/contracts';
@@ -879,33 +878,6 @@ export function DesignerSection({
   );
 }
 
-export function FinalizationSection({
-  sectionId,
-  viewModel,
-  displayConfig,
-  theme,
-  viewMode,
-}: BaseSectionProps<FinalizationViewModel>) {
-  if (!viewModel || ((viewModel.required?.items?.length ?? 0) === 0 && (viewModel.afterConfirmation?.items?.length ?? 0) === 0)) {
-    return null;
-  }
-  const slots = getLayoutSlots(displayConfig.layoutVariant, viewMode);
-  return (
-    <section id="finalization" className={shellProps(sectionId, displayConfig, viewMode)}>
-      {sectionOrnaments(theme, displayConfig.ornaments)}
-      <div className={slots.container}>
-        <div className={slots.header}>
-          <SectionHeader kicker={viewModel.kicker} title={viewModel.title} body={viewModel.description} typography={displayConfig.typographySlots} />
-        </div>
-        <div className={slots.content}>
-          <InclusionsPanel title={viewModel.required.title} items={viewModel.required.items} typography={displayConfig.typographySlots} />
-          <InclusionsPanel title={viewModel.afterConfirmation.title} items={viewModel.afterConfirmation.items} typography={displayConfig.typographySlots} />
-        </div>
-      </div>
-    </section>
-  );
-}
-
 export function FooterSection({
   sectionId,
   viewModel,
@@ -950,7 +922,6 @@ export const sectionRegistry = {
   pricing: PricingSection,
   inclusionsExclusions: InclusionsExclusionsSection,
   paymentTerms: PaymentTermsSection,
-  finalization: FinalizationSection,
   designer: DesignerSection,
   footer: FooterSection,
 };

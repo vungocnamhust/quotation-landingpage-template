@@ -62,6 +62,8 @@ export type PricingOptionFact = {
   currency: string | null;
   per_traveler_amount_minor: number | null;
   group_total_amount_minor: number | null;
+  per_adult_amount_minor?: number | null;
+  per_child_amount_minor?: number | null;
 };
 
 export type BookingItemFact = {
@@ -89,6 +91,75 @@ export type DraftMediaRef = {
 };
 export type DraftMediaSlotValue = DraftMediaRef | DraftMediaRef[] | null;
 export type DraftMediaSelections = Record<string, DraftMediaSlotValue>;
+
+export type QuoteRequestRole = "traveller" | "advisor";
+
+export type QuoteRequestItem = {
+  id: string;
+
+  role: QuoteRequestRole;
+  status: "new" | "under_review" | "quotation_created" | "archived";
+  current_revision?: number;
+  customer_name: string | null;
+  email: string | null;
+  phone: string | null;
+  company_name: string | null;
+  market: string | null;
+  preferred_contact: string | null;
+  destinations: string[];
+  start_date: string | null;
+  end_date: string | null;
+  raw_dates_text: string | null;
+  adults: number | null;
+  children: number | null;
+  kid_ages: number[];
+  children_details: string | null;
+  travel_style: string | null;
+  special_requirements: string | null;
+  payload_json: Record<string, unknown>;
+
+  created_by_profile_id: string | null;
+  updated_by_profile_id?: string | null;
+  partner_id: string | null;
+  linked_quotation_id: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type QuoteRequestRevisionMeta = {
+  revision: number;
+  change_summary: string | null;
+  change_source: string;
+  created_by_profile_id: string | null;
+  created_at: string;
+};
+
+export type QuoteRequestRevisionDetail = {
+  request_id: string;
+  revision: number;
+  role: QuoteRequestRole;
+  customer_name: string | null;
+  email: string | null;
+  phone: string | null;
+  company_name: string | null;
+  market: string | null;
+  preferred_contact: string | null;
+  destinations: string[];
+  start_date: string | null;
+  end_date: string | null;
+  raw_dates_text: string | null;
+  adults: number | null;
+  children: number | null;
+  kid_ages: number[];
+  children_details: string | null;
+  travel_style: string | null;
+  special_requirements: string | null;
+  payload_json: Record<string, unknown>;
+  change_summary: string | null;
+  change_source: string;
+  created_by_profile_id: string | null;
+  created_at: string;
+};
 
 export type QuotationFacts = {
   source: {
@@ -120,13 +191,17 @@ export type QuotationFacts = {
     customer_name: string | null;
     adults: number | null;
     children: number | null;
+    kid_ages?: number[];
     nationality: string | null;
     guest_profile: string | null;
     travel_style?: string | null;
     market: string | null;
     party_label: string | null;
     greeting_name: string | null;
+    advisor_name?: string | null;
+    advisor_agency?: string | null;
   };
+
   service_facts: {
     hotels: HotelFact[];
     inclusions: string[];
@@ -158,6 +233,12 @@ export type QuotationFacts = {
     cta_body: string | null;
   };
 };
+
+export type TripFact = QuotationFacts["trip_facts"];
+export type CustomerFact = QuotationFacts["customer_facts"];
+export type ServiceFact = QuotationFacts["service_facts"];
+export type PricingFact = QuotationFacts["pricing_facts"];
+export type BookingFact = QuotationFacts["booking_facts"];
 
 export type ResolvedFacts = {
   durationDays: number | null;

@@ -19,7 +19,7 @@ export default function RouteMapClientIsland({
   viewModel: RouteMapViewModel;
   typography: TypographySlotMap;
   mapColors: { route: string; marker?: string; activeMarker?: string };
-  viewMode: Exclude<ViewMode, 'pdf'>;
+  viewMode: ViewMode;
 }) {
   if (!viewModel.isInteractiveAvailable) {
     return <div className="display-route-map__unavailable" role="status">{textValue(viewModel.unavailableMessage)}</div>;

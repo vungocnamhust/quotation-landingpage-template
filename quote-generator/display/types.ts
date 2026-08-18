@@ -13,7 +13,6 @@ export type PublicSectionId =
   | 'pricing'
   | 'inclusionsExclusions'
   | 'paymentTerms'
-  | 'finalization'
   | 'designer'
   | 'footer';
 
@@ -629,7 +628,6 @@ export interface PageViewModel {
   pricing: PricingViewModel;
   inclusionsExclusions: InclusionsExclusionsViewModel;
   paymentTerms: PaymentTermsViewModel;
-  finalization?: FinalizationViewModel;
   designer: DesignerViewModel;
   footer: FooterViewModel;
   states: StateViewModels;

@@ -40,6 +40,7 @@
 
 ## Quote Generator Skills
 - Prefer the repo-local skills in `./.agents/skills/` whenever a task touches `quote-generator/`.
+- Use `react-component-reuse-governor` when creating new inputs, selectors, pickers, refactoring duplicated UI logic, or standardizing reusable React components across forms and workspaces.
 - Use `quote-generator-display-governor` first for display-system changes.
 - Use `quote-generator-prefill-governor` for prefill, default value assignment, duration/date calculations, party labels, or hotel/pricing data derivations.
 - Use `quote-generator-typography-ssot` for any typography, button text, nav text, CTA, or print text changes.

@@ -15,7 +15,7 @@ interface RouteMapExperienceProps {
   viewModel: RouteMapViewModel;
   typography: TypographySlotMap;
   mapColors: { route: string; marker?: string; activeMarker?: string };
-  viewMode: Exclude<ViewMode, 'pdf'>;
+  viewMode: ViewMode;
 }
 
 type TileProvider = {
@@ -255,10 +255,19 @@ export default function RouteMapExperience({
 
     const nextMarker = markerMapRef.current.get(activeSequence);
     if (nextMarker) {
-      map.flyTo(nextMarker.getLatLng(), Math.max(map.getZoom(), viewMode === 'mobile' ? 6.4 : 7.6), {
-        animate: true,
-        duration: 0.6,
-      });
+      const targetLatLng = nextMarker.getLatLng();
+      if (
+        targetLatLng &&
+        typeof targetLatLng.lat === 'number' &&
+        typeof targetLatLng.lng === 'number' &&
+        !Number.isNaN(targetLatLng.lat) &&
+        !Number.isNaN(targetLatLng.lng)
+      ) {
+        map.flyTo(targetLatLng, Math.max(map.getZoom(), viewMode === 'mobile' ? 6.4 : 7.6), {
+          animate: true,
+          duration: 0.6,
+        });
+      }
     }
   }, [activeSequence, mapColors, points, typography, viewMode, viewModel.segments]);
 

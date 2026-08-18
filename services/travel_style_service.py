@@ -69,10 +69,5 @@ class TravelStyleService:
     @staticmethod
     def sync_travel_style_facts(customer_facts: Dict[str, Any]) -> Dict[str, Any]:
         """Bidirectional sync helper between travel_style and guest_profile in customer_facts."""
-        if not isinstance(customer_facts, dict):
-            return customer_facts
-
-        travel_style = customer_facts.get("travel_style") or customer_facts.get("guest_profile") or ""
-        customer_facts["travel_style"] = travel_style
-        customer_facts["guest_profile"] = travel_style
-        return customer_facts
+        from core.rules import sync_travel_style_facts as _sync
+        return _sync(customer_facts)

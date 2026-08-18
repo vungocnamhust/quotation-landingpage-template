@@ -31,6 +31,9 @@ EXPECTED_V2_OPERATIONS = {
     ("/api/v2/media-library/children", "GET"), ("/api/v2/media-library/resolve-location", "POST"),
     ("/api/v2/media-library/search", "GET"), ("/api/v2/media-library/sync", "POST"),
     ("/api/v2/media-library/sync/{run_id}", "GET"), ("/api/v2/media-library/uploads", "POST"),
+    ("/api/v2/partners", "GET"), ("/api/v2/partners", "POST"),
+    ("/api/v2/partners/{partner_id}", "GET"), ("/api/v2/partners/{partner_id}", "PUT"),
+    ("/api/v2/partners/{partner_id}/status", "PATCH"),
     ("/api/v2/publication-jobs/{job_id}", "GET"), ("/api/v2/quotation-options", "GET"),
     ("/api/v2/quotations", "POST"),
     ("/api/v2/quotations/{quotation_id}/content-drafts", "GET"),
@@ -58,7 +61,11 @@ EXPECTED_V2_OPERATIONS = {
     ("/api/v2/travel-designers/{profile_id}", "PUT"), ("/api/v2/travel-designers/{profile_id}/status", "PATCH"),
     ("/api/v2/travel-styles", "GET"), ("/api/v2/workspace/me", "GET"),
     ("/api/v2/workspace/quotations", "GET"), ("/api/v2/workspace/quotations/{quotation_id}/overview", "GET"),
+    ("/api/v2/workspace/requests", "GET"), ("/api/v2/workspace/requests", "POST"),
+    ("/api/v2/workspace/requests/{request_id}", "GET"), ("/api/v2/workspace/requests/{request_id}", "PATCH"),
+    ("/api/v2/workspace/requests/{request_id}/generate-quotation", "POST"),
 }
+
 
 
 def test_v2_route_manifest_is_exact() -> None:

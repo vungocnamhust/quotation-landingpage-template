@@ -1277,15 +1277,33 @@
         border-width: 1.5px;
       }
 
-      .luxury-marker-label {
-        font-size: 12px;
-        left: 28px;
-        top: 2px;
-        max-width: 110px;
-        white-space: normal;
-        line-height: 1.15;
-        text-shadow: 0 0 3px var(--bg-main), 0 0 3px var(--bg-main);
-      }
+          .luxury-marker-label {
+      position: absolute;
+      left: 38px;
+      top: 3px;
+      font-family: var(--serif);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-main);
+      white-space: nowrap;
+      text-shadow: 0 0 4px var(--bg-main), 0 0 4px var(--bg-main), 0 0 4px var(--bg-main), 0 0 4px #ffffff;
+    }
+
+    .luxury-marker-label.label-left {
+      left: auto !important;
+      right: 38px !important;
+      text-align: right !important;
+    }
+
+    .luxury-marker-label.label-bottom-right {
+      left: 38px !important;
+      top: 8px !important;
+    }
+
+    .luxury-marker-label.label-top-right {
+      left: 38px !important;
+      top: -8px !important;
+    }
     }
 
     .map-section {
@@ -1450,7 +1468,7 @@
       z-index: 10;
     }
 
-    .luxury-marker-label {
+        .luxury-marker-label {
       position: absolute;
       left: 38px;
       top: 3px;
@@ -1459,12 +1477,40 @@
       font-weight: 600;
       color: var(--text-main);
       white-space: nowrap;
-      text-shadow: 0 0 4px var(--bg-main), 0 0 4px var(--bg-main), 0 0 4px var(--bg-main);
-      pointer-events: none;
-      transition: color 0.3s;
+      text-shadow: 0 0 4px var(--bg-main), 0 0 4px var(--bg-main), 0 0 4px var(--bg-main), 0 0 4px #ffffff;
+    }
+
+    .luxury-marker-label.label-left {
+      left: auto !important;
+      right: 38px !important;
+      text-align: right !important;
+    }
+
+    .luxury-marker-label.label-bottom-right {
+      left: 38px !important;
+      top: 8px !important;
+    }
+
+    .luxury-marker-label.label-top-right {
+      left: 38px !important;
+      top: -8px !important;
     }
 
     .luxury-marker.active+.luxury-marker-label {
+    .luxury-marker-label.label-left {
+      left: auto !important;
+      right: 36px !important;
+      text-align: right !important;
+    }
+    .luxury-marker-label.label-bottom-right {
+      left: 36px !important;
+      top: 10px !important;
+    }
+    .luxury-marker-label.label-top-right {
+      left: 36px !important;
+      top: -10px !important;
+    }
+
       color: var(--accent);
     }
 
@@ -6563,19 +6609,39 @@
     }
 
     function applyMarkerOffsets() {
-      const grouped = new Map();
-      mapSegments.forEach(segment => {
-        const key = `${segment.coords[0]},${segment.coords[1]}`;
-        if (!grouped.has(key)) grouped.set(key, []);
-        grouped.get(key).push(segment);
-      });
-
-      grouped.forEach(items => {
-        items.forEach((segment, occurrenceIdx) => {
-          segment.offsetPattern = getOffsetPattern(occurrenceIdx);
-          segment.displayCoords = segment.coords; // DO NOT mutate LatLng!
+                      // Proximity and collision resolution for markers and labels
+        mapSegments.forEach(segment => {
+          segment.offsetPattern = [0, 0];
+          segment.labelClass = '';
         });
-      });
+
+        for (let i = 0; i < mapSegments.length; i++) {
+          for (let j = i + 1; j < mapSegments.length; j++) {
+            const s1 = mapSegments[i];
+            const s2 = mapSegments[j];
+            const latDiff = s2.coords[0] - s1.coords[0];
+            const lngDiff = s2.coords[1] - s1.coords[1];
+            const dist = Math.hypot(latDiff, lngDiff);
+
+            if (dist < 0.45) {
+              // Very close destinations like Da Nang & Hoi An (~25km) -> 5px offset
+              if (s1.coords[0] < s2.coords[0]) {
+                s1.offsetPattern = [5, 5];
+                s1.labelClass = 'label-bottom-right';
+                s2.offsetPattern = [-5, -5];
+                s2.labelClass = 'label-top-right';
+              } else {
+                s1.offsetPattern = [-5, -5];
+                s1.labelClass = 'label-top-right';
+                s2.offsetPattern = [5, 5];
+                s2.labelClass = 'label-bottom-right';
+              }
+            } else if (dist < 1.4 && Math.abs(latDiff) < 0.3 && lngDiff > 0) {
+              // Horizontally close like Hanoi (West) and Halong Bay (East)
+              s1.labelClass = 'label-left';
+            }
+          }
+        }
     }
 
     function drawMarkers() {

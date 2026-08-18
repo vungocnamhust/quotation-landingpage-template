@@ -62,15 +62,12 @@ class QuoteDocumentFlowTests(unittest.TestCase):
         apply_quote_document_to_lang_ctx(lang_ctx, document)
 
         self.assertEqual(lang_ctx["booking_terms_items"][1]["label"], "Visa")
-        self.assertEqual(lang_ctx["final_req"], ["Passport copies"])
-        self.assertEqual(lang_ctx["final_after"], ["Vouchers issued"])
         self.assertEqual(lang_ctx["journey_overview_title"], "A Journey Shaped Around Your Group")
         self.assertEqual(lang_ctx["letter_highlight"], "This journey was designed to leave room for both discovery and rest.")
         self.assertEqual(lang_ctx["payment_cta"], "Approve & Book Now")
         self.assertEqual(lang_ctx["designer_kicker"], "Your Journey Designer")
         self.assertEqual(lang_ctx["cta_h2"], "I will remain your personal point of contact as we refine your journey.")
         self.assertEqual(lang_ctx["seller_subtitle"], "(Trung Hieu Pham)")
-        self.assertTrue(lang_ctx["section_enabled"]["finalization"])
 
 
 if __name__ == "__main__":

@@ -1,13 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import useSWR from "swr";
-import { LayoutDashboard, FileText, Plus, Boxes } from "lucide-react";
+import { LayoutDashboard, FileText, Inbox, PlusCircle, Boxes } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography";
 import { apiErrorMessage, quotationFetch } from "../../lib/apiError";
 import { cn } from "../../utils/cn";
 import { ToastProvider } from "./ToastProvider";
+import { NotificationBellButton } from "./NotificationBellButton";
+import { NotificationCenterDrawer } from "./NotificationCenterDrawer";
+import { useNotifications } from "./useNotifications";
 
 const API_BASE = process.env.NEXT_PUBLIC_QUOTATION_API_URL ?? "";
 const fetcher = <T,>(url: string) =>
@@ -19,9 +23,10 @@ type Me = {
 
 const nav = [
   { label: "Desk", href: "/workspace", icon: LayoutDashboard },
+  { label: "Requests", href: "/workspace/requests", icon: Inbox },
+  { label: "New Request", href: "/workspace/requests/new", icon: PlusCircle },
   { label: "My quotations", href: "/workspace/quotations", icon: FileText },
   { label: "Components", href: "/workspace/components", icon: Boxes },
-  { label: "New quotation", href: "/workspace/quotations/new", icon: Plus },
 ] as const;
 
 function UserAvatar({ name }: { name: string }) {
@@ -39,33 +44,39 @@ function UserAvatar({ name }: { name: string }) {
   );
 }
 
-export default function WorkspaceShell({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function WorkspaceShellInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const { data, error } = useSWR<Me>(
     `${API_BASE}/api/v2/workspace/me`,
     fetcher
   );
 
+  const {
+    notifications,
+    unreadCount,
+    isLoading: isNotifLoading,
+    markAsRead,
+    markAllAsRead,
+  } = useNotifications();
+
   return (
-    <ToastProvider>
-      <div className="min-h-screen bg-[var(--color-surface-muted)] text-[var(--color-on-surface)]">
-        <header className="border-b border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-4 sm:px-8">
-          <div className="mx-auto flex w-full max-w-[100rem] items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <Link
-                href="/workspace"
-                className={cn(
-                  getTypographyClassName("navTitle"),
-                  "text-[var(--color-on-surface)] transition-colors hover:text-[var(--color-accent)]"
-                )}
-              >
-                DIASgroup Desk
-              </Link>
-            </div>
+    <div className="min-h-screen bg-[var(--color-surface-muted)] text-[var(--color-on-surface)]">
+      <header className="border-b border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-4 sm:px-8">
+        <div className="mx-auto flex w-full max-w-[100rem] items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Link
+              href="/workspace"
+              className={cn(
+                getTypographyClassName("navTitle"),
+                "text-[var(--color-on-surface)] transition-colors hover:text-[var(--color-accent)]"
+              )}
+            >
+              DIASgroup Desk
+            </Link>
+          </div>
+
+          <div className="flex items-center gap-4">
             <p
               className={cn(
                 getTypographyClassName("navMeta"),
@@ -75,73 +86,101 @@ export default function WorkspaceShell({
               {data?.profile.email ??
                 (error ? apiErrorMessage(error) : "Loading your workspace…")}
             </p>
+
+            <NotificationBellButton
+              unreadCount={unreadCount}
+              isOpen={isDrawerOpen}
+              onClick={() => setIsDrawerOpen((prev) => !prev)}
+            />
           </div>
-        </header>
-
-        <div className="mx-auto grid w-full max-w-[100rem] gap-6 px-5 py-6 lg:grid-cols-[15rem_minmax(0,1fr)] lg:px-8">
-          <aside className="h-fit rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3 shadow-[var(--elevation-card)]">
-            <p
-              className={cn(
-                getTypographyClassName("overline"),
-                "px-3 pb-3 text-[var(--color-muted)]"
-              )}
-            >
-              Personal workspace
-            </p>
-            <nav
-              className="flex gap-1 overflow-x-auto lg:flex-col"
-              aria-label="Staff workspace"
-            >
-              {nav.map(({ label, href, icon: Icon }) => {
-                const isActive =
-                  pathname === href ||
-                  (href !== "/workspace" && pathname.startsWith(href));
-                return (
-                  <Link
-                    key={href}
-                    href={href}
-                    className={cn(
-                      getTypographyClassName("buttonSecondary"),
-                      "workspace-nav-item shrink-0 rounded-[var(--radius-button)] px-3 py-3 transition-all",
-                      isActive
-                        ? "border border-[var(--color-border-strong)] bg-[var(--color-accent-wash)] text-[var(--color-accent)] shadow-xs"
-                        : "border border-transparent text-[var(--color-on-surface)] hover:border-[var(--color-border)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)]"
-                    )}
-                  >
-                    <Icon size={16} aria-hidden="true" />
-                    <span>{label}</span>
-                  </Link>
-                );
-              })}
-            </nav>
-
-            {data?.profile ? (
-              <div className="mt-5 flex items-center gap-3 border-t border-[var(--color-border)] px-3 pt-4">
-                <UserAvatar name={data.profile.name} />
-                <div className="min-w-0 flex-1">
-                  <p
-                    className={cn(
-                      getTypographyClassName("bodySm"),
-                      "truncate text-[var(--color-on-surface)]"
-                    )}
-                  >
-                    {data.profile.name}
-                  </p>
-                  <p
-                    className={cn(
-                      getTypographyClassName("caption"),
-                      "text-[var(--color-muted)]"
-                    )}
-                  >
-                    Travel Designer
-                  </p>
-                </div>
-              </div>
-            ) : null}
-          </aside>
-          <section className="min-w-0">{children}</section>
         </div>
+      </header>
+
+      <NotificationCenterDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        notifications={notifications}
+        unreadCount={unreadCount}
+        isLoading={isNotifLoading}
+        onMarkAsRead={markAsRead}
+        onMarkAllAsRead={markAllAsRead}
+      />
+
+      <div className="mx-auto grid w-full max-w-[100rem] gap-6 px-5 py-6 lg:grid-cols-[15rem_minmax(0,1fr)] lg:px-8">
+        <aside className="h-fit rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3 shadow-[var(--elevation-card)]">
+          <p
+            className={cn(
+              getTypographyClassName("overline"),
+              "px-3 pb-3 text-[var(--color-muted)]"
+            )}
+          >
+            Personal workspace
+          </p>
+          <nav
+            className="flex gap-1 overflow-x-auto lg:flex-col"
+            aria-label="Staff workspace"
+          >
+            {nav.map(({ label, href, icon: Icon }) => {
+              const isActive =
+                pathname === href ||
+                (href !== "/workspace" && pathname.startsWith(href));
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={cn(
+                    getTypographyClassName("buttonSecondary"),
+                    "workspace-nav-item shrink-0 rounded-[var(--radius-button)] px-3 py-3 transition-all",
+                    isActive
+                      ? "border border-[var(--color-border-strong)] bg-[var(--color-accent-wash)] text-[var(--color-accent)] shadow-xs"
+                      : "border border-transparent text-[var(--color-on-surface)] hover:border-[var(--color-border)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)]"
+                  )}
+                >
+                  <Icon size={16} aria-hidden="true" />
+                  <span>{label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+
+          {data?.profile ? (
+            <div className="mt-5 flex items-center gap-3 border-t border-[var(--color-border)] px-3 pt-4">
+              <UserAvatar name={data.profile.name} />
+              <div className="min-w-0 flex-1">
+                <p
+                  className={cn(
+                    getTypographyClassName("bodySm"),
+                    "truncate text-[var(--color-on-surface)]"
+                  )}
+                >
+                  {data.profile.name}
+                </p>
+                <p
+                  className={cn(
+                    getTypographyClassName("caption"),
+                    "text-[var(--color-muted)]"
+                  )}
+                >
+                  Travel Designer
+                </p>
+              </div>
+            </div>
+          ) : null}
+        </aside>
+        <section className="min-w-0">{children}</section>
       </div>
+    </div>
+  );
+}
+
+export default function WorkspaceShell({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <ToastProvider>
+      <WorkspaceShellInner>{children}</WorkspaceShellInner>
     </ToastProvider>
   );
 }

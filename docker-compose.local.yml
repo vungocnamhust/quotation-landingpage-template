@@ -10,6 +10,10 @@ x-migration-build: &migration-build
   dockerfile: docker/app/Dockerfile
   target: runtime-base
 
+x-notification-build: &notification-build
+  context: .
+  dockerfile: docker/notification/Dockerfile
+
 services:
   postgres:
     image: postgres:16
@@ -22,6 +26,7 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init-multi-db.sh:/docker-entrypoint-initdb.d/init-multi-db.sh
     networks:
       - quotation_net
     healthcheck:
@@ -47,6 +52,25 @@ services:
     command: ["alembic", "upgrade", "head"]
     restart: "no"
 
+  notification-migrate:
+    image: quotation-local-notification-migrate:latest
+    build: *notification-build
+    env_file:
+      - .env.local
+    environment:
+      NOTIFICATION_DATABASE_URL: postgresql+asyncpg://quotation:quotation@postgres:5432/notification
+      NOTIFICATION_DATABASE_URL_SYNC: postgresql+psycopg://quotation:quotation@postgres:5432/notification
+    working_dir: /app
+    volumes:
+      - .:/app
+    networks:
+      - quotation_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["alembic", "-c", "notification/alembic.ini", "upgrade", "head"]
+    restart: "no"
+
   app:
     image: quotation-local-app:latest
     build: *pdf-app-build
@@ -70,6 +94,49 @@ services:
     command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8111"]
     ports:
       - "8111:8111"
+    restart: unless-stopped
+
+  notification-service:
+    image: quotation-local-notification-service:latest
+    build: *notification-build
+    env_file:
+      - .env.local
+    environment:
+      NOTIFICATION_PORT: 8116
+      NOTIFICATION_DATABASE_URL: postgresql+asyncpg://quotation:quotation@postgres:5432/notification
+      NOTIFICATION_DATABASE_URL_SYNC: postgresql+psycopg://quotation:quotation@postgres:5432/notification
+    working_dir: /app
+    volumes:
+      - .:/app
+    networks:
+      - quotation_net
+      - dmc-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      notification-migrate:
+        condition: service_completed_successfully
+    command: ["uvicorn", "notification.main:app", "--host", "0.0.0.0", "--port", "8116"]
+    ports:
+      - "8116:8116"
+    restart: unless-stopped
+
+  notification-worker:
+    image: quotation-local-notification-worker:latest
+    build: *notification-build
+    env_file:
+      - .env.local
+    environment:
+      NOTIFICATION_DATABASE_URL: postgresql+asyncpg://quotation:quotation@postgres:5432/notification
+    working_dir: /app
+    volumes:
+      - .:/app
+    networks:
+      - quotation_net
+    depends_on:
+      notification-service:
+        condition: service_healthy
+    command: ["python", "-m", "notification.workers.delivery_worker"]
     restart: unless-stopped
 
 networks:

@@ -307,8 +307,6 @@ async def _seed_e2e_intake_catalog(payload: dict[str, Any]) -> None:
                     destinationId=destination.id,
                     name=hotel["name"],
                     room_type=hotel["room_type"],
-                    check_in=hotel["check_in"],
-                    check_out=hotel["check_out"],
                     intro=hotel.get("intro"),
                     phone=hotel.get("phone"),
                     display_city=hotel.get("display_city"),

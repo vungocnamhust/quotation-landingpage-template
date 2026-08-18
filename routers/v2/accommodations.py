@@ -16,8 +16,6 @@ class AccommodationProfileRequest(BaseModel):
     destinationId: str
     name: str
     room_type: str | None = None
-    check_in: str | None = None
-    check_out: str | None = None
     intro: str | None = None
     phone: str | None = None
     display_city: str | None = None

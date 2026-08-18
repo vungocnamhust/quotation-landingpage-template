@@ -147,6 +147,68 @@ services:
     command: ["python", "-m", "services.publication_worker"]
     restart: unless-stopped
 
+  notification-migrate:
+    image: ${QUOTE_NOTIFICATION_IMAGE:-quotation-notification:local}
+    build:
+      context: .
+      dockerfile: docker/notification/Dockerfile
+    env_file:
+      - ${QUOTE_PRODUCTION_ENV_FILE:-.env.production}
+    environment:
+      NOTIFICATION_DATABASE_URL: postgresql+asyncpg://quotation:${POSTGRES_PASSWORD:-quotation_password}@postgres:5432/notification
+      NOTIFICATION_DATABASE_URL_SYNC: postgresql+psycopg://quotation:${POSTGRES_PASSWORD:-quotation_password}@postgres:5432/notification
+    networks:
+      - quotation_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["alembic", "-c", "notification/alembic.ini", "upgrade", "head"]
+    restart: "no"
+
+  notification-service:
+    image: ${QUOTE_NOTIFICATION_IMAGE:-quotation-notification:local}
+    build:
+      context: .
+      dockerfile: docker/notification/Dockerfile
+    env_file:
+      - ${QUOTE_PRODUCTION_ENV_FILE:-.env.production}
+    environment:
+      NOTIFICATION_PORT: 8116
+      NOTIFICATION_DATABASE_URL: postgresql+asyncpg://quotation:${POSTGRES_PASSWORD:-quotation_password}@postgres:5432/notification
+      NOTIFICATION_DATABASE_URL_SYNC: postgresql+psycopg://quotation:${POSTGRES_PASSWORD:-quotation_password}@postgres:5432/notification
+    networks:
+      - quotation_net
+      - dmc-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      notification-migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8116/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: ["uvicorn", "notification.main:app", "--host", "0.0.0.0", "--port", "8116"]
+    restart: unless-stopped
+
+  notification-worker:
+    image: ${QUOTE_NOTIFICATION_IMAGE:-quotation-notification:local}
+    build:
+      context: .
+      dockerfile: docker/notification/Dockerfile
+    env_file:
+      - ${QUOTE_PRODUCTION_ENV_FILE:-.env.production}
+    environment:
+      NOTIFICATION_DATABASE_URL: postgresql+asyncpg://quotation:${POSTGRES_PASSWORD:-quotation_password}@postgres:5432/notification
+    networks:
+      - quotation_net
+    depends_on:
+      notification-service:
+        condition: service_healthy
+    command: ["python", "-m", "notification.workers.delivery_worker"]
+    restart: unless-stopped
+
   nginx:
     image: ${QUOTE_NGINX_IMAGE:-quotation-nginx:local}
     build:
@@ -163,6 +225,8 @@ services:
       app:
         condition: service_healthy
       quote-generator:
+        condition: service_healthy
+      notification-service:
         condition: service_healthy
     restart: unless-stopped
 

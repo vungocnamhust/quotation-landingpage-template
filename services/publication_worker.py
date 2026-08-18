@@ -14,6 +14,7 @@ from core.config import settings
 from db.models.publication import PublicationJob
 from db.session import get_session_factory
 from repositories import PublicationTargetRepository, QuotationRepository
+from services.outbox_service import OutboxService
 from services.storage.r2_storage import R2Storage
 from services.publication_runtime import (
     purge_public_urls,
@@ -75,7 +76,15 @@ async def _run_pdf(job: PublicationJob) -> None:
                 if current.attempts >= current.max_attempts:
                     current.status = "failed"
                     release = await PublicationTargetRepository(session).get_release(current.release_id)
-                    if release: release.status = "failed"
+                    if release:
+                        release.status = "failed"
+                    outbox = OutboxService(session)
+                    await outbox.emit_event(
+                        event_type="quotation.publication.failed",
+                        aggregate_type="quotation",
+                        aggregate_id=current.release_id,
+                        payload={"error": current.last_error, "release_id": current.release_id},
+                    )
                 else:
                     current.status = "queued"
                     current.locked_at = None
@@ -126,6 +135,32 @@ async def _run_pdf(job: PublicationJob) -> None:
             },
             max_attempts=settings.publication_job_max_attempts,
         )
+
+        outbox = OutboxService(session)
+        await outbox.emit_event(
+            event_type="quotation.publication.completed",
+            aggregate_type="quotation",
+            aggregate_id=target.quotation_id,
+            brand_id=_brand.id,
+            payload={
+                "title": quotation.title if quotation else f"Quotation {target.quotation_id}",
+                "version": quotation.current_version if quotation else release.release_number,
+                "designer_profile_id": quotation.designer_profile_id if quotation else None,
+                "action_url": f"/workspace/quotations/{target.quotation_id}",
+            },
+        )
+        await outbox.emit_event(
+            event_type="quotation.pdf.ready",
+            aggregate_type="quotation",
+            aggregate_id=target.quotation_id,
+            brand_id=_brand.id,
+            payload={
+                "title": quotation.title if quotation else f"Quotation {target.quotation_id}",
+                "designer_profile_id": quotation.designer_profile_id if quotation else None,
+                "action_url": f"/workspace/quotations/{target.quotation_id}?tab=pdf",
+            },
+        )
+
         await session.commit()
 
 

@@ -146,6 +146,11 @@
     }
 
     @media print {
+      @page {
+        size: A4 portrait;
+        margin: 0;
+      }
+
       body {
         background-color: var(--ivory) !important;
         padding: 0;
@@ -153,27 +158,36 @@
       }
 
       .pdf-page {
-        width: auto !important;
-        min-height: auto !important;
+        width: 794px !important;
+        height: 1123px !important;
+        min-height: 1123px !important;
+        max-height: 1123px !important;
+        page-break-after: always !important;
+        break-after: page !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
         box-shadow: none !important;
-        background: transparent !important;
-        page-break-inside: auto !important;
-        break-inside: auto !important;
+        position: relative !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
       }
 
       .cover {
-        height: 100vh !important;
+        height: 1123px !important;
       }
     }
 
     /* ── Page wrapper ── */
     .pdf-page {
       width: 794px;
+      height: 1123px;
       min-height: 1123px;
+      max-height: 1123px;
       background: var(--ivory);
       page-break-after: always;
       position: relative;
       overflow: hidden;
+      box-sizing: border-box;
     }
 
     .pdf-page:last-of-type {
@@ -191,27 +205,32 @@
     .pdf-page--shell::before {
       content: "";
       position: absolute;
-      inset: 14px;
+      top: 48px;
+      left: 14px;
+      right: 14px;
+      bottom: 18px;
       border-style: solid;
-      border-width: 20px;
+      border-width: 18px;
       border-image-source: var(--indochine-border);
       border-image-slice: 72;
       border-image-repeat: round;
       background: none;
-      opacity: 0.5;
+      opacity: 0.35;
       pointer-events: none;
-      z-index: 0;
-      filter: brightness(0.4) sepia(1) saturate(3) hue-rotate(85deg);
+      z-index: 1;
     }
 
     .pdf-page--shell::after {
       content: "";
       position: absolute;
-      inset: 24px;
-      border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
-      opacity: 0.6;
+      top: 58px;
+      left: 24px;
+      right: 24px;
+      bottom: 28px;
+      border: 1px solid color-mix(in srgb, var(--primary) 25%, transparent);
+      opacity: 0.5;
       pointer-events: none;
-      z-index: 0;
+      z-index: 1;
     }
 
     .pdf-page>* {
@@ -226,9 +245,7 @@
       background-repeat: no-repeat;
       background-size: contain;
       background-position: center;
-      mix-blend-mode: multiply;
-      opacity: 0.25;
-      filter: sepia(0.5) hue-rotate(-20deg) contrast(1.2) brightness(0.9);
+      opacity: 0.18;
     }
 
     .pdf-indochine-art--cyclo {
@@ -236,14 +253,13 @@
       width: 220px;
       aspect-ratio: 251 / 168;
       opacity: 0.15;
-      filter: grayscale(1) contrast(3) brightness(1.2);
     }
 
     .pdf-indochine-art--buffalo {
       background-image: var(--indochine-cloud);
       width: 240px;
       aspect-ratio: 528 / 266;
-      opacity: 0.25;
+      opacity: 0.2;
     }
 
     .pdf-indochine-art--van-mieu {
@@ -251,14 +267,13 @@
       width: 240px;
       aspect-ratio: 597 / 429;
       opacity: 0.15;
-      filter: grayscale(1) contrast(3) brightness(1.2);
     }
 
     .pdf-indochine-art--lantern {
       background-image: var(--indochine-den-long);
       width: 96px;
       aspect-ratio: 166 / 295;
-      opacity: 0.25;
+      opacity: 0.2;
     }
 
     .cover-lantern {
@@ -374,11 +389,20 @@
       z-index: 0;
     }
 
-    .cover-overlay {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(160deg, rgba(17, 19, 15, .88) 0%, rgba(17, 19, 15, .55) 55%, rgba(17, 19, 15, .18) 100%);
-      z-index: 1;
+        .cover-overlay {
+      display: none !important;
+    }
+
+    .cover-body {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 180px 48px 54px;
+      height: 100%;
+      max-width: 600px;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.75), 0 0 20px rgba(0, 0, 0, 0.5);
     }
 
     .cover-body {
@@ -486,7 +510,9 @@
        Shared section styles
     ═══════════════════════════════════════════ */
     .page-inner {
-      padding: 44px 48px;
+      padding: 28px 52px 28px 52px;
+      position: relative;
+      z-index: 2;
     }
 
     .section-label {
@@ -605,103 +631,127 @@
       font-weight: 500;
     }
 
-    /* ═══════════════════════════════════════════
-       PAGE 3 — Itinerary
+        /* ═══════════════════════════════════════════
+       PAGE 4-10 — Itinerary (Day-by-Day Full Height Distribution)
     ═══════════════════════════════════════════ */
+    .pdf-page--shell {
+      display: flex !important;
+      flex-direction: column !important;
+      height: 1123px !important;
+      box-sizing: border-box !important;
+    }
+
+    .pdf-page--shell .page-inner {
+      flex: 1 1 auto !important;
+      display: flex !important;
+      flex-direction: column !important;
+      padding: 24px 52px 24px 52px !important;
+      min-height: 0 !important;
+      box-sizing: border-box !important;
+    }
+
     .itinerary {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+      display: flex !important;
+      flex-direction: column !important;
+      flex: 1 1 auto !important;
+      justify-content: space-between !important;
+      gap: 16px !important;
+      min-height: 0 !important;
     }
 
     .day-card {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 252px;
+      flex: 1 1 0 !important;
+      display: grid !important;
+      grid-template-columns: minmax(0, 1fr) 240px !important;
       /* text on left, image on right */
-      gap: 16px;
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 4px;
-      padding: 16px;
-      align-items: start;
-      page-break-inside: avoid;
-      min-height: 280px;
-      height: auto;
-      overflow: visible;
+      gap: 16px !important;
+      background: var(--card) !important;
+      border: 1px solid var(--line) !important;
+      border-radius: 4px !important;
+      padding: 16px 18px !important;
+      align-items: stretch !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+      min-height: 0 !important;
+      max-height: none !important;
+      height: auto !important;
+      box-sizing: border-box !important;
+      overflow: visible !important;
     }
 
     .day-card.is-alternate {
-      grid-template-columns: 252px minmax(0, 1fr);
+      grid-template-columns: 240px minmax(0, 1fr) !important;
     }
 
     .day-card.is-alternate .day-content {
-      order: 2;
+      order: 2 !important;
     }
 
     .day-card.is-alternate .day-media {
-      order: 1;
+      order: 1 !important;
     }
 
     .day-num {
-      display: none;
+      display: none !important;
     }
 
     .day-card .day-content {
       display: flex !important;
-      flex-direction: column;
-      justify-content: flex-start;
-      min-height: 0;
-      height: auto;
-      overflow: visible;
+      flex-direction: column !important;
+      justify-content: flex-start !important;
+      height: 100% !important;
+      min-height: 0 !important;
+      overflow: visible !important;
     }
 
     .day-card h3 {
-      font-family: var(--serif);
-      font-size: 17px;
-      font-weight: 500;
-      color: var(--emerald);
-      margin: 2px 0 8px;
-      line-height: 1.14;
-      overflow-wrap: anywhere;
+      font-family: var(--serif) !important;
+      font-size: 16px !important;
+      font-weight: 500 !important;
+      color: var(--emerald) !important;
+      margin: 0 0 6px !important;
+      line-height: 1.25 !important;
+      overflow-wrap: anywhere !important;
     }
 
     .day-badge {
-      font-size: 8px;
-      color: var(--gold);
-      font-weight: 800;
-      letter-spacing: .14em;
-      text-transform: uppercase;
+      font-size: 8px !important;
+      color: var(--gold) !important;
+      font-weight: 800 !important;
+      letter-spacing: .14em !important;
+      text-transform: uppercase !important;
     }
 
     .day-card p {
-      font-size: 11px;
-      color: var(--muted);
-      line-height: 1.42;
-      overflow-wrap: anywhere;
+      font-size: 10.5px !important;
+      color: var(--muted) !important;
+      line-height: 1.36 !important;
+      overflow-wrap: anywhere !important;
+      margin-bottom: 4px !important;
     }
 
     .day-content,
     .day-copy,
     .day-media {
-      min-width: 0;
-      min-height: 0;
+      min-width: 0 !important;
+      min-height: 0 !important;
     }
 
     .day-copy {
-      display: flex;
-      flex: 1 1 auto;
-      flex-direction: column;
-      justify-content: flex-start;
-      gap: 6px;
-      min-height: 0;
-      overflow: visible;
+      display: flex !important;
+      flex: 1 1 auto !important;
+      flex-direction: column !important;
+      justify-content: flex-start !important;
+      gap: 4px !important;
+      min-height: 0 !important;
+      overflow: visible !important;
     }
 
     .day-copy-body {
-      flex: 0 0 auto;
-      display: block;
-      min-height: 0;
-      overflow: visible;
+      flex: 0 0 auto !important;
+      display: block !important;
+      min-height: 0 !important;
+      overflow: visible !important;
     }
 
     .day-copy-body p:last-child {
@@ -709,708 +759,182 @@
     }
 
     .day-highlights {
-      flex-shrink: 0;
-      font-size: 11px;
-      color: var(--text-muted);
-      line-height: 1.42;
-      overflow-wrap: anywhere;
+      flex-shrink: 0 !important;
+      font-size: 10px !important;
+      color: var(--text-muted) !important;
+      line-height: 1.3 !important;
+      overflow-wrap: anywhere !important;
+      margin-top: 2px !important;
     }
 
     .day-notes {
-      flex-shrink: 0;
-      font-size: 11px;
-      color: #8a7042;
-      border-left: 2px solid var(--gold);
-      padding: 4px 0 4px 8px;
-      background: rgba(183, 137, 75, 0.05);
-      border-radius: 2px;
-      line-height: 1.42;
-      overflow-wrap: anywhere;
+      flex-shrink: 0 !important;
+      font-size: 9.5px !important;
+      color: #8a7042 !important;
+      border-left: 2px solid var(--gold) !important;
+      padding: 2px 0 2px 6px !important;
+      background: rgba(183, 137, 75, 0.05) !important;
+      border-radius: 2px !important;
+      line-height: 1.3 !important;
+      overflow-wrap: anywhere !important;
+      margin-top: 3px !important;
     }
 
     .day-notes ul {
-      margin: 3px 0 0;
-      padding-left: 11px;
-      list-style-type: disc;
+      margin: 1px 0 0 !important;
+      padding-left: 10px !important;
+      list-style-type: disc !important;
     }
 
     .day-notes li {
-      margin-bottom: 1px;
+      margin-bottom: 0px !important;
+      line-height: 1.3 !important;
     }
 
     .day-detail-list {
-      flex: 0 0 auto;
-      flex-wrap: wrap;
-      margin-top: 10px !important;
+      flex: 0 0 auto !important;
+      display: flex !important;
+      flex-wrap: wrap !important;
+      margin-top: auto !important;
+      padding-top: 8px !important;
+      border-top: 1px solid var(--line) !important;
+      gap: 18px !important;
     }
 
     .day-media {
-      display: grid;
-      grid-template-rows: minmax(0, 2.15fr) minmax(0, 1fr);
-      gap: 8px;
-      height: auto;
-      align-self: start;
+      display: grid !important;
+      grid-template-rows: 1.35fr 1fr !important;
+      gap: 8px !important;
+      width: 240px !important;
+      height: 100% !important;
+      min-height: 220px !important;
+      align-self: stretch !important;
     }
 
     .day-media-main,
     .day-media-thumbs,
     .day-media-thumb {
-      min-height: 0;
-      overflow: hidden;
-      border-radius: 4px;
+      min-height: 0 !important;
+      overflow: hidden !important;
+      border-radius: 4px !important;
     }
 
     .day-media-thumbs {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
+      display: grid !important;
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      gap: 8px !important;
+      height: 100% !important;
     }
 
     .day-media-main img,
     .day-media-thumb img {
-      width: 100%;
-      height: 100%;
-      display: block;
-      object-fit: cover;
+      width: 100% !important;
+      height: 100% !important;
+      display: block !important;
+      object-fit: cover !important;
     }
 
-    .day-meta {
-      text-align: right;
-      padding-top: 6px;
-    }
-
-    .day-meta .price {
-      font-family: var(--serif);
-      font-size: 22px;
-      color: var(--emerald);
-      font-weight: 500;
-    }
-
-    .day-meta .price-sub {
-      font-size: 10px;
-      color: var(--muted);
-    }
-
-    .day-meta .qty {
-      font-size: 11px;
-      color: var(--muted);
-      margin-bottom: 6px;
-    }
-
-    /* ═══════════════════════════════════════════
-       PAGE 4 — Pricing + Inc/Exc
-    ═══════════════════════════════════════════ */
-    .pricing-block {
-      background: var(--charcoal);
-      border-radius: 0;
-      padding: 32px;
-      color: white;
-      margin-bottom: 16px;
-      break-inside: avoid;
-    }
-
-    .pricing-block h2 {
-      font-family: var(--serif);
-      font-size: 32px;
-      font-weight: 500;
-      letter-spacing: -.04em;
-      margin-bottom: 8px;
-    }
-
-    .pricing-block .sub {
-      color: rgba(255, 255, 255, .68);
-      font-size: 12px;
-      margin-bottom: 20px;
-    }
-
-    .price-cards {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-    }
-
-    .price-card {
-      background: rgba(255, 255, 255, .08);
-      border: 1px solid rgba(216, 189, 133, .35);
-      border-radius: 0;
-      padding: 16px;
-    }
-
-    .price-card.featured {
-      background: linear-gradient(180deg, rgba(183, 137, 75, .25), rgba(255, 255, 255, .06));
-      border-color: var(--gold-2);
-    }
-
-    .price-card span {
-      color: var(--gold-2);
-      font-size: 9px;
-      font-weight: 800;
-      letter-spacing: .18em;
-      text-transform: uppercase;
-    }
-
-    .price-card strong {
-      display: block;
-      font-family: var(--serif);
-      font-size: 28px;
-      font-weight: 500;
-      margin: 6px 0 2px;
-    }
-
-    .price-card small {
-      font-size: 10px;
-      color: rgba(255, 255, 255, .65);
-    }
-
-    .price-note {
-      margin-top: 14px;
-      font-size: 11px;
-      color: rgba(255, 255, 255, .55);
-    }
-
-    .two-col {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    .panel {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 0;
-      padding: 20px;
-      break-inside: avoid;
-    }
-
-    .panel h3 {
-      font-family: var(--serif);
-      font-size: 18px;
-      font-weight: 500;
-      color: var(--emerald);
-      margin-bottom: 10px;
-    }
-
-    .panel ul {
-      padding-left: 18px;
-      display: grid;
-      gap: 6px;
-    }
-
-    .panel ul li {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    /* ═══════════════════════════════════════════
-       PAGE 5 — Terms + CTA + Footer
-    ═══════════════════════════════════════════ */
-    .terms-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .term-card {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 0;
-      padding: 18px;
-      break-inside: avoid;
-    }
-
-    .term-card .label {
-      font-size: 8px;
-      color: var(--gold);
-      font-weight: 800;
-      letter-spacing: .2em;
-      text-transform: uppercase;
-      margin-bottom: 6px;
-    }
-
-    .term-card h3 {
-      font-family: var(--serif);
-      font-size: 15px;
-      font-weight: 500;
-      color: var(--emerald);
-      margin-bottom: 6px;
-    }
-
-    .term-card p {
-      font-size: 11px;
-      color: var(--muted);
-    }
-
-    .cta-block {
-      background: #FAF8F5;
-      color: var(--text);
-      border: 1px solid var(--gold-2);
-      border-radius: 0;
-      padding: 32px;
-      display: grid;
-      grid-template-columns: 1fr 220px;
-      gap: 28px;
-      align-items: center;
-      break-inside: avoid;
-      margin-bottom: 20px;
-    }
-
-    .cta-block h2 {
-      font-family: var(--serif);
-      font-size: 32px;
-      font-weight: 500;
-      letter-spacing: -.04em;
-      line-height: .96;
-      margin-bottom: 10px;
-    }
-
-    .cta-block p {
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .contact-box {
-      background: rgba(255, 255, 255, .09);
-      border: 1px solid rgba(255, 255, 255, .2);
-      border-radius: 0;
-      padding: 18px;
-    }
-
-    .contact-box .clabel {
-      display: block;
-      color: var(--gold-2);
-      font-size: 8px;
-      text-transform: uppercase;
-      letter-spacing: .16em;
-      font-weight: 800;
-      margin-top: 12px;
-    }
-
-    .contact-box .clabel:first-child {
-      margin-top: 0;
-    }
-
-    .contact-box .cval {
-      font-weight: 700;
-      font-size: 13px;
-      margin-top: 2px;
-    }
-
-    .pdf-footer {
-      text-align: center;
-      font-size: 11px;
-      color: var(--muted);
-      padding: 16px 0 20px;
-      border-top: 1px solid var(--line);
-      margin-top: 8px;
-    }
-
-    /* Page header bar (pages 2-5) */
-    .page-header {
-      background: var(--emerald);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 48px;
-    }
-
-    .page-header .brand {
-      color: white;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-    }
-
-    .page-header .ref {
-      color: var(--gold-2);
-      font-size: 9px;
-      letter-spacing: .1em;
-    }
-
-    html[dir="rtl"] {
-      direction: rtl;
-      --serif: 'Noto Sans Arabic', 'Amiri', Georgia, serif;
-      --sans: 'Noto Sans Arabic', 'Plus Jakarta Sans', Arial, sans-serif;
-    }
-
-    html[dir="rtl"] body {
-      direction: rtl;
-      text-align: right;
-    }
-
-    html[dir="rtl"] .qrow strong {
-      text-align: left;
-    }
-
-    html[dir="rtl"] .qrow.stacked strong {
-      text-align: right;
-    }
-
-    html[dir="rtl"] .day-meta {
-      text-align: left;
-    }
-
-    /* ═══════════════════════════════════════════
-       Selected Hotel Plan — Editorial Grid
-    ═══════════════════════════════════════════ */
-    .hotel-plan-container {
-      display: flex;
-      flex-direction: column;
-      gap: 32px;
-      margin-top: 20px;
-    }
-
-    .hotel-card-editorial {
-      border-bottom: 1px solid var(--line);
-      padding-bottom: 28px;
-      page-break-inside: avoid;
-      break-inside: avoid;
-    }
-
-    .hotel-card-editorial:last-child {
-      border-bottom: none;
-      padding-bottom: 0;
-    }
-
-    .hotel-editorial-grid {
-      display: grid;
-      gap: 28px;
-      align-items: center;
-    }
-
-    .hotel-editorial-grid>*,
-    .hotel-images-group>* {
-      min-width: 0;
-    }
-
-    .hotel-editorial-grid.odd-row {
-      grid-template-columns: 2.4fr 1.3fr;
-    }
-
-    .hotel-editorial-grid.even-row {
-      grid-template-columns: 1.3fr 2.4fr;
-    }
-
-    .hotel-editorial-grid.even-row .hotel-info-block {
-      order: -1;
-    }
-
-    .hotel-images-group {
-      display: grid;
-      gap: 14px;
-      align-items: center;
-    }
-
-    .hotel-images-group.odd-group {
-      grid-template-columns: 1.6fr 1fr;
-    }
-
-    .hotel-images-group.even-group {
-      grid-template-columns: 1fr 1.6fr;
-    }
-
-    .hotel-images-group.even-group .img-wrapper-main {
-      order: 2;
-    }
-
-    .hotel-images-group.even-group .img-wrapper-sub {
-      order: 1;
-    }
-
-    .img-wrapper-main,
-    .img-wrapper-sub {
-      aspect-ratio: 4 / 3;
-      width: 100%;
-      border-radius: 0;
-      overflow: hidden;
-      position: relative;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-    }
-
-    .img-wrapper-main img,
-    .img-wrapper-sub img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    .hotel-info-block {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-
-    .hotel-header-mobile {
-      margin-bottom: 10px;
-    }
-
-    .hotel-subtitle {
-      font-size: 9.5px;
-      font-weight: 700;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: var(--text-muted, var(--muted));
-      margin-bottom: 4px;
-    }
-
-    .hotel-title {
-      font-family: var(--serif);
-      font-size: 22px;
-      font-weight: 700;
-      color: var(--text-main, var(--ink));
-      margin: 0;
-      letter-spacing: 0.02em;
-      line-height: 1.2;
-    }
-
-    .hotel-desc {
-      font-size: 12px;
-      line-height: 1.55;
-      color: var(--text-muted, var(--muted));
-      margin: 0;
-      text-align: justify;
-    }
-
-    .hotel-tags {
-      display: flex;
-      gap: 14px;
-      margin-top: 14px;
-      font-size: 11.5px;
-      color: var(--text-main, var(--ink));
-      font-weight: 600;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    .hotel-tags span.tel {
-      color: var(--text-muted, var(--muted));
-      font-size: 10.5px;
-      font-weight: 400;
-    }
-
-    html[dir="rtl"] table {
-      text-align: right;
-    }
-
-    html[dir="rtl"] th {
-      text-align: right;
-    }
-
-    html[dir="rtl"] .contact-box {
-      text-align: left;
-    }
-
-    /* Custom Leaflet Map Markers & Timeline */
-    .luxury-marker-wrapper {
-      position: relative;
-    }
-
-    .luxury-marker {
-      width: 28px;
-      height: 28px;
-      background: var(--primary);
-      border-radius: 50%;
-      border: 2px solid #fff;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      font-size: 13px;
-      font-weight: 600;
-      font-family: var(--sans);
-    }
-
-    .luxury-marker-label {
-      position: absolute;
-      left: 38px;
-      top: 3px;
-      font-family: var(--serif);
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--text-main);
-      white-space: nowrap;
-      text-shadow: 0 0 4px var(--bg-main), 0 0 4px var(--bg-main), 0 0 4px var(--bg-main);
-    }
-
-    .timeline {
-      position: relative;
-      padding-left: 0;
-      page-break-inside: auto;
-    }
-
-    .timeline::before {
-      content: '';
-      position: absolute;
-      top: 10px;
-      /* Offset to align with first dot */
-      bottom: 20px;
-      /* Offset to align with last dot */
-      left: 9px;
-      width: 1px;
-      background: var(--accent);
-      /* Solid line connecting dots */
-      opacity: 0.5;
-      z-index: 0;
-    }
-
-    .timeline-item {
-      position: relative;
-      padding-left: 0;
-      margin-bottom: 30px;
-      page-break-inside: avoid;
-      z-index: 1;
-    }
-
-    .item-duration {
-      font-size: 11px;
-      font-weight: 800;
-      color: var(--accent);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-
-    .item-title {
-      font-family: var(--serif);
-      font-size: 20px;
-      color: var(--primary);
-      margin: 0 0 4px 0;
-    }
-
-    .item-hotel {
-      font-size: 13px;
-      color: var(--text-main);
-      font-weight: 600;
-      margin: 0 0 8px 0;
-    }
-
-    .item-content {
-      font-size: 14px;
-      line-height: 1.5;
-    }
-
-    .item-sub {
-      color: var(--text-main);
-      font-weight: 500;
-      margin-bottom: 8px;
-    }
-
-    .item-desc {
-      color: var(--text-muted);
-    }
-
-    .leaflet-control-attribution {
-      font-size: 8px !important;
-      background: rgba(255, 255, 255, 0.75) !important;
-    }
-
-    /* Clean up Map for Printing */
-    .leaflet-container {
-      background: var(--bg-main) !important;
-    }
-
+    /* ── Quartz-Safe Luxury Leaflet Map Markers & Labels ── */
     .leaflet-tile {
       filter: sepia(0.7) hue-rotate(-10deg) saturate(0.4) contrast(1.05) brightness(0.98) !important;
     }
 
-    .leaflet-tile-pane {
-      mix-blend-mode: multiply;
-      filter: sepia(0.2);
+    .leaflet-tile-pane,
+    .leaflet-tile-container,
+    .leaflet-pane,
+    .leaflet-marker-pane,
+    .leaflet-marker-icon,
+    .leaflet-div-icon {
+      mix-blend-mode: normal !important;
+      filter: none !important;
+      box-shadow: none !important;
+      background: transparent !important;
+      border: none !important;
     }
 
-    .leaflet-tile-container {
-      filter: saturate(0.9) contrast(1) brightness(1);
+    .leaflet-shadow-pane {
+      display: none !important;
     }
 
-    /* ── PDF Chapter Divider Page ─────────────────────── */
-    .pdf-chapter-divider {
-      width: 794px;
-      height: 1123px;
+    .luxury-marker-wrapper {
       position: relative;
-      background-size: cover;
-      background-position: center;
       display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      color: white;
-      page-break-after: always;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-      box-sizing: border-box;
+      align-items: center;
+      box-shadow: none !important;
+      filter: none !important;
     }
 
-    .pdf-chapter-divider::after {
-      content: "";
+    .luxury-marker {
+      width: 26px;
+      height: 26px;
+      background: var(--gold, #b8860b) !important;
+      border-radius: 50% !important;
+      border: 2px solid #ffffff !important;
+      outline: 1px solid var(--primary, #17412e) !important;
+      box-shadow: none !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      color: #ffffff !important;
+      font-size: 11px !important;
+      font-weight: 700 !important;
+      font-family: var(--sans) !important;
+      flex-shrink: 0;
+      z-index: 2;
+    }
+
+    .luxury-marker-label {
       position: absolute;
-      inset: 0;
-      background: linear-gradient(180deg, rgba(17, 19, 15, 0.45) 0%, rgba(17, 19, 15, 0.15) 40%, rgba(17, 19, 15, 0.65) 100%);
+      left: 32px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-family: var(--serif) !important;
+      font-size: 13px !important;
+      font-weight: 600 !important;
+      color: var(--text-main, #11130f) !important;
+      background: #ffffff !important;
+      border: 1px solid var(--line, #e2dcd2) !important;
+      border-radius: 3px !important;
+      padding: 1px 7px !important;
+      line-height: 1.25 !important;
+      white-space: nowrap !important;
+      text-shadow: none !important;
+      box-shadow: none !important;
+      z-index: 3;
       pointer-events: none;
     }
 
-    .pdf-chapter-divider-top {
-      position: relative;
-      z-index: 2;
-      padding: 64px 54px 0;
-      max-width: 640px;
+    .luxury-marker-label.label-left {
+      left: auto !important;
+      right: 32px !important;
+      text-align: right !important;
     }
 
-    .pdf-chapter-divider-bottom {
-      position: relative;
-      z-index: 2;
-      padding: 0 54px 72px;
-      max-width: 580px;
+    .luxury-marker-label.label-bottom-right {
+      left: 26px !important;
+      top: 18px !important;
+      transform: none !important;
     }
 
-    .pdf-chapter-divider-kicker {
-      font-size: 10px;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.85);
-      font-weight: 700;
-      margin-bottom: 18px;
+    .luxury-marker-label.label-top-right {
+      left: 26px !important;
+      top: -22px !important;
+      transform: none !important;
     }
 
-    .pdf-chapter-divider-title {
-      font-family: var(--serif);
-      font-size: 50px;
-      font-weight: 400;
-      line-height: 1.05;
-      letter-spacing: -0.01em;
-      margin: 0;
-      color: #ffffff;
-    }
-
-    .pdf-chapter-divider-tagline {
-      font-family: var(--serif);
-      font-size: 20px;
-      line-height: 1.45;
-      color: rgba(255, 255, 255, 0.92);
-      margin: 0;
-    }
-
-    .pdf-chapter-divider-footer {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      z-index: 3;
-      background: rgba(23, 65, 46, 0.85);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 48px;
-      font-size: 9px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: #ffffff;
+    /* ── Quartz-Safe Hotel Cards & Photo Framing ── */
+    .hotel-image-wrapper,
+    .img-wrapper-main,
+    .img-wrapper-sub .hotel-image-wrapper {
+      border: 1px solid var(--line) !important;
+      box-shadow: none !important;
+      border-radius: 2px !important;
     }
   </style>
 </head>
 
-<body {% if designer_img or hero_img_custom
+<body data-brochure-mode="pdf" data-brochure-preview="{% if brochure_preview_mode %}1{% else %}0{% endif %}"
+  data-quotation-id="{{ quotation_id }}" data-current-lang="{{ lang or 'en' }}" {% if designer_img or hero_img_custom
   %}style="{% if designer_img %}--designer-img: url('{{ designer_img }}');{% endif %} {% if hero_img_custom %}--hero-img: url('{{ hero_img_custom }}');{% endif %}"
   {% endif %}>
 
@@ -1420,7 +944,7 @@
   <!-- ═══════════════════ PAGE 1 — Cover ═══════════════════ -->
   <div class="pdf-page pdf-page--no-shell">
     <div class="cover">
-      <img class="cover-media" src="{{ hero_img_custom | default(img_0 | default('/assets/vietnam-safar-logo.png')) }}"
+      <img class="cover-media" src="{{ hero_img_custom | default('/assets/brands/hero/elder.png?v=27') }}"
         alt="">
       <div class="cover-overlay"></div>
       <div class="pdf-indochine-art pdf-indochine-art--lantern cover-lantern" aria-hidden="true"></div>
@@ -1538,7 +1062,7 @@
   </div>
 
   <!-- ═══════════════════ PAGE 3 — Glance & Overview ═══════════════════ -->
-  <div class="pdf-page pdf-page--no-shell" style="display: flex; flex-direction: column;">
+  <div class="pdf-page pdf-page--shell" style="display: flex; flex-direction: column;">
     <div class="pdf-indochine-art pdf-indochine-art--cyclo route-cyclo" aria-hidden="true"></div>
     <div class="page-header">
       <span class="brand">{% if brand and brand.logo %}<img src="{{ brand.logo }}"
@@ -1646,7 +1170,7 @@
   </div>
 
   <!-- ═══════════════════ PAGE 4 — Itinerary ═══════════════════ -->
-  <div class="pdf-page pdf-page--no-shell">
+  <div class="pdf-page pdf-page--shell">
     <div class="page-header">
       <span class="brand">{% if brand and brand.logo %}<img src="{{ brand.logo }}"
           style="height: 14px; margin-right: 6px; vertical-align: middle;">{% endif %}{{ (brand.name if brand else '')
@@ -1668,7 +1192,7 @@
             <div class="day-kicker"
               style="font-size: 9px; letter-spacing: 0.15em; color: var(--gold); font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">
               <span class="destination" style="color: var(--muted); margin-right: 6px;">{{ day.segment_city }}</span>
-              <span>{{ "DAY" | translate(lang) }} {{ day.dayNumber }}</span>
+              <span>{{ "DAY" | translate(lang) }} {{ day.dayNumber }}{% if day.date %} · {{ day.date | format_date }}{% endif %}</span>
             </div>
             <h3 class="day-title font-serif"
               style="font-size: 18px; font-weight: 500; color: var(--emerald); margin: 0 0 12px; line-height: 1.25;">{{
@@ -1848,7 +1372,7 @@
               <div class="img-wrapper-sub"
                 style="height: auto !important; aspect-ratio: auto !important; box-shadow: none; border-radius: 0; background: transparent; overflow: visible !important;">
                 <div class="hotel-image-wrapper"
-                  style="aspect-ratio: 4/3; position: relative; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.06);">
+                  style="aspect-ratio: 4/3; position: relative; overflow: hidden; border: 1px solid var(--line); box-shadow: none;">
                   <img src="{{ item.room_img }}" alt="{{ item.name }} Room"
                     style="width: 100%; height: 100%; object-fit: cover;">
                 </div>
@@ -1903,6 +1427,127 @@
       <p style="font-size:11px; color:var(--muted); font-style:italic; margin-bottom:24px;">{{ "Hotel arrangements will
         be tailored and detailed here for your specific travel dates." | translate(lang) }}</p>
       {% endif %}
+    </div>
+  </div>
+
+  <!-- ═══════════════════ DEDICATED PAGE — Flight Recommendations ═══════════════════ -->
+  <div class="pdf-page pdf-page--shell"
+    style="background: color-mix(in srgb, var(--c_primary, var(--primary, #17412e)) 8%, #ffffff); color: var(--text-main, #333);">
+    <div class="pdf-indochine-art pdf-indochine-art--buffalo pricing-cloud" aria-hidden="true"></div>
+    <div class="page-header" style="border-bottom: 1px solid rgba(0,0,0,0.1); color: var(--text-muted, #666);">
+      <span class="brand" style="color: var(--text-main, #333);">{% if brand and brand.logo %}<img
+          src="{{ brand.logo }}" style="height: 14px; margin-right: 6px; vertical-align: middle;">{% endif %}{{
+        (brand.name if brand else '') or 'Vietnam Safar' }} — {{ "Travel Proposal" | translate(lang) }}</span>
+      <span class="ref" style="color: var(--text-muted, #666);"><span class="ltr-token">{{ quotation_number }} · {{
+          quotation_date }}</span></span>
+    </div>
+    <div class="page-inner"
+      style="display: flex; flex-direction: column; justify-content: center; height: calc(100% - 60px);">
+      <div class="section-label"
+        style="color: var(--c_primary, var(--primary, #17412e)); font-weight: 700; letter-spacing: 0.16em; font-size: 11px; text-transform: uppercase; margin-bottom: 12px;"
+        data-editable="flight_kicker">{{ flight_kicker | default("International Flight Routing") }}</div>
+      <div class="pricing-block" style="background: transparent; border: none; padding: 0; margin-bottom: 0;">
+        <h2 class="font-serif"
+          style="font-size: 36px; font-weight: 500; color: var(--text-main, #333); margin-bottom: 12px; letter-spacing: -0.03em;"
+          data-editable="flight_h2">{{ flight_h2 | default("Flight Recommendations:") }}</h2>
+        <p class="sub" style="color: var(--text-muted, #666); font-size: 13px; line-height: 1.5; margin-bottom: 24px;"
+          data-editable="flight_p">{{ flight_p | default("Recommended flight options for convenient arrival and seamless departures.") }}</p>
+
+        <div class="price-cards" style="display: flex; flex-direction: column; gap: 14px;">
+          <!-- Flight 1 -->
+          <div class="price-card"
+            style="display: grid; grid-template-columns: 50px 1.2fr 1fr 1fr; align-items: center; padding: 18px 20px; background: #ffffff; border-radius: 12px; border: 1px solid var(--line); border-left: 4px solid var(--c_primary, var(--primary, #17412e)); color: var(--text-main, #333); gap: 12px;">
+            <div class="investment-num font-serif"
+              style="font-size: 24px; font-weight: 700; line-height: 1; color: color-mix(in srgb, var(--c_primary, var(--primary, #17412e)) 20%, transparent); align-self: flex-start;">
+              01
+            </div>
+            <div class="investment-col" style="display: flex; flex-direction: column; gap: 4px;">
+              <div style="font-weight: 600; font-size: 15px; color: var(--text-main, #333); display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                <span>Chicago (ORD) ➔ Hanoi (HAN)</span>
+                <span style="font-size: 10px; font-weight: 600; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); padding: 2px 6px; border-radius: 4px;">EVA Air · BR</span>
+              </div>
+              <div style="font-size: 11px; color: var(--text-muted, #666); line-height: 1.4;">
+                <div>Inbound sector arriving in Hanoi on Day 1.</div>
+                <div style="color: var(--c_primary, var(--primary, #17412e)); font-weight: 600; margin-top: 2px;">🔄 Transit TPE: 4h 10m</div>
+              </div>
+            </div>
+            <div class="investment-col" style="display: flex; flex-direction: column; gap: 2px;">
+              <div style="font-size: 10px; font-weight: 700; color: var(--accent); text-transform: uppercase;">Leg 1 · BR 55</div>
+              <div style="font-size: 14px; font-weight: 600; color: var(--text-main);"><span class="ltr-token">12:30 AM ➔ 04:55 AM</span></div>
+              <div style="font-size: 10px; color: var(--text-muted);">Fri 26 Mar (ORD) → Sat 27 Mar (TPE)</div>
+              <div style="font-size: 9.5px; color: var(--accent);">Late Thu departure</div>
+            </div>
+            <div class="investment-col" style="display: flex; flex-direction: column; gap: 2px;">
+              <div style="font-size: 10px; font-weight: 700; color: var(--c_primary, var(--primary, #17412e)); text-transform: uppercase;">Leg 2 · BR 397</div>
+              <div style="font-size: 14px; font-weight: 600; color: var(--text-main);"><span class="ltr-token">09:05 AM ➔ 11:05 AM</span></div>
+              <div style="font-size: 10px; color: var(--text-muted);">Sat 27 Mar (TPE) → Sat 27 Mar (HAN)</div>
+              <div style="font-size: 9.5px; color: var(--c_primary, var(--primary, #17412e));">Mid-day Hanoi arrival</div>
+            </div>
+          </div>
+
+          <!-- Flight 2 -->
+          <div class="price-card"
+            style="display: grid; grid-template-columns: 50px 1.2fr 1fr 1fr; align-items: center; padding: 18px 20px; background: #ffffff; border-radius: 12px; border: 1px solid var(--line); border-left: 4px solid var(--c_primary, var(--primary, #17412e)); color: var(--text-main, #333); gap: 12px;">
+            <div class="investment-num font-serif"
+              style="font-size: 24px; font-weight: 700; line-height: 1; color: color-mix(in srgb, var(--c_primary, var(--primary, #17412e)) 20%, transparent); align-self: flex-start;">
+              02
+            </div>
+            <div class="investment-col" style="display: flex; flex-direction: column; gap: 4px;">
+              <div style="font-weight: 600; font-size: 15px; color: var(--text-main, #333); display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                <span>Da Nang (DAD) ➔ Chicago (ORD)</span>
+                <span style="font-size: 10px; font-weight: 600; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); padding: 2px 6px; border-radius: 4px;">EVA Air · BR</span>
+              </div>
+              <div style="font-size: 11px; color: var(--text-muted, #666); line-height: 1.4;">
+                <div>8D7N early return option departing on Day 8.</div>
+                <div style="color: var(--c_primary, var(--primary, #17412e)); font-weight: 600; margin-top: 2px;">🔄 Transit TPE: 2h 35m</div>
+              </div>
+            </div>
+            <div class="investment-col" style="display: flex; flex-direction: column; gap: 2px;">
+              <div style="font-size: 10px; font-weight: 700; color: var(--accent); text-transform: uppercase;">Leg 1 · BR 384</div>
+              <div style="font-size: 14px; font-weight: 600; color: var(--text-main);"><span class="ltr-token">02:15 PM ➔ 06:00 PM</span></div>
+              <div style="font-size: 10px; color: var(--text-muted);">Sat 03 Apr (DAD) → Sat 03 Apr (TPE)</div>
+              <div style="font-size: 9.5px; color: var(--accent);">Mid-day departure</div>
+            </div>
+            <div class="investment-col" style="display: flex; flex-direction: column; gap: 2px;">
+              <div style="font-size: 10px; font-weight: 700; color: var(--c_primary, var(--primary, #17412e)); text-transform: uppercase;">Leg 2 · BR 56</div>
+              <div style="font-size: 14px; font-weight: 600; color: var(--text-main);"><span class="ltr-token">08:35 PM ➔ 09:00 PM</span></div>
+              <div style="font-size: 10px; color: var(--text-muted);">Sat 03 Apr (TPE) → Sat 03 Apr (ORD)</div>
+              <div style="font-size: 9.5px; color: var(--c_primary, var(--primary, #17412e));">Same-day arrival</div>
+            </div>
+          </div>
+
+          <!-- Flight 3 -->
+          <div class="price-card"
+            style="display: grid; grid-template-columns: 50px 1.2fr 1fr 1fr; align-items: center; padding: 18px 20px; background: #ffffff; border-radius: 12px; border: 1px solid var(--line); border-left: 4px solid var(--c_primary, var(--primary, #17412e)); color: var(--text-main, #333); gap: 12px;">
+            <div class="investment-num font-serif"
+              style="font-size: 24px; font-weight: 700; line-height: 1; color: color-mix(in srgb, var(--c_primary, var(--primary, #17412e)) 20%, transparent); align-self: flex-start;">
+              03
+            </div>
+            <div class="investment-col" style="display: flex; flex-direction: column; gap: 4px;">
+              <div style="font-weight: 600; font-size: 15px; color: var(--text-main, #333); display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                <span>Saigon (SGN) ➔ Chicago (ORD)</span>
+                <span style="font-size: 10px; font-weight: 600; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); padding: 2px 6px; border-radius: 4px;">EVA Air · BR</span>
+              </div>
+              <div style="font-size: 11px; color: var(--text-muted, #666); line-height: 1.4;">
+                <div>14D13N main return sector departing on Day 14.</div>
+                <div style="color: var(--c_primary, var(--primary, #17412e)); font-weight: 600; margin-top: 2px;">🔄 Transit TPE: 3h 10m</div>
+              </div>
+            </div>
+            <div class="investment-col" style="display: flex; flex-direction: column; gap: 2px;">
+              <div style="font-size: 10px; font-weight: 700; color: var(--accent); text-transform: uppercase;">Leg 1 · BR 392</div>
+              <div style="font-size: 14px; font-weight: 600; color: var(--text-main);"><span class="ltr-token">12:55 PM ➔ 05:25 PM</span></div>
+              <div style="font-size: 10px; color: var(--text-muted);">Fri 09 Apr (SGN) → Fri 09 Apr (TPE)</div>
+              <div style="font-size: 9.5px; color: var(--accent);">Mid-day departure</div>
+            </div>
+            <div class="investment-col" style="display: flex; flex-direction: column; gap: 2px;">
+              <div style="font-size: 10px; font-weight: 700; color: var(--c_primary, var(--primary, #17412e)); text-transform: uppercase;">Leg 2 · BR 56</div>
+              <div style="font-size: 14px; font-weight: 600; color: var(--text-main);"><span class="ltr-token">08:35 PM ➔ 09:00 PM</span></div>
+              <div style="font-size: 10px; color: var(--text-muted);">Fri 09 Apr (TPE) → Fri 09 Apr (ORD)</div>
+              <div style="font-size: 9.5px; color: var(--c_primary, var(--primary, #17412e));">Same-day arrival</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1986,7 +1631,7 @@
         <div class="price-cards" style="display: flex; flex-direction: column; gap: 16px;">
           {% for opt in price_options %}
           <div class="price-card"
-            style="display: grid; grid-template-columns: 60px 2fr 1fr auto; align-items: center; padding: 24px; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border-left: 4px solid var(--c_primary, var(--primary, #17412e)); color: var(--text-main, #333);">
+            style="display: grid; grid-template-columns: 60px 2fr 1fr auto; align-items: center; padding: 24px; background: #ffffff; border-radius: 12px; border: 1px solid var(--line); border-left: 4px solid var(--c_primary, var(--primary, #17412e)); color: var(--text-main, #333);">
 
             <div class="investment-num font-serif"
               style="font-size: 28px; font-weight: 700; line-height: 1; color: color-mix(in srgb, var(--c_primary, var(--primary, #17412e)) 20%, transparent); align-self: flex-start;">
@@ -2050,7 +1695,7 @@
     </div>
 
     <!-- ═══════════════════ PAGE 6 — Inc/Exc & Muslim Care ═══════════════════ -->
-    <div class="pdf-page pdf-page--no-shell">
+    <div class="pdf-page pdf-page--shell">
       <div class="page-header">
         <span class="brand">{% if brand and brand.logo %}<img src="{{ brand.logo }}"
             style="height: 14px; margin-right: 6px; vertical-align: middle;">{% endif %}{{ (brand.name if brand else '')
@@ -2104,7 +1749,7 @@
     </div>
 
     <!-- ═══════════════════ PAGE 8 — Booking Terms ═══════════════════ -->
-    <div class="pdf-page pdf-page--no-shell">
+    <div class="pdf-page pdf-page--shell">
       <div class="page-header">
         <span class="brand">{% if brand and brand.logo %}<img src="{{ brand.logo }}"
             style="height: 14px; margin-right: 6px; vertical-align: middle;">{% endif %}{{ (brand.name if brand else '')
@@ -2210,7 +1855,7 @@
 
     {% if show_designer_section %}
     <!-- ═══════════════════ PAGE 9 — Travel Specialist ═══════════════════ -->
-    <div class="pdf-page pdf-page--no-shell">
+    <div class="pdf-page pdf-page--shell">
       <div class="pdf-indochine-art pdf-indochine-art--cyclo designer-cyclo" aria-hidden="true"></div>
       <div class="page-header">
         <span class="brand">{% if brand and brand.logo %}<img src="{{ brand.logo }}"
@@ -2234,7 +1879,7 @@
           <!-- Left Column: Image & Name -->
           <div style="text-align: center;">
             <div data-editable="designer_img"
-              style="margin: 0 auto 24px; width: 100%; max-width: 260px; aspect-ratio: 3/4; border-radius: 200px 200px 0 0; overflow: hidden; border: 4px solid #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.05); background-image: url('{{ designer_img | default('/assets/dias_team/hieu.jpg') }}'); background-size: cover; background-position: center;">
+              style="margin: 0 auto 24px; width: 100%; max-width: 260px; aspect-ratio: 3/4; border-radius: 200px 200px 0 0; overflow: hidden; border: 4px solid #fff; box-shadow: none; background-image: url('{{ designer_img | default('/assets/dias_team/hieu.jpg') }}'); background-size: cover; background-position: center;">
             </div>
             <h3 class="font-serif" style="font-size: 24px; color: var(--emerald); margin: 0 0 2px;"
               data-editable="seller_name">{{ seller_name or "Eddie" |
@@ -2631,18 +2276,39 @@
             return pattern[index] || [0, 0];
           }
 
-          const grouped = new Map();
-          mapSegments.forEach(segment => {
-            const key = `${segment.coords[0]},${segment.coords[1]}`;
-            if (!grouped.has(key)) grouped.set(key, []);
-            grouped.get(key).push(segment);
-          });
-          grouped.forEach(items => {
-            items.forEach((segment, occurrenceIdx) => {
-              segment.offsetPattern = getOffsetPattern(occurrenceIdx);
-              segment.displayCoords = segment.coords;
-            });
-          });
+                          // Proximity and collision resolution for markers and labels
+        mapSegments.forEach(segment => {
+          segment.offsetPattern = [0, 0];
+          segment.labelClass = '';
+        });
+
+        for (let i = 0; i < mapSegments.length; i++) {
+          for (let j = i + 1; j < mapSegments.length; j++) {
+            const s1 = mapSegments[i];
+            const s2 = mapSegments[j];
+            const latDiff = s2.coords[0] - s1.coords[0];
+            const lngDiff = s2.coords[1] - s1.coords[1];
+            const dist = Math.hypot(latDiff, lngDiff);
+
+            if (dist < 0.45) {
+              // Very close destinations like Da Nang & Hoi An (~25km) -> 5px offset
+              if (s1.coords[0] < s2.coords[0]) {
+                s1.offsetPattern = [5, 5];
+                s1.labelClass = 'label-bottom-right';
+                s2.offsetPattern = [-5, -5];
+                s2.labelClass = 'label-top-right';
+              } else {
+                s1.offsetPattern = [-5, -5];
+                s1.labelClass = 'label-top-right';
+                s2.offsetPattern = [5, 5];
+                s2.labelClass = 'label-bottom-right';
+              }
+            } else if (dist < 1.4 && Math.abs(latDiff) < 0.3 && lngDiff > 0) {
+              // Horizontally close like Hanoi (West) and Halong Bay (East)
+              s1.labelClass = 'label-left';
+            }
+          }
+        }
 
           const mapBoundsPoints = journeyLinePoints.length > 0 ? journeyLinePoints : coordPoints;
           if (mapBoundsPoints.length > 0) {
@@ -2662,7 +2328,7 @@
             const markerHtml = `
           <div class="luxury-marker-wrapper" id="marker-wrapper-${idx}" style="transform: translate(${off[0]}px, ${off[1]}px);">
             <div class="luxury-marker">${idx + 1}</div>
-            <div class="luxury-marker-label">${dest.displayName}</div>
+            <div class="luxury-marker-label ${dest.labelClass || ''}">${dest.displayName}</div>
           </div>
         `;
             const customIcon = L.divIcon({

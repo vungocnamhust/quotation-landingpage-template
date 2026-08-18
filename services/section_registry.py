@@ -67,7 +67,6 @@ def build_default_sections() -> List[QuoteSection]:
         QuoteSection(id="inclusions_exclusions", type="inclusions_exclusions", enabled=True, order=7),
         QuoteSection(id="booking_terms", type="booking_terms", enabled=True, order=8),
         QuoteSection(id="designer", type="designer", enabled=True, order=9),
-        QuoteSection(id="finalization", type="finalization", enabled=True, order=10),
     ]
 
 
@@ -143,14 +142,6 @@ SECTION_REGISTRY: Dict[str, SectionDefinition] = {
         pdf_anchor="designer",
         required_document_paths=["designer.name"],
         editor_schema={"fields": ["designer.name", "designer.signature", "designer.title", "designer.experience", "designer.quote", "designer.phone", "designer.email", "designer.image"]},
-    ),
-    "finalization": SectionDefinition(
-        type="finalization",
-        label="Finalization",
-        web_anchor="finalization",
-        pdf_anchor="finalization",
-        required_document_paths=[],
-        editor_schema={"fields": ["content.sections.finalization.blocks"]},
     ),
 }
 

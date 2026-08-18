@@ -687,8 +687,6 @@ class BrochureRouteContractTests(unittest.TestCase):
                 asset_prefix="accommodations/vietnam/north/hanoi/test-hotel",
                 name="Test Hotel",
                 room_type="Deluxe",
-                check_in="2026-10-01",
-                check_out="2026-10-01",
                 intro="A test stay.",
                 phone="",
                 display_city="Hanoi",

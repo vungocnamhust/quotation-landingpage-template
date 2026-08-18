@@ -1,9 +1,16 @@
+/**
+ * Facade providing clean domain rules and backward-compatible helper signatures.
+ * Delegates pure business rules to lib/rules/*.
+ */
+
 import {
-  dateForItineraryDay,
   type DestinationRef,
   type HotelFact,
   type ItineraryDayFact,
 } from "../components/quotation-workspace/factsTypes";
+import { dateForItineraryDay, parseIsoDate } from "./rules/datesRules";
+import { generatePartyLabel, inferGreetingName as inferGreetingNameRule } from "./rules/partyRules";
+import { calculateTriPricing, inferRatesFromGroupTotal } from "./rules/pricingRules";
 
 export type StaySegment = {
   city: string;
@@ -111,7 +118,6 @@ export function syncHotelsFromStaySegments(
   return segments.map((segment, index) => {
     const existing = currentHotels[index];
     if (existing && existing.name) {
-      // Keep existing hotel if user selected an accommodation profile or named a hotel
       return {
         ...existing,
         destination: existing.destination || segment.city,
@@ -151,7 +157,12 @@ export function validateHotelDates(
   tourStartDate: string | null,
   tourEndDate: string | null,
 ): HotelDateValidationResult {
-  if (checkIn && tourStartDate && checkIn < tourStartDate) {
+  const cin = parseIsoDate(checkIn);
+  const cout = parseIsoDate(checkOut);
+  const tstart = parseIsoDate(tourStartDate);
+  const tend = parseIsoDate(tourEndDate);
+
+  if (cin && tstart && cin < tstart) {
     return {
       valid: false,
       code: "BEFORE_START",
@@ -159,7 +170,7 @@ export function validateHotelDates(
     };
   }
 
-  if (checkOut && tourEndDate && checkOut > tourEndDate) {
+  if (cout && tend && cout > tend) {
     return {
       valid: false,
       code: "AFTER_END",
@@ -167,7 +178,7 @@ export function validateHotelDates(
     };
   }
 
-  if (checkIn && checkOut && checkOut < checkIn) {
+  if (cin && cout && cout < cin) {
     return {
       valid: false,
       code: "INVALID_RANGE",
@@ -185,10 +196,7 @@ export function inferCommercialTotal(
   perTravelerAmountMinor: number | null,
   adults: number | null,
 ): number | null {
-  if (perTravelerAmountMinor === null || perTravelerAmountMinor <= 0 || !adults || adults <= 0) {
-    return null;
-  }
-  return perTravelerAmountMinor * adults;
+  return calculateTriPricing(perTravelerAmountMinor, null, adults ?? 2, 0);
 }
 
 /**
@@ -198,10 +206,8 @@ export function inferCommercialPerTraveler(
   groupTotalAmountMinor: number | null,
   adults: number | null,
 ): number | null {
-  if (groupTotalAmountMinor === null || groupTotalAmountMinor <= 0 || !adults || adults <= 0) {
-    return null;
-  }
-  return Math.round(groupTotalAmountMinor / adults);
+  const { perAdultMinor } = inferRatesFromGroupTotal(groupTotalAmountMinor, adults ?? 2, 0);
+  return perAdultMinor;
 }
 
 /**
@@ -211,37 +217,17 @@ export function inferPartyLabel(
   customerName: string | null,
   adults: number | null,
   children: number | null,
+  lang: string = "en"
 ): string | null {
-  const adultCount = adults && adults > 0 ? adults : null;
-  const childCount = children && children > 0 ? children : null;
-
-  const counts: string[] = [];
-  if (adultCount) counts.push(`${adultCount} Adult${adultCount > 1 ? "s" : ""}`);
-  if (childCount) counts.push(`${childCount} Child${childCount > 1 ? "ren" : ""}`);
-
-  const countLabel = counts.join(", ");
-  const name = customerName?.trim();
-
-  if (name && countLabel) {
-    return `${name} & Party (${countLabel})`;
-  }
-  if (name) {
-    return name;
-  }
-  if (countLabel) {
-    return countLabel;
-  }
-  return null;
+  const label = generatePartyLabel(adults, children, customerName, lang);
+  return label || null;
 }
 
 /**
  * Infer greeting name string from customer name.
  */
-export function inferGreetingName(customerName: string | null): string | null {
-  const name = customerName?.trim();
-  if (!name) return null;
-  if (name.toLowerCase().startsWith("dear ")) return name;
-  return `Dear ${name}`;
+export function inferGreetingName(customerName: string | null, lang: string = "en"): string | null {
+  return inferGreetingNameRule(customerName, lang);
 }
 
 /**
@@ -258,9 +244,9 @@ export function inferDefaultCurrency(brandId: string | null, market: string | nu
 }
 
 export const MULTILINGUAL_DEFAULT_MEALS: Record<"en" | "vi" | "ar", string[]> = {
-  en: ["Breakfast", "Lunch", "Dinner"],
-  vi: ["Bữa sáng", "Bữa trưa", "Bữa tối"],
-  ar: ["الإفطار", "الغداء", "العشاء"],
+  en: ["Breakfast"],
+  vi: ["Bữa sáng"],
+  ar: ["الإفطار"],
 };
 
 /**
@@ -272,4 +258,3 @@ export function getDefaultMealsForLang(lang?: "en" | "vi" | "ar" | null): string
   }
   return [...MULTILINGUAL_DEFAULT_MEALS[lang]];
 }
-

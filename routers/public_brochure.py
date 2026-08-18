@@ -122,15 +122,23 @@ async def get_quotation_pdf(quotation_id: str, request: Request):
             if success:
                 ctx_data = h._load_ctx_data(quotation_id) or ctx_data
 
-    effective_lang = target_lang if target_lang in ctx_data.get("available_langs", [baseline_lang]) else baseline_lang
+    # Extract appropriate payload dict
+    if target_lang == baseline_lang:
+        payload_dict = ctx_data.get("baseline_payload")
+    else:
+        payload_dict = ctx_data.get("translations", {}).get(target_lang)
+
+    if not payload_dict:
+        payload_dict = ctx_data.get("baseline_payload")
+        target_lang = baseline_lang
 
     try:
-        rendered_html, _ = await h._render_quotation_html_for_lang(
+        rendered_html, effective_lang = await h._render_quotation_doc_from_ctx(
+            ctx_data,
             quotation_id,
-            effective_lang,
-            pdf_mode=True,
-            request=request,
-            requested_brand=requested_brand,
+            target_lang,
+            request,
+            is_pdf=True,
             preview_mode=preview_mode,
         )
         if h._is_brochure_template(ctx_data.get("template_name", "vietnam_luxury_brosure.html")):
@@ -148,3 +156,4 @@ async def get_quotation_pdf(quotation_id: str, request: Request):
     except Exception as err:
         h.log.exception("[/quotations] Dynamic PDF render failed for %s: %s", quotation_id, err)
         raise HTTPException(status_code=500, detail=f"PDF render error: {err}")
+

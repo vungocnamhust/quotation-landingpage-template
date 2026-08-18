@@ -5,7 +5,8 @@ import { Image as ImageIcon, X, Upload } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography";
 import { cn } from "../../utils/cn";
 import type { AccommodationProfileInput } from "../../lib/quotationApi";
-import { DestinationInput, type DestinationRef } from "./DestinationInputs";
+import { DestinationSelect } from "../destination/DestinationSelect";
+import type { DestinationRef } from "../destination/types";
 import MediaDrawer from "./MediaDrawer";
 import { RichTextEditor } from "../ui/RichTextEditor";
 
@@ -43,11 +44,10 @@ export default function AccommodationProfileForm({
   return (
     <div className="mt-5 grid gap-3 sm:grid-cols-2">
       <div className="sm:col-span-2">
-        <DestinationInput
+        <DestinationSelect
           label="Accommodation destination"
           value={destinationRef?.name ?? null}
-          onChange={() => onDestinationChange(null)}
-          onSelect={onDestinationChange}
+          onChange={(_name, ref) => onDestinationChange(ref ?? null)}
         />
       </div>
       <label className="flex flex-col gap-1.5">
@@ -78,38 +78,6 @@ export default function AccommodationProfileForm({
           className={inputClass}
           value={draft.room_type ?? ""}
           onChange={(event) => set("room_type", event.target.value || null)}
-        />
-      </label>
-      <label className="flex flex-col gap-1.5">
-        <span
-          className={cn(
-            getTypographyClassName("label"),
-            "text-[var(--color-muted)]"
-          )}
-        >
-          Default check-in
-        </span>
-        <input
-          className={inputClass}
-          type="date"
-          value={draft.check_in ?? ""}
-          onChange={(event) => set("check_in", event.target.value || null)}
-        />
-      </label>
-      <label className="flex flex-col gap-1.5">
-        <span
-          className={cn(
-            getTypographyClassName("label"),
-            "text-[var(--color-muted)]"
-          )}
-        >
-          Default check-out
-        </span>
-        <input
-          className={inputClass}
-          type="date"
-          value={draft.check_out ?? ""}
-          onChange={(event) => set("check_out", event.target.value || null)}
         />
       </label>
       <label className="flex flex-col gap-1.5">

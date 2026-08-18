@@ -29,7 +29,7 @@ class AccommodationRepositoryTests(unittest.TestCase):
         async with self.factory() as session:
             destination = await DestinationRepository(session).upsert(destination_id="dst_hanoi", canonical_name="Hanoi", slug="hanoi", aliases=["Hanoi"], country_slug="vietnam", region_slug="north", province_slug="hanoi")
             location = accommodation_location(destination, "Example Hotel", "hotel")
-            await AccommodationRepository(session).create_profile(id="acc_example", destination_id=destination.id, storage_slug=location.accommodation_slug, asset_prefix=location.leaf_prefix, name="Example Hotel", room_type="Deluxe", check_in=None, check_out=None, intro="", phone="", display_city="Hanoi", display_date=None, hotel_asset=None, room_asset=None)
+            await AccommodationRepository(session).create_profile(id="acc_example", destination_id=destination.id, storage_slug=location.accommodation_slug, asset_prefix=location.leaf_prefix, name="Example Hotel", room_type="Deluxe", intro="", phone="", display_city="Hanoi", display_date=None, hotel_asset=None, room_asset=None)
             await session.commit()
 
     def test_profile_uses_destination_taxonomy_prefix(self):

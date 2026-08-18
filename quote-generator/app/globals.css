@@ -111,10 +111,35 @@ img {
   color: var(--color-on-surface);
 }
 
+.pdf-page-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 10mm;
+  z-index: 10;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 17mm;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-on-accent) 20%, transparent);
+}
+.pdf-page-header .brand {
+  display: flex;
+  align-items: center;
+  gap: 2.5mm;
+  color: var(--color-on-accent);
+}
+.pdf-page-header .ref {
+  color: color-mix(in srgb, var(--color-on-accent) 88%, transparent);
+}
+
 .pdf-brochure-page__content {
   box-sizing: border-box;
   min-height: 297mm;
-  padding: 16mm 17mm 21mm;
+  padding: 18mm 17mm 21mm;
 }
 
 .pdf-brochure-page__footer,
@@ -125,15 +150,24 @@ img {
   text-align: center;
 }
 
-.pdf-brochure-page__footer { bottom: 8mm; }
+.pdf-brochure-page__footer {
+  bottom: 8mm;
+  padding-top: 2.5mm;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-on-surface-muted);
+}
 .pdf-brochure-page__slogan { bottom: 16mm; }
 
 .pdf-cover { background: var(--color-contrast); color: var(--color-on-contrast); }
 .pdf-cover__image { object-fit: cover; }
-.pdf-cover__veil { position: absolute; inset: 0; background: color-mix(in srgb, var(--color-contrast) 42%, transparent); }
-.pdf-cover__top, .pdf-cover__bottom { position: absolute; z-index: 1; right: 17mm; left: 17mm; display: grid; gap: 4mm; }
-.pdf-cover__top { top: 17mm; }
-.pdf-cover__bottom { bottom: 22mm; max-width: 124mm; }
+.pdf-cover__veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--color-contrast) 88%, transparent) 0%, color-mix(in srgb, var(--color-contrast) 55%, transparent) 55%, color-mix(in srgb, var(--color-contrast) 18%, transparent) 100%);
+}
+.pdf-cover__top, .pdf-cover__bottom { position: absolute; z-index: 1; right: 17mm; left: 17mm; display: flex; flex-direction: column; }
+.pdf-cover__top { top: 28mm; gap: 3.5mm; max-width: 155mm; }
+.pdf-cover__bottom { bottom: 24mm; max-width: 155mm; gap: 2.5mm; padding-top: 4mm; border-top: 1px solid color-mix(in srgb, var(--color-on-contrast) 25%, transparent); }
 
 .pdf-letter .pdf-brochure-page__content { display: grid; grid-template-columns: 180px minmax(0, 1fr); padding: 0; }
 .pdf-letter__rail { position: relative; box-sizing: border-box; min-height: 297mm; padding: 16mm 11mm; border-right: 1px solid var(--color-border); }
@@ -141,16 +175,40 @@ img {
 .pdf-letter__body { display: grid; align-content: start; gap: 5mm; padding: 20mm 17mm 24mm; }
 .pdf-letter__signature { display: grid; gap: 2mm; margin-top: 5mm; }
 
-.pdf-route__map { height: 72mm; margin-top: 7mm; border: 1px solid var(--color-border); background: var(--color-surface-muted); }
+.pdf-route__map { height: 78mm; margin-top: 5mm; border: 1px solid var(--color-border); background: var(--color-surface-muted); overflow: hidden; position: relative; }
 .pdf-route__map svg { width: 100%; height: 100%; }
 .pdf-route__line { fill: none; stroke: var(--color-accent); stroke-width: 5; stroke-linecap: round; }
 .pdf-route__marker { fill: var(--color-surface); stroke: var(--color-accent); stroke-width: 4; }
 .pdf-route__marker-text { fill: var(--color-accent); }
-.pdf-route__summary { display: grid; gap: 4mm; margin-top: 7mm; }
+.pdf-route__summary { display: grid; gap: 4mm; margin-top: 5mm; }
 .pdf-route__summary--multiple { grid-template-columns: repeat(auto-fit, minmax(35mm, 1fr)); }
 .pdf-route__summary--single { grid-template-columns: minmax(0, 90mm); justify-content: center; text-align: center; }
 .pdf-route__summary article { display: grid; gap: 1.5mm; padding: 3mm; border-top: 1px solid var(--color-border); }
-.pdf-route__quote { position: absolute; right: 17mm; bottom: 29mm; left: 17mm; text-align: center; }
+
+.pdf-route__quote-banner {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  padding: 5mm 10mm;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-top: 5mm;
+  border-radius: var(--radius-card, 4px);
+  position: relative;
+}
+.pdf-route__quote-rule {
+  width: 30mm;
+  height: 1px;
+  background: color-mix(in srgb, var(--color-on-accent) 40%, transparent);
+  margin: 2mm 0;
+}
+.pdf-route__quote-text {
+  color: var(--color-on-accent);
+  max-width: 140mm;
+  margin: 0;
+}
 
 .pdf-itinerary__pair { display: grid; grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 8mm; }
 .pdf-itinerary-day { display: grid; grid-template-columns: 64mm minmax(0, 1fr); grid-template-rows: auto 1fr; gap: 3mm 6mm; min-height: 119mm; break-inside: avoid; page-break-inside: avoid; }
@@ -161,9 +219,78 @@ img {
 .pdf-itinerary-day__thumbs > * { min-height: 0; }
 .pdf-itinerary-day__copy { display: grid; align-content: start; gap: 2mm; }
 
-.pdf-divider .pdf-brochure-page__content { padding: 0; }
-.pdf-divider__image { height: 166mm; }
-.pdf-divider__copy { display: grid; gap: 4mm; padding: 14mm 17mm 23mm; }
+.pdf-chapter-divider {
+  min-height: 297mm;
+  background: var(--color-contrast);
+  color: var(--color-on-contrast);
+  position: relative;
+  overflow: hidden;
+}
+
+.pdf-chapter-divider-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+.pdf-chapter-divider-veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--color-contrast) 85%, transparent) 0%, color-mix(in srgb, var(--color-contrast) 50%, transparent) 100%);
+  z-index: 1;
+}
+
+.pdf-chapter-divider-body {
+  position: relative;
+  z-index: 2;
+  box-sizing: border-box;
+  padding: 40mm 17mm;
+  max-width: 150mm;
+  display: grid;
+  gap: 5mm;
+}
+
+.pdf-chapter-divider-kicker {
+  color: color-mix(in srgb, var(--color-on-contrast) 85%, transparent);
+}
+
+.pdf-chapter-divider-title {
+  color: var(--color-on-contrast);
+}
+
+.pdf-chapter-divider-tagline {
+  color: color-mix(in srgb, var(--color-on-contrast) 92%, transparent);
+}
+
+.pdf-chapter-divider-stats {
+  display: flex;
+  gap: 10mm;
+  color: var(--color-on-contrast);
+  margin-top: 4mm;
+}
+
+.pdf-chapter-divider-stats span.label {
+  display: block;
+  color: color-mix(in srgb, var(--color-on-contrast) 60%, transparent);
+  margin-bottom: 1.5mm;
+}
+
+.pdf-chapter-divider-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  background: color-mix(in srgb, var(--color-contrast) 85%, transparent);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4mm 17mm;
+  color: var(--color-on-contrast);
+}
 
 .pdf-hotel__card { display: grid; gap: 5mm; break-inside: avoid; page-break-inside: avoid; }
 .pdf-hotel__card header { display: grid; gap: 2mm; }
@@ -2574,6 +2701,11 @@ img {
 }
 
 @media print {
+  *, *::before, *::after {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
   .app-topbar,
   .app-bottom-nav {
     display: none !important;
@@ -2606,6 +2738,31 @@ img {
   .display-route-map__pdf-timeline {
     page-break-inside: avoid;
   }
+
+  .leaflet-tile {
+    filter: sepia(0.7) hue-rotate(-10deg) saturate(0.4) contrast(1.05) brightness(0.98) !important;
+  }
+
+  .display-route-map-marker__capsule,
+  .display-route-map-marker__pointer {
+    box-shadow: none !important;
+  }
+}
+
+html[data-view-mode="pdf"] .pdf-brochure *,
+html[data-view-mode="pdf"] .pdf-brochure *::before,
+html[data-view-mode="pdf"] .pdf-brochure *::after {
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+html[data-view-mode="pdf"] .display-route-map-marker__capsule,
+html[data-view-mode="pdf"] .display-route-map-marker__pointer {
+  box-shadow: none !important;
+}
+
+html[data-view-mode="pdf"] .leaflet-tile {
+  filter: sepia(0.7) hue-rotate(-10deg) saturate(0.4) contrast(1.05) brightness(0.98) !important;
 }
 
 /* ─── Staff Workspace UI Extensions ───────────────────────── */

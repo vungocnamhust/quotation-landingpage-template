@@ -11,6 +11,11 @@ from datetime import date
 from typing import Any, Awaitable, Callable
 
 from quote_document import CreateQuoteRequestV1
+from core.rules import (
+    calculate_duration,
+    format_travel_dates_label,
+    generate_party_label,
+)
 
 DestinationLookup = Callable[[str], Awaitable[Any | None]]
 
@@ -29,19 +34,6 @@ def _as_ref(item: Any) -> dict[str, Any]:
         "slug": item.slug,
         "coordinates": [float(latitude), float(longitude)] if latitude is not None and longitude is not None else None,
     }
-
-
-def _date_label(start: str | None, end: str | None) -> tuple[str, int | None, int | None]:
-    if not start or not end:
-        return "", None, None
-    try:
-        start_date, end_date = date.fromisoformat(start), date.fromisoformat(end)
-    except ValueError:
-        return "", None, None
-    if end_date < start_date:
-        return "", None, None
-    days = (end_date - start_date).days + 1
-    return f"{start_date:%d %b %Y} – {end_date:%d %b %Y}", days, max(days - 1, 0)
 
 
 class FactsResolver:
@@ -87,13 +79,13 @@ class FactsResolver:
         if missing:
             raise FactsResolutionError(missing)
 
-        travel_dates, date_days, date_nights = _date_label(canonical.trip_facts.start_date, canonical.trip_facts.end_date)
+        travel_dates = format_travel_dates_label(canonical.trip_facts.start_date, canonical.trip_facts.end_date)
+        date_days, date_nights = calculate_duration(canonical.trip_facts.start_date, canonical.trip_facts.end_date)
         itinerary_days = len(canonical.trip_facts.itinerary)
         duration_days = date_days or canonical.trip_facts.duration_days or (itinerary_days or None)
         duration_nights = date_nights if date_nights is not None else (max(duration_days - 1, 0) if duration_days else None)
         adults, children = canonical.customer_facts.adults, canonical.customer_facts.children
-        guests = [f"{adults} adult{'s' if adults != 1 else ''}" if adults is not None else "", f"{children} child{'ren' if children != 1 else ''}" if children else ""]
-        party_label = ", ".join(value for value in guests if value)
+        party_label = generate_party_label(adults, children, customer_name=None, lang=canonical.lang or "en")
         route_label = " · ".join(route)
         resolved = {
             **refs,

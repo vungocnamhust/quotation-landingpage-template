@@ -35,7 +35,6 @@ const sectionColorScopes: Record<PublicSectionId, ColorScopeId> = {
   pricing: 'pricing',
   inclusionsExclusions: 'details',
   paymentTerms: 'details',
-  finalization: 'details',
   designer: 'designer',
   footer: 'footer',
 };
@@ -282,13 +281,6 @@ const typographyMap: ThemeDefinition['typographyMap'] = {
     body: 'termBody',
     action: 'buttonSecondary',
     metaPrimary: 'label',
-  }),
-  finalization: slots({
-    kicker: 'chapterKicker',
-    title: 'chapterTitle',
-    body: 'bodyMd',
-    metaPrimary: 'hotelTitle',
-    action: 'buttonSecondary',
   }),
   designer: slots({
     kicker: 'chapterKicker',
@@ -870,17 +862,6 @@ export const brochureTheme: ThemeDefinition = {
         ornaments: [],
         typographySlots: typographyMap.paymentTerms,
         printBehavior: { pageTemplate: 'details', avoidBreakInside: true },
-      }),
-    },
-    finalization: {
-      desktop: config('finalization', {
-        layoutVariant: 'inclusions-panels', shellVariant: 'shell-editorial-strip', backgroundVariant: 'canvas', spacingVariant: 'airy', alignment: 'split', surfaceStyle: 'borderless', sectionIntroStyle: 'editorial', visibilityByViewMode: defaultVisible, ornaments: [], typographySlots: typographyMap.finalization, printBehavior: { pageTemplate: 'details', avoidBreakInside: true },
-      }),
-      mobile: config('finalization', {
-        layoutVariant: 'inclusions-panels', shellVariant: 'shell-editorial-strip', backgroundVariant: 'canvas', spacingVariant: 'comfortable', alignment: 'start', surfaceStyle: 'borderless', sectionIntroStyle: 'editorial', mobileOrderStrategy: 'finalization-stacked', visibilityByViewMode: defaultVisible, ornaments: [], typographySlots: typographyMap.finalization, printBehavior: { pageTemplate: 'details', avoidBreakInside: true },
-      }),
-      pdf: config('finalization', {
-        layoutVariant: 'inclusions-panels', shellVariant: 'shell-pdf-page', backgroundVariant: 'canvas', spacingVariant: 'page', alignment: 'split', surfaceStyle: 'paper', sectionIntroStyle: 'editorial', visibilityByViewMode: defaultVisible, ornaments: [], typographySlots: typographyMap.finalization, printBehavior: { pageTemplate: 'details', avoidBreakInside: true },
       }),
     },
     designer: {

@@ -21,8 +21,6 @@ class AccommodationProfile(Base):
     asset_prefix: Mapped[str] = mapped_column(String(1024), nullable=False, unique=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     room_type: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    check_in: Mapped[str | None] = mapped_column(String(32), nullable=True)
-    check_out: Mapped[str | None] = mapped_column(String(32), nullable=True)
     intro: Mapped[str | None] = mapped_column(String(4000), nullable=True)
     phone: Mapped[str | None] = mapped_column(String(64), nullable=True)
     display_city: Mapped[str | None] = mapped_column(String(255), nullable=True)

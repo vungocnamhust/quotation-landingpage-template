@@ -68,7 +68,7 @@ class EditableRuntimeCoverageTests(unittest.TestCase):
             ("/stays/hotels/0/hotelImage/altText", "fact"),
             ("/pricing/options/0/label", "fact"),
             ("/content/sections/booking_terms/blocks/1/items/1/body", "fact"),
-            ("/content/sections/finalization/blocks/0/groups/1/items/1", "content"),
+            ("/content/sections/inclusions_exclusions/blocks/0/leftItems/0", "fact"),
         )
         for source, owner in cases:
             descriptor = next((item for item in EDITABLE_BROCHURE_FIELDS if _source_matches(item["source"], source)), None)
@@ -84,7 +84,7 @@ class EditableRuntimeCoverageTests(unittest.TestCase):
         self.assertTrue(aria_fields)
         self.assertIn("alt={textValue(alt)} {...editableProps(alt)}", screen)
         self.assertIn("aria-label={textValue(viewModel.sectionAriaLabel)}", screen)
-        self.assertIn("aria-label={textValue(route.overviewAriaLabel)} {...editableProps(route.overviewAriaLabel)}", pdf)
+        self.assertIn("viewModel={route}", pdf)
         self.assertIn("<ImageFrame src={hotel.hotelImage} alt={hotel.hotelImageAlt}", pdf)
         self.assertIn("<ImageFrame src={images[0]?.src ?? ''} alt={images[0]?.alt ?? day.title}", pdf)
 
@@ -98,7 +98,7 @@ class EditableRuntimeCoverageTests(unittest.TestCase):
         self.assertIn("{letter.signatureRole}", pdf)
         self.assertIn("aria-label={textValue(viewModel.sectionAriaLabel)}", nav)
         self.assertIn("alt={textValue(viewModel.brandLogoAlt ?? viewModel.brandName)}", nav)
-        self.assertIn("aria-label={textValue(route.overviewAriaLabel)} {...editableProps(route.overviewAriaLabel)}", pdf)
+        self.assertIn("viewModel={route}", pdf)
 
     def test_empty_designer_cta_has_a_canvas_only_editable_affordance(self):
         page = (ROOT / "quote-generator/components/DisplayPage.tsx").read_text(encoding="utf-8")
@@ -117,7 +117,7 @@ class EditableRuntimeCoverageTests(unittest.TestCase):
         for source in (
             "/narrative/letterSignOff",
             "/narrative/letterSender",
-            "/content/sections/finalization/blocks/0/groups/0/title",
+            "/content/sections/inclusions_exclusions/blocks/0/leftItems/0",
             "/itinerary/days/0/title",
             "/itinerary/days/0/labelHighlights",
             "/stays/hotels/0/name",

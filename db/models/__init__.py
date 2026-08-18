@@ -2,6 +2,7 @@ from db.models.brand import Brand
 from db.models.accommodation import AccommodationProfile
 from db.models.destination import DestinationAlias, DestinationCatalog
 from db.models.media import MediaAsset, MediaSelection
+from db.models.outbox import OutboxEvent
 from db.models.publication import PublicationJob, PublicationRelease, PublicationTarget, QuotationPublication
 from db.models.quotation import (
     Quotation,
@@ -9,6 +10,8 @@ from db.models.quotation import (
     QuotationDocumentRevision,
     QuotationRequest,
 )
+from db.models.quote_request import QuoteRequest, QuoteRequestRevision
+from db.models.partner import PartnerProfile
 from db.models.travel_designer import TravelDesignerBrandDefault, TravelDesignerProfile
 from db.models.travel_style import TravelStyleTag
 
@@ -19,11 +22,15 @@ __all__ = [
     "DestinationCatalog",
     "MediaAsset",
     "MediaSelection",
+    "OutboxEvent",
+    "PartnerProfile",
     "Quotation",
     "QuotationDocument",
     "QuotationDocumentRevision",
     "QuotationPublication",
     "QuotationRequest",
+    "QuoteRequest",
+    "QuoteRequestRevision",
     "PublicationRelease",
     "PublicationJob",
     "PublicationTarget",
@@ -31,4 +38,5 @@ __all__ = [
     "TravelDesignerProfile",
     "TravelStyleTag",
 ]
+
 

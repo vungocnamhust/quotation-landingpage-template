@@ -105,8 +105,11 @@ from routers.v2.quotation_document import router as quotation_document_router
 from routers.v2.destinations import router as destinations_router
 from routers.v2.accommodations import router as accommodations_router
 from routers.v2.travel_designers import router as travel_designers_router
+from routers.v2.partners import router as partners_router
+from routers.v2.quote_requests import router as quote_requests_router
 from routers.v1.translations import router as translations_router
 from routers.public_brochure import router as public_brochure_router
+
 
 from core.config import settings
 
@@ -201,7 +204,10 @@ app.include_router(quotation_document_router)
 app.include_router(destinations_router)
 app.include_router(accommodations_router)
 app.include_router(travel_designers_router)
+app.include_router(partners_router)
+app.include_router(quote_requests_router)
 app.include_router(translations_router)
+
 app.include_router(public_brochure_router)
 
 
@@ -6885,8 +6891,6 @@ class AccommodationProfileRequest(BaseModel):
     destinationId: str
     name: str
     room_type: str | None = None
-    check_in: str | None = None
-    check_out: str | None = None
     intro: str | None = None
     phone: str | None = None
     display_city: str | None = None
@@ -7871,8 +7875,6 @@ async def _serialize_accommodation(profile, session) -> dict[str, Any]:
         "asset_prefix": profile.asset_prefix,
         "name": profile.name,
         "room_type": profile.room_type,
-        "check_in": profile.check_in,
-        "check_out": profile.check_out,
         "intro": profile.intro,
         "phone": profile.phone,
         "display_city": profile.display_city,
@@ -7911,12 +7913,6 @@ async def _save_accommodation_profile(session, payload: AccommodationProfileRequ
     name = payload.name.strip()
     if not name:
         raise HTTPException(status_code=422, detail={"missingInputs": ["name"]})
-    if payload.check_in and payload.check_out:
-        try:
-            if date.fromisoformat(payload.check_out) < date.fromisoformat(payload.check_in):
-                raise HTTPException(status_code=422, detail={"missingInputs": ["check_out"]})
-        except ValueError as exc:
-            raise HTTPException(status_code=422, detail={"missingInputs": ["check_in", "check_out"]}) from exc
     if profile is None:
         location = accommodation_location(destination, name, "hotel")
         storage_slug_value, asset_prefix = location.accommodation_slug, location.leaf_prefix
@@ -7931,7 +7927,7 @@ async def _save_accommodation_profile(session, payload: AccommodationProfileRequ
         room_asset=payload.room_asset,
         legacy_keys={key for key in (profile.hotel_asset, profile.room_asset) if key} if profile is not None else None,
     )
-    values = {"destination_id": destination.id, "storage_slug": storage_slug_value, "asset_prefix": asset_prefix, "name": name, "room_type": payload.room_type, "check_in": payload.check_in, "check_out": payload.check_out, "intro": payload.intro, "phone": payload.phone, "display_city": payload.display_city or destination.canonical_name, "display_date": payload.display_date, "hotel_asset": payload.hotel_asset, "room_asset": payload.room_asset}
+    values = {"destination_id": destination.id, "storage_slug": storage_slug_value, "asset_prefix": asset_prefix, "name": name, "room_type": payload.room_type, "intro": payload.intro, "phone": payload.phone, "display_city": payload.display_city or destination.canonical_name, "display_date": payload.display_date, "hotel_asset": payload.hotel_asset, "room_asset": payload.room_asset}
     repository = AccommodationRepository(session)
     saved = await repository.update_profile(profile, **values) if profile is not None else await repository.create_profile(id=f"acc_{uuid.uuid4().hex[:12]}", **values)
     return await _serialize_accommodation(saved, session)

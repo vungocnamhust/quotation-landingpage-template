@@ -27,8 +27,6 @@ export type AccommodationProfile = {
   asset_prefix: string;
   name: string;
   room_type: string | null;
-  check_in: string | null;
-  check_out: string | null;
   intro: string | null;
   phone: string | null;
   display_city: string | null;
@@ -42,8 +40,6 @@ export type AccommodationProfileInput = {
   destinationId: string;
   name: string;
   room_type: string | null;
-  check_in: string | null;
-  check_out: string | null;
   intro: string | null;
   phone: string | null;
   display_city: string | null;
@@ -193,5 +189,75 @@ export type TravelStyleResponse = {
 
 export async function listTravelStyles(): Promise<TravelStyleResponse> {
   return request<TravelStyleResponse>("/api/v2/travel-styles");
+}
+
+export type PartnerProfile = {
+  id: string;
+  company_name: string;
+  contact_name: string;
+  email: string;
+  phone: string;
+  market?: string | null;
+  tier?: string | null;
+  default_commission_rate: number;
+  preferred_currency: string;
+  notes?: string | null;
+  is_active: boolean;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+export type PartnerInput = {
+  company_name: string;
+  contact_name: string;
+  email: string;
+  phone?: string;
+  market?: string | null;
+  tier?: string | null;
+  default_commission_rate?: number;
+  preferred_currency?: string;
+  notes?: string | null;
+  is_active?: boolean;
+};
+
+export type PartnerListResponse = {
+  items: PartnerProfile[];
+  total: number;
+};
+
+export async function listPartners({
+  active = 'true',
+  search = '',
+}: {
+  active?: 'true' | 'false' | 'all';
+  search?: string;
+} = {}): Promise<PartnerListResponse> {
+  const params = new URLSearchParams({ active });
+  if (search.trim()) params.set('search', search.trim());
+  return request<PartnerListResponse>(`/api/v2/partners?${params.toString()}`);
+}
+
+export async function createPartner(input: PartnerInput): Promise<PartnerProfile> {
+  return request<PartnerProfile>('/api/v2/partners', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+}
+
+export async function updatePartner(id: string, input: PartnerInput): Promise<PartnerProfile> {
+  return request<PartnerProfile>(`/api/v2/partners/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+}
+
+export async function updatePartnerStatus(id: string, isActive: boolean): Promise<PartnerProfile> {
+  return request<PartnerProfile>(`/api/v2/partners/${encodeURIComponent(id)}/status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ isActive }),
+  });
 }
 
