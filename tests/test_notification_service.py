@@ -178,6 +178,7 @@ class TestNotificationRepositoryAndUseCases(unittest.IsolatedAsyncioTestCase):
 
             # Verify mark all as read
             mark_uc = MarkReadUseCase(session)
-            marked = await mark_uc.mark_all_read("agent.lead@dias.travel")
+            marked, unread_remaining = await mark_uc.mark_all_read("agent.lead@dias.travel")
             self.assertEqual(marked, 1)
+            self.assertEqual(unread_remaining, 0)
             self.assertEqual(await inbox_uc.get_unread_count("agent.lead@dias.travel"), 0)

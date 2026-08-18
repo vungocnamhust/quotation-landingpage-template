@@ -129,7 +129,12 @@ function EditRequestDrawerContent({
           <QuoteRequestForm state={formState} onChange={setFormState} disabled={submitting} />
 
           {/* 2. Basic Daily Itinerary Schedule */}
-          <BasicItineraryDayGrid days={itineraryDays} onChange={setItineraryDays} />
+          <BasicItineraryDayGrid
+            days={itineraryDays}
+            startDate={formState.arrival_date}
+            onChange={setItineraryDays}
+          />
+
 
           {/* Bottom Action Bar */}
           <div className="sticky bottom-0 -mx-6 -mb-6 mt-4 flex items-center justify-between border-t border-[var(--color-border)] bg-[var(--color-surface)]/95 px-6 py-4 backdrop-blur-md">

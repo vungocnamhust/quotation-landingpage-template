@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { getTypographyClassName } from "../../../config/typography";
 import { cn } from "../../../utils/cn";
 import CustomSelect from "../../ui/CustomSelect";
 import { DestinationSelect } from "../../destination/DestinationSelect";
 import KidAgesInput from "../KidAgesInput";
 import RoomConfigInput from "../RoomConfigInput";
+import { calculateDuration, formatTravelDatesLabel } from "../../../lib/rules/datesRules";
 import type { QuoteRequestFormState } from "../../../lib/quoteRequestPayload";
 
 type Props = {
@@ -30,6 +32,7 @@ function Field({
   required = false,
   disabled = false,
   min,
+  max,
   onChange,
 }: {
   label: string;
@@ -38,7 +41,8 @@ function Field({
   placeholder?: string;
   required?: boolean;
   disabled?: boolean;
-  min?: number;
+  min?: string | number;
+  max?: string | number;
   onChange: (val: string) => void;
 }) {
   return (
@@ -53,6 +57,7 @@ function Field({
         required={required}
         placeholder={placeholder}
         min={min}
+        max={max}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className={cn(
@@ -66,6 +71,14 @@ function Field({
 
 export function RequestRoutingSection({ state, onChange, disabled = false }: Props) {
   const isTraveller = state.role === "traveller";
+  const [advisorDateMode, setAdvisorDateMode] = useState<"exact" | "flexible">(() => {
+    return state.arrival_date && state.departure_date ? "exact" : state.raw_dates_text ? "flexible" : "exact";
+  });
+
+  const duration = calculateDuration(state.arrival_date, state.departure_date);
+  const durationText = duration.durationDays !== null
+    ? `${duration.durationDays} Days / ${duration.durationNights} Nights`
+    : null;
 
   return (
     <section className="flex flex-col gap-5 rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[var(--elevation-card)] sm:p-6">
@@ -109,26 +122,145 @@ export function RequestRoutingSection({ state, onChange, disabled = false }: Pro
             <Field
               label="Arrival date"
               type="date"
+              required
               disabled={disabled}
               value={state.arrival_date}
-              onChange={(val) => onChange((prev) => ({ ...prev, arrival_date: val }))}
+              onChange={(val) =>
+                onChange((prev) => ({
+                  ...prev,
+                  arrival_date: val,
+                  raw_dates_text: formatTravelDatesLabel(val, prev.departure_date, prev.raw_dates_text),
+                }))
+              }
             />
             <Field
               label="Departure date"
               type="date"
+              required
+              min={state.arrival_date || undefined}
               disabled={disabled}
               value={state.departure_date}
-              onChange={(val) => onChange((prev) => ({ ...prev, departure_date: val }))}
+              onChange={(val) =>
+                onChange((prev) => ({
+                  ...prev,
+                  departure_date: val,
+                  raw_dates_text: formatTravelDatesLabel(prev.arrival_date, val, prev.raw_dates_text),
+                }))
+              }
             />
+            {durationText ? (
+              <div className="flex flex-col gap-1.5">
+                <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>
+                  Trip Duration
+                </span>
+                <div
+                  className={cn(
+                    getTypographyClassName("bodyMd"),
+                    "flex min-h-11 items-center rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface-muted)] px-3 text-[var(--color-accent)]"
+                  )}
+                >
+                  ⏱ {durationText}
+                </div>
+              </div>
+            ) : null}
           </>
         ) : (
-          <Field
-            label="Travel dates / month"
-            placeholder="e.g. 09–20 Nov 2026"
-            disabled={disabled}
-            value={state.raw_dates_text}
-            onChange={(val) => onChange((prev) => ({ ...prev, raw_dates_text: val }))}
-          />
+          <div className="sm:col-span-2 lg:col-span-3 flex flex-col gap-3 rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className={cn(getTypographyClassName("label"), "text-[var(--color-on-surface)]")}>
+                Advisor Travel Dates Specification
+              </span>
+              <div className="flex items-center rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-0.5">
+                <button
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => setAdvisorDateMode("exact")}
+                  className={cn(
+                    getTypographyClassName("caption"),
+                    "rounded-md px-3 py-1 transition-all cursor-pointer",
+                    advisorDateMode === "exact"
+                      ? "bg-[var(--color-accent-wash)] text-[var(--color-accent)] shadow-2xs"
+                      : "text-[var(--color-muted)] hover:text-[var(--color-on-surface)]"
+                  )}
+                >
+                  Exact Date Pickers
+                </button>
+                <button
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => setAdvisorDateMode("flexible")}
+                  className={cn(
+                    getTypographyClassName("caption"),
+                    "rounded-md px-3 py-1 transition-all cursor-pointer",
+                    advisorDateMode === "flexible"
+                      ? "bg-[var(--color-accent-wash)] text-[var(--color-accent)] shadow-2xs"
+                      : "text-[var(--color-muted)] hover:text-[var(--color-on-surface)]"
+                  )}
+                >
+                  Flexible Period / Month
+                </button>
+              </div>
+            </div>
+
+
+            {advisorDateMode === "exact" ? (
+              <div className="grid gap-3 sm:grid-cols-3 items-end">
+                <Field
+                  label="Arrival date"
+                  type="date"
+                  disabled={disabled}
+                  value={state.arrival_date}
+                  onChange={(val) =>
+                    onChange((prev) => ({
+                      ...prev,
+                      arrival_date: val,
+                      raw_dates_text: formatTravelDatesLabel(val, prev.departure_date, prev.raw_dates_text),
+                    }))
+                  }
+                />
+                <Field
+                  label="Departure date"
+                  type="date"
+                  min={state.arrival_date || undefined}
+                  disabled={disabled}
+                  value={state.departure_date}
+                  onChange={(val) =>
+                    onChange((prev) => ({
+                      ...prev,
+                      departure_date: val,
+                      raw_dates_text: formatTravelDatesLabel(prev.arrival_date, val, prev.raw_dates_text),
+                    }))
+                  }
+                />
+                <div className="flex flex-col gap-1.5">
+                  <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>
+                    Calculated Duration
+                  </span>
+                  <div
+                    className={cn(
+                      getTypographyClassName("bodyMd"),
+                      "flex min-h-11 items-center rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3 text-[var(--color-on-surface)]"
+                    )}
+                  >
+                    {durationText || "Select arrival & departure"}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2 items-end">
+                <Field
+                  label="Travel dates / Month / Season"
+                  placeholder="e.g. 09–20 Nov 2026 / Autumn 2026 / Dec holidays"
+                  disabled={disabled}
+                  value={state.raw_dates_text}
+                  onChange={(val) => onChange((prev) => ({ ...prev, raw_dates_text: val }))}
+                />
+                <p className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)] pb-2")}>
+                  ℹ️ Use this when the agency has a target month or range but exact flight dates are not yet locked.
+                </p>
+              </div>
+            )}
+          </div>
         )}
 
         <DestinationSelect
@@ -153,6 +285,7 @@ export function RequestRoutingSection({ state, onChange, disabled = false }: Pro
           }}
         />
       </div>
+
 
       {/* Routing Constraints Field */}
       <label className="flex flex-col gap-2 border-t border-[var(--color-border)] pt-4">

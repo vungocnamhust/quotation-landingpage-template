@@ -8,9 +8,10 @@ import { useToast } from "./ToastProvider";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_NOTIFICATION_API_URL ||
+  process.env.NEXT_PUBLIC_QUOTATION_API_URL ||
   (typeof window !== "undefined" && window.location.hostname === "localhost"
-    ? "http://localhost:8116"
-    : process.env.NEXT_PUBLIC_QUOTATION_API_URL || "");
+    ? "http://localhost:8111"
+    : "");
 
 export type NotificationItem = {
   id: string;
@@ -206,10 +207,10 @@ export function useNotifications(options?: {
       } catch (err) {
         mutateList();
         mutateCount();
-        throw err;
+        toast("Could not mark notification as read.", "error");
       }
     },
-    [mutateList, mutateCount]
+    [mutateList, mutateCount, toast]
   );
 
   const markAllAsRead = useCallback(async () => {
@@ -234,9 +235,9 @@ export function useNotifications(options?: {
     } catch (err) {
       mutateList();
       mutateCount();
-      throw err;
+      toast("Could not mark all notifications as read.", "error");
     }
-  }, [mutateList, mutateCount]);
+  }, [mutateList, mutateCount, toast]);
 
   return {
     notifications: listData?.items ?? [],

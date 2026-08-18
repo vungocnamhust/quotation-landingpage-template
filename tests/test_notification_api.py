@@ -20,11 +20,14 @@ class TestNotificationAPI(unittest.IsolatedAsyncioTestCase):
             async with self.session_factory() as session:
                 yield session
 
+        self.override_get_db = override_get_db
         app.dependency_overrides[get_notification_db] = override_get_db
         self.client = TestClient(app)
 
     async def asyncTearDown(self):
         app.dependency_overrides.clear()
+        from main import app as main_app
+        main_app.dependency_overrides.clear()
         await self.engine.dispose()
 
     def test_health_check(self):
@@ -96,6 +99,76 @@ class TestNotificationAPI(unittest.IsolatedAsyncioTestCase):
         resp_mark_all = self.client.post("/api/v2/notifications/mark-all-read", headers=headers)
         self.assertEqual(resp_mark_all.status_code, 200)
         self.assertEqual(resp_mark_all.json()["marked_count"], 1)
+        self.assertEqual(resp_mark_all.json()["unread_count"], 0)
+
+    def test_mark_all_read_idempotency_and_isolation(self):
+        user_a_headers = {"X-DMC-Email": "user_a@dias.travel"}
+        user_b_headers = {"X-DMC-Email": "user_b@dias.travel"}
+
+        # Ingest 3 events for User A and 2 events for User B
+        for i in range(3):
+            self.client.post("/api/v2/events", json={
+                "event_id": f"evt_iso_a_{i}",
+                "source_service": "quotation-app",
+                "event_type": "quotation.publication.completed",
+                "aggregate_type": "quotation",
+                "aggregate_id": f"quo_a_{i}",
+                "payload": {"recipient_email": "user_a@dias.travel", "title": f"Quote A {i}"},
+            }, headers=user_a_headers)
+
+        for j in range(2):
+            self.client.post("/api/v2/events", json={
+                "event_id": f"evt_iso_b_{j}",
+                "source_service": "quotation-app",
+                "event_type": "quotation.publication.completed",
+                "aggregate_type": "quotation",
+                "aggregate_id": f"quo_b_{j}",
+                "payload": {"recipient_email": "user_b@dias.travel", "title": f"Quote B {j}"},
+            }, headers=user_b_headers)
+
+        # Verify initial unread counts
+        resp_a = self.client.get("/api/v2/notifications/unread-count", headers=user_a_headers)
+        self.assertEqual(resp_a.json()["unread_count"], 3)
+        resp_b = self.client.get("/api/v2/notifications/unread-count", headers=user_b_headers)
+        self.assertEqual(resp_b.json()["unread_count"], 2)
+
+        # User A calls mark-all-read
+        resp_mark_a = self.client.post("/api/v2/notifications/mark-all-read", headers=user_a_headers)
+        self.assertEqual(resp_mark_a.status_code, 200)
+        self.assertEqual(resp_mark_a.json()["marked_count"], 3)
+        self.assertEqual(resp_mark_a.json()["unread_count"], 0)
+
+        # User A calls mark-all-read a 2nd time (Idempotency)
+        resp_mark_a_2 = self.client.post("/api/v2/notifications/mark-all-read", headers=user_a_headers)
+        self.assertEqual(resp_mark_a_2.status_code, 200)
+        self.assertEqual(resp_mark_a_2.json()["marked_count"], 0)
+        self.assertEqual(resp_mark_a_2.json()["unread_count"], 0)
+
+        # User B's unread notifications must remain completely untouched (Isolation)
+        resp_b_after = self.client.get("/api/v2/notifications/unread-count", headers=user_b_headers)
+        self.assertEqual(resp_b_after.json()["unread_count"], 2)
+
+    def test_mark_all_read_via_main_quotation_app(self):
+        from main import app as main_app
+        main_app.dependency_overrides[get_notification_db] = self.override_get_db
+        main_client = TestClient(main_app)
+        headers = {"X-DMC-Email": "main_app_user@dias.travel"}
+
+        # Ingest event via main app
+        main_client.post("/api/v2/events", json={
+            "event_id": "evt_main_app_1",
+            "source_service": "quotation-app",
+            "event_type": "quotation.publication.completed",
+            "aggregate_type": "quotation",
+            "aggregate_id": "quo_main_1",
+            "payload": {"recipient_email": "main_app_user@dias.travel", "title": "Main App Quote"},
+        }, headers=headers)
+
+        # Mark all read via main app
+        resp = main_client.post("/api/v2/notifications/mark-all-read", headers=headers)
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json()["marked_count"], 1)
+        self.assertEqual(resp.json()["unread_count"], 0)
 
     async def test_delivery_worker_processing(self):
         headers = {"X-DMC-Email": "worker.test@dias.travel"}

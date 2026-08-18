@@ -109,6 +109,9 @@ from routers.v2.partners import router as partners_router
 from routers.v2.quote_requests import router as quote_requests_router
 from routers.v1.translations import router as translations_router
 from routers.public_brochure import router as public_brochure_router
+from notification.api.v2.notifications import router as notifications_v2_router
+from notification.api.v2.events import router as events_v2_router
+from notification.api.v2.stream import router as stream_v2_router
 
 
 from core.config import settings
@@ -209,6 +212,9 @@ app.include_router(quote_requests_router)
 app.include_router(translations_router)
 
 app.include_router(public_brochure_router)
+app.include_router(notifications_v2_router)
+app.include_router(events_v2_router)
+app.include_router(stream_v2_router)
 
 
 # CORS — required for ChatGPT Custom GPT Actions to reach the API

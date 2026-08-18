@@ -108,7 +108,7 @@ export function RequestIdentitySection({ state, onChange, disabled = false }: Pr
           </p>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           <label className="flex flex-col gap-2">
             <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>
               Brand <span className="text-[var(--color-accent)]">*</span>
@@ -143,6 +143,14 @@ export function RequestIdentitySection({ state, onChange, disabled = false }: Pr
             onChange={(val) => onChange((prev) => ({ ...prev, quote_deadline: val }))}
           />
 
+          <Field
+            label="Client Decision Date"
+            type="date"
+            disabled={disabled}
+            value={state.decision_date}
+            onChange={(val) => onChange((prev) => ({ ...prev, decision_date: val }))}
+          />
+
           <label className="flex flex-col gap-2">
             <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>
               Lead Source
@@ -155,6 +163,7 @@ export function RequestIdentitySection({ state, onChange, disabled = false }: Pr
             />
           </label>
         </div>
+
 
         {/* Travel Designer Ownership Selector */}
         <div className="border-t border-[var(--color-border)] pt-4">

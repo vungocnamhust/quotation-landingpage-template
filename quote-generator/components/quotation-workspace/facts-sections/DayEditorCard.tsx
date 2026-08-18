@@ -21,6 +21,7 @@ function Field({
   id,
   label,
   value,
+  placeholder,
   onChange,
   type = "text",
   disabled,
@@ -29,6 +30,7 @@ function Field({
   id?: string;
   label: string;
   value: string | number | null;
+  placeholder?: string;
   onChange: (value: string) => void;
   type?: string;
   disabled?: boolean;
@@ -55,6 +57,7 @@ function Field({
       <input
         id={id}
         aria-required={required}
+        placeholder={placeholder}
         className={inputClass}
         type={type}
         disabled={disabled}
@@ -63,6 +66,7 @@ function Field({
       />
     </label>
   );
+
 }
 
 function Area({
@@ -275,10 +279,12 @@ export const DayEditorCard = memo(function DayEditorCard({
           />
           <Field
             label="Display date"
+            placeholder="e.g. Day 1 · 09 Nov 2026"
             disabled={readOnly}
             value={day.display_date}
             onChange={(value) => patch("display_date", value || null)}
           />
+
           <div className="sm:col-span-2">
             <Area
               label="Meals"

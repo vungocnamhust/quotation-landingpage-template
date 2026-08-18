@@ -8,9 +8,25 @@ import {
   type HotelFact,
   type ItineraryDayFact,
 } from "../components/quotation-workspace/factsTypes";
-import { dateForItineraryDay, parseIsoDate } from "./rules/datesRules";
+import {
+  dateForItineraryDay,
+  parseIsoDate,
+  isValidIsoDate,
+  addDaysToIsoDate,
+  formatDisplayDate,
+  calculateValidityExpiry,
+} from "./rules/datesRules";
 import { generatePartyLabel, inferGreetingName as inferGreetingNameRule } from "./rules/partyRules";
 import { calculateTriPricing, inferRatesFromGroupTotal } from "./rules/pricingRules";
+
+export {
+  isValidIsoDate,
+  addDaysToIsoDate,
+  formatDisplayDate,
+  calculateValidityExpiry,
+};
+
+
 
 export type StaySegment = {
   city: string;

@@ -43,6 +43,14 @@ const BUDGET_BASIS_OPTIONS = [
 
 const PRICING_TYPES = ["Gross", "Net", "Commissionable"];
 
+const VALIDITY_PRESETS = [
+  "7 days from issue",
+  "14 days from issue",
+  "30 days from issue",
+  "Subject to hotel availability",
+];
+
+
 const SHOW_COMMISSION_OPTIONS = [
   "No",
   "Yes — separate line",
@@ -268,19 +276,40 @@ export default function CommercialPricingSection({
               />
             </label>
 
-            <label className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2">
               <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>
                 Quote Validity
               </span>
+              <div className="flex flex-wrap gap-1">
+                {VALIDITY_PRESETS.map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => onChange((prev) => ({ ...prev, quote_validity: preset }))}
+                    className={cn(
+                      getTypographyClassName("caption"),
+                      "rounded-md border px-2 py-0.5 transition-all cursor-pointer",
+                      state.quote_validity === preset
+                        ? "border-[var(--color-accent)] bg-[var(--color-accent-wash)] text-[var(--color-accent)]"
+                        : "border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-muted)] hover:text-[var(--color-on-surface)]"
+
+                    )}
+                  >
+                    {preset}
+                  </button>
+                ))}
+              </div>
               <input
                 type="text"
                 disabled={disabled}
-                placeholder="e.g. 7 days / subject to availability"
+                placeholder="e.g. 14 days from issue / 30 Nov 2026..."
                 value={state.quote_validity}
                 onChange={(e) => onChange((prev) => ({ ...prev, quote_validity: e.target.value }))}
                 className={inputClass}
               />
-            </label>
+            </div>
+
 
             <label className="flex flex-col gap-2">
               <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>

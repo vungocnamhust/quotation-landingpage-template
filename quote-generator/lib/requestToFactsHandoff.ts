@@ -28,9 +28,10 @@ export function buildInitialFactsFromRequest(
           highlights: [],
           notes: [],
           sense_of_pace: "balanced" as const,
-          display_date: null,
+          display_date: (d.display_date as string) || null,
         }))
       : fallback.trip_facts.itinerary;
+
 
   const adults = quoteRequest.adults ?? fallback.customer_facts.adults ?? 2;
   const children = quoteRequest.children ?? fallback.customer_facts.children ?? 0;

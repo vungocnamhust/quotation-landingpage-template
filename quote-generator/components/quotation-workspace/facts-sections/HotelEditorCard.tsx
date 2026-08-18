@@ -19,6 +19,7 @@ function Field({
   id,
   label,
   value,
+  placeholder,
   onChange,
   type = "text",
   disabled,
@@ -29,6 +30,7 @@ function Field({
   id?: string;
   label: string;
   value: string | number | null;
+  placeholder?: string;
   onChange: (value: string) => void;
   type?: string;
   disabled?: boolean;
@@ -57,6 +59,7 @@ function Field({
       <input
         id={id}
         aria-required={required}
+        placeholder={placeholder}
         className={inputClass}
         type={type}
         min={min}
@@ -68,6 +71,7 @@ function Field({
     </label>
   );
 }
+
 
 function Area({
   label,
@@ -320,10 +324,12 @@ export const HotelEditorCard = memo(function HotelEditorCard({
           />
           <Field
             label="Display dates"
+            placeholder="e.g. 09 Nov – 12 Nov 2026"
             disabled={readOnly}
             value={hotel.display_date}
             onChange={(value) => patch("display_date", value || null)}
           />
+
           {mediaWorkspace ? (
             <MediaSlotRenderer
               workspace={mediaWorkspace}

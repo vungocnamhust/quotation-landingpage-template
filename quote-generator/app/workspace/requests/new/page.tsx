@@ -70,7 +70,12 @@ export default function NewQuoteRequestPage() {
       <QuoteRequestForm state={formState} onChange={setFormState} disabled={submitting} />
 
       {/* 2. Optional Basic Daily Itinerary Grid */}
-      <BasicItineraryDayGrid days={itineraryDays} onChange={setItineraryDays} />
+      <BasicItineraryDayGrid
+        days={itineraryDays}
+        startDate={formState.arrival_date}
+        onChange={setItineraryDays}
+      />
+
 
       {/* Submit Button Bar */}
       <div className="flex items-center justify-end gap-3 border-t border-[var(--color-border)] pt-5">

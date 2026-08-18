@@ -1,7 +1,7 @@
 import unittest
 
 from quote_document import CreateQuoteRequestV1
-from services.facts_resolver import FactsResolver, _date_label
+from core.rules import calculate_duration, format_travel_dates_label
 
 
 class PrefillRulesContractTests(unittest.TestCase):
@@ -16,10 +16,12 @@ class PrefillRulesContractTests(unittest.TestCase):
         self.assertEqual(len(meals_ar), 3)
 
     def test_date_label_and_duration_derivation(self):
-        label, days, nights = _date_label("2026-10-01", "2026-10-05")
+        days, nights = calculate_duration("2026-10-01", "2026-10-05")
+        label = format_travel_dates_label("2026-10-01", "2026-10-05")
         self.assertEqual(days, 5)
         self.assertEqual(nights, 4)
         self.assertEqual(label, "01 Oct 2026 – 05 Oct 2026")
+
 
     def test_commercial_option_validation(self):
         payload = CreateQuoteRequestV1.model_validate({

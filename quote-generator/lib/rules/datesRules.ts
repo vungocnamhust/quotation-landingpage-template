@@ -9,6 +9,47 @@ export function parseIsoDate(value: string | null | undefined): Date | null {
   return d;
 }
 
+export function isValidIsoDate(value: string | null | undefined): boolean {
+  if (!value || typeof value !== "string") return false;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const d = parseIsoDate(value);
+  if (!d) return false;
+  return d.toISOString().split("T")[0] === value;
+}
+
+export function addDaysToIsoDate(
+  isoDate: string | null | undefined,
+  days: number
+): string | null {
+  if (!isoDate || typeof isoDate !== "string") return null;
+  const d = parseIsoDate(isoDate);
+  if (!d) return null;
+  const target = new Date(d.getTime() + days * 86_400_000);
+  return target.toISOString().split("T")[0];
+}
+
+export function formatDisplayDate(
+  isoDate: string | null | undefined,
+  lang: string = "en",
+  options: Intl.DateTimeFormatOptions = { weekday: "short", day: "2-digit", month: "short" }
+): string {
+  if (!isoDate || typeof isoDate !== "string") return "";
+  const d = parseIsoDate(isoDate);
+  if (!d) return "";
+  const locale = lang === "vi" ? "vi-VN" : lang === "ar" ? "ar-SA" : "en-GB";
+  return d.toLocaleDateString(locale, options);
+}
+
+export function calculateValidityExpiry(
+  referenceDate: string | null | undefined,
+  daysCount: number
+): string | null {
+  const baseIso = referenceDate && isValidIsoDate(referenceDate)
+    ? referenceDate
+    : new Date().toISOString().split("T")[0];
+  return addDaysToIsoDate(baseIso, daysCount);
+}
+
 export function calculateDuration(
   startDate: string | null | undefined,
   endDate: string | null | undefined
@@ -52,3 +93,4 @@ export function formatTravelDatesLabel(
   const options: Intl.DateTimeFormatOptions = { day: "2-digit", month: "short", year: "numeric" };
   return `${start.toLocaleDateString("en-GB", options)} – ${end.toLocaleDateString("en-GB", options)}`;
 }
+
