@@ -109,7 +109,7 @@ SSR_EDITABLE_FIELD_EXPECTATIONS: tuple[EditableFieldExpectation, ...] = (
     EditableFieldExpectation("/pricing/options/0/groupTotalAmountMinor", "fact", "plainText"),
     EditableFieldExpectation("/content/sections/inclusions_exclusions/blocks/0/leftItems/0", "fact", "plainText"),
     EditableFieldExpectation("/content/sections/booking_terms/blocks/0/text", "fact", "richText"),
-    EditableFieldExpectation("/content/sections/finalization/blocks/0/groups/0/items/0", "content", "plainText"),
+    EditableFieldExpectation("/designer/quote", "content", "plainText"),
     EditableFieldExpectation("/designer/name", "fact-derived", "plainText"),
     EditableFieldExpectation("/labels/chatWhatsapp", "system", "actionLabel"),
     EditableFieldExpectation("/presentation/copyOverrides/a11y.routeMapOverview", "design", "ariaLabel"),
@@ -159,7 +159,7 @@ def validate_coverage_manifest(entries: Iterable[CoverageEntry] = COVERAGE_MANIF
         if invalid_owner:
             parts.append(f"invalid_owner={invalid_owner}")
         raise WorkflowFailure("Coverage manifest is incomplete: " + "; ".join(parts))
-    if set(SECTION_REGISTRY) != {"hero", "overview_letter", "route_map", "itinerary", "hotel_plan", "pricing", "inclusions_exclusions", "booking_terms", "designer", "finalization"}:
+    if set(SECTION_REGISTRY) != {"hero", "overview_letter", "route_map", "itinerary", "hotel_plan", "pricing", "inclusions_exclusions", "booking_terms", "designer"}:
         raise WorkflowFailure("Section registry changed; update the workflow coverage manifest.")
 
 
