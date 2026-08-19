@@ -1,6 +1,6 @@
 // Production editor requests stay same-origin behind quote.capellatravel.com.
 // Local development opts into a separate API origin through .env.local.
-import { quotationFetch } from './apiError';
+import { quotationFetch } from './apiError.ts';
 export const QUOTATION_API_BASE = process.env.NEXT_PUBLIC_QUOTATION_API_URL ?? '';
 
 export type TravelDesignerProfile = {

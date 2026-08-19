@@ -4,6 +4,7 @@ import { getTypographyClassName } from "../../../config/typography";
 import { cn } from "../../../utils/cn";
 import { DestinationSelect } from "../../destination/DestinationSelect";
 import { TravelDesignerSelect } from "../../travel-designer/TravelDesignerSelect";
+import { DateInput } from "../../date";
 import type { TravelDesignerProfile } from "../../../lib/quotationApi";
 import type {
   QuotationFacts,
@@ -209,17 +210,18 @@ export function FactTripSection({
         Trip title and brochure narrative are created and reviewed in Content Studio after these route facts are saved.
       </p>
 
-      <Field
+      <DateInput
         label="Start date"
-        type="date"
+        mode="iso"
         disabled={readOnly}
         value={trip.start_date}
-        onChange={onTripStartDateChange}
+        onChange={(val) => onTripStartDateChange(val ?? "")}
       />
 
-      <Field
+      <DateInput
         label="End date"
-        type="date"
+        mode="iso"
+        min={trip.start_date ?? undefined}
         disabled={readOnly}
         value={trip.end_date}
         onChange={(value) =>

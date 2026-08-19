@@ -5,6 +5,7 @@ import { getTypographyClassName } from "../../config/typography";
 import { cn } from "../../utils/cn";
 import CustomSelect from "../ui/CustomSelect";
 import { TravelDesignerSelect } from "../travel-designer/TravelDesignerSelect";
+import { DateInput } from "../date";
 import KidAgesInput from "./KidAgesInput";
 import DayEmbeddedRouteTable from "./DayEmbeddedRouteTable";
 import TriPricingSection from "./TriPricingSection";
@@ -285,31 +286,22 @@ export default function MinimalQuotationIntakeForm({
         description="Pick dates, then map out destinations and accommodations day by day."
       >
         <div className="grid gap-4 sm:grid-cols-3 border-b border-[var(--color-border)] pb-4">
-          <label className="flex flex-col gap-1.5">
-            <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>
-              Start Date *
-            </span>
-            <input
-              type="date"
-              required
-              className={inputClass}
-              value={trip.start_date ?? ""}
-              onChange={(e) => handleStartDateChange(e.target.value)}
-            />
-          </label>
+          <DateInput
+            label="Start Date"
+            required
+            mode="iso"
+            value={trip.start_date ?? ""}
+            onChange={(val) => handleStartDateChange(val ?? "")}
+          />
 
-          <label className="flex flex-col gap-1.5">
-            <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>
-              End Date *
-            </span>
-            <input
-              type="date"
-              required
-              className={inputClass}
-              value={trip.end_date ?? ""}
-              onChange={(e) => handleEndDateChange(e.target.value)}
-            />
-          </label>
+          <DateInput
+            label="End Date"
+            required
+            mode="iso"
+            min={trip.start_date ?? undefined}
+            value={trip.end_date ?? ""}
+            onChange={(val) => handleEndDateChange(val ?? "")}
+          />
 
           <div className="flex flex-col gap-1.5">
             <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>

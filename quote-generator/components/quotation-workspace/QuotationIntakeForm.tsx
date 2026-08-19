@@ -8,6 +8,7 @@ import { DestinationSelect } from "../destination/DestinationSelect";
 import { TravelDesignerSelect } from "../travel-designer/TravelDesignerSelect";
 import { AccommodationSelect } from "../accommodation/AccommodationSelect";
 import { TravelStyleSelect } from "../travel-style/TravelStyleSelect";
+import { DateInput } from "../date";
 import { RichTextEditor } from "../ui/RichTextEditor";
 import type { AccommodationProfile } from "../../lib/quotationApi";
 import { BrochureAssetsEditor, MediaSlotRenderer, type MediaSlotValue, type MediaWorkspace } from "./MediaSlotRenderer";
@@ -41,8 +42,10 @@ import {
   type QuotationFacts,
   type QuotationOptions,
   type DraftMediaSelections,
-} from "./factsTypes";
-import { useQuotationIntake, daysBetween } from "./useQuotationIntake";
+} from "./factsTypes.ts";
+import { newHotelFact } from "./useFactsFormState.ts";
+import { useQuotationIntake } from "./useQuotationIntake.ts";
+import { calculateDuration } from "../../lib/rules/datesRules.ts";
 
 type Props = {
   facts: QuotationFacts;
@@ -69,24 +72,6 @@ function fieldIsBlank(day: ItineraryDayFact): boolean {
     !day.meals.length &&
     !day.notes.length
   );
-}
-
-function emptyHotel(): HotelFact {
-  return {
-    accommodation_id: null,
-    destination: null,
-    destination_ref: null,
-    name: null,
-    room_type: null,
-    check_in: null,
-    check_out: null,
-    intro: "Breakfast included.",
-    phone: null,
-    display_city: null,
-    display_date: null,
-    hotel_asset: null,
-    room_asset: null,
-  };
 }
 
 function hotelFromProfile(profile: AccommodationProfile, existingHotel?: Partial<HotelFact>): HotelFact {
@@ -224,7 +209,7 @@ export default function QuotationIntakeForm({
     (field: "start_date" | "end_date", value: string) => {
       const nextStartDate = field === "start_date" ? value || null : trip.start_date;
       const nextEndDate = field === "end_date" ? value || null : trip.end_date;
-      const nextLength = daysBetween(nextStartDate, nextEndDate);
+      const nextLength = calculateDuration(nextStartDate, nextEndDate).durationDays;
       if (nextLength === null) {
         patchFacts((current) => ({
           ...current,
@@ -307,7 +292,7 @@ export default function QuotationIntakeForm({
         ...current,
         service_facts: {
           ...current.service_facts,
-          hotels: [...current.service_facts.hotels, emptyHotel()],
+          hotels: [...current.service_facts.hotels, newHotelFact()],
         },
       })),
     [patchFacts]
@@ -501,19 +486,20 @@ export default function QuotationIntakeForm({
         alternateBg={false}
       >
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field
+          <DateInput
             label="Start date"
             required
-            type="date"
+            mode="iso"
             value={trip.start_date}
-            onChange={(value) => changeDate("start_date", value)}
+            onChange={(value) => changeDate("start_date", value ?? "")}
           />
-          <Field
+          <DateInput
             label="End date"
             required
-            type="date"
+            mode="iso"
+            min={trip.start_date ?? undefined}
             value={trip.end_date}
-            onChange={(value) => changeDate("end_date", value)}
+            onChange={(value) => changeDate("end_date", value ?? "")}
           />
           <div className="flex flex-col gap-2">
             <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>
@@ -660,15 +646,15 @@ export default function QuotationIntakeForm({
                   name={hotel.name}
                   destination={hotel.destination || hotel.display_city}
                   onChange={(profile) => {
-                    patchHotel(index, profile ? hotelFromProfile(profile, hotel) : emptyHotel());
+                    patchHotel(index, profile ? hotelFromProfile(profile, hotel) : newHotelFact());
                     seedProfileMedia(`stays.hotels.${index}.hotelImage`, profile?.hotel_asset);
                     seedProfileMedia(`stays.hotels.${index}.roomImage`, profile?.room_asset);
                   }}
                 />
-                <Field
+                <DateInput
                   label="Check-in"
                   required
-                  type="date"
+                  mode="iso"
                   min={trip.start_date ?? undefined}
                   max={trip.end_date ?? undefined}
                   value={hotel.check_in}
@@ -676,10 +662,10 @@ export default function QuotationIntakeForm({
                     patchHotel(index, { check_in: checkIn || null })
                   }
                 />
-                <Field
+                <DateInput
                   label="Check-out"
                   required
-                  type="date"
+                  mode="iso"
                   min={hotel.check_in ?? trip.start_date ?? undefined}
                   max={trip.end_date ?? undefined}
                   value={hotel.check_out}

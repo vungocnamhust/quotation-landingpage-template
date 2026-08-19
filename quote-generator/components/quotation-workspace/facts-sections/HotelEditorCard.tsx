@@ -5,6 +5,7 @@ import { getTypographyClassName } from "../../../config/typography";
 import { cn } from "../../../utils/cn";
 import { DestinationSelect } from "../../destination/DestinationSelect";
 import { AccommodationSelect } from "../../accommodation/AccommodationSelect";
+import { DateInput } from "../../date";
 import type { AccommodationProfile } from "../../accommodation/types";
 import type { HotelFact } from "../factsTypes";
 import { MediaSlotRenderer, type MediaWorkspace } from "../MediaSlotRenderer";
@@ -273,18 +274,18 @@ export const HotelEditorCard = memo(function HotelEditorCard({
             value={hotel.room_type}
             onChange={(value) => patch("room_type", value || null)}
           />
-          <Field
+          <DateInput
             label="Check-in"
-            type="date"
+            mode="iso"
             min={startDate ?? undefined}
             max={endDate ?? undefined}
             disabled={readOnly}
             value={hotel.check_in}
             onChange={(value) => patch("check_in", value || null)}
           />
-          <Field
+          <DateInput
             label="Check-out"
-            type="date"
+            mode="iso"
             min={hotel.check_in ?? startDate ?? undefined}
             max={endDate ?? undefined}
             disabled={readOnly}

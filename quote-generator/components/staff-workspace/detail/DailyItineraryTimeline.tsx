@@ -47,9 +47,12 @@ export default function DailyItineraryTimeline({ days = [] }: Props) {
         <div className="flex flex-col gap-3">
           {dayItems.map((day, idx) => {
             const dayNum = day.day_number || idx + 1;
+            const mealsList = Array.isArray(day.meals) ? day.meals.filter(Boolean) : [];
+            const highlightsList = Array.isArray(day.highlights) ? day.highlights.filter(Boolean) : [];
+
             return (
               <div
-                key={idx}
+                key={day.day_number ? `detail-day-${day.day_number}` : `detail-day-${idx}`}
                 className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-3.5 transition-all hover:border-[var(--color-accent)]"
               >
                 <div className="flex items-start gap-3 min-w-0 flex-1">
@@ -73,6 +76,41 @@ export default function DailyItineraryTimeline({ days = [] }: Props) {
                     <p className={cn(getTypographyClassName("bodySm"), "text-[var(--color-muted)] mt-1 whitespace-pre-wrap")}>
                       {day.summary || "Exploration, private transfers and curated experiences."}
                     </p>
+
+                    {mealsList.length > 0 || highlightsList.length > 0 ? (
+                      <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                        {mealsList.length > 0 ? (
+                          <div className="flex items-center gap-1">
+                            <span className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>
+                              Meals:
+                            </span>
+                            {mealsList.map((meal, mIdx) => (
+                              <span
+                                key={mIdx}
+                                className={cn(
+                                  getTypographyClassName("caption"),
+                                  "rounded-md bg-[var(--color-surface)] border border-[var(--color-border)] px-1.5 py-0.2 text-[var(--color-on-surface)]"
+                                )}
+                              >
+                                {meal}
+                              </span>
+                            ))}
+                          </div>
+                        ) : null}
+
+                        {highlightsList.map((hl, hIdx) => (
+                          <span
+                            key={hIdx}
+                            className={cn(
+                              getTypographyClassName("caption"),
+                              "rounded-full bg-[var(--color-accent-wash)] px-2 py-0.2 text-[var(--color-accent)]"
+                            )}
+                          >
+                            {hl}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
                   </div>
                 </div>
 

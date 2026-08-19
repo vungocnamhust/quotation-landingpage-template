@@ -7,7 +7,7 @@ import {
   type ItineraryDayFact,
   type PricingOptionFact,
   type QuotationFacts,
-} from "../components/quotation-workspace/factsTypes";
+} from "../components/quotation-workspace/factsTypes.ts";
 import {
   deriveStaySegmentsFromItinerary,
   getDefaultMealsForLang,
@@ -17,7 +17,7 @@ import {
   inferOvernightDestination,
   inferPartyLabel,
   syncHotelsFromStaySegments,
-} from "./prefillRules";
+} from "./prefillRules.ts";
 
 /**
  * Creates an itinerary day with default meals localized by quotation language.

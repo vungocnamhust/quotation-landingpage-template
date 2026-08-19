@@ -2,8 +2,8 @@
  * Pure domain rules for accommodation stay consolidation (TypeScript).
  */
 
-import type { HotelFact, DestinationRef } from "../../components/quotation-workspace/factsTypes";
-import { dateForItineraryDay } from "./datesRules";
+import type { HotelFact, DestinationRef } from "../../components/quotation-workspace/factsTypes.ts";
+import { dateForItineraryDay } from "./datesRules.ts";
 
 export type DayItemWithStayLike = {
   day_number?: number | null;

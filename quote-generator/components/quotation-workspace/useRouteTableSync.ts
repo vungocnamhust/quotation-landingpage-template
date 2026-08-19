@@ -1,11 +1,11 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import type { DayWithStayItem } from "./DayEmbeddedRouteTable";
-import type { HotelFact, ItineraryDayFact, QuotationFacts } from "./factsTypes";
-import { ensureFactsDefaults, routeDestinationRefsFromItinerary } from "./factsTypes";
-import { inferOvernightDestination } from "../../lib/prefillRules";
-import { consolidateStaysFromDayItems } from "../../lib/rules/staysRules";
+import type { DayWithStayItem } from "./DayEmbeddedRouteTable.tsx";
+import type { HotelFact, ItineraryDayFact, QuotationFacts } from "./factsTypes.ts";
+import { ensureFactsDefaults, routeDestinationRefsFromItinerary } from "./factsTypes.ts";
+import { inferOvernightDestination } from "../../lib/prefillRules.ts";
+import { consolidateStaysFromDayItems } from "../../lib/rules/staysRules.ts";
 
 export function deriveDayWithStays(facts: QuotationFacts): DayWithStayItem[] {
   const itinerary = facts.trip_facts.itinerary;

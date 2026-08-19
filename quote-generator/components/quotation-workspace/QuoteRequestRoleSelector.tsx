@@ -16,19 +16,19 @@ const ROLES: Array<{
   subtitle: string;
   icon: typeof User;
 }> = [
-  {
-    id: "traveller",
-    title: "I’m planning a journey",
-    subtitle: "For myself, my partner, family or friends.",
-    icon: User,
-  },
-  {
-    id: "advisor",
-    title: "I’m a Travel Advisor",
-    subtitle: "I’m planning a journey for a client.",
-    icon: Briefcase,
-  },
-];
+    {
+      id: "traveller",
+      title: "For Our Customer",
+      subtitle: "Support to provide quotation for end customer.",
+      icon: User,
+    },
+    {
+      id: "advisor",
+      title: "For Travel Agent Partner",
+      subtitle: "Support to provide quotation for Travel Agent Partner.",
+      icon: Briefcase,
+    },
+  ];
 
 export default function QuoteRequestRoleSelector({ value, onChange }: Props) {
   return (

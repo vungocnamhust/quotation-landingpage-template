@@ -5,6 +5,7 @@ import { cn } from "../../../utils/cn";
 import CustomSelect from "../../ui/CustomSelect";
 import { TravelDesignerSelect } from "../../travel-designer/TravelDesignerSelect";
 import { PartnerSelect } from "../../partner/PartnerSelect";
+import { DateInput } from "../../date";
 import QuoteRequestRoleSelector from "../QuoteRequestRoleSelector";
 import type { QuoteRequestFormState } from "../../../lib/quoteRequestPayload";
 
@@ -135,20 +136,20 @@ export function RequestIdentitySection({ state, onChange, disabled = false }: Pr
             />
           </label>
 
-          <Field
+          <DateInput
             label="Quote Deadline"
-            type="date"
+            mode="iso"
             disabled={disabled}
             value={state.quote_deadline}
-            onChange={(val) => onChange((prev) => ({ ...prev, quote_deadline: val }))}
+            onChange={(val) => onChange((prev) => ({ ...prev, quote_deadline: val ?? "" }))}
           />
 
-          <Field
+          <DateInput
             label="Client Decision Date"
-            type="date"
+            mode="iso"
             disabled={disabled}
             value={state.decision_date}
-            onChange={(val) => onChange((prev) => ({ ...prev, decision_date: val }))}
+            onChange={(val) => onChange((prev) => ({ ...prev, decision_date: val ?? "" }))}
           />
 
           <label className="flex flex-col gap-2">

@@ -25,16 +25,18 @@ import {
   ensureFactsDefaults,
   MAX_COMMERCIAL_OPTIONS,
   routeDestinationRefsFromItinerary,
-} from "./factsTypes";
-import type { FactsDeepLink } from "./editableHandoff";
+} from "./factsTypes.ts";
+import type { FactsDeepLink } from "./editableHandoff.ts";
 import {
   createItineraryDayWithDefaults,
   syncHotelsFromItineraryOvernights,
-} from "../../lib/prefillEngine";
+} from "../../lib/prefillEngine.ts";
 import {
   consolidateStaysFromDayItems,
   hydrateDayAccommodationsFromHotels,
-} from "../../lib/rules/staysRules";
+} from "../../lib/rules/staysRules.ts";
+import { tripAdapter } from "../../lib/rules/tripAdapter.ts";
+import { tripReconciler, type CanonicalDay } from "../../lib/rules/tripReconciler.ts";
 
 export const newHotelFact = (): HotelFact => ({
   accommodation_id: null,
@@ -191,16 +193,9 @@ export function useFactsFormState({
   const removeDay = useCallback(
     (index: number) => {
       onChange((current) => {
-        const safe = ensureFactsDefaults(current);
-        return {
-          ...safe,
-          trip_facts: {
-            ...safe.trip_facts,
-            itinerary: safe.trip_facts.itinerary.filter(
-              (_, itemIndex) => itemIndex !== index
-            ),
-          },
-        };
+        const canonical = tripAdapter.fromQuotationFacts(current);
+        const reconciled = tripReconciler.removeDay(canonical, index);
+        return tripAdapter.syncToQuotationFacts(reconciled, current);
       });
       setActiveDay(null);
       onDayRemoved?.(index);
@@ -231,21 +226,9 @@ export function useFactsFormState({
   const addDay = useCallback(() => {
     const index = trip.itinerary.length;
     onChange((current) => {
-      const safe = ensureFactsDefaults(current);
-      return {
-        ...safe,
-        trip_facts: {
-          ...safe.trip_facts,
-          itinerary: [
-            ...safe.trip_facts.itinerary,
-            createItineraryDayWithDefaults({
-              index,
-              startDate: safe.trip_facts.start_date,
-              lang: safe.lang,
-            }),
-          ],
-        },
-      };
+      const canonical = tripAdapter.fromQuotationFacts(current);
+      const reconciled = tripReconciler.addDay(canonical);
+      return tripAdapter.syncToQuotationFacts(reconciled, current);
     });
     setActiveDay(index);
     focusTarget.current = { kind: "day", index };
@@ -254,22 +237,20 @@ export function useFactsFormState({
   const patchTripStartDate = useCallback(
     (value: string) => {
       onChange((current) => {
-        const safe = ensureFactsDefaults(current);
-        const startDate = value || null;
-        return {
-          ...safe,
-          trip_facts: {
-            ...safe.trip_facts,
-            start_date: startDate,
-            itinerary: safe.trip_facts.itinerary.map((day, index) => ({
-              ...day,
-              display_date: dateForItineraryDay(
-                startDate,
-                day.day_number ?? index + 1
-              ),
-            })),
-          },
-        };
+        const canonical = tripAdapter.fromQuotationFacts(current);
+        const reconciled = tripReconciler.setStartDate(canonical, value || null);
+        return tripAdapter.syncToQuotationFacts(reconciled, current);
+      });
+    },
+    [onChange]
+  );
+
+  const patchTripEndDate = useCallback(
+    (value: string) => {
+      onChange((current) => {
+        const canonical = tripAdapter.fromQuotationFacts(current);
+        const reconciled = tripReconciler.setEndDate(canonical, value || null);
+        return tripAdapter.syncToQuotationFacts(reconciled, current);
       });
     },
     [onChange]
@@ -511,6 +492,7 @@ export function useFactsFormState({
     addHotel,
     removeHotel,
     patchTripStartDate,
+    patchTripEndDate,
     syncHotelsFromItinerary,
     addPricingOption,
     patchPricingOption,

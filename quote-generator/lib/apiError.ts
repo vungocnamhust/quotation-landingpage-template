@@ -15,15 +15,24 @@ export type ApiErrorMetadata = {
 };
 
 export class QuotationApiError extends Error {
+  readonly kind: ApiErrorKind;
+  readonly status: number;
+  readonly detail: unknown;
+  readonly metadata: ApiErrorMetadata;
+
   constructor(
-    public readonly kind: ApiErrorKind,
-    public readonly status: number,
+    kind: ApiErrorKind,
+    status: number,
     message: string,
-    public readonly detail: unknown = null,
-    public readonly metadata: ApiErrorMetadata = {},
+    detail: unknown = null,
+    metadata: ApiErrorMetadata = {},
   ) {
     super(message);
     this.name = 'QuotationApiError';
+    this.kind = kind;
+    this.status = status;
+    this.detail = detail;
+    this.metadata = metadata;
   }
 }
 

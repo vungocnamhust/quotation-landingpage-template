@@ -1,64 +1,97 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2, ChevronDown, ChevronUp, Calendar, Sparkles } from "lucide-react";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
-import { DestinationSelect } from "../destination/DestinationSelect";
-import { dateForItineraryDay, formatDisplayDate } from "../../lib/rules/datesRules";
+import { Plus, Trash2, ChevronDown, ChevronUp, Calendar } from "lucide-react";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
+import { DestinationSelect } from "../destination/DestinationSelect.tsx";
+import { DateInput } from "../date/index.ts";
+import { dateForItineraryDay, formatDisplayDate } from "../../lib/rules/datesRules.ts";
 
 export type BasicDayItem = {
+  id?: string;
   day_number: number;
   destination: string;
+  destination_ref_id?: string | null;
   display_date: string;
   summary: string;
   overnight: string;
+  meals?: string[];
+  highlights?: string[];
+  notes?: string[];
 };
 
 type Props = {
   days: BasicDayItem[];
   startDate?: string | null;
-  onChange: (days: BasicDayItem[]) => void;
+  onChange?: (days: BasicDayItem[]) => void;
+  onAddDay?: (defaultPayload?: Partial<BasicDayItem>) => void;
+  onRemoveDay?: (index: number) => void;
+  onUpdateDay?: (index: number, patch: Partial<BasicDayItem>) => void;
 };
 
-export default function BasicItineraryDayGrid({ days, startDate, onChange }: Props) {
-  const [isOpen, setIsOpen] = useState(false);
+export default function BasicItineraryDayGrid({
+  days,
+  startDate,
+  onChange,
+  onAddDay,
+  onRemoveDay,
+  onUpdateDay,
+}: Props) {
+  const [isOpen, setIsOpen] = useState(() => days.length > 0);
 
   const handleAddDay = () => {
-    const nextNumber = days.length + 1;
-    const projectedIso = dateForItineraryDay(startDate, nextNumber);
-    const projectedLabel = projectedIso ? formatDisplayDate(projectedIso) : "";
-    const newDay: BasicDayItem = {
-      day_number: nextNumber,
-      destination: "",
-      display_date: projectedLabel,
-      summary: "",
-      overnight: "",
-    };
-    onChange([...days, newDay]);
+    if (onAddDay) {
+      onAddDay();
+    } else {
+      const nextNumber = days.length + 1;
+      const projectedIso = dateForItineraryDay(startDate, nextNumber);
+      const projectedLabel = projectedIso ? formatDisplayDate(projectedIso) : "";
+      const newDay: BasicDayItem = {
+        id: `day_${Date.now()}_${nextNumber}`,
+        day_number: nextNumber,
+        destination: "",
+        display_date: projectedLabel,
+        summary: "",
+        overnight: "",
+        meals: [],
+        highlights: [],
+        notes: [],
+      };
+      onChange?.([...days, newDay]);
+    }
     if (!isOpen) setIsOpen(true);
   };
 
   const handleRemoveDay = (index: number) => {
-    const updated = days.filter((_, i) => i !== index).map((day, i) => {
-      const nextNum = i + 1;
-      const nextProjectedIso = dateForItineraryDay(startDate, nextNum);
-      const nextProjectedLabel = nextProjectedIso ? formatDisplayDate(nextProjectedIso) : "";
-      return {
-        ...day,
-        day_number: nextNum,
-        display_date: day.display_date || nextProjectedLabel,
-      };
-    });
-    onChange(updated);
+    if (onRemoveDay) {
+      onRemoveDay(index);
+    } else {
+      const updated = days
+        .filter((_, i) => i !== index)
+        .map((day, i) => {
+          const nextNum = i + 1;
+          const nextProjectedIso = dateForItineraryDay(startDate, nextNum);
+          const nextProjectedLabel = nextProjectedIso ? formatDisplayDate(nextProjectedIso) : "";
+          return {
+            ...day,
+            day_number: nextNum,
+            display_date: day.display_date || nextProjectedLabel,
+          };
+        });
+      onChange?.(updated);
+    }
   };
 
-  const handleFieldChange = (index: number, field: keyof BasicDayItem, value: string) => {
-    const updated = [...days];
-    updated[index] = { ...updated[index], [field]: value };
-    onChange(updated);
+  const handleFieldChange = (index: number, field: keyof BasicDayItem, value: unknown) => {
+    if (onUpdateDay) {
+      onUpdateDay(index, { [field]: value });
+    } else {
+      const updated = [...days];
+      updated[index] = { ...updated[index], [field]: value };
+      onChange?.(updated);
+    }
   };
-
 
   return (
     <div className="flex flex-col rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--elevation-card)] transition-all">
@@ -117,7 +150,7 @@ export default function BasicItineraryDayGrid({ days, startDate, onChange }: Pro
 
                 return (
                   <div
-                    key={idx}
+                    key={day.id || `day-${day.day_number}-${idx}`}
                     className="flex flex-col gap-3 rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-4"
                   >
                     <div className="flex items-center justify-between gap-2">
@@ -157,36 +190,15 @@ export default function BasicItineraryDayGrid({ days, startDate, onChange }: Pro
                         }
                       />
 
-                      <label className="flex flex-col gap-1.5">
-                        <div className="flex items-center justify-between gap-1">
-                          <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>
-                            Date:
-                          </span>
-                          {!day.display_date && projectedLabel ? (
-                            <button
-                              type="button"
-                              onClick={() => handleFieldChange(idx, "display_date", projectedLabel)}
-                              className={cn(
-                                getTypographyClassName("caption"),
-                                "flex items-center gap-1 text-[var(--color-accent)] hover:underline cursor-pointer"
-                              )}
-                            >
-                              <Sparkles size={11} aria-hidden="true" />
-                              <span>Auto-fill</span>
-                            </button>
-                          ) : null}
-                        </div>
-                        <input
-                          type="text"
-                          placeholder={projectedLabel || "e.g. Mon, 09 Nov"}
-                          value={day.display_date}
-                          onChange={(e) => handleFieldChange(idx, "display_date", e.target.value)}
-                          className={cn(
-                            getTypographyClassName("bodySm"),
-                            "h-9 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-2.5 text-[var(--color-on-surface)] focus:outline-none focus:ring-1 focus:ring-[var(--color-focus)]"
-                          )}
-                        />
-                      </label>
+                      <DateInput
+                        mode="text"
+                        label="Date:"
+                        size="sm"
+                        variant="compact"
+                        placeholder={projectedLabel || "e.g. Mon, 09 Nov"}
+                        value={day.display_date || projectedLabel || ""}
+                        onChange={(val) => handleFieldChange(idx, "display_date", val ?? "")}
+                      />
 
                       <DestinationSelect
                         label="Overnight:"
@@ -223,7 +235,6 @@ export default function BasicItineraryDayGrid({ days, startDate, onChange }: Pro
                 );
               })}
 
-
               <button
                 type="button"
                 onClick={handleAddDay}
@@ -235,7 +246,6 @@ export default function BasicItineraryDayGrid({ days, startDate, onChange }: Pro
                 <Plus size={15} aria-hidden="true" />
                 <span>+ Add Day {days.length + 1}</span>
               </button>
-
             </div>
           )}
         </div>
@@ -243,3 +253,4 @@ export default function BasicItineraryDayGrid({ days, startDate, onChange }: Pro
     </div>
   );
 }
+

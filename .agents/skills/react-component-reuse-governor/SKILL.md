@@ -79,6 +79,7 @@ Every reusable React component must comply with these **5 Golden Standards**:
 3. ❌ **Do not use raw `<input>` without autocomplete in one form while other forms use a search selector.**
 4. ❌ **Do not break existing consumers during refactors**; provide a thin backward-compatibility adapter wrapper if legacy components are being phased out.
 5. ❌ **Do not bypass `getTypographyClassName` or theme CSS variables.**
+6. ❌ **Do not embed domain calculations or state mutations (like date arithmetic, day re-indexing, stay consolidation) inside reusable UI components or grids**; always delegate calculations to Domain Reconcilers (`lib/rules/*Reconciler.ts`) via standard `onChange` dispatch.
 
 ---
 

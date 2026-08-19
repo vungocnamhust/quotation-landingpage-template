@@ -7,7 +7,7 @@ import {
   type DestinationRef,
   type HotelFact,
   type ItineraryDayFact,
-} from "../components/quotation-workspace/factsTypes";
+} from "../components/quotation-workspace/factsTypes.ts";
 import {
   dateForItineraryDay,
   parseIsoDate,
@@ -15,9 +15,9 @@ import {
   addDaysToIsoDate,
   formatDisplayDate,
   calculateValidityExpiry,
-} from "./rules/datesRules";
-import { generatePartyLabel, inferGreetingName as inferGreetingNameRule } from "./rules/partyRules";
-import { calculateTriPricing, inferRatesFromGroupTotal } from "./rules/pricingRules";
+} from "./rules/datesRules.ts";
+import { generatePartyLabel, inferGreetingName as inferGreetingNameRule } from "./rules/partyRules.ts";
+import { calculateTriPricing, inferRatesFromGroupTotal } from "./rules/pricingRules.ts";
 
 export {
   isValidIsoDate,
@@ -66,6 +66,7 @@ export function inferOvernightDestination(destination: string | null, currentOve
 }
 
 /**
+ * @deprecated Use consolidateStaysFromDayItems from lib/rules/staysRules.ts instead.
  * Derive stay segments from itinerary by grouping consecutive days with the same overnight location.
  */
 export function deriveStaySegmentsFromItinerary(
@@ -102,8 +103,8 @@ export function deriveStaySegmentsFromItinerary(
     const city = (lastDay.overnight || lastDay.destination || "").trim();
     const destinationRef = lastDay.destination_ref ?? firstDay.destination_ref ?? null;
 
-    const checkIn = inferDayDate(startDate, dayStart);
-    const checkOut = inferDayDate(startDate, dayEnd + 1) || (startDate && endDate && dayEnd === itinerary.length ? endDate : null);
+    const checkIn = dateForItineraryDay(startDate, dayStart);
+    const checkOut = dateForItineraryDay(startDate, dayEnd + 1) || (startDate && endDate && dayEnd === itinerary.length ? endDate : null);
 
     const displayDate = checkIn && checkOut ? `${checkIn} – ${checkOut}` : null;
 
@@ -123,6 +124,7 @@ export function deriveStaySegmentsFromItinerary(
 }
 
 /**
+ * @deprecated Use consolidateStaysFromDayItems from lib/rules/staysRules.ts instead.
  * Sync hotel facts from derived stay segments. Preserves existing hotel details where possible.
  */
 export function syncHotelsFromStaySegments(

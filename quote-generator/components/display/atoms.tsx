@@ -56,7 +56,7 @@ export function parseFormattedContent(value: TextValue): ReactNode {
       } else if (match[7]) {
         tokens.push(<em key={match.index}>{match[7]}</em>);
       }
-      lastIndex = regex.lastIndex;
+      lastIndex = FORMATTING_TOKEN_REGEX.lastIndex;
     }
 
     if (lastIndex < line.length) {

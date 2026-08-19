@@ -17,6 +17,9 @@ export default function NewQuoteRequestPage() {
     setFormState,
     itineraryDays,
     setItineraryDays,
+    addItineraryDay,
+    removeItineraryDay,
+    updateItineraryDay,
     submitting,
     errorMsg,
     handleSubmit,
@@ -73,6 +76,9 @@ export default function NewQuoteRequestPage() {
       <BasicItineraryDayGrid
         days={itineraryDays}
         startDate={formState.arrival_date}
+        onAddDay={addItineraryDay}
+        onRemoveDay={removeItineraryDay}
+        onUpdateDay={updateItineraryDay}
         onChange={setItineraryDays}
       />
 

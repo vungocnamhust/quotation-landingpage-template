@@ -10,8 +10,8 @@ import {
   uploadAccommodationAsset,
   type AccommodationProfile,
   type AccommodationProfileInput,
-} from "../../../lib/quotationApi";
-import type { DestinationRef } from "../../destination/types";
+} from "../../../lib/quotationApi.ts";
+import type { DestinationRef } from "../../destination/types.ts";
 
 export const blankAccommodationInput = (): AccommodationProfileInput => ({
   destinationId: "",

@@ -1,6 +1,6 @@
-import type { QuotationFacts, QuoteRequestItem } from "../components/quotation-workspace/factsTypes";
-import { resolveClientDisplayName } from "./rules/partyRules";
-import { currencyDivisor, inferRatesFromGroupTotal } from "./rules/pricingRules";
+import type { QuotationFacts, QuoteRequestItem } from "../components/quotation-workspace/factsTypes.ts";
+import { resolveClientDisplayName } from "./rules/partyRules.ts";
+import { currencyDivisor, inferRatesFromGroupTotal } from "./rules/pricingRules.ts";
 
 /**
  * Pure utility function to build initial QuotationFacts from a QuoteRequestItem.

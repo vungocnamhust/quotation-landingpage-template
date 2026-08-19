@@ -204,7 +204,7 @@ export function useNotifications(options?: {
           { method: "PATCH" },
           "Failed to mark notification as read."
         );
-      } catch (err) {
+      } catch {
         mutateList();
         mutateCount();
         toast("Could not mark notification as read.", "error");
@@ -232,7 +232,7 @@ export function useNotifications(options?: {
         { method: "POST" },
         "Failed to mark all notifications as read."
       );
-    } catch (err) {
+    } catch {
       mutateList();
       mutateCount();
       toast("Could not mark all notifications as read.", "error");

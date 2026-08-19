@@ -1,30 +1,16 @@
 "use client";
 
 import { useCallback, useMemo, useState, type Dispatch, type SetStateAction } from "react";
-import type { TravelDesignerProfile } from "../../lib/quotationApi";
-import { applyRouteDates } from "../../lib/prefillEngine";
+import type { TravelDesignerProfile } from "../../lib/quotationApi.ts";
+import { calculateDuration } from "../../lib/rules/datesRules.ts";
+import { tripAdapter } from "../../lib/rules/tripAdapter.ts";
+import { tripReconciler, type CanonicalDay } from "../../lib/rules/tripReconciler.ts";
 import {
-  dateForItineraryDay,
   ensureFactsDefaults,
+  type ItineraryDayFact,
   type QuotationFacts,
   type QuotationOptions,
-} from "./factsTypes";
-
-export function daysBetween(
-  startDate: string | null,
-  endDate: string | null
-): number | null {
-  if (!startDate || !endDate) return null;
-  const start = new Date(`${startDate}T00:00:00.000Z`);
-  const end = new Date(`${endDate}T00:00:00.000Z`);
-  if (
-    Number.isNaN(start.getTime()) ||
-    Number.isNaN(end.getTime()) ||
-    end < start
-  )
-    return null;
-  return Math.floor((end.getTime() - start.getTime()) / 86_400_000) + 1;
-}
+} from "./factsTypes.ts";
 
 export type UseQuotationIntakeOptions = {
   facts: QuotationFacts;
@@ -60,7 +46,8 @@ export function useQuotationIntake({
     [facts.brand_id, options.templates]
   );
 
-  const durationDays = daysBetween(trip.start_date, trip.end_date);
+  const duration = calculateDuration(trip.start_date, trip.end_date);
+  const durationDays = duration.durationDays;
 
   const patchFacts = useCallback(
     (updater: (current: QuotationFacts) => QuotationFacts) =>
@@ -70,44 +57,49 @@ export function useQuotationIntake({
 
   const handleStartDateChange = useCallback(
     (value: string) => {
-      const nextStart = value || null;
-      const nextLength = daysBetween(nextStart, trip.end_date);
-      if (nextLength === null) {
-        patchFacts((current) => ({
-          ...current,
-          trip_facts: {
-            ...current.trip_facts,
-            start_date: nextStart,
-            itinerary: current.trip_facts.itinerary.map((day, idx) => ({
-              ...day,
-              display_date: dateForItineraryDay(nextStart, day.day_number ?? idx + 1),
-            })),
-          },
-        }));
-        return;
-      }
-      patchFacts((current) => applyRouteDates(current, nextStart, current.trip_facts.end_date, nextLength));
+      patchFacts((current) => {
+        const canonical = tripAdapter.fromQuotationFacts(current);
+        const reconciled = tripReconciler.setStartDate(canonical, value || null);
+        return tripAdapter.syncToQuotationFacts(reconciled, current);
+      });
     },
-    [patchFacts, trip.end_date]
+    [patchFacts]
   );
 
   const handleEndDateChange = useCallback(
     (value: string) => {
-      const nextEnd = value || null;
-      const nextLength = daysBetween(trip.start_date, nextEnd);
-      if (nextLength === null) {
-        patchFacts((current) => ({
-          ...current,
-          trip_facts: {
-            ...current.trip_facts,
-            end_date: nextEnd,
-          },
-        }));
-        return;
-      }
-      patchFacts((current) => applyRouteDates(current, current.trip_facts.start_date, nextEnd, nextLength));
+      patchFacts((current) => {
+        const canonical = tripAdapter.fromQuotationFacts(current);
+        const reconciled = tripReconciler.setEndDate(canonical, value || null);
+        return tripAdapter.syncToQuotationFacts(reconciled, current);
+      });
     },
-    [patchFacts, trip.start_date]
+    [patchFacts]
+  );
+
+  const addItineraryDay = useCallback(
+    (defaultPayload?: Partial<ItineraryDayFact>) => {
+      patchFacts((current) => {
+        const canonical = tripAdapter.fromQuotationFacts(current);
+        const reconciled = tripReconciler.addDay(
+          canonical,
+          defaultPayload as Partial<CanonicalDay> | undefined
+        );
+        return tripAdapter.syncToQuotationFacts(reconciled, current);
+      });
+    },
+    [patchFacts]
+  );
+
+  const removeItineraryDay = useCallback(
+    (index: number) => {
+      patchFacts((current) => {
+        const canonical = tripAdapter.fromQuotationFacts(current);
+        const reconciled = tripReconciler.removeDay(canonical, index);
+        return tripAdapter.syncToQuotationFacts(reconciled, current);
+      });
+    },
+    [patchFacts]
   );
 
   const handleDesignerChange = useCallback(
@@ -138,6 +130,9 @@ export function useQuotationIntake({
     patchFacts,
     handleStartDateChange,
     handleEndDateChange,
+    addItineraryDay,
+    removeItineraryDay,
     handleDesignerChange,
   };
 }
+

@@ -45,12 +45,14 @@ export default function CustomSelect({
   const selectedIndex = options.findIndex((opt) => opt.id === value);
   const selectedOption = selectedIndex >= 0 ? options[selectedIndex] : null;
 
-  // Initialize highlighted index to selected item or first item
-  useEffect(() => {
+  // Initialize highlighted index when opened
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
     if (isOpen) {
       setHighlightedIndex(selectedIndex >= 0 ? selectedIndex : 0);
     }
-  }, [isOpen, selectedIndex]);
+  }
 
   // Close on outside click
   useEffect(() => {

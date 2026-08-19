@@ -1,64 +1,99 @@
 ---
 name: quote-generator-prefill-governor
-description: Govern prefill, default values, and data derivation in quote-generator. Use when adding or modifying form fields, handling default values, calculating trip duration/dates, inferring overnight destinations, computing commercial totals, generating traveller labels, or synchronizing accommodation slots. Enforce the 3-layered prefill architecture, Vercel React Best Practices, and multilingual defaults.
+description: Govern prefill, default values, and bidirectional domain reconciliation in quote-generator. Use when adding or modifying form fields, handling default values, calculating trip duration/dates, inferring overnight destinations, computing commercial totals, generating traveller labels, or synchronizing accommodation slots. Enforce the 4-layer Bidirectional Reconciler & Canonical Adapter architecture, Vercel React Best Practices, and multilingual defaults.
 ---
 
-# Quote Generator Prefill & Data Derivation Governor
+# Quote Generator Prefill & Domain Reconciler Governor
 
-Govern prefill, default value assignment, and data derivation logic across all quotation tabs (`new quotation`, `fact`, `content`, `design`).
+Govern prefill, default value assignment, and data reconciliation logic across all quotation tabs (`request`, `new quotation`, `fact`, `content`, `design`).
 
-## Architecture & Ownership
+## Architecture & Ownership (The 4-Layer Reconciler Pattern)
 
-Always follow the **3-Layered Architecture** for state mutation and data derivation:
+Always follow the **4-Layered Architecture** for state mutations, derivations, and invariant reconciliation:
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│  React UI Layer (QuotationIntakeForm, FactsForm, ContentStudioClient) │
-└──────────────────────────────────┬─────────────────────────────────────┘
-                                   │ Calls Single-pass Updaters
+│ Tầng 4: React UI Layer (QuoteRequestForm, BasicItineraryDayGrid, Facts)│
+│ - Calls 1-line Facade Updaters or Headless Reconciler Hooks            │
+│ - STRICT: No inline math, day-index arithmetic, or manual date loops   │
+├──────────────────────────────────┬─────────────────────────────────────┘
+                                   │ Single-pass transformations
                                    ▼
 ┌────────────────────────────────────────────────────────────────────────┐
-│  Layer 3: Orchestrator / Facade (quote-generator/lib/prefillEngine.ts) │
-│  - Executes Single-pass State Transformations on QuotationFacts        │
-│  - Prevents cascading re-renders via atomic updates                    │
-└──────────────────┬──────────────────────────────────────┬──────────────┘
-                   │ Reuses Pure Rules                    │ Uses Contracts
-                   ▼                                      ▼
-┌──────────────────────────────────────┐  ┌──────────────────────────────┐
-│ Layer 2: Business & Inference Rules  │  │ Layer 1: Data Contracts      │
-│ (lib/prefillRules.ts - ENRICHED)     │  │ (components/factsTypes.ts)   │
-│ - inferOvernightDestination()        │  │ - QuotationFacts Types       │
-│ - deriveStaySegmentsFromItinerary()  │  │ - ensureFactsDefaults()      │
-│ - syncHotelsFromStaySegments()       │  │ - createBrochureFacts()      │
-│ - inferCommercialTotal/PerTraveler() │  │ - BROCHURE_DEFAULT_*         │
-│ - inferPartyLabel / inferGreeting()  │  │ - serializeFactsForApi()     │
-│ - getDefaultMealsForLang()           │  │                              │
-└──────────────────────────────────────┘  └──────────────────────────────┘
+│ Tầng 3: Orchestrator / Facade Layer (quote-generator/lib/prefillEngine.ts)
+│ - Executes atomic state mutations on QuotationFacts / FormStates       │
+│ - Prevents cascading re-renders via single-pass updates                │
+├──────────────────────────────────┬─────────────────────────────────────┤
+│ Tầng 2: Canonical Adapter Layer (quote-generator/lib/rules/*Adapter.ts) │
+│ - tripAdapter: bridges QuoteRequestFormState <-> CanonicalTrip <-> Facts│
+│ - Zero schema corruption, reusable across all entrypoints              │
+├──────────────────────────────────┬─────────────────────────────────────┤
+│ Tầng 1: Pure Domain Reconciler Core (lib/rules/*Reconciler.ts & Rules) │
+│ - tripReconciler.ts: startDate <-> endDate <-> duration <-> itinerary  │
+│ - staysRules.ts: overnight grouping <-> hotel stays <-> checkIn/Out    │
+│ - pricingRules.ts: per-person rate <-> group total 2-way inference     │
+│ - partyRules.ts: name/pax count <-> party_label & greeting_name        │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Hard Guardrails
 
-1. **Never Execute Multi-step Inline State Mutations in Components**:
-   - ❌ **BAD**: Calling multiple `patchFacts` or `setFacts` in sequence inside event handlers (e.g. updating `customer_name`, then `party_label`, then `greeting_name`).
-   - ✅ **GOOD**: Call atomic facade updaters from `prefillEngine.ts`: `setFacts(current => updateCustomerName(current, name))`.
+1. **Strictly Use Domain Reconcilers for Closed State Graphs**:
+   - For Trip Dates & Itinerary: **`tripReconciler`** enforces:
+     $$\text{EndDate} = \text{StartDate} + \text{Length} - 1$$
+     $$\text{Duration Days} = \text{Length of Itinerary}$$
+     $$\text{Day } i\text{ Date} = \text{StartDate} + (i - 1)\text{ days}$$
+   - Any mutation to StartDate, EndDate, or Itinerary Days **MUST** pass through:
+     ```ts
+     const canonical = tripAdapter.fromQuoteRequest(formState, itineraryDays);
+     const updated = tripReconciler.addDay(canonical); // or removeDay, setStartDate, setEndDate
+     const synced = tripAdapter.syncToQuoteRequest(updated, formState);
+     setFormState(synced.formState);
+     setItineraryDays(synced.itineraryDays);
+     ```
 
-2. **Never Duplicate Derived State in React State**:
-   - ❌ **BAD**: Saving dynamic calculations (like duration days/nights, party label badges, calculated pricing totals) into duplicate component state.
-   - ✅ **GOOD**: Compute derived values dynamically using pure functions in `prefillRules.ts` or memoize with `useMemo`.
+2. **Never Execute Multi-step Inline State Mutations in Components**:
+   - ❌ **BAD**: Calling multiple `setFacts` in sequence inside event handlers or manually calculating `days.length + 1` with `Date.now()`.
+   - ✅ **GOOD**: Call atomic facade updaters from `prefillEngine.ts` or `tripReconciler`.
 
-3. **Always Multilingual Default Meals**:
-   - When initializing new itinerary days, always use `getDefaultMealsForLang(lang)`:
+3. **Never Duplicate Derived State in React State**:
+   - ❌ **BAD**: Storing dynamic calculations (like duration days/nights, party label badges, calculated pricing totals) in duplicate component state.
+   - ✅ **GOOD**: Compute derived values dynamically using pure functions in `lib/rules/*` or memoize with `useMemo`.
+
+4. **Always Multilingual Default Meals**:
+   - When initializing new itinerary days, always use `getDefaultMealsForLang(lang)` or `getDefaultMeals(lang)`:
      - `en`: `["Breakfast", "Lunch", "Dinner"]`
      - `vi`: `["Bữa sáng", "Bữa trưa", "Bữa tối"]`
      - `ar`: `["الإفطار", "الغداء", "العشاء"]`
 
-4. **Ensure O(1) Performance for Derivations**:
+5. **Ensure O(1) Performance for Derivations**:
    - Use `Set` / `Map` for stay segment grouping (`deriveStaySegmentsFromItinerary`) and route destination reference aggregation (`routeDestinationRefsFromItinerary`).
 
-## Available Facade Updaters (`lib/prefillEngine.ts`)
+## Available Reconciler & Facade Updaters
 
-- `createItineraryDayWithDefaults({ index, startDate, lang })`: Creates an itinerary day initialized with ISO display date and localized default meals.
-- `updateCustomerName(input, name)`: Single-pass update for customer name, auto-updating `party_label` and `greeting_name` if not manually overridden.
+- **`tripReconciler`** (`lib/rules/tripReconciler.ts`):
+  - `addDay(trip, defaultPayload)`: Pushes endDate and sets projected display_date.
+  - `removeDay(trip, index)`: Pulls back endDate and re-indexes all days.
+  - `setStartDate(trip, nextStartDate)`: Shifts display_date for all days and shifts endDate.
+  - `setEndDate(trip, nextEndDate)`: Resizes itinerary array to match duration.
+  - `updateDay(trip, index, patch)`: Smart overnight auto-fill and hotel cascading.
+- **`tripAdapter`** (`lib/rules/tripAdapter.ts`):
+  - `fromQuoteRequest(formState, days)` & `syncToQuoteRequest(canonical, prev)`
+  - `fromQuotationFacts(facts)` & `syncToQuotationFacts(canonical, prev)`
+- **`prefillEngine`** (`lib/prefillEngine.ts`):
+  - `updateCustomerName(input, name)`
+  - `updateCustomerCounts(input, { adults, children })`
+  - `updateItineraryDayDestination(input, index, destination, ref)`
+  - `syncHotelsFromItineraryOvernights(input)`
+  - `patchPricingOptionWithInference(input, index, patch)`
+
+## References
+
+- Contract documentation: `quote-generator/docs/prefill-system-contract.md`
+- Reconciler Engine: `quote-generator/lib/rules/tripReconciler.ts`
+- Canonical Adapter: `quote-generator/lib/rules/tripAdapter.ts`
+- Facade Engine: `quote-generator/lib/prefillEngine.ts`
+- Master Guidelines: `AGENTS.md` (Contract 2)`party_label` and `greeting_name` if not manually overridden.
 - `updateCustomerCounts(input, { adults, children })`: Single-pass update for adult/children counts, auto-updating `party_label`.
 - `updateItineraryDayDestination(input, index, destination, ref)`: Single-pass update for day destination, auto-inferring overnight and rebuilding `routeDestinationRefs`.
 - `applyRouteDates(input, startDate, endDate, nextLength)`: Updates travel dates and resizes itinerary while preserving day contents and localized meal defaults.

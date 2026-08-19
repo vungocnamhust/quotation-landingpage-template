@@ -463,6 +463,107 @@ test('UseCase 3: Bi-directional sync & hydration between Itinerary Days and Hote
 });
 
 // ==========================================
+// 8. Temporal Trip Reconciler & Adapter Tests
+// ==========================================
+console.log('\n⏱️  8. Testing Temporal Trip Reconciler & Trip Adapter...');
+
+import { tripReconciler } from '../lib/rules/tripReconciler.ts';
+import { tripAdapter } from '../lib/rules/tripAdapter.ts';
+import { getInitialQuoteRequestFormState } from '../lib/quoteRequestPayload.ts';
+
+test('tripReconciler.addDay: auto-updates endDate, duration and projects display_date', () => {
+  const initial = {
+    startDate: '2026-11-01',
+    endDate: null,
+    durationDays: null,
+    durationNights: null,
+    itinerary: [],
+  };
+
+  const withDay1 = tripReconciler.addDay(initial, { destination: 'Hanoi' });
+  assert.equal(withDay1.itinerary.length, 1);
+  assert.equal(withDay1.endDate, '2026-11-01');
+  assert.equal(withDay1.durationDays, 1);
+  assert.equal(withDay1.durationNights, 0);
+  assert.equal(withDay1.itinerary[0].day_number, 1);
+
+  const withDay2 = tripReconciler.addDay(withDay1, { destination: 'Hanoi' });
+  assert.equal(withDay2.itinerary.length, 2);
+  assert.equal(withDay2.endDate, '2026-11-02');
+  assert.equal(withDay2.durationDays, 2);
+  assert.equal(withDay2.durationNights, 1);
+});
+
+test('tripReconciler.removeDay: pulls back endDate and re-indexes remaining days', () => {
+  const initial = {
+    startDate: '2026-11-01',
+    endDate: '2026-11-03',
+    durationDays: 3,
+    durationNights: 2,
+    itinerary: [
+      { day_number: 1, destination: 'Hanoi', overnight: 'Hanoi', display_date: '01 Nov', summary: 'Day 1' },
+      { day_number: 2, destination: 'Halong', overnight: 'Halong', display_date: '02 Nov', summary: 'Day 2' },
+      { day_number: 3, destination: 'Hue', overnight: 'Hue', display_date: '03 Nov', summary: 'Day 3' },
+    ],
+  };
+
+  const afterRemove = tripReconciler.removeDay(initial, 1);
+  assert.equal(afterRemove.itinerary.length, 2);
+  assert.equal(afterRemove.endDate, '2026-11-02');
+  assert.equal(afterRemove.durationDays, 2);
+  assert.equal(afterRemove.durationNights, 1);
+  assert.equal(afterRemove.itinerary[0].day_number, 1);
+  assert.equal(afterRemove.itinerary[1].day_number, 2);
+  assert.equal(afterRemove.itinerary[1].destination, 'Hue');
+});
+
+test('tripReconciler.setStartDate: shifts display dates and updates endDate preserving duration', () => {
+  const initial = {
+    startDate: '2026-11-01',
+    endDate: '2026-11-03',
+    durationDays: 3,
+    durationNights: 2,
+    itinerary: [
+      { day_number: 1, destination: 'Hanoi', overnight: 'Hanoi', display_date: null, summary: null },
+      { day_number: 2, destination: 'Halong', overnight: 'Halong', display_date: null, summary: null },
+      { day_number: 3, destination: 'Hue', overnight: 'Hue', display_date: null, summary: null },
+    ],
+  };
+
+  const shifted = tripReconciler.setStartDate(initial, '2026-12-10');
+  assert.equal(shifted.startDate, '2026-12-10');
+  assert.equal(shifted.endDate, '2026-12-12');
+  assert.equal(shifted.durationDays, 3);
+  assert.equal(shifted.durationNights, 2);
+});
+
+test('tripAdapter: bidirectional sync between QuoteRequestFormState and CanonicalTrip', () => {
+  const formState = getInitialQuoteRequestFormState('traveller');
+  formState.arrival_date = '2026-11-01';
+  formState.departure_date = '2026-11-03';
+
+  const days = [
+    { day_number: 1, destination: 'Hanoi', overnight: 'Hanoi', display_date: '01 Nov', summary: 'Arrival' },
+    { day_number: 2, destination: 'Hanoi', overnight: 'Hanoi', display_date: '02 Nov', summary: 'City tour' },
+    { day_number: 3, destination: 'Halong', overnight: 'Halong', display_date: '03 Nov', summary: 'Cruise' },
+  ];
+
+  const canonical = tripAdapter.fromQuoteRequest(formState, days);
+  assert.equal(canonical.startDate, '2026-11-01');
+  assert.equal(canonical.endDate, '2026-11-03');
+  assert.equal(canonical.durationDays, 3);
+
+  const expanded = tripReconciler.addDay(canonical, { destination: 'Hue' });
+  const synced = tripAdapter.syncToQuoteRequest(expanded, formState);
+
+  assert.equal(synced.formState.arrival_date, '2026-11-01');
+  assert.equal(synced.formState.departure_date, '2026-11-04');
+  assert.equal(synced.itineraryDays.length, 4);
+  assert.equal(synced.itineraryDays[3].day_number, 4);
+  assert.equal(synced.itineraryDays[3].destination, 'Hue');
+});
+
+// ==========================================
 // Summary
 // ==========================================
 console.log('\n==========================================');
@@ -474,4 +575,5 @@ if (passedTests === totalTests) {
   console.error(`🚨 ${totalTests - passedTests} TESTS FAILED!`);
   process.exit(1);
 }
+
 

@@ -243,7 +243,17 @@ export function getInitialQuoteRequestFormState(role: QuoteRequestRole = "travel
 }
 
 export function mapRequestToFormState(request: QuoteRequestItem): QuoteRequestFormState {
-  const payload = (request.payload_json || {}) as Record<string, unknown>;
+  const payload = (
+    typeof request.payload_json === "string"
+      ? (() => {
+          try {
+            return JSON.parse(request.payload_json) as Record<string, unknown>;
+          } catch {
+            return {};
+          }
+        })()
+      : (request.payload_json || {})
+  ) as Record<string, unknown>;
   const isTraveller = request.role === "traveller";
 
   // Split name for traveller or advisor if not in payload

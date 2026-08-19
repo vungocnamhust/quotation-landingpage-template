@@ -50,7 +50,17 @@ export default function DetailRequestView({ request: initialRequest }: Props) {
     currentLatestRequest.current_revision !== undefined &&
     activeRequest.current_revision < currentLatestRequest.current_revision;
 
-  const payload = (activeRequest.payload_json || {}) as Record<string, unknown>;
+  const payload = (
+    typeof activeRequest.payload_json === "string"
+      ? (() => {
+          try {
+            return JSON.parse(activeRequest.payload_json) as Record<string, unknown>;
+          } catch {
+            return {};
+          }
+        })()
+      : (activeRequest.payload_json || {})
+  ) as Record<string, unknown>;
   const isTraveller = activeRequest.role === "traveller";
   const clientName = payload.client_name as string | undefined;
   const rawTitle = activeRequest.customer_name || (isTraveller ? "Valued Client" : "Travel Advisor");

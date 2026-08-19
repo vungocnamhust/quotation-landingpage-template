@@ -5,6 +5,7 @@ import { getTypographyClassName } from "../../../config/typography";
 import { cn } from "../../../utils/cn";
 import CustomSelect from "../../ui/CustomSelect";
 import { DestinationSelect } from "../../destination/DestinationSelect";
+import { DateInput } from "../../date";
 import KidAgesInput from "../KidAgesInput";
 import RoomConfigInput from "../RoomConfigInput";
 import { calculateDuration, formatTravelDatesLabel } from "../../../lib/rules/datesRules";
@@ -119,23 +120,23 @@ export function RequestRoutingSection({ state, onChange, disabled = false }: Pro
 
         {isTraveller ? (
           <>
-            <Field
+            <DateInput
               label="Arrival date"
-              type="date"
+              mode="iso"
               required
               disabled={disabled}
               value={state.arrival_date}
               onChange={(val) =>
                 onChange((prev) => ({
                   ...prev,
-                  arrival_date: val,
+                  arrival_date: val ?? "",
                   raw_dates_text: formatTravelDatesLabel(val, prev.departure_date, prev.raw_dates_text),
                 }))
               }
             />
-            <Field
+            <DateInput
               label="Departure date"
-              type="date"
+              mode="iso"
               required
               min={state.arrival_date || undefined}
               disabled={disabled}
@@ -143,7 +144,7 @@ export function RequestRoutingSection({ state, onChange, disabled = false }: Pro
               onChange={(val) =>
                 onChange((prev) => ({
                   ...prev,
-                  departure_date: val,
+                  departure_date: val ?? "",
                   raw_dates_text: formatTravelDatesLabel(prev.arrival_date, val, prev.raw_dates_text),
                 }))
               }
@@ -205,29 +206,29 @@ export function RequestRoutingSection({ state, onChange, disabled = false }: Pro
 
             {advisorDateMode === "exact" ? (
               <div className="grid gap-3 sm:grid-cols-3 items-end">
-                <Field
+                <DateInput
                   label="Arrival date"
-                  type="date"
+                  mode="iso"
                   disabled={disabled}
                   value={state.arrival_date}
                   onChange={(val) =>
                     onChange((prev) => ({
                       ...prev,
-                      arrival_date: val,
+                      arrival_date: val ?? "",
                       raw_dates_text: formatTravelDatesLabel(val, prev.departure_date, prev.raw_dates_text),
                     }))
                   }
                 />
-                <Field
+                <DateInput
                   label="Departure date"
-                  type="date"
+                  mode="iso"
                   min={state.arrival_date || undefined}
                   disabled={disabled}
                   value={state.departure_date}
                   onChange={(val) =>
                     onChange((prev) => ({
                       ...prev,
-                      departure_date: val,
+                      departure_date: val ?? "",
                       raw_dates_text: formatTravelDatesLabel(prev.arrival_date, val, prev.raw_dates_text),
                     }))
                   }

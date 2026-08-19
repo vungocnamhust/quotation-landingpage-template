@@ -30,6 +30,9 @@ function EditRequestDrawerContent({
     setFormState,
     itineraryDays,
     setItineraryDays,
+    addItineraryDay,
+    removeItineraryDay,
+    updateItineraryDay,
     changeSummary,
     setChangeSummary,
     submitting,
@@ -137,6 +140,9 @@ function EditRequestDrawerContent({
           <BasicItineraryDayGrid
             days={itineraryDays}
             startDate={formState.arrival_date}
+            onAddDay={addItineraryDay}
+            onRemoveDay={removeItineraryDay}
+            onUpdateDay={updateItineraryDay}
             onChange={setItineraryDays}
           />
 

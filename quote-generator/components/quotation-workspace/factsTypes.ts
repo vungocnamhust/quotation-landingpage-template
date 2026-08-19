@@ -1,4 +1,4 @@
-import { DESIGNER_PRESENTATION_DEFAULTS } from "../../config/designerPresentationDefaults";
+import { DESIGNER_PRESENTATION_DEFAULTS } from "../../config/designerPresentationDefaults.ts";
 
 export type SourceKind = "manual" | "dmc_handoff";
 export type DestinationRef = {

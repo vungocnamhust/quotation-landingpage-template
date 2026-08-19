@@ -45,7 +45,7 @@ export function DestinationSelect({
   const singleValueName =
     typeof value === "string" ? value : value?.name ?? "";
 
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(() => (mode === "single" ? singleValueName : ""));
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
 
