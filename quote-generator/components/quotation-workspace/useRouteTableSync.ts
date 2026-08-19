@@ -12,12 +12,25 @@ export function deriveDayWithStays(facts: QuotationFacts): DayWithStayItem[] {
   const hotels = facts.service_facts.hotels;
 
   return itinerary.map((day, idx) => {
-    // Attempt to match hotel with day destination/overnight
+    // 1. If day already has accommodation attached, prioritize it
+    if (day.accommodation_id || day.accommodation_name) {
+      return {
+        day_number: day.day_number ?? idx + 1,
+        destination: day.destination,
+        destination_ref: day.destination_ref,
+        accommodation_id: day.accommodation_id ?? null,
+        accommodation_name: day.accommodation_name ?? null,
+        room_type: day.room_type ?? null,
+        summary: day.summary,
+      };
+    }
+
+    // 2. Attempt to match hotel with day destination/overnight
     const matchingHotel =
       hotels.find(
         (h) =>
-          (h.destination && day.destination && h.destination === day.destination) ||
-          (h.destination && day.overnight && h.destination === day.overnight)
+          (h.destination && day.destination && h.destination.toLowerCase() === day.destination.toLowerCase()) ||
+          (h.destination && day.overnight && h.destination.toLowerCase() === day.overnight.toLowerCase())
       ) || hotels[idx];
 
     return {
@@ -54,6 +67,9 @@ export function syncRouteTableToFacts(
       notes: existing?.notes ?? [],
       sense_of_pace: existing?.sense_of_pace ?? "balanced",
       display_date: existing?.display_date ?? null,
+      accommodation_id: item.accommodation_id ?? null,
+      accommodation_name: item.accommodation_name ?? null,
+      room_type: item.room_type ?? null,
     };
   });
 

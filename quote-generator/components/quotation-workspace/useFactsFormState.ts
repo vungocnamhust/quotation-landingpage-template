@@ -31,6 +31,10 @@ import {
   createItineraryDayWithDefaults,
   syncHotelsFromItineraryOvernights,
 } from "../../lib/prefillEngine";
+import {
+  consolidateStaysFromDayItems,
+  hydrateDayAccommodationsFromHotels,
+} from "../../lib/rules/staysRules";
 
 export const newHotelFact = (): HotelFact => ({
   accommodation_id: null,
@@ -63,7 +67,22 @@ export function useFactsFormState({
   onDayRemoved,
   onHotelRemoved,
 }: UseFactsFormStateOptions) {
-  const facts = useMemo(() => ensureFactsDefaults(inputFacts), [inputFacts]);
+  const facts = useMemo(() => {
+    const safe = ensureFactsDefaults(inputFacts);
+    const hydratedItinerary = hydrateDayAccommodationsFromHotels(
+      safe.trip_facts.itinerary,
+      safe.service_facts.hotels,
+      safe.trip_facts.start_date
+    );
+    return {
+      ...safe,
+      trip_facts: {
+        ...safe.trip_facts,
+        itinerary: hydratedItinerary,
+      },
+    };
+  }, [inputFacts]);
+
   const trip = facts.trip_facts;
   const customer = facts.customer_facts;
   const services = facts.service_facts;
@@ -97,6 +116,22 @@ export function useFactsFormState({
           itemIndex === index ? { ...item, ...patch } : item
         );
         const destination_refs = routeDestinationRefsFromItinerary(itinerary);
+
+        let hotels = safe.service_facts.hotels;
+        if (
+          patch.accommodation_id !== undefined ||
+          patch.accommodation_name !== undefined ||
+          patch.room_type !== undefined
+        ) {
+          const consolidated = consolidateStaysFromDayItems(
+            itinerary,
+            safe.trip_facts.start_date
+          );
+          if (consolidated.length > 0) {
+            hotels = consolidated;
+          }
+        }
+
         return {
           ...safe,
           trip_facts: {
@@ -104,6 +139,10 @@ export function useFactsFormState({
             itinerary,
             destination_refs,
             destinations: destination_refs.map((ref) => ref.name),
+          },
+          service_facts: {
+            ...safe.service_facts,
+            hotels,
           },
         };
       }),
@@ -114,13 +153,23 @@ export function useFactsFormState({
     (index: number, patch: Partial<HotelFact>) =>
       onChange((current) => {
         const safe = ensureFactsDefaults(current);
+        const hotels = safe.service_facts.hotels.map((item, itemIndex) =>
+          itemIndex === index ? { ...item, ...patch } : item
+        );
+        const itinerary = hydrateDayAccommodationsFromHotels(
+          safe.trip_facts.itinerary,
+          hotels,
+          safe.trip_facts.start_date
+        );
         return {
           ...safe,
+          trip_facts: {
+            ...safe.trip_facts,
+            itinerary,
+          },
           service_facts: {
             ...safe.service_facts,
-            hotels: safe.service_facts.hotels.map((item, itemIndex) =>
-              itemIndex === index ? { ...item, ...patch } : item
-            ),
+            hotels,
           },
         };
       }),

@@ -58,8 +58,8 @@ services:
     env_file:
       - .env.local
     environment:
-      NOTIFICATION_DATABASE_URL: postgresql+asyncpg://quotation:quotation@postgres:5432/notification
-      NOTIFICATION_DATABASE_URL_SYNC: postgresql+psycopg://quotation:quotation@postgres:5432/notification
+      NOTIFICATION_DATABASE_URL: postgresql+asyncpg://quotation:${POSTGRES_PASSWORD:-quotation_local_password}@quotation-local-postgres-1:5432/notification
+      NOTIFICATION_DATABASE_URL_SYNC: postgresql+psycopg://quotation:${POSTGRES_PASSWORD:-quotation_local_password}@quotation-local-postgres-1:5432/notification
     working_dir: /app
     volumes:
       - .:/app
@@ -103,8 +103,8 @@ services:
       - .env.local
     environment:
       NOTIFICATION_PORT: 8116
-      NOTIFICATION_DATABASE_URL: postgresql+asyncpg://quotation:quotation@postgres:5432/notification
-      NOTIFICATION_DATABASE_URL_SYNC: postgresql+psycopg://quotation:quotation@postgres:5432/notification
+      NOTIFICATION_DATABASE_URL: postgresql+asyncpg://quotation:${POSTGRES_PASSWORD:-quotation_local_password}@quotation-local-postgres-1:5432/notification
+      NOTIFICATION_DATABASE_URL_SYNC: postgresql+psycopg://quotation:${POSTGRES_PASSWORD:-quotation_local_password}@quotation-local-postgres-1:5432/notification
     working_dir: /app
     volumes:
       - .:/app
@@ -116,6 +116,11 @@ services:
         condition: service_healthy
       notification-migrate:
         condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8116/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     command: ["uvicorn", "notification.main:app", "--host", "0.0.0.0", "--port", "8116"]
     ports:
       - "8116:8116"
@@ -127,7 +132,7 @@ services:
     env_file:
       - .env.local
     environment:
-      NOTIFICATION_DATABASE_URL: postgresql+asyncpg://quotation:quotation@postgres:5432/notification
+      NOTIFICATION_DATABASE_URL: postgresql+asyncpg://quotation:${POSTGRES_PASSWORD:-quotation_local_password}@quotation-local-postgres-1:5432/notification
     working_dir: /app
     volumes:
       - .:/app

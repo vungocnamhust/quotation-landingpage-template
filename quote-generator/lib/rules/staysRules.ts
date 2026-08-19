@@ -2,12 +2,21 @@
  * Pure domain rules for accommodation stay consolidation (TypeScript).
  */
 
-import type { HotelFact } from "../../components/quotation-workspace/factsTypes";
-import type { DayWithStayItem } from "../../components/quotation-workspace/DayEmbeddedRouteTable";
+import type { HotelFact, DestinationRef } from "../../components/quotation-workspace/factsTypes";
 import { dateForItineraryDay } from "./datesRules";
 
+export type DayItemWithStayLike = {
+  day_number?: number | null;
+  destination?: string | null;
+  destination_ref?: DestinationRef | null;
+  accommodation_id?: string | null;
+  accommodation_name?: string | null;
+  room_type?: string | null;
+  summary?: string | null;
+};
+
 export function consolidateStaysFromDayItems(
-  items: DayWithStayItem[],
+  items: DayItemWithStayLike[],
   startDate: string | null | undefined
 ): HotelFact[] {
   if (!items || items.length === 0) return [];
@@ -23,7 +32,7 @@ export function consolidateStaysFromDayItems(
     const accId = day.accommodation_id;
     const accName = day.accommodation_name;
     const roomType = day.room_type || "Standard Room";
-    const dest = day.destination;
+    const dest = day.destination ?? null;
 
     if (!accId && !accName) {
       if (currentStay) {
@@ -53,7 +62,7 @@ export function consolidateStaysFromDayItems(
     stayStartDay = dayNum;
     stayEndDay = dayNum;
     currentStay = {
-      accommodation_id: accId,
+      accommodation_id: accId ?? null,
       destination: dest,
       destination_ref: day.destination_ref ?? null,
       name: accName || "Hotel",
@@ -76,4 +85,52 @@ export function consolidateStaysFromDayItems(
   }
 
   return hotels;
+}
+
+export function hydrateDayAccommodationsFromHotels<T extends DayItemWithStayLike>(
+  itinerary: T[],
+  hotels: HotelFact[],
+  startDate: string | null | undefined
+): T[] {
+  if (!itinerary || itinerary.length === 0) return [];
+  if (!hotels || hotels.length === 0) return itinerary;
+
+  return itinerary.map((day, idx) => {
+    if (day.accommodation_id || day.accommodation_name) {
+      return day;
+    }
+    const dayNum = day.day_number ?? idx + 1;
+    const dayDate = dateForItineraryDay(startDate, dayNum);
+
+    // 1. Try matching hotel by check_in <= dayDate < check_out
+    if (dayDate) {
+      const matchingHotel = hotels.find((h) => {
+        if (!h.check_in || !h.check_out) return false;
+        return dayDate >= h.check_in && dayDate < h.check_out;
+      });
+      if (matchingHotel) {
+        return {
+          ...day,
+          accommodation_id: matchingHotel.accommodation_id,
+          accommodation_name: matchingHotel.name,
+          room_type: matchingHotel.room_type,
+        };
+      }
+    }
+
+    // 2. Fallback: match by destination
+    const destMatchingHotel = hotels.find(
+      (h) => h.destination && day.destination && h.destination.toLowerCase() === day.destination.toLowerCase()
+    );
+    if (destMatchingHotel) {
+      return {
+        ...day,
+        accommodation_id: destMatchingHotel.accommodation_id,
+        accommodation_name: destMatchingHotel.name,
+        room_type: destMatchingHotel.room_type,
+      };
+    }
+
+    return day;
+  });
 }

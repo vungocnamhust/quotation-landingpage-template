@@ -4,6 +4,8 @@ import { memo } from "react";
 import { getTypographyClassName } from "../../../config/typography";
 import { cn } from "../../../utils/cn";
 import { DestinationSelect } from "../../destination/DestinationSelect";
+import { AccommodationSelect } from "../../accommodation/AccommodationSelect";
+import type { AccommodationProfile } from "../../accommodation/types";
 import type { ItineraryDayFact } from "../factsTypes";
 import { dateForItineraryDay } from "../factsTypes";
 import { MediaSlotRenderer, type MediaWorkspace } from "../MediaSlotRenderer";
@@ -184,6 +186,7 @@ export const DayEditorCard = memo(function DayEditorCard({
             )}
           >
             {day.destination || "Destination needed"}
+            {day.accommodation_name ? ` · 🏨 ${day.accommodation_name}` : ""}
           </span>
         </span>
         <span
@@ -249,6 +252,52 @@ export const DayEditorCard = memo(function DayEditorCard({
               patch("overnight", overnightName);
             }}
           />
+
+          {/* OVERNIGHT ACCOMMODATION / HOTEL */}
+          <div className="sm:col-span-2 flex flex-col gap-2 rounded-[var(--radius-card)] border border-[var(--color-border-strong)] bg-[var(--color-surface-muted)] p-3.5">
+            <div className="flex items-center justify-between gap-2">
+              <span className={cn(getTypographyClassName("label"), "text-[var(--color-on-surface)]")}>
+                Overnight Accommodation
+              </span>
+              {day.accommodation_name ? (
+                <span className={cn(getTypographyClassName("caption"), "rounded-full bg-emerald-50 text-emerald-700 px-2.5 py-0.5 border border-emerald-200")}>
+                  🏨 {day.accommodation_name} {day.room_type ? `(${day.room_type})` : ""}
+                </span>
+              ) : (
+                <span className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>
+                  Optional overnight stay
+                </span>
+              )}
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <AccommodationSelect
+                label="Select Hotel"
+                value={day.accommodation_id ?? null}
+                name={day.accommodation_name ?? null}
+                destination={day.destination || day.overnight}
+                destinationId={day.destination_ref?.id}
+                disabled={readOnly}
+                variant="compact"
+                size="md"
+                onChange={(profile: AccommodationProfile | null) => {
+                  onPatch(index, {
+                    accommodation_id: profile?.id ?? null,
+                    accommodation_name: profile?.name ?? null,
+                    room_type: profile?.room_type ?? day.room_type ?? null,
+                  });
+                }}
+              />
+
+              <Field
+                label="Room type"
+                placeholder="e.g. Deluxe Heritage Room"
+                disabled={readOnly}
+                value={day.room_type ?? ""}
+                onChange={(value) => patch("room_type", value || null)}
+              />
+            </div>
+          </div>
           <div className="sm:col-span-2 grid gap-4 sm:grid-cols-2">
             <Area
               label="Programme summary"

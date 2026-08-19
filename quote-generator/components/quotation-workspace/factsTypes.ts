@@ -38,6 +38,9 @@ export type ItineraryDayFact = {
   notes: string[];
   sense_of_pace: string | null;
   display_date: string | null;
+  accommodation_id?: string | null;
+  accommodation_name?: string | null;
+  room_type?: string | null;
 };
 
 export type HotelFact = {
@@ -561,6 +564,7 @@ export function createItineraryDay({ index, startDate }: { index: number; startD
     day_number: dayNumber, destination: null, destination_ref: null, summary: null, overnight: null,
     meals: [], highlights: [], notes: [], sense_of_pace: null,
     display_date: dateForItineraryDay(startDate, dayNumber),
+    accommodation_id: null, accommodation_name: null, room_type: null,
   };
 }
 

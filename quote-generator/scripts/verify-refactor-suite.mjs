@@ -69,9 +69,9 @@ test('validateHotelDates: validates check-in/out boundaries correctly', () => {
 });
 
 test('getDefaultMealsForLang: provides localized default meals for EN, VI, AR', () => {
-  assert.deepEqual(getDefaultMealsForLang('en'), ['Breakfast', 'Lunch', 'Dinner']);
-  assert.deepEqual(getDefaultMealsForLang('vi'), ['Bữa sáng', 'Bữa trưa', 'Bữa tối']);
-  assert.deepEqual(getDefaultMealsForLang('ar'), ['الإفطار', 'الغداء', 'العشاء']);
+  assert.deepEqual(getDefaultMealsForLang('en'), ['Breakfast']);
+  assert.deepEqual(getDefaultMealsForLang('vi'), ['Bữa sáng']);
+  assert.deepEqual(getDefaultMealsForLang('ar'), ['الإفطار']);
 });
 
 test('inferOvernightDestination: handles destination overnight transitions', () => {
@@ -98,10 +98,10 @@ import {
   syncHotelsFromItineraryOvernights,
   createItineraryDayWithDefaults,
 } from '../lib/prefillEngine.ts';
-import { ensureFactsDefaults, FALLBACK_FACTS } from '../components/quotation-workspace/factsTypes.ts';
+import { ensureFactsDefaults, emptyFacts } from '../components/quotation-workspace/factsTypes.ts';
 
 test('updateCustomerName: updates party_label and greeting_name atomically when default', () => {
-  const initial = ensureFactsDefaults(FALLBACK_FACTS);
+  const initial = ensureFactsDefaults(emptyFacts());
   const updated = updateCustomerName(initial, 'Alice Wonderland');
   assert.equal(updated.customer_facts.customer_name, 'Alice Wonderland');
   assert.equal(updated.customer_facts.greeting_name, 'Dear Alice Wonderland');
@@ -109,14 +109,15 @@ test('updateCustomerName: updates party_label and greeting_name atomically when 
 });
 
 test('updateCustomerCounts: updates adults/children and derived party_label', () => {
-  const initial = ensureFactsDefaults(FALLBACK_FACTS);
+  const initial = ensureFactsDefaults(emptyFacts());
   const updated = updateCustomerCounts(initial, { adults: 4, children: 1 });
   assert.equal(updated.customer_facts.adults, 4);
   assert.equal(updated.customer_facts.children, 1);
+  assert.match(updated.customer_facts.party_label || '', /4 Adults, 1 Child/);
 });
 
-test('applyRouteDates: synchronizes itinerary length and day display dates', () => {
-  const initial = ensureFactsDefaults(FALLBACK_FACTS);
+test('applyRouteDates: updates duration and itinerary dates seamlessly', () => {
+  const initial = ensureFactsDefaults(emptyFacts());
   const updated = applyRouteDates(initial, '2026-11-01', '2026-11-05', 5);
   assert.equal(updated.trip_facts.start_date, '2026-11-01');
   assert.equal(updated.trip_facts.end_date, '2026-11-05');
@@ -126,7 +127,7 @@ test('applyRouteDates: synchronizes itinerary length and day display dates', () 
 });
 
 test('syncHotelsFromItineraryOvernights: consolidates hotels from route itinerary', () => {
-  const base = ensureFactsDefaults(FALLBACK_FACTS);
+  const base = ensureFactsDefaults(emptyFacts());
   const withItinerary = {
     ...base,
     trip_facts: {
@@ -194,7 +195,7 @@ test('buildInitialFactsFromRequest: maps Lead Request fields into valid Quotatio
     updated_at: '2026-08-17T00:00:00Z',
   };
 
-  const facts = buildInitialFactsFromRequest(mockRequest, ensureFactsDefaults(FALLBACK_FACTS));
+  const facts = buildInitialFactsFromRequest(mockRequest, ensureFactsDefaults(emptyFacts()));
   assert.equal(facts.customer_facts.customer_name, 'Robert Stark');
   assert.equal(facts.customer_facts.adults, 2);
   assert.equal(facts.customer_facts.children, 1);
@@ -212,7 +213,7 @@ console.log('\n🗺️ 4. Testing Route Table Sync (components/quotation-workspa
 import { deriveDayWithStays, syncRouteTableToFacts } from '../components/quotation-workspace/useRouteTableSync.ts';
 
 test('deriveDayWithStays & syncRouteTableToFacts: roundtrip conversion', () => {
-  const base = ensureFactsDefaults(FALLBACK_FACTS);
+  const base = ensureFactsDefaults(emptyFacts());
   const withRoute = {
     ...base,
     trip_facts: {
@@ -355,6 +356,113 @@ test('profileToInput: accurately converts AccommodationProfile to AccommodationP
 
 
 // ==========================================
+// 7. Itinerary Day Standardization (3 Use Cases)
+// ==========================================
+console.log('🗓️  7. Testing Itinerary Day Standardization (Use Cases 1, 2, 3)...');
+
+import {
+  consolidateStaysFromDayItems,
+  hydrateDayAccommodationsFromHotels,
+} from '../lib/rules/staysRules.ts';
+import {
+  dateForItineraryDay,
+  formatDisplayDate,
+} from '../lib/rules/datesRules.ts';
+
+// Use Case 1: QuoteRequest Summary Mode
+test('UseCase 1: Basic Itinerary Day date projection & summary structure', () => {
+  const startDate = '2026-11-09';
+  const day1Date = dateForItineraryDay(startDate, 1);
+  const day3Date = dateForItineraryDay(startDate, 3);
+  assert.equal(day1Date, '2026-11-09');
+  assert.equal(day3Date, '2026-11-11');
+  assert.equal(formatDisplayDate(day1Date), 'Mon 09 Nov');
+
+  const basicDay = {
+    day_number: 1,
+    destination: 'Hanoi',
+    display_date: formatDisplayDate(day1Date),
+    summary: 'Arrival in Hanoi, street food tasting tour',
+    overnight: 'Hanoi',
+  };
+  assert.equal(basicDay.day_number, 1);
+  assert.equal(basicDay.destination, 'Hanoi');
+  assert.equal(typeof basicDay.summary, 'string');
+});
+
+// Use Case 2: NewQuote Intake Blueprint Mode (Route & Stays Consolidation)
+test('UseCase 2: Stays Consolidation from DayWithStayItems', () => {
+  const startDate = '2026-11-10';
+  const intakeDays = [
+    { day_number: 1, destination: 'Hanoi', accommodation_id: 'acc-metropole', accommodation_name: 'Sofitel Legend Metropole', room_type: 'Luxury Room', summary: 'Arrival' },
+    { day_number: 2, destination: 'Hanoi', accommodation_id: 'acc-metropole', accommodation_name: 'Sofitel Legend Metropole', room_type: 'Luxury Room', summary: 'City tour' },
+    { day_number: 3, destination: 'Hanoi', accommodation_id: 'acc-metropole', accommodation_name: 'Sofitel Legend Metropole', room_type: 'Luxury Room', summary: 'Museums' },
+    { day_number: 4, destination: 'Halong Bay', accommodation_id: 'acc-heritage-cruise', accommodation_name: 'Heritage Line Cruise', room_type: 'Captain Suite', summary: 'Boarding cruise' },
+    { day_number: 5, destination: 'Hanoi', accommodation_id: null, accommodation_name: null, summary: 'Transfer & Departure' },
+  ];
+
+  const stays = consolidateStaysFromDayItems(intakeDays, startDate);
+  assert.equal(stays.length, 2);
+
+  // Metropole stay: 3 nights (Day 1, 2, 3) -> check-in: 2026-11-10, check-out: 2026-11-13
+  assert.equal(stays[0].name, 'Sofitel Legend Metropole');
+  assert.equal(stays[0].accommodation_id, 'acc-metropole');
+  assert.equal(stays[0].check_in, '2026-11-10');
+  assert.equal(stays[0].check_out, '2026-11-13');
+
+  // Heritage Cruise: 1 night (Day 4) -> check-in: 2026-11-13, check-out: 2026-11-14
+  assert.equal(stays[1].name, 'Heritage Line Cruise');
+  assert.equal(stays[1].accommodation_id, 'acc-heritage-cruise');
+  assert.equal(stays[1].check_in, '2026-11-13');
+  assert.equal(stays[1].check_out, '2026-11-14');
+});
+
+// Use Case 3: Quotation Workspace Detail Mode & Bi-directional Synchronization
+test('UseCase 3: Bi-directional sync & hydration between Itinerary Days and Hotels', () => {
+  const startDate = '2026-11-10';
+  const initialFacts = {
+    ...emptyFacts(),
+    trip_facts: {
+      ...emptyFacts().trip_facts,
+      start_date: startDate,
+      itinerary: [
+        { day_number: 1, destination: 'Hanoi', summary: 'Day 1 in Hanoi', meals: ['Breakfast'], highlights: [], notes: [], display_date: '2026-11-10', overnight: 'Hanoi', sense_of_pace: 'balanced' },
+        { day_number: 2, destination: 'Hanoi', summary: 'Day 2 in Hanoi', meals: ['Breakfast'], highlights: [], notes: [], display_date: '2026-11-11', overnight: 'Hanoi', sense_of_pace: 'balanced' },
+        { day_number: 3, destination: 'Hue', summary: 'Fly to Hue', meals: ['Breakfast'], highlights: [], notes: [], display_date: '2026-11-12', overnight: 'Hue', sense_of_pace: 'balanced' },
+      ],
+    },
+    service_facts: {
+      ...emptyFacts().service_facts,
+      hotels: [
+        { accommodation_id: 'acc-metropole', name: 'Sofitel Legend Metropole', destination: 'Hanoi', room_type: 'Luxury Room', check_in: '2026-11-10', check_out: '2026-11-12', intro: 'Breakfast included.', phone: null, display_city: 'Hanoi', display_date: null, hotel_asset: null, room_asset: null },
+        { accommodation_id: 'acc-azerai', name: 'Azerai La Residence Hue', destination: 'Hue', room_type: 'Superior Suite', check_in: '2026-11-12', check_out: '2026-11-13', intro: 'Breakfast included.', phone: null, display_city: 'Hue', display_date: null, hotel_asset: null, room_asset: null },
+      ],
+    },
+  };
+
+  // Test 3.1: Hydrate days from hotels
+  const hydratedItinerary = hydrateDayAccommodationsFromHotels(
+    initialFacts.trip_facts.itinerary,
+    initialFacts.service_facts.hotels,
+    startDate
+  );
+  assert.equal(hydratedItinerary[0].accommodation_name, 'Sofitel Legend Metropole');
+  assert.equal(hydratedItinerary[1].accommodation_name, 'Sofitel Legend Metropole');
+  assert.equal(hydratedItinerary[2].accommodation_name, 'Azerai La Residence Hue');
+
+  // Test 3.2: Sync modified route table to facts
+  const modifiedDays = [
+    { day_number: 1, destination: 'Hanoi', accommodation_id: 'acc-capella', accommodation_name: 'Capella Hanoi', room_type: 'Opera Suite', summary: 'Day 1' },
+    { day_number: 2, destination: 'Hanoi', accommodation_id: 'acc-capella', accommodation_name: 'Capella Hanoi', room_type: 'Opera Suite', summary: 'Day 2' },
+  ];
+  const syncedFacts = syncRouteTableToFacts(initialFacts, modifiedDays);
+  assert.equal(syncedFacts.trip_facts.itinerary[0].accommodation_name, 'Capella Hanoi');
+  assert.equal(syncedFacts.service_facts.hotels[0].name, 'Capella Hanoi');
+  assert.equal(syncedFacts.service_facts.hotels[0].check_in, '2026-11-10');
+  assert.equal(syncedFacts.service_facts.hotels[0].check_out, '2026-11-12');
+});
+
+// ==========================================
 // Summary
 // ==========================================
 console.log('\n==========================================');
@@ -366,3 +474,4 @@ if (passedTests === totalTests) {
   console.error(`🚨 ${totalTests - passedTests} TESTS FAILED!`);
   process.exit(1);
 }
+

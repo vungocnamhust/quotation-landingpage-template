@@ -29,6 +29,9 @@ export function buildInitialFactsFromRequest(
           notes: [],
           sense_of_pace: "balanced" as const,
           display_date: (d.display_date as string) || null,
+          accommodation_id: null,
+          accommodation_name: null,
+          room_type: null,
         }))
       : fallback.trip_facts.itinerary;
 
