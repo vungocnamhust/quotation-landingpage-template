@@ -44,13 +44,18 @@ function EditRequestDrawerContent({
     },
   });
 
-  // Lock body scroll when drawer is mounted
+  // Lock body scroll and handle Escape key when drawer is mounted
   useEffect(() => {
     document.body.style.overflow = "hidden";
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
     return () => {
       document.body.style.overflow = "unset";
+      window.removeEventListener("keydown", handleKeyDown);
     };
-  }, []);
+  }, [onClose]);
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-xs transition-opacity duration-300">

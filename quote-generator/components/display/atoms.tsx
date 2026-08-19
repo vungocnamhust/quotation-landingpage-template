@@ -25,20 +25,23 @@ interface DisplayTitleProps extends TypographyAtomProps { as?: 'h1' | 'h2' | 'h3
 export function DisplayTitle({ as: Tag = 'h2', children, variant, className, tone = 'default' }: DisplayTitleProps) {
   return <Tag className={cn(getTypographyClassName(variant), toneClassName(tone), className)} {...editableProps(children)}>{parseFormattedContent(children)}</Tag>;
 }
+const FORMATTING_CHECK_REGEX = /(\*\*|__|\*|_|<mark>|<b>|<i>|\n)/;
+const FORMATTING_TOKEN_REGEX = /(\*\*|__)(.*?)\1|(\*|_)(.*?)\3|<mark>(.*?)<\/mark>|<b>(.*?)<\/b>|<i>(.*?)<\/i>/g;
+
 export function parseFormattedContent(value: TextValue): ReactNode {
   const str = textValue(value);
   if (!str) return null;
-  if (!/(\*\*|__|\*|_|<mark>|<b>|<i>|\n)/.test(str)) {
+  if (!FORMATTING_CHECK_REGEX.test(str)) {
     return str;
   }
   const lines = str.split('\n');
   return lines.map((line, lineIndex) => {
     const tokens: ReactNode[] = [];
     let lastIndex = 0;
-    const regex = /(\*\*|__)(.*?)\1|(\*|_)(.*?)\3|<mark>(.*?)<\/mark>|<b>(.*?)<\/b>|<i>(.*?)<\/i>/g;
+    FORMATTING_TOKEN_REGEX.lastIndex = 0;
     let match: RegExpExecArray | null;
 
-    while ((match = regex.exec(line)) !== null) {
+    while ((match = FORMATTING_TOKEN_REGEX.exec(line)) !== null) {
       if (match.index > lastIndex) {
         tokens.push(line.slice(lastIndex, match.index));
       }

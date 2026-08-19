@@ -6,6 +6,7 @@
     "dev": "next dev -p 8115",
     "build": "next build --webpack",
     "start": "next start -p 8115",
+    "test": "node --test --experimental-strip-types lib/__tests__/*.test.ts",
     "lint": "eslint && npm run lint:typography && npm run lint:typography-contract && npm run lint:display-system && npm run lint:colors && npm run lint:v2-runtime-imports",
     "lint:typography": "node scripts/lint-typography.mjs",
     "lint:typography-contract": "bash ../.agents/skills/quote-generator-display-governor/scripts/audit_typography_usage.sh",

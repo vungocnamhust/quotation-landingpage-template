@@ -37,7 +37,7 @@ export interface DestinationSelectProps {
    */
   onChange?: (value: string | DestinationRef[] | null, ref?: DestinationRef | null) => void;
 
-  /** Legacy / explicit callback for when a DestinationRef is selected */
+  /** @deprecated Prefer using `onChange(value, ref)` which provides the DestinationRef in the 2nd argument. */
   onSelect?: (ref: DestinationRef | null) => void;
 
   /** Label rendered above input */

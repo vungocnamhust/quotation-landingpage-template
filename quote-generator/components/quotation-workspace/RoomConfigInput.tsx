@@ -90,11 +90,11 @@ export default function RoomConfigInput({
           <Sparkles size={12} className="text-[var(--color-accent)]" aria-hidden="true" />
           <span>Quick presets:</span>
         </span>
-        {suggestions.map((chip, idx) => {
+        {suggestions.map((chip) => {
           const isSelected = value === chip;
           return (
             <button
-              key={idx}
+              key={chip}
               type="button"
               disabled={disabled}
               onClick={() => onChange(chip)}

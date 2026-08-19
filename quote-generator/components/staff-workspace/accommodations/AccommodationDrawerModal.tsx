@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { getTypographyClassName } from "../../../config/typography";
 import { cn } from "../../../utils/cn";
 import AccommodationProfileForm from "../../quotation-workspace/AccommodationProfileForm";
@@ -33,6 +34,15 @@ export function AccommodationDrawerModal({
   onUploadAsset,
   onSave,
 }: Props) {
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (

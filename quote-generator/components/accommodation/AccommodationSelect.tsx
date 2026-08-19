@@ -86,7 +86,7 @@ export function AccommodationSelect({
 
   const handleSelect = useCallback(
     (profile: AccommodationProfile) => {
-      onChange?.(profile);
+      onChange?.(profile, profile.id);
       setIsOpen(false);
       setQuery("");
     },
@@ -96,7 +96,7 @@ export function AccommodationSelect({
   const handleClear = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      onChange?.(null);
+      onChange?.(null, null);
     },
     [onChange]
   );

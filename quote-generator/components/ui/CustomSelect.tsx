@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { getTypographyClassName } from "../../config/typography";
 import { cn } from "../../utils/cn";
 
@@ -37,10 +37,22 @@ export default function CustomSelect({
   "aria-label": ariaLabel,
 }: CustomSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const listboxRef = useRef<HTMLDivElement>(null);
 
-  const selectedOption = options.find((opt) => opt.id === value);
+  const selectedIndex = options.findIndex((opt) => opt.id === value);
+  const selectedOption = selectedIndex >= 0 ? options[selectedIndex] : null;
 
+  // Initialize highlighted index to selected item or first item
+  useEffect(() => {
+    if (isOpen) {
+      setHighlightedIndex(selectedIndex >= 0 ? selectedIndex : 0);
+    }
+  }, [isOpen, selectedIndex]);
+
+  // Close on outside click
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -50,20 +62,65 @@ export default function CustomSelect({
         setIsOpen(false);
       }
     }
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setIsOpen(false);
-      }
-    }
+
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
-      document.addEventListener("keydown", handleKeyDown);
     }
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen]);
+
+  const handleSelectOption = useCallback(
+    (optionId: string) => {
+      onChange(optionId);
+      setIsOpen(false);
+      buttonRef.current?.focus();
+    },
+    [onChange]
+  );
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLButtonElement | HTMLDivElement>) => {
+    if (disabled) return;
+
+    if (!isOpen) {
+      if (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        setIsOpen(true);
+      }
+      return;
+    }
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setHighlightedIndex((prev) => (prev < options.length - 1 ? prev + 1 : 0));
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : options.length - 1));
+        break;
+      case "Home":
+        e.preventDefault();
+        setHighlightedIndex(0);
+        break;
+      case "End":
+        e.preventDefault();
+        setHighlightedIndex(options.length - 1);
+        break;
+      case "Enter":
+      case " ":
+        e.preventDefault();
+        if (options[highlightedIndex]) {
+          handleSelectOption(options[highlightedIndex].id);
+        }
+        break;
+      case "Escape":
+      case "Tab":
+        setIsOpen(false);
+        break;
+    }
+  };
 
   const sizeClasses = {
     sm: "min-h-9 px-3 rounded-lg",
@@ -75,16 +132,19 @@ export default function CustomSelect({
     <div
       ref={containerRef}
       className={cn("relative inline-block w-full text-left", className)}
+      onKeyDown={handleKeyDown}
     >
       <button
+        ref={buttonRef}
         type="button"
         disabled={disabled}
         onClick={() => setIsOpen((prev) => !prev)}
         aria-label={ariaLabel ?? placeholder}
         aria-expanded={isOpen}
+        aria-haspopup="listbox"
         className={cn(
           size === "sm" ? getTypographyClassName("bodySm") : getTypographyClassName("bodyMd"),
-          "flex w-full items-center justify-between gap-3 border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--color-focus)]",
+          "flex w-full items-center justify-between gap-3 border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--color-focus)] cursor-pointer",
           "border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-on-surface)]",
           "hover:border-[var(--color-accent)] hover:bg-[var(--color-surface-hover)]",
           "disabled:cursor-not-allowed disabled:opacity-50",
@@ -106,6 +166,7 @@ export default function CustomSelect({
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
+          aria-hidden="true"
         >
           <path
             strokeLinecap="round"
@@ -118,6 +179,7 @@ export default function CustomSelect({
 
       {isOpen && (
         <div
+          ref={listboxRef}
           className={cn(
             "absolute left-0 top-[calc(100%+0.375rem)] z-50 min-w-full overflow-hidden rounded-xl border p-1.5 shadow-xl transition-all duration-150 animate-in fade-in zoom-in-95",
             "border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-on-surface)] backdrop-blur-md",
@@ -128,25 +190,26 @@ export default function CustomSelect({
               "0 12px 32px -4px rgba(0, 0, 0, 0.12), 0 4px 12px -2px rgba(0, 0, 0, 0.08)",
           }}
           role="listbox"
+          tabIndex={-1}
         >
           <div className="max-h-60 overflow-y-auto p-0.5 space-y-0.5">
-            {options.map((option) => {
+            {options.map((option, index) => {
               const isSelected = option.id === value;
+              const isHighlighted = index === highlightedIndex;
               return (
-                <button
+                <div
                   key={option.id}
-                  type="button"
                   role="option"
                   aria-selected={isSelected}
-                  onClick={() => {
-                    onChange(option.id);
-                    setIsOpen(false);
-                  }}
+                  onClick={() => handleSelectOption(option.id)}
+                  onMouseEnter={() => setHighlightedIndex(index)}
                   className={cn(
-                    "group flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left transition-colors duration-150",
+                    "group flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left transition-colors duration-150 cursor-pointer select-none",
                     isSelected
                       ? "bg-[var(--color-accent-wash)] text-[var(--color-accent)]"
-                      : "text-[var(--color-on-surface)] hover:bg-[var(--color-surface-hover)]"
+                      : isHighlighted
+                        ? "bg-[var(--color-surface-hover)] text-[var(--color-on-surface)]"
+                        : "text-[var(--color-on-surface)]"
                   )}
                 >
                   <div className="flex flex-col min-w-0">
@@ -176,6 +239,7 @@ export default function CustomSelect({
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
+                      aria-hidden="true"
                     >
                       <path
                         strokeLinecap="round"
@@ -185,7 +249,7 @@ export default function CustomSelect({
                       />
                     </svg>
                   )}
-                </button>
+                </div>
               );
             })}
           </div>

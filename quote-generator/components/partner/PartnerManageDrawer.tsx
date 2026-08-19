@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Building2 } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography";
 import { cn } from "../../utils/cn";
@@ -119,6 +119,15 @@ export function PartnerManageDrawer({
   );
   const [message, setMessage] = useState("");
   const [pending, setPending] = useState(false);
+
+  useEffect(() => {
+    if (!currentMode) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [currentMode, onClose]);
 
   if (!currentMode) return null;
 

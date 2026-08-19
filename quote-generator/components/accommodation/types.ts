@@ -19,8 +19,8 @@ export interface AccommodationSelectProps {
   destinationId?: string | null;
   destination?: string | null;
 
-  /** Unified change handler */
-  onChange?: (profile: AccommodationProfile | null) => void;
+  /** Unified change handler: receives profile as primary argument, and id as secondary argument */
+  onChange?: (profile: AccommodationProfile | null, id?: string | null) => void;
 
   /** Label rendered above selector */
   label?: string;

@@ -82,9 +82,9 @@ export function TravelStyleSelect({
             <Sparkles size={12} className="text-[var(--color-accent)]" aria-hidden="true" />
             <span>Applied:</span>
           </span>
-          {selectedTags.map((tag, idx) => (
+          {selectedTags.map((tag) => (
             <span
-              key={idx}
+              key={tag}
               className={cn(
                 getTypographyClassName("caption"),
                 "inline-flex items-center gap-1 rounded-full border border-[var(--color-accent)] bg-[var(--color-accent-wash)] px-2.5 py-0.5 text-[var(--color-accent)]"

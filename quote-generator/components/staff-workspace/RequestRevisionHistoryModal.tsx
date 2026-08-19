@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { X, History, ArrowRight, Eye, CheckCircle2, Clock } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography";
 import { cn } from "../../utils/cn";
@@ -29,6 +30,15 @@ export default function RequestRevisionHistoryModal({
     inspectError,
     fetchRevisionSnapshot,
   } = useRequestRevisionHistory(requestId, { enabled: isOpen });
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 

@@ -1,0 +1,21 @@
+# Cursor Rules for Travel Quotation & Brochure Generation Platform
+
+You are an expert AI software engineer working on this repository. Always follow the Master Guidelines in `AGENTS.md`.
+
+## Core System Architecture
+1. **Backend (Python / FastAPI)**:
+   - Use type hints for all parameters and return types.
+   - Use `Annotated[..., Depends(...)]` for dependency injection.
+   - Separate concerns: `routers/` (request handling) -> `services/` (business logic) -> `repositories/` (database access).
+   - Use regular `def` for synchronous / blocking operations; use `async def` only when genuine async I/O is performed.
+
+2. **Frontend (`quote-generator` / Next.js 14+ App Router)**:
+   - **5-Layer Display Contract**: Theme Tokens -> View Modes -> Layouts -> Component System (Atoms, Molecules, Sections) -> Section ViewModel. Never import workspace/editor tools into `display/`.
+   - **3-Layer Prefill Engine**: Schema (`factsTypes.ts`) -> Pure Rules (`prefillRules.ts`) -> Facade Updaters (`prefillEngine.ts`). Always use atomic facade updaters (`setFacts(curr => updateX(curr, val))`). Never use inline state mutations or chain `useEffect`s for derived values.
+   - **Typography SSOT**: Always use `typo-*` classes from `config/typography.ts`. Never use raw Tailwind `text-*`, `font-*`, `tracking-*` classes in brochure components.
+   - **Reusable UI Selectors (5 Golden Standards)**: Separate headless hook (`use<Name>Search.ts`), standardize `onChange(id, profile)` callback, only register window event listeners when open, support responsive sizes and keyboard navigation.
+   - **Server-First RSC**: Keep pages as Server Components. Isolate heavy client interactive islands (Map, Rich Text Editor, Modals) with `dynamic(..., { ssr: false })`.
+
+## Quality Gates Checklist
+- Backend tests: `python -m pytest tests`
+- Frontend quality gates: `cd quote-generator && npm run lint && npm run lint:typography && npm run lint:display-system && npm run build`
