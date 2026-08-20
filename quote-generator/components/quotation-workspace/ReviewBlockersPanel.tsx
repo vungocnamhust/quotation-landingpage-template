@@ -14,6 +14,8 @@ import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
 import type { ReviewResponse, WorkflowResponse } from "./useQuotationWorkspace.ts";
 import type { ResolvedHandoff } from "./editableHandoff.ts";
+import { fromReviewResponse, type BlockerCategory, type CanonicalBlockerItem } from "../../lib/rules/workflowReconciler.ts";
+import { workflowAdapter } from "../../lib/rules/workflowAdapter.ts";
 
 export type Stage = "facts" | "content" | "design" | "review";
 
@@ -25,7 +27,7 @@ export interface ReviewBlockersPanelProps {
   onNavigateHandoff?: (target: ResolvedHandoff) => void;
 }
 
-export type BlockerCategory = "facts" | "content" | "design" | "publish";
+export type { BlockerCategory };
 
 export type BlockerItem = {
   id: string;
@@ -44,188 +46,35 @@ export function ReviewBlockersPanel({
   onSetStage,
   onNavigateHandoff,
 }: ReviewBlockersPanelProps) {
-  const items = useMemo(() => {
-    const missingInputs = reviewData?.missingInputs ?? workflowData?.facts.missingInputs ?? [];
-    const blockingDrafts = reviewData?.blockingDrafts ?? workflowData?.content.blockingDrafts ?? [];
-    const contentBlockers = reviewData?.contentBlockers ?? workflowData?.content.contentBlockers ?? [];
-    const presentationErrors = reviewData?.presentationErrors ?? workflowData?.design.presentationErrors ?? [];
-    const contentReadiness = reviewData?.contentReadiness ?? [];
+  const items: BlockerItem[] = useMemo(() => {
+    const canonicalItems: CanonicalBlockerItem[] = fromReviewResponse(
+      reviewData,
+      workflowData,
+      publicationJob,
+      "vi"
+    );
 
-    const list: BlockerItem[] = [];
-
-    // 1. Facts Blockers
-    if (missingInputs.length > 0) {
-      list.push({
-        id: "facts-missing",
-        category: "facts",
-        title: "Missing Required Facts",
-        description: `The quotation is missing ${missingInputs.length} required fact(s): ${missingInputs.join(", ")}.`,
-        ctaLabel: "Fix in Facts",
-        onAction: () => onSetStage("facts"),
-      });
-    }
-
-    // 2. Content Blockers / Advisory Drafts
-    if (blockingDrafts.length > 0) {
-      list.push({
-        id: "content-drafts",
-        category: "content",
-        title: "Unreviewed Content Drafts",
-        description: `There are ${blockingDrafts.length} content candidate(s) available for review: ${blockingDrafts.join(", ")}.`,
-        ctaLabel: "Review Content Candidates",
-        isAdvisory: true,
-        onAction: () => onSetStage("content"),
-      });
-    }
-
-    contentBlockers.forEach((blocker, idx) => {
-      list.push({
-        id: `content-blocker-${idx}`,
-        category: "content",
-        title: `Content Blocker in ${blocker.sectionId}`,
-        description: blocker.message,
-        ctaLabel: `Edit ${blocker.sectionId}`,
-        onAction: () => {
-          if (onNavigateHandoff) {
-            onNavigateHandoff({ stage: "content", section: blocker.sectionId, source: "blocker", wildcardIndices: [] });
-          } else {
-            onSetStage("content");
-          }
-        },
-      });
-    });
-
-    contentReadiness.forEach((item, idx) => {
-      if (item.status) {
-        list.push({
-          id: `content-readiness-${idx}`,
-          category: "content",
-          title: item.label,
-          description: item.missing.map((m) => m.message).join(". ") || "Content incomplete.",
-          ctaLabel: item.targetStage === "facts" ? "Go to Facts" : "Go to Content",
-          onAction: () => {
-            if (item.targetStage === "facts") {
-              onSetStage("facts");
-            } else if (onNavigateHandoff) {
-              onNavigateHandoff({ stage: "content", section: item.sectionId, source: "blocker", wildcardIndices: [] });
-            } else {
-              onSetStage("content");
-            }
-          },
-        });
-      }
-    });
-
-    // 3. Design / PDF Layout Blockers
-    presentationErrors.forEach((error, idx) => {
-      const itineraryMatch = error.match(/^\/itinerary\/days\/(\d+)(?:\/(description|title))?$/);
-      const hotelMatch = error.match(/^\/stays\/hotels\/(\d+)$/);
-
-      if (itineraryMatch) {
-        const dayIndex = parseInt(itineraryMatch[1], 10);
-        const dayNumber = dayIndex + 1;
-        const fieldType = itineraryMatch[2];
-
-        if (fieldType === "description") {
-          list.push({
-            id: `design-error-${idx}`,
-            category: "design",
-            title: `Nội dung Ngày ${dayNumber} quá dài (vượt quá 1,150 ký tự)`,
-            description: `Văn bản mô tả của Ngày ${dayNumber} vượt quá giới hạn trang in A4 PDF. Vui lòng rút gọn nội dung Ngày ${dayNumber} trong Content Studio.`,
-            ctaLabel: `Sửa nội dung Ngày ${dayNumber}`,
-            onAction: () => {
-              if (onNavigateHandoff) {
-                onNavigateHandoff({ stage: "content", section: `itinerary:day:${dayNumber}`, source: "blocker", wildcardIndices: [] });
-              } else {
-                onSetStage("content");
-              }
-            },
-          });
-        } else if (fieldType === "title") {
-          list.push({
-            id: `design-error-${idx}`,
-            category: "design",
-            title: `Tiêu đề Ngày ${dayNumber} quá dài (vượt quá 170 ký tự)`,
-            description: `Tiêu đề Ngày ${dayNumber} vượt quá giới hạn trang in A4 PDF. Vui lòng rút gọn tiêu đề Ngày ${dayNumber}.`,
-            ctaLabel: `Sửa tiêu đề Ngày ${dayNumber}`,
-            onAction: () => {
-              if (onNavigateHandoff) {
-                onNavigateHandoff({ stage: "content", section: `itinerary:day:${dayNumber}`, source: "blocker", wildcardIndices: [] });
-              } else {
-                onSetStage("content");
-              }
-            },
-          });
+    return canonicalItems.map((item) => ({
+      id: item.id,
+      category: item.category,
+      title: item.title,
+      description: item.description,
+      ctaLabel: item.ctaLabel,
+      isAdvisory: item.isAdvisory,
+      onAction: () => {
+        if (item.targetHandoff.stage === "facts") {
+          onSetStage("facts");
+        } else if (item.targetHandoff.stage === "design") {
+          onSetStage("design");
+        } else if (item.targetHandoff.stage === "publish" || item.targetHandoff.stage === "review") {
+          onSetStage("review");
+        } else if (onNavigateHandoff) {
+          onNavigateHandoff(workflowAdapter.toResolvedHandoff(item));
         } else {
-          list.push({
-            id: `design-error-${idx}`,
-            category: "design",
-            title: `Lỗi dữ liệu Ngày ${dayNumber}`,
-            description: `Nội dung Ngày ${dayNumber} không hợp lệ cho bố cục trang in PDF.`,
-            ctaLabel: `Chỉnh sửa Ngày ${dayNumber}`,
-            onAction: () => {
-              if (onNavigateHandoff) {
-                onNavigateHandoff({ stage: "content", section: `itinerary:day:${dayNumber}`, source: "blocker", wildcardIndices: [] });
-              } else {
-                onSetStage("content");
-              }
-            },
-          });
+          onSetStage("content");
         }
-      } else if (hotelMatch) {
-        const hotelIndex = parseInt(hotelMatch[1], 10);
-        const hotelNumber = hotelIndex + 1;
-        list.push({
-          id: `design-error-${idx}`,
-          category: "design",
-          title: `Thông tin Khách sạn ${hotelNumber} quá dài (vượt quá 2,100 ký tự)`,
-          description: `Văn bản giới thiệu khách sạn vượt quá giới hạn trang in A4 PDF. Vui lòng rút gọn thông tin khách sạn.`,
-          ctaLabel: `Chỉnh sửa Khách sạn`,
-          onAction: () => {
-            if (onNavigateHandoff) {
-              onNavigateHandoff({ stage: "content", section: "hotel_plan", source: "blocker", wildcardIndices: [] });
-            } else {
-              onSetStage("content");
-            }
-          },
-        });
-      } else {
-        list.push({
-          id: `design-error-${idx}`,
-          category: "design",
-          title: "Presentation & Layout Check Failed",
-          description: error,
-          ctaLabel: "Inspect Design",
-          onAction: () => onSetStage("design"),
-        });
-      }
-    });
-
-    const assetReadiness = reviewData?.assetReadiness;
-    if (assetReadiness && !assetReadiness.ready && assetReadiness.missing && assetReadiness.missing.length > 0) {
-      list.push({
-        id: "asset-missing",
-        category: "design",
-        title: `Thiếu ${assetReadiness.missing.length} hình ảnh tư liệu trên R2`,
-        description: `Báo giá tham chiếu các hình ảnh chưa có trên thư viện R2: ${assetReadiness.missing.join(", ")}.`,
-        ctaLabel: "Kiểm tra Design",
-        onAction: () => onSetStage("design"),
-      });
-    }
-
-    // 4. Publish Job Blockers
-    if (publicationJob?.status === "failed") {
-      list.push({
-        id: "publish-failed",
-        category: "publish",
-        title: "PDF Publication Job Failed",
-        description: publicationJob.lastError || "Background PDF rendering job failed.",
-        ctaLabel: "Check Target Settings",
-        onAction: () => onSetStage("review"),
-      });
-    }
-
-    return list;
+      },
+    }));
   }, [reviewData, workflowData, publicationJob, onSetStage, onNavigateHandoff]);
 
   const categoryGroups: Array<{
