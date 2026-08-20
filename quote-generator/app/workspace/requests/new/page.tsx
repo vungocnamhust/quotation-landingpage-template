@@ -20,6 +20,7 @@ export default function NewQuoteRequestPage() {
     addItineraryDay,
     removeItineraryDay,
     updateItineraryDay,
+    applyRouteSequence,
     submitting,
     errorMsg,
     handleSubmit,
@@ -70,7 +71,12 @@ export default function NewQuoteRequestPage() {
       ) : null}
 
       {/* 1. Primary Request Information Form */}
-      <QuoteRequestForm state={formState} onChange={setFormState} disabled={submitting} />
+      <QuoteRequestForm
+        state={formState}
+        onChange={setFormState}
+        onApplyRouteToItinerary={applyRouteSequence}
+        disabled={submitting}
+      />
 
       {/* 2. Optional Basic Daily Itinerary Grid */}
       <BasicItineraryDayGrid

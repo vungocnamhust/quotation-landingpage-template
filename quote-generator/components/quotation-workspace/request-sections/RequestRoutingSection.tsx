@@ -1,19 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { getTypographyClassName } from "../../../config/typography";
-import { cn } from "../../../utils/cn";
-import CustomSelect from "../../ui/CustomSelect";
-import { DestinationSelect } from "../../destination/DestinationSelect";
-import { DateInput } from "../../date";
-import KidAgesInput from "../KidAgesInput";
-import RoomConfigInput from "../RoomConfigInput";
-import { calculateDuration, formatTravelDatesLabel } from "../../../lib/rules/datesRules";
-import type { QuoteRequestFormState } from "../../../lib/quoteRequestPayload";
+import { getTypographyClassName } from "../../../config/typography.ts";
+import { cn } from "../../../utils/cn.ts";
+import CustomSelect from "../../ui/CustomSelect.tsx";
+import { DestinationSelect } from "../../destination/DestinationSelect.tsx";
+import { RouteSequenceInput } from "../../destination/RouteSequenceInput.tsx";
+import type { DestinationRef } from "../../destination/types.ts";
+import { DateInput } from "../../date/index.tsx";
+import KidAgesInput from "../KidAgesInput.tsx";
+import RoomConfigInput from "../RoomConfigInput.tsx";
+import { calculateDuration, formatTravelDatesLabel } from "../../../lib/rules/datesRules.ts";
+import type { QuoteRequestFormState } from "../../../lib/quoteRequestPayload.ts";
 
 type Props = {
   state: QuoteRequestFormState;
   onChange: (updater: (prev: QuoteRequestFormState) => QuoteRequestFormState) => void;
+  onApplyRouteToItinerary?: (destinations: DestinationRef[]) => void;
   disabled?: boolean;
 };
 
@@ -263,48 +266,33 @@ export function RequestRoutingSection({ state, onChange, disabled = false }: Pro
             )}
           </div>
         )}
+      </div>
 
-        <DestinationSelect
-          label="Arrival City"
-          placeholder="e.g. Hanoi (HAN)"
+      {/* Standardized Canonical Route Sequence & Constraints */}
+      <div className="border-t border-[var(--color-border)] pt-4">
+        <RouteSequenceInput
+          values={state.destination_refs}
+          destinations={state.destinations}
+          routingConstraints={state.routing_constraints}
           disabled={disabled}
-          value={state.arrival_city}
-          onChange={(val) => {
-            const strVal = typeof val === "string" ? val : Array.isArray(val) ? val[0]?.name ?? "" : "";
-            onChange((prev) => ({ ...prev, arrival_city: strVal }));
+          onApplyToItinerary={onApplyRouteToItinerary}
+          onChange={(nextRefs) => {
+            const arrivalCity = nextRefs[0]?.name || "";
+            const departureCity = nextRefs[nextRefs.length - 1]?.name || "";
+            const destNames = nextRefs.map((r) => r.name);
+            onChange((prev) => ({
+              ...prev,
+              destination_refs: nextRefs,
+              destinations: destNames.length > 0 ? destNames : prev.destinations,
+              arrival_city: arrivalCity || prev.arrival_city,
+              departure_city: departureCity || prev.departure_city,
+            }));
           }}
-        />
-
-        <DestinationSelect
-          label="Departure City"
-          placeholder="e.g. Ho Chi Minh City (SGN)"
-          disabled={disabled}
-          value={state.departure_city}
-          onChange={(val) => {
-            const strVal = typeof val === "string" ? val : Array.isArray(val) ? val[0]?.name ?? "" : "";
-            onChange((prev) => ({ ...prev, departure_city: strVal }));
+          onRoutingConstraintsChange={(constraints) => {
+            onChange((prev) => ({ ...prev, routing_constraints: constraints }));
           }}
         />
       </div>
-
-
-      {/* Routing Constraints Field */}
-      <label className="flex flex-col gap-2 border-t border-[var(--color-border)] pt-4">
-        <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>
-          Routing Constraints / Fixed Flights & Dates
-        </span>
-        <textarea
-          rows={2}
-          disabled={disabled}
-          placeholder="International flights already booked, must be in Hanoi on a specific date, fixed hotel nights, cruise departure..."
-          value={state.routing_constraints}
-          onChange={(e) => onChange((prev) => ({ ...prev, routing_constraints: e.target.value }))}
-          className={cn(
-            getTypographyClassName("bodyMd"),
-            "w-full rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] p-3 text-[var(--color-on-surface)] placeholder:text-[var(--color-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus)] disabled:cursor-not-allowed disabled:opacity-60"
-          )}
-        />
-      </label>
 
       {/* Pax counters */}
       <div className="grid gap-4 sm:grid-cols-3 border-t border-[var(--color-border)] pt-4">

@@ -10,22 +10,35 @@ import SpecialRequirementsSection from "./SpecialRequirementsSection";
 import CommercialPricingSection from "./CommercialPricingSection";
 import ReadinessAndStrategySection from "./ReadinessAndStrategySection";
 
+import type { DestinationRef } from "../destination/types.ts";
+
 export type { QuoteRequestFormState };
 
 type Props = {
   state: QuoteRequestFormState;
   onChange: (updater: (prev: QuoteRequestFormState) => QuoteRequestFormState) => void;
+  onApplyRouteToItinerary?: (destinations: DestinationRef[]) => void;
   disabled?: boolean;
 };
 
-export default function QuoteRequestForm({ state, onChange, disabled = false }: Props) {
+export default function QuoteRequestForm({
+  state,
+  onChange,
+  onApplyRouteToItinerary,
+  disabled = false,
+}: Props) {
   return (
     <div className="flex flex-col gap-6">
       {/* 1. Internal Lead Management & Identity Section */}
       <RequestIdentitySection state={state} onChange={onChange} disabled={disabled} />
 
       {/* 2. Routing, Travel Dates & Party Composition Section */}
-      <RequestRoutingSection state={state} onChange={onChange} disabled={disabled} />
+      <RequestRoutingSection
+        state={state}
+        onChange={onChange}
+        onApplyRouteToItinerary={onApplyRouteToItinerary}
+        disabled={disabled}
+      />
 
       {/* 3. Travel Themes, Priorities & Experience Pace Section */}
       <RequestTravelStyleSection state={state} onChange={onChange} disabled={disabled} />

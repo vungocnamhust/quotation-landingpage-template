@@ -10,12 +10,17 @@ import {
   formatDisplayDate,
   isValidIsoDate,
 } from "./datesRules.ts";
+import {
+  deriveRouteFromItinerary,
+  formatRouteString,
+  type DestinationRef,
+} from "./routeRules.ts";
 
 export type CanonicalDay = {
   id?: string;
   day_number: number;
   destination: string | null;
-  destination_ref?: { id: string; name: string; slug: string } | null;
+  destination_ref?: DestinationRef | null;
   overnight: string | null;
   display_date: string | null;
   summary: string | null;
@@ -34,6 +39,12 @@ export type CanonicalTrip = {
   endDate: string | null;
   durationDays: number | null;
   durationNights: number | null;
+  arrivalCity?: string | null;
+  departureCity?: string | null;
+  destinations?: string[];
+  destinationRefs?: DestinationRef[];
+  displayRouteText?: string | null;
+  routingConstraints?: string | null;
   itinerary: CanonicalDay[];
   lang?: "en" | "vi" | "ar" | string | null;
 };
@@ -52,6 +63,102 @@ export function getDefaultMeals(lang?: string | null): string[] {
 }
 
 export const tripReconciler = {
+  /**
+   * Synchronize route metadata (arrivalCity, departureCity, destinations, destinationRefs, displayRouteText)
+   * based on the current itinerary items.
+   */
+  syncRouteMetadata<T extends CanonicalTrip>(trip: T): T {
+    const routeMeta = deriveRouteFromItinerary(trip.itinerary);
+    return {
+      ...trip,
+      arrivalCity: routeMeta.arrivalCity ?? trip.arrivalCity ?? null,
+      departureCity: routeMeta.departureCity ?? trip.departureCity ?? null,
+      destinations: routeMeta.destinations.length > 0 ? routeMeta.destinations : (trip.destinations ?? []),
+      destinationRefs: routeMeta.destinationRefs.length > 0 ? routeMeta.destinationRefs : (trip.destinationRefs ?? []),
+      displayRouteText: routeMeta.displayRouteText ?? trip.displayRouteText ?? null,
+    };
+  },
+
+  /**
+   * Apply an ordered list of destinations (from RouteSequenceInput or parser) to the trip.
+   * Expands the itinerary if needed, updates day destinations, and recalculates duration/dates.
+   */
+  applyRouteSequence<T extends CanonicalTrip>(
+    trip: T,
+    destinationItems: Array<string | DestinationRef>
+  ): T {
+    if (!destinationItems || destinationItems.length === 0) {
+      return trip;
+    }
+
+    const normalizedItems: DestinationRef[] = destinationItems.map((item, idx) => {
+      if (typeof item === "string") {
+        const clean = item.trim();
+        const lower = clean.toLowerCase().replace(/[^a-z0-9]/g, "_");
+        return {
+          id: `dst_${lower || idx}`,
+          name: clean,
+          slug: clean.toLowerCase().replace(/\s+/g, "-"),
+        };
+      }
+      return item;
+    });
+
+    const targetLength = Math.max(trip.itinerary.length, normalizedItems.length);
+    const defaultMeals = getDefaultMeals(trip.lang);
+    const lang = trip.lang || "en";
+
+    let nextEndDate = trip.endDate;
+    if (trip.startDate && isValidIsoDate(trip.startDate)) {
+      nextEndDate = addDaysToIsoDate(trip.startDate, targetLength - 1);
+    }
+
+    const nextItinerary: CanonicalDay[] = [];
+    for (let i = 0; i < targetLength; i++) {
+      const dayNum = i + 1;
+      const projectedIso = dateForItineraryDay(trip.startDate, dayNum);
+      const projectedLabel = projectedIso ? formatDisplayDate(projectedIso, lang) : null;
+      const destRef = i < normalizedItems.length ? normalizedItems[i] : null;
+      const existingDay = i < trip.itinerary.length ? trip.itinerary[i] : null;
+
+      const destName = destRef?.name || existingDay?.destination || null;
+      const overnight = destName || existingDay?.overnight || null;
+
+      nextItinerary.push({
+        id: existingDay?.id || `day_${Date.now()}_${dayNum}`,
+        day_number: dayNum,
+        destination: destName,
+        destination_ref: destRef ?? existingDay?.destination_ref ?? null,
+        overnight,
+        display_date: existingDay?.display_date || projectedLabel,
+        summary: existingDay?.summary || null,
+        meals: existingDay?.meals?.length ? existingDay.meals : [...defaultMeals],
+        highlights: existingDay?.highlights || [],
+        notes: existingDay?.notes || [],
+        sense_of_pace: existingDay?.sense_of_pace || "balanced",
+        accommodation_id: existingDay?.accommodation_id ?? null,
+        accommodation_name: existingDay?.accommodation_name ?? null,
+        room_type: existingDay?.room_type ?? null,
+      });
+    }
+
+    const { durationDays, durationNights } = calculateDuration(trip.startDate, nextEndDate);
+    const routeMeta = deriveRouteFromItinerary(nextItinerary);
+
+    return {
+      ...trip,
+      endDate: nextEndDate,
+      durationDays: durationDays ?? targetLength,
+      durationNights: durationNights ?? Math.max(0, targetLength - 1),
+      arrivalCity: routeMeta.arrivalCity,
+      departureCity: routeMeta.departureCity,
+      destinations: routeMeta.destinations,
+      destinationRefs: routeMeta.destinationRefs,
+      displayRouteText: routeMeta.displayRouteText,
+      itinerary: nextItinerary,
+    };
+  },
+
   /**
    * Add a new day to the itinerary.
    * Invariant: Automatically pushes endDate by 1 day and calculates the new day's display_date.
@@ -99,13 +206,21 @@ export const tripReconciler = {
       ...defaultDayPayload,
     };
 
+    const nextItinerary = [...trip.itinerary, newDay];
     const { durationDays, durationNights } = calculateDuration(trip.startDate, nextEndDate);
+    const routeMeta = deriveRouteFromItinerary(nextItinerary);
+
     return {
       ...trip,
       endDate: nextEndDate,
       durationDays: durationDays ?? nextLength,
       durationNights: durationNights ?? Math.max(0, nextLength - 1),
-      itinerary: [...trip.itinerary, newDay],
+      arrivalCity: routeMeta.arrivalCity ?? trip.arrivalCity ?? null,
+      departureCity: routeMeta.departureCity ?? trip.departureCity ?? null,
+      destinations: routeMeta.destinations.length > 0 ? routeMeta.destinations : (trip.destinations ?? []),
+      destinationRefs: routeMeta.destinationRefs.length > 0 ? routeMeta.destinationRefs : (trip.destinationRefs ?? []),
+      displayRouteText: routeMeta.displayRouteText ?? trip.displayRouteText ?? null,
+      itinerary: nextItinerary,
     };
   },
 
@@ -140,11 +255,18 @@ export const tripReconciler = {
     });
 
     const { durationDays, durationNights } = calculateDuration(trip.startDate, nextEndDate);
+    const routeMeta = deriveRouteFromItinerary(reIndexed);
+
     return {
       ...trip,
       endDate: nextEndDate,
       durationDays: durationDays ?? nextLength,
       durationNights: durationNights ?? Math.max(0, nextLength - 1),
+      arrivalCity: routeMeta.arrivalCity ?? trip.arrivalCity ?? null,
+      departureCity: routeMeta.departureCity ?? trip.departureCity ?? null,
+      destinations: routeMeta.destinations.length > 0 ? routeMeta.destinations : (trip.destinations ?? []),
+      destinationRefs: routeMeta.destinationRefs.length > 0 ? routeMeta.destinationRefs : (trip.destinationRefs ?? []),
+      displayRouteText: routeMeta.displayRouteText ?? trip.displayRouteText ?? null,
       itinerary: reIndexed,
     };
   },
@@ -175,12 +297,19 @@ export const tripReconciler = {
     });
 
     const { durationDays, durationNights } = calculateDuration(start, nextEndDate);
+    const routeMeta = deriveRouteFromItinerary(reIndexed);
+
     return {
       ...trip,
       startDate: start,
       endDate: nextEndDate,
       durationDays: durationDays ?? length,
       durationNights: durationNights ?? Math.max(0, length - 1),
+      arrivalCity: routeMeta.arrivalCity ?? trip.arrivalCity ?? null,
+      departureCity: routeMeta.departureCity ?? trip.departureCity ?? null,
+      destinations: routeMeta.destinations.length > 0 ? routeMeta.destinations : (trip.destinations ?? []),
+      destinationRefs: routeMeta.destinationRefs.length > 0 ? routeMeta.destinationRefs : (trip.destinationRefs ?? []),
+      displayRouteText: routeMeta.displayRouteText ?? trip.displayRouteText ?? null,
       itinerary: reIndexed,
     };
   },
@@ -192,7 +321,6 @@ export const tripReconciler = {
   setEndDate<T extends CanonicalTrip>(trip: T, nextEndDate: string | null): T {
     const end = nextEndDate?.trim() || null;
     const { durationDays, durationNights } = calculateDuration(trip.startDate, end);
-    const targetLength = durationDays ?? trip.itinerary.length;
 
     let nextItinerary = [...trip.itinerary];
     const lang = trip.lang || "en";
@@ -222,11 +350,18 @@ export const tripReconciler = {
       }
     }
 
+    const routeMeta = deriveRouteFromItinerary(nextItinerary);
+
     return {
       ...trip,
       endDate: end,
       durationDays,
       durationNights,
+      arrivalCity: routeMeta.arrivalCity ?? trip.arrivalCity ?? null,
+      departureCity: routeMeta.departureCity ?? trip.departureCity ?? null,
+      destinations: routeMeta.destinations.length > 0 ? routeMeta.destinations : (trip.destinations ?? []),
+      destinationRefs: routeMeta.destinationRefs.length > 0 ? routeMeta.destinationRefs : (trip.destinationRefs ?? []),
+      displayRouteText: routeMeta.displayRouteText ?? trip.displayRouteText ?? null,
       itinerary: nextItinerary,
     };
   },
@@ -302,8 +437,15 @@ export const tripReconciler = {
       }
     }
 
+    const routeMeta = deriveRouteFromItinerary(nextItinerary);
+
     return {
       ...trip,
+      arrivalCity: routeMeta.arrivalCity ?? trip.arrivalCity ?? null,
+      departureCity: routeMeta.departureCity ?? trip.departureCity ?? null,
+      destinations: routeMeta.destinations.length > 0 ? routeMeta.destinations : (trip.destinations ?? []),
+      destinationRefs: routeMeta.destinationRefs.length > 0 ? routeMeta.destinationRefs : (trip.destinationRefs ?? []),
+      displayRouteText: routeMeta.displayRouteText ?? trip.displayRouteText ?? null,
       itinerary: nextItinerary,
     };
   },

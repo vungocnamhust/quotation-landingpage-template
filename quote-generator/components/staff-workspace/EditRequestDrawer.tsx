@@ -33,6 +33,7 @@ function EditRequestDrawerContent({
     addItineraryDay,
     removeItineraryDay,
     updateItineraryDay,
+    applyRouteSequence,
     changeSummary,
     setChangeSummary,
     submitting,
@@ -134,7 +135,12 @@ function EditRequestDrawerContent({
           </section>
 
           {/* 1. Request Details Form */}
-          <QuoteRequestForm state={formState} onChange={setFormState} disabled={submitting} />
+          <QuoteRequestForm
+            state={formState}
+            onChange={setFormState}
+            onApplyRouteToItinerary={applyRouteSequence}
+            disabled={submitting}
+          />
 
           {/* 2. Basic Daily Itinerary Schedule */}
           <BasicItineraryDayGrid

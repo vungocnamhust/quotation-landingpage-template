@@ -126,6 +126,17 @@ export function useQuoteRequestForm({
     [formState, itineraryDays]
   );
 
+  const applyRouteSequence = useCallback(
+    (destinations: Array<string | DestinationRef>) => {
+      const canonical = tripAdapter.fromQuoteRequest(formState, itineraryDays);
+      const reconciled = tripReconciler.applyRouteSequence(canonical, destinations);
+      const synced = tripAdapter.syncToQuoteRequest(reconciled, formState);
+      setFormState(synced.formState);
+      setItineraryDays(synced.itineraryDays);
+    },
+    [formState, itineraryDays]
+  );
+
   const setRole = useCallback((role: QuoteRequestRole) => {
     setFormState((prev) => ({ ...prev, role }));
   }, []);
@@ -198,6 +209,7 @@ export function useQuoteRequestForm({
     addItineraryDay,
     removeItineraryDay,
     updateItineraryDay,
+    applyRouteSequence,
     changeSummary,
     setChangeSummary,
     submitting,

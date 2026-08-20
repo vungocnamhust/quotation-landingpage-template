@@ -14,6 +14,7 @@ import {
 } from "../../components/quotation-workspace/factsTypes.ts";
 import type { QuoteRequestFormState } from "../quoteRequestPayload.ts";
 import { calculateDuration, formatTravelDatesLabel } from "./datesRules.ts";
+import { deriveRouteFromItinerary, formatRouteString } from "./routeRules.ts";
 import type { CanonicalDay, CanonicalTrip } from "./tripReconciler.ts";
 
 export const tripAdapter = {
@@ -33,7 +34,7 @@ export const tripAdapter = {
       day_number: d.day_number || index + 1,
       destination: d.destination || null,
       destination_ref: d.destination_ref_id
-        ? { id: d.destination_ref_id, name: d.destination, slug: "" }
+        ? { id: d.destination_ref_id, name: d.destination || "", slug: "" }
         : null,
       overnight: d.overnight || d.destination || null,
       display_date: d.display_date || null,
@@ -43,11 +44,19 @@ export const tripAdapter = {
       notes: d.notes || [],
     }));
 
+    const routeMeta = deriveRouteFromItinerary(canonicalDays);
+
     return {
       startDate: start,
       endDate: end,
       durationDays: duration.durationDays ?? (canonicalDays.length || null),
       durationNights: duration.durationNights ?? (canonicalDays.length ? Math.max(0, canonicalDays.length - 1) : null),
+      arrivalCity: routeMeta.arrivalCity || formState.arrival_city?.trim() || null,
+      departureCity: routeMeta.departureCity || formState.departure_city?.trim() || null,
+      destinations: routeMeta.destinations.length > 0 ? routeMeta.destinations : (formState.destinations || []),
+      destinationRefs: routeMeta.destinationRefs.length > 0 ? routeMeta.destinationRefs : (formState.destination_refs || []),
+      displayRouteText: routeMeta.displayRouteText || formatRouteString(formState.destinations),
+      routingConstraints: formState.routing_constraints || null,
       itinerary: canonicalDays,
       lang: "en",
     };
@@ -85,6 +94,18 @@ export const tripAdapter = {
         arrival_date: canonical.startDate || "",
         departure_date: canonical.endDate || "",
         raw_dates_text: rawDatesText,
+        arrival_city: canonical.arrivalCity || prev.arrival_city || "",
+        departure_city: canonical.departureCity || prev.departure_city || "",
+        destinations: canonical.destinations && canonical.destinations.length > 0
+          ? canonical.destinations
+          : prev.destinations,
+        destination_refs: canonical.destinationRefs && canonical.destinationRefs.length > 0
+          ? canonical.destinationRefs
+          : prev.destination_refs,
+        routing_constraints:
+          canonical.routingConstraints !== undefined && canonical.routingConstraints !== null
+            ? canonical.routingConstraints
+            : prev.routing_constraints,
       },
       itineraryDays,
     };
@@ -117,11 +138,19 @@ export const tripAdapter = {
       room_type: d.room_type || null,
     }));
 
+    const routeMeta = deriveRouteFromItinerary(canonicalDays);
+
     return {
       startDate: start,
       endDate: end,
       durationDays: duration.durationDays ?? (canonicalDays.length || null),
       durationNights: duration.durationNights ?? (canonicalDays.length ? Math.max(0, canonicalDays.length - 1) : null),
+      arrivalCity: routeMeta.arrivalCity || (trip as unknown as { arrival_city?: string }).arrival_city || null,
+      departureCity: routeMeta.departureCity || (trip as unknown as { departure_city?: string }).departure_city || null,
+      destinations: routeMeta.destinations.length > 0 ? routeMeta.destinations : (trip.destinations || []),
+      destinationRefs: routeMeta.destinationRefs.length > 0 ? routeMeta.destinationRefs : (trip.destination_refs || []),
+      displayRouteText: routeMeta.displayRouteText || trip.display_route_text || null,
+      routingConstraints: (trip as unknown as { routing_constraints?: string }).routing_constraints || null,
       itinerary: canonicalDays,
       lang: facts.lang || "en",
     };
@@ -156,6 +185,8 @@ export const tripAdapter = {
     });
 
     const destinationRefs = routeDestinationRefsFromItinerary(itinerary);
+    const destinations = destinationRefs.map((r) => r.name);
+    const displayRouteText = canonical.displayRouteText || formatRouteString(destinations);
 
     return {
       ...safe,
@@ -167,7 +198,9 @@ export const tripAdapter = {
         duration_nights: canonical.durationNights,
         itinerary,
         destination_refs: destinationRefs,
-        destinations: destinationRefs.map((r) => r.name),
+        destinations,
+        display_route_text: displayRouteText,
+        ...(canonical.routingConstraints ? { routing_constraints: canonical.routingConstraints } : {}),
       },
     };
   },

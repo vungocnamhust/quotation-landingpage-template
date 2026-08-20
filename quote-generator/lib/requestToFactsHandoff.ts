@@ -50,6 +50,17 @@ export function buildInitialFactsFromRequest(
   const { perAdultMinor, perChildMinor } = inferRatesFromGroupTotal(totalMinor, adults, children, 0.75);
   const effectiveAdultMinor = perAdultMinor ?? totalMinor;
 
+  const routeMeta = deriveRouteFromItinerary(itineraryDays);
+  const finalDestinations =
+    quoteRequest.destinations?.length && quoteRequest.destinations[0]
+      ? quoteRequest.destinations
+      : routeMeta.destinations.length > 0
+        ? routeMeta.destinations
+        : fallback.trip_facts.destinations;
+
+  const displayRouteText =
+    formatRouteString(finalDestinations) || fallback.trip_facts.display_route_text;
+
   return {
     ...fallback,
     brand_id: (payload.brand_id as string) || fallback.brand_id || "selvara",
@@ -62,13 +73,19 @@ export function buildInitialFactsFromRequest(
     },
     trip_facts: {
       ...fallback.trip_facts,
-      destinations: quoteRequest.destinations?.length
-        ? quoteRequest.destinations
-        : fallback.trip_facts.destinations,
+      destinations: finalDestinations,
+      destination_refs:
+        routeMeta.destinationRefs.length > 0
+          ? routeMeta.destinationRefs
+          : fallback.trip_facts.destination_refs,
       start_date: quoteRequest.start_date || fallback.trip_facts.start_date,
       end_date: quoteRequest.end_date || fallback.trip_facts.end_date,
       itinerary: itineraryDays,
+      display_route_text: displayRouteText,
       display_travel_dates: quoteRequest.raw_dates_text || fallback.trip_facts.display_travel_dates,
+      ...(payload.routing_constraints
+        ? { routing_constraints: payload.routing_constraints as string }
+        : {}),
     },
     customer_facts: {
       ...fallback.customer_facts,
