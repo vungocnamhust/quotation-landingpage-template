@@ -4,13 +4,15 @@ import { useCallback, useMemo, useState, type Dispatch, type SetStateAction } fr
 import type { TravelDesignerProfile } from "../../lib/quotationApi.ts";
 import { calculateDuration } from "../../lib/rules/datesRules.ts";
 import { tripAdapter } from "../../lib/rules/tripAdapter.ts";
-import { tripReconciler, type CanonicalDay } from "../../lib/rules/tripReconciler.ts";
+import { tripReconciler } from "../../lib/rules/tripReconciler.ts";
 import {
   ensureFactsDefaults,
   type ItineraryDayFact,
   type QuotationFacts,
   type QuotationOptions,
 } from "./factsTypes.ts";
+
+import { addDayToRouteTable, removeDayFromRouteTable } from "./useRouteTableSync.ts";
 
 export type UseQuotationIntakeOptions = {
   facts: QuotationFacts;
@@ -79,25 +81,14 @@ export function useQuotationIntake({
 
   const addItineraryDay = useCallback(
     (defaultPayload?: Partial<ItineraryDayFact>) => {
-      patchFacts((current) => {
-        const canonical = tripAdapter.fromQuotationFacts(current);
-        const reconciled = tripReconciler.addDay(
-          canonical,
-          defaultPayload as Partial<CanonicalDay> | undefined
-        );
-        return tripAdapter.syncToQuotationFacts(reconciled, current);
-      });
+      patchFacts((current) => addDayToRouteTable(current, defaultPayload));
     },
     [patchFacts]
   );
 
   const removeItineraryDay = useCallback(
     (index: number) => {
-      patchFacts((current) => {
-        const canonical = tripAdapter.fromQuotationFacts(current);
-        const reconciled = tripReconciler.removeDay(canonical, index);
-        return tripAdapter.syncToQuotationFacts(reconciled, current);
-      });
+      patchFacts((current) => removeDayFromRouteTable(current, index));
     },
     [patchFacts]
   );

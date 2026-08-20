@@ -287,3 +287,118 @@ class TestQuoteRequestService(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(pricing_opt["per_child_amount_minor"], 250000)
         self.assertEqual(pricing_opt["group_total_amount_minor"], 1050000)
 
+    def test_generate_quotation_with_added_days_overrides(self):
+        from schemas.v2.quote_request import (
+            MinimalItineraryDayWithStayOverrideSchema,
+            QuotationMinimalOverridesSchema,
+        )
+
+        req = QuoteRequest(
+            id="req_expand_001",
+            role="traveller",
+            customer_name="Alice Johnson",
+            email="alice@example.com",
+            destinations=["Hanoi"],
+            start_date="2026-11-01",
+            end_date="2026-11-03",
+            adults=2,
+            children=0,
+            payload_json={
+                "itinerary_days": [
+                    {"day_number": 1, "destination": "Hanoi", "summary": "Arrival"},
+                    {"day_number": 2, "destination": "Hanoi", "summary": "City tour"},
+                    {"day_number": 3, "destination": "Hanoi", "summary": "Food tour"},
+                ]
+            },
+        )
+
+        # User added Day 4 (Hue) and Day 5 (Da Nang) on New Quotation screen
+        overrides = QuotationMinimalOverridesSchema(
+            start_date="2026-11-01",
+            end_date="2026-11-05",
+            itinerary_with_stays=[
+                MinimalItineraryDayWithStayOverrideSchema(day_number=1, destination="Hanoi", accommodation_id="acc_metropole", accommodation_name="Sofitel Metropole", room_type="Deluxe"),
+                MinimalItineraryDayWithStayOverrideSchema(day_number=2, destination="Hanoi", accommodation_id="acc_metropole", accommodation_name="Sofitel Metropole", room_type="Deluxe"),
+                MinimalItineraryDayWithStayOverrideSchema(day_number=3, destination="Hanoi", accommodation_id="acc_metropole", accommodation_name="Sofitel Metropole", room_type="Deluxe"),
+                MinimalItineraryDayWithStayOverrideSchema(day_number=4, destination="Hue", accommodation_id="acc_azerai", accommodation_name="Azerai La Residence", room_type="River View"),
+                MinimalItineraryDayWithStayOverrideSchema(day_number=5, destination="Da Nang", accommodation_id="acc_intercon", accommodation_name="InterContinental Danang", room_type="Ocean View"),
+            ],
+        )
+
+        facts = convert_request_to_quotation_facts(req, overrides)
+
+        self.assertEqual(facts["trip_facts"]["start_date"], "2026-11-01")
+        self.assertEqual(facts["trip_facts"]["end_date"], "2026-11-05")
+        self.assertEqual(facts["trip_facts"]["duration_days"], 5)
+        self.assertEqual(facts["trip_facts"]["duration_nights"], 4)
+        self.assertEqual(len(facts["trip_facts"]["itinerary"]), 5)
+        self.assertEqual(facts["trip_facts"]["itinerary"][3]["destination"], "Hue")
+        self.assertEqual(facts["trip_facts"]["itinerary"][4]["destination"], "Da Nang")
+        self.assertIn("Hue", facts["trip_facts"]["destinations"])
+        self.assertIn("Da Nang", facts["trip_facts"]["destinations"])
+
+        # Check hotel stays consolidation
+        hotels = facts["service_facts"]["hotels"]
+        self.assertEqual(len(hotels), 3)
+        self.assertEqual(hotels[0]["name"], "Sofitel Metropole")
+        self.assertEqual(hotels[0]["check_in"], "2026-11-01")
+        self.assertEqual(hotels[0]["check_out"], "2026-11-04")
+        self.assertEqual(hotels[1]["name"], "Azerai La Residence")
+        self.assertEqual(hotels[1]["check_in"], "2026-11-04")
+        self.assertEqual(hotels[1]["check_out"], "2026-11-05")
+        self.assertEqual(hotels[2]["name"], "InterContinental Danang")
+        self.assertEqual(hotels[2]["check_in"], "2026-11-05")
+        self.assertEqual(hotels[2]["check_out"], "2026-11-06")
+
+    def test_generate_quotation_with_removed_days_overrides(self):
+        from schemas.v2.quote_request import (
+            MinimalItineraryDayWithStayOverrideSchema,
+            QuotationMinimalOverridesSchema,
+        )
+
+        req = QuoteRequest(
+            id="req_shrink_001",
+            role="traveller",
+            customer_name="Bob Miller",
+            email="bob@example.com",
+            destinations=["Hanoi", "Halong", "Hue", "Hoi An"],
+            start_date="2026-11-01",
+            end_date="2026-11-04",
+            adults=2,
+            children=0,
+            payload_json={
+                "itinerary_days": [
+                    {"day_number": 1, "destination": "Hanoi"},
+                    {"day_number": 2, "destination": "Halong"},
+                    {"day_number": 3, "destination": "Hue"},
+                    {"day_number": 4, "destination": "Hoi An"},
+                ]
+            },
+        )
+
+        # User removed Day 3 and Day 4 on New Quotation screen, keeping only 2 days in Hanoi
+        overrides = QuotationMinimalOverridesSchema(
+            start_date="2026-11-01",
+            end_date="2026-11-02",
+            itinerary_with_stays=[
+                MinimalItineraryDayWithStayOverrideSchema(day_number=1, destination="Hanoi", accommodation_id="acc_metropole", accommodation_name="Sofitel Metropole", room_type="Deluxe"),
+                MinimalItineraryDayWithStayOverrideSchema(day_number=2, destination="Hanoi", accommodation_id="acc_metropole", accommodation_name="Sofitel Metropole", room_type="Deluxe"),
+            ],
+        )
+
+        facts = convert_request_to_quotation_facts(req, overrides)
+
+        self.assertEqual(facts["trip_facts"]["start_date"], "2026-11-01")
+        self.assertEqual(facts["trip_facts"]["end_date"], "2026-11-02")
+        self.assertEqual(facts["trip_facts"]["duration_days"], 2)
+        self.assertEqual(facts["trip_facts"]["duration_nights"], 1)
+        self.assertEqual(len(facts["trip_facts"]["itinerary"]), 2)
+        self.assertEqual(facts["trip_facts"]["destinations"], ["Hanoi"])
+
+        # Stays consolidated to 1 hotel segment
+        hotels = facts["service_facts"]["hotels"]
+        self.assertEqual(len(hotels), 1)
+        self.assertEqual(hotels[0]["name"], "Sofitel Metropole")
+        self.assertEqual(hotels[0]["check_in"], "2026-11-01")
+        self.assertEqual(hotels[0]["check_out"], "2026-11-03")
+

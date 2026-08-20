@@ -4,6 +4,7 @@ import { tripReconciler, type CanonicalTrip } from '../rules/tripReconciler.ts';
 import { tripAdapter } from '../rules/tripAdapter.ts';
 import { getInitialQuoteRequestFormState } from '../quoteRequestPayload.ts';
 import { createBrochureFacts } from '../../components/quotation-workspace/factsTypes.ts';
+import { addDayToRouteTable, removeDayFromRouteTable } from '../../components/quotation-workspace/useRouteTableSync.ts';
 
 describe('tripReconciler temporal invariant rules', () => {
   describe('addDay', () => {
@@ -297,5 +298,153 @@ describe('tripAdapter bidirectional schema mapping', () => {
     assert.equal(updatedFacts.trip_facts.itinerary.length, 3);
     assert.equal(updatedFacts.trip_facts.itinerary[2].destination, 'Ninh Binh');
     assert.deepEqual(updatedFacts.trip_facts.destinations, ['Hanoi', 'Halong', 'Ninh Binh']);
+  });
+});
+
+describe('useRouteTableSync route table atomic reconcilers', () => {
+  it('adds day to QuotationFacts and synchronizes end_date and hotels', () => {
+    const facts = createBrochureFacts();
+    facts.trip_facts.start_date = '2026-11-01';
+    facts.trip_facts.end_date = '2026-11-02';
+    facts.trip_facts.itinerary = [
+      {
+        day_number: 1,
+        destination: 'Hanoi',
+        destination_ref: null,
+        overnight: 'Hanoi',
+        display_date: '01 Nov',
+        summary: 'Arrival',
+        meals: ['Breakfast'],
+        highlights: [],
+        notes: [],
+        sense_of_pace: 'balanced',
+        accommodation_id: 'acc_metropole',
+        accommodation_name: 'Sofitel Metropole',
+        room_type: 'Luxury Room',
+      },
+      {
+        day_number: 2,
+        destination: 'Hanoi',
+        destination_ref: null,
+        overnight: 'Hanoi',
+        display_date: '02 Nov',
+        summary: 'City Tour',
+        meals: ['Breakfast'],
+        highlights: [],
+        notes: [],
+        sense_of_pace: 'balanced',
+        accommodation_id: 'acc_metropole',
+        accommodation_name: 'Sofitel Metropole',
+        room_type: 'Luxury Room',
+      },
+    ];
+
+    const updated = addDayToRouteTable(facts, {
+      destination: 'Hanoi',
+      accommodation_id: 'acc_metropole',
+      accommodation_name: 'Sofitel Metropole',
+      room_type: 'Luxury Room',
+    });
+
+    assert.equal(updated.trip_facts.start_date, '2026-11-01');
+    assert.equal(updated.trip_facts.end_date, '2026-11-03');
+    assert.equal(updated.trip_facts.duration_days, 3);
+    assert.equal(updated.trip_facts.itinerary.length, 3);
+    assert.equal(updated.trip_facts.itinerary[2].day_number, 3);
+    assert.equal(updated.trip_facts.itinerary[2].destination, 'Hanoi');
+    // Hotel check_out extended to 2026-11-04 (3 nights)
+    assert.equal(updated.service_facts.hotels.length, 1);
+    assert.equal(updated.service_facts.hotels[0].check_in, '2026-11-01');
+    assert.equal(updated.service_facts.hotels[0].check_out, '2026-11-04');
+  });
+
+  it('removes day from QuotationFacts, pulls back end_date and re-indexes days', () => {
+    const facts = createBrochureFacts();
+    facts.trip_facts.start_date = '2026-11-01';
+    facts.trip_facts.end_date = '2026-11-03';
+    facts.trip_facts.itinerary = [
+      {
+        day_number: 1,
+        destination: 'Hanoi',
+        destination_ref: null,
+        overnight: 'Hanoi',
+        display_date: '01 Nov',
+        summary: 'Day 1',
+        meals: ['Breakfast'],
+        highlights: [],
+        notes: [],
+        sense_of_pace: 'balanced',
+        accommodation_id: 'acc_metropole',
+        accommodation_name: 'Sofitel Metropole',
+        room_type: 'Luxury Room',
+      },
+      {
+        day_number: 2,
+        destination: 'Halong',
+        destination_ref: null,
+        overnight: 'Halong',
+        display_date: '02 Nov',
+        summary: 'Day 2',
+        meals: ['Breakfast'],
+        highlights: [],
+        notes: [],
+        sense_of_pace: 'balanced',
+        accommodation_id: 'acc_cruise',
+        accommodation_name: 'Heritage Cruise',
+        room_type: 'Cabin',
+      },
+      {
+        day_number: 3,
+        destination: 'Hanoi',
+        destination_ref: null,
+        overnight: 'Hanoi',
+        display_date: '03 Nov',
+        summary: 'Day 3',
+        meals: ['Breakfast'],
+        highlights: [],
+        notes: [],
+        sense_of_pace: 'balanced',
+        accommodation_id: 'acc_metropole',
+        accommodation_name: 'Sofitel Metropole',
+        room_type: 'Luxury Room',
+      },
+    ];
+
+    // Remove middle day (Day 2: Halong)
+    const updated = removeDayFromRouteTable(facts, 1);
+
+    assert.equal(updated.trip_facts.start_date, '2026-11-01');
+    assert.equal(updated.trip_facts.end_date, '2026-11-02');
+    assert.equal(updated.trip_facts.duration_days, 2);
+    assert.equal(updated.trip_facts.itinerary.length, 2);
+    assert.equal(updated.trip_facts.itinerary[0].day_number, 1);
+    assert.equal(updated.trip_facts.itinerary[1].day_number, 2);
+    assert.equal(updated.trip_facts.itinerary[1].summary, 'Day 3');
+  });
+
+  it('preserves minimum 1 day when attempting to remove the last remaining day', () => {
+    const facts = createBrochureFacts();
+    facts.trip_facts.start_date = '2026-11-01';
+    facts.trip_facts.end_date = '2026-11-01';
+    facts.trip_facts.itinerary = [
+      {
+        day_number: 1,
+        destination: 'Hanoi',
+        destination_ref: null,
+        overnight: 'Hanoi',
+        display_date: '01 Nov',
+        summary: 'Day 1',
+        meals: ['Breakfast'],
+        highlights: [],
+        notes: [],
+        sense_of_pace: 'balanced',
+        accommodation_id: null,
+        accommodation_name: null,
+        room_type: null,
+      },
+    ];
+
+    const updated = removeDayFromRouteTable(facts, 0);
+    assert.equal(updated.trip_facts.itinerary.length, 1);
   });
 });

@@ -629,6 +629,116 @@ test('tripReconciler.applyRouteSequence: expands itinerary, recalculates dates a
   assert.deepEqual(updated.destinations, ['Ho Chi Minh City', 'Mekong Delta', 'Da Nang', 'Hanoi']);
 });
 
+
+// ==========================================
+// 10. New Quotation Add/Remove Day Reconciler & Handoff Tests
+// ==========================================
+console.log('\n✨ 10. Testing New Quotation Add/Remove Day Reconciler (useRouteTableSync.ts)...');
+
+import { addDayToRouteTable, removeDayFromRouteTable } from '../components/quotation-workspace/useRouteTableSync.ts';
+import { createBrochureFacts } from '../components/quotation-workspace/factsTypes.ts';
+
+test('New Quotation: addDayToRouteTable expands itinerary, extends end_date and syncs hotels', () => {
+  const baseFacts = createBrochureFacts();
+  baseFacts.trip_facts.start_date = '2026-11-01';
+  baseFacts.trip_facts.end_date = '2026-11-02';
+  baseFacts.trip_facts.itinerary = [
+    {
+      day_number: 1,
+      destination: 'Hanoi',
+      overnight: 'Hanoi',
+      display_date: '01 Nov',
+      summary: 'Arrival',
+      accommodation_id: 'acc_metropole',
+      accommodation_name: 'Sofitel Metropole',
+      room_type: 'Luxury',
+      meals: ['Breakfast'],
+      highlights: [],
+      notes: [],
+      sense_of_pace: 'balanced',
+    },
+    {
+      day_number: 2,
+      destination: 'Hanoi',
+      overnight: 'Hanoi',
+      display_date: '02 Nov',
+      summary: 'City Tour',
+      accommodation_id: 'acc_metropole',
+      accommodation_name: 'Sofitel Metropole',
+      room_type: 'Luxury',
+      meals: ['Breakfast'],
+      highlights: [],
+      notes: [],
+      sense_of_pace: 'balanced',
+    },
+  ];
+
+  const expanded = addDayToRouteTable(baseFacts, {
+    destination: 'Halong Bay',
+    accommodation_id: 'acc_cruise',
+    accommodation_name: 'Heritage Cruise',
+  });
+
+  assert.equal(expanded.trip_facts.itinerary.length, 3);
+  assert.equal(expanded.trip_facts.start_date, '2026-11-01');
+  assert.equal(expanded.trip_facts.end_date, '2026-11-03');
+  assert.equal(expanded.trip_facts.duration_days, 3);
+  assert.equal(expanded.trip_facts.itinerary[2].destination, 'Halong Bay');
+  assert.equal(expanded.service_facts.hotels.length, 2);
+  assert.equal(expanded.service_facts.hotels[0].name, 'Sofitel Metropole');
+  assert.equal(expanded.service_facts.hotels[1].name, 'Heritage Cruise');
+});
+
+test('New Quotation: removeDayFromRouteTable pulls back end_date, re-indexes and consolidates stays', () => {
+  const baseFacts = createBrochureFacts();
+  baseFacts.trip_facts.start_date = '2026-11-01';
+  baseFacts.trip_facts.end_date = '2026-11-03';
+  baseFacts.trip_facts.itinerary = [
+    {
+      day_number: 1,
+      destination: 'Hanoi',
+      overnight: 'Hanoi',
+      display_date: '01 Nov',
+      summary: 'Day 1',
+      meals: ['Breakfast'],
+      highlights: [],
+      notes: [],
+      sense_of_pace: 'balanced',
+    },
+    {
+      day_number: 2,
+      destination: 'Halong',
+      overnight: 'Halong',
+      display_date: '02 Nov',
+      summary: 'Day 2',
+      meals: ['Breakfast'],
+      highlights: [],
+      notes: [],
+      sense_of_pace: 'balanced',
+    },
+    {
+      day_number: 3,
+      destination: 'Hanoi',
+      overnight: 'Hanoi',
+      display_date: '03 Nov',
+      summary: 'Day 3',
+      meals: ['Breakfast'],
+      highlights: [],
+      notes: [],
+      sense_of_pace: 'balanced',
+    },
+  ];
+
+  const contracted = removeDayFromRouteTable(baseFacts, 1);
+  assert.equal(contracted.trip_facts.itinerary.length, 2);
+  assert.equal(contracted.trip_facts.start_date, '2026-11-01');
+  assert.equal(contracted.trip_facts.end_date, '2026-11-02');
+  assert.equal(contracted.trip_facts.duration_days, 2);
+  assert.equal(contracted.trip_facts.itinerary[0].day_number, 1);
+  assert.equal(contracted.trip_facts.itinerary[1].day_number, 2);
+  assert.equal(contracted.trip_facts.itinerary[1].summary, 'Day 3');
+});
+
 // ==========================================
 // Summary
 // ==========================================

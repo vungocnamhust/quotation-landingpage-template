@@ -9,6 +9,7 @@ import { inferOvernightDestination } from "../../lib/prefillRules.ts";
 import { patchItineraryDayInFacts } from "../../lib/prefillEngine.ts";
 import { staysAdapter } from "../../lib/rules/staysAdapter.ts";
 import { staysReconciler } from "../../lib/rules/staysReconciler.ts";
+import { tripReconciler, type CanonicalDay } from "../../lib/rules/tripReconciler.ts";
 
 export function deriveDayWithStays(facts: QuotationFacts): DayWithStayItem[] {
   const safe = ensureFactsDefaults(facts);
@@ -176,6 +177,72 @@ export function updateDayInRouteTable(
   return patchItineraryDayInFacts(safe, index, updatedPatch);
 }
 
+export function addDayToRouteTable(
+  current: QuotationFacts,
+  defaultPayload?: Partial<DayWithStayItem> | Partial<ItineraryDayFact> | Partial<CanonicalDay>
+): QuotationFacts {
+  const safe = ensureFactsDefaults(current);
+  const canonical = staysAdapter.fromQuotationFacts(safe);
+  const reconciled = tripReconciler.addDay(
+    canonical,
+    defaultPayload as Partial<CanonicalDay> | undefined
+  );
+  const nextStays = staysReconciler.reconcileStaysFromItinerary(
+    reconciled.itinerary,
+    reconciled.startDate,
+    safe.service_facts.hotels
+  );
+  const destination_refs = routeDestinationRefsFromItinerary(reconciled.itinerary as ItineraryDayFact[]);
+  const destinations =
+    destination_refs.length > 0
+      ? destination_refs.map((r) => r.name)
+      : Array.from(
+          new Set(
+            reconciled.itinerary
+              .map((d) => d.destination)
+              .filter((d): d is string => Boolean(d))
+          )
+        );
+
+  return staysAdapter.syncToQuotationFacts(
+    { ...reconciled, stays: nextStays, destinationRefs: destination_refs, destinations },
+    safe
+  );
+}
+
+export function removeDayFromRouteTable(
+  current: QuotationFacts,
+  index: number
+): QuotationFacts {
+  const safe = ensureFactsDefaults(current);
+  const canonical = staysAdapter.fromQuotationFacts(safe);
+  if (canonical.itinerary.length <= 1) {
+    return safe; // Guardrail: preserve at least 1 day in itinerary
+  }
+  const reconciled = tripReconciler.removeDay(canonical, index);
+  const nextStays = staysReconciler.reconcileStaysFromItinerary(
+    reconciled.itinerary,
+    reconciled.startDate,
+    safe.service_facts.hotels
+  );
+  const destination_refs = routeDestinationRefsFromItinerary(reconciled.itinerary as ItineraryDayFact[]);
+  const destinations =
+    destination_refs.length > 0
+      ? destination_refs.map((r) => r.name)
+      : Array.from(
+          new Set(
+            reconciled.itinerary
+              .map((d) => d.destination)
+              .filter((d): d is string => Boolean(d))
+          )
+        );
+
+  return staysAdapter.syncToQuotationFacts(
+    { ...reconciled, stays: nextStays, destinationRefs: destination_refs, destinations },
+    safe
+  );
+}
+
 export function useRouteTableSync(
   facts: QuotationFacts,
   onFactsChange: (updater: (prev: QuotationFacts) => QuotationFacts) => void
@@ -196,9 +263,25 @@ export function useRouteTableSync(
     [onFactsChange]
   );
 
+  const handleAddDay = useCallback(
+    (defaultPayload?: Partial<DayWithStayItem>) => {
+      onFactsChange((current) => addDayToRouteTable(current, defaultPayload));
+    },
+    [onFactsChange]
+  );
+
+  const handleRemoveDay = useCallback(
+    (index: number) => {
+      onFactsChange((current) => removeDayFromRouteTable(current, index));
+    },
+    [onFactsChange]
+  );
+
   return {
     dayWithStays,
     handleRouteTableChange,
     handleUpdateDay,
+    handleAddDay,
+    handleRemoveDay,
   };
 }

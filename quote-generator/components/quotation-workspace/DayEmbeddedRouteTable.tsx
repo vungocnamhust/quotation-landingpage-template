@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { Sparkles, Bed } from "lucide-react";
+import { Sparkles, Bed, Plus, Trash2 } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
 import { DestinationSelect } from "../destination/DestinationSelect.tsx";
@@ -27,6 +27,8 @@ type Props = {
   startDate: string | null;
   onChange?: (itinerary: DayWithStayItem[]) => void;
   onUpdateDay?: (index: number, patch: Partial<DayWithStayItem>) => void;
+  onAddDay?: (defaultPayload?: Partial<DayWithStayItem>) => void;
+  onRemoveDay?: (index: number) => void;
   onAutoSuggestStays?: () => void;
 };
 
@@ -40,6 +42,8 @@ export default function DayEmbeddedRouteTable({
   startDate,
   onChange,
   onUpdateDay,
+  onAddDay,
+  onRemoveDay,
   onAutoSuggestStays,
 }: Props) {
   const updateDay = useCallback(
@@ -84,140 +88,190 @@ export default function DayEmbeddedRouteTable({
         ) : null}
       </div>
 
-      {/* Day Cards Grid */}
-      <div className="flex flex-col gap-3">
-        {itinerary.map((day, index) => {
-          const derivedDate = dateForItineraryDay(startDate, day.day_number);
-          const prevDay = index > 0 ? itinerary[index - 1] : null;
-          const isSameHotelAsPrev =
-            prevDay &&
-            day.accommodation_id &&
-            prevDay.accommodation_id === day.accommodation_id;
-
-          const effectiveOvernight = day.overnight || day.destination || null;
-
-          return (
-            <div
-              key={index}
-              className="grid gap-3 rounded-[var(--radius-card)] border border-[var(--color-border-strong)] bg-[var(--color-surface-muted)] p-4 shadow-2xs sm:grid-cols-12 items-start"
+      {/* Day Cards Grid or Empty State */}
+      {itinerary.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-[var(--radius-card)] border border-dashed border-[var(--color-border-strong)] bg-[var(--color-surface-muted)] p-8 text-center">
+          <p className={cn(getTypographyClassName("bodyMd"), "text-[var(--color-muted)] mb-3")}>
+            No itinerary days created yet. Add a day to start building your route.
+          </p>
+          {onAddDay ? (
+            <button
+              type="button"
+              onClick={() => onAddDay()}
+              className={cn(
+                getTypographyClassName("buttonPrimary"),
+                "flex items-center gap-2 rounded-[var(--radius-button)] bg-[var(--color-accent)] !text-white px-4 py-2 hover:bg-[color-mix(in_srgb,var(--color-accent)_85%,black)] transition-colors cursor-pointer"
+              )}
             >
-              {/* Day Header & Badges */}
-              <div className="sm:col-span-12 flex flex-wrap items-center justify-between gap-2 border-b border-[var(--color-border)] pb-2">
-                <div className="flex items-center gap-2">
-                  <span className={cn(getTypographyClassName("cardTitle"), "text-[var(--color-on-surface)]")}>
-                    Day {day.day_number}
-                  </span>
-                  {derivedDate ? (
-                    <span className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>
-                      · {derivedDate}
+              <Plus size={16} aria-hidden="true" />
+              <span>+ Add Day 1</span>
+            </button>
+          ) : null}
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {itinerary.map((day, index) => {
+            const derivedDate = dateForItineraryDay(startDate, day.day_number);
+            const prevDay = index > 0 ? itinerary[index - 1] : null;
+            const isSameHotelAsPrev =
+              prevDay &&
+              day.accommodation_id &&
+              prevDay.accommodation_id === day.accommodation_id;
+
+            const effectiveOvernight = day.overnight || day.destination || null;
+
+            return (
+              <div
+                key={index}
+                className="grid gap-3 rounded-[var(--radius-card)] border border-[var(--color-border-strong)] bg-[var(--color-surface-muted)] p-4 shadow-2xs sm:grid-cols-12 items-start"
+              >
+                {/* Day Header & Badges */}
+                <div className="sm:col-span-12 flex flex-wrap items-center justify-between gap-2 border-b border-[var(--color-border)] pb-2">
+                  <div className="flex items-center gap-2">
+                    <span className={cn(getTypographyClassName("cardTitle"), "text-[var(--color-on-surface)]")}>
+                      Day {day.day_number}
                     </span>
-                  ) : null}
+                    {derivedDate ? (
+                      <span className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>
+                        · {derivedDate}
+                      </span>
+                    ) : null}
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    {effectiveOvernight ? (
+                      <span className={cn(getTypographyClassName("caption"), "flex items-center gap-1 rounded-full bg-[var(--color-surface)] px-2.5 py-0.5 border border-[var(--color-border)] text-[var(--color-muted)]")}>
+                        <Bed size={12} className="text-[var(--color-accent)] shrink-0" aria-hidden="true" />
+                        <span>Overnight: <strong className="text-[var(--color-on-surface)]">{effectiveOvernight}</strong></span>
+                      </span>
+                    ) : null}
+
+                    {isSameHotelAsPrev ? (
+                      <span className={cn(getTypographyClassName("caption"), "rounded-full bg-emerald-50 text-emerald-700 px-2 py-0.5 border border-emerald-200")}>
+                        🔁 Continuing stay: {day.accommodation_name || "Same hotel"}
+                      </span>
+                    ) : null}
+
+                    {onRemoveDay && itinerary.length > 1 ? (
+                      <button
+                        type="button"
+                        onClick={() => onRemoveDay(index)}
+                        className="text-[var(--color-muted)] hover:text-rose-600 transition-colors p-1 cursor-pointer rounded-[var(--radius-button)] hover:bg-rose-50"
+                        aria-label={`Remove Day ${day.day_number}`}
+                        title={`Remove Day ${day.day_number}`}
+                      >
+                        <Trash2 size={15} aria-hidden="true" />
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2">
-                  {effectiveOvernight ? (
-                    <span className={cn(getTypographyClassName("caption"), "flex items-center gap-1 rounded-full bg-[var(--color-surface)] px-2.5 py-0.5 border border-[var(--color-border)] text-[var(--color-muted)]")}>
-                      <Bed size={12} className="text-[var(--color-accent)] shrink-0" aria-hidden="true" />
-                      <span>Overnight: <strong className="text-[var(--color-on-surface)]">{effectiveOvernight}</strong></span>
-                    </span>
-                  ) : null}
-
-                  {isSameHotelAsPrev ? (
-                    <span className={cn(getTypographyClassName("caption"), "rounded-full bg-emerald-50 text-emerald-700 px-2 py-0.5 border border-emerald-200")}>
-                      🔁 Continuing stay: {day.accommodation_name || "Same hotel"}
-                    </span>
-                  ) : null}
-                </div>
-              </div>
-
-              {/* 1. Day Destination Column */}
-              <div className="sm:col-span-4">
-                <DestinationSelect
-                  label="Day Destination"
-                  value={day.destination}
-                  variant="compact"
-                  size="md"
-                  onChange={(dest, ref) => {
-                    const destName =
-                      typeof dest === "string"
-                        ? dest
-                        : Array.isArray(dest)
-                          ? dest[0]?.name ?? null
-                          : null;
-                    updateDay(index, {
-                      destination: destName,
-                      destination_ref: ref ?? null,
-                    });
-                  }}
-                />
-              </div>
-
-              {/* 2. Overnight Destination / Sleeping Point Column */}
-              <div className="sm:col-span-4">
-                <DestinationSelect
-                  label="Overnight Location"
-                  value={day.overnight || day.destination}
-                  variant="compact"
-                  size="md"
-                  onChange={(dest, ref) => {
-                    const destName =
-                      typeof dest === "string"
-                        ? dest
-                        : Array.isArray(dest)
-                          ? dest[0]?.name ?? null
-                          : null;
-                    updateDay(index, {
-                      overnight: destName,
-                      overnight_ref: ref ?? null,
-                    });
-                  }}
-                />
-              </div>
-
-              {/* 3. Overnight Accommodation Column */}
-              <div className="sm:col-span-4 flex flex-col gap-2">
-                <AccommodationSelect
-                  label="Overnight Accommodation"
-                  value={day.accommodation_id}
-                  name={day.accommodation_name}
-                  destination={day.overnight || day.destination}
-                  destinationId={day.overnight_ref?.id || day.destination_ref?.id}
-                  variant="compact"
-                  size="md"
-                  onChange={(profile: AccommodationProfile | null, id, customName) => {
-                    const accName = profile?.name ?? customName ?? null;
-                    const patch: Partial<DayWithStayItem> = {
-                      accommodation_id: profile?.id ?? id ?? null,
-                      accommodation_name: accName,
-                      room_type: profile?.room_type ?? day.room_type ?? null,
-                    };
-                    if (profile?.destination) {
-                      patch.overnight = profile.destination;
-                      patch.overnight_ref = profile.destination_ref ?? null;
-                    }
-                    updateDay(index, patch);
-                  }}
-                />
-              </div>
-
-              {/* 1-Line Quick Summary Idea */}
-              <div className="sm:col-span-12 flex flex-col gap-1.5">
-                <label className="flex flex-col gap-1">
-                  <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>
-                    1-Line Program Prompt / Idea (Optional)
-                  </span>
-                  <input
-                    className={inputClass}
-                    value={day.summary ?? ""}
-                    placeholder="e.g. Airport arrival greeting, check-in, evening street food tasting"
-                    onChange={(e) => updateDay(index, { summary: e.target.value || null })}
+                {/* 1. Day Destination Column */}
+                <div className="sm:col-span-4">
+                  <DestinationSelect
+                    label="Day Destination"
+                    value={day.destination}
+                    variant="compact"
+                    size="md"
+                    onChange={(dest, ref) => {
+                      const destName =
+                        typeof dest === "string"
+                          ? dest
+                          : Array.isArray(dest)
+                            ? dest[0]?.name ?? null
+                            : null;
+                      updateDay(index, {
+                        destination: destName,
+                        destination_ref: ref ?? null,
+                      });
+                    }}
                   />
-                </label>
+                </div>
+
+                {/* 2. Overnight Destination / Sleeping Point Column */}
+                <div className="sm:col-span-4">
+                  <DestinationSelect
+                    label="Overnight Location"
+                    value={day.overnight || day.destination}
+                    variant="compact"
+                    size="md"
+                    onChange={(dest, ref) => {
+                      const destName =
+                        typeof dest === "string"
+                          ? dest
+                          : Array.isArray(dest)
+                            ? dest[0]?.name ?? null
+                            : null;
+                      updateDay(index, {
+                        overnight: destName,
+                        overnight_ref: ref ?? null,
+                      });
+                    }}
+                  />
+                </div>
+
+                {/* 3. Overnight Accommodation Column */}
+                <div className="sm:col-span-4 flex flex-col gap-2">
+                  <AccommodationSelect
+                    label="Overnight Accommodation"
+                    value={day.accommodation_id}
+                    name={day.accommodation_name}
+                    destination={day.overnight || day.destination}
+                    destinationId={day.overnight_ref?.id || day.destination_ref?.id}
+                    variant="compact"
+                    size="md"
+                    onChange={(profile: AccommodationProfile | null, id, customName) => {
+                      const accName = profile?.name ?? customName ?? null;
+                      const patch: Partial<DayWithStayItem> = {
+                        accommodation_id: profile?.id ?? id ?? null,
+                        accommodation_name: accName,
+                        room_type: profile?.room_type ?? day.room_type ?? null,
+                      };
+                      if (profile?.destination) {
+                        patch.overnight = profile.destination;
+                        patch.overnight_ref = profile.destination_ref ?? null;
+                      }
+                      updateDay(index, patch);
+                    }}
+                  />
+                </div>
+
+                {/* 1-Line Quick Summary Idea */}
+                <div className="sm:col-span-12 flex flex-col gap-1.5">
+                  <label className="flex flex-col gap-1">
+                    <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>
+                      1-Line Program Prompt / Idea (Optional)
+                    </span>
+                    <input
+                      className={inputClass}
+                      value={day.summary ?? ""}
+                      placeholder="e.g. Airport arrival greeting, check-in, evening street food tasting"
+                      onChange={(e) => updateDay(index, { summary: e.target.value || null })}
+                    />
+                  </label>
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Add Day Button */}
+      {onAddDay && itinerary.length > 0 ? (
+        <div className="flex justify-start pt-1">
+          <button
+            type="button"
+            onClick={() => onAddDay()}
+            className={cn(
+              getTypographyClassName("buttonSecondary"),
+              "flex items-center gap-1.5 rounded-[var(--radius-button)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2 text-[var(--color-on-surface)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] hover:bg-[var(--color-surface-muted)] transition-all cursor-pointer"
+            )}
+          >
+            <Plus size={15} aria-hidden="true" />
+            <span>+ Add Day {itinerary.length + 1}</span>
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
