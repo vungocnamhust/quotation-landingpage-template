@@ -17,26 +17,26 @@ import {
   validateHotelDates,
 } from "../../lib/prefillRules.ts";
 import {
+  addHotelToFacts,
   applyRouteDates,
   patchHotelInFacts,
+  patchItineraryDayInFacts,
   patchPricingOptionWithInference,
+  removeHotelFromFacts,
   syncHotelsFromItineraryOvernights,
   updateCustomerCounts,
   updateCustomerName,
-  updateDayAccommodationInFacts,
   updateItineraryDayDestination,
   updateTravelStyle,
 } from "../../lib/prefillEngine.ts";
 import { pricingAdapter } from "../../lib/rules/pricingAdapter.ts";
 import { pricingReconciler } from "../../lib/rules/pricingReconciler.ts";
 import {
-  createPricingOption,
   CURRENCY_OPTIONS,
   dateForItineraryDay,
   formatMinorAmount,
   minorAmountFromInput,
   minorAmountToInput,
-  routeDestinationRefsFromItinerary,
   type DestinationRef,
   type ItineraryDayFact,
   type HotelFact,
@@ -46,8 +46,8 @@ import {
   type QuotationOptions,
   type DraftMediaSelections,
 } from "./factsTypes.ts";
-import { newHotelFact } from "./useFactsFormState.ts";
 import { useQuotationIntake } from "./useQuotationIntake.ts";
+import { newHotelFact } from "./useFactsFormState.ts";
 import { calculateDuration } from "../../lib/rules/datesRules.ts";
 
 type Props = {
@@ -248,38 +248,7 @@ export default function QuotationIntakeForm({
 
   const patchDay = useCallback(
     (index: number, patch: Partial<ItineraryDayFact>) =>
-      patchFacts((current) => {
-        if (
-          patch.accommodation_id !== undefined ||
-          patch.accommodation_name !== undefined ||
-          patch.room_type !== undefined
-        ) {
-          return updateDayAccommodationInFacts(current, index, patch);
-        }
-        const rawDays = current.trip_facts.itinerary;
-        const days: ItineraryDayFact[] = Array.isArray(rawDays) ? rawDays : [];
-        const itinerary = days.map((day, dayIndex) =>
-          dayIndex === index ? { ...day, ...patch } : day
-        );
-        const destination_refs = routeDestinationRefsFromItinerary(itinerary);
-        const destinations =
-          destination_refs.length > 0
-            ? destination_refs.map((r) => r.name)
-            : Array.from(
-                new Set(
-                  itinerary.map((d) => d.destination).filter((d): d is string => Boolean(d))
-                )
-              );
-        return {
-          ...current,
-          trip_facts: {
-            ...current.trip_facts,
-            itinerary,
-            destination_refs,
-            destinations,
-          },
-        };
-      }),
+      patchFacts((current) => patchItineraryDayInFacts(current, index, patch)),
     [patchFacts]
   );
 
@@ -297,28 +266,12 @@ export default function QuotationIntakeForm({
   );
 
   const addHotel = useCallback(
-    () =>
-      patchFacts((current) => ({
-        ...current,
-        service_facts: {
-          ...current.service_facts,
-          hotels: [...current.service_facts.hotels, newHotelFact()],
-        },
-      })),
+    () => patchFacts((current) => addHotelToFacts(current)),
     [patchFacts]
   );
 
   const removeHotel = useCallback(
-    (index: number) =>
-      patchFacts((current) => ({
-        ...current,
-        service_facts: {
-          ...current.service_facts,
-          hotels: current.service_facts.hotels.filter(
-            (_, hotelIndex) => hotelIndex !== index
-          ),
-        },
-      })),
+    (index: number) => patchFacts((current) => removeHotelFromFacts(current, index)),
     [patchFacts]
   );
 
@@ -516,7 +469,7 @@ export default function QuotationIntakeForm({
               day.display_date || dateForItineraryDay(trip.start_date, index + 1);
             return (
               <div
-                key={index}
+                key={`intake-day-${day.day_number || index + 1}`}
                 className="grid items-end gap-3 rounded-[var(--radius-card)] border border-[var(--color-border-strong)] bg-[var(--color-surface-muted)] p-4 shadow-2xs sm:grid-cols-2"
               >
                 <p className={cn(getTypographyClassName("bodyMd"), "sm:col-span-2 text-[var(--color-on-surface)]")}>
@@ -626,7 +579,7 @@ export default function QuotationIntakeForm({
             );
             return (
               <article
-                key={index}
+                key={hotel.accommodation_id || `intake-hotel-${hotel.destination || "dest"}-${hotel.check_in || index}`}
                 className="grid gap-3 rounded-[var(--radius-card)] border border-[var(--color-border-strong)] bg-[var(--color-surface-muted)] p-4 shadow-2xs sm:grid-cols-2"
               >
                 <AccommodationSelect

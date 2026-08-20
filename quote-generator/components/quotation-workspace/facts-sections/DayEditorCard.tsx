@@ -5,11 +5,9 @@ import { getTypographyClassName } from "../../../config/typography.ts";
 import { cn } from "../../../utils/cn.ts";
 import { DestinationSelect } from "../../destination/DestinationSelect.tsx";
 import { AccommodationSelect } from "../../accommodation/AccommodationSelect.tsx";
-import type { AccommodationProfile } from "../../accommodation/types.ts";
 import type { ItineraryDayFact } from "../factsTypes.ts";
 import { dateForItineraryDay } from "../factsTypes.ts";
 import { MediaSlotRenderer, type MediaWorkspace } from "../MediaSlotRenderer.tsx";
-import { inferOvernightDestination } from "../../../lib/prefillRules.ts";
 
 const lines = (values: string[]) => values.join("\n");
 const toLines = (value: string) => value.split("\n");
@@ -234,7 +232,6 @@ export const DayEditorCard = memo(function DayEditorCard({
               onPatch(index, {
                 destination: destName,
                 destination_ref: ref ?? null,
-                overnight: inferOvernightDestination(destName, day.overnight),
               });
             }}
           />

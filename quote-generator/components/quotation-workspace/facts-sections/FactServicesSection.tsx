@@ -94,7 +94,7 @@ export function FactServicesSection({
 
       {services.hotels.map((hotel, index) => (
         <HotelEditorCard
-          key={index}
+          key={hotel.accommodation_id || `service-hotel-${hotel.destination || "dest"}-${hotel.check_in || index}`}
           hotel={hotel}
           index={index}
           startDate={tripStartDate}

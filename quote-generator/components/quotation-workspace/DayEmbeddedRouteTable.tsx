@@ -9,7 +9,6 @@ import type { DestinationRef } from "../destination/types.ts";
 import { AccommodationSelect } from "../accommodation/AccommodationSelect.tsx";
 import type { AccommodationProfile } from "../accommodation/types.ts";
 import { dateForItineraryDay } from "./factsTypes.ts";
-import { inferOvernightDestination } from "../../lib/prefillRules.ts";
 
 export type DayWithStayItem = {
   day_number: number;
@@ -26,7 +25,8 @@ export type DayWithStayItem = {
 type Props = {
   itinerary: DayWithStayItem[];
   startDate: string | null;
-  onChange: (itinerary: DayWithStayItem[]) => void;
+  onChange?: (itinerary: DayWithStayItem[]) => void;
+  onUpdateDay?: (index: number, patch: Partial<DayWithStayItem>) => void;
   onAutoSuggestStays?: () => void;
 };
 
@@ -39,64 +39,22 @@ export default function DayEmbeddedRouteTable({
   itinerary,
   startDate,
   onChange,
+  onUpdateDay,
   onAutoSuggestStays,
 }: Props) {
   const updateDay = useCallback(
     (index: number, patch: Partial<DayWithStayItem>) => {
-      const next = [...itinerary];
-      const prevDay = index > 0 ? next[index - 1] : null;
-      const currentDay = next[index];
-
-      let updatedItem = { ...currentDay, ...patch };
-
-      // If destination changed, check if overnight was in sync with destination
-      if (patch.destination !== undefined && patch.destination !== currentDay.destination) {
-        const newDest = patch.destination;
-        if (!currentDay.overnight || currentDay.overnight === currentDay.destination) {
-          updatedItem.overnight = inferOvernightDestination(newDest, currentDay.overnight ?? null);
-          updatedItem.overnight_ref = patch.destination_ref ?? null;
-        }
-
-        // Auto-inherit accommodation from previous day if same destination or overnight
-        if (
-          prevDay &&
-          (prevDay.destination === newDest || prevDay.overnight === newDest) &&
-          prevDay.accommodation_id &&
-          !patch.accommodation_id
-        ) {
-          updatedItem = {
-            ...updatedItem,
-            accommodation_id: prevDay.accommodation_id,
-            accommodation_name: prevDay.accommodation_name,
-            room_type: prevDay.room_type,
-          };
-        }
+      if (onUpdateDay) {
+        onUpdateDay(index, patch);
+        return;
       }
-
-      next[index] = updatedItem;
-
-      // Smart Cascade: If this day's hotel changed, cascade down if subsequent contiguous days share the same destination/overnight
-      if (patch.accommodation_id !== undefined || patch.room_type !== undefined) {
-        for (let i = index + 1; i < next.length; i++) {
-          const isSameTarget =
-            next[i].destination === updatedItem.destination ||
-            next[i].overnight === updatedItem.overnight;
-          if (isSameTarget) {
-            next[i] = {
-              ...next[i],
-              accommodation_id: updatedItem.accommodation_id,
-              accommodation_name: updatedItem.accommodation_name,
-              room_type: updatedItem.room_type,
-            };
-          } else {
-            break;
-          }
-        }
+      if (onChange) {
+        const next = [...itinerary];
+        next[index] = { ...next[index], ...patch };
+        onChange(next);
       }
-
-      onChange(next);
     },
-    [itinerary, onChange]
+    [itinerary, onChange, onUpdateDay]
   );
 
   return (

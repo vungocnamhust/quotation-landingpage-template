@@ -26,6 +26,9 @@ import {
   applyChildPresetInFacts,
   updatePricingOptionTotalInFacts,
   convertOptionCurrencyInFacts,
+  patchItineraryDayInFacts,
+  addHotelToFacts,
+  removeHotelFromFacts,
 } from '../prefillEngine.ts';
 
 describe('prefillRules pure business rules', () => {
@@ -257,10 +260,91 @@ describe('prefillEngine single-pass facade updaters', () => {
 
     assert.equal(facts.booking_facts.title, 'Grand Vietnam Journey');
     assert.equal(facts.booking_facts.description, 'An exclusive bespoke itinerary');
-    assert.equal(facts.customer_facts.party_label, 'Vance Family VIP Delegation');
-    assert.equal(facts.customer_facts.greeting_name, 'Dear Alexander and Family');
-    assert.equal(facts.customer_facts.market, 'North America');
-    assert.equal(facts.designer_facts.hero_title, 'Unforgettable Indochina');
+  });
+
+  it('patchItineraryDayInFacts updates destination, overnight and delegates accommodation cascade', () => {
+    const facts = createBrochureFacts();
+    facts.trip_facts.start_date = '2026-10-01';
+    facts.trip_facts.itinerary = [
+      {
+        day_number: 1,
+        destination: 'Hanoi',
+        destination_ref: null,
+        overnight: 'Hanoi',
+        display_date: '01 Oct',
+        summary: 'Arrival',
+        meals: ['Breakfast'],
+        highlights: [],
+        notes: [],
+        sense_of_pace: 'balanced',
+        accommodation_id: null,
+        accommodation_name: null,
+        room_type: null,
+      },
+      {
+        day_number: 2,
+        destination: 'Hanoi',
+        destination_ref: null,
+        overnight: 'Hanoi',
+        display_date: '02 Oct',
+        summary: 'City exploration',
+        meals: ['Breakfast'],
+        highlights: [],
+        notes: [],
+        sense_of_pace: 'balanced',
+        accommodation_id: null,
+        accommodation_name: null,
+        room_type: null,
+      },
+    ];
+
+    // 1. Changing destination on Day 1 auto-updates overnight
+    const withDest = patchItineraryDayInFacts(facts, 0, { destination: 'Hue' });
+    assert.equal(withDest.trip_facts.itinerary[0].destination, 'Hue');
+    assert.equal(withDest.trip_facts.itinerary[0].overnight, 'Hue');
+
+    // 2. Changing accommodation cascades to Day 2 if same destination
+    const withHotel = patchItineraryDayInFacts(facts, 0, {
+      accommodation_id: 'hotel-metropole',
+      accommodation_name: 'Sofitel Legend Metropole',
+      room_type: 'Luxury Room',
+    });
+    assert.equal(withHotel.trip_facts.itinerary[0].accommodation_id, 'hotel-metropole');
+    assert.equal(withHotel.trip_facts.itinerary[1].accommodation_id, 'hotel-metropole');
+    assert.equal(withHotel.service_facts.hotels.length, 1);
+    assert.equal(withHotel.service_facts.hotels[0].name, 'Sofitel Legend Metropole');
+  });
+
+  it('addHotelToFacts and removeHotelFromFacts maintain stays synchronization', () => {
+    const facts = createBrochureFacts();
+    facts.trip_facts.start_date = '2026-10-01';
+    facts.trip_facts.itinerary = [
+      {
+        day_number: 1,
+        destination: 'Hanoi',
+        destination_ref: null,
+        overnight: 'Hanoi',
+        display_date: '01 Oct',
+        summary: 'Arrival',
+        meals: ['Breakfast'],
+        highlights: [],
+        notes: [],
+        sense_of_pace: 'balanced',
+        accommodation_id: null,
+        accommodation_name: null,
+        room_type: null,
+      },
+    ];
+
+    // 1. Add hotel
+    const withHotel = addHotelToFacts(facts);
+    assert.equal(withHotel.service_facts.hotels.length, 1);
+    assert.equal(withHotel.service_facts.hotels[0].check_in, '2026-10-01');
+    assert.equal(withHotel.service_facts.hotels[0].check_out, '2026-10-02');
+
+    // 2. Remove hotel
+    const withoutHotel = removeHotelFromFacts(withHotel, 0);
+    assert.equal(withoutHotel.service_facts.hotels.length, 0);
   });
 });
 

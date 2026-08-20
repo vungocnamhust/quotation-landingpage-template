@@ -89,7 +89,7 @@ export default function MinimalQuotationIntakeForm({
     onChange,
   });
 
-  const { dayWithStays, handleRouteTableChange } = useRouteTableSync(facts, patchFacts);
+  const { dayWithStays, handleRouteTableChange, handleUpdateDay } = useRouteTableSync(facts, patchFacts);
 
   const pricingOption = pricing.options[0] || {
     id: "opt-standard",
@@ -330,6 +330,7 @@ export default function MinimalQuotationIntakeForm({
           itinerary={dayWithStays}
           startDate={trip.start_date}
           onChange={handleRouteTableChange}
+          onUpdateDay={handleUpdateDay}
         />
       </SectionCard>
 

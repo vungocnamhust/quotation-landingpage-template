@@ -20,17 +20,16 @@ import type {
   PricingOptionFact,
 } from "./factsTypes.ts";
 import {
-  createPricingOption,
   ensureFactsDefaults,
-  MAX_COMMERCIAL_OPTIONS,
-  routeDestinationRefsFromItinerary,
 } from "./factsTypes.ts";
 import type { FactsDeepLink } from "./editableHandoff.ts";
 import {
+  addHotelToFacts,
   patchHotelInFacts,
+  patchItineraryDayInFacts,
   patchPricingOptionWithInference,
+  removeHotelFromFacts,
   syncHotelsFromItineraryOvernights,
-  updateDayAccommodationInFacts,
 } from "../../lib/prefillEngine.ts";
 import { pricingAdapter } from "../../lib/rules/pricingAdapter.ts";
 import { pricingReconciler } from "../../lib/rules/pricingReconciler.ts";
@@ -111,38 +110,7 @@ export function useFactsFormState({
 
   const patchDay = useCallback(
     (index: number, patch: Partial<ItineraryDayFact>) =>
-      onChange((current) => {
-        if (
-          patch.accommodation_id !== undefined ||
-          patch.accommodation_name !== undefined ||
-          patch.room_type !== undefined
-        ) {
-          return updateDayAccommodationInFacts(current, index, patch);
-        }
-        const safe = ensureFactsDefaults(current);
-        const itinerary = safe.trip_facts.itinerary.map((item, itemIndex) =>
-          itemIndex === index ? { ...item, ...patch } : item
-        );
-        const destination_refs = routeDestinationRefsFromItinerary(itinerary);
-        const destinations =
-          destination_refs.length > 0
-            ? destination_refs.map((r) => r.name)
-            : Array.from(
-                new Set(
-                  itinerary.map((d) => d.destination).filter((d): d is string => Boolean(d))
-                )
-              );
-
-        return {
-          ...safe,
-          trip_facts: {
-            ...safe.trip_facts,
-            itinerary,
-            destination_refs,
-            destinations,
-          },
-        };
-      }),
+      onChange((current) => patchItineraryDayInFacts(current, index, patch)),
     [onChange]
   );
 
@@ -180,28 +148,7 @@ export function useFactsFormState({
 
   const removeHotel = useCallback(
     (index: number) => {
-      onChange((current) => {
-        const safe = ensureFactsDefaults(current);
-        const remainingHotels = safe.service_facts.hotels.filter(
-          (_, itemIndex) => itemIndex !== index
-        );
-        const canonical = staysAdapter.fromQuotationFacts(safe);
-        const syncedItinerary = staysReconciler.syncItineraryFromStays(
-          canonical.itinerary,
-          remainingHotels,
-          canonical.startDate
-        );
-        return staysAdapter.syncToQuotationFacts(
-          { ...canonical, itinerary: syncedItinerary },
-          {
-            ...safe,
-            service_facts: {
-              ...safe.service_facts,
-              hotels: remainingHotels,
-            },
-          }
-        );
-      });
+      onChange((current) => removeHotelFromFacts(current, index));
       setActiveHotel(null);
       onHotelRemoved?.(index);
     },
@@ -294,16 +241,7 @@ export function useFactsFormState({
 
   const addHotel = useCallback(() => {
     const index = services.hotels.length;
-    onChange((current) => {
-      const safe = ensureFactsDefaults(current);
-      return {
-        ...safe,
-        service_facts: {
-          ...safe.service_facts,
-          hotels: [...safe.service_facts.hotels, newHotelFact()],
-        },
-      };
-    });
+    onChange((current) => addHotelToFacts(current));
     setActiveHotel(index);
     focusTarget.current = { kind: "hotel", index };
   }, [onChange, services.hotels.length]);

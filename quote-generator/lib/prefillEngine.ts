@@ -15,10 +15,11 @@ import {
   inferOvernightDestination,
   syncHotelsFromStaySegments,
 } from "./prefillRules.ts";
+import { parseIsoDate } from "./rules/datesRules.ts";
+import { formatStayDisplayDate, staysReconciler } from "./rules/staysReconciler.ts";
 import { partyAdapter } from "./rules/partyAdapter.ts";
 import { partyReconciler } from "./rules/partyReconciler.ts";
 import { staysAdapter } from "./rules/staysAdapter.ts";
-import { staysReconciler } from "./rules/staysReconciler.ts";
 import { pricingAdapter } from "./rules/pricingAdapter.ts";
 import { pricingReconciler, type CanonicalPricingOption } from "./rules/pricingReconciler.ts";
 
@@ -298,6 +299,159 @@ export function updateDayAccommodationInFacts(
 }
 
 /**
+ * Single-pass updater for modifying an itinerary day's attributes or destination.
+ * Automatically handles overnight prefill, destination_refs rebuild, and delegates
+ * accommodation changes to updateDayAccommodationInFacts.
+ */
+export function patchItineraryDayInFacts(
+  input: QuotationFacts,
+  index: number,
+  patch: Partial<ItineraryDayFact>
+): QuotationFacts {
+  if (
+    patch.accommodation_id !== undefined ||
+    patch.accommodation_name !== undefined ||
+    patch.room_type !== undefined
+  ) {
+    return updateDayAccommodationInFacts(input, index, patch);
+  }
+
+  const current = ensureFactsDefaults(input);
+  const existingDay = current.trip_facts.itinerary[index];
+  if (!existingDay) return current;
+
+  const destName = patch.destination !== undefined ? patch.destination : existingDay.destination;
+  let resolvedOvernight = existingDay.overnight;
+  if (patch.overnight !== undefined) {
+    resolvedOvernight = patch.overnight;
+  } else if (patch.destination !== undefined) {
+    if (!existingDay.overnight || existingDay.overnight === existingDay.destination) {
+      resolvedOvernight = destName;
+    }
+  }
+
+  const updatedDay: ItineraryDayFact = {
+    ...existingDay,
+    ...patch,
+    destination: destName,
+    overnight: resolvedOvernight,
+  };
+
+  const itinerary = current.trip_facts.itinerary.map((item, itemIndex) =>
+    itemIndex === index ? updatedDay : item
+  );
+
+  const destination_refs = routeDestinationRefsFromItinerary(itinerary);
+  const destinations =
+    destination_refs.length > 0
+      ? destination_refs.map((r) => r.name)
+      : Array.from(
+          new Set(
+            itinerary.map((d) => d.destination).filter((d): d is string => Boolean(d))
+          )
+        );
+
+  return {
+    ...current,
+    trip_facts: {
+      ...current.trip_facts,
+      itinerary,
+      destination_refs,
+      destinations,
+    },
+  };
+}
+
+/**
+ * Single-pass updater for adding a new hotel to service_facts.hotels.
+ * Automatically computes check_in / check_out based on the last existing hotel or trip start date.
+ */
+export function addHotelToFacts(input: QuotationFacts): QuotationFacts {
+  const current = ensureFactsDefaults(input);
+  const existingHotels = current.service_facts.hotels;
+  const lastHotel = existingHotels.length > 0 ? existingHotels[existingHotels.length - 1] : null;
+
+  let checkIn: string | null = null;
+  let checkOut: string | null = null;
+
+  if (lastHotel?.check_out) {
+    checkIn = lastHotel.check_out;
+    const cinDate = parseIsoDate(checkIn);
+    if (cinDate) {
+      const nextDay = new Date(cinDate.getTime() + 86_400_000);
+      checkOut = nextDay.toISOString().split("T")[0];
+    }
+  } else if (current.trip_facts.start_date) {
+    checkIn = current.trip_facts.start_date;
+    const cinDate = parseIsoDate(checkIn);
+    if (cinDate) {
+      const nextDay = new Date(cinDate.getTime() + 86_400_000);
+      checkOut = nextDay.toISOString().split("T")[0];
+    }
+  }
+
+  const newHotel: HotelFact = {
+    accommodation_id: null,
+    destination: null,
+    destination_ref: null,
+    name: null,
+    room_type: null,
+    check_in: checkIn,
+    check_out: checkOut,
+    intro: null,
+    phone: null,
+    display_city: null,
+    display_date: formatStayDisplayDate(checkIn, checkOut, current.lang || undefined),
+    hotel_asset: null,
+    room_asset: null,
+  };
+
+  return {
+    ...current,
+    service_facts: {
+      ...current.service_facts,
+      hotels: [...existingHotels, newHotel],
+    },
+  };
+}
+
+/**
+ * Single-pass updater for removing a hotel from service_facts.hotels.
+ * Automatically synchronizes itinerary days via staysReconciler.
+ */
+export function removeHotelFromFacts(input: QuotationFacts, index: number): QuotationFacts {
+  const current = ensureFactsDefaults(input);
+  const hotels = current.service_facts.hotels.filter((_, i) => i !== index);
+
+  const canonical = staysAdapter.fromQuotationFacts(current);
+  const syncedItinerary = staysReconciler.syncItineraryFromStays(
+    canonical.itinerary,
+    hotels,
+    canonical.startDate
+  );
+  const reconciledStays = staysReconciler.reconcileStaysFromItinerary(
+    syncedItinerary,
+    canonical.startDate,
+    hotels
+  );
+
+  return staysAdapter.syncToQuotationFacts(
+    {
+      ...canonical,
+      itinerary: syncedItinerary,
+      stays: reconciledStays,
+    },
+    {
+      ...current,
+      service_facts: {
+        ...current.service_facts,
+        hotels,
+      },
+    }
+  );
+}
+
+/**
  * Single-pass updater when modifying a hotel in service_facts.hotels,
  * automatically syncing accommodation metadata to corresponding itinerary days.
  */
@@ -328,7 +482,7 @@ export function patchHotelInFacts(
     {
       ...canonical,
       itinerary: syncedItinerary,
-      stays: reconciledStays.length > 0 ? reconciledStays : canonical.stays,
+      stays: reconciledStays,
     },
     {
       ...current,

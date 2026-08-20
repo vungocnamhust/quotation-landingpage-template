@@ -5,6 +5,8 @@ import type { DayWithStayItem } from "./DayEmbeddedRouteTable.tsx";
 import type { ItineraryDayFact, QuotationFacts } from "./factsTypes.ts";
 import { ensureFactsDefaults, routeDestinationRefsFromItinerary } from "./factsTypes.ts";
 import { POPULAR_DESTINATIONS } from "../destination/useDestinationSearch.ts";
+import { inferOvernightDestination } from "../../lib/prefillRules.ts";
+import { patchItineraryDayInFacts } from "../../lib/prefillEngine.ts";
 import { staysAdapter } from "../../lib/rules/staysAdapter.ts";
 import { staysReconciler } from "../../lib/rules/staysReconciler.ts";
 
@@ -105,6 +107,75 @@ export function syncRouteTableToFacts(
   };
 }
 
+export function updateDayInRouteTable(
+  current: QuotationFacts,
+  index: number,
+  patch: Partial<DayWithStayItem>
+): QuotationFacts {
+  const safe = ensureFactsDefaults(current);
+  const canonical = staysAdapter.fromQuotationFacts(safe);
+  const prevDay = index > 0 ? canonical.itinerary[index - 1] : null;
+  const currentDay = canonical.itinerary[index];
+  if (!currentDay) return current;
+
+  const updatedPatch: Partial<ItineraryDayFact> = {
+    ...patch,
+  };
+
+  // If destination changed, check if overnight was in sync with destination
+  if (patch.destination !== undefined && patch.destination !== currentDay.destination) {
+    const newDest = patch.destination;
+    if (!currentDay.overnight || currentDay.overnight === currentDay.destination) {
+      updatedPatch.overnight = inferOvernightDestination(newDest, currentDay.overnight);
+      updatedPatch.destination_ref = patch.destination_ref ?? null;
+    }
+
+    // Auto-inherit accommodation from previous day if same destination and no accommodation selected in patch
+    if (
+      prevDay &&
+      (prevDay.destination === newDest || prevDay.overnight === newDest) &&
+      prevDay.accommodation_id &&
+      !patch.accommodation_id
+    ) {
+      updatedPatch.accommodation_id = prevDay.accommodation_id;
+      updatedPatch.accommodation_name = prevDay.accommodation_name;
+      updatedPatch.room_type = prevDay.room_type;
+    }
+  }
+
+  // If accommodation is patched, delegate to staysReconciler.updateDayAccommodation
+  if (
+    updatedPatch.accommodation_id !== undefined ||
+    updatedPatch.accommodation_name !== undefined ||
+    updatedPatch.room_type !== undefined
+  ) {
+    const { itinerary, stays } = staysReconciler.updateDayAccommodation(
+      canonical.itinerary,
+      index,
+      updatedPatch,
+      canonical.startDate,
+      safe.service_facts.hotels
+    );
+    const destination_refs = routeDestinationRefsFromItinerary(itinerary);
+    const destinations =
+      destination_refs.length > 0
+        ? destination_refs.map((r) => r.name)
+        : Array.from(
+            new Set(
+              itinerary.map((d) => d.destination).filter((d): d is string => Boolean(d))
+            )
+          );
+
+    return staysAdapter.syncToQuotationFacts(
+      { ...canonical, itinerary, stays, destinationRefs: destination_refs, destinations },
+      safe
+    );
+  }
+
+  // Otherwise patch itinerary day normally via prefillEngine
+  return patchItineraryDayInFacts(safe, index, updatedPatch);
+}
+
 export function useRouteTableSync(
   facts: QuotationFacts,
   onFactsChange: (updater: (prev: QuotationFacts) => QuotationFacts) => void
@@ -118,8 +189,16 @@ export function useRouteTableSync(
     [onFactsChange]
   );
 
+  const handleUpdateDay = useCallback(
+    (index: number, patch: Partial<DayWithStayItem>) => {
+      onFactsChange((current) => updateDayInRouteTable(current, index, patch));
+    },
+    [onFactsChange]
+  );
+
   return {
     dayWithStays,
     handleRouteTableChange,
+    handleUpdateDay,
   };
 }
