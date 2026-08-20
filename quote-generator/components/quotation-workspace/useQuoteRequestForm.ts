@@ -42,7 +42,7 @@ export function useQuoteRequestForm({
   onSuccess,
 }: UseQuoteRequestFormOptions = {}) {
   const { toast } = useToast();
-  const [formState, setFormState] = useState<QuoteRequestFormState>(() =>
+  const [formState, setRawFormState] = useState<QuoteRequestFormState>(() =>
     initialRequest
       ? mapRequestToFormState(initialRequest)
       : getInitialQuoteRequestFormState(initialRole)
@@ -59,35 +59,37 @@ export function useQuoteRequestForm({
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const setField = useCallback(
-    <K extends keyof QuoteRequestFormState>(key: K, value: QuoteRequestFormState[K]) => {
-      if (key === "arrival_date") {
-        const nextArrival = typeof value === "string" ? value : "";
-        setFormState((prev) => {
-          const canonical = tripAdapter.fromQuoteRequest(prev, itineraryDays);
-          const reconciled = tripReconciler.setStartDate(canonical, nextArrival);
-          const synced = tripAdapter.syncToQuoteRequest(reconciled, prev);
+  const setFormState = useCallback(
+    (action: ((prev: QuoteRequestFormState) => QuoteRequestFormState) | QuoteRequestFormState) => {
+      setRawFormState((prev) => {
+        const next = typeof action === "function" ? action(prev) : action;
+        const arrivalChanged = next.arrival_date !== prev.arrival_date;
+        const departureChanged = next.departure_date !== prev.departure_date;
+
+        if (arrivalChanged || departureChanged) {
+          let canonical = tripAdapter.fromQuoteRequest(prev, itineraryDays);
+          if (arrivalChanged) {
+            canonical = tripReconciler.setStartDate(canonical, next.arrival_date || null);
+          }
+          if (departureChanged) {
+            canonical = tripReconciler.setEndDate(canonical, next.departure_date || null);
+          }
+          const synced = tripAdapter.syncToQuoteRequest(canonical, next);
           setItineraryDays(synced.itineraryDays);
           return synced.formState;
-        });
-        return;
-      }
+        }
 
-      if (key === "departure_date") {
-        const nextDeparture = typeof value === "string" ? value : "";
-        setFormState((prev) => {
-          const canonical = tripAdapter.fromQuoteRequest(prev, itineraryDays);
-          const reconciled = tripReconciler.setEndDate(canonical, nextDeparture);
-          const synced = tripAdapter.syncToQuoteRequest(reconciled, prev);
-          setItineraryDays(synced.itineraryDays);
-          return synced.formState;
-        });
-        return;
-      }
-
-      setFormState((prev) => ({ ...prev, [key]: value }));
+        return next;
+      });
     },
     [itineraryDays]
+  );
+
+  const setField = useCallback(
+    <K extends keyof QuoteRequestFormState>(key: K, value: QuoteRequestFormState[K]) => {
+      setFormState((prev) => ({ ...prev, [key]: value }));
+    },
+    [setFormState]
   );
 
   const addItineraryDay = useCallback(
@@ -98,7 +100,7 @@ export function useQuoteRequestForm({
         defaultPayload as Partial<CanonicalDay> | undefined
       );
       const synced = tripAdapter.syncToQuoteRequest(reconciled, formState);
-      setFormState(synced.formState);
+      setRawFormState(synced.formState);
       setItineraryDays(synced.itineraryDays);
     },
     [formState, itineraryDays]
@@ -110,7 +112,7 @@ export function useQuoteRequestForm({
       const canonical = tripAdapter.fromQuoteRequest(formState, itineraryDays);
       const reconciled = tripReconciler.removeDay(canonical, index);
       const synced = tripAdapter.syncToQuoteRequest(reconciled, formState);
-      setFormState(synced.formState);
+      setRawFormState(synced.formState);
       setItineraryDays(synced.itineraryDays);
 
       if (removedDay) {
@@ -132,7 +134,7 @@ export function useQuoteRequestForm({
         patch as Partial<CanonicalDay>
       );
       const synced = tripAdapter.syncToQuoteRequest(reconciled, formState);
-      setFormState(synced.formState);
+      setRawFormState(synced.formState);
       setItineraryDays(synced.itineraryDays);
     },
     [formState, itineraryDays]
@@ -143,7 +145,7 @@ export function useQuoteRequestForm({
       const canonical = tripAdapter.fromQuoteRequest(formState, itineraryDays);
       const reconciled = tripReconciler.applyRouteSequence(canonical, destinations);
       const synced = tripAdapter.syncToQuoteRequest(reconciled, formState);
-      setFormState(synced.formState);
+      setRawFormState(synced.formState);
       setItineraryDays(synced.itineraryDays);
       toast(
         `Applied route sequence (${synced.itineraryDays.length} day${synced.itineraryDays.length > 1 ? "s" : ""} generated).`,
@@ -154,17 +156,17 @@ export function useQuoteRequestForm({
   );
 
   const setRole = useCallback((role: QuoteRequestRole) => {
-    setFormState((prev) => ({ ...prev, role }));
+    setRawFormState((prev) => ({ ...prev, role }));
   }, []);
 
   const resetForm = useCallback(() => {
     if (initialRequest) {
-      setFormState(mapRequestToFormState(initialRequest));
+      setRawFormState(mapRequestToFormState(initialRequest));
       const payload = getRequestPayload(initialRequest);
       const rawItinerary = payload.itinerary_days;
       setItineraryDays(Array.isArray(rawItinerary) ? (rawItinerary as BasicDayItem[]) : []);
     } else {
-      setFormState(getInitialQuoteRequestFormState(initialRole));
+      setRawFormState(getInitialQuoteRequestFormState(initialRole));
       setItineraryDays([]);
     }
     setChangeSummary("");

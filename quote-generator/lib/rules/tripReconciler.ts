@@ -385,6 +385,17 @@ export const tripReconciler = {
       ...patch,
     };
 
+    // 0. Day number change: re-calculate display_date if trip.startDate is present and patch.display_date is not explicitly provided
+    if (patch.day_number !== undefined && patch.display_date === undefined) {
+      const dayNum = patch.day_number;
+      if (dayNum && trip.startDate) {
+        const projectedIso = dateForItineraryDay(trip.startDate, dayNum);
+        updatedDay.display_date = projectedIso
+          ? formatDisplayDate(projectedIso, trip.lang || "en")
+          : null;
+      }
+    }
+
     // 1. Destination change: auto-infer overnight if overnight was blank or matched previous destination
     if (patch.destination !== undefined && patch.destination !== currentDay.destination) {
       const isOvernightMatchingOrBlank =

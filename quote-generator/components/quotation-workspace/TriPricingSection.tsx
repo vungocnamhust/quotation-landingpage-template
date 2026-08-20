@@ -1,6 +1,6 @@
 "use client";
 
-import { DollarSign, RefreshCw, Users } from "lucide-react";
+import { DollarSign, Users } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
 import CustomSelect from "../ui/CustomSelect.tsx";
@@ -122,7 +122,6 @@ export default function TriPricingSection({
   const totalDisplay = minorAmountToInput(groupTotalMinor, currency);
 
   // Exchange rate badge against USD
-  const rateToUsd = pricingReconciler.getExchangeRate(currency, "USD");
   const rateFromUsd = pricingReconciler.getExchangeRate("USD", currency);
   const showRoeBadge = currency !== "USD";
 

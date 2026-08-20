@@ -143,6 +143,7 @@ export default function FactsForm({
     addHotel,
     removeHotel,
     patchTripStartDate,
+    patchTripEndDate,
     syncHotelsFromItinerary,
     addPricingOption,
     patchPricingOption,
@@ -236,6 +237,7 @@ export default function FactsForm({
               }));
             }}
             onTripStartDateChange={patchTripStartDate}
+            onTripEndDateChange={patchTripEndDate}
             onUpdate={update}
           />
         </FactCard>

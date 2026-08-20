@@ -181,11 +181,6 @@ export function FactCommercialSection({
           option.group_total_amount_minor !== null &&
           expectedTotal !== option.group_total_amount_minor;
 
-        const partySummary =
-          safeChildren > 0
-            ? `${safeAdults} adults, ${safeChildren} children`
-            : `${safeAdults} adults`;
-
         return (
           <div
             id={`pricing-option-${index}`}

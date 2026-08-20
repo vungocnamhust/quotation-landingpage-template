@@ -7,6 +7,7 @@ import { cn } from "../../utils/cn.ts";
 import { DestinationSelect } from "../destination/DestinationSelect.tsx";
 import { DateInput } from "../date/index.ts";
 import { dateForItineraryDay, formatDisplayDate } from "../../lib/rules/datesRules.ts";
+import { tripReconciler, type CanonicalDay } from "../../lib/rules/tripReconciler.ts";
 
 export type BasicDayItem = {
   id?: string;
@@ -44,21 +45,31 @@ export default function BasicItineraryDayGrid({
     if (onAddDay) {
       onAddDay();
     } else {
-      const nextNumber = days.length + 1;
-      const projectedIso = dateForItineraryDay(startDate, nextNumber);
-      const projectedLabel = projectedIso ? formatDisplayDate(projectedIso) : "";
-      const newDay: BasicDayItem = {
-        id: `day_${Date.now()}_${nextNumber}`,
-        day_number: nextNumber,
-        destination: "",
-        display_date: projectedLabel,
-        summary: "",
-        overnight: "",
-        meals: [],
-        highlights: [],
-        notes: [],
-      };
-      onChange?.([...days, newDay]);
+      const canonicalDays: CanonicalDay[] = days.map((d, i) => ({
+        ...d,
+        day_number: d.day_number || i + 1,
+        overnight: d.overnight || d.destination || null,
+      }));
+      const reconciled = tripReconciler.addDay({
+        startDate: startDate || null,
+        endDate: null,
+        durationDays: days.length,
+        durationNights: Math.max(0, days.length - 1),
+        itinerary: canonicalDays,
+      });
+      onChange?.(
+        reconciled.itinerary.map((d, i) => ({
+          id: d.id || `day_${i + 1}`,
+          day_number: d.day_number || i + 1,
+          destination: d.destination || "",
+          display_date: d.display_date || "",
+          summary: (d.summary as string) || "",
+          overnight: d.overnight || "",
+          meals: d.meals || [],
+          highlights: d.highlights || [],
+          notes: d.notes || [],
+        }))
+      );
     }
     if (!isOpen) setIsOpen(true);
   };
@@ -67,19 +78,34 @@ export default function BasicItineraryDayGrid({
     if (onRemoveDay) {
       onRemoveDay(index);
     } else {
-      const updated = days
-        .filter((_, i) => i !== index)
-        .map((day, i) => {
-          const nextNum = i + 1;
-          const nextProjectedIso = dateForItineraryDay(startDate, nextNum);
-          const nextProjectedLabel = nextProjectedIso ? formatDisplayDate(nextProjectedIso) : "";
-          return {
-            ...day,
-            day_number: nextNum,
-            display_date: day.display_date || nextProjectedLabel,
-          };
-        });
-      onChange?.(updated);
+      const canonicalDays: CanonicalDay[] = days.map((d, i) => ({
+        ...d,
+        day_number: d.day_number || i + 1,
+        overnight: d.overnight || d.destination || null,
+      }));
+      const reconciled = tripReconciler.removeDay(
+        {
+          startDate: startDate || null,
+          endDate: null,
+          durationDays: days.length,
+          durationNights: Math.max(0, days.length - 1),
+          itinerary: canonicalDays,
+        },
+        index
+      );
+      onChange?.(
+        reconciled.itinerary.map((d, i) => ({
+          id: d.id || `day_${i + 1}`,
+          day_number: d.day_number || i + 1,
+          destination: d.destination || "",
+          display_date: d.display_date || "",
+          summary: (d.summary as string) || "",
+          overnight: d.overnight || "",
+          meals: d.meals || [],
+          highlights: d.highlights || [],
+          notes: d.notes || [],
+        }))
+      );
     }
   };
 
@@ -87,9 +113,35 @@ export default function BasicItineraryDayGrid({
     if (onUpdateDay) {
       onUpdateDay(index, { [field]: value });
     } else {
-      const updated = [...days];
-      updated[index] = { ...updated[index], [field]: value };
-      onChange?.(updated);
+      const canonicalDays: CanonicalDay[] = days.map((d, i) => ({
+        ...d,
+        day_number: d.day_number || i + 1,
+        overnight: d.overnight || d.destination || null,
+      }));
+      const reconciled = tripReconciler.updateDay(
+        {
+          startDate: startDate || null,
+          endDate: null,
+          durationDays: days.length,
+          durationNights: Math.max(0, days.length - 1),
+          itinerary: canonicalDays,
+        },
+        index,
+        { [field]: value }
+      );
+      onChange?.(
+        reconciled.itinerary.map((d, i) => ({
+          id: d.id || `day_${i + 1}`,
+          day_number: d.day_number || i + 1,
+          destination: d.destination || "",
+          display_date: d.display_date || "",
+          summary: (d.summary as string) || "",
+          overnight: d.overnight || "",
+          meals: d.meals || [],
+          highlights: d.highlights || [],
+          notes: d.notes || [],
+        }))
+      );
     }
   };
 

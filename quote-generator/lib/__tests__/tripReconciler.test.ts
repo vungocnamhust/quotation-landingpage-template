@@ -196,6 +196,24 @@ describe('tripReconciler temporal invariant rules', () => {
       // Day 4 is Hue -> not affected
       assert.equal(updated.itinerary[3].accommodation_id ?? null, null);
     });
+
+    it('recalculates display_date when day_number is changed', () => {
+      const initial: CanonicalTrip = {
+        startDate: '2026-11-01',
+        endDate: '2026-11-03',
+        durationDays: 3,
+        durationNights: 2,
+        itinerary: [
+          { day_number: 1, destination: 'Hanoi', overnight: 'Hanoi', display_date: '01 Nov', summary: 'Arrival' },
+          { day_number: 2, destination: 'Hanoi', overnight: 'Hanoi', display_date: '02 Nov', summary: 'City tour' },
+          { day_number: 3, destination: 'Halong', overnight: 'Halong', display_date: '03 Nov', summary: 'Cruise' },
+        ],
+      };
+
+      const updated = tripReconciler.updateDay(initial, 1, { day_number: 5 });
+      assert.equal(updated.itinerary[1].day_number, 5);
+      assert.equal(updated.itinerary[1].display_date, 'Thu 05 Nov');
+    });
   });
 });
 

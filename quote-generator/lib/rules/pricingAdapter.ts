@@ -237,9 +237,10 @@ export const pricingAdapter = {
    */
   fromTriPricing(
     fields: TriPricingFields,
-    _adults: number = 2,
+    adults: number = 2,
     children: number = 0
   ): CanonicalPricingOption {
+    void adults;
     const childRatio =
       fields.perAdultMinor && fields.perAdultMinor > 0 && fields.perChildMinor !== null
         ? fields.perChildMinor / fields.perAdultMinor

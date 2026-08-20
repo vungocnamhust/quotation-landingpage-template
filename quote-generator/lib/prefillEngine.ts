@@ -20,6 +20,8 @@ import { formatStayDisplayDate, staysReconciler } from "./rules/staysReconciler.
 import { partyAdapter } from "./rules/partyAdapter.ts";
 import { partyReconciler } from "./rules/partyReconciler.ts";
 import { staysAdapter } from "./rules/staysAdapter.ts";
+import { tripAdapter } from "./rules/tripAdapter.ts";
+import { tripReconciler, type CanonicalDay } from "./rules/tripReconciler.ts";
 import { pricingAdapter } from "./rules/pricingAdapter.ts";
 import { pricingReconciler, type CanonicalPricingOption } from "./rules/pricingReconciler.ts";
 
@@ -317,49 +319,13 @@ export function patchItineraryDayInFacts(
   }
 
   const current = ensureFactsDefaults(input);
-  const existingDay = current.trip_facts.itinerary[index];
-  if (!existingDay) return current;
-
-  const destName = patch.destination !== undefined ? patch.destination : existingDay.destination;
-  let resolvedOvernight = existingDay.overnight;
-  if (patch.overnight !== undefined) {
-    resolvedOvernight = patch.overnight;
-  } else if (patch.destination !== undefined) {
-    if (!existingDay.overnight || existingDay.overnight === existingDay.destination) {
-      resolvedOvernight = destName;
-    }
-  }
-
-  const updatedDay: ItineraryDayFact = {
-    ...existingDay,
-    ...patch,
-    destination: destName,
-    overnight: resolvedOvernight,
-  };
-
-  const itinerary = current.trip_facts.itinerary.map((item, itemIndex) =>
-    itemIndex === index ? updatedDay : item
+  const canonical = tripAdapter.fromQuotationFacts(current);
+  const reconciled = tripReconciler.updateDay(
+    canonical,
+    index,
+    patch as Partial<CanonicalDay>
   );
-
-  const destination_refs = routeDestinationRefsFromItinerary(itinerary);
-  const destinations =
-    destination_refs.length > 0
-      ? destination_refs.map((r) => r.name)
-      : Array.from(
-          new Set(
-            itinerary.map((d) => d.destination).filter((d): d is string => Boolean(d))
-          )
-        );
-
-  return {
-    ...current,
-    trip_facts: {
-      ...current.trip_facts,
-      itinerary,
-      destination_refs,
-      destinations,
-    },
-  };
+  return tripAdapter.syncToQuotationFacts(reconciled, current);
 }
 
 /**

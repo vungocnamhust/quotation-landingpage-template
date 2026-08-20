@@ -214,7 +214,6 @@ export const DayEditorCard = memo(function DayEditorCard({
               const dayNumber = Number(value) || null;
               onPatch(index, {
                 day_number: dayNumber,
-                display_date: dateForItineraryDay(startDate, dayNumber),
               });
             }}
           />

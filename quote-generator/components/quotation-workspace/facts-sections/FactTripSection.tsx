@@ -101,6 +101,7 @@ type Props = {
   selectedDesigner: TravelDesignerProfile | null;
   onDesignerChange: (designerId: string | null, profile?: TravelDesignerProfile | null) => void;
   onTripStartDateChange: (value: string) => void;
+  onTripEndDateChange?: (value: string) => void;
   onUpdate: <K extends keyof QuotationFacts>(key: K, value: QuotationFacts[K]) => void;
 };
 
@@ -113,6 +114,7 @@ export function FactTripSection({
   selectedDesigner,
   onDesignerChange,
   onTripStartDateChange,
+  onTripEndDateChange,
   onUpdate,
 }: Props) {
   const trip = facts.trip_facts;
@@ -224,9 +226,13 @@ export function FactTripSection({
         min={trip.start_date ?? undefined}
         disabled={readOnly}
         value={trip.end_date}
-        onChange={(value) =>
-          onUpdate("trip_facts", { ...trip, end_date: value || null })
-        }
+        onChange={(value) => {
+          if (onTripEndDateChange) {
+            onTripEndDateChange(value ?? "");
+          } else {
+            onUpdate("trip_facts", { ...trip, end_date: value || null });
+          }
+        }}
       />
 
       <div className="sm:col-span-2">
