@@ -40,6 +40,13 @@ from core.rules.stays_rules import (
     consolidate_stays_from_day_accommodations,
     validate_hotel_boundaries,
 )
+from core.rules.destination_rules import (
+    COUNTRY_GATEWAY_MAP,
+    DESTINATION_KEYWORD_MAP,
+    VALID_DESTINATION_SLUGS,
+    match_destination_slug,
+    normalize_destination_text,
+)
 from core.rules.taxonomy_rules import (
     MULTILINGUAL_DEFAULT_MEALS,
     get_default_meals_for_lang,
@@ -88,6 +95,12 @@ __all__ = [
     "RequestIntakeGate",
     "QuotationTransitionGate",
     "PublishReadinessGate",
+    # Destination & Gateways
+    "VALID_DESTINATION_SLUGS",
+    "COUNTRY_GATEWAY_MAP",
+    "DESTINATION_KEYWORD_MAP",
+    "normalize_destination_text",
+    "match_destination_slug",
     # Service Candidate Protocol
     "ServiceType",
     "ServiceCandidate",

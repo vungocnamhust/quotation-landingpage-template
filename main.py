@@ -6981,22 +6981,22 @@ def _apply_travel_designer_snapshot(document: dict[str, Any], profile: dict[str,
     )
 
 
-_DESTINATION_GEO = {
-    "ha-noi": ("vietnam", "north", "hanoi"), "ninh-binh": ("vietnam", "north", "ninh-binh"), "quang-ninh": ("vietnam", "north", "quang-ninh"), "lao-cai": ("vietnam", "north", "lao-cai"),
-    "da-nang": ("vietnam", "central", "da-nang"), "quang-nam": ("vietnam", "central", "quang-nam"), "thua-thien-hue": ("vietnam", "central", "thua-thien-hue"), "khanh-hoa": ("vietnam", "central", "khanh-hoa"),
-    "ho-chi-minh": ("vietnam", "south", "ho-chi-minh"), "mekong": ("vietnam", "south", "mekong"), "siem-reap": ("cambodia", "northwest", "siem-reap"), "phnom-penh": ("cambodia", "central", "phnom-penh"),
-    "luang-prabang": ("laos", "north", "luang-prabang"), "vientiane": ("laos", "central", "vientiane"), "bangkok": ("thailand", "central", "bangkok"), "chiang-mai": ("thailand", "north", "chiang-mai"), "phuket": ("thailand", "south", "phuket"),
-}
-
-
 async def _seed_destination_catalog(session) -> None:
+    from destination_catalog_seed import get_seed_destination_profiles
+
     repository = DestinationRepository(session)
-    for slug, profile in DESTINATION_PROFILES.items():
-        if slug == "default":
-            continue
-        geo = _DESTINATION_GEO.get(slug, (None, None, None))
-        coordinates = BASELINE_DESTINATION_COORDINATES.get(slug)
-        await repository.upsert(destination_id=f"dst_{slug}", canonical_name=str(profile.get("label") or slug.title()), slug=slug, aliases=[slug, slug.replace("-", " ")], country_slug=geo[0], region_slug=geo[1], province_slug=geo[2], latitude=coordinates[0] if coordinates else None, longitude=coordinates[1] if coordinates else None)
+    for profile in get_seed_destination_profiles():
+        await repository.upsert(
+            destination_id=f"dst_{profile['slug']}",
+            canonical_name=profile["canonical_name"],
+            slug=profile["slug"],
+            aliases=profile["aliases"],
+            country_slug=profile["country_slug"],
+            region_slug=profile["region_slug"],
+            province_slug=profile["province_slug"],
+            latitude=profile["latitude"],
+            longitude=profile["longitude"],
+        )
 
 
 async def _canonicalize_quote_destinations(payload: CreateQuoteRequestV1) -> tuple[CreateQuoteRequestV1, dict[str, Any]]:

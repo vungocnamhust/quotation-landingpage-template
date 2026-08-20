@@ -94,4 +94,33 @@ class DestinationRepository:
         normalized = normalize_destination(value)
         if not normalized:
             return None
-        return await self.session.scalar(select(DestinationCatalog).join(DestinationAlias).where(DestinationAlias.normalized_alias == normalized, DestinationCatalog.is_active.is_(True)))
+
+        # 1. Exact alias match in DB (fast index lookup)
+        stmt = (
+            select(DestinationCatalog)
+            .join(DestinationAlias, DestinationAlias.destination_id == DestinationCatalog.id)
+            .where(DestinationAlias.normalized_alias == normalized, DestinationCatalog.is_active.is_(True))
+        )
+        item = await self.session.scalar(stmt)
+        if item is not None:
+            return item
+
+        # 2. Fallback to deterministic pure-domain matcher (core.rules.destination_rules)
+        from core.rules.destination_rules import match_destination_slug
+
+        matched_slug = match_destination_slug(value)
+        if matched_slug:
+            fallback_stmt = (
+                select(DestinationCatalog).where(
+                    or_(
+                        DestinationCatalog.slug == matched_slug,
+                        DestinationCatalog.province_slug == matched_slug,
+                    ),
+                    DestinationCatalog.is_active.is_(True),
+                )
+            )
+            item = await self.session.scalar(fallback_stmt)
+            if item is not None:
+                return item
+
+        return None
