@@ -35,11 +35,11 @@ export const workflowAdapter = {
    */
   toResolvedHandoff(target: TargetHandoff | CanonicalBlockerItem): ResolvedHandoff {
     const handoff = 'targetHandoff' in target ? target.targetHandoff : target;
-    const stage = handoff.stage === 'facts' ? 'facts' : 'content';
+    const stage = handoff.stage === 'facts' ? 'facts' : handoff.stage === 'design' ? 'design' : 'content';
 
     return {
       stage,
-      section: handoff.section || (handoff.stage === 'facts' ? 'trip' : 'hero'),
+      section: handoff.section || (handoff.stage === 'facts' ? 'trip' : handoff.stage === 'design' ? 'hero' : 'hero'),
       source: handoff.source || 'blocker',
       wildcardIndices: [],
       focus: handoff.focus

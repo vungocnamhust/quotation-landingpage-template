@@ -62,14 +62,14 @@ export function ReviewBlockersPanel({
       ctaLabel: item.ctaLabel,
       isAdvisory: item.isAdvisory,
       onAction: () => {
-        if (item.targetHandoff.stage === "facts") {
+        if (onNavigateHandoff) {
+          onNavigateHandoff(workflowAdapter.toResolvedHandoff(item));
+        } else if (item.targetHandoff.stage === "facts") {
           onSetStage("facts");
         } else if (item.targetHandoff.stage === "design") {
           onSetStage("design");
         } else if (item.targetHandoff.stage === "publish" || item.targetHandoff.stage === "review") {
           onSetStage("review");
-        } else if (onNavigateHandoff) {
-          onNavigateHandoff(workflowAdapter.toResolvedHandoff(item));
         } else {
           onSetStage("content");
         }

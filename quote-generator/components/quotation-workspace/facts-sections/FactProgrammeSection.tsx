@@ -31,7 +31,7 @@ export function FactProgrammeSection({
     <div className="flex flex-col gap-3">
       {trip.itinerary.map((day, index) => (
         <DayEditorCard
-          key={`programme-day-${day.day_number}`}
+          key={day.id || `programme-day-${day.day_number || index + 1}`}
           day={day}
           index={index}
           startDate={trip.start_date}

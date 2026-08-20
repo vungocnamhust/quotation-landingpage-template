@@ -15,8 +15,7 @@ export type PromptPreview = { version: string; scope: string; mode: string; syst
 export type ContentDraft = { id: string; scope: string; generationMode: 'storytelling' | 'detailed' | 'manual'; status: 'draft' | 'applied' | 'discarded' | 'stale'; candidate: ContentCandidate; missingInputs: Array<{ path: string; reason: string }>; generation: { cached?: boolean; latencyMs?: number; warnings?: string[]; llmCalled?: boolean; generationStatus?: string; instructionSource?: 'default' | 'custom' | 'manual'; systemPrompt?: string; userPrompt?: string; promptVersion?: string }; sourceDocumentRevision: number; factsSnapshot: { trip?: { title?: string; destinations?: string[] }; itineraryDay?: { destination?: string; summary?: string } }; editor?: ContentEditor };
 export type FactsResponse = { facts: QuotationFacts; resolvedFacts: ResolvedFacts; source: { kind?: string; opportunityId?: string | null; snapshotAt?: string | null }; baselineLang: 'en' | 'vi' | 'ar' };
 export type EditableHandoff = {
-
-  stage: 'facts' | 'content';
+  stage: 'facts' | 'content' | 'design';
   section: string;
   anchor?: string;
   item?: 'day' | 'hotel' | 'pricingOption' | 'bookingTerm' | 'routeSegment';

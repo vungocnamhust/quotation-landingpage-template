@@ -2,8 +2,8 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getLanguageLabels } from '../../display/labels.ts';
 import { getDefaultMealsForLang } from '../../lib/prefillRules.ts';
+import { contentReconciler } from '../../lib/rules/contentReconciler.ts';
 import type {
   ContentCandidate,
   ContentDraft,
@@ -30,33 +30,6 @@ export const labels: Record<string, string> = {
 export const SCOPE_BY_SECTION_TYPE: Record<string, string> = {
   route_map: 'route',
 };
-
-export function defaultRouteCandidate(
-  candidate: ContentCandidate | undefined,
-  lang: string
-): ContentCandidate | undefined {
-  if (!candidate) return candidate;
-  const route = candidate.route;
-  if (!route || typeof route !== 'object') return candidate;
-  const language = lang === 'vi' || lang === 'ar' ? lang : 'en';
-  const copy = getLanguageLabels(language);
-  const routeValues = route as Record<string, unknown>;
-  const title =
-    typeof routeValues.title === 'string' ? routeValues.title.trim() : '';
-  const description =
-    typeof routeValues.description === 'string'
-      ? routeValues.description.trim()
-      : '';
-  if (title && description) return candidate;
-  return {
-    ...candidate,
-    route: {
-      ...routeValues,
-      title: title || copy.routeMapTitle,
-      description: description || copy.routeMapDescription,
-    },
-  };
-}
 
 export type UseContentStudioStateOptions = {
   quotationId: string;
@@ -94,7 +67,7 @@ export function useContentStudioState({
     () =>
       (resources.reviewData?.contentReadiness ?? []).flatMap((item) => {
         if (item.sectionType !== 'itinerary') return [item];
-        const days = resources.factsData?.facts.trip_facts.itinerary ?? [];
+        const days = resources.factsData?.facts?.trip_facts?.itinerary ?? [];
         return [
           item,
           ...days.map((day, index) => {
@@ -144,18 +117,29 @@ export function useContentStudioState({
       : persistedDraft;
 
   const canonicalCandidate = useMemo(() => {
-    const candidate = scope
-      ? resources.documentData?.contentEditorState?.[scope]
-      : undefined;
-    return scope === 'route'
-      ? defaultRouteCandidate(candidate, lang)
-      : candidate;
-  }, [lang, resources.documentData?.contentEditorState, scope]);
+    if (!scope) return undefined;
+    const raw = resources.documentData?.contentEditorState?.[scope];
+    const facts = resources.factsData?.facts;
+    const fallback = contentReconciler.deriveDefaultCandidate(scope, facts, lang);
+    const base = raw ?? fallback;
+    return contentReconciler.reconcileCandidateWithFacts(scope, base, facts, lang);
+  }, [lang, resources.documentData?.contentEditorState, resources.factsData?.facts, scope]);
 
-  const workingCandidate =
-    localCandidate?.scope === scope
-      ? localCandidate.candidate
-      : draft?.candidate ?? canonicalCandidate;
+  const workingCandidate = useMemo(() => {
+    if (!scope) return undefined;
+    const candidateSource =
+      localCandidate?.scope === scope
+        ? localCandidate.candidate
+        : draft?.candidate ?? canonicalCandidate;
+    if (!candidateSource) return undefined;
+    const facts = resources.factsData?.facts;
+    return contentReconciler.reconcileCandidateWithFacts(
+      scope,
+      candidateSource,
+      facts,
+      lang
+    );
+  }, [canonicalCandidate, draft?.candidate, lang, localCandidate, resources.factsData?.facts, scope]);
 
   const defaultInstruction = editor?.defaultInstructions?.[mode] ?? '';
   const activeCustomInstruction =

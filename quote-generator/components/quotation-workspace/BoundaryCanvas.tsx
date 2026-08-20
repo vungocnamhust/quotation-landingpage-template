@@ -87,7 +87,7 @@ export default function BoundaryCanvas({
   return (
     <div
       ref={root}
-      className="workspace-boundary-canvas overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-border)] focus-within:ring-2 focus-within:ring-[var(--color-focus)] [&_[data-workspace-hovered=true]]:outline [&_[data-workspace-hovered=true]]:outline-1 [&_[data-workspace-hovered=true]]:outline-offset-2 [&_[data-workspace-hovered=true]]:outline-[var(--color-accent)] [&_[data-workspace-selected=true]]:outline [&_[data-workspace-selected=true]]:outline-2 [&_[data-workspace-selected=true]]:outline-offset-2 [&_[data-workspace-selected=true]]:outline-[var(--color-focus)]"
+      className="workspace-boundary-canvas overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-border)] focus-within:ring-2 focus-within:ring-[var(--color-focus)] [&_[data-workspace-hovered=true]]:outline [&_[data-workspace-hovered=true]]:outline-1 [&_[data-workspace-hovered=true]]:outline-offset-2 [&_[data-workspace-hovered=true]]:outline-[var(--color-accent)] [&_[data-workspace-selected=true]]:outline [&_[data-workspace-selected=true]]:outline-2 [&_[data-workspace-selected=true]]:outline-offset-2 [&_[data-workspace-selected=true]]:outline-[var(--color-focus)] [&_[data-workspace-highlighted=true]]:ring-4 [&_[data-workspace-highlighted=true]]:ring-[var(--color-accent)] [&_[data-workspace-highlighted=true]]:ring-offset-2 [&_[data-workspace-highlighted=true]]:animate-pulse"
       onPointerMoveCapture={(event) => {
         const element = targetFor(event.target); const selection = resolve(element);
         clear('data-workspace-hovered');

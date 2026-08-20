@@ -1,7 +1,9 @@
 'use client';
 
+import { AlertCircle } from 'lucide-react';
 import { cn } from '../../utils/cn.ts';
 import { getTypographyClassName } from '../../config/typography.ts';
+import { contentReconciler } from '../../lib/rules/contentReconciler.ts';
 import type { ContentCandidate, ContentEditorField } from '../quotation-workspace/useQuotationWorkspace.ts';
 import { RichTextEditor } from '../ui/RichTextEditor.tsx';
 
@@ -25,17 +27,54 @@ function writeValue(candidate: ContentCandidate, path: Array<string | number>, v
   return next;
 }
 
+function CharacterBudgetMeter({
+  budgetType,
+  text,
+}: {
+  budgetType: string;
+  text: string | string[] | null | undefined;
+}) {
+  const result = contentReconciler.validatePdfTextBudget(budgetType, text);
+
+  if (result.overflow > 0) {
+    return (
+      <div className="flex items-center justify-between gap-2 mt-1 px-1">
+        <div className="flex items-center gap-1.5 text-rose-600 dark:text-rose-400">
+          <AlertCircle size={14} className="shrink-0" aria-hidden="true" />
+          <span className={cn(getTypographyClassName('caption'), 'text-rose-600 dark:text-rose-400')}>
+            Vượt quá giới hạn trang in PDF A4 (vượt {result.overflow} ký tự)
+          </span>
+        </div>
+        <span className={cn(getTypographyClassName('caption'), 'text-rose-600 dark:text-rose-400')}>
+          {result.current} / {result.max}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex justify-end mt-1 px-1">
+      <span className={cn(getTypographyClassName('caption'), 'text-[var(--color-muted)]')}>
+        {result.current} / {result.max} ký tự
+      </span>
+    </div>
+  );
+}
+
 function FieldEditor({
+  scope,
   field,
   candidate,
   onChange,
   document,
 }: {
+  scope?: string;
   field: ContentEditorField;
   candidate: ContentCandidate;
   onChange: (value: ContentCandidate) => void;
   document?: Record<string, unknown>;
 }) {
+  const budgetType = contentReconciler.deriveBudgetType(scope, field.id, field.path);
 
   if (field.control === 'string-list') {
     const items = Array.isArray(readValue(candidate, field.path)) ? (readValue(candidate, field.path) as unknown[]).map(String) : [];
@@ -63,6 +102,7 @@ function FieldEditor({
                         onChange(writeValue(candidate, field.path, items.map((current, currentIndex) => currentIndex === index ? nextVal : current)))
                       }
                     />
+                    <CharacterBudgetMeter budgetType={budgetType} text={item} />
                   </div>
                   <button
                     type="button"
@@ -127,6 +167,7 @@ function FieldEditor({
                     onChange(writeValue(candidate, field.path, items.map((current, currentIndex) => currentIndex === index ? nextVal : current)))
                   }
                 />
+                <CharacterBudgetMeter budgetType="route_stop_description" text={item} />
                 {!item && fallbackDesc ? (
                   <p className={cn(getTypographyClassName('caption'), 'text-[var(--color-muted)] opacity-80')}>
                     Left empty: Will display default activity summary on brochure map & timeline.
@@ -156,18 +197,20 @@ function FieldEditor({
 
   const value = typeof readValue(candidate, field.path) === 'string' ? String(readValue(candidate, field.path)) : '';
   return (
-    <label className="grid gap-1.5">
-      <span className={cn(getTypographyClassName('label'), 'text-[var(--color-muted)]')}>{field.label}</span>
+    <div className="grid gap-1.5">
+      <label className={cn(getTypographyClassName('label'), 'text-[var(--color-muted)]')}>{field.label}</label>
       {field.control === 'textarea' ? (
         <RichTextEditor value={value} minHeight="6rem" onChange={(nextVal) => onChange(writeValue(candidate, field.path, nextVal))} />
       ) : (
         <RichTextEditor value={value} singleLine onChange={(nextVal) => onChange(writeValue(candidate, field.path, nextVal))} />
       )}
-    </label>
+      <CharacterBudgetMeter budgetType={budgetType} text={value} />
+    </div>
   );
 }
 
 export function SectionContentFields({
+  scope,
   fields,
   candidate,
   onChange,
@@ -186,7 +229,7 @@ export function SectionContentFields({
         <p className={cn(getTypographyClassName('bodySm'), 'mt-1 text-[var(--color-muted)]')}>Write directly, or generate into these fields. Nothing is published until Apply.</p>
       </div>
       {fields.map((field) => (
-        <FieldEditor key={field.id} field={field} candidate={candidate} onChange={onChange} document={document} />
+        <FieldEditor key={field.id} scope={scope} field={field} candidate={candidate} onChange={onChange} document={document} />
       ))}
     </section>
   );

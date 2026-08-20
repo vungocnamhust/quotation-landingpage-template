@@ -28,6 +28,7 @@ export function routeDestinationRefsFromItinerary(
 }
 
 export type ItineraryDayFact = {
+  id?: string;
   day_number: number | null;
   destination: string | null;
   destination_ref?: DestinationRef | null;
@@ -41,9 +42,11 @@ export type ItineraryDayFact = {
   accommodation_id?: string | null;
   accommodation_name?: string | null;
   room_type?: string | null;
+  [key: string]: unknown;
 };
 
 export type HotelFact = {
+  id?: string;
   accommodation_id: string | null;
   destination: string | null;
   destination_ref?: DestinationRef | null;
@@ -57,6 +60,7 @@ export type HotelFact = {
   display_date: string | null;
   hotel_asset: string | null;
   room_asset: string | null;
+  [key: string]: unknown;
 };
 
 export type PricingOptionFact = {
@@ -560,7 +564,9 @@ export function dateForItineraryDay(startDate: string | null, dayNumber: number 
 
 export function createItineraryDay({ index, startDate }: { index: number; startDate: string | null }): ItineraryDayFact {
   const dayNumber = index + 1;
+  const stableId = `day_${dayNumber}_${Math.random().toString(36).slice(2, 9)}`;
   return {
+    id: stableId,
     day_number: dayNumber, destination: null, destination_ref: null, summary: null, overnight: null,
     meals: [], highlights: [], notes: [], sense_of_pace: null,
     display_date: dateForItineraryDay(startDate, dayNumber),
@@ -664,8 +670,9 @@ export function ensureFactsDefaults(facts?: Partial<QuotationFacts> | null): Quo
       ...(facts.trip_facts ?? {}),
       destinations: facts.trip_facts?.destinations ?? base.trip_facts.destinations,
       destination_refs: facts.trip_facts?.destination_refs ?? base.trip_facts.destination_refs,
-      itinerary: (facts.trip_facts?.itinerary ?? base.trip_facts.itinerary).map((day) => ({
+      itinerary: (facts.trip_facts?.itinerary ?? base.trip_facts.itinerary).map((day, idx) => ({
         ...day,
+        id: day.id || `day_${day.day_number ?? idx + 1}_${Math.random().toString(36).slice(2, 9)}`,
         meals: day.meals ?? [],
         highlights: day.highlights ?? [],
         notes: day.notes ?? [],
@@ -681,8 +688,9 @@ export function ensureFactsDefaults(facts?: Partial<QuotationFacts> | null): Quo
     service_facts: {
       ...base.service_facts,
       ...(facts.service_facts ?? {}),
-      hotels: (facts.service_facts?.hotels ?? base.service_facts.hotels).map((hotel) => ({
+      hotels: (facts.service_facts?.hotels ?? base.service_facts.hotels).map((hotel, idx) => ({
         ...hotel,
+        id: hotel.id || `hotel_${hotel.accommodation_id || hotel.destination || idx + 1}_${Math.random().toString(36).slice(2, 9)}`,
         accommodation_id: hotel.accommodation_id ?? null,
       })),
       inclusions: facts.service_facts?.inclusions ?? base.service_facts.inclusions,

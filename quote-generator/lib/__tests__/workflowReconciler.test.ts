@@ -58,29 +58,30 @@ describe('workflowReconciler pure domain rules', () => {
   });
 
   describe('mapPresentationErrorToBlocker error mapping', () => {
-    it('maps itinerary description error to content stage handoff', () => {
+    it('maps itinerary description error to design stage handoff', () => {
       const blockerEn = mapPresentationErrorToBlocker('/itinerary/days/0/description', 0, 'en');
       assert.equal(blockerEn.category, 'design');
       assert.ok(blockerEn.title.includes('Day 1 description too long'));
-      assert.equal(blockerEn.targetHandoff.stage, 'content');
+      assert.equal(blockerEn.targetHandoff.stage, 'design');
       assert.equal(blockerEn.targetHandoff.section, 'itinerary:day:1');
       assert.deepEqual(blockerEn.targetHandoff.focus, { kind: 'day', index: 0 });
 
       const blockerVi = mapPresentationErrorToBlocker('/itinerary/days/0/description', 0, 'vi');
       assert.ok(blockerVi.title.includes('Nội dung Ngày 1 quá dài'));
-      assert.equal(blockerVi.ctaLabel, 'Sửa nội dung Ngày 1');
+      assert.equal(blockerVi.ctaLabel, 'Sửa nội dung Ngày 1 trên Design Canvas');
     });
 
-    it('maps itinerary title error to content stage handoff', () => {
+    it('maps itinerary title error to design stage handoff', () => {
       const blocker = mapPresentationErrorToBlocker('/itinerary/days/2/title', 1, 'en');
       assert.ok(blocker.title.includes('Day 3 title too long'));
+      assert.equal(blocker.targetHandoff.stage, 'design');
       assert.equal(blocker.targetHandoff.section, 'itinerary:day:3');
     });
 
-    it('maps hotel stays error to hotel_plan section', () => {
+    it('maps hotel stays error to hotel_plan section on design canvas', () => {
       const blocker = mapPresentationErrorToBlocker('/stays/hotels/1', 0, 'en');
       assert.ok(blocker.title.includes('Hotel 2 copy too long'));
-      assert.equal(blocker.targetHandoff.stage, 'content');
+      assert.equal(blocker.targetHandoff.stage, 'design');
       assert.equal(blocker.targetHandoff.section, 'hotel_plan');
       assert.deepEqual(blocker.targetHandoff.focus, { kind: 'hotel', index: 1 });
     });

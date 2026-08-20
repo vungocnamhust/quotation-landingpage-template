@@ -20,12 +20,14 @@ export default function FactsNavigator({
   onSubmit,
   pending,
   activeSection,
+  isDirty,
 }: {
   sections: FactSectionStatus[];
   submitLabel?: string;
   onSubmit?: () => void;
   pending?: boolean;
   activeSection?: FactSectionId;
+  isDirty?: boolean;
 }) {
   const [active, setActive] = useState<FactSectionId>('trip');
 
@@ -58,17 +60,35 @@ export default function FactsNavigator({
   }));
 
   const footer = onSubmit ? (
-    <button
-      type="button"
-      onClick={onSubmit}
-      disabled={pending}
-      className={cn(
-        getTypographyClassName('buttonPrimary'),
-        'min-h-11 w-full rounded-[var(--radius-button)] bg-[var(--color-accent)] !text-white hover:bg-[color-mix(in_srgb,var(--color-accent)_85%,black)] px-4 shadow-md transition-all disabled:opacity-50'
-      )}
-    >
-      {pending ? 'Saving facts…' : submitLabel}
-    </button>
+    <div className="flex flex-col gap-2.5">
+      <div className="flex items-center justify-between px-1">
+        <span className={cn(getTypographyClassName('caption'), 'text-[var(--color-muted)]')}>
+          Sync status:
+        </span>
+        {isDirty ? (
+          <span className={cn(getTypographyClassName('caption'), 'inline-flex items-center gap-1.5 text-[var(--color-accent-alt)]')}>
+            <span className="h-2 w-2 rounded-full bg-[var(--color-accent-alt)] animate-pulse" />
+            Unsaved changes
+          </span>
+        ) : (
+          <span className={cn(getTypographyClassName('caption'), 'inline-flex items-center gap-1 text-[var(--color-accent)]')}>
+            <span className="h-2 w-2 rounded-full bg-[var(--color-accent)]" />
+            Synced
+          </span>
+        )}
+      </div>
+      <button
+        type="button"
+        onClick={onSubmit}
+        disabled={pending}
+        className={cn(
+          getTypographyClassName('buttonPrimary'),
+          'min-h-11 w-full rounded-[var(--radius-button)] bg-[var(--color-accent)] !text-white hover:bg-[color-mix(in_srgb,var(--color-accent)_85%,black)] px-4 shadow-md transition-all disabled:opacity-50 cursor-pointer'
+        )}
+      >
+        {pending ? 'Saving facts…' : submitLabel}
+      </button>
+    </div>
   ) : undefined;
 
   return (

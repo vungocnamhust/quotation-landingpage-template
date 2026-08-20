@@ -114,13 +114,14 @@ export function mapPresentationErrorToBlocker(
           ? `Nội dung Ngày ${dayNumber} quá dài (vượt quá 1,150 ký tự)`
           : `Day ${dayNumber} description too long (exceeds 1,150 characters)`,
         description: isVi
-          ? `Văn bản mô tả của Ngày ${dayNumber} vượt quá giới hạn trang in A4 PDF. Vui lòng rút gọn nội dung trong Content Studio.`
-          : `Narrative text for Day ${dayNumber} exceeds A4 PDF printable boundaries. Please shorten the copy in Content Studio.`,
-        ctaLabel: isVi ? `Sửa nội dung Ngày ${dayNumber}` : `Edit Day ${dayNumber} Copy`,
+          ? `Văn bản mô tả của Ngày ${dayNumber} vượt quá giới hạn trang in A4 PDF. Vui lòng rút gọn nội dung trên Design Canvas.`
+          : `Narrative text for Day ${dayNumber} exceeds A4 PDF printable boundaries. Please shorten the copy on Design Canvas.`,
+        ctaLabel: isVi ? `Sửa nội dung Ngày ${dayNumber} trên Design Canvas` : `Edit Day ${dayNumber} on Design Canvas`,
         targetHandoff: {
-          stage: 'content',
+          stage: 'design',
           section: `itinerary:day:${dayNumber}`,
           index: parsed.index,
+          source: `/itinerary/days/${parsed.index}/description/0`,
           focus: { kind: 'day', index: parsed.index },
         },
         rawError: error,
@@ -135,13 +136,14 @@ export function mapPresentationErrorToBlocker(
           ? `Tiêu đề Ngày ${dayNumber} quá dài (vượt quá 170 ký tự)`
           : `Day ${dayNumber} title too long (exceeds 170 characters)`,
         description: isVi
-          ? `Tiêu đề Ngày ${dayNumber} vượt quá giới hạn trang in A4 PDF. Vui lòng rút gọn tiêu đề.`
-          : `Day ${dayNumber} title exceeds A4 PDF printable space. Please shorten the title.`,
-        ctaLabel: isVi ? `Sửa tiêu đề Ngày ${dayNumber}` : `Edit Day ${dayNumber} Title`,
+          ? `Tiêu đề Ngày ${dayNumber} vượt quá giới hạn trang in A4 PDF. Vui lòng rút gọn tiêu đề trên Design Canvas.`
+          : `Day ${dayNumber} title exceeds A4 PDF printable space. Please shorten the title on Design Canvas.`,
+        ctaLabel: isVi ? `Sửa tiêu đề Ngày ${dayNumber} trên Design Canvas` : `Edit Day ${dayNumber} Title on Design Canvas`,
         targetHandoff: {
-          stage: 'content',
+          stage: 'design',
           section: `itinerary:day:${dayNumber}`,
           index: parsed.index,
+          source: `/itinerary/days/${parsed.index}/title`,
           focus: { kind: 'day', index: parsed.index },
         },
         rawError: error,
@@ -155,11 +157,12 @@ export function mapPresentationErrorToBlocker(
       description: isVi
         ? `Nội dung Ngày ${dayNumber} không hợp lệ cho bố cục trang in PDF.`
         : `Content on Day ${dayNumber} does not fit A4 PDF printable layout.`,
-      ctaLabel: isVi ? `Chỉnh sửa Ngày ${dayNumber}` : `Edit Day ${dayNumber}`,
+      ctaLabel: isVi ? `Sửa nội dung Ngày ${dayNumber} trên Design Canvas` : `Edit Day ${dayNumber} on Design Canvas`,
       targetHandoff: {
-        stage: 'content',
+        stage: 'design',
         section: `itinerary:day:${dayNumber}`,
         index: parsed.index,
+        source: `/itinerary/days/${parsed.index}/description/0`,
         focus: { kind: 'day', index: parsed.index },
       },
       rawError: error,
@@ -175,13 +178,14 @@ export function mapPresentationErrorToBlocker(
         ? `Thông tin Khách sạn ${hotelNumber} quá dài (vượt quá 2,100 ký tự)`
         : `Hotel ${hotelNumber} copy too long (exceeds 2,100 characters)`,
       description: isVi
-        ? `Văn bản giới thiệu khách sạn vượt quá giới hạn trang in A4 PDF. Vui lòng rút gọn thông tin khách sạn.`
-        : `Hotel information exceeds A4 PDF printable page budget. Please shorten the description.`,
-      ctaLabel: isVi ? `Chỉnh sửa Khách sạn` : `Edit Hotel Stay`,
+        ? `Văn bản giới thiệu khách sạn vượt quá giới hạn trang in A4 PDF. Vui lòng rút gọn thông tin khách sạn trên Design Canvas.`
+        : `Hotel information exceeds A4 PDF printable page budget. Please shorten the description on Design Canvas.`,
+      ctaLabel: isVi ? `Sửa thông tin Khách sạn trên Design Canvas` : `Edit Hotel on Design Canvas`,
       targetHandoff: {
-        stage: 'content',
+        stage: 'design',
         section: 'hotel_plan',
         index: parsed.index,
+        source: `/stays/hotels/${parsed.index}`,
         focus: { kind: 'hotel', index: parsed.index },
       },
       rawError: error,
@@ -252,7 +256,7 @@ export function fromReviewResponse(
       description: isVi
         ? `Báo giá đang thiếu ${missingInputs.length} thông tin bắt buộc: ${missingInputs.join(', ')}.`
         : `The quotation is missing ${missingInputs.length} required fact(s): ${missingInputs.join(', ')}.`,
-      ctaLabel: isVi ? 'Bổ sung trong Facts' : 'Fix in Facts',
+      ctaLabel: isVi ? 'Cập nhật thông tin khách' : 'Update Customer Facts',
       targetHandoff: firstHandoff,
     });
   }
@@ -321,8 +325,13 @@ export function fromReviewResponse(
       description: isVi
         ? `Báo giá tham chiếu các hình ảnh chưa có trên thư viện R2: ${assetReadiness.missing.join(', ')}.`
         : `Quotation references assets not present in R2 catalogue: ${assetReadiness.missing.join(', ')}.`,
-      ctaLabel: isVi ? 'Kiểm tra Design' : 'Inspect Media Assets',
-      targetHandoff: { stage: 'design' },
+      ctaLabel: isVi ? 'Chọn ảnh Hero trên Design Canvas' : 'Choose Hero image on Design Canvas',
+      targetHandoff: {
+        stage: 'design',
+        section: 'hero',
+        source: '/hero/bannerImage',
+        fieldId: 'hero.bannerImage',
+      },
     });
   }
 

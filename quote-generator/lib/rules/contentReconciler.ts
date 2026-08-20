@@ -44,6 +44,66 @@ export const PDF_TEXT_BUDGETS: Record<string, number> = {
 export const DEFAULT_BUDGET_LIMIT = 1600;
 
 /**
+ * Helper to derive the budget metric key for a given scope, fieldId, and path.
+ */
+export function deriveBudgetType(
+  scope?: string | null,
+  fieldId?: string | null,
+  path?: Array<string | number> | null
+): string {
+  const pathStr = (path || []).join('.').toLowerCase();
+  const idStr = (fieldId || '').toLowerCase();
+
+  if (idStr === 'route-stop-descriptions' || pathStr.includes('mapsegmentdescriptions')) {
+    return 'route_stop_description';
+  }
+
+  if (scope?.startsWith('itinerary:day:')) {
+    if (idStr.includes('title') || pathStr.includes('title')) {
+      return 'itinerary:day:title';
+    }
+    return 'itinerary:day:description';
+  }
+
+  if (scope === 'hero') {
+    if (idStr.includes('title') || pathStr.includes('title')) {
+      return 'hero_title';
+    }
+    return 'hero_lede';
+  }
+
+  if (scope === 'hotel_plan') {
+    if (idStr.includes('intro') || pathStr.includes('intro')) {
+      return 'hotel_intro';
+    }
+    return 'hotel_total_copy';
+  }
+
+  if (scope === 'route') {
+    if (idStr.includes('title') || pathStr.includes('title')) {
+      return 'hero_title';
+    }
+    return 'hero_lede';
+  }
+
+  if (scope === 'overview_letter' || scope === 'overview') {
+    if (idStr.includes('highlight') || pathStr.includes('highlight')) {
+      return 'overview_highlight';
+    }
+    if (idStr.includes('title') || pathStr.includes('title')) {
+      return 'hero_title';
+    }
+    return 'hero_lede';
+  }
+
+  if (fieldId && PDF_TEXT_BUDGETS[fieldId]) {
+    return fieldId;
+  }
+
+  return 'default';
+}
+
+/**
  * Validate text length against fixed A4 PDF compositor printable budgets.
  */
 export function validatePdfTextBudget(
@@ -77,7 +137,19 @@ export function validatePdfTextBudget(
 /**
  * Convert facts or trip into a canonical trip object helper.
  */
-function toTripHelper(factsOrTrip: QuotationFacts | CanonicalTrip): CanonicalTrip {
+function toTripHelper(factsOrTrip?: QuotationFacts | CanonicalTrip | null): CanonicalTrip {
+  if (!factsOrTrip) {
+    return {
+      startDate: null,
+      endDate: null,
+      durationDays: null,
+      durationNights: null,
+      destinations: [],
+      displayRouteText: null,
+      itinerary: [],
+      lang: 'en',
+    };
+  }
   if ('itinerary' in factsOrTrip && Array.isArray(factsOrTrip.itinerary)) {
     return factsOrTrip as CanonicalTrip;
   }
@@ -120,7 +192,7 @@ function formatDayLabel(dayNumber: number, destination: string | null | undefine
  */
 export function deriveDefaultCandidate(
   scope: string,
-  factsOrTrip: QuotationFacts | CanonicalTrip,
+  factsOrTrip?: QuotationFacts | CanonicalTrip | null,
   langCode?: string | null
 ): Record<string, unknown> {
   const lang: LanguageCode = langCode === 'vi' || langCode === 'ar' ? langCode : 'en';
@@ -150,7 +222,7 @@ export function deriveDefaultCandidate(
     return {
       trip: {
         title,
-        lede: labels.routeMapLead || labels.routeMapDescription,
+        lede: labels.routeMapLead,
       },
       narrative: {
         coverKicker: labels.journeyOverviewKicker,
@@ -165,7 +237,7 @@ export function deriveDefaultCandidate(
     return {
       narrative: {
         journeyOverviewTitle: labels.journeyOverviewTitle,
-        letterHighlight: labels.routeMapLead || labels.routeMapDescription,
+        letterHighlight: labels.routeMapLead,
         letterGreeting: lang === 'vi' ? 'Kính gửi Quý khách' : lang === 'ar' ? 'عزيزي الضيف' : 'Dear Guest',
         letterIntro: labels.staysDividerTagline,
         letterBody2: labels.itineraryDescription,
@@ -272,12 +344,13 @@ export function deriveDefaultCandidate(
  */
 export function reconcileCandidateWithFacts(
   scope: string,
-  candidate: Record<string, unknown> | undefined,
-  canonicalTrip: CanonicalTrip,
+  candidate: Record<string, unknown> | undefined | null,
+  canonicalTripOrFacts?: CanonicalTrip | QuotationFacts | null,
   langCode?: string | null
 ): Record<string, unknown> {
   const lang: LanguageCode = langCode === 'vi' || langCode === 'ar' ? langCode : 'en';
-  const defaultCandidate = deriveDefaultCandidate(scope, canonicalTrip, lang);
+  const trip = toTripHelper(canonicalTripOrFacts);
+  const defaultCandidate = deriveDefaultCandidate(scope, trip, lang);
 
   if (!candidate || Object.keys(candidate).length === 0) {
     return defaultCandidate;
@@ -332,7 +405,7 @@ export function reconcileCandidateWithFacts(
   if (scope.startsWith('itinerary:day:')) {
     const dayNumber = parseInt(scope.split(':').pop() || '1', 10);
     const day: CanonicalDay | undefined =
-      canonicalTrip.itinerary.find((d) => d.day_number === dayNumber) ?? canonicalTrip.itinerary[dayNumber - 1];
+      trip.itinerary.find((d) => d.day_number === dayNumber) ?? trip.itinerary[dayNumber - 1];
 
     const defaultTitle = formatDayLabel(dayNumber, day?.destination, lang);
     const title =
@@ -504,7 +577,10 @@ export function checkDocumentPdfTextBudgets(document: Record<string, unknown>): 
 
 export const contentReconciler = {
   validatePdfTextBudget,
+  deriveBudgetType,
   deriveDefaultCandidate,
   reconcileCandidateWithFacts,
   checkDocumentPdfTextBudgets,
+  PDF_TEXT_BUDGETS,
+  DEFAULT_BUDGET_LIMIT,
 };

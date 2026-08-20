@@ -33,6 +33,7 @@ import { buildDisplayDocumentFromQuoteDocument } from "../../display/runtimePage
 import type { ViewMode } from "../../display/contracts.ts";
 import { updateDesignerPresentationFacts } from "../../lib/prefillEngine.ts";
 import { useQuotationWorkspace } from "./useQuotationWorkspace.ts";
+import { useQuotationWorkflowManager } from "./useQuotationWorkflowManager.ts";
 import { useToast } from "../staff-workspace/ToastProvider.tsx";
 import {
   parseFactsDeepLink,
@@ -110,6 +111,24 @@ export default function QuotationWorkspaceClient({
   const { data: workflowData } = workspace.workflow;
   const { data: options } = workspace.options;
   const { data: brandsResponse } = workspace.brands;
+
+  const {
+    isFactsDirty,
+    isSaving: isWorkflowSaving,
+    guardedNavigateStage,
+    saveFactsWithRefresh,
+  } = useQuotationWorkflowManager({
+    quotationId,
+    lang,
+    stage,
+    setStage,
+    editableFacts,
+    setEditableFacts,
+    workspace,
+    toast,
+    notify,
+  });
+
   const factsDeepLink = useMemo(
     () =>
       parseFactsDeepLink(
@@ -167,8 +186,10 @@ export default function QuotationWorkspaceClient({
   }, []);
 
   const goTo = useCallback(
-    (next: Stage) => {
-      setStage(next);
+    async (next: Stage) => {
+      const allowed = await guardedNavigateStage(next);
+      if (!allowed) return;
+
       if (next === "review" && !reviewReady) {
         notify({
           message: "Resolve the server-reported review blockers before publishing.",
@@ -182,20 +203,11 @@ export default function QuotationWorkspaceClient({
         });
       }
     },
-    [notify, reviewReady, scrollToBlockers]
+    [guardedNavigateStage, notify, reviewReady, scrollToBlockers]
   );
 
   function saveFacts(facts: QuotationFacts) {
-    startTransition(async () => {
-      try {
-        await workspace.saveFacts(facts);
-        toast("Facts saved. Existing content candidates re-evaluated.", "success");
-        setEditableFacts(null);
-        setStage("content");
-      } catch (error) {
-        toast(apiErrorMessage(error), "error");
-      }
-    });
+    void saveFactsWithRefresh(facts, { targetStageAfterSave: "content" });
   }
 
   function savePresentation() {
@@ -336,7 +348,10 @@ export default function QuotationWorkspaceClient({
   );
 
   const navigateHandoff = useCallback(
-    (target: ResolvedHandoff) => {
+    async (target: ResolvedHandoff) => {
+      const allowed = await guardedNavigateStage(target.stage as Stage);
+      if (!allowed) return;
+
       const params = new URLSearchParams(search.toString());
       params.set("stage", target.stage);
       if (target.stage === "facts") {
@@ -345,6 +360,17 @@ export default function QuotationWorkspaceClient({
         const focus = serializeFactsFocus(target.focus);
         if (focus) params.set("focus", focus);
         else params.delete("focus");
+      } else if (target.stage === "design") {
+        params.delete("factsSection");
+        params.delete("section");
+        const focus = serializeFactsFocus(target.focus);
+        if (focus) {
+          params.set("focus", focus);
+        } else if (target.source && target.source !== "blocker") {
+          params.set("focus", target.source);
+        } else {
+          params.delete("focus");
+        }
       } else {
         params.delete("factsSection");
         params.delete("focus");
@@ -357,9 +383,8 @@ export default function QuotationWorkspaceClient({
         params.set("section", section);
       }
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-      setStage(target.stage);
     },
-    [documentData?.document, pathname, router, search],
+    [documentData?.document, guardedNavigateStage, pathname, router, search],
   );
 
   return (
@@ -495,6 +520,7 @@ export default function QuotationWorkspaceClient({
             resolvedFacts={factsData.resolvedFacts}
             readOnly={!editable}
             allowSubmitWhenReadOnly={!editable}
+            isDirty={isFactsDirty}
             sourceNote={
               editable
                 ? "Manual quotation · changes create a new fact revision and stale older candidates."
@@ -512,7 +538,7 @@ export default function QuotationWorkspaceClient({
             onSubmit={() =>
               editable ? saveFacts(activeFacts) : savePresentation()
             }
-            pending={pending}
+            pending={pending || isWorkflowSaving}
             deepLink={factsDeepLink}
             mediaWorkspace={documentData ? { quotationId, lang, document: documentData.document, currentRevision: documentData.currentRevision, contract: documentData.editableContract, onSaved: workspace.refresh } : undefined}
             onDesignerSelected={documentData ? async (designerProfileId) => {
@@ -635,6 +661,7 @@ export default function QuotationWorkspaceClient({
                     }
                   }}
                   onHandoff={navigateHandoff}
+                  focus={search.get("focus") ?? undefined}
                 />
               ) : null}
             </div>

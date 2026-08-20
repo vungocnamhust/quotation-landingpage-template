@@ -35,6 +35,7 @@ type Props = {
   allowPresentationEdits?: boolean;
   allowSubmitWhenReadOnly?: boolean;
   sourceNote?: string;
+  isDirty?: boolean;
   onChange: Dispatch<SetStateAction<QuotationFacts>>;
   onSubmit?: () => void;
   submitLabel?: string;
@@ -111,6 +112,7 @@ export default function FactsForm({
   allowPresentationEdits = true,
   allowSubmitWhenReadOnly = false,
   sourceNote,
+  isDirty = false,
   onChange,
   onSubmit,
   submitLabel = "Confirm facts & prepare content",
@@ -170,11 +172,56 @@ export default function FactsForm({
           onSubmit={canSubmit ? onSubmit : undefined}
           submitLabel={submitLabel}
           pending={pending}
+          isDirty={isDirty}
         />
       </div>
 
       {/* Main Content Form Cards */}
       <div className="order-2 flex min-w-0 flex-col gap-5 lg:order-2">
+        {/* Sync Status Banner */}
+        <div
+          className={cn(
+            "flex items-center justify-between gap-3 rounded-[var(--radius-card)] border px-4 py-3 transition-colors",
+            isDirty
+              ? "border-[var(--color-accent-alt)] bg-[color-mix(in_srgb,var(--color-accent-alt)_8%,var(--color-surface))]"
+              : "border-[var(--color-border)] bg-[var(--color-surface-muted)]"
+          )}
+        >
+          <div className="flex items-center gap-2">
+            {isDirty ? (
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--color-accent-alt)] opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[var(--color-accent-alt)]" />
+              </span>
+            ) : (
+              <CheckCircle2 size={16} className="text-[var(--color-accent)] shrink-0" aria-hidden="true" />
+            )}
+            <span
+              className={cn(
+                getTypographyClassName("bodySm"),
+                isDirty ? "text-[var(--color-accent-alt)]" : "text-[var(--color-muted)]"
+              )}
+            >
+              {isDirty
+                ? "Unsaved changes in Facts · will auto-save on tab switch"
+                : "Facts synchronized with current revision"}
+            </span>
+          </div>
+          {canSubmit && isDirty ? (
+            <button
+              type="button"
+              onClick={onSubmit}
+              disabled={pending}
+              className={cn(
+                getTypographyClassName("buttonSecondary"),
+                "min-h-8 rounded-[var(--radius-button)] bg-[var(--color-accent)] !text-white px-3 py-1 hover:bg-[color-mix(in_srgb,var(--color-accent)_85%,black)] transition-all cursor-pointer disabled:opacity-50"
+              )}
+            >
+              {pending ? "Saving…" : "Save now"}
+            </button>
+          ) : null}
+        </div>
+
         {sourceNote ? (
           <p
             className={cn(

@@ -357,6 +357,7 @@ export function addHotelToFacts(input: QuotationFacts): QuotationFacts {
   }
 
   const newHotel: HotelFact = {
+    id: `hotel_new_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
     accommodation_id: null,
     destination: null,
     destination_ref: null,

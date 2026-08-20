@@ -117,7 +117,7 @@ export const tripAdapter = {
     const duration = calculateDuration(start, end);
 
     const canonicalDays: CanonicalDay[] = trip.itinerary.map((d, index) => ({
-      id: `day_${d.day_number || index + 1}`,
+      id: d.id || `day_${d.day_number || index + 1}`,
       day_number: d.day_number || index + 1,
       destination: d.destination || null,
       destination_ref: d.destination_ref ?? null,
@@ -161,8 +161,9 @@ export const tripAdapter = {
     const safe = ensureFactsDefaults(prevInput);
 
     const itinerary: ItineraryDayFact[] = canonical.itinerary.map((d, index) => {
-      const existing = safe.trip_facts.itinerary[index];
+      const existing = safe.trip_facts.itinerary.find((item) => item.id && item.id === d.id) || safe.trip_facts.itinerary[index];
       return {
+        id: d.id || existing?.id,
         day_number: d.day_number || index + 1,
         destination: d.destination || null,
         destination_ref: d.destination_ref ?? null,
