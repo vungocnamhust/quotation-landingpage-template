@@ -263,28 +263,28 @@ export default function DetailRequestView({ request: initialRequest }: Props) {
 
       {/* Linked Quotation Status Banner */}
       {activeRequest.linked_quotation_id ? (
-        <section className="flex flex-wrap items-center justify-between gap-4 rounded-[var(--radius-card)] border border-emerald-200 bg-emerald-50 p-5 text-emerald-900 shadow-xs">
+        <section className="flex flex-wrap items-center justify-between gap-4 rounded-[var(--radius-card)] border border-emerald-300 bg-emerald-50/90 p-5 text-emerald-950 shadow-sm">
           <div className="flex items-center gap-3">
-            <CheckCircle2 size={22} className="text-emerald-600 shrink-0" aria-hidden="true" />
+            <CheckCircle2 size={24} className="text-emerald-600 shrink-0" aria-hidden="true" />
             <div>
-              <h3 className={cn(getTypographyClassName("cardTitle"), "text-emerald-900")}>
+              <h3 className={cn(getTypographyClassName("cardTitle"), "text-emerald-950")}>
                 Quotation Proposal Generated
               </h3>
-              <p className={cn(getTypographyClassName("caption"), "text-emerald-700")}>
-                Linked Quotation ID: {activeRequest.linked_quotation_id}
+              <p className={cn(getTypographyClassName("caption"), "text-emerald-800")}>
+                👉 Báo giá đã được tạo [{activeRequest.linked_quotation_id}]
               </p>
             </div>
           </div>
 
           <Link
-            href={`/workspace/quotations/${activeRequest.linked_quotation_id}`}
+            href={`/workspace/quotations/${activeRequest.linked_quotation_id}/edit?stage=facts`}
             className={cn(
               getTypographyClassName("buttonPrimary"),
-              "flex items-center gap-1.5 rounded-[var(--radius-button)] bg-emerald-600 px-4 py-2 text-white shadow-xs hover:bg-emerald-700 transition-colors"
+              "flex items-center gap-2 rounded-[var(--radius-button)] bg-emerald-700 hover:bg-emerald-800 px-5 py-2.5 !text-white shadow-md transition-all"
             )}
           >
-            <span>Open Quotation Workspace</span>
-            <ExternalLink size={14} aria-hidden="true" />
+            <span>Mở Quotation Studio</span>
+            <ExternalLink size={15} aria-hidden="true" />
           </Link>
         </section>
       ) : null}

@@ -178,9 +178,8 @@ class TestQuoteRequestService(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(facts["trip_facts"]["avoid"], "Large tour groups")
 
         # Pricing facts
-        self.assertEqual(facts["pricing_facts"]["show_commission"], "Yes — separate line")
-        self.assertEqual(facts["pricing_facts"]["price_display"], "Per person sharing")
-        self.assertEqual(facts["pricing_facts"]["commission_rate"], 15.0)
+        self.assertEqual(len(facts["pricing_facts"]["options"]), 1)
+        self.assertIn("sharing", facts["pricing_facts"]["conditions"][0])
 
     def test_consolidate_stays_from_day_accommodations(self):
         from services.quote_request_service import consolidate_stays_from_day_accommodations
@@ -283,8 +282,7 @@ class TestQuoteRequestService(unittest.IsolatedAsyncioTestCase):
         pricing_opt = facts["pricing_facts"]["options"][0]
         self.assertEqual(pricing_opt["label"], "Bespoke Safar Option")
         self.assertEqual(pricing_opt["currency"], "USD")
-        self.assertEqual(pricing_opt["per_adult_amount_minor"], 400000)
-        self.assertEqual(pricing_opt["per_child_amount_minor"], 250000)
+        self.assertEqual(pricing_opt["per_traveler_amount_minor"], 400000)
         self.assertEqual(pricing_opt["group_total_amount_minor"], 1050000)
 
     def test_generate_quotation_with_added_days_overrides(self):

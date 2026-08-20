@@ -169,12 +169,18 @@ async def update_quote_request(
 async def generate_quotation_from_request(
     request_id: str,
     session: DbSessionDep,
+    principal: EditorPrincipalDep,
     overrides: QuotationMinimalOverridesSchema | None = None,
 ) -> GenerateQuotationFromRequestResponseSchema:
     service = QuoteRequestService(session)
     try:
+        from repositories.travel_designer_repository import TravelDesignerRepository
+        creator_designer = None
+        if principal.email:
+            creator_designer = await TravelDesignerRepository(session).get_active_by_email(principal.email)
         res = await service.generate_quotation_from_request(
             request_id=request_id,
+            created_by_profile_id=creator_designer.id if creator_designer else None,
             overrides=overrides,
         )
         await session.commit()

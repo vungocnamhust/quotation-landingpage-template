@@ -24,9 +24,11 @@ import {
 import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
 import FactsForm from "./FactsForm.tsx";
+import useSWR from "swr";
 import {
   hydrateDestinationRefs,
   type QuotationFacts,
+  type QuoteRequestItem,
 } from "./factsTypes.ts";
 import { apiErrorMessage, quotationFetch } from "../../lib/apiError.ts";
 import { buildDisplayDocumentFromQuoteDocument } from "../../display/runtimePageBuilder.ts";
@@ -43,6 +45,7 @@ import {
 import { ReviewBlockersPanel } from "./ReviewBlockersPanel.tsx";
 import DesignPreviewToolbar from "./DesignPreviewToolbar.tsx";
 import BrochurePreviewModal from "./BrochurePreviewModal.tsx";
+import RequestRecapModal from "./RequestRecapModal.tsx";
 
 const ContentStudioClient = dynamic(
   () => import("../content-studio/ContentStudioClient"),
@@ -111,6 +114,17 @@ export default function QuotationWorkspaceClient({
   const { data: workflowData } = workspace.workflow;
   const { data: options } = workspace.options;
   const { data: brandsResponse } = workspace.brands;
+
+  const opportunityId =
+    factsData?.source?.opportunityId ||
+    ((factsData?.facts as Record<string, unknown> | undefined)?.opportunity_id as string | undefined) ||
+    ((documentData?.document?.meta as Record<string, unknown> | undefined)?.opportunityId as string | undefined);
+
+  const { data: quoteRequest } = useSWR<QuoteRequestItem>(
+    opportunityId ? `${API_BASE}/api/v2/workspace/requests/${opportunityId}` : null,
+    (url: string) => quotationFetch<QuoteRequestItem>(url, undefined, "Failed to load request.")
+  );
+  const [isRecapOpen, setIsRecapOpen] = useState(false);
 
   const {
     isFactsDirty,
@@ -433,6 +447,21 @@ export default function QuotationWorkspaceClient({
             </h1>
           </div>
           <div className="flex flex-wrap items-center gap-3">
+            {quoteRequest ? (
+              <button
+                type="button"
+                onClick={() => setIsRecapOpen(true)}
+                className={cn(
+                  getTypographyClassName("buttonSecondary"),
+                  "flex items-center gap-2 min-h-11 rounded-[var(--radius-button)] border border-amber-300/80 bg-amber-50/80 text-amber-900 hover:bg-amber-100 px-4 transition-all shadow-xs cursor-pointer"
+                )}
+                title="View original customer request context & constraints"
+              >
+                <ClipboardList size={15} className="text-amber-700" aria-hidden="true" />
+                <span>Request Recap</span>
+              </button>
+            ) : null}
+
             <button
               type="button"
               onClick={() => {
@@ -443,7 +472,7 @@ export default function QuotationWorkspaceClient({
               }}
               className={cn(
                 getTypographyClassName("buttonSecondary"),
-                "flex items-center gap-2 min-h-11 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-on-surface)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)] px-4 transition-all"
+                "flex items-center gap-2 min-h-11 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-on-surface)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)] px-4 transition-all cursor-pointer"
               )}
             >
               <RefreshCw size={14} aria-hidden="true" />
@@ -771,6 +800,12 @@ export default function QuotationWorkspaceClient({
           </div>
         ) : null}
       </section>
+
+      <RequestRecapModal
+        isOpen={isRecapOpen}
+        onClose={() => setIsRecapOpen(false)}
+        request={quoteRequest ?? null}
+      />
     </div>
   );
 }

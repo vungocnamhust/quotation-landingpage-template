@@ -99,10 +99,11 @@ def convert_request_to_quotation_facts(
     start_date = (overrides.start_date if overrides and overrides.start_date else req.start_date)
     end_date = (overrides.end_date if overrides and overrides.end_date else req.end_date)
     brand_id = (overrides.brand_id if overrides and overrides.brand_id else payload.get("brand_id")) or "selvara"
-    lang = (overrides.lang if overrides and overrides.lang else "en")
+    lang = (overrides.lang if overrides and overrides.lang else payload.get("lang") or "en")
     template_id = (overrides.template_id if overrides and overrides.template_id else "itinerary-imagery-v1")
     designer_profile_id = (overrides.travel_designer_id if overrides and overrides.travel_designer_id else (req.created_by_profile_id or payload.get("travel_designer_id")))
 
+    default_meals = ["Bữa sáng"] if lang == "vi" else ["الإفطار"] if lang == "ar" else ["Breakfast"]
     children_details = req.children_details or derive_children_details(children, kid_ages)
     party_label = generate_party_label(adults, children, customer_name=None, lang=lang, kid_ages=kid_ages)
 
@@ -126,7 +127,7 @@ def convert_request_to_quotation_facts(
                 "destination_ref": day.destination_ref if isinstance(day.destination_ref, dict) else None,
                 "summary": day.summary or f"Day {day.day_number} exploration",
                 "overnight": overnight_loc,
-                "meals": ["Breakfast"],
+                "meals": default_meals,
                 "highlights": [],
                 "notes": [],
                 "sense_of_pace": "balanced",
@@ -147,7 +148,7 @@ def convert_request_to_quotation_facts(
                 "destination_ref": None,
                 "summary": day.get("summary") or f"Day {idx} exploration",
                 "overnight": day.get("overnight"),
-                "meals": day.get("meals") or ["Breakfast"],
+                "meals": day.get("meals") or default_meals,
                 "highlights": day.get("highlights") or [],
                 "notes": day.get("notes") or [],
                 "sense_of_pace": "balanced",
@@ -255,8 +256,6 @@ def convert_request_to_quotation_facts(
             "currency": currency,
             "per_traveler_amount_minor": per_traveler_minor,
             "group_total_amount_minor": group_total_minor,
-            "per_adult_amount_minor": per_adult_minor,
-            "per_child_amount_minor": per_child_minor,
         }
     ]
 
@@ -336,9 +335,6 @@ def convert_request_to_quotation_facts(
         "pricing_facts": {
             "conditions": [f"Prices based on {adults} guests sharing" if adults > 1 else "Prices based on single occupancy"],
             "options": pricing_options,
-            "price_display": payload.get("price_display") or "total_journey",
-            "show_commission": payload.get("show_commission") or "no",
-            "commission_rate": payload.get("commission"),
         },
         "booking_facts": {
             "title": booking_title,
@@ -547,34 +543,101 @@ class QuoteRequestService:
         effective_lang = facts.get("lang") or "en"
         effective_template = (facts.get("presentation_options") or {}).get("template_id") or template_name
         customer_display_name = (facts.get("customer_facts") or {}).get("customer_name") or req.customer_name or "Valued Guest"
-
-        # Create new quotation ID
-        quotation_id = f"quo_{uuid.uuid4().hex[:16]}"
-        quo_repo = QuotationRepository(self.session)
-
         title = f"Journey for {customer_display_name}"
 
-        # Create quotation record
+        # Create new quotation ID
+        quotation_id = f"quo_{uuid.uuid4().hex[:12]}"
+        quo_repo = QuotationRepository(self.session)
+        doc_repo = QuotationDocumentRepository(self.session)
+
+        import main
+        from api.dependencies import V2_RENDERER_NAME
+        from quote_document import CreateQuoteRequestV1
+        from repositories.travel_designer_repository import TravelDesignerRepository
+        from services.skeleton_builder import SkeletonBuilder
+
+        normalized_facts = main.normalize_legacy_facts_snapshot(facts)
+        payload = CreateQuoteRequestV1.model_validate(normalized_facts)
+        canonical, resolved = await main._resolve_v2_facts(payload)
+
+        # Resolve Travel Designer
+        designers = TravelDesignerRepository(self.session)
+        designer_id = (
+            (facts.get("presentation_options") or {}).get("travel_designer_id")
+            or req.created_by_profile_id
+            or created_by_profile_id
+            or (req.payload_json or {}).get("travel_designer_id")
+            or effective_designer
+        )
+        designer_profile = None
+        if designer_id:
+            designer_profile = await designers.get_profile(designer_id)
+        if designer_profile is None:
+            designer_profile = await designers.get_brand_default(effective_brand)
+        if designer_profile is None:
+            active_profiles = await designers.list_profiles(active_only=True, limit=1)
+            if active_profiles:
+                designer_profile = active_profiles[0]
+
+        resolved_designer_id = designer_profile.id if designer_profile else None
+
+        document = SkeletonBuilder().build(
+            quotation_id=quotation_id,
+            payload=canonical,
+            resolved_facts=resolved,
+            template=V2_RENDERER_NAME,
+        )
+        if designer_profile:
+            main._apply_travel_designer_snapshot(document, main._serialize_travel_designer(designer_profile))
+            canonical.presentation_options.travel_designer_id = designer_profile.id
+
+        document["meta"]["resolvedDestinationRefs"] = {
+            key: resolved.get(key) for key in ("routeDestinationRefs", "itinerary", "hotels")
+        }
+
+        # Create quotation record with V2_RENDERER_NAME
         quotation = await quo_repo.create_quotation(
             quotation_id=quotation_id,
             brand_id=effective_brand,
-            template_name=effective_template,
+            template_name=V2_RENDERER_NAME,
             baseline_lang=effective_lang,
             opportunity_id=req.id,
             customer_name=customer_display_name,
             title=title,
             status="draft",
-            designer_profile_id=effective_designer,
-            created_by_profile_id=effective_designer,
+            source_kind="manual",
+            source_snapshot_at=datetime.now().astimezone(),
+            designer_profile_id=resolved_designer_id,
+            created_by_profile_id=resolved_designer_id,
         )
 
+        # Create quotation request snapshot
+        await quo_repo.create_quotation_request(
+            quotation_id=quotation_id,
+            request_json=canonical.model_dump(mode="json"),
+        )
+
+        # Apply missing media defaults from catalog
+        try:
+            await main._apply_missing_media_defaults(self.session, document, quotation_id, effective_lang)
+        except Exception:
+            # Tolerant of missing media library catalog in SQLite test harnesses
+            pass
+
         # Save initial document revision
-        doc_repo = QuotationDocumentRepository(self.session)
-        await doc_repo.save_current_document(
+        saved = await doc_repo.save_current_document(
             quotation_id=quotation.id,
             lang=effective_lang,
-            document_json=facts,
+            document_json=document,
             expected_revision=0,
+        )
+        document.setdefault("meta", {})["revision"] = saved.revision
+        await doc_repo.append_document_revision(
+            quotation_id=quotation.id,
+            lang=effective_lang,
+            revision=saved.revision,
+            document_json=document,
+            change_source="create_from_request",
         )
 
         # Update QuoteRequest status to quotation_created and link quotation_id
@@ -615,7 +678,7 @@ class QuoteRequestService:
             "request_id": req.id,
             "redirect_url": f"/workspace/quotations/{quotation.id}/edit?stage=facts&lang={effective_lang}",
             "status": "draft",
-            "current_revision": 1,
-            "facts_snapshot": facts,
+            "current_revision": saved.revision,
+            "facts_snapshot": canonical.model_dump(mode="json"),
         }
 

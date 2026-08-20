@@ -1,6 +1,7 @@
 "use client";
 
 import { type Dispatch, type ReactNode, type SetStateAction } from "react";
+import { Sparkles } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
 import CustomSelect from "../ui/CustomSelect.tsx";
@@ -30,7 +31,7 @@ type Props = {
   options: QuotationOptions;
   pending?: boolean;
   onChange: Dispatch<SetStateAction<QuotationFacts>>;
-  onSubmit: () => void;
+  onSubmit: (targetStage: "facts" | "design") => void;
 };
 
 const inputClass = cn(
@@ -105,19 +106,23 @@ export default function MinimalQuotationIntakeForm({
     group_total_amount_minor: 700000,
   };
 
+  const handleFormSubmit = (targetStage: "facts" | "design") => {
+    const gateResult = evaluateQuotationDraftReadiness(facts, dayWithStays);
+    if (!gateResult.passed) {
+      const toastPayload = toastAdapter.fromGateResult(gateResult);
+      if (toastPayload) {
+        toast(toastPayload.message, toastPayload.type);
+      }
+      return;
+    }
+    onSubmit(targetStage);
+  };
+
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        const gateResult = evaluateQuotationDraftReadiness(facts, dayWithStays);
-        if (!gateResult.passed) {
-          const toastPayload = toastAdapter.fromGateResult(gateResult);
-          if (toastPayload) {
-            toast(toastPayload.message, toastPayload.type);
-          }
-          return;
-        }
-        onSubmit();
+        handleFormSubmit("facts");
       }}
       className="mx-auto flex w-full max-w-4xl flex-col gap-6"
     >
@@ -152,24 +157,30 @@ export default function MinimalQuotationIntakeForm({
             </label>
           ) : null}
 
-          {options.languages?.length ? (
-            <label className="flex flex-col gap-1.5">
-              <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>
-                Language
-              </span>
-              <CustomSelect
-                value={facts.lang}
-                placeholder="Select language"
-                options={options.languages}
-                onChange={(lang) =>
-                  patchFacts((current) => ({
-                    ...current,
-                    lang: lang as QuotationFacts["lang"],
-                  }))
-                }
-              />
-            </label>
-          ) : null}
+          <label className="flex flex-col gap-1.5">
+            <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>
+              Language
+            </span>
+            <CustomSelect
+              value={facts.lang || "en"}
+              placeholder="Select language"
+              options={
+                options.languages?.length
+                  ? options.languages
+                  : [
+                      { id: "en", label: "English (EN)" },
+                      { id: "vi", label: "Tiếng Việt (VI)" },
+                      { id: "ar", label: "العربية (AR)" },
+                    ]
+              }
+              onChange={(lang) =>
+                patchFacts((current) => ({
+                  ...current,
+                  lang: (lang || "en") as QuotationFacts["lang"],
+                }))
+              }
+            />
+          </label>
 
           {compatibleTemplates.length ? (
             <label className="flex flex-col gap-1.5">
@@ -370,17 +381,31 @@ export default function MinimalQuotationIntakeForm({
         />
       </SectionCard>
 
-      {/* Submit Button Bar */}
-      <div className="flex justify-end gap-3 pt-2">
+      {/* Submit Button Bar with Dual Actions */}
+      <div className="flex flex-wrap items-center justify-end gap-3 pt-2">
         <button
-          type="submit"
+          type="button"
           disabled={pending}
+          onClick={() => handleFormSubmit("facts")}
           className={cn(
-            getTypographyClassName("buttonPrimary"),
-            "min-h-12 rounded-[var(--radius-button)] bg-[var(--color-accent)] !text-white hover:bg-[color-mix(in_srgb,var(--color-accent)_85%,black)] px-8 shadow-md border border-transparent transition-all disabled:opacity-50 cursor-pointer"
+            getTypographyClassName("buttonSecondary"),
+            "min-h-12 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-6 text-[var(--color-on-surface)] hover:bg-[var(--color-surface-muted)] shadow-xs transition-all disabled:opacity-50 cursor-pointer"
           )}
         >
-          {pending ? "Creating Quotation…" : "Create Quotation & Proceed"}
+          {pending ? "Creating Quotation…" : "Tạo Báo Giá & Kiểm Tra Facts"}
+        </button>
+
+        <button
+          type="button"
+          disabled={pending}
+          onClick={() => handleFormSubmit("design")}
+          className={cn(
+            getTypographyClassName("buttonPrimary"),
+            "flex items-center gap-2 min-h-12 rounded-[var(--radius-button)] bg-[var(--color-accent)] !text-white hover:bg-[color-mix(in_srgb,var(--color-accent)_85%,black)] px-7 shadow-md border border-transparent transition-all disabled:opacity-50 cursor-pointer"
+          )}
+        >
+          <Sparkles size={16} aria-hidden="true" />
+          <span>{pending ? "Creating Quotation…" : "Tạo Báo Giá & Mở Trực Tiếp Canvas Thiết Kế"}</span>
         </button>
       </div>
     </form>

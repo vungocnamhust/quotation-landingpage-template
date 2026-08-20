@@ -27,6 +27,9 @@ const API_BASE = process.env.NEXT_PUBLIC_QUOTATION_API_URL ?? "";
 const fetchJson = async <T,>(url: string): Promise<T> =>
   quotationFetch<T>(url, undefined, "Data could not be loaded.");
 
+import FastTrackProgressModal from "./FastTrackProgressModal.tsx";
+import { runQuotationFastTrackPipeline, type FastTrackProgress } from "../../lib/quotationFastTrack.ts";
+
 function QuotationIntakeInner({
   quoteRequest,
   requestId,
@@ -44,17 +47,53 @@ function QuotationIntakeInner({
   );
   const [fieldErrors, setFieldErrors] = useState<Array<{ path: string; message: string }>>([]);
   const [isPending, startTransition] = useTransition();
+  const [fastTrackProgress, setFastTrackProgress] = useState<FastTrackProgress | null>(null);
+  const [isFastTrackOpen, setIsFastTrackOpen] = useState(false);
   const { toast, notify, clearScope } = useToast();
 
   useEffect(() => {
     if (fieldErrors.length) document.getElementById("quotation-intake-errors")?.focus();
   }, [fieldErrors]);
 
-  const createQuotation = () => {
+  const handleCreateQuotation = (targetStage: "facts" | "design") => {
+    if (targetStage === "design") {
+      setIsFastTrackOpen(true);
+      setFastTrackProgress({
+        stage: "create",
+        message: "Starting automated fast-track workflow...",
+      });
+
+      startTransition(async () => {
+        try {
+          const result = await runQuotationFastTrackPipeline({
+            requestId,
+            facts,
+            onProgress: (prog) => setFastTrackProgress(prog),
+          });
+
+          clearScope("create-quotation");
+          toast("Brochure assembled successfully! Opening Design Studio...", "success");
+          router.push(result.redirectUrl);
+        } catch (error) {
+          setIsFastTrackOpen(false);
+          const msg = apiErrorMessage(error);
+          setFieldErrors(apiErrorFieldErrors(error));
+          notify({
+            message: msg,
+            type: "error",
+            persistent: true,
+            scope: "create-quotation",
+            action: { label: "Retry", onClick: () => handleCreateQuotation("design") },
+          });
+        }
+      });
+      return;
+    }
+
+    // Standard creation -> navigate to Facts stage
     startTransition(async () => {
       try {
         if (requestId) {
-          // Generate Quotation from Request with minimal overrides
           const pricingOpt: PricingOptionFact = facts.pricing_facts.options[0] || {
             id: "opt-standard",
             label: "Standard Luxury Option",
@@ -67,6 +106,7 @@ function QuotationIntakeInner({
             lang: facts.lang,
             template_id: facts.presentation_options.template_id,
             travel_designer_id: facts.presentation_options.travel_designer_id,
+            partner_id: facts.presentation_options.partner_id,
             customer_name: facts.customer_facts.customer_name,
             adults: facts.customer_facts.adults,
             children: facts.customer_facts.children,
@@ -118,11 +158,11 @@ function QuotationIntakeInner({
             `Quotation created successfully from request #${requestId}! Redirecting to workspace...`,
             "success"
           );
-          if (res?.redirect_url) {
-            router.push(res.redirect_url);
-          } else {
-            router.push(`/workspace/quotations/${res.quotation_id}/edit?stage=facts`);
-          }
+          router.push(
+            `/workspace/quotations/${res.quotation_id}/edit?stage=facts&lang=${encodeURIComponent(
+              facts.lang || "en"
+            )}`
+          );
         } else {
           // Direct quotation creation without request
           const res = await quotationFetch<{ quotationId: string; baselineLang: string }>(
@@ -150,7 +190,7 @@ function QuotationIntakeInner({
           type: "error",
           persistent: true,
           scope: "create-quotation",
-          action: { label: "Retry", onClick: createQuotation },
+          action: { label: "Retry", onClick: () => handleCreateQuotation("facts") },
         });
       }
     });
@@ -158,6 +198,7 @@ function QuotationIntakeInner({
 
   return (
     <>
+      <FastTrackProgressModal isOpen={isFastTrackOpen} progress={fastTrackProgress} />
       {/* Field Errors Alert */}
       {fieldErrors.length ? (
         <div
@@ -192,7 +233,7 @@ function QuotationIntakeInner({
             facts={facts}
             options={options}
             onChange={setFacts}
-            onSubmit={createQuotation}
+            onSubmit={handleCreateQuotation}
             pending={isPending}
           />
         </div>
