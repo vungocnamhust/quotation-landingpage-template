@@ -17,6 +17,7 @@ import {
   updateCustomerCounts,
   updateCustomerKidAges,
   updateCustomerName,
+  updateTravelStyle,
 } from "../../lib/prefillEngine.ts";
 import { useFactsFormState } from "./useFactsFormState.ts";
 import { FactTripSection } from "./facts-sections/FactTripSection.tsx";
@@ -257,6 +258,9 @@ export default function FactsForm({
             }
             onCustomerKidAgesChange={(ages) =>
               onChange((current) => updateCustomerKidAges(current, ages))
+            }
+            onTravelStyleChange={(style) =>
+              onChange((current) => updateTravelStyle(current, style))
             }
             onUpdate={update}
           />

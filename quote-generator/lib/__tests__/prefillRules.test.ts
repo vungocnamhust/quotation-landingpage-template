@@ -18,6 +18,8 @@ import {
   updateCustomerCounts,
   updateCustomerKidAges,
   updateCustomerRoomNotes,
+  updateTravelStyle,
+  updateDesignerPresentationFacts,
   createItineraryDayWithDefaults,
   patchPricingOptionWithInference,
   updatePricingOptionAdultInFacts,
@@ -231,6 +233,34 @@ describe('prefillEngine single-pass facade updaters', () => {
 
     facts = updateCustomerRoomNotes(facts, 'Connecting rooms on high floor requested');
     assert.equal(facts.service_facts.room_notes, 'Connecting rooms on high floor requested');
+  });
+
+  it('updateTravelStyle updates travel_style and guest_profile via partyAdapter', () => {
+    let facts = createBrochureFacts();
+    facts = updateTravelStyle(facts, 'Family, Luxury Adventure');
+    assert.equal(facts.customer_facts.travel_style, 'Family, Luxury Adventure');
+    assert.equal(facts.customer_facts.guest_profile, 'Family, Luxury Adventure');
+  });
+
+  it('updateDesignerPresentationFacts updates booking title, customer labels, market and designer facts', () => {
+    let facts = createBrochureFacts();
+    facts = updateCustomerName(facts, 'Alexander Vance');
+
+    facts = updateDesignerPresentationFacts(facts, {
+      booking_title: 'Grand Vietnam Journey',
+      booking_description: 'An exclusive bespoke itinerary',
+      customer_party_label: 'Vance Family VIP Delegation',
+      customer_greeting_name: 'Dear Alexander and Family',
+      customer_market: 'North America',
+      hero_title: 'Unforgettable Indochina',
+    });
+
+    assert.equal(facts.booking_facts.title, 'Grand Vietnam Journey');
+    assert.equal(facts.booking_facts.description, 'An exclusive bespoke itinerary');
+    assert.equal(facts.customer_facts.party_label, 'Vance Family VIP Delegation');
+    assert.equal(facts.customer_facts.greeting_name, 'Dear Alexander and Family');
+    assert.equal(facts.customer_facts.market, 'North America');
+    assert.equal(facts.designer_facts.hero_title, 'Unforgettable Indochina');
   });
 });
 

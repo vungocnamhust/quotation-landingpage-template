@@ -504,14 +504,61 @@ export function convertOptionCurrencyInFacts(
  */
 export function updateTravelStyle(input: QuotationFacts, rawStyle: string | null): QuotationFacts {
   const current = ensureFactsDefaults(input);
-  const style = rawStyle?.trim() || null;
+  const canonical = partyAdapter.fromQuotationFacts(current);
+  const updated = partyReconciler.reconcileParty({
+    ...canonical,
+    travelStyle: rawStyle?.trim() || null,
+  });
+  return partyAdapter.syncToQuotationFacts(updated, current);
+}
+
+export type DesignerPresentationPatch = Partial<QuotationFacts["designer_facts"]> & {
+  booking_title?: string | null;
+  booking_description?: string | null;
+  customer_market?: string | null;
+  customer_greeting_name?: string | null;
+  customer_party_label?: string | null;
+};
+
+/**
+ * Single-pass updater when saving designer presentation facts from Design Canvas.
+ * Synchronizes booking title/description, customer labels, market, and designer facts via partyAdapter.
+ */
+export function updateDesignerPresentationFacts(
+  input: QuotationFacts,
+  patch: DesignerPresentationPatch
+): QuotationFacts {
+  const current = ensureFactsDefaults(input);
+  const canonicalParty = partyAdapter.fromQuotationFacts(current);
+
+  let updatedParty = canonicalParty;
+  if (patch.customer_party_label !== undefined) {
+    updatedParty = partyReconciler.setPartyLabel(updatedParty, patch.customer_party_label);
+  }
+  if (patch.customer_greeting_name !== undefined) {
+    updatedParty = partyReconciler.setGreetingName(updatedParty, patch.customer_greeting_name);
+  }
+  if (patch.customer_market !== undefined) {
+    updatedParty = {
+      ...updatedParty,
+      market: patch.customer_market || null,
+    };
+  }
+
+  const syncedPartyFacts = partyAdapter.syncToQuotationFacts(updatedParty, current);
+
   return {
-    ...current,
-    customer_facts: {
-      ...current.customer_facts,
-      travel_style: style,
-      guest_profile: style,
+    ...syncedPartyFacts,
+    booking_facts: {
+      ...syncedPartyFacts.booking_facts,
+      ...(patch.booking_title !== undefined ? { title: patch.booking_title || null } : {}),
+      ...(patch.booking_description !== undefined ? { description: patch.booking_description || null } : {}),
+    },
+    designer_facts: {
+      ...syncedPartyFacts.designer_facts,
+      ...patch,
     },
   };
 }
+
 

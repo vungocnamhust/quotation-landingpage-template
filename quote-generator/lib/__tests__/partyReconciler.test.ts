@@ -4,6 +4,8 @@ import {
   partyReconciler,
   generatePartyLabel,
   inferGreetingName,
+  normalizeKidAges,
+  updateKidAgeVector,
   calculateMinEstimatedRooms,
   generateRoomSuggestions,
   createDefaultParty,
@@ -61,6 +63,24 @@ describe('partyReconciler pure domain rules', () => {
       party = partyReconciler.setKidAge(party, 1, -5); // Under 0 -> clamped to 0
 
       assert.deepEqual(party.kidAges, [17, 0]);
+    });
+
+    it('normalizeKidAges and updateKidAgeVector handle padding, clamping, and out-of-bound inputs', () => {
+      // 1. Padding with default age 6
+      const padded = normalizeKidAges([], 3);
+      assert.deepEqual(padded, [6, 6, 6]);
+
+      // 2. Truncation and age clamping
+      const clamped = normalizeKidAges([4, 25, -2], 2);
+      assert.deepEqual(clamped, [4, 17]);
+
+      // 3. Updating specific index
+      const updated = updateKidAgeVector([6, 6], 2, 1, '12');
+      assert.deepEqual(updated, [6, 12]);
+
+      // 4. Updating out-of-bound index is safely ignored
+      const ignored = updateKidAgeVector([6, 6], 2, 5, '10');
+      assert.deepEqual(ignored, [6, 6]);
     });
   });
 

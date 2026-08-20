@@ -3,11 +3,16 @@
 import { Baby } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
+import {
+  normalizeKidAges,
+  updateKidAgeVector,
+} from "../../lib/rules/partyReconciler.ts";
 
 export type KidAgesInputProps = {
   childrenCount: number;
   kidAges: number[];
   onChange: (ages: number[]) => void;
+  onAgeChange?: (index: number, age: number) => void;
   disabled?: boolean;
   size?: "sm" | "md" | "lg";
   variant?: "default" | "compact" | "inline";
@@ -18,6 +23,7 @@ export default function KidAgesInput({
   childrenCount,
   kidAges,
   onChange,
+  onAgeChange,
   disabled = false,
   size = "md",
   variant = "default",
@@ -25,21 +31,15 @@ export default function KidAgesInput({
 }: KidAgesInputProps) {
   if (childrenCount <= 0) return null;
 
+  const currentAges = normalizeKidAges(kidAges, childrenCount);
+
   const handleAgeChange = (index: number, valueStr: string) => {
-    const rawVal = parseInt(valueStr, 10);
-    const ageVal = isNaN(rawVal) ? 6 : Math.max(0, Math.min(17, rawVal));
-
-    const next = [...kidAges];
-    while (next.length < childrenCount) {
-      next.push(6);
+    const updatedAges = updateKidAgeVector(kidAges, childrenCount, index, valueStr);
+    onChange(updatedAges);
+    if (onAgeChange) {
+      onAgeChange(index, updatedAges[index]);
     }
-    next[index] = ageVal;
-    onChange(next.slice(0, childrenCount));
   };
-
-  const currentAges = Array.from({ length: childrenCount }).map(
-    (_, idx) => kidAges[idx] ?? 6
-  );
 
   const isCompact = variant === "compact";
   const isInline = variant === "inline";
@@ -82,7 +82,7 @@ export default function KidAgesInput({
       <div className="flex flex-wrap items-center gap-2.5 pt-0.5">
         {currentAges.map((age, idx) => (
           <label
-            key={idx}
+            key={`kid-age-slot-${idx}`}
             className={cn(
               "flex items-center gap-1.5 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-2 py-1 shadow-2xs transition-shadow focus-within:ring-2 focus-within:ring-[var(--color-focus)]",
               disabled && "opacity-60 cursor-not-allowed"

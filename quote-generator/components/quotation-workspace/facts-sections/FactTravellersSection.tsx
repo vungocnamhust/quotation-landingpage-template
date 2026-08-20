@@ -51,6 +51,7 @@ type Props = {
   onCustomerNameChange: (value: string) => void;
   onCustomerCountsChange: (counts: { adults?: number | null; children?: number | null }) => void;
   onCustomerKidAgesChange?: (ages: number[]) => void;
+  onTravelStyleChange?: (style: string | null) => void;
   onUpdate: <K extends keyof QuotationFacts>(key: K, value: QuotationFacts[K]) => void;
 };
 
@@ -60,6 +61,7 @@ export function FactTravellersSection({
   onCustomerNameChange,
   onCustomerCountsChange,
   onCustomerKidAgesChange,
+  onTravelStyleChange,
   onUpdate,
 }: Props) {
   const handleKidAgesChange = (ages: number[]) => {
@@ -69,6 +71,18 @@ export function FactTravellersSection({
       onUpdate("customer_facts", {
         ...customer,
         kid_ages: ages,
+      });
+    }
+  };
+
+  const handleTravelStyleChange = (style: string | null) => {
+    if (onTravelStyleChange) {
+      onTravelStyleChange(style);
+    } else {
+      onUpdate("customer_facts", {
+        ...customer,
+        guest_profile: style || null,
+        travel_style: style || null,
       });
     }
   };
@@ -128,13 +142,7 @@ export function FactTravellersSection({
           label="Travel Style & Guest Preferences"
           disabled={readOnly}
           value={customer.travel_style ?? customer.guest_profile}
-          onChange={(value) =>
-            onUpdate("customer_facts", {
-              ...customer,
-              guest_profile: value || null,
-              travel_style: value || null,
-            })
-          }
+          onChange={handleTravelStyleChange}
         />
       </div>
       <Field

@@ -202,6 +202,37 @@ export const DEFAULT_FALLBACK_ROOMING_RULES: RoomingRule[] = [
   },
 ];
 
+export function normalizeKidAges(
+  kidAges: number[] | null | undefined,
+  childrenCount: number
+): number[] {
+  const safeCount = Math.max(0, childrenCount);
+  const raw = Array.isArray(kidAges) ? [...kidAges] : [];
+  while (raw.length < safeCount) {
+    raw.push(6);
+  }
+  return raw
+    .slice(0, safeCount)
+    .map((age) => Math.max(0, Math.min(17, isNaN(age) ? 6 : Math.round(age))));
+}
+
+export function updateKidAgeVector(
+  kidAges: number[] | null | undefined,
+  childrenCount: number,
+  index: number,
+  rawAge: number | string
+): number[] {
+  const safeCount = Math.max(0, childrenCount);
+  if (index < 0 || index >= safeCount) return normalizeKidAges(kidAges, safeCount);
+
+  const numVal = typeof rawAge === "string" ? parseInt(rawAge, 10) : rawAge;
+  const clampedAge = Math.max(0, Math.min(17, isNaN(numVal) ? 6 : Math.round(numVal)));
+
+  const current = normalizeKidAges(kidAges, safeCount);
+  current[index] = clampedAge;
+  return current;
+}
+
 export function resolveClientDisplayName(
   role: string | null | undefined,
   customerName: string | null | undefined,
@@ -393,6 +424,8 @@ export const partyReconciler = {
   resolveClientDisplayName,
   generatePartyLabel,
   inferGreetingName,
+  normalizeKidAges,
+  updateKidAgeVector,
   calculateMinEstimatedRooms,
   formatSuggestionTemplate,
   generateRoomSuggestions,

@@ -25,13 +25,13 @@ import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
 import FactsForm from "./FactsForm.tsx";
 import {
-  ensureFactsDefaults,
   hydrateDestinationRefs,
   type QuotationFacts,
 } from "./factsTypes.ts";
 import { apiErrorMessage, quotationFetch } from "../../lib/apiError.ts";
 import { buildDisplayDocumentFromQuoteDocument } from "../../display/runtimePageBuilder.ts";
 import type { ViewMode } from "../../display/contracts.ts";
+import { updateDesignerPresentationFacts } from "../../lib/prefillEngine.ts";
 import { useQuotationWorkspace } from "./useQuotationWorkspace.ts";
 import { useToast } from "../staff-workspace/ToastProvider.tsx";
 import {
@@ -623,25 +623,10 @@ export default function QuotationWorkspaceClient({
                   onSaved={() => workspace.refresh()}
                   onSaveDesignerFacts={async (next) => {
                     try {
-                      const safeFacts = ensureFactsDefaults(factsData.facts);
-                      const updatedFacts = {
-                        ...safeFacts,
-                        booking_facts: {
-                          ...safeFacts.booking_facts,
-                          ...(next.booking_title !== undefined ? { title: next.booking_title } : {}),
-                          ...(next.booking_description !== undefined ? { description: next.booking_description } : {}),
-                        },
-                        customer_facts: {
-                          ...safeFacts.customer_facts,
-                          ...(next.customer_market !== undefined ? { market: next.customer_market } : {}),
-                          ...(next.customer_greeting_name !== undefined ? { greeting_name: next.customer_greeting_name } : {}),
-                          ...(next.customer_party_label !== undefined ? { party_label: next.customer_party_label } : {}),
-                        },
-                        designer_facts: {
-                          ...safeFacts.designer_facts,
-                          ...next,
-                        },
-                      };
+                      const updatedFacts = updateDesignerPresentationFacts(
+                        factsData.facts,
+                        next
+                      );
                       await workspace.saveFacts(updatedFacts);
                       toast("Presentation copy saved to Facts.", "success");
                     } catch (error) {
