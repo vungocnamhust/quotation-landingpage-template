@@ -107,6 +107,7 @@ type Props = {
   brandId: string | null;
   market: string | null;
   adults: number | null;
+  childrenCount?: number | null;
   lang?: string;
   readOnly?: boolean;
   onAddPricingOption: () => void;
@@ -120,6 +121,7 @@ export function FactCommercialSection({
   brandId,
   market,
   adults,
+  childrenCount,
   lang = "en",
   readOnly = false,
   onAddPricingOption,
@@ -128,6 +130,7 @@ export function FactCommercialSection({
   onUpdate,
 }: Props) {
   const safeAdults = Math.max(1, adults ?? 2);
+  const safeChildren = Math.max(0, childrenCount ?? 0);
 
   return (
     <div className="flex flex-col gap-4">
@@ -155,18 +158,33 @@ export function FactCommercialSection({
 
         const expectedTotal =
           perTravelerVal !== null && perTravelerVal !== undefined
-            ? pricingReconciler.calculateOptionTotal(perTravelerVal, option.per_child_amount_minor, safeAdults, 0)
+            ? pricingReconciler.calculateOptionTotal(
+                perTravelerVal,
+                option.per_child_amount_minor,
+                safeAdults,
+                safeChildren
+              )
             : null;
 
-        const expectedPerTraveler =
+        const expectedRates =
           option.group_total_amount_minor !== null && option.group_total_amount_minor !== undefined
-            ? pricingReconciler.inferOptionRatesFromTotal(option.group_total_amount_minor, safeAdults, 0).perAdultMinor
+            ? pricingReconciler.inferOptionRatesFromTotal(
+                option.group_total_amount_minor,
+                safeAdults,
+                safeChildren
+              )
             : null;
+        const expectedPerTraveler = expectedRates?.perAdultMinor ?? null;
 
         const inconsistent =
           expectedTotal !== null &&
           option.group_total_amount_minor !== null &&
           expectedTotal !== option.group_total_amount_minor;
+
+        const partySummary =
+          safeChildren > 0
+            ? `${safeAdults} adults, ${safeChildren} children`
+            : `${safeAdults} adults`;
 
         return (
           <div
@@ -213,15 +231,10 @@ export function FactCommercialSection({
                   value,
                   option.currency || defaultCurr
                 );
-                const autoTotal =
-                  option.group_total_amount_minor === null && perTraveler !== null
-                    ? pricingReconciler.calculateOptionTotal(perTraveler, option.per_child_amount_minor, safeAdults, 0)
-                    : option.group_total_amount_minor;
                 onPatchPricingOption(index, {
                   currency: option.currency || defaultCurr,
                   per_traveler_amount_minor: perTraveler,
                   per_adult_amount_minor: perTraveler,
-                  group_total_amount_minor: autoTotal,
                 });
               }}
             />
@@ -240,15 +253,9 @@ export function FactCommercialSection({
                   value,
                   option.currency || defaultCurr
                 );
-                const autoPerTraveler =
-                  perTravelerVal === null && groupTotal !== null
-                    ? pricingReconciler.inferOptionRatesFromTotal(groupTotal, safeAdults, 0).perAdultMinor
-                    : perTravelerVal;
                 onPatchPricingOption(index, {
                   currency: option.currency || defaultCurr,
                   group_total_amount_minor: groupTotal,
-                  per_traveler_amount_minor: autoPerTraveler,
-                  per_adult_amount_minor: autoPerTraveler,
                 });
               }}
             />
@@ -256,7 +263,7 @@ export function FactCommercialSection({
             {inconsistent ? (
               <div className="sm:col-span-2 flex flex-col gap-2 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface-muted)] p-3 text-[var(--color-muted)]">
                 <p className={cn(getTypographyClassName("caption"))}>
-                  {`For ${safeAdults} adults, the per traveler price equals ${formatMinorAmount(
+                  {`For ${partyLabel(safeAdults, safeChildren)}, the per traveler price equals ${formatMinorAmount(
                     expectedTotal,
                     option.currency || defaultCurr,
                     lang
@@ -352,4 +359,8 @@ export function FactCommercialSection({
       />
     </div>
   );
+}
+
+function partyLabel(adults: number, children: number): string {
+  return children > 0 ? `${adults} adults, ${children} children` : `${adults} adults`;
 }

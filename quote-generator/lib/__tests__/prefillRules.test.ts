@@ -19,6 +19,7 @@ import {
   updateCustomerKidAges,
   updateCustomerRoomNotes,
   createItineraryDayWithDefaults,
+  patchPricingOptionWithInference,
   updatePricingOptionAdultInFacts,
   applyChildPresetInFacts,
   updatePricingOptionTotalInFacts,
@@ -184,6 +185,40 @@ describe('prefillEngine single-pass facade updaters', () => {
 
     const dayEn = createItineraryDayWithDefaults({ index: 0, startDate: '2026-10-01', lang: 'en' });
     assert.deepEqual(dayEn.meals, ['Breakfast']);
+  });
+
+  it('patchPricingOptionWithInference handles atomic single-field dispatches correctly', () => {
+    const facts = createBrochureFacts();
+    facts.customer_facts.adults = 2;
+    facts.customer_facts.children = 1;
+    facts.pricing_facts.options = [
+      {
+        id: 'opt-1',
+        label: 'Luxury Option',
+        currency: 'USD',
+        per_adult_amount_minor: 400000,
+        per_child_amount_minor: 300000,
+        per_traveler_amount_minor: 400000,
+        group_total_amount_minor: 1100000,
+      },
+    ];
+
+    // 1. Atomic adult price change: dispatch only per_adult_amount_minor (600,000)
+    // 2 adults x 600,000 + 1 child x 300,000 = 1,500,000
+    const withAdult = patchPricingOptionWithInference(facts, 0, {
+      per_adult_amount_minor: 600000,
+      per_traveler_amount_minor: 600000,
+    });
+    assert.equal(withAdult.pricing_facts.options[0].per_adult_amount_minor, 600000);
+    assert.equal(withAdult.pricing_facts.options[0].per_child_amount_minor, 300000);
+    assert.equal(withAdult.pricing_facts.options[0].group_total_amount_minor, 1500000);
+
+    // 2. Atomic total change: dispatch only group_total_amount_minor (2,000,000)
+    const withTotal = patchPricingOptionWithInference(withAdult, 0, {
+      group_total_amount_minor: 2000000,
+    });
+    assert.equal(withTotal.pricing_facts.options[0].group_total_amount_minor, 2000000);
+    assert.ok((withTotal.pricing_facts.options[0].per_adult_amount_minor ?? 0) > 0);
   });
 
   it('updateCustomerKidAges and updateCustomerRoomNotes reconcile party & service facts', () => {

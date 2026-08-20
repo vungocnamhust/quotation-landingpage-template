@@ -350,18 +350,26 @@ export function patchPricingOptionWithInference(
 ): QuotationFacts {
   const current = ensureFactsDefaults(input);
   const canonical = pricingAdapter.fromQuotationFacts(current);
-  const canonicalPatch: Partial<CanonicalPricingOption> = {
-    label: patch.label,
-    currency: patch.currency ?? undefined,
-    perAdultMinor:
-      patch.per_adult_amount_minor !== undefined
-        ? patch.per_adult_amount_minor
-        : patch.per_traveler_amount_minor !== undefined
-          ? patch.per_traveler_amount_minor
-          : undefined,
-    perChildMinor: patch.per_child_amount_minor,
-    groupTotalMinor: patch.group_total_amount_minor,
-  };
+  const canonicalPatch: Partial<CanonicalPricingOption> = {};
+
+  if (patch.label !== undefined) {
+    canonicalPatch.label = patch.label;
+  }
+  if (patch.currency !== undefined) {
+    canonicalPatch.currency = patch.currency ?? undefined;
+  }
+  if (patch.per_adult_amount_minor !== undefined) {
+    canonicalPatch.perAdultMinor = patch.per_adult_amount_minor;
+  } else if (patch.per_traveler_amount_minor !== undefined) {
+    canonicalPatch.perAdultMinor = patch.per_traveler_amount_minor;
+  }
+  if (patch.per_child_amount_minor !== undefined) {
+    canonicalPatch.perChildMinor = patch.per_child_amount_minor;
+  }
+  if (patch.group_total_amount_minor !== undefined) {
+    canonicalPatch.groupTotalMinor = patch.group_total_amount_minor;
+  }
+
   const updated = pricingReconciler.updateOption(canonical, index, canonicalPatch);
   return pricingAdapter.syncToQuotationFacts(updated, current);
 }

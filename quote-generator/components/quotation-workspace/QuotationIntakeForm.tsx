@@ -13,8 +13,6 @@ import { RichTextEditor } from "../ui/RichTextEditor.tsx";
 import type { AccommodationProfile } from "../../lib/quotationApi.ts";
 import { BrochureAssetsEditor, MediaSlotRenderer, type MediaSlotValue, type MediaWorkspace } from "./MediaSlotRenderer.tsx";
 import {
-  inferCommercialPerTraveler,
-  inferCommercialTotal,
   inferDefaultCurrency,
   validateHotelDates,
 } from "../../lib/prefillRules.ts";
@@ -753,18 +751,39 @@ export default function QuotationIntakeForm({
           {pricing.options.map((option, index) => {
             const defaultCurr =
               option.currency || inferDefaultCurrency(facts.brand_id, customer.market);
+            const safeAdults = Math.max(1, customer.adults ?? 2);
+            const safeChildren = Math.max(0, customer.children ?? 0);
+            const perTravelerVal = option.per_adult_amount_minor ?? option.per_traveler_amount_minor;
+
             const expectedTotal =
-              customer.adults && option.per_traveler_amount_minor
-                ? inferCommercialTotal(option.per_traveler_amount_minor, customer.adults)
+              perTravelerVal !== null && perTravelerVal !== undefined
+                ? pricingReconciler.calculateOptionTotal(
+                    perTravelerVal,
+                    option.per_child_amount_minor,
+                    safeAdults,
+                    safeChildren
+                  )
                 : null;
-            const expectedPerTraveler =
-              customer.adults && option.group_total_amount_minor
-                ? inferCommercialPerTraveler(option.group_total_amount_minor, customer.adults)
+
+            const expectedRates =
+              option.group_total_amount_minor !== null && option.group_total_amount_minor !== undefined
+                ? pricingReconciler.inferOptionRatesFromTotal(
+                    option.group_total_amount_minor,
+                    safeAdults,
+                    safeChildren
+                  )
                 : null;
+            const expectedPerTraveler = expectedRates?.perAdultMinor ?? null;
+
             const inconsistent =
               expectedTotal !== null &&
               option.group_total_amount_minor !== null &&
               expectedTotal !== option.group_total_amount_minor;
+
+            const partyDesc =
+              safeChildren > 0
+                ? `${safeAdults} adults, ${safeChildren} children`
+                : `${safeAdults} adults`;
 
             return (
               <article
@@ -793,7 +812,7 @@ export default function QuotationIntakeForm({
                   required
                   type="number"
                   value={minorAmountToInput(
-                    option.per_traveler_amount_minor,
+                    perTravelerVal,
                     option.currency || defaultCurr
                   )}
                   onChange={(value) => {
@@ -801,14 +820,10 @@ export default function QuotationIntakeForm({
                       value,
                       option.currency || defaultCurr
                     );
-                    const autoTotal =
-                      option.group_total_amount_minor === null
-                        ? inferCommercialTotal(perTraveler, customer.adults)
-                        : option.group_total_amount_minor;
                     patchPricingOption(index, {
                       currency: option.currency || defaultCurr,
                       per_traveler_amount_minor: perTraveler,
-                      group_total_amount_minor: autoTotal,
+                      per_adult_amount_minor: perTraveler,
                     });
                   }}
                 />
@@ -825,21 +840,16 @@ export default function QuotationIntakeForm({
                       value,
                       option.currency || defaultCurr
                     );
-                    const autoPerTraveler =
-                      option.per_traveler_amount_minor === null
-                        ? inferCommercialPerTraveler(groupTotal, customer.adults)
-                        : option.per_traveler_amount_minor;
                     patchPricingOption(index, {
                       currency: option.currency || defaultCurr,
                       group_total_amount_minor: groupTotal,
-                      per_traveler_amount_minor: autoPerTraveler,
                     });
                   }}
                 />
                 {inconsistent ? (
                   <div className="sm:col-span-2 flex flex-col gap-2 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface-muted)] p-3 text-[var(--color-muted)]">
                     <p className={cn(getTypographyClassName("caption"))}>
-                      {`For ${customer.adults} adults, the per traveler price equals ${formatMinorAmount(
+                      {`For ${partyDesc}, the per traveler price equals ${formatMinorAmount(
                         expectedTotal,
                         option.currency || defaultCurr,
                         facts.lang ?? "en"
@@ -876,6 +886,7 @@ export default function QuotationIntakeForm({
                           onClick={() =>
                             patchPricingOption(index, {
                               per_traveler_amount_minor: expectedPerTraveler,
+                              per_adult_amount_minor: expectedPerTraveler,
                             })
                           }
                           className={cn(

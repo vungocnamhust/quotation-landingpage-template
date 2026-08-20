@@ -318,6 +318,7 @@ export default function FactsForm({
             brandId={facts.brand_id}
             market={customer.market}
             adults={customer.adults}
+            childrenCount={customer.children}
             lang={facts.lang ?? "en"}
             readOnly={readOnly}
             onAddPricingOption={addPricingOption}
