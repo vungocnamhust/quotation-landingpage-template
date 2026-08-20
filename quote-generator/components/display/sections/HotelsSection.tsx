@@ -1,12 +1,12 @@
-import type { HotelsViewModel } from '../../../display/types';
-import { textValue } from '../../../display/types';
-import { getLayoutSlots } from '../../../display/layoutRegistry';
-import { requireTypographySlot } from '../../../display/typographySlots';
-import { getTypographyClassName } from '../../../config/typography';
-import { cn } from '../../../utils/cn';
-import { BodyCopy } from '../atoms';
-import { HotelEditorialCard, SectionHeader } from '../molecules';
-import { BaseSectionProps, getItineraryDayColor, sectionOrnaments, shellProps } from './sectionHelpers';
+import type { HotelsViewModel } from '../../../display/types.ts';
+import { textValue } from '../../../display/types.ts';
+import { getLayoutSlots } from '../../../display/layoutRegistry.ts';
+import { requireTypographySlot } from '../../../display/typographySlots.ts';
+import { getTypographyClassName } from '../../../config/typography.ts';
+import { cn } from '../../../utils/cn.ts';
+import { BodyCopy } from '../atoms.tsx';
+import { HotelEditorialCard, SectionHeader } from '../molecules.tsx';
+import { BaseSectionProps, getItineraryDayColor, sectionOrnaments, shellProps } from './sectionHelpers.tsx';
 
 export function HotelsSection({
   sectionId,

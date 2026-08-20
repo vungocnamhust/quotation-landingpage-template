@@ -4,12 +4,12 @@ import { useSearchParams } from "next/navigation";
 import { useState, useTransition, useMemo } from "react";
 import useSWR from "swr";
 import { Search, Inbox, LayoutGrid, List } from "lucide-react";
-import { getTypographyClassName } from "../../config/typography";
-import { apiErrorMessage, quotationFetch } from "../../lib/apiError";
-import { cn } from "../../utils/cn";
-import { WorkspaceRequestCard } from "./WorkspaceRequestCard";
-import { WorkspaceRequestTable } from "./WorkspaceRequestTable";
-import type { QuoteRequestItem } from "../quotation-workspace/factsTypes";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { apiErrorMessage, quotationFetch } from "../../lib/apiError.ts";
+import { cn } from "../../utils/cn.ts";
+import { WorkspaceRequestCard } from "./WorkspaceRequestCard.tsx";
+import { WorkspaceRequestTable } from "./WorkspaceRequestTable.tsx";
+import type { QuoteRequestItem } from "../quotation-workspace/factsTypes.ts";
 
 const API_BASE = process.env.NEXT_PUBLIC_QUOTATION_API_URL ?? "";
 
@@ -36,7 +36,7 @@ export default function WorkspaceRequestList() {
   if (role) params.set("role", role);
   if (status) params.set("status", status);
 
-  const { data, error, isLoading } = useSWR<Response>(
+  const { data, error, isLoading, mutate } = useSWR<Response>(
     `${API_BASE}/api/v2/workspace/requests?${params}`,
     fetcher
   );
@@ -48,6 +48,11 @@ export default function WorkspaceRequestList() {
       if (next.status !== undefined) setStatus(next.status);
     });
 
+  const clearAllFilters = () => {
+    applyFilter({ q: "", role: "", status: "" });
+  };
+
+  const hasActiveFilters = Boolean(query.trim() || role || status);
   const items = useMemo(() => data?.items ?? [], [data?.items]);
 
   return (
@@ -98,23 +103,35 @@ export default function WorkspaceRequestList() {
           >
             <option value="">All Statuses</option>
             <option value="new">New Request</option>
-
             <option value="under_review">Under Review</option>
             <option value="quotation_created">Quotation Created</option>
             <option value="archived">Archived</option>
           </select>
+
+          {hasActiveFilters ? (
+            <button
+              type="button"
+              onClick={clearAllFilters}
+              className={cn(
+                getTypographyClassName("buttonSecondary"),
+                "min-h-11 rounded-[var(--radius-button)] border border-[var(--color-border)] px-3 text-[var(--color-muted)] hover:text-[var(--color-on-surface)] hover:bg-[var(--color-surface-muted)] transition-colors cursor-pointer"
+              )}
+            >
+              Clear filters
+            </button>
+          ) : null}
         </div>
 
-        {/* View Mode Toggle */}
-        <div className="flex items-center rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-1 shrink-0">
+        {/* View Toggle (Grid / Table) */}
+        <div className="flex items-center gap-1 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] p-1">
           <button
             type="button"
             onClick={() => setViewMode("grid")}
             className={cn(
               getTypographyClassName("caption"),
-              "flex items-center gap-1.5 rounded-md px-3 py-1.5 transition-all cursor-pointer",
+              "flex items-center gap-1.5 rounded-[calc(var(--radius-button)-2px)] px-3 py-1.5 transition-all cursor-pointer",
               viewMode === "grid"
-                ? "bg-[var(--color-surface)] text-[var(--color-accent)] shadow-xs"
+                ? "bg-[var(--color-accent-wash)] text-[var(--color-accent)] shadow-2xs"
                 : "text-[var(--color-muted)] hover:text-[var(--color-on-surface)]"
             )}
             aria-label="Grid View"
@@ -127,12 +144,11 @@ export default function WorkspaceRequestList() {
             onClick={() => setViewMode("table")}
             className={cn(
               getTypographyClassName("caption"),
-              "flex items-center gap-1.5 rounded-md px-3 py-1.5 transition-all cursor-pointer",
+              "flex items-center gap-1.5 rounded-[calc(var(--radius-button)-2px)] px-3 py-1.5 transition-all cursor-pointer",
               viewMode === "table"
-                ? "bg-[var(--color-surface)] text-[var(--color-accent)] shadow-xs"
+                ? "bg-[var(--color-accent-wash)] text-[var(--color-accent)] shadow-2xs"
                 : "text-[var(--color-muted)] hover:text-[var(--color-on-surface)]"
             )}
-
             aria-label="Table View"
           >
             <List size={15} aria-hidden="true" />
@@ -142,14 +158,22 @@ export default function WorkspaceRequestList() {
       </div>
 
       {error ? (
-        <p
-          className={cn(
-            getTypographyClassName("bodyMd"),
-            "rounded-[var(--radius-card)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] p-5 text-[var(--color-on-surface)] shadow-[var(--elevation-card)]"
-          )}
-        >
-          {apiErrorMessage(error)}
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-card)] border border-rose-200 bg-rose-50 p-5 text-rose-800 shadow-[var(--elevation-card)]">
+          <div className="flex flex-col gap-0.5">
+            <p className={cn(getTypographyClassName("label"), "text-rose-900")}>Could not load requests</p>
+            <p className={cn(getTypographyClassName("bodySm"), "text-rose-700")}>{apiErrorMessage(error)}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => mutate()}
+            className={cn(
+              getTypographyClassName("buttonSecondary"),
+              "rounded-[var(--radius-button)] border border-rose-300 bg-white px-3.5 py-1.5 text-rose-800 hover:bg-rose-100 transition-colors cursor-pointer"
+            )}
+          >
+            Retry
+          </button>
+        </div>
       ) : null}
 
       {isLoading ? (
@@ -172,10 +196,22 @@ export default function WorkspaceRequestList() {
             No requests found
           </h2>
           <p className={cn(getTypographyClassName("bodyMd"), "mt-1 text-[var(--color-muted)] max-w-sm")}>
-            {query.trim()
-              ? `No journey requests matching "${query}".`
+            {hasActiveFilters
+              ? "No journey requests matching your active filters."
               : "No enquiries received yet. Create a new request to get started."}
           </p>
+          {hasActiveFilters ? (
+            <button
+              type="button"
+              onClick={clearAllFilters}
+              className={cn(
+                getTypographyClassName("buttonSecondary"),
+                "mt-4 rounded-[var(--radius-button)] border border-[var(--color-border)] px-4 py-2 text-[var(--color-on-surface)] hover:bg-[var(--color-surface-muted)] cursor-pointer"
+              )}
+            >
+              Clear all filters
+            </button>
+          ) : null}
         </div>
       ) : null}
 

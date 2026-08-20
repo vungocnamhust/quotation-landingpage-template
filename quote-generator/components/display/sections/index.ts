@@ -1,31 +1,31 @@
-export * from './sectionHelpers';
-export * from './NavSection';
-export * from './HeroSection';
-export * from './OpenLetterSection';
-export * from './RouteMapSection';
-export * from './ItineraryDividerSection';
-export * from './ItinerarySection';
-export * from './HotelsSection';
-export * from './StaysDividerSection';
-export * from './PricingSection';
-export * from './InclusionsExclusionsSection';
-export * from './PaymentTermsSection';
-export * from './DesignerSection';
-export * from './FooterSection';
+export * from './sectionHelpers.tsx';
+export * from './NavSection.tsx';
+export * from './HeroSection.tsx';
+export * from './OpenLetterSection.tsx';
+export * from './RouteMapSection.tsx';
+export * from './ItineraryDividerSection.tsx';
+export * from './ItinerarySection.tsx';
+export * from './HotelsSection.tsx';
+export * from './StaysDividerSection.tsx';
+export * from './PricingSection.tsx';
+export * from './InclusionsExclusionsSection.tsx';
+export * from './PaymentTermsSection.tsx';
+export * from './DesignerSection.tsx';
+export * from './FooterSection.tsx';
 
-import { NavSection } from './NavSection';
-import { HeroSection } from './HeroSection';
-import { OpenLetterSection } from './OpenLetterSection';
-import { RouteMapSection } from './RouteMapSection';
-import { ItineraryDividerSection } from './ItineraryDividerSection';
-import { ItinerarySection } from './ItinerarySection';
-import { HotelsSection } from './HotelsSection';
-import { StaysDividerSection } from './StaysDividerSection';
-import { PricingSection } from './PricingSection';
-import { InclusionsExclusionsSection } from './InclusionsExclusionsSection';
-import { PaymentTermsSection } from './PaymentTermsSection';
-import { DesignerSection } from './DesignerSection';
-import { FooterSection } from './FooterSection';
+import { NavSection } from './NavSection.tsx';
+import { HeroSection } from './HeroSection.tsx';
+import { OpenLetterSection } from './OpenLetterSection.tsx';
+import { RouteMapSection } from './RouteMapSection.tsx';
+import { ItineraryDividerSection } from './ItineraryDividerSection.tsx';
+import { ItinerarySection } from './ItinerarySection.tsx';
+import { HotelsSection } from './HotelsSection.tsx';
+import { StaysDividerSection } from './StaysDividerSection.tsx';
+import { PricingSection } from './PricingSection.tsx';
+import { InclusionsExclusionsSection } from './InclusionsExclusionsSection.tsx';
+import { PaymentTermsSection } from './PaymentTermsSection.tsx';
+import { DesignerSection } from './DesignerSection.tsx';
+import { FooterSection } from './FooterSection.tsx';
 
 export const sectionRegistry = {
   nav: NavSection,

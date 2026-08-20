@@ -1,15 +1,15 @@
 "use client";
 
 import { memo } from "react";
-import { getTypographyClassName } from "../../../config/typography";
-import { cn } from "../../../utils/cn";
-import { DestinationSelect } from "../../destination/DestinationSelect";
-import { AccommodationSelect } from "../../accommodation/AccommodationSelect";
-import { DateInput } from "../../date";
-import type { AccommodationProfile } from "../../accommodation/types";
-import type { HotelFact } from "../factsTypes";
-import { MediaSlotRenderer, type MediaWorkspace } from "../MediaSlotRenderer";
-import { validateHotelDates } from "../../../lib/prefillRules";
+import { getTypographyClassName } from "../../../config/typography.ts";
+import { cn } from "../../../utils/cn.ts";
+import { DestinationSelect } from "../../destination/DestinationSelect.tsx";
+import { AccommodationSelect } from "../../accommodation/AccommodationSelect.tsx";
+import { DateInput } from "../../date/index.ts";
+import type { AccommodationProfile } from "../../accommodation/types.ts";
+import type { HotelFact } from "../factsTypes.ts";
+import { MediaSlotRenderer, type MediaWorkspace } from "../MediaSlotRenderer.tsx";
+import { validateHotelDates } from "../../../lib/prefillRules.ts";
 
 const inputClass = cn(
   getTypographyClassName("bodyMd"),
@@ -235,9 +235,15 @@ export const HotelEditorCard = memo(function HotelEditorCard({
               destination={hotel.destination || hotel.display_city}
               destinationId={hotel.destination_ref?.id}
               disabled={readOnly}
-              onChange={(profile) => {
+              onChange={(profile, id, customName) => {
                 if (profile) {
                   onPatch(index, hotelFromProfile(profile, hotel));
+                } else if (customName) {
+                  onPatch(index, {
+                    ...hotel,
+                    accommodation_id: null,
+                    name: customName,
+                  });
                 } else {
                   patch("accommodation_id", null);
                 }

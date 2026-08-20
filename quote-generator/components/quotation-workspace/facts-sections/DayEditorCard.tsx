@@ -1,15 +1,15 @@
 "use client";
 
 import { memo } from "react";
-import { getTypographyClassName } from "../../../config/typography";
-import { cn } from "../../../utils/cn";
-import { DestinationSelect } from "../../destination/DestinationSelect";
-import { AccommodationSelect } from "../../accommodation/AccommodationSelect";
-import type { AccommodationProfile } from "../../accommodation/types";
-import type { ItineraryDayFact } from "../factsTypes";
-import { dateForItineraryDay } from "../factsTypes";
-import { MediaSlotRenderer, type MediaWorkspace } from "../MediaSlotRenderer";
-import { inferOvernightDestination } from "../../../lib/prefillRules";
+import { getTypographyClassName } from "../../../config/typography.ts";
+import { cn } from "../../../utils/cn.ts";
+import { DestinationSelect } from "../../destination/DestinationSelect.tsx";
+import { AccommodationSelect } from "../../accommodation/AccommodationSelect.tsx";
+import type { AccommodationProfile } from "../../accommodation/types.ts";
+import type { ItineraryDayFact } from "../factsTypes.ts";
+import { dateForItineraryDay } from "../factsTypes.ts";
+import { MediaSlotRenderer, type MediaWorkspace } from "../MediaSlotRenderer.tsx";
+import { inferOvernightDestination } from "../../../lib/prefillRules.ts";
 
 const lines = (values: string[]) => values.join("\n");
 const toLines = (value: string) => value.split("\n");
@@ -280,10 +280,10 @@ export const DayEditorCard = memo(function DayEditorCard({
                 disabled={readOnly}
                 variant="compact"
                 size="md"
-                onChange={(profile: AccommodationProfile | null) => {
+                onChange={(profile, id, customName) => {
                   onPatch(index, {
-                    accommodation_id: profile?.id ?? null,
-                    accommodation_name: profile?.name ?? null,
+                    accommodation_id: profile?.id ?? id ?? null,
+                    accommodation_name: profile?.name ?? customName ?? null,
                     room_type: profile?.room_type ?? day.room_type ?? null,
                   });
                 }}

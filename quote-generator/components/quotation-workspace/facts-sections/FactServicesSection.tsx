@@ -1,10 +1,10 @@
 "use client";
 
-import { getTypographyClassName } from "../../../config/typography";
-import { cn } from "../../../utils/cn";
-import { HotelEditorCard } from "./HotelEditorCard";
-import type { HotelFact, QuotationFacts, ServiceFact } from "../factsTypes";
-import type { MediaWorkspace } from "../MediaSlotRenderer";
+import { getTypographyClassName } from "../../../config/typography.ts";
+import { cn } from "../../../utils/cn.ts";
+import { HotelEditorCard } from "./HotelEditorCard.tsx";
+import type { HotelFact, QuotationFacts, ServiceFact } from "../factsTypes.ts";
+import type { MediaWorkspace } from "../MediaSlotRenderer.tsx";
 
 const lines = (values: string[]) => values.join("\n");
 const toLines = (value: string) => value.split("\n");

@@ -3,9 +3,9 @@
 import Link from "next/link";
 import useSWR from "swr";
 import { CheckCircle2, AlertCircle, Eye, ArrowRight } from "lucide-react";
-import { getTypographyClassName } from "../../config/typography";
-import { quotationFetch } from "../../lib/apiError";
-import { cn } from "../../utils/cn";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { quotationFetch } from "../../lib/apiError.ts";
+import { cn } from "../../utils/cn.ts";
 
 const API_BASE = process.env.NEXT_PUBLIC_QUOTATION_API_URL ?? "";
 

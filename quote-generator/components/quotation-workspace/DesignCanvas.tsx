@@ -1,14 +1,14 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import type { DisplayDocument } from '../../display/runtimePageBuilder';
-import { quotationFetch, apiErrorMessage } from '../../lib/apiError';
-import type { EditableBrochureContract } from './useQuotationWorkspace';
-import BoundaryCanvas, { type InspectorDescriptor, type ResolvedInspectorSelection } from './BoundaryCanvas';
-import ContextualInspector from './ContextualInspector';
-import type { ResolvedHandoff } from './editableHandoff';
-import type { QuotationFacts } from './factsTypes';
-import { useToast } from '../staff-workspace/ToastProvider';
+import type { DisplayDocument } from '../../display/runtimePageBuilder.ts';
+import { quotationFetch, apiErrorMessage } from '../../lib/apiError.ts';
+import type { EditableBrochureContract } from './useQuotationWorkspace.ts';
+import BoundaryCanvas, { type InspectorDescriptor, type ResolvedInspectorSelection } from './BoundaryCanvas.tsx';
+import ContextualInspector from './ContextualInspector.tsx';
+import type { ResolvedHandoff } from './editableHandoff.ts';
+import type { QuotationFacts } from './factsTypes.ts';
+import { useToast } from '../staff-workspace/ToastProvider.tsx';
 
 const API_BASE = process.env.NEXT_PUBLIC_QUOTATION_API_URL ?? '';
 

@@ -1,7 +1,7 @@
 import type {
   AccommodationProfile,
   AccommodationProfileInput,
-} from "../../lib/quotationApi";
+} from "../../lib/quotationApi.ts";
 
 export type { AccommodationProfile, AccommodationProfileInput };
 
@@ -19,8 +19,11 @@ export interface AccommodationSelectProps {
   destinationId?: string | null;
   destination?: string | null;
 
-  /** Unified change handler: receives profile as primary argument, and id as secondary argument */
-  onChange?: (profile: AccommodationProfile | null, id?: string | null) => void;
+  /** Unified change handler: receives profile as primary argument, id as secondary argument, and customName as third argument */
+  onChange?: (profile: AccommodationProfile | null, id?: string | null, customName?: string | null) => void;
+
+  /** Allow typing and selecting custom accommodation name */
+  allowCustom?: boolean;
 
   /** Label rendered above selector */
   label?: string;

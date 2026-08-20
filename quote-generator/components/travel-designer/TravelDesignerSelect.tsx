@@ -9,11 +9,11 @@ import {
   type KeyboardEvent,
 } from "react";
 import { ChevronDown, Search, X, Check, Loader2, Sparkles, User, Settings2 } from "lucide-react";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
-import type { TravelDesignerProfile, TravelDesignerSelectProps } from "./types";
-import { useTravelDesignerSearch } from "./useTravelDesignerSearch";
-import { ProfileAvatar, TravelDesignerManageDrawer, type TravelDesignerDrawerMode } from "./TravelDesignerManageDrawer";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
+import type { TravelDesignerProfile, TravelDesignerSelectProps } from "./types.ts";
+import { useTravelDesignerSearch } from "./useTravelDesignerSearch.ts";
+import { ProfileAvatar, TravelDesignerManageDrawer, type TravelDesignerDrawerMode } from "./TravelDesignerManageDrawer.tsx";
 
 export function TravelDesignerSelect({
   value,

@@ -1,4 +1,4 @@
-import type { PartnerInput, PartnerProfile } from "../../lib/quotationApi";
+import type { PartnerInput, PartnerProfile } from "../../lib/quotationApi.ts";
 
 export type { PartnerInput, PartnerProfile };
 

@@ -2,11 +2,12 @@
 
 import { useDeferredValue, useMemo } from "react";
 import useSWR from "swr";
-import { listAccommodations, type AccommodationProfile } from "../../lib/quotationApi";
+import { listAccommodations, type AccommodationProfile } from "../../lib/quotationApi.ts";
 
 export type UseAccommodationSearchOptions = {
   active?: "true" | "false" | "all";
   destinationId?: string | null;
+  destination?: string | null;
   initialSelectedId?: string | null;
   enabled?: boolean;
 };
@@ -16,6 +17,7 @@ export function useAccommodationSearch(
   {
     active = "true",
     destinationId,
+    destination,
     initialSelectedId,
     enabled = true,
   }: UseAccommodationSearchOptions = {}
@@ -23,15 +25,16 @@ export function useAccommodationSearch(
   const deferredQuery = useDeferredValue(query.trim());
 
   const queryKey = enabled
-    ? ["accommodations", active, destinationId || "", deferredQuery]
+    ? ["accommodations", active, destinationId || "", destination || "", deferredQuery]
     : null;
 
   const { data, error, isLoading, mutate } = useSWR(
     queryKey,
-    ([, activeStatus, destId, searchQuery]) =>
+    ([, activeStatus, destId, destName, searchQuery]) =>
       listAccommodations({
         active: activeStatus as "true" | "false" | "all",
         destinationId: destId || undefined,
+        destination: destName || undefined,
         query: searchQuery,
       }),
     {

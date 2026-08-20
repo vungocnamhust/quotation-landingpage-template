@@ -13,7 +13,6 @@ import {
   MapPin,
   Search,
   X,
-  Check,
   Loader2,
   Sparkles,
   ArrowRight,
@@ -131,18 +130,6 @@ export function RouteSequenceInput({
     (indexToRemove: number) => {
       if (disabled || readOnly) return;
       const next = effectiveValues.filter((_, i) => i !== indexToRemove);
-      commitItems(next);
-    },
-    [disabled, readOnly, effectiveValues, commitItems]
-  );
-
-  const handleMoveChip = useCallback(
-    (fromIndex: number, toIndex: number) => {
-      if (disabled || readOnly) return;
-      if (toIndex < 0 || toIndex >= effectiveValues.length) return;
-      const next = [...effectiveValues];
-      const [moved] = next.splice(fromIndex, 1);
-      next.splice(toIndex, 0, moved);
       commitItems(next);
     },
     [disabled, readOnly, effectiveValues, commitItems]
@@ -287,7 +274,8 @@ export function RouteSequenceInput({
                 >
                   <span
                     className={cn(
-                      "flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] font-bold",
+                      getTypographyClassName("overline"),
+                      "flex h-4 w-4 shrink-0 items-center justify-center rounded-full",
                       isFirst
                         ? "bg-emerald-600 text-white"
                         : isLast
@@ -298,7 +286,7 @@ export function RouteSequenceInput({
                     {index + 1}
                   </span>
 
-                  <span className={cn(getTypographyClassName("bodySm"), "font-medium")}>
+                  <span className={cn(getTypographyClassName("bodySm"))}>
                     {ref.name}
                   </span>
 
@@ -445,7 +433,7 @@ export function RouteSequenceInput({
                           <span
                             className={cn(
                               getTypographyClassName("bodySm"),
-                              "truncate font-medium"
+                              "truncate"
                             )}
                           >
                             {item.name}

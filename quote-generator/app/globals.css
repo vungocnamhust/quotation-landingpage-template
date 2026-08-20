@@ -2799,6 +2799,14 @@ html[data-view-mode="pdf"] .leaflet-tile {
   border-color: color-mix(in srgb, var(--color-accent-alt) 60%, transparent);
 }
 
+.toast-item--warning {
+  border-color: color-mix(in srgb, var(--color-accent-alt) 50%, var(--color-accent));
+}
+
+.toast-item--loading {
+  border-color: var(--color-border-strong);
+}
+
 .toast-item--info {
   border-color: var(--color-border-strong);
 }
@@ -2814,6 +2822,14 @@ html[data-view-mode="pdf"] .leaflet-tile {
 
 .toast-item__icon--error {
   color: var(--color-accent-alt);
+}
+
+.toast-item__icon--warning {
+  color: color-mix(in srgb, var(--color-accent-alt) 60%, var(--color-accent));
+}
+
+.toast-item__icon--loading {
+  color: var(--color-accent);
 }
 
 .toast-item__icon--info {

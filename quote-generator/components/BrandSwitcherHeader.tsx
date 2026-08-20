@@ -2,9 +2,9 @@
 
 import { useEffect } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useBrand } from '../context/BrandContext';
-import { BRANDS_DATA, type BrandKey } from '../data/brandsData';
-import type { ViewMode } from '../display/contracts';
+import { useBrand } from '../context/BrandContext.tsx';
+import { BRANDS_DATA, type BrandKey } from '../data/brandsData.ts';
+import type { ViewMode } from '../display/contracts.ts';
 
 const PREVIEW_MODES: Array<{ value: ViewMode | null; label: string }> = [
   { value: null, label: 'Auto' },

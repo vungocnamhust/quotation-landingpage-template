@@ -3,11 +3,11 @@
 import { useMemo } from "react";
 import useSWR from "swr";
 import { ShieldCheck, UserCheck, Calendar, Clock, Flag } from "lucide-react";
-import DetailSectionCard from "./DetailSectionCard";
-import DetailField from "./DetailField";
-import { listTravelDesigners, type TravelDesignerProfile } from "../../../lib/quotationApi";
-import { getTypographyClassName } from "../../../config/typography";
-import { cn } from "../../../utils/cn";
+import DetailSectionCard from "./DetailSectionCard.tsx";
+import DetailField from "./DetailField.tsx";
+import { listTravelDesigners, type TravelDesignerProfile } from "../../../lib/quotationApi.ts";
+import { getTypographyClassName } from "../../../config/typography.ts";
+import { cn } from "../../../utils/cn.ts";
 
 type Props = {
   brandId?: string | null;

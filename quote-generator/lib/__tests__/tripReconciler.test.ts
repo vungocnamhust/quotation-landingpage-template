@@ -194,7 +194,7 @@ describe('tripReconciler temporal invariant rules', () => {
       assert.equal(updated.itinerary[1].accommodation_id, 'hotel-metropole');
       assert.equal(updated.itinerary[2].accommodation_id, 'hotel-metropole');
       // Day 4 is Hue -> not affected
-      assert.equal(updated.itinerary[3].accommodation_id, null);
+      assert.equal(updated.itinerary[3].accommodation_id ?? null, null);
     });
   });
 });

@@ -341,6 +341,8 @@ class MinimalItineraryDayWithStayOverrideSchema(BaseModel):
 
     day_number: int = Field(ge=1)
     destination: str | None = None
+    destination_ref: dict[str, Any] | None = None
+    overnight: str | None = None
     accommodation_id: str | None = None
     accommodation_name: str | None = None
     room_type: str | None = None

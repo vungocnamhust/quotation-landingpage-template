@@ -1,8 +1,8 @@
 "use client";
 
-import { getTypographyClassName } from "../../../config/typography";
-import { cn } from "../../../utils/cn";
-import type { BookingFact, BookingItemFact } from "../factsTypes";
+import { getTypographyClassName } from "../../../config/typography.ts";
+import { cn } from "../../../utils/cn.ts";
+import type { BookingFact, BookingItemFact } from "../factsTypes.ts";
 
 const inputClass = cn(
   getTypographyClassName("bodyMd"),

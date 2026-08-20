@@ -1,8 +1,8 @@
-import type { DisplayDocument } from '../display/runtimePageBuilder';
+import type { DisplayDocument } from '../display/runtimePageBuilder.ts';
 import type { CSSProperties } from 'react';
-import { getSectionDisplayConfig } from '../display/runtimePageBuilder';
-import { sectionRegistry } from './display/sections';
-import { PdfBrochureDocument } from './display/PdfBrochureDocument';
+import { getSectionDisplayConfig } from '../display/runtimePageBuilder.ts';
+import { sectionRegistry } from './display/sections.tsx';
+import { PdfBrochureDocument } from './display/PdfBrochureDocument.tsx';
 
 export default function DisplayPage({
   documentModel,

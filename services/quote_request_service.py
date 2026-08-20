@@ -115,19 +115,25 @@ def convert_request_to_quotation_facts(
         extracted_dests = []
         for day in overrides.itinerary_with_stays:
             dest = day.destination
+            overnight_loc = day.overnight or dest
             if dest and dest not in extracted_dests:
                 extracted_dests.append(dest)
+            if overnight_loc and overnight_loc not in extracted_dests:
+                extracted_dests.append(overnight_loc)
             itinerary_facts.append({
                 "day_number": day.day_number,
                 "destination": dest,
-                "destination_ref": None,
+                "destination_ref": day.destination_ref if isinstance(day.destination_ref, dict) else None,
                 "summary": day.summary or f"Day {day.day_number} exploration",
-                "overnight": dest,
+                "overnight": overnight_loc,
                 "meals": ["Breakfast"],
                 "highlights": [],
                 "notes": [],
                 "sense_of_pace": "balanced",
                 "display_date": date_for_itinerary_day(start_date, day.day_number),
+                "accommodation_id": day.accommodation_id,
+                "accommodation_name": day.accommodation_name,
+                "room_type": day.room_type,
             })
         if extracted_dests:
             destinations = extracted_dests

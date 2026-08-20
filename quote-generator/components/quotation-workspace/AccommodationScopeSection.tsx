@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { Building2, ChevronDown, ChevronUp } from "lucide-react";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
-import CustomSelect from "../ui/CustomSelect";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
+import CustomSelect from "../ui/CustomSelect.tsx";
 
 export type AccommodationScopeState = {
   hotel_level: string;

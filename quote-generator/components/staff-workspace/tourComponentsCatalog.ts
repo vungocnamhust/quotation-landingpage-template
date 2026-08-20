@@ -7,7 +7,7 @@ import {
   MapPin,
 } from "lucide-react";
 import type { ComponentType } from "react";
-import type { TravelStyleTagItem } from "../../lib/quotationApi";
+import type { TravelStyleTagItem } from "../../lib/quotationApi.ts";
 
 export type ComponentCategoryKey =
   | "accommodations"

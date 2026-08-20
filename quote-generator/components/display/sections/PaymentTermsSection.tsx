@@ -1,10 +1,10 @@
-import type { PaymentTermsViewModel } from '../../../display/types';
-import { textValue } from '../../../display/types';
-import { getLayoutSlots } from '../../../display/layoutRegistry';
-import { requireTypographySlot } from '../../../display/typographySlots';
-import { TextLink } from '../atoms';
-import { SectionHeader, TermRow } from '../molecules';
-import { BaseSectionProps, sectionOrnaments, shellProps } from './sectionHelpers';
+import type { PaymentTermsViewModel } from '../../../display/types.ts';
+import { textValue } from '../../../display/types.ts';
+import { getLayoutSlots } from '../../../display/layoutRegistry.ts';
+import { requireTypographySlot } from '../../../display/typographySlots.ts';
+import { TextLink } from '../atoms.tsx';
+import { SectionHeader, TermRow } from '../molecules.tsx';
+import { BaseSectionProps, sectionOrnaments, shellProps } from './sectionHelpers.tsx';
 
 export function PaymentTermsSection({
   sectionId,

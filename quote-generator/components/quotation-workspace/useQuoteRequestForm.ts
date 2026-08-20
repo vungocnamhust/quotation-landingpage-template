@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { apiErrorMessage, quotationFetch } from "../../lib/apiError.ts";
+import { quotationFetch } from "../../lib/apiError.ts";
 import {
   formStateToRequestPayload,
   getInitialQuoteRequestFormState,
@@ -10,8 +10,11 @@ import {
 } from "../../lib/quoteRequestPayload.ts";
 import { tripAdapter } from "../../lib/rules/tripAdapter.ts";
 import { tripReconciler, type CanonicalDay } from "../../lib/rules/tripReconciler.ts";
+import { evaluateQuoteRequestReadiness } from "../../lib/rules/validationGates.ts";
+import { toastAdapter } from "../../lib/rules/toastAdapter.ts";
+import { useToast } from "../staff-workspace/ToastProvider.tsx";
 import type { BasicDayItem } from "./BasicItineraryDayGrid.tsx";
-import type { QuoteRequestItem, QuoteRequestRole } from "./factsTypes.ts";
+import type { DestinationRef, QuoteRequestItem, QuoteRequestRole } from "./factsTypes.ts";
 
 const API_BASE = process.env.NEXT_PUBLIC_QUOTATION_API_URL ?? "";
 
@@ -38,6 +41,7 @@ export function useQuoteRequestForm({
   initialRole = "traveller",
   onSuccess,
 }: UseQuoteRequestFormOptions = {}) {
+  const { toast } = useToast();
   const [formState, setFormState] = useState<QuoteRequestFormState>(() =>
     initialRequest
       ? mapRequestToFormState(initialRequest)
@@ -102,13 +106,21 @@ export function useQuoteRequestForm({
 
   const removeItineraryDay = useCallback(
     (index: number) => {
+      const removedDay = itineraryDays[index];
       const canonical = tripAdapter.fromQuoteRequest(formState, itineraryDays);
       const reconciled = tripReconciler.removeDay(canonical, index);
       const synced = tripAdapter.syncToQuoteRequest(reconciled, formState);
       setFormState(synced.formState);
       setItineraryDays(synced.itineraryDays);
+
+      if (removedDay) {
+        toast(
+          `Removed Day ${index + 1}${removedDay.destination ? ` (${removedDay.destination})` : ""}`,
+          "info"
+        );
+      }
     },
-    [formState, itineraryDays]
+    [formState, itineraryDays, toast]
   );
 
   const updateItineraryDay = useCallback(
@@ -133,8 +145,12 @@ export function useQuoteRequestForm({
       const synced = tripAdapter.syncToQuoteRequest(reconciled, formState);
       setFormState(synced.formState);
       setItineraryDays(synced.itineraryDays);
+      toast(
+        `Applied route sequence (${synced.itineraryDays.length} day${synced.itineraryDays.length > 1 ? "s" : ""} generated).`,
+        "info"
+      );
     },
-    [formState, itineraryDays]
+    [formState, itineraryDays, toast]
   );
 
   const setRole = useCallback((role: QuoteRequestRole) => {
@@ -160,6 +176,18 @@ export function useQuoteRequestForm({
       if (e) {
         e.preventDefault();
       }
+
+      // Pre-flight Client Validation Gate (Layer 1)
+      const gateResult = evaluateQuoteRequestReadiness(formState, itineraryDays);
+      if (!gateResult.passed) {
+        const toastPayload = toastAdapter.fromGateResult(gateResult);
+        if (toastPayload) {
+          toast(toastPayload.message, toastPayload.type);
+          setErrorMsg(toastPayload.message);
+        }
+        return null;
+      }
+
       setSubmitting(true);
       setErrorMsg(null);
 
@@ -190,13 +218,15 @@ export function useQuoteRequestForm({
         }
         return null;
       } catch (err: unknown) {
-        setErrorMsg(apiErrorMessage(err));
+        const toastPayload = toastAdapter.fromApiError(err, fallbackError);
+        toast(toastPayload.message, toastPayload.type);
+        setErrorMsg(toastPayload.message);
         return null;
       } finally {
         setSubmitting(false);
       }
     },
-    [changeSummary, formState, initialRequest, itineraryDays, onSuccess]
+    [changeSummary, formState, initialRequest, itineraryDays, onSuccess, toast]
   );
 
   return {

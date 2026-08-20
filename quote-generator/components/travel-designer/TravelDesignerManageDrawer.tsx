@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
 import {
   createTravelDesigner,
   setTravelDesignerDefault,
@@ -11,7 +11,8 @@ import {
   uploadTravelDesignerPortrait,
   type TravelDesignerInput,
   type TravelDesignerProfile,
-} from "../../lib/quotationApi";
+} from "../../lib/quotationApi.ts";
+import { useToast } from "../staff-workspace/ToastProvider.tsx";
 
 export type TravelDesignerDrawerMode = "create" | "edit" | "manage" | null;
 
@@ -119,6 +120,7 @@ export function TravelDesignerManageDrawer({
   onSaved,
   onMutate,
 }: Props) {
+  const { toast } = useToast();
   const [currentMode, setCurrentMode] = useState<TravelDesignerDrawerMode>(mode);
   const [editing, setEditing] = useState<TravelDesignerProfile | null>(editingProfile ?? null);
   const [draft, setDraft] = useState<TravelDesignerInput>(() =>
@@ -126,7 +128,7 @@ export function TravelDesignerManageDrawer({
       ? {
           name: editingProfile.name,
           email: editingProfile.email,
-          phone: editingProfile.phone,
+          phone: editingProfile.phone ?? "",
           imageAssetId: editingProfile.imageAssetId ?? null,
           imageUrl: editingProfile.imageUrl ?? null,
           imageR2Key: editingProfile.imageR2Key ?? null,
@@ -156,7 +158,7 @@ export function TravelDesignerManageDrawer({
     setDraft({
       name: profile.name,
       email: profile.email,
-      phone: profile.phone,
+      phone: profile.phone ?? "",
       imageAssetId: profile.imageAssetId ?? null,
       imageUrl: profile.imageUrl ?? null,
       imageR2Key: profile.imageR2Key ?? null,
@@ -168,7 +170,9 @@ export function TravelDesignerManageDrawer({
 
   const saveProfile = async () => {
     if (!draft.name.trim() || !draft.email.trim()) {
-      setMessage("Name and email are required.");
+      const warningMsg = "Name and email are required.";
+      setMessage(warningMsg);
+      toast(warningMsg, "warning");
       return;
     }
     setPending(true);
@@ -179,10 +183,13 @@ export function TravelDesignerManageDrawer({
         saved = await updateTravelDesigner(saved.id, { ...draft, imageR2Key: uploaded.r2Key });
       }
       await onMutate();
+      toast(`Travel Designer "${saved.name}" saved successfully.`, "success");
       onSaved(saved);
       onClose();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Travel Designer could not be saved.");
+      const errMsg = error instanceof Error ? error.message : "Travel Designer could not be saved.";
+      setMessage(errMsg);
+      toast(errMsg, "error");
     } finally {
       setPending(false);
     }
@@ -193,9 +200,13 @@ export function TravelDesignerManageDrawer({
     try {
       await updateTravelDesignerStatus(profile.id, !profile.isActive);
       await onMutate();
+      const statusText = !profile.isActive ? "activated" : "deactivated";
+      toast(`Travel Designer "${profile.name}" ${statusText}.`, "info");
       setMessage("");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Travel Designer status could not be changed.");
+      const errMsg = error instanceof Error ? error.message : "Travel Designer status could not be changed.";
+      setMessage(errMsg);
+      toast(errMsg, "error");
     } finally {
       setPending(false);
     }
@@ -203,15 +214,21 @@ export function TravelDesignerManageDrawer({
 
   const makeDefault = async (profile: TravelDesignerProfile) => {
     if (!brandId) {
-      setMessage("Choose a brand before setting its default designer.");
+      const warningMsg = "Choose a brand before setting its default designer.";
+      setMessage(warningMsg);
+      toast(warningMsg, "warning");
       return;
     }
     setPending(true);
     try {
       await setTravelDesignerDefault(brandId, profile.id);
-      setMessage(`${profile.name} is now the default for this brand.`);
+      const msg = `"${profile.name}" is now the default designer for this brand.`;
+      setMessage(msg);
+      toast(msg, "success");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Brand default could not be saved.");
+      const errMsg = error instanceof Error ? error.message : "Brand default could not be saved.";
+      setMessage(errMsg);
+      toast(errMsg, "error");
     } finally {
       setPending(false);
     }
@@ -363,3 +380,5 @@ export function TravelDesignerManageDrawer({
     </div>
   );
 }
+
+export default TravelDesignerManageDrawer;

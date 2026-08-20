@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { CircleDollarSign, ChevronDown, ChevronUp } from "lucide-react";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
-import CustomSelect from "../ui/CustomSelect";
-import { CURRENCY_OPTIONS } from "./factsTypes";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
+import CustomSelect from "../ui/CustomSelect.tsx";
+import { CURRENCY_OPTIONS } from "./factsTypes.ts";
 
 export type CommercialPricingState = {
   budget: number | "";

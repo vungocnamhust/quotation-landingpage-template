@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import type { TipTapRichEditorProps } from './TipTapRichEditorCore';
+import type { TipTapRichEditorProps } from './TipTapRichEditorCore.tsx';
 
 const TipTapRichEditorCore = dynamic(() => import('./TipTapRichEditorCore'), {
   ssr: false,

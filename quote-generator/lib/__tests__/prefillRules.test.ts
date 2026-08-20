@@ -16,7 +16,13 @@ import {
 import {
   updateCustomerName,
   updateCustomerCounts,
+  updateCustomerKidAges,
+  updateCustomerRoomNotes,
   createItineraryDayWithDefaults,
+  updatePricingOptionAdultInFacts,
+  applyChildPresetInFacts,
+  updatePricingOptionTotalInFacts,
+  convertOptionCurrencyInFacts,
 } from '../prefillEngine.ts';
 
 describe('prefillRules pure business rules', () => {
@@ -106,13 +112,70 @@ describe('prefillEngine single-pass facade updaters', () => {
     assert.equal(updated.customer_facts.party_label, 'David Miller & Party (2 Adults)');
   });
 
-  it('updateCustomerCounts updates party label when counts change', () => {
+  it('updateCustomerCounts updates party label and auto-syncs pricing options', () => {
     const initialFacts = createBrochureFacts();
+    initialFacts.customer_facts.adults = 2;
+    initialFacts.customer_facts.children = 0;
+    initialFacts.pricing_facts.options = [
+      {
+        id: 'opt-1',
+        label: 'Luxury Option',
+        currency: 'USD',
+        per_adult_amount_minor: 400000, // $4,000
+        per_child_amount_minor: null,
+        per_traveler_amount_minor: 400000,
+        group_total_amount_minor: 800000, // $8,000
+      },
+    ];
+
     const withName = updateCustomerName(initialFacts, 'David Miller');
-    const withFamily = updateCustomerCounts(withName, { adults: 2, children: 2 });
-    assert.equal(withFamily.customer_facts.adults, 2);
+    const withFamily = updateCustomerCounts(withName, { adults: 4, children: 2 });
+    assert.equal(withFamily.customer_facts.adults, 4);
     assert.equal(withFamily.customer_facts.children, 2);
-    assert.equal(withFamily.customer_facts.party_label, 'David Miller & Party (2 Adults, 2 Children)');
+    assert.equal(withFamily.customer_facts.party_label, 'David Miller & Party (4 Adults, 2 Children)');
+
+    // Invariant: option group_total_amount_minor automatically updated!
+    // 4 adults x $4,000 + 2 children x $3,000 = $22,000 (2,200,000 cents)
+    assert.equal(withFamily.pricing_facts.options[0].per_adult_amount_minor, 400000);
+    assert.equal(withFamily.pricing_facts.options[0].per_child_amount_minor, 300000);
+    assert.equal(withFamily.pricing_facts.options[0].group_total_amount_minor, 2200000);
+  });
+
+  it('commercial pricing facade helpers update options and invariants', () => {
+    const facts = createBrochureFacts();
+    facts.customer_facts.adults = 2;
+    facts.customer_facts.children = 1;
+    facts.pricing_facts.options = [
+      {
+        id: 'opt-1',
+        label: 'Standard Option',
+        currency: 'USD',
+        per_adult_amount_minor: 400000,
+        per_child_amount_minor: 300000,
+        per_traveler_amount_minor: 400000,
+        group_total_amount_minor: 1100000,
+      },
+    ];
+
+    // 1. update adult rate to $5,000 (500,000)
+    const withAdult = updatePricingOptionAdultInFacts(facts, 0, 500000);
+    assert.equal(withAdult.pricing_facts.options[0].per_adult_amount_minor, 500000);
+    assert.equal(withAdult.pricing_facts.options[0].group_total_amount_minor, 1300000); // 2*5k + 3k
+
+    // 2. apply 50% child preset -> child = 250,000
+    const withPreset = applyChildPresetInFacts(withAdult, 0, 0.5);
+    assert.equal(withPreset.pricing_facts.options[0].per_child_amount_minor, 250000);
+    assert.equal(withPreset.pricing_facts.options[0].group_total_amount_minor, 1250000); // 2*5k + 2.5k
+
+    // 3. update group total -> $10,000 (1,000,000)
+    const withTotal = updatePricingOptionTotalInFacts(withPreset, 0, 1000000);
+    assert.equal(withTotal.pricing_facts.options[0].group_total_amount_minor, 1000000);
+    assert.ok((withTotal.pricing_facts.options[0].per_adult_amount_minor ?? 0) > 0);
+
+    // 4. convert currency to VND
+    const inVnd = convertOptionCurrencyInFacts(facts, 0, 'VND', true);
+    assert.equal(inVnd.pricing_facts.options[0].currency, 'VND');
+    assert.equal(inVnd.pricing_facts.options[0].per_adult_amount_minor, 101600000);
   });
 
   it('createItineraryDayWithDefaults sets localized meal defaults', () => {
@@ -122,4 +185,17 @@ describe('prefillEngine single-pass facade updaters', () => {
     const dayEn = createItineraryDayWithDefaults({ index: 0, startDate: '2026-10-01', lang: 'en' });
     assert.deepEqual(dayEn.meals, ['Breakfast']);
   });
+
+  it('updateCustomerKidAges and updateCustomerRoomNotes reconcile party & service facts', () => {
+    let facts = createBrochureFacts();
+    facts = updateCustomerCounts(facts, { adults: 2, children: 2 });
+    assert.deepEqual(facts.customer_facts.kid_ages, [6, 6]);
+
+    facts = updateCustomerKidAges(facts, [10, 14]);
+    assert.deepEqual(facts.customer_facts.kid_ages, [10, 14]);
+
+    facts = updateCustomerRoomNotes(facts, 'Connecting rooms on high floor requested');
+    assert.equal(facts.service_facts.room_notes, 'Connecting rooms on high floor requested');
+  });
 });
+

@@ -1,9 +1,9 @@
-import type { RouteMapViewModel } from '../../../display/types';
-import { getLayoutSlots } from '../../../display/layoutRegistry';
-import { requireTypographySlot } from '../../../display/typographySlots';
-import { BodyCopy, DisplayTitle } from '../atoms';
-import RouteMapClientIsland from '../RouteMapClientIsland';
-import { BaseSectionProps, StaticRouteMapPanel, sectionOrnaments, shellProps } from './sectionHelpers';
+import type { RouteMapViewModel } from '../../../display/types.ts';
+import { getLayoutSlots } from '../../../display/layoutRegistry.ts';
+import { requireTypographySlot } from '../../../display/typographySlots.ts';
+import { BodyCopy, DisplayTitle } from '../atoms.tsx';
+import RouteMapClientIsland from '../RouteMapClientIsland.tsx';
+import { BaseSectionProps, StaticRouteMapPanel, sectionOrnaments, shellProps } from './sectionHelpers.tsx';
 
 export function RouteMapSection({
   sectionId,

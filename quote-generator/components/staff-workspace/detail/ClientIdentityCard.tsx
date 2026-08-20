@@ -3,11 +3,11 @@
 import { useMemo } from "react";
 import useSWR from "swr";
 import { User, Briefcase, Mail, Phone, Globe, MessageSquare, Building2, Sparkles } from "lucide-react";
-import DetailSectionCard from "./DetailSectionCard";
-import DetailField from "./DetailField";
-import { listPartners, type PartnerProfile } from "../../../lib/quotationApi";
-import { getTypographyClassName } from "../../../config/typography";
-import { cn } from "../../../utils/cn";
+import DetailSectionCard from "./DetailSectionCard.tsx";
+import DetailField from "./DetailField.tsx";
+import { listPartners, type PartnerProfile } from "../../../lib/quotationApi.ts";
+import { getTypographyClassName } from "../../../config/typography.ts";
+import { cn } from "../../../utils/cn.ts";
 
 type Props = {
   role: "traveller" | "advisor";

@@ -1,9 +1,9 @@
-import type { FooterViewModel } from '../../../display/types';
-import { getLayoutSlots } from '../../../display/layoutRegistry';
-import { requireTypographySlot } from '../../../display/typographySlots';
-import { BodyCopy, MetaText } from '../atoms';
-import { FooterMetaRow } from '../molecules';
-import { BaseSectionProps, sectionOrnaments, shellProps } from './sectionHelpers';
+import type { FooterViewModel } from '../../../display/types.ts';
+import { getLayoutSlots } from '../../../display/layoutRegistry.ts';
+import { requireTypographySlot } from '../../../display/typographySlots.ts';
+import { BodyCopy, MetaText } from '../atoms.tsx';
+import { FooterMetaRow } from '../molecules.tsx';
+import { BaseSectionProps, sectionOrnaments, shellProps } from './sectionHelpers.tsx';
 
 export function FooterSection({
   sectionId,

@@ -3,22 +3,24 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import useSWR from "swr";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
-import { apiErrorFieldErrors, apiErrorMessage, quotationFetch } from "../../lib/apiError";
-import { useToast } from "../staff-workspace/ToastProvider";
-import MinimalQuotationIntakeForm from "./MinimalQuotationIntakeForm";
-import RequestRecapPanel from "./RequestRecapPanel";
+import { AlertCircle } from "lucide-react";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
+import { apiErrorFieldErrors, apiErrorMessage, quotationFetch } from "../../lib/apiError.ts";
+import { useToast } from "../staff-workspace/ToastProvider.tsx";
+import MinimalQuotationIntakeForm from "./MinimalQuotationIntakeForm.tsx";
+import RequestRecapPanel from "./RequestRecapPanel.tsx";
 import {
   createBrochureFacts,
-  type HotelFact,
   type PricingOptionFact,
   type QuotationFacts,
   type QuotationOptions,
   type QuoteRequestItem,
-} from "./factsTypes";
+} from "./factsTypes.ts";
 
-import { buildInitialFactsFromRequest } from "../../lib/requestToFactsHandoff";
+import { buildInitialFactsFromRequest } from "../../lib/requestToFactsHandoff.ts";
+import { staysAdapter } from "../../lib/rules/staysAdapter.ts";
+import { staysReconciler } from "../../lib/rules/staysReconciler.ts";
 
 const API_BASE = process.env.NEXT_PUBLIC_QUOTATION_API_URL ?? "";
 
@@ -41,8 +43,8 @@ function QuotationIntakeInner({
     buildInitialFactsFromRequest(quoteRequest, createBrochureFacts())
   );
   const [fieldErrors, setFieldErrors] = useState<Array<{ path: string; message: string }>>([]);
-  const [pending, startTransition] = useTransition();
-  const { notify, clearScope } = useToast();
+  const [isPending, startTransition] = useTransition();
+  const { toast, notify, clearScope } = useToast();
 
   useEffect(() => {
     if (fieldErrors.length) document.getElementById("quotation-intake-errors")?.focus();
@@ -71,19 +73,24 @@ function QuotationIntakeInner({
             kid_ages: facts.customer_facts.kid_ages,
             start_date: facts.trip_facts.start_date,
             end_date: facts.trip_facts.end_date,
-            itinerary_with_stays: facts.trip_facts.itinerary.map((day) => {
-              const stay: HotelFact | undefined = facts.service_facts.hotels.find(
-                (h) => h.destination === day.destination
+            itinerary_with_stays: (() => {
+              const canonical = staysAdapter.fromQuotationFacts(facts);
+              const hydrated = staysReconciler.syncItineraryFromStays(
+                canonical.itinerary,
+                facts.service_facts.hotels,
+                facts.trip_facts.start_date
               );
-              return {
+              return hydrated.map((day) => ({
                 day_number: day.day_number,
                 destination: day.destination,
-                accommodation_id: stay?.accommodation_id ?? null,
-                accommodation_name: stay?.name ?? null,
-                room_type: stay?.room_type ?? null,
+                destination_ref: day.destination_ref ?? null,
+                overnight: day.overnight ?? day.destination ?? null,
+                accommodation_id: day.accommodation_id ?? null,
+                accommodation_name: day.accommodation_name ?? null,
+                room_type: day.room_type ?? null,
                 summary: day.summary ?? null,
-              };
-            }),
+              }));
+            })(),
             pricing: {
               label: pricingOpt.label || "Standard Luxury Option",
               currency: pricingOpt.currency || "USD",
@@ -107,6 +114,10 @@ function QuotationIntakeInner({
           );
 
           clearScope("create-quotation");
+          toast(
+            `Quotation created successfully from request #${requestId}! Redirecting to workspace...`,
+            "success"
+          );
           if (res?.redirect_url) {
             router.push(res.redirect_url);
           } else {
@@ -124,6 +135,7 @@ function QuotationIntakeInner({
             "Quotation could not be created."
           );
           clearScope("create-quotation");
+          toast("Quotation created successfully! Redirecting to workspace...", "success");
           router.push(
             `${personalWorkspace ? "/workspace/quotations" : "/quotations"}/${res.quotationId}${
               personalWorkspace ? "/edit" : "/workspace"
@@ -152,40 +164,36 @@ function QuotationIntakeInner({
           id="quotation-intake-errors"
           tabIndex={-1}
           role="alert"
-          className={cn(
-            getTypographyClassName("bodySm"),
-            "rounded-[var(--radius-card)] border border-rose-300 bg-rose-50 p-4 text-rose-900"
-          )}
+          className="mx-auto w-full max-w-4xl rounded-[var(--radius-card)] border border-rose-300 bg-rose-50 p-4 text-rose-900 shadow-sm"
         >
-          <p className={cn(getTypographyClassName("label"), "text-rose-900")}>Please correct the following fields:</p>
-          <ul className="mt-1 list-disc pl-5">
-            {fieldErrors.map((item, index) => (
-              <li key={`${item.path}-${index}`}>
-                {item.path ? `${item.path}: ` : ""}
-                {item.message}
+          <div className="flex items-center gap-2">
+            <AlertCircle size={16} className="text-rose-600" />
+            <p className={cn(getTypographyClassName("label"), "text-rose-900")}>
+              Please resolve the following intake requirements:
+            </p>
+          </div>
+          <ul className="mt-2 list-disc pl-5 space-y-1">
+            {fieldErrors.map((err, idx) => (
+              <li key={idx} className={cn(getTypographyClassName("caption"), "text-rose-800")}>
+                {err.message}
               </li>
             ))}
           </ul>
         </div>
       ) : null}
 
-      {/* Main Content Layout */}
-      <div className={cn("grid gap-8 items-start", quoteRequest ? "lg:grid-cols-12" : "max-w-4xl mx-auto w-full")}>
-        {/* Left Column: Request Context Recap (Sticky) */}
-        {quoteRequest ? (
-          <div className="lg:col-span-4 lg:sticky lg:top-6 lg:self-start lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto pr-1">
-            <RequestRecapPanel request={quoteRequest} />
-          </div>
+      <div className={cn("grid gap-8 items-start", requestId ? "lg:grid-cols-[20rem_minmax(0,1fr)]" : "")}>
+        {requestId && quoteRequest ? (
+          <RequestRecapPanel request={quoteRequest} />
         ) : null}
 
-        {/* Right Column: Minimal Facts Intake Form */}
-        <div className={cn(quoteRequest ? "lg:col-span-8" : "w-full")}>
+        <div className="min-w-0">
           <MinimalQuotationIntakeForm
             facts={facts}
             options={options}
-            pending={pending}
             onChange={setFacts}
             onSubmit={createQuotation}
+            pending={isPending}
           />
         </div>
       </div>
@@ -198,7 +206,11 @@ export default function NewQuotationClient({ personalWorkspace = false }: { pers
   const requestId = searchParams.get("requestId");
 
   // Load Brand / Language options
-  const { data: options, error: optionsError } = useSWR<QuotationOptions>(
+  const {
+    data: options,
+    error: optionsError,
+    mutate: mutateOptions,
+  } = useSWR<QuotationOptions>(
     `${API_BASE}/api/v2/quotation-options`,
     fetchJson
   );
@@ -246,9 +258,29 @@ export default function NewQuotationClient({ personalWorkspace = false }: { pers
           />
         )
       ) : (
-        <p className={cn(getTypographyClassName("bodyMd"), "text-[var(--color-muted)]")}>
-          {optionsError ? apiErrorMessage(optionsError) : "Loading active options…"}
-        </p>
+        <div className="rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface)] p-6 text-center shadow-[var(--elevation-card)]">
+          {optionsError ? (
+            <div className="flex flex-col items-center gap-3">
+              <p className={cn(getTypographyClassName("bodyMd"), "text-rose-700")}>
+                {apiErrorMessage(optionsError)}
+              </p>
+              <button
+                type="button"
+                onClick={() => mutateOptions()}
+                className={cn(
+                  getTypographyClassName("buttonSecondary"),
+                  "rounded-[var(--radius-button)] border border-[var(--color-border)] px-4 py-2 text-[var(--color-on-surface)] hover:bg-[var(--color-surface-muted)] cursor-pointer"
+                )}
+              >
+                Retry loading options
+              </button>
+            </div>
+          ) : (
+            <p className={cn(getTypographyClassName("bodyMd"), "text-[var(--color-muted)]")}>
+              Loading active options…
+            </p>
+          )}
+        </div>
       )}
     </main>
   );

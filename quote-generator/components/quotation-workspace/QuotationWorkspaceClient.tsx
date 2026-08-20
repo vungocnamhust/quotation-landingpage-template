@@ -21,27 +21,27 @@ import {
   CheckCircle2,
   RefreshCw,
 } from "lucide-react";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
-import FactsForm from "./FactsForm";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
+import FactsForm from "./FactsForm.tsx";
 import {
   ensureFactsDefaults,
   hydrateDestinationRefs,
   type QuotationFacts,
-} from "./factsTypes";
-import { apiErrorMessage, quotationFetch } from "../../lib/apiError";
-import { buildDisplayDocumentFromQuoteDocument } from "../../display/runtimePageBuilder";
-import type { ViewMode } from "../../display/contracts";
-import { useQuotationWorkspace } from "./useQuotationWorkspace";
-import { useToast } from "../staff-workspace/ToastProvider";
+} from "./factsTypes.ts";
+import { apiErrorMessage, quotationFetch } from "../../lib/apiError.ts";
+import { buildDisplayDocumentFromQuoteDocument } from "../../display/runtimePageBuilder.ts";
+import type { ViewMode } from "../../display/contracts.ts";
+import { useQuotationWorkspace } from "./useQuotationWorkspace.ts";
+import { useToast } from "../staff-workspace/ToastProvider.tsx";
 import {
   parseFactsDeepLink,
   serializeFactsFocus,
   type ResolvedHandoff,
-} from "./editableHandoff";
-import { ReviewBlockersPanel } from "./ReviewBlockersPanel";
-import DesignPreviewToolbar from "./DesignPreviewToolbar";
-import BrochurePreviewModal from "./BrochurePreviewModal";
+} from "./editableHandoff.ts";
+import { ReviewBlockersPanel } from "./ReviewBlockersPanel.tsx";
+import DesignPreviewToolbar from "./DesignPreviewToolbar.tsx";
+import BrochurePreviewModal from "./BrochurePreviewModal.tsx";
 
 const ContentStudioClient = dynamic(
   () => import("../content-studio/ContentStudioClient"),
@@ -516,8 +516,13 @@ export default function QuotationWorkspaceClient({
             deepLink={factsDeepLink}
             mediaWorkspace={documentData ? { quotationId, lang, document: documentData.document, currentRevision: documentData.currentRevision, contract: documentData.editableContract, onSaved: workspace.refresh } : undefined}
             onDesignerSelected={documentData ? async (designerProfileId) => {
-              await workspace.request(`/api/v2/quotations/${quotationId}/facts/designer?lang=${encodeURIComponent(lang)}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ baseRevision: documentData.currentRevision, designerProfileId }) }, "Travel Designer could not be assigned.");
-              await workspace.refresh();
+              try {
+                await workspace.request(`/api/v2/quotations/${quotationId}/facts/designer?lang=${encodeURIComponent(lang)}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ baseRevision: documentData.currentRevision, designerProfileId }) }, "Travel Designer could not be assigned.");
+                await workspace.refresh();
+                toast("Travel Designer assigned to quotation.", "success");
+              } catch (err: unknown) {
+                toast(apiErrorMessage(err) || "Travel Designer could not be assigned.", "error");
+              }
             } : undefined}
             submitLabel={
               editable

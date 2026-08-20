@@ -2,10 +2,10 @@
 
 import { useId } from "react";
 import { Calendar, X } from "lucide-react";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
-import type { DateInputProps } from "./types";
-import { useDateInput } from "./useDateInput";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
+import type { DateInputProps } from "./types.ts";
+import { useDateInput } from "./useDateInput.ts";
 
 export function DateInput({
   mode = "iso",

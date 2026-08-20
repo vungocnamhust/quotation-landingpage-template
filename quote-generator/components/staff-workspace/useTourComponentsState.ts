@@ -7,7 +7,7 @@ import {
   type ComponentCategoryKey,
   type CategoryMeta,
   type GenericComponentItem,
-} from "./tourComponentsCatalog";
+} from "./tourComponentsCatalog.ts";
 
 export function useTourComponentsState() {
   const router = useRouter();

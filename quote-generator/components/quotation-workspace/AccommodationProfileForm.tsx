@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { Image as ImageIcon, X, Upload } from "lucide-react";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
-import type { AccommodationProfileInput } from "../../lib/quotationApi";
-import { DestinationSelect } from "../destination/DestinationSelect";
-import type { DestinationRef } from "../destination/types";
-import MediaDrawer from "./MediaDrawer";
-import { RichTextEditor } from "../ui/RichTextEditor";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
+import type { AccommodationProfileInput } from "../../lib/quotationApi.ts";
+import { DestinationSelect } from "../destination/DestinationSelect.tsx";
+import type { DestinationRef } from "../destination/types.ts";
+import MediaDrawer from "./MediaDrawer.tsx";
+import { RichTextEditor } from "../ui/RichTextEditor.tsx";
 
 const inputClass = cn(
   getTypographyClassName("bodyMd"),

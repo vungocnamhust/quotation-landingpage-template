@@ -1,6 +1,6 @@
 "use client";
 
-import { TravelStyleSelect } from "../travel-style/TravelStyleSelect";
+import { TravelStyleSelect } from "../travel-style/TravelStyleSelect.tsx";
 
 type TravelStyleInputProps = {
   label?: string;

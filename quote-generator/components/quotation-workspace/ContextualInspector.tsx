@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { getTypographyClassName } from '../../config/typography';
-import { cn } from '../../utils/cn';
-import type { InspectorDescriptor } from './BoundaryCanvas';
-import type { ResolvedHandoff } from './editableHandoff';
-import type { QuotationFacts } from './factsTypes';
-import type { FactInspectorPatch } from './DesignCanvas';
-import { inferGreetingName, inferPartyLabel } from '../../lib/prefillRules';
-import { RichTextEditor } from '../ui/RichTextEditor';
+import { getTypographyClassName } from '../../config/typography.ts';
+import { cn } from '../../utils/cn.ts';
+import type { InspectorDescriptor } from './BoundaryCanvas.tsx';
+import type { ResolvedHandoff } from './editableHandoff.ts';
+import type { QuotationFacts } from './factsTypes.ts';
+import type { FactInspectorPatch } from './DesignCanvas.tsx';
+import { inferGreetingName, inferPartyLabel } from '../../lib/prefillRules.ts';
+import { RichTextEditor } from '../ui/RichTextEditor.tsx';
 
 export default function ContextualInspector({
   selected,

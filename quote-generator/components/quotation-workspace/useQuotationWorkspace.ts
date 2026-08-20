@@ -2,9 +2,9 @@
 
 import { useCallback, useMemo } from 'react';
 import useSWR from 'swr';
-import type { BrandRenderProfile } from '../../display/types';
-import { quotationFetch } from '../../lib/apiError';
-import { serializeFactsForApi, type QuotationFacts, type QuotationOptions, type ResolvedFacts } from './factsTypes';
+import type { BrandRenderProfile } from '../../display/types.ts';
+import { quotationFetch } from '../../lib/apiError.ts';
+import { serializeFactsForApi, type QuotationFacts, type QuotationOptions, type ResolvedFacts } from './factsTypes.ts';
 
 const API_BASE = process.env.NEXT_PUBLIC_QUOTATION_API_URL ?? '';
 export type ContentCandidate = Record<string, unknown>;

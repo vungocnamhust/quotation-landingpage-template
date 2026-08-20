@@ -1,21 +1,29 @@
 "use client";
 
 import { type Dispatch, type ReactNode, type SetStateAction } from "react";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
-import CustomSelect from "../ui/CustomSelect";
-import { TravelDesignerSelect } from "../travel-designer/TravelDesignerSelect";
-import { DateInput } from "../date";
-import KidAgesInput from "./KidAgesInput";
-import DayEmbeddedRouteTable from "./DayEmbeddedRouteTable";
-import TriPricingSection from "./TriPricingSection";
-import { updateCustomerCounts, updateCustomerName } from "../../lib/prefillEngine";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
+import CustomSelect from "../ui/CustomSelect.tsx";
+import { TravelDesignerSelect } from "../travel-designer/TravelDesignerSelect.tsx";
+import { DateInput } from "../date/index.ts";
+import KidAgesInput from "./KidAgesInput.tsx";
+import DayEmbeddedRouteTable from "./DayEmbeddedRouteTable.tsx";
+import TriPricingSection from "./TriPricingSection.tsx";
+import {
+  patchPricingOptionWithInference,
+  updateCustomerCounts,
+  updateCustomerKidAges,
+  updateCustomerName,
+} from "../../lib/prefillEngine.ts";
 import {
   type QuotationFacts,
   type QuotationOptions,
-} from "./factsTypes";
-import { useQuotationIntake } from "./useQuotationIntake";
-import { useRouteTableSync } from "./useRouteTableSync";
+} from "./factsTypes.ts";
+import { useQuotationIntake } from "./useQuotationIntake.ts";
+import { useRouteTableSync } from "./useRouteTableSync.ts";
+import { evaluateQuotationDraftReadiness } from "../../lib/rules/validationGates.ts";
+import { toastAdapter } from "../../lib/rules/toastAdapter.ts";
+import { useToast } from "../staff-workspace/ToastProvider.tsx";
 
 type Props = {
   facts: QuotationFacts;
@@ -63,6 +71,7 @@ export default function MinimalQuotationIntakeForm({
   onChange,
   onSubmit,
 }: Props) {
+  const { toast } = useToast();
   const {
     facts,
     trip,
@@ -94,6 +103,14 @@ export default function MinimalQuotationIntakeForm({
     <form
       onSubmit={(e) => {
         e.preventDefault();
+        const gateResult = evaluateQuotationDraftReadiness(facts, dayWithStays);
+        if (!gateResult.passed) {
+          const toastPayload = toastAdapter.fromGateResult(gateResult);
+          if (toastPayload) {
+            toast(toastPayload.message, toastPayload.type);
+          }
+          return;
+        }
         onSubmit();
       }}
       className="mx-auto flex w-full max-w-4xl flex-col gap-6"
@@ -268,13 +285,7 @@ export default function MinimalQuotationIntakeForm({
             childrenCount={customer.children}
             kidAges={customer.kid_ages ?? []}
             onChange={(kidAges) =>
-              patchFacts((current) => ({
-                ...current,
-                customer_facts: {
-                  ...current.customer_facts,
-                  kid_ages: kidAges,
-                },
-              }))
+              patchFacts((current) => updateCustomerKidAges(current, kidAges))
             }
           />
         ) : null}
@@ -336,26 +347,16 @@ export default function MinimalQuotationIntakeForm({
           adults={customer.adults ?? 2}
           childrenCount={customer.children ?? 0}
           onChange={(patch) =>
-            patchFacts((current) => {
-              const currentOpt = current.pricing_facts.options[0] || pricingOption;
-              return {
-                ...current,
-                pricing_facts: {
-                  ...current.pricing_facts,
-                  options: [
-                    {
-                      ...currentOpt,
-                      label: patch.label ?? currentOpt.label,
-                      currency: patch.currency ?? currentOpt.currency,
-                      per_traveler_amount_minor: patch.perAdultMinor ?? currentOpt.per_traveler_amount_minor,
-                      per_adult_amount_minor: patch.perAdultMinor ?? currentOpt.per_adult_amount_minor,
-                      per_child_amount_minor: patch.perChildMinor ?? currentOpt.per_child_amount_minor,
-                      group_total_amount_minor: patch.groupTotalMinor ?? currentOpt.group_total_amount_minor,
-                    },
-                  ],
-                },
-              };
-            })
+            patchFacts((current) =>
+              patchPricingOptionWithInference(current, 0, {
+                label: patch.label,
+                currency: patch.currency,
+                per_adult_amount_minor: patch.perAdultMinor,
+                per_child_amount_minor: patch.perChildMinor,
+                per_traveler_amount_minor: patch.perAdultMinor,
+                group_total_amount_minor: patch.groupTotalMinor,
+              })
+            )
           }
         />
       </SectionCard>

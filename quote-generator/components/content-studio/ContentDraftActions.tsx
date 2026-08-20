@@ -1,7 +1,7 @@
 'use client';
 
-import { cn } from '../../utils/cn';
-import { getTypographyClassName } from '../../config/typography';
+import { cn } from '../../utils/cn.ts';
+import { getTypographyClassName } from '../../config/typography.ts';
 
 export function ContentDraftActions({ hasDraft, canApply, pending, onSave, onApply, onDiscard }: { hasDraft: boolean; canApply?: boolean; pending: boolean; onSave: () => void; onApply: () => void; onDiscard: () => void }) {
   const actionClass = 'min-h-11 rounded-[var(--radius-button)] px-3 py-2 lg:min-h-9';

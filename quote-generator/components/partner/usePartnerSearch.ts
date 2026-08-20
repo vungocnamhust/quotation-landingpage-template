@@ -2,7 +2,7 @@
 
 import { useDeferredValue, useMemo } from "react";
 import useSWR from "swr";
-import { listPartners, type PartnerProfile } from "../../lib/quotationApi";
+import { listPartners, type PartnerProfile } from "../../lib/quotationApi.ts";
 
 export type UsePartnerSearchOptions = {
   active?: "true" | "false" | "all";

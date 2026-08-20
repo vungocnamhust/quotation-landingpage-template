@@ -1,10 +1,10 @@
 import Image from 'next/image';
-import type { StaysDividerViewModel } from '../../../display/types';
-import { textValue } from '../../../display/types';
-import { getLayoutSlots } from '../../../display/layoutRegistry';
-import { requireTypographySlot } from '../../../display/typographySlots';
-import { BodyCopy, DisplayTitle, Kicker, QuoteText } from '../atoms';
-import { BaseSectionProps, sectionOrnaments, shellProps } from './sectionHelpers';
+import type { StaysDividerViewModel } from '../../../display/types.ts';
+import { textValue } from '../../../display/types.ts';
+import { getLayoutSlots } from '../../../display/layoutRegistry.ts';
+import { requireTypographySlot } from '../../../display/typographySlots.ts';
+import { BodyCopy, DisplayTitle, Kicker, QuoteText } from '../atoms.tsx';
+import { BaseSectionProps, sectionOrnaments, shellProps } from './sectionHelpers.tsx';
 
 export function StaysDividerSection({
   sectionId,

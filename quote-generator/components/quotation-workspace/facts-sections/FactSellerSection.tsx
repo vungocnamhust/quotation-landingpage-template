@@ -1,7 +1,7 @@
 "use client";
 
-import { BookingTermsEditor } from "./BookingTermsEditor";
-import type { BookingFact, QuotationFacts } from "../factsTypes";
+import { BookingTermsEditor } from "./BookingTermsEditor.tsx";
+import type { BookingFact, QuotationFacts } from "../factsTypes.ts";
 
 type Props = {
   booking: BookingFact;

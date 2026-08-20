@@ -11,11 +11,11 @@ import type {
   PriceOptionViewModel,
   TypographySlotMap,
   TextValue,
-} from '../../display/types';
-import { textValue } from '../../display/types';
-import { cn } from '../../utils/cn';
-import { requireTypographySlot } from '../../display/typographySlots';
-import { getTypographyClassName } from '../../config/typography';
+} from '../../display/types.ts';
+import { textValue } from '../../display/types.ts';
+import { cn } from '../../utils/cn.ts';
+import { requireTypographySlot } from '../../display/typographySlots.ts';
+import { getTypographyClassName } from '../../config/typography.ts';
 import {
   ActionButton,
   AvatarFrame,
@@ -26,8 +26,8 @@ import {
   MetaText,
   PriceText,
   QuoteText,
-} from './atoms';
-import ItineraryCarousel from './ItineraryCarousel';
+} from './atoms.tsx';
+import ItineraryCarousel from './ItineraryCarousel.tsx';
 
 export function SectionHeader({
   kicker,

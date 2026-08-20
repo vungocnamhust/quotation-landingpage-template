@@ -1,17 +1,17 @@
 "use client";
 
-import { getTypographyClassName } from "../../../config/typography";
-import { cn } from "../../../utils/cn";
-import { DestinationSelect } from "../../destination/DestinationSelect";
-import { TravelDesignerSelect } from "../../travel-designer/TravelDesignerSelect";
-import { DateInput } from "../../date";
-import type { TravelDesignerProfile } from "../../../lib/quotationApi";
+import { getTypographyClassName } from "../../../config/typography.ts";
+import { cn } from "../../../utils/cn.ts";
+import { DestinationSelect } from "../../destination/DestinationSelect.tsx";
+import { TravelDesignerSelect } from "../../travel-designer/TravelDesignerSelect.tsx";
+import { DateInput } from "../../date/index.ts";
+import type { TravelDesignerProfile } from "../../../lib/quotationApi.ts";
 import type {
   QuotationFacts,
   QuotationOptions,
   ResolvedFacts,
-} from "../factsTypes";
-import CustomSelect from "../../ui/CustomSelect";
+} from "../factsTypes.ts";
+import CustomSelect from "../../ui/CustomSelect.tsx";
 
 const lines = (values: string[]) => values.join("\n");
 const toLines = (value: string) => value.split("\n");

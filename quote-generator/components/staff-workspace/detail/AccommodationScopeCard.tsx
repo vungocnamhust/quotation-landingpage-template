@@ -1,10 +1,10 @@
 "use client";
 
 import { Building2, BedDouble, Layers } from "lucide-react";
-import DetailSectionCard from "./DetailSectionCard";
-import DetailField from "./DetailField";
-import { getTypographyClassName } from "../../../config/typography";
-import { cn } from "../../../utils/cn";
+import DetailSectionCard from "./DetailSectionCard.tsx";
+import DetailField from "./DetailField.tsx";
+import { getTypographyClassName } from "../../../config/typography.ts";
+import { cn } from "../../../utils/cn.ts";
 
 type Props = {
   hotelLevel?: string | null;

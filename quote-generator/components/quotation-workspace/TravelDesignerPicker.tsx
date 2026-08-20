@@ -1,7 +1,7 @@
 "use client";
 
-import { TravelDesignerSelect } from "../travel-designer/TravelDesignerSelect";
-import type { TravelDesignerProfile } from "../travel-designer/types";
+import { TravelDesignerSelect } from "../travel-designer/TravelDesignerSelect.tsx";
+import type { TravelDesignerProfile } from "../travel-designer/types.ts";
 
 type Props = {
   value: string | null;

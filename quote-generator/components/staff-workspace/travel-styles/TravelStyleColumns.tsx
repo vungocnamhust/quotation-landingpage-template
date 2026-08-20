@@ -1,10 +1,10 @@
 "use client";
 
 import { Palette, CheckCircle2 } from "lucide-react";
-import { getTypographyClassName } from "../../../config/typography";
-import { cn } from "../../../utils/cn";
-import type { FlatTravelStyleTag } from "../tourComponentsCatalog";
-import type { ColumnDef } from "../../ui/data-view/DataTable";
+import { getTypographyClassName } from "../../../config/typography.ts";
+import { cn } from "../../../utils/cn.ts";
+import type { FlatTravelStyleTag } from "../tourComponentsCatalog.ts";
+import type { ColumnDef } from "../../ui/data-view/DataTable.tsx";
 
 export function createTravelStyleColumns(): ColumnDef<FlatTravelStyleTag>[] {
   return [

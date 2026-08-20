@@ -6,8 +6,8 @@ import Highlight from '@tiptap/extension-highlight';
 import { Markdown } from 'tiptap-markdown';
 import { useEffect, useRef } from 'react';
 import { Bold, Italic, Highlighter, List, ListOrdered, Undo, Redo } from 'lucide-react';
-import { cn } from '../../utils/cn';
-import { getTypographyClassName } from '../../config/typography';
+import { cn } from '../../utils/cn.ts';
+import { getTypographyClassName } from '../../config/typography.ts';
 
 export interface TipTapRichEditorProps {
   value: string;

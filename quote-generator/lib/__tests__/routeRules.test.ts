@@ -8,7 +8,7 @@ import {
 import { tripReconciler } from "../rules/tripReconciler.ts";
 import { tripAdapter } from "../rules/tripAdapter.ts";
 import type { CanonicalTrip } from "../rules/tripReconciler.ts";
-import type { QuoteRequestFormState } from "../quoteRequestPayload.ts";
+import { getInitialQuoteRequestFormState, type QuoteRequestFormState } from "../quoteRequestPayload.ts";
 
 test("parseRouteTokens tokenizes multiple delimiter styles", () => {
   // Arrow delimiter
@@ -96,33 +96,16 @@ test("tripReconciler.applyRouteSequence expands itinerary and sets dates", () =>
 
 test("tripAdapter bidirectional sync preserves route metadata", () => {
   const formState: QuoteRequestFormState = {
-    role: "traveller",
-    customer_name: "John Doe",
+    ...getInitialQuoteRequestFormState("traveller"),
+    first_name: "John",
+    last_name: "Doe",
     email: "john@example.com",
-    phone: "",
-    market: "UK",
-    preferred_contact: "email",
     destination: "Vietnam",
-    destinations: ["Vietnam"],
-    destination_refs: [],
     arrival_city: "Hanoi",
     departure_city: "Saigon",
     routing_constraints: "Fixed flight VN50 arriving 06:30",
     arrival_date: "2026-10-10",
     departure_date: "2026-10-12",
-    raw_dates_text: "",
-    date_flexibility: "exact",
-    adults: 2,
-    children: 0,
-    children_details: "",
-    kid_ages: [],
-    travel_style: "Living Heritage",
-    special_requirements: "",
-    budget: "",
-    currency: "USD",
-    client_name: "",
-    company_name: "",
-    message: "",
   };
 
   const days = [
@@ -140,6 +123,6 @@ test("tripAdapter bidirectional sync preserves route metadata", () => {
   const synced = tripAdapter.syncToQuoteRequest(canonical, formState);
   assert.equal(synced.formState.arrival_city, "Hanoi");
   assert.equal(synced.formState.departure_city, "Saigon");
-  assert.deepEqual(synced.formState.destinations, ["Hanoi", "Halong Bay", "Saigon"]);
+  assert.equal(synced.formState.destination, "Hanoi");
   assert.equal(synced.formState.routing_constraints, "Fixed flight VN50 arriving 06:30");
 });

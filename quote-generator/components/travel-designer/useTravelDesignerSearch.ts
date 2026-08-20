@@ -2,7 +2,7 @@
 
 import { useDeferredValue, useMemo } from "react";
 import useSWR from "swr";
-import { listTravelDesigners, type TravelDesignerProfile } from "../../lib/quotationApi";
+import { listTravelDesigners, type TravelDesignerProfile } from "../../lib/quotationApi.ts";
 
 export type UseTravelDesignerSearchOptions = {
   active?: "true" | "false" | "all";

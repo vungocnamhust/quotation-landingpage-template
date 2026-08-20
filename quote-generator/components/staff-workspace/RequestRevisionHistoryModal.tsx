@@ -2,10 +2,10 @@
 
 import { useEffect } from "react";
 import { X, History, ArrowRight, Eye, CheckCircle2, Clock } from "lucide-react";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
-import type { QuoteRequestItem } from "../quotation-workspace/factsTypes";
-import { useRequestRevisionHistory } from "./useRequestRevisionHistory";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
+import type { QuoteRequestItem } from "../quotation-workspace/factsTypes.ts";
+import { useRequestRevisionHistory } from "./useRequestRevisionHistory.ts";
 
 type Props = {
   requestId: string;

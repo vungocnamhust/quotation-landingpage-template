@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { User, Briefcase, Calendar, MapPin, Users, ArrowRight } from "lucide-react";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
-import type { QuoteRequestItem } from "../quotation-workspace/factsTypes";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
+import type { QuoteRequestItem } from "../quotation-workspace/factsTypes.ts";
 
 type Props = {
   item: QuoteRequestItem;

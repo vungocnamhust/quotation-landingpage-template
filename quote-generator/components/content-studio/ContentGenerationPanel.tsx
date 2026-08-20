@@ -1,12 +1,12 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { cn } from '../../utils/cn';
-import { getTypographyClassName } from '../../config/typography';
-import type { ContentFactInput, PromptPreview } from '../quotation-workspace/useQuotationWorkspace';
-import { RichTextEditor } from '../ui/RichTextEditor';
-import { PromptOptionPillSelector, GROUND_RULE_OPTIONS, BRAND_OPTIONS } from './PromptOptionPillSelector';
-import { RealtimePromptPreviewPanel } from './RealtimePromptPreviewPanel';
+import { cn } from '../../utils/cn.ts';
+import { getTypographyClassName } from '../../config/typography.ts';
+import type { ContentFactInput, PromptPreview } from '../quotation-workspace/useQuotationWorkspace.ts';
+import { RichTextEditor } from '../ui/RichTextEditor.tsx';
+import { PromptOptionPillSelector, GROUND_RULE_OPTIONS, BRAND_OPTIONS } from './PromptOptionPillSelector.tsx';
+import { RealtimePromptPreviewPanel } from './RealtimePromptPreviewPanel.tsx';
 
 type Mode = 'storytelling' | 'detailed';
 

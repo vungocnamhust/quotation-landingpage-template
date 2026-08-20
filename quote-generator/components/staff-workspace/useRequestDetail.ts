@@ -1,8 +1,8 @@
 "use client";
 
 import useSWR from "swr";
-import { quotationFetch } from "../../lib/apiError";
-import type { QuoteRequestItem } from "../quotation-workspace/factsTypes";
+import { quotationFetch } from "../../lib/apiError.ts";
+import type { QuoteRequestItem } from "../quotation-workspace/factsTypes.ts";
 
 const API_BASE = process.env.NEXT_PUBLIC_QUOTATION_API_URL ?? "";
 

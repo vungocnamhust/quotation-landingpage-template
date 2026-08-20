@@ -3,13 +3,13 @@
 import type { LatLngExpression, Map as LeafletMap, Marker, Polyline, TileLayer, TileLayerOptions } from 'leaflet';
 import L from 'leaflet';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { ViewMode } from '../../display/contracts';
-import type { RouteMapViewModel, TypographySlotMap } from '../../display/types';
-import { textValue } from '../../display/types';
-import { cn } from '../../utils/cn';
-import { requireTypographySlot } from '../../display/typographySlots';
-import { getTypographyClassName } from '../../config/typography';
-import { DisplayTitle, MetaText } from './atoms';
+import type { ViewMode } from '../../display/contracts.ts';
+import type { RouteMapViewModel, TypographySlotMap } from '../../display/types.ts';
+import { textValue } from '../../display/types.ts';
+import { cn } from '../../utils/cn.ts';
+import { requireTypographySlot } from '../../display/typographySlots.ts';
+import { getTypographyClassName } from '../../config/typography.ts';
+import { DisplayTitle, MetaText } from './atoms.tsx';
 
 interface RouteMapExperienceProps {
   viewModel: RouteMapViewModel;

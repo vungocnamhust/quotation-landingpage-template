@@ -10,9 +10,9 @@ import {
   FileText,
   Globe,
 } from "lucide-react";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
-import type { QuoteRequestItem } from "./factsTypes";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
+import type { QuoteRequestItem } from "./factsTypes.ts";
 
 type Props = {
   request: QuoteRequestItem;

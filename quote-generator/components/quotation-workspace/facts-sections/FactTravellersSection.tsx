@@ -1,9 +1,10 @@
 "use client";
 
-import { getTypographyClassName } from "../../../config/typography";
-import { cn } from "../../../utils/cn";
-import { TravelStyleSelect } from "../../travel-style/TravelStyleSelect";
-import type { CustomerFact, QuotationFacts } from "../factsTypes";
+import { getTypographyClassName } from "../../../config/typography.ts";
+import { cn } from "../../../utils/cn.ts";
+import { TravelStyleSelect } from "../../travel-style/TravelStyleSelect.tsx";
+import KidAgesInput from "../KidAgesInput.tsx";
+import type { CustomerFact, QuotationFacts } from "../factsTypes.ts";
 
 const inputClass = cn(
   getTypographyClassName("bodyMd"),
@@ -49,6 +50,7 @@ type Props = {
   readOnly?: boolean;
   onCustomerNameChange: (value: string) => void;
   onCustomerCountsChange: (counts: { adults?: number | null; children?: number | null }) => void;
+  onCustomerKidAgesChange?: (ages: number[]) => void;
   onUpdate: <K extends keyof QuotationFacts>(key: K, value: QuotationFacts[K]) => void;
 };
 
@@ -57,8 +59,20 @@ export function FactTravellersSection({
   readOnly = false,
   onCustomerNameChange,
   onCustomerCountsChange,
+  onCustomerKidAgesChange,
   onUpdate,
 }: Props) {
+  const handleKidAgesChange = (ages: number[]) => {
+    if (onCustomerKidAgesChange) {
+      onCustomerKidAgesChange(ages);
+    } else {
+      onUpdate("customer_facts", {
+        ...customer,
+        kid_ages: ages,
+      });
+    }
+  };
+
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       <Field
@@ -96,6 +110,19 @@ export function FactTravellersSection({
           })
         }
       />
+
+      {/* Dynamic Kid Ages Grid */}
+      {customer.children && customer.children > 0 ? (
+        <div className="sm:col-span-2">
+          <KidAgesInput
+            childrenCount={customer.children}
+            kidAges={customer.kid_ages ?? []}
+            disabled={readOnly}
+            onChange={handleKidAgesChange}
+          />
+        </div>
+      ) : null}
+
       <div className="sm:col-span-2">
         <TravelStyleSelect
           label="Travel Style & Guest Preferences"

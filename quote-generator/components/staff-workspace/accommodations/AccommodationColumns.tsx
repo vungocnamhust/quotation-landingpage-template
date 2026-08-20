@@ -1,10 +1,10 @@
 "use client";
 
 import { MapPin, Phone, CheckCircle2, XCircle } from "lucide-react";
-import { getTypographyClassName } from "../../../config/typography";
-import { cn } from "../../../utils/cn";
-import type { AccommodationProfile } from "../../../lib/quotationApi";
-import type { ColumnDef } from "../../ui/data-view/DataTable";
+import { getTypographyClassName } from "../../../config/typography.ts";
+import { cn } from "../../../utils/cn.ts";
+import type { AccommodationProfile } from "../../../lib/quotationApi.ts";
+import type { ColumnDef } from "../../ui/data-view/DataTable.tsx";
 
 export function createAccommodationColumns(
   onEdit: (profile: AccommodationProfile) => void,

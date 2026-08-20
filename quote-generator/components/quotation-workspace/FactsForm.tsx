@@ -1,26 +1,30 @@
 "use client";
 
 import { useState, type Dispatch, type ReactNode, type SetStateAction } from "react";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
 import { CheckCircle2, AlertCircle } from "lucide-react";
-import FactsNavigator, { type FactSectionStatus } from "./FactsNavigator";
+import FactsNavigator, { type FactSectionStatus } from "./FactsNavigator.tsx";
 import type {
   QuotationFacts,
   QuotationOptions,
   ResolvedFacts,
-} from "./factsTypes";
-import { BrochureAssetsEditor, type MediaWorkspace } from "./MediaSlotRenderer";
-import type { TravelDesignerProfile } from "../../lib/quotationApi";
-import type { FactsDeepLink } from "./editableHandoff";
-import { updateCustomerCounts, updateCustomerName } from "../../lib/prefillEngine";
-import { useFactsFormState } from "./useFactsFormState";
-import { FactTripSection } from "./facts-sections/FactTripSection";
-import { FactTravellersSection } from "./facts-sections/FactTravellersSection";
-import { FactProgrammeSection } from "./facts-sections/FactProgrammeSection";
-import { FactServicesSection } from "./facts-sections/FactServicesSection";
-import { FactCommercialSection } from "./facts-sections/FactCommercialSection";
-import { FactSellerSection } from "./facts-sections/FactSellerSection";
+} from "./factsTypes.ts";
+import { BrochureAssetsEditor, type MediaWorkspace } from "./MediaSlotRenderer.tsx";
+import type { TravelDesignerProfile } from "../../lib/quotationApi.ts";
+import type { FactsDeepLink } from "./editableHandoff.ts";
+import {
+  updateCustomerCounts,
+  updateCustomerKidAges,
+  updateCustomerName,
+} from "../../lib/prefillEngine.ts";
+import { useFactsFormState } from "./useFactsFormState.ts";
+import { FactTripSection } from "./facts-sections/FactTripSection.tsx";
+import { FactTravellersSection } from "./facts-sections/FactTravellersSection.tsx";
+import { FactProgrammeSection } from "./facts-sections/FactProgrammeSection.tsx";
+import { FactServicesSection } from "./facts-sections/FactServicesSection.tsx";
+import { FactCommercialSection } from "./facts-sections/FactCommercialSection.tsx";
+import { FactSellerSection } from "./facts-sections/FactSellerSection.tsx";
 
 type Props = {
   facts: QuotationFacts;
@@ -250,6 +254,9 @@ export default function FactsForm({
             }
             onCustomerCountsChange={(counts) =>
               onChange((current) => updateCustomerCounts(current, counts))
+            }
+            onCustomerKidAgesChange={(ages) =>
+              onChange((current) => updateCustomerKidAges(current, ages))
             }
             onUpdate={update}
           />

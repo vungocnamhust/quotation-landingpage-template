@@ -2,15 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { Building2 } from "lucide-react";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
 import {
   createPartner,
   updatePartner,
   updatePartnerStatus,
   type PartnerInput,
   type PartnerProfile,
-} from "../../lib/quotationApi";
+} from "../../lib/quotationApi.ts";
+import { useToast } from "../staff-workspace/ToastProvider.tsx";
 
 export type PartnerDrawerMode = "create" | "edit" | "manage" | null;
 
@@ -100,25 +101,26 @@ export function PartnerManageDrawer({
   onSaved,
   onMutate,
 }: Props) {
+  const { toast } = useToast();
   const [currentMode, setCurrentMode] = useState<PartnerDrawerMode>(mode);
   const [editing, setEditing] = useState<PartnerProfile | null>(editingPartner ?? null);
-  const [draft, setDraft] = useState<PartnerInput>(() =>
+  const [draft, setDraft] = useState<PartnerInput>(
     editingPartner
       ? {
           company_name: editingPartner.company_name,
           contact_name: editingPartner.contact_name,
           email: editingPartner.email,
-          phone: editingPartner.phone || "",
-          market: editingPartner.market || "",
-          tier: editingPartner.tier || "Standard",
+          phone: editingPartner.phone ?? "",
+          market: editingPartner.market ?? "",
+          tier: editingPartner.tier ?? "Standard",
           default_commission_rate: editingPartner.default_commission_rate ?? 10.0,
-          preferred_currency: editingPartner.preferred_currency || "USD",
-          notes: editingPartner.notes || "",
+          preferred_currency: editingPartner.preferred_currency ?? "USD",
+          notes: editingPartner.notes ?? "",
         }
       : blankDraft()
   );
-  const [message, setMessage] = useState("");
   const [pending, setPending] = useState(false);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     if (!currentMode) return;
@@ -140,12 +142,12 @@ export function PartnerManageDrawer({
       company_name: partner.company_name,
       contact_name: partner.contact_name,
       email: partner.email,
-      phone: partner.phone || "",
-      market: partner.market || "",
-      tier: partner.tier || "Standard",
+      phone: partner.phone ?? "",
+      market: partner.market ?? "",
+      tier: partner.tier ?? "Standard",
       default_commission_rate: partner.default_commission_rate ?? 10.0,
-      preferred_currency: partner.preferred_currency || "USD",
-      notes: partner.notes || "",
+      preferred_currency: partner.preferred_currency ?? "USD",
+      notes: partner.notes ?? "",
     });
     setCurrentMode("edit");
     setMessage("");
@@ -153,7 +155,9 @@ export function PartnerManageDrawer({
 
   const savePartner = async () => {
     if (!draft.company_name.trim() || !draft.contact_name.trim() || !draft.email.trim()) {
-      setMessage("Company name, contact name, and email are required.");
+      const warningMsg = "Company name, contact name, and email are required.";
+      setMessage(warningMsg);
+      toast(warningMsg, "warning");
       return;
     }
     setPending(true);
@@ -162,10 +166,13 @@ export function PartnerManageDrawer({
         ? await updatePartner(editing.id, draft)
         : await createPartner(draft);
       await onMutate();
+      toast(`Partner agency "${saved.company_name}" saved successfully.`, "success");
       onSaved(saved);
       onClose();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Partner could not be saved.");
+      const errMsg = error instanceof Error ? error.message : "Partner could not be saved.";
+      setMessage(errMsg);
+      toast(errMsg, "error");
     } finally {
       setPending(false);
     }
@@ -176,9 +183,13 @@ export function PartnerManageDrawer({
     try {
       await updatePartnerStatus(partner.id, !partner.is_active);
       await onMutate();
+      const statusText = !partner.is_active ? "activated" : "deactivated";
+      toast(`Partner agency "${partner.company_name}" ${statusText}.`, "info");
       setMessage("");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Partner status could not be updated.");
+      const errMsg = error instanceof Error ? error.message : "Partner status could not be updated.";
+      setMessage(errMsg);
+      toast(errMsg, "error");
     } finally {
       setPending(false);
     }
@@ -368,3 +379,5 @@ export function PartnerManageDrawer({
     </div>
   );
 }
+
+export default PartnerManageDrawer;

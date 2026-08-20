@@ -3,8 +3,8 @@
  * Mirrors Backend Gatekeeper Pipeline to provide immediate UI feedback.
  */
 
-import type { DayWithStayItem } from "../../components/quotation-workspace/DayEmbeddedRouteTable";
-import type { QuotationFacts } from "../../components/quotation-workspace/factsTypes";
+import type { DayWithStayItem } from "../../components/quotation-workspace/DayEmbeddedRouteTable.tsx";
+import type { QuotationFacts } from "../../components/quotation-workspace/factsTypes.ts";
 
 export type GateSeverity = "error" | "warning" | "info";
 
@@ -138,6 +138,126 @@ export function evaluateQuotationDraftReadiness(
       code: "BRAND_REQUIRED",
       message: "Please select a publishing brand.",
       severity: "error",
+    });
+  }
+
+  const errors = issues.filter((i) => i.severity === "error");
+  const warnings = issues.filter((i) => i.severity === "warning");
+
+  return {
+    passed: errors.length === 0,
+    issues,
+    errors,
+    warnings,
+  };
+}
+
+export function evaluateQuoteRequestReadiness(
+  formState: {
+    role?: string;
+    first_name?: string;
+    last_name?: string;
+    client_name?: string;
+    advisor_first_name?: string;
+    advisor_last_name?: string;
+    advisor_company?: string;
+    email?: string;
+    advisor_email?: string;
+    travel_timing?: string;
+    arrival_date?: string;
+    departure_date?: string;
+    adults?: number;
+    destination?: string;
+    destinations?: string[];
+  },
+  itineraryDays?: Array<{ destination?: string; day_number?: number }>
+): ClientGateResult {
+  const issues: ClientGateIssue[] = [];
+  const isAdvisor = formState.role === "advisor";
+
+  // 1. Identity Gate
+  if (isAdvisor) {
+    const clientName = (formState.client_name || "").trim();
+    const advisorName = (formState.advisor_first_name || formState.advisor_last_name || "").trim();
+    if (!clientName && !advisorName) {
+      issues.push({
+        field: "client_name",
+        code: "CLIENT_OR_ADVISOR_NAME_REQUIRED",
+        message: "End-client name or Advisor name is required.",
+        severity: "error",
+        suggestion: "Please enter the traveller's family name or lead name.",
+      });
+    }
+
+    const email = (formState.advisor_email || formState.email || "").trim();
+    if (!email) {
+      issues.push({
+        field: "advisor_email",
+        code: "ADVISOR_EMAIL_REQUIRED",
+        message: "Advisor email address is required.",
+        severity: "error",
+      });
+    }
+  } else {
+    const fullName = `${formState.first_name || ""} ${formState.last_name || ""}`.trim() || (formState.client_name || "").trim();
+    if (!fullName || fullName.length < 2) {
+      issues.push({
+        field: "first_name",
+        code: "TRAVELLER_NAME_REQUIRED",
+        message: "Traveller name is required (minimum 2 characters).",
+        severity: "error",
+        suggestion: "Please provide the lead traveller's first and last name.",
+      });
+    }
+
+    const email = (formState.email || "").trim();
+    if (!email) {
+      issues.push({
+        field: "email",
+        code: "EMAIL_RECOMMENDED",
+        message: "Contact email is recommended for follow-up notifications.",
+        severity: "warning",
+      });
+    }
+  }
+
+  // 2. Party Size Gate
+  const adults = formState.adults ?? 1;
+  if (adults < 1) {
+    issues.push({
+      field: "adults",
+      code: "INVALID_ADULTS",
+      message: "At least 1 adult traveller is required.",
+      severity: "error",
+    });
+  }
+
+  // 3. Travel Dates Gate
+  const arrival = formState.arrival_date;
+  const departure = formState.departure_date;
+  if (arrival && departure && departure < arrival) {
+    issues.push({
+      field: "departure_date",
+      code: "INVALID_DATE_RANGE",
+      message: "Departure date must be on or after arrival date.",
+      severity: "error",
+    });
+  }
+
+  // 4. Destinations Gate
+  const hasDest = Boolean(
+    (formState.destination && formState.destination.trim()) ||
+    (formState.destinations && formState.destinations.length > 0) ||
+    (itineraryDays && itineraryDays.some((d) => d.destination && d.destination.trim()))
+  );
+
+  if (!hasDest) {
+    issues.push({
+      field: "destination",
+      code: "DESTINATION_RECOMMENDED",
+      message: "Specifying at least one destination helps generate an accurate quote.",
+      severity: "warning",
+      suggestion: "Add a destination or route sequence to the itinerary.",
     });
   }
 

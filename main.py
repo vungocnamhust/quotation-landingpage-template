@@ -107,6 +107,7 @@ from routers.v2.accommodations import router as accommodations_router
 from routers.v2.travel_designers import router as travel_designers_router
 from routers.v2.partners import router as partners_router
 from routers.v2.quote_requests import router as quote_requests_router
+from routers.v2.rooming_heuristics import router as rooming_heuristics_router
 from routers.v1.translations import router as translations_router
 from routers.public_brochure import router as public_brochure_router
 from notification.api.v2.notifications import router as notifications_v2_router
@@ -209,6 +210,7 @@ app.include_router(accommodations_router)
 app.include_router(travel_designers_router)
 app.include_router(partners_router)
 app.include_router(quote_requests_router)
+app.include_router(rooming_heuristics_router)
 app.include_router(translations_router)
 
 app.include_router(public_brochure_router)
@@ -7940,10 +7942,23 @@ async def _save_accommodation_profile(session, payload: AccommodationProfileRequ
 
 
 @app.get("/api/v2/accommodations")
-async def list_accommodations(active: Literal["true", "false", "all"] = "true", query: str = "", destinationId: str | None = None, principal: Principal = Depends(require_editor)):
+async def list_accommodations(active: Literal["true", "false", "all"] = "true", query: str = "", destinationId: str | None = None, destination: str | None = None, principal: Principal = Depends(require_editor)):
     async with _get_db_session_factory()() as session:
         await _seed_destination_catalog(session)
-        items = await AccommodationRepository(session).list_profiles(active_only={"true": True, "false": False, "all": None}[active], search=query, destination_id=destinationId)
+        dest_repo = DestinationRepository(session)
+        resolved_dest_id = destinationId
+        if destinationId:
+            direct = await dest_repo.get(destinationId)
+            if direct is None:
+                clean_target = destinationId.removeprefix("dst_").replace("-", " ")
+                resolved = await dest_repo.resolve(clean_target)
+                if resolved is not None:
+                    resolved_dest_id = resolved.id
+        elif destination:
+            resolved = await dest_repo.resolve(destination)
+            if resolved is not None:
+                resolved_dest_id = resolved.id
+        items = await AccommodationRepository(session).list_profiles(active_only={"true": True, "false": False, "all": None}[active], search=query, destination_id=resolved_dest_id)
         return {"items": [await _serialize_accommodation(item, session) for item in items]}
 
 

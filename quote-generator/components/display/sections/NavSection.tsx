@@ -1,7 +1,7 @@
-import type { NavViewModel } from '../../../display/types';
-import { getLayoutSlots } from '../../../display/layoutRegistry';
-import AppTopBar from '../../AppTopBar';
-import { BaseSectionProps, shellProps } from './sectionHelpers';
+import type { NavViewModel } from '../../../display/types.ts';
+import { getLayoutSlots } from '../../../display/layoutRegistry.ts';
+import AppTopBar from '../../AppTopBar.tsx';
+import { BaseSectionProps, shellProps } from './sectionHelpers.tsx';
 
 export function NavSection({
   sectionId,

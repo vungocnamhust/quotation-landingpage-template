@@ -2,12 +2,12 @@
 
 import { useEffect } from "react";
 import { X, Save, Sparkles, AlertCircle } from "lucide-react";
-import QuoteRequestForm from "../quotation-workspace/QuoteRequestForm";
-import BasicItineraryDayGrid from "../quotation-workspace/BasicItineraryDayGrid";
-import { useQuoteRequestForm } from "../quotation-workspace/useQuoteRequestForm";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
-import type { QuoteRequestItem } from "../quotation-workspace/factsTypes";
+import QuoteRequestForm from "../quotation-workspace/QuoteRequestForm.tsx";
+import BasicItineraryDayGrid from "../quotation-workspace/BasicItineraryDayGrid.tsx";
+import { useQuoteRequestForm } from "../quotation-workspace/useQuoteRequestForm.ts";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
+import type { QuoteRequestItem } from "../quotation-workspace/factsTypes.ts";
 
 type Props = {
   request: QuoteRequestItem;

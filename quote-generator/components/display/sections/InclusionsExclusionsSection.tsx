@@ -1,7 +1,7 @@
-import type { InclusionsExclusionsViewModel } from '../../../display/types';
-import { getLayoutSlots } from '../../../display/layoutRegistry';
-import { InclusionsPanel, SectionHeader } from '../molecules';
-import { BaseSectionProps, sectionOrnaments, shellProps } from './sectionHelpers';
+import type { InclusionsExclusionsViewModel } from '../../../display/types.ts';
+import { getLayoutSlots } from '../../../display/layoutRegistry.ts';
+import { InclusionsPanel, SectionHeader } from '../molecules.tsx';
+import { BaseSectionProps, sectionOrnaments, shellProps } from './sectionHelpers.tsx';
 
 export function InclusionsExclusionsSection({
   sectionId,

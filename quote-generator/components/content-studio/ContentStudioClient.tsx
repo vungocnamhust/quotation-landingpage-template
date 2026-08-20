@@ -2,25 +2,25 @@
 
 import { useMemo } from 'react';
 import { Loader2, Sparkles } from 'lucide-react';
-import SectionOutlineNav from '../ui/SectionOutlineNav';
-import { getTypographyClassName } from '../../config/typography';
-import { cn } from '../../utils/cn';
-import { ContentDraftActions } from './ContentDraftActions';
-import { ContentGenerationPanel, FactsUsed } from './ContentGenerationPanel';
-import { SectionContentFields } from './SectionContentFields';
+import SectionOutlineNav from '../ui/SectionOutlineNav.tsx';
+import { getTypographyClassName } from '../../config/typography.ts';
+import { cn } from '../../utils/cn.ts';
+import { ContentDraftActions } from './ContentDraftActions.tsx';
+import { ContentGenerationPanel, FactsUsed } from './ContentGenerationPanel.tsx';
+import { SectionContentFields } from './SectionContentFields.tsx';
 import type {
   ContentFactInput,
   DocumentResponse,
   DraftsResponse,
   FactsResponse,
   ReviewResponse,
-} from '../quotation-workspace/useQuotationWorkspace';
+} from '../quotation-workspace/useQuotationWorkspace.ts';
 import {
   useContentStudioState,
   labels,
   SCOPE_BY_SECTION_TYPE,
-} from './useContentStudioState';
-import { useContentGeneration } from './useContentGeneration';
+} from './useContentStudioState.ts';
+import { useContentGeneration } from './useContentGeneration.ts';
 
 type Props = {
   quotationId: string;

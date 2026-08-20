@@ -2,9 +2,9 @@
 
 import { memo } from "react";
 import { Palette, CheckCircle2, Hash } from "lucide-react";
-import { getTypographyClassName } from "../../../config/typography";
-import { cn } from "../../../utils/cn";
-import type { FlatTravelStyleTag } from "../tourComponentsCatalog";
+import { getTypographyClassName } from "../../../config/typography.ts";
+import { cn } from "../../../utils/cn.ts";
+import type { FlatTravelStyleTag } from "../tourComponentsCatalog.ts";
 
 interface Props {
   tag: FlatTravelStyleTag;

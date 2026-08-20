@@ -4,6 +4,7 @@ import {
   ensureFactsDefaults,
   routeDestinationRefsFromItinerary,
   type DestinationRef,
+  type HotelFact,
   type ItineraryDayFact,
   type PricingOptionFact,
   type QuotationFacts,
@@ -11,13 +12,15 @@ import {
 import {
   deriveStaySegmentsFromItinerary,
   getDefaultMealsForLang,
-  inferCommercialPerTraveler,
-  inferCommercialTotal,
-  inferGreetingName,
   inferOvernightDestination,
-  inferPartyLabel,
   syncHotelsFromStaySegments,
 } from "./prefillRules.ts";
+import { partyAdapter } from "./rules/partyAdapter.ts";
+import { partyReconciler } from "./rules/partyReconciler.ts";
+import { staysAdapter } from "./rules/staysAdapter.ts";
+import { staysReconciler } from "./rules/staysReconciler.ts";
+import { pricingAdapter } from "./rules/pricingAdapter.ts";
+import { pricingReconciler, type CanonicalPricingOption } from "./rules/pricingReconciler.ts";
 
 /**
  * Creates an itinerary day with default meals localized by quotation language.
@@ -44,51 +47,83 @@ export function createItineraryDayWithDefaults({
  */
 export function updateCustomerName(input: QuotationFacts, rawName: string | null): QuotationFacts {
   const current = ensureFactsDefaults(input);
-  const name = rawName?.trim() || null;
-  const cust = current.customer_facts;
-
-  const prevParty = inferPartyLabel(cust.customer_name, cust.adults, cust.children);
-  const prevGreeting = inferGreetingName(cust.customer_name);
-
-  const isPartyDefaultOrBlank = !cust.party_label || cust.party_label === prevParty;
-  const isGreetingDefaultOrBlank = !cust.greeting_name || cust.greeting_name === prevGreeting;
-
-  return {
-    ...current,
-    customer_facts: {
-      ...cust,
-      customer_name: name,
-      party_label: isPartyDefaultOrBlank ? inferPartyLabel(name, cust.adults, cust.children) : cust.party_label,
-      greeting_name: isGreetingDefaultOrBlank ? inferGreetingName(name) : cust.greeting_name,
-    },
-  };
+  const canonicalParty = partyAdapter.fromQuotationFacts(current);
+  const updatedParty = partyReconciler.setCustomerName(canonicalParty, rawName);
+  return partyAdapter.syncToQuotationFacts(updatedParty, current);
 }
 
 /**
  * Single-pass updater when changing adult or child traveler counts.
+ * Automatically resizes kid_ages array vector and synchronizes pricing options total price with new Pax counts.
  */
 export function updateCustomerCounts(
   input: QuotationFacts,
   { adults, children }: { adults?: number | null; children?: number | null },
 ): QuotationFacts {
   const current = ensureFactsDefaults(input);
-  const cust = current.customer_facts;
+  const canonicalParty = partyAdapter.fromQuotationFacts(current);
 
-  const nextAdults = adults !== undefined ? adults : cust.adults;
-  const nextChildren = children !== undefined ? children : cust.children;
+  let updatedParty = canonicalParty;
+  if (adults !== undefined && adults !== null) {
+    updatedParty = partyReconciler.setAdults(updatedParty, adults);
+  }
+  if (children !== undefined && children !== null) {
+    updatedParty = partyReconciler.setChildren(updatedParty, children);
+  }
 
-  const prevParty = inferPartyLabel(cust.customer_name, cust.adults, cust.children);
-  const isPartyDefaultOrBlank = !cust.party_label || cust.party_label === prevParty;
+  // Sync pricing options with new Pax counts
+  const canonicalPricing = pricingAdapter.fromQuotationFacts(current);
+  const syncedPricing = pricingReconciler.syncPaxCounts(
+    canonicalPricing,
+    updatedParty.adults,
+    updatedParty.children
+  );
+  const syncedFacts = pricingAdapter.syncToQuotationFacts(syncedPricing, current);
 
-  return {
-    ...current,
-    customer_facts: {
-      ...cust,
-      adults: nextAdults,
-      children: nextChildren,
-      party_label: isPartyDefaultOrBlank ? inferPartyLabel(cust.customer_name, nextAdults, nextChildren) : cust.party_label,
-    },
-  };
+  return partyAdapter.syncToQuotationFacts(updatedParty, syncedFacts);
+}
+
+/**
+ * Single-pass updater when modifying kid ages vector.
+ */
+export function updateCustomerKidAges(
+  input: QuotationFacts,
+  kidAges: number[]
+): QuotationFacts {
+  const current = ensureFactsDefaults(input);
+  const canonicalParty = partyAdapter.fromQuotationFacts(current);
+  const reconciledParty = partyReconciler.reconcileParty({
+    ...canonicalParty,
+    kidAges,
+  });
+  return partyAdapter.syncToQuotationFacts(reconciledParty, current);
+}
+
+/**
+ * Single-pass updater when modifying individual kid age.
+ */
+export function updateCustomerKidAgeAtIndex(
+  input: QuotationFacts,
+  index: number,
+  age: number
+): QuotationFacts {
+  const current = ensureFactsDefaults(input);
+  const canonicalParty = partyAdapter.fromQuotationFacts(current);
+  const updatedParty = partyReconciler.setKidAge(canonicalParty, index, age);
+  return partyAdapter.syncToQuotationFacts(updatedParty, current);
+}
+
+/**
+ * Single-pass updater when modifying room notes & requests.
+ */
+export function updateCustomerRoomNotes(
+  input: QuotationFacts,
+  roomNotes: string | null
+): QuotationFacts {
+  const current = ensureFactsDefaults(input);
+  const canonicalParty = partyAdapter.fromQuotationFacts(current);
+  const updatedParty = partyReconciler.setRoomNotes(canonicalParty, roomNotes);
+  return partyAdapter.syncToQuotationFacts(updatedParty, current);
 }
 
 /**
@@ -117,19 +152,29 @@ export function updateItineraryDayDestination(
   });
 
   const destination_refs = routeDestinationRefsFromItinerary(itinerary);
+  const destinations =
+    destination_refs.length > 0
+      ? destination_refs.map((r) => r.name)
+      : Array.from(
+          new Set(
+            itinerary.map((d) => d.destination).filter((d): d is string => Boolean(d))
+          )
+        );
+
   return {
     ...current,
     trip_facts: {
       ...current.trip_facts,
       itinerary,
       destination_refs,
-      destinations: destination_refs.map((r) => r.name),
+      destinations,
     },
   };
 }
 
 /**
  * Single-pass updater for updating travel dates & route itinerary size.
+ * Also shifts check_in/check_out of hotel stays in sync.
  */
 export function applyRouteDates(
   input: QuotationFacts,
@@ -154,38 +199,145 @@ export function applyRouteDates(
   });
 
   const destination_refs = routeDestinationRefsFromItinerary(itinerary);
-  return {
+  const destinations =
+    destination_refs.length > 0
+      ? destination_refs.map((r) => r.name)
+      : Array.from(
+          new Set(
+            itinerary.map((d) => d.destination).filter((d): d is string => Boolean(d))
+          )
+        );
+
+  // Shift stay dates if hotels exist
+  const canonical = staysAdapter.fromQuotationFacts({
     ...current,
     trip_facts: {
       ...current.trip_facts,
       start_date: startDate,
       end_date: endDate,
       itinerary,
+    },
+  });
+  const shiftedStays = staysReconciler.shiftStayDates(canonical.stays, startDate, canonical.itinerary);
+  const hotels = staysReconciler.toHotelFacts(shiftedStays);
+
+  return {
+    ...current,
+    trip_facts: {
+      ...current.trip_facts,
+      start_date: startDate,
+      end_date: endDate,
+      duration_days: nextLength,
+      duration_nights: Math.max(0, nextLength - 1),
+      itinerary,
       destination_refs,
-      destinations: destination_refs.map((ref) => ref.name),
+      destinations,
+    },
+    service_facts: {
+      ...current.service_facts,
+      hotels,
     },
   };
 }
 
 /**
- * Single-pass hotel sync from itinerary overnights.
+ * Single-pass hotel sync from itinerary overnights using staysReconciler.
  */
 export function syncHotelsFromItineraryOvernights(input: QuotationFacts): QuotationFacts {
   const current = ensureFactsDefaults(input);
+  const canonical = staysAdapter.fromQuotationFacts(current);
+  const reconciledStays = staysReconciler.reconcileStaysFromItinerary(
+    canonical.itinerary,
+    canonical.startDate,
+    current.service_facts.hotels
+  );
+
+  if (reconciledStays.length > 0) {
+    return staysAdapter.syncToQuotationFacts(
+      { ...canonical, stays: reconciledStays },
+      current
+    );
+  }
+
   const segments = deriveStaySegmentsFromItinerary(
     current.trip_facts.itinerary,
     current.trip_facts.start_date,
-    current.trip_facts.end_date,
+    current.trip_facts.end_date
   );
-  const syncedHotels = syncHotelsFromStaySegments(current.service_facts.hotels, segments);
-
+  const hotels = syncHotelsFromStaySegments(current.service_facts.hotels, segments);
   return {
     ...current,
     service_facts: {
       ...current.service_facts,
-      hotels: syncedHotels,
+      hotels,
     },
   };
+}
+
+/**
+ * Single-pass updater when editing a day's accommodation, with automatic smart cascading.
+ */
+export function updateDayAccommodationInFacts(
+  input: QuotationFacts,
+  index: number,
+  patch: Partial<ItineraryDayFact>
+): QuotationFacts {
+  const current = ensureFactsDefaults(input);
+  const canonical = staysAdapter.fromQuotationFacts(current);
+  const { itinerary, stays } = staysReconciler.updateDayAccommodation(
+    canonical.itinerary,
+    index,
+    patch,
+    canonical.startDate,
+    current.service_facts.hotels
+  );
+  return staysAdapter.syncToQuotationFacts(
+    { ...canonical, itinerary, stays },
+    current
+  );
+}
+
+/**
+ * Single-pass updater when modifying a hotel in service_facts.hotels,
+ * automatically syncing accommodation metadata to corresponding itinerary days.
+ */
+export function patchHotelInFacts(
+  input: QuotationFacts,
+  index: number,
+  patch: Partial<HotelFact>
+): QuotationFacts {
+  const current = ensureFactsDefaults(input);
+  const hotels = current.service_facts.hotels.map((h, i) =>
+    i === index ? { ...h, ...patch } : h
+  );
+
+  // Sync back to itinerary days
+  const canonical = staysAdapter.fromQuotationFacts(current);
+  const syncedItinerary = staysReconciler.syncItineraryFromStays(
+    canonical.itinerary,
+    hotels,
+    canonical.startDate
+  );
+  const reconciledStays = staysReconciler.reconcileStaysFromItinerary(
+    syncedItinerary,
+    canonical.startDate,
+    hotels
+  );
+
+  return staysAdapter.syncToQuotationFacts(
+    {
+      ...canonical,
+      itinerary: syncedItinerary,
+      stays: reconciledStays.length > 0 ? reconciledStays : canonical.stays,
+    },
+    {
+      ...current,
+      service_facts: {
+        ...current.service_facts,
+        hotels,
+      },
+    }
+  );
 }
 
 /**
@@ -197,37 +349,145 @@ export function patchPricingOptionWithInference(
   patch: Partial<PricingOptionFact>,
 ): QuotationFacts {
   const current = ensureFactsDefaults(input);
-  const adults = current.customer_facts.adults;
-
-  const options = current.pricing_facts.options.map((option, optionIndex) => {
-    if (optionIndex !== index) return option;
-
-    const updated = { ...option, ...patch };
-
-    // If per traveler changed and group total is blank, auto-infer group total
-    if (patch.per_traveler_amount_minor !== undefined && patch.group_total_amount_minor === undefined) {
-      if (updated.group_total_amount_minor === null && patch.per_traveler_amount_minor !== null && adults) {
-        updated.group_total_amount_minor = inferCommercialTotal(patch.per_traveler_amount_minor, adults);
-      }
-    }
-
-    // If group total changed and per traveler is blank, auto-infer per traveler
-    if (patch.group_total_amount_minor !== undefined && patch.per_traveler_amount_minor === undefined) {
-      if (updated.per_traveler_amount_minor === null && patch.group_total_amount_minor !== null && adults) {
-        updated.per_traveler_amount_minor = inferCommercialPerTraveler(patch.group_total_amount_minor, adults);
-      }
-    }
-
-    return updated;
-  });
-
-  return {
-    ...current,
-    pricing_facts: {
-      ...current.pricing_facts,
-      options,
-    },
+  const canonical = pricingAdapter.fromQuotationFacts(current);
+  const canonicalPatch: Partial<CanonicalPricingOption> = {
+    label: patch.label,
+    currency: patch.currency ?? undefined,
+    perAdultMinor:
+      patch.per_adult_amount_minor !== undefined
+        ? patch.per_adult_amount_minor
+        : patch.per_traveler_amount_minor !== undefined
+          ? patch.per_traveler_amount_minor
+          : undefined,
+    perChildMinor: patch.per_child_amount_minor,
+    groupTotalMinor: patch.group_total_amount_minor,
   };
+  const updated = pricingReconciler.updateOption(canonical, index, canonicalPatch);
+  return pricingAdapter.syncToQuotationFacts(updated, current);
+}
+
+/**
+ * Single-pass updater when changing adult rate for a pricing option.
+ */
+export function updatePricingOptionAdultInFacts(
+  input: QuotationFacts,
+  index: number,
+  perAdultMinor: number | null
+): QuotationFacts {
+  const current = ensureFactsDefaults(input);
+  const canonical = pricingAdapter.fromQuotationFacts(current);
+  if (index < 0 || index >= canonical.options.length) return current;
+
+  const updatedOption = pricingReconciler.updateOptionPerAdult(
+    canonical.options[index],
+    perAdultMinor,
+    canonical.adults,
+    canonical.children
+  );
+  const nextOptions = [...canonical.options];
+  nextOptions[index] = updatedOption;
+
+  return pricingAdapter.syncToQuotationFacts({ ...canonical, options: nextOptions }, current);
+}
+
+/**
+ * Single-pass updater when changing child rate for a pricing option.
+ */
+export function updatePricingOptionChildInFacts(
+  input: QuotationFacts,
+  index: number,
+  perChildMinor: number | null
+): QuotationFacts {
+  const current = ensureFactsDefaults(input);
+  const canonical = pricingAdapter.fromQuotationFacts(current);
+  if (index < 0 || index >= canonical.options.length) return current;
+
+  const updatedOption = pricingReconciler.updateOptionPerChild(
+    canonical.options[index],
+    perChildMinor,
+    canonical.adults,
+    canonical.children
+  );
+  const nextOptions = [...canonical.options];
+  nextOptions[index] = updatedOption;
+
+  return pricingAdapter.syncToQuotationFacts({ ...canonical, options: nextOptions }, current);
+}
+
+/**
+ * Single-pass updater when applying a child preset ratio to a pricing option.
+ */
+export function applyChildPresetInFacts(
+  input: QuotationFacts,
+  index: number,
+  ratio: number
+): QuotationFacts {
+  const current = ensureFactsDefaults(input);
+  const canonical = pricingAdapter.fromQuotationFacts(current);
+  if (index < 0 || index >= canonical.options.length) return current;
+
+  const updatedOption = pricingReconciler.applyChildPreset(
+    canonical.options[index],
+    ratio,
+    canonical.adults,
+    canonical.children
+  );
+  const nextOptions = [...canonical.options];
+  nextOptions[index] = updatedOption;
+
+  return pricingAdapter.syncToQuotationFacts({ ...canonical, options: nextOptions }, current);
+}
+
+/**
+ * Single-pass updater when changing group total for a pricing option.
+ */
+export function updatePricingOptionTotalInFacts(
+  input: QuotationFacts,
+  index: number,
+  groupTotalMinor: number | null
+): QuotationFacts {
+  const current = ensureFactsDefaults(input);
+  const canonical = pricingAdapter.fromQuotationFacts(current);
+  if (index < 0 || index >= canonical.options.length) return current;
+
+  const updatedOption = pricingReconciler.updateOptionTotal(
+    canonical.options[index],
+    groupTotalMinor,
+    canonical.adults,
+    canonical.children
+  );
+  const nextOptions = [...canonical.options];
+  nextOptions[index] = updatedOption;
+
+  return pricingAdapter.syncToQuotationFacts({ ...canonical, options: nextOptions }, current);
+}
+
+/**
+ * Single-pass updater when converting currency for a pricing option.
+ */
+export function convertOptionCurrencyInFacts(
+  input: QuotationFacts,
+  index: number,
+  nextCurrency: string,
+  convertAmounts = true
+): QuotationFacts {
+  const current = ensureFactsDefaults(input);
+  const canonical = pricingAdapter.fromQuotationFacts(current);
+  if (index < 0 || index >= canonical.options.length) return current;
+
+  const updatedOption = pricingReconciler.convertOptionCurrency(
+    canonical.options[index],
+    nextCurrency,
+    {
+      convertAmounts,
+      adults: canonical.adults,
+      children: canonical.children,
+    }
+  );
+  const nextOptions = [...canonical.options];
+  nextOptions[index] = updatedOption;
+
+  return pricingAdapter.syncToQuotationFacts({ ...canonical, options: nextOptions }, current);
 }
 
 /**

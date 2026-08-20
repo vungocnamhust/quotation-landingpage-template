@@ -1,9 +1,9 @@
 "use client";
 
-import { getTypographyClassName } from "../../../config/typography";
-import { cn } from "../../../utils/cn";
-import CustomSelect from "../../ui/CustomSelect";
-import type { QuoteRequestFormState } from "../../../lib/quoteRequestPayload";
+import { getTypographyClassName } from "../../../config/typography.ts";
+import { cn } from "../../../utils/cn.ts";
+import CustomSelect from "../../ui/CustomSelect.tsx";
+import type { QuoteRequestFormState } from "../../../lib/quoteRequestPayload.ts";
 
 type Props = {
   state: QuoteRequestFormState;

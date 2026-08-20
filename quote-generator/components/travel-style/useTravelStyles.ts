@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import useSWR from "swr";
-import { listTravelStyles, type TravelStyleCategoryGroup } from "../../lib/quotationApi";
+import { listTravelStyles, type TravelStyleCategoryGroup } from "../../lib/quotationApi.ts";
 
 export const FALLBACK_TRAVEL_STYLE_TAXONOMY: TravelStyleCategoryGroup[] = [
   {

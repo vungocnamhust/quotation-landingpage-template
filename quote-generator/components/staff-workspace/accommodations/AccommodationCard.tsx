@@ -2,9 +2,9 @@
 
 import { memo } from "react";
 import { MapPin, Phone, CheckCircle2, XCircle } from "lucide-react";
-import { getTypographyClassName } from "../../../config/typography";
-import { cn } from "../../../utils/cn";
-import type { AccommodationProfile } from "../../../lib/quotationApi";
+import { getTypographyClassName } from "../../../config/typography.ts";
+import { cn } from "../../../utils/cn.ts";
+import type { AccommodationProfile } from "../../../lib/quotationApi.ts";
 
 interface Props {
   profile: AccommodationProfile;

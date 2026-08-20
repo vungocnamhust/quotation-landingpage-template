@@ -1,17 +1,17 @@
 'use client';
 
 import { useEffect, useMemo, useRef } from 'react';
-import DisplayPage from '../DisplayPage';
-import type { DisplayDocument } from '../../display/runtimePageBuilder';
-import type { EditableBrochureContract } from './useQuotationWorkspace';
+import DisplayPage from '../DisplayPage.tsx';
+import type { DisplayDocument } from '../../display/runtimePageBuilder.ts';
+import type { EditableBrochureContract } from './useQuotationWorkspace.ts';
 import {
   resolveEditableHandoff,
   resolveInspectorDescriptor,
   type InspectorDescriptor,
   type ResolvedHandoff,
-} from './editableHandoff';
+} from './editableHandoff.ts';
 
-export type { InspectorDescriptor } from './editableHandoff';
+export type { InspectorDescriptor } from './editableHandoff.ts';
 export type ResolvedInspectorSelection = {
   descriptor: InspectorDescriptor;
   source: string;

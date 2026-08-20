@@ -1,9 +1,9 @@
 "use client";
 
 import { Monitor, Smartphone, FileText, Eye, Palette } from "lucide-react";
-import type { ViewMode } from "../../display/contracts";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
+import type { ViewMode } from "../../display/contracts.ts";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
 
 export interface DesignPreviewToolbarProps {
   viewMode: ViewMode;

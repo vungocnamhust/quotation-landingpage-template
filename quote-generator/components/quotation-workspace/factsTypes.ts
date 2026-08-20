@@ -581,6 +581,8 @@ export function serializeCommercialOptions(options: PricingOptionFact[]): Pricin
   return options.filter((option) => Boolean(
     option.currency
     || option.per_traveler_amount_minor !== null
+    || option.per_adult_amount_minor !== null
+    || option.per_child_amount_minor !== null
     || option.group_total_amount_minor !== null,
   ));
 }
@@ -694,8 +696,10 @@ export function ensureFactsDefaults(facts?: Partial<QuotationFacts> | null): Quo
         id: option.id ?? `pricing-option-legacy-${index + 1}`,
         label: option.label ?? `Option ${String(index + 1).padStart(2, "0")}`,
         currency: option.currency ?? null,
-        per_traveler_amount_minor: option.per_traveler_amount_minor ?? null,
+        per_traveler_amount_minor: option.per_traveler_amount_minor ?? option.per_adult_amount_minor ?? null,
         group_total_amount_minor: option.group_total_amount_minor ?? null,
+        per_adult_amount_minor: option.per_adult_amount_minor ?? option.per_traveler_amount_minor ?? null,
+        per_child_amount_minor: option.per_child_amount_minor ?? null,
       })),
     },
     booking_facts: {

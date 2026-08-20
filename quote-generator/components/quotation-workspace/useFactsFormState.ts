@@ -12,31 +12,32 @@ import {
 import type {
   FactSectionId,
   FactSectionStatus,
-} from "./FactsNavigator";
+} from "./FactsNavigator.tsx";
 import type {
   HotelFact,
   ItineraryDayFact,
   QuotationFacts,
   PricingOptionFact,
-} from "./factsTypes";
+} from "./factsTypes.ts";
 import {
   createPricingOption,
-  dateForItineraryDay,
   ensureFactsDefaults,
   MAX_COMMERCIAL_OPTIONS,
   routeDestinationRefsFromItinerary,
 } from "./factsTypes.ts";
 import type { FactsDeepLink } from "./editableHandoff.ts";
 import {
-  createItineraryDayWithDefaults,
+  patchHotelInFacts,
+  patchPricingOptionWithInference,
   syncHotelsFromItineraryOvernights,
+  updateDayAccommodationInFacts,
 } from "../../lib/prefillEngine.ts";
-import {
-  consolidateStaysFromDayItems,
-  hydrateDayAccommodationsFromHotels,
-} from "../../lib/rules/staysRules.ts";
+import { pricingAdapter } from "../../lib/rules/pricingAdapter.ts";
+import { pricingReconciler } from "../../lib/rules/pricingReconciler.ts";
+import { staysAdapter } from "../../lib/rules/staysAdapter.ts";
+import { staysReconciler } from "../../lib/rules/staysReconciler.ts";
 import { tripAdapter } from "../../lib/rules/tripAdapter.ts";
-import { tripReconciler, type CanonicalDay } from "../../lib/rules/tripReconciler.ts";
+import { tripReconciler } from "../../lib/rules/tripReconciler.ts";
 
 export const newHotelFact = (): HotelFact => ({
   accommodation_id: null,
@@ -69,20 +70,18 @@ export function useFactsFormState({
   onDayRemoved,
   onHotelRemoved,
 }: UseFactsFormStateOptions) {
-  const facts = useMemo(() => {
+  const facts: QuotationFacts = useMemo(() => {
     const safe = ensureFactsDefaults(inputFacts);
-    const hydratedItinerary = hydrateDayAccommodationsFromHotels(
-      safe.trip_facts.itinerary,
+    const canonical = staysAdapter.fromQuotationFacts(safe);
+    const hydratedItinerary = staysReconciler.syncItineraryFromStays(
+      canonical.itinerary,
       safe.service_facts.hotels,
       safe.trip_facts.start_date
     );
-    return {
-      ...safe,
-      trip_facts: {
-        ...safe.trip_facts,
-        itinerary: hydratedItinerary,
-      },
-    };
+    return staysAdapter.syncToQuotationFacts(
+      { ...canonical, itinerary: hydratedItinerary },
+      safe
+    );
   }, [inputFacts]);
 
   const trip = facts.trip_facts;
@@ -113,26 +112,26 @@ export function useFactsFormState({
   const patchDay = useCallback(
     (index: number, patch: Partial<ItineraryDayFact>) =>
       onChange((current) => {
-        const safe = ensureFactsDefaults(current);
-        const itinerary = safe.trip_facts.itinerary.map((item, itemIndex) =>
-          itemIndex === index ? { ...item, ...patch } : item
-        );
-        const destination_refs = routeDestinationRefsFromItinerary(itinerary);
-
-        let hotels = safe.service_facts.hotels;
         if (
           patch.accommodation_id !== undefined ||
           patch.accommodation_name !== undefined ||
           patch.room_type !== undefined
         ) {
-          const consolidated = consolidateStaysFromDayItems(
-            itinerary,
-            safe.trip_facts.start_date
-          );
-          if (consolidated.length > 0) {
-            hotels = consolidated;
-          }
+          return updateDayAccommodationInFacts(current, index, patch);
         }
+        const safe = ensureFactsDefaults(current);
+        const itinerary = safe.trip_facts.itinerary.map((item, itemIndex) =>
+          itemIndex === index ? { ...item, ...patch } : item
+        );
+        const destination_refs = routeDestinationRefsFromItinerary(itinerary);
+        const destinations =
+          destination_refs.length > 0
+            ? destination_refs.map((r) => r.name)
+            : Array.from(
+                new Set(
+                  itinerary.map((d) => d.destination).filter((d): d is string => Boolean(d))
+                )
+              );
 
         return {
           ...safe,
@@ -140,11 +139,7 @@ export function useFactsFormState({
             ...safe.trip_facts,
             itinerary,
             destination_refs,
-            destinations: destination_refs.map((ref) => ref.name),
-          },
-          service_facts: {
-            ...safe.service_facts,
-            hotels,
+            destinations,
           },
         };
       }),
@@ -153,28 +148,7 @@ export function useFactsFormState({
 
   const patchHotel = useCallback(
     (index: number, patch: Partial<HotelFact>) =>
-      onChange((current) => {
-        const safe = ensureFactsDefaults(current);
-        const hotels = safe.service_facts.hotels.map((item, itemIndex) =>
-          itemIndex === index ? { ...item, ...patch } : item
-        );
-        const itinerary = hydrateDayAccommodationsFromHotels(
-          safe.trip_facts.itinerary,
-          hotels,
-          safe.trip_facts.start_date
-        );
-        return {
-          ...safe,
-          trip_facts: {
-            ...safe.trip_facts,
-            itinerary,
-          },
-          service_facts: {
-            ...safe.service_facts,
-            hotels,
-          },
-        };
-      }),
+      onChange((current) => patchHotelInFacts(current, index, patch)),
     [onChange]
   );
 
@@ -195,7 +169,8 @@ export function useFactsFormState({
       onChange((current) => {
         const canonical = tripAdapter.fromQuotationFacts(current);
         const reconciled = tripReconciler.removeDay(canonical, index);
-        return tripAdapter.syncToQuotationFacts(reconciled, current);
+        const updatedFacts = tripAdapter.syncToQuotationFacts(reconciled, current);
+        return syncHotelsFromItineraryOvernights(updatedFacts);
       });
       setActiveDay(null);
       onDayRemoved?.(index);
@@ -207,15 +182,25 @@ export function useFactsFormState({
     (index: number) => {
       onChange((current) => {
         const safe = ensureFactsDefaults(current);
-        return {
-          ...safe,
-          service_facts: {
-            ...safe.service_facts,
-            hotels: safe.service_facts.hotels.filter(
-              (_, itemIndex) => itemIndex !== index
-            ),
-          },
-        };
+        const remainingHotels = safe.service_facts.hotels.filter(
+          (_, itemIndex) => itemIndex !== index
+        );
+        const canonical = staysAdapter.fromQuotationFacts(safe);
+        const syncedItinerary = staysReconciler.syncItineraryFromStays(
+          canonical.itinerary,
+          remainingHotels,
+          canonical.startDate
+        );
+        return staysAdapter.syncToQuotationFacts(
+          { ...canonical, itinerary: syncedItinerary },
+          {
+            ...safe,
+            service_facts: {
+              ...safe.service_facts,
+              hotels: remainingHotels,
+            },
+          }
+        );
       });
       setActiveHotel(null);
       onHotelRemoved?.(index);
@@ -228,7 +213,8 @@ export function useFactsFormState({
     onChange((current) => {
       const canonical = tripAdapter.fromQuotationFacts(current);
       const reconciled = tripReconciler.addDay(canonical);
-      return tripAdapter.syncToQuotationFacts(reconciled, current);
+      const updatedFacts = tripAdapter.syncToQuotationFacts(reconciled, current);
+      return syncHotelsFromItineraryOvernights(updatedFacts);
     });
     setActiveDay(index);
     focusTarget.current = { kind: "day", index };
@@ -237,9 +223,19 @@ export function useFactsFormState({
   const patchTripStartDate = useCallback(
     (value: string) => {
       onChange((current) => {
-        const canonical = tripAdapter.fromQuotationFacts(current);
-        const reconciled = tripReconciler.setStartDate(canonical, value || null);
-        return tripAdapter.syncToQuotationFacts(reconciled, current);
+        const canonicalTrip = tripAdapter.fromQuotationFacts(current);
+        const reconciledTrip = tripReconciler.setStartDate(canonicalTrip, value || null);
+        const updatedFacts = tripAdapter.syncToQuotationFacts(reconciledTrip, current);
+        const canonicalStays = staysAdapter.fromQuotationFacts(updatedFacts);
+        const shiftedStays = staysReconciler.shiftStayDates(
+          canonicalStays.stays,
+          value || null,
+          canonicalStays.itinerary
+        );
+        return staysAdapter.syncToQuotationFacts(
+          { ...canonicalStays, stays: shiftedStays },
+          updatedFacts
+        );
       });
     },
     [onChange]
@@ -248,9 +244,19 @@ export function useFactsFormState({
   const patchTripEndDate = useCallback(
     (value: string) => {
       onChange((current) => {
-        const canonical = tripAdapter.fromQuotationFacts(current);
-        const reconciled = tripReconciler.setEndDate(canonical, value || null);
-        return tripAdapter.syncToQuotationFacts(reconciled, current);
+        const canonicalTrip = tripAdapter.fromQuotationFacts(current);
+        const reconciledTrip = tripReconciler.setEndDate(canonicalTrip, value || null);
+        const updatedFacts = tripAdapter.syncToQuotationFacts(reconciledTrip, current);
+        const canonicalStays = staysAdapter.fromQuotationFacts(updatedFacts);
+        const reconciledStays = staysReconciler.reconcileStaysFromItinerary(
+          canonicalStays.itinerary,
+          canonicalStays.startDate,
+          current.service_facts.hotels
+        );
+        return staysAdapter.syncToQuotationFacts(
+          { ...canonicalStays, stays: reconciledStays },
+          updatedFacts
+        );
       });
     },
     [onChange]
@@ -262,36 +268,15 @@ export function useFactsFormState({
 
   const addPricingOption = useCallback(() => {
     onChange((current) => {
-      const safe = ensureFactsDefaults(current);
-      return safe.pricing_facts.options.length >= MAX_COMMERCIAL_OPTIONS
-        ? safe
-        : {
-            ...safe,
-            pricing_facts: {
-              ...safe.pricing_facts,
-              options: [
-                ...safe.pricing_facts.options,
-                createPricingOption(safe.pricing_facts.options.length + 1),
-              ],
-            },
-          };
+      const canonical = pricingAdapter.fromQuotationFacts(current);
+      const updated = pricingReconciler.addOption(canonical);
+      return pricingAdapter.syncToQuotationFacts(updated, current);
     });
   }, [onChange]);
 
   const patchPricingOption = useCallback(
     (index: number, patch: Partial<PricingOptionFact>) => {
-      onChange((current) => {
-        const safe = ensureFactsDefaults(current);
-        return {
-          ...safe,
-          pricing_facts: {
-            ...safe.pricing_facts,
-            options: safe.pricing_facts.options.map((item, itemIndex) =>
-              itemIndex === index ? { ...item, ...patch } : item
-            ),
-          },
-        };
-      });
+      onChange((current) => patchPricingOptionWithInference(current, index, patch));
     },
     [onChange]
   );
@@ -299,16 +284,9 @@ export function useFactsFormState({
   const removePricingOption = useCallback(
     (index: number) => {
       onChange((current) => {
-        const safe = ensureFactsDefaults(current);
-        return {
-          ...safe,
-          pricing_facts: {
-            ...safe.pricing_facts,
-            options: safe.pricing_facts.options.filter(
-              (_, itemIndex) => itemIndex !== index
-            ),
-          },
-        };
+        const canonical = pricingAdapter.fromQuotationFacts(current);
+        const updated = pricingReconciler.removeOption(canonical, index);
+        return pricingAdapter.syncToQuotationFacts(updated, current);
       });
     },
     [onChange]

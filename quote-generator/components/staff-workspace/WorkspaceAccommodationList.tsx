@@ -2,14 +2,14 @@
 
 import { useDeferredValue, useMemo, useState } from "react";
 import { Plus, Building2 } from "lucide-react";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
-import { DataViewContainer } from "../ui/data-view/DataViewContainer";
-import type { AccommodationProfile } from "../../lib/quotationApi";
-import { useAccommodationManager } from "./accommodations/useAccommodationManager";
-import { AccommodationCard } from "./accommodations/AccommodationCard";
-import { createAccommodationColumns } from "./accommodations/AccommodationColumns";
-import { AccommodationDrawerModal } from "./accommodations/AccommodationDrawerModal";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
+import { DataViewContainer } from "../ui/data-view/DataViewContainer.tsx";
+import type { AccommodationProfile } from "../../lib/quotationApi.ts";
+import { useAccommodationManager } from "./accommodations/useAccommodationManager.ts";
+import { AccommodationCard } from "./accommodations/AccommodationCard.tsx";
+import { createAccommodationColumns } from "./accommodations/AccommodationColumns.tsx";
+import { AccommodationDrawerModal } from "./accommodations/AccommodationDrawerModal.tsx";
 
 export default function WorkspaceAccommodationList() {
   const [search, setSearch] = useState("");

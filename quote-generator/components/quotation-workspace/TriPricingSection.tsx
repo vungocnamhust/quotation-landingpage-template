@@ -1,20 +1,20 @@
 "use client";
 
-import { DollarSign, Users } from "lucide-react";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
-import CustomSelect from "../ui/CustomSelect";
+import { DollarSign, RefreshCw, Users } from "lucide-react";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
+import CustomSelect from "../ui/CustomSelect.tsx";
 import {
-  applyChildPresetRatio,
-  calculateTriPricing,
-  inferRatesFromGroupTotal,
-} from "../../lib/rules/pricingRules";
+  pricingReconciler,
+  type CanonicalPricingOption,
+} from "../../lib/rules/pricingReconciler.ts";
+import { pricingAdapter } from "../../lib/rules/pricingAdapter.ts";
 import {
   CURRENCY_OPTIONS,
   formatMinorAmount,
   minorAmountFromInput,
   minorAmountToInput,
-} from "./factsTypes";
+} from "./factsTypes.ts";
 
 type Props = {
   label: string;
@@ -53,57 +53,78 @@ export default function TriPricingSection({
   const safeAdults = Math.max(adults || 2, 1);
   const safeChildren = Math.max(childrenCount || 0, 0);
 
+  const currentOption: CanonicalPricingOption = pricingAdapter.fromTriPricing(
+    { label, currency, perAdultMinor, perChildMinor, groupTotalMinor },
+    safeAdults,
+    safeChildren
+  );
+
   const handleAdultChange = (valStr: string) => {
     const minor = minorAmountFromInput(valStr, currency);
-    const newTotal = calculateTriPricing(minor, perChildMinor, safeAdults, safeChildren);
-    onChange({
-      perAdultMinor: minor,
-      groupTotalMinor: newTotal,
-    });
+    const updated = pricingReconciler.updateOptionPerAdult(
+      currentOption,
+      minor,
+      safeAdults,
+      safeChildren
+    );
+    onChange(pricingAdapter.toTriPricing(updated));
   };
 
   const handleChildChange = (valStr: string) => {
     const minor = minorAmountFromInput(valStr, currency);
-    const newTotal = calculateTriPricing(perAdultMinor, minor, safeAdults, safeChildren);
-    onChange({
-      perChildMinor: minor,
-      groupTotalMinor: newTotal,
-    });
+    const updated = pricingReconciler.updateOptionPerChild(
+      currentOption,
+      minor,
+      safeAdults,
+      safeChildren
+    );
+    onChange(pricingAdapter.toTriPricing(updated));
   };
 
   const handleChildPreset = (ratio: number) => {
-    const childMinor = applyChildPresetRatio(perAdultMinor, ratio);
-    const newTotal = calculateTriPricing(perAdultMinor, childMinor, safeAdults, safeChildren);
-    onChange({
-      perChildMinor: childMinor,
-      groupTotalMinor: newTotal,
-    });
+    const updated = pricingReconciler.applyChildPreset(
+      currentOption,
+      ratio,
+      safeAdults,
+      safeChildren
+    );
+    onChange(pricingAdapter.toTriPricing(updated));
   };
 
   const handleTotalChange = (valStr: string) => {
     const totalMinor = minorAmountFromInput(valStr, currency);
-    if (totalMinor === null) {
-      onChange({ groupTotalMinor: null });
-      return;
-    }
-    const currentChildRatio =
-      perAdultMinor && perChildMinor !== null ? perChildMinor / perAdultMinor : 0.75;
-    const { perAdultMinor: adultMinor, perChildMinor: childMinor } = inferRatesFromGroupTotal(
+    const updated = pricingReconciler.updateOptionTotal(
+      currentOption,
       totalMinor,
       safeAdults,
-      safeChildren,
-      currentChildRatio
+      safeChildren
     );
-    onChange({
-      perAdultMinor: adultMinor,
-      perChildMinor: childMinor,
-      groupTotalMinor: totalMinor,
-    });
+    onChange(pricingAdapter.toTriPricing(updated));
+  };
+
+  const handleCurrencyChange = (nextCurrency: string) => {
+    // If the option already had numbers, convert amounts automatically using the exchange rate table
+    const hasAmount = Boolean(perAdultMinor || groupTotalMinor);
+    const updated = pricingReconciler.convertOptionCurrency(
+      currentOption,
+      nextCurrency,
+      {
+        convertAmounts: hasAmount,
+        adults: safeAdults,
+        children: safeChildren,
+      }
+    );
+    onChange(pricingAdapter.toTriPricing(updated));
   };
 
   const adultDisplay = minorAmountToInput(perAdultMinor, currency);
   const childDisplay = minorAmountToInput(perChildMinor, currency);
   const totalDisplay = minorAmountToInput(groupTotalMinor, currency);
+
+  // Exchange rate badge against USD
+  const rateToUsd = pricingReconciler.getExchangeRate(currency, "USD");
+  const rateFromUsd = pricingReconciler.getExchangeRate("USD", currency);
+  const showRoeBadge = currency !== "USD";
 
   return (
     <div className="flex flex-col gap-4 rounded-[var(--radius-card)] border border-[var(--color-border-strong)] bg-[var(--color-surface-muted)] p-4 shadow-2xs">
@@ -115,6 +136,17 @@ export default function TriPricingSection({
           </h3>
         </div>
         <div className="flex items-center gap-2">
+          {showRoeBadge ? (
+            <span
+              className={cn(
+                getTypographyClassName("caption"),
+                "rounded bg-[var(--color-accent-wash)] px-2 py-0.5 text-[var(--color-accent)] border border-[var(--color-border)]"
+              )}
+              title="Reference exchange rate"
+            >
+              1 USD ≈ {rateFromUsd.toLocaleString()} {currency}
+            </span>
+          ) : null}
           <span className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>
             Party: {safeAdults} Adults{safeChildren > 0 ? `, ${safeChildren} Children` : ""}
           </span>
@@ -137,14 +169,19 @@ export default function TriPricingSection({
 
         {/* Currency */}
         <div className="flex flex-col gap-1.5 sm:col-span-2">
-          <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>
-            Currency
+          <span className={cn(getTypographyClassName("label"), "flex justify-between text-[var(--color-muted)]")}>
+            <span>Currency</span>
+            {showRoeBadge ? (
+              <span className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>
+                Auto-converts amounts
+              </span>
+            ) : null}
           </span>
           <CustomSelect
             value={currency}
             placeholder="Select currency"
             options={CURRENCY_OPTIONS}
-            onChange={(curr) => onChange({ currency: curr })}
+            onChange={handleCurrencyChange}
           />
         </div>
 
@@ -192,7 +229,7 @@ export default function TriPricingSection({
                 onClick={() => handleChildPreset(0.5)}
                 className={cn(
                   getTypographyClassName("caption"),
-                  "rounded px-1.5 py-0.5 border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-muted)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)] transition-colors"
+                  "rounded px-1.5 py-0.5 border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-muted)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)] transition-colors cursor-pointer"
                 )}
               >
                 50%
@@ -202,7 +239,7 @@ export default function TriPricingSection({
                 onClick={() => handleChildPreset(0.75)}
                 className={cn(
                   getTypographyClassName("caption"),
-                  "rounded px-1.5 py-0.5 border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-muted)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)] transition-colors"
+                  "rounded px-1.5 py-0.5 border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-muted)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)] transition-colors cursor-pointer"
                 )}
               >
                 75% (Std)
@@ -212,7 +249,7 @@ export default function TriPricingSection({
                 onClick={() => handleChildPreset(1.0)}
                 className={cn(
                   getTypographyClassName("caption"),
-                  "rounded px-1.5 py-0.5 border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-muted)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)] transition-colors"
+                  "rounded px-1.5 py-0.5 border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-muted)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)] transition-colors cursor-pointer"
                 )}
               >
                 100%
@@ -222,7 +259,7 @@ export default function TriPricingSection({
                 onClick={() => handleChildPreset(0)}
                 className={cn(
                   getTypographyClassName("caption"),
-                  "rounded px-1.5 py-0.5 border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-muted)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)] transition-colors"
+                  "rounded px-1.5 py-0.5 border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-muted)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)] transition-colors cursor-pointer"
                 )}
               >
                 0$ (Free)

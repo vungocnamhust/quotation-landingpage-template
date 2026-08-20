@@ -1,11 +1,11 @@
 import Image from 'next/image';
-import type { LetterViewModel } from '../../../display/types';
-import { textValue } from '../../../display/types';
-import { getLayoutSlots } from '../../../display/layoutRegistry';
-import { requireTypographySlot } from '../../../display/typographySlots';
-import { BodyCopy, DisplayTitle, MetaText, QuoteText } from '../atoms';
-import { SectionHeader } from '../molecules';
-import { BaseSectionProps, sectionOrnaments, shellProps } from './sectionHelpers';
+import type { LetterViewModel } from '../../../display/types.ts';
+import { textValue } from '../../../display/types.ts';
+import { getLayoutSlots } from '../../../display/layoutRegistry.ts';
+import { requireTypographySlot } from '../../../display/typographySlots.ts';
+import { BodyCopy, DisplayTitle, MetaText, QuoteText } from '../atoms.tsx';
+import { SectionHeader } from '../molecules.tsx';
+import { BaseSectionProps, sectionOrnaments, shellProps } from './sectionHelpers.tsx';
 
 export function OpenLetterSection({
   sectionId,

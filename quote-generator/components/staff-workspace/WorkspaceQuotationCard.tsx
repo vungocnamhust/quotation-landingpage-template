@@ -3,8 +3,8 @@
 import React from "react";
 import Link from "next/link";
 import { User, MapPin, Calendar, Clock, ChevronRight, CheckCircle2, Globe, Users } from "lucide-react";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
 
 export type TripFacts = {
   destinations?: string[];

@@ -1,8 +1,8 @@
 'use client';
 
-import { useBrand } from '../context/BrandContext';
-import { BRANDS_DATA, type BrandKey } from '../data/brandsData';
-import { getBrandTypographyConfig } from '../config/typography';
+import { useBrand } from '../context/BrandContext.tsx';
+import { BRANDS_DATA, type BrandKey } from '../data/brandsData.ts';
+import { getBrandTypographyConfig } from '../config/typography.ts';
 
 export default function BrandSpecModal() {
   const {

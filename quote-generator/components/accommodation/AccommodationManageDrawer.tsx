@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
 import {
   createAccommodation,
   updateAccommodation,
@@ -10,9 +10,10 @@ import {
   uploadAccommodationAsset,
   type AccommodationProfile,
   type AccommodationProfileInput,
-} from "../../lib/quotationApi";
-import type { DestinationRef } from "../destination/types";
-import AccommodationProfileForm from "../quotation-workspace/AccommodationProfileForm";
+} from "../../lib/quotationApi.ts";
+import { useToast } from "../staff-workspace/ToastProvider.tsx";
+import type { DestinationRef } from "../destination/types.ts";
+import AccommodationProfileForm from "../quotation-workspace/AccommodationProfileForm.tsx";
 
 export type AccommodationDrawerMode = "create" | "edit" | "manage" | null;
 
@@ -29,8 +30,8 @@ const blankDraft = (): AccommodationProfileInput => ({
   destinationId: "",
   name: "",
   room_type: null,
-  intro: null,
   phone: null,
+  intro: null,
   display_city: null,
   display_date: null,
   hotel_asset: null,
@@ -45,52 +46,76 @@ export function AccommodationManageDrawer({
   onSaved,
   onMutate,
 }: Props) {
+  const { toast } = useToast();
   const [currentMode, setCurrentMode] = useState<AccommodationDrawerMode>(mode);
   const [editing, setEditing] = useState<AccommodationProfile | null>(editingProfile ?? null);
-  const [draft, setDraft] = useState<AccommodationProfileInput>(() =>
+  const [draft, setDraft] = useState<AccommodationProfileInput>(
     editingProfile
       ? {
-          destinationId: editingProfile.destination_id,
-          name: editingProfile.name,
-          room_type: editingProfile.room_type,
-          intro: editingProfile.intro,
-          phone: editingProfile.phone,
-          display_city: editingProfile.display_city,
-          display_date: editingProfile.display_date,
-          hotel_asset: editingProfile.hotel_asset,
-          room_asset: editingProfile.room_asset,
+          destinationId: editingProfile.destination_id ?? "",
+          name: editingProfile.name ?? "",
+          room_type: editingProfile.room_type ?? null,
+          phone: editingProfile.phone ?? null,
+          intro: editingProfile.intro ?? null,
+          display_city: editingProfile.display_city ?? null,
+          display_date: editingProfile.display_date ?? null,
+          hotel_asset: editingProfile.hotel_asset ?? null,
+          room_asset: editingProfile.room_asset ?? null,
         }
       : blankDraft()
   );
   const [destinationRef, setDestinationRef] = useState<DestinationRef | null>(
-    editingProfile?.destination_ref ?? null
+    editingProfile?.destination_ref ??
+      (editingProfile?.destination_id
+        ? {
+            id: editingProfile.destination_id,
+            name: editingProfile.destination,
+            slug: editingProfile.storage_slug ?? "",
+          }
+        : null)
   );
-  const [message, setMessage] = useState("");
   const [pending, setPending] = useState(false);
+  const [message, setMessage] = useState<string>("");
 
   if (!currentMode) return null;
+
+  const handleDestinationChange = (nextRef: DestinationRef | null) => {
+    setDestinationRef(nextRef);
+    setDraft((current) => ({ ...current, destinationId: nextRef?.id ?? "" }));
+  };
 
   const openEdit = (profile: AccommodationProfile) => {
     setEditing(profile);
     setDraft({
-      destinationId: profile.destination_id,
-      name: profile.name,
-      room_type: profile.room_type,
-      intro: profile.intro,
-      phone: profile.phone,
-      display_city: profile.display_city,
-      display_date: profile.display_date,
-      hotel_asset: profile.hotel_asset,
-      room_asset: profile.room_asset,
+      destinationId: profile.destination_id ?? "",
+      name: profile.name ?? "",
+      room_type: profile.room_type ?? null,
+      phone: profile.phone ?? null,
+      intro: profile.intro ?? null,
+      display_city: profile.display_city ?? null,
+      display_date: profile.display_date ?? null,
+      hotel_asset: profile.hotel_asset ?? null,
+      room_asset: profile.room_asset ?? null,
     });
-    setDestinationRef(profile.destination_ref);
+    setDestinationRef(
+      profile.destination_ref ??
+        (profile.destination_id
+          ? {
+              id: profile.destination_id,
+              name: profile.destination,
+              slug: profile.storage_slug ?? "",
+            }
+          : null)
+    );
     setCurrentMode("edit");
     setMessage("");
   };
 
   const saveAccommodation = async () => {
     if (!destinationRef || !draft.name.trim()) {
-      setMessage("Destination and accommodation name are required.");
+      const warningMsg = "Destination and accommodation name are required.";
+      setMessage(warningMsg);
+      toast(warningMsg, "warning");
       return;
     }
     setPending(true);
@@ -100,10 +125,13 @@ export function AccommodationManageDrawer({
         ? await updateAccommodation(editing.id, input)
         : await createAccommodation(input);
       await onMutate();
+      toast(`Accommodation "${saved.name}" saved successfully.`, "success");
       onSaved(saved);
       onClose();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Accommodation could not be saved.");
+      const errMsg = error instanceof Error ? error.message : "Accommodation could not be saved.";
+      setMessage(errMsg);
+      toast(errMsg, "error");
     } finally {
       setPending(false);
     }
@@ -119,9 +147,13 @@ export function AccommodationManageDrawer({
         target === "hotel_asset" ? "exteriors" : "interiors"
       );
       setDraft((current) => ({ ...current, [target]: uploaded.r2Key }));
-      setMessage("Asset uploaded. Save profile to apply changes.");
+      const msg = "Asset uploaded. Save profile to apply changes.";
+      setMessage(msg);
+      toast(msg, "info");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Accommodation asset could not be uploaded.");
+      const errMsg = error instanceof Error ? error.message : "Accommodation asset could not be uploaded.";
+      setMessage(errMsg);
+      toast(errMsg, "error");
     } finally {
       setPending(false);
     }
@@ -132,9 +164,13 @@ export function AccommodationManageDrawer({
     try {
       await updateAccommodationStatus(profile.id, !profile.is_active);
       await onMutate();
+      const statusText = !profile.is_active ? "activated" : "deactivated";
+      toast(`Accommodation "${profile.name}" ${statusText}.`, "info");
       setMessage("");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Accommodation status could not be updated.");
+      const errMsg = error instanceof Error ? error.message : "Accommodation status could not be updated.";
+      setMessage(errMsg);
+      toast(errMsg, "error");
     } finally {
       setPending(false);
     }
@@ -225,7 +261,7 @@ export function AccommodationManageDrawer({
               destinationRef={destinationRef}
               profileId={editing?.id ?? null}
               onChange={setDraft}
-              onDestinationChange={setDestinationRef}
+              onDestinationChange={handleDestinationChange}
               onUpload={(target, file) => void upload(target, file)}
             />
             <div className="mt-6 flex justify-end gap-3">
@@ -264,3 +300,5 @@ export function AccommodationManageDrawer({
     </div>
   );
 }
+
+export default AccommodationManageDrawer;

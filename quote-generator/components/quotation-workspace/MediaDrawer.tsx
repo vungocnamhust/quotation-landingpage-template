@@ -2,9 +2,9 @@
 
 import { useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
-import type { MediaPickerContext } from "./MediaPicker";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
+import type { MediaPickerContext } from "./MediaPicker.tsx";
 
 const MediaPicker = dynamic(() => import("./MediaPicker"), {
   loading: () => (

@@ -3,8 +3,8 @@
 import { useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import useSWR from "swr";
-import { quotationFetch } from "../../lib/apiError";
-import { useToast } from "./ToastProvider";
+import { quotationFetch } from "../../lib/apiError.ts";
+import { useToast } from "./ToastProvider.tsx";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_NOTIFICATION_API_URL ||

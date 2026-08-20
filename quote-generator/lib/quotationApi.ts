@@ -139,10 +139,21 @@ export async function assignTravelDesigner({
   });
 }
 
-export async function listAccommodations({ active = "true", query = "", destinationId }: { active?: "true" | "false" | "all"; query?: string; destinationId?: string } = {}): Promise<AccommodationListResponse> {
+export async function listAccommodations({
+  active = "true",
+  query = "",
+  destinationId,
+  destination,
+}: {
+  active?: "true" | "false" | "all";
+  query?: string;
+  destinationId?: string;
+  destination?: string;
+} = {}): Promise<AccommodationListResponse> {
   const params = new URLSearchParams({ active });
   if (query.trim()) params.set("query", query.trim());
   if (destinationId) params.set("destinationId", destinationId);
+  if (destination && !destinationId) params.set("destination", destination);
   return request<AccommodationListResponse>(`/api/v2/accommodations?${params.toString()}`);
 }
 
@@ -260,4 +271,36 @@ export async function updatePartnerStatus(id: string, isActive: boolean): Promis
     body: JSON.stringify({ isActive }),
   });
 }
+
+export type RoomingHeuristicRuleItem = {
+  id: string;
+  name: string;
+  description?: string | null;
+  min_adults: number;
+  max_adults?: number | null;
+  min_children: number;
+  max_children?: number | null;
+  min_infants?: number;
+  max_infants?: number | null;
+  kid_age_condition?: "ANY" | "ALL_UNDER_12" | "ANY_12_AND_ABOVE" | "NO_KIDS";
+  suggestions: Array<{
+    en: string;
+    vi?: string | null;
+    ar?: string | null;
+    code?: string | null;
+  }>;
+  min_rooms_formula?: string | null;
+  priority?: number;
+  is_active?: boolean;
+};
+
+export type RoomingHeuristicsListResponse = {
+  items: RoomingHeuristicRuleItem[];
+  total: number;
+};
+
+export async function listRoomingHeuristics(): Promise<RoomingHeuristicsListResponse> {
+  return request<RoomingHeuristicsListResponse>('/api/v2/rooming-heuristics');
+}
+
 

@@ -3,11 +3,11 @@
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import type { NavViewModel, TypographySlotMap } from '../display/types';
-import { textValue } from '../display/types';
-import { getTypographyClassName } from '../config/typography';
-import { requireTypographySlot } from '../display/typographySlots';
-import { ActionButton, DisplayTitle, TextLink } from './display/atoms';
+import type { NavViewModel, TypographySlotMap } from '../display/types.ts';
+import { textValue } from '../display/types.ts';
+import { getTypographyClassName } from '../config/typography.ts';
+import { requireTypographySlot } from '../display/typographySlots.ts';
+import { ActionButton, DisplayTitle, TextLink } from './display/atoms.tsx';
 
 /** Public brochure navigation. Tooling actions deliberately do not belong here. */
 export default function AppTopBar({

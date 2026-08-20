@@ -3,9 +3,9 @@
 import React from "react";
 import Link from "next/link";
 import { User, MapPin, Calendar, Clock, ChevronRight, CheckCircle2, Globe } from "lucide-react";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
-import { QuotationItem, formatNationality, formatTravelDates, formatDuration } from "./WorkspaceQuotationCard";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
+import { QuotationItem, formatNationality, formatTravelDates, formatDuration } from "./WorkspaceQuotationCard.tsx";
 
 function StatusBadge({ status }: { status: string }) {
   const isPublished = status === "published";

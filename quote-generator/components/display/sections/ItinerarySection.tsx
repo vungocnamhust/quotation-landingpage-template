@@ -1,8 +1,8 @@
-import type { ItinerarySectionViewModel } from '../../../display/types';
-import { textValue } from '../../../display/types';
-import { getLayoutSlots } from '../../../display/layoutRegistry';
-import { ItineraryDayMultiLayout, ItineraryDaySingleLayout, SectionHeader } from '../molecules';
-import { BaseSectionProps, getItineraryDayColor, sectionOrnaments, shellProps } from './sectionHelpers';
+import type { ItinerarySectionViewModel } from '../../../display/types.ts';
+import { textValue } from '../../../display/types.ts';
+import { getLayoutSlots } from '../../../display/layoutRegistry.ts';
+import { ItineraryDayMultiLayout, ItineraryDaySingleLayout, SectionHeader } from '../molecules.tsx';
+import { BaseSectionProps, getItineraryDayColor, sectionOrnaments, shellProps } from './sectionHelpers.tsx';
 
 export function ItinerarySection({
   sectionId,

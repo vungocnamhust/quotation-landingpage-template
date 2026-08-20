@@ -2,8 +2,8 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getLanguageLabels } from '../../display/labels';
-import { getDefaultMealsForLang } from '../../lib/prefillRules';
+import { getLanguageLabels } from '../../display/labels.ts';
+import { getDefaultMealsForLang } from '../../lib/prefillRules.ts';
 import type {
   ContentCandidate,
   ContentDraft,
@@ -11,7 +11,7 @@ import type {
   DraftsResponse,
   FactsResponse,
   ReviewResponse,
-} from '../quotation-workspace/useQuotationWorkspace';
+} from '../quotation-workspace/useQuotationWorkspace.ts';
 
 export type Mode = 'storytelling' | 'detailed';
 

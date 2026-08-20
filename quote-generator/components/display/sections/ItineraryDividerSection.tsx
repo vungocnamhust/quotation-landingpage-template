@@ -1,10 +1,10 @@
-import type { ChapterDividerViewModel } from '../../../display/types';
-import { textValue } from '../../../display/types';
-import { getLayoutSlots } from '../../../display/layoutRegistry';
-import { requireTypographySlot } from '../../../display/typographySlots';
-import { cn } from '../../../utils/cn';
-import { BodyCopy, DisplayTitle, Kicker, MetaText, TextLink } from '../atoms';
-import { BaseSectionProps, SectionOverlay, sectionOrnaments, shellProps } from './sectionHelpers';
+import type { ChapterDividerViewModel } from '../../../display/types.ts';
+import { textValue } from '../../../display/types.ts';
+import { getLayoutSlots } from '../../../display/layoutRegistry.ts';
+import { requireTypographySlot } from '../../../display/typographySlots.ts';
+import { cn } from '../../../utils/cn.ts';
+import { BodyCopy, DisplayTitle, Kicker, MetaText, TextLink } from '../atoms.tsx';
+import { BaseSectionProps, SectionOverlay, sectionOrnaments, shellProps } from './sectionHelpers.tsx';
 
 export function ItineraryDividerSection({
   sectionId,

@@ -1,5 +1,6 @@
-import type { QuoteRequestItem, QuoteRequestRole } from "../components/quotation-workspace/factsTypes";
-import type { BasicDayItem } from "../components/quotation-workspace/BasicItineraryDayGrid";
+import type { QuoteRequestItem, QuoteRequestRole } from "../components/quotation-workspace/factsTypes.ts";
+import type { BasicDayItem } from "../components/quotation-workspace/BasicItineraryDayGrid.tsx";
+import type { DestinationRef } from "../components/destination/types.ts";
 
 export type QuoteRequestFormState = {
   role: QuoteRequestRole;
@@ -31,6 +32,9 @@ export type QuoteRequestFormState = {
 
   // Journey Specs
   destination: string;
+  destinations?: string[];
+  destination_refs?: DestinationRef[];
+  display_route_text?: string;
   travel_timing: string;
   arrival_date: string;
   departure_date: string;
@@ -153,6 +157,9 @@ export function getInitialQuoteRequestFormState(role: QuoteRequestRole = "travel
     advisor_market: "",
 
     destination: "Vietnam",
+    destinations: [],
+    destination_refs: [],
+    display_route_text: "",
     travel_timing: "Exact dates",
     arrival_date: "",
     departure_date: "",
@@ -289,6 +296,9 @@ export function mapRequestToFormState(request: QuoteRequestItem): QuoteRequestFo
     advisor_market: !isTraveller ? request.market || (payload.advisor_market as string) || "" : "",
 
     destination: request.destinations?.[0] || (payload.destination as string) || "Vietnam",
+    destinations: request.destinations || (payload.destinations as string[]) || [],
+    destination_refs: (payload.destination_refs as DestinationRef[]) || [],
+    display_route_text: (payload.display_route_text as string) || "",
     travel_timing: (payload.travel_timing as string) || "Exact dates",
     arrival_date: request.start_date || (payload.arrival_date as string) || "",
     departure_date: request.end_date || (payload.departure_date as string) || "",
@@ -411,7 +421,9 @@ export function formStateToRequestPayload(
     preferred_contact: isTraveller ? formState.preferred_contact || null : null,
     client_context: formState.client_context || null,
 
-    destinations: [formState.destination],
+    destinations: formState.destinations && formState.destinations.length > 0 ? formState.destinations : [formState.destination],
+    destination_refs: formState.destination_refs || null,
+    display_route_text: formState.display_route_text || null,
     start_date: isTraveller && formState.arrival_date ? formState.arrival_date : null,
     end_date: isTraveller && formState.departure_date ? formState.departure_date : null,
     raw_dates_text: !isTraveller && formState.raw_dates_text ? formState.raw_dates_text : null,

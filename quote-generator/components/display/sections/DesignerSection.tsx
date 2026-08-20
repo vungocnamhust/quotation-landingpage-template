@@ -1,12 +1,12 @@
-import type { DesignerViewModel } from '../../../display/types';
-import { textValue } from '../../../display/types';
-import { getLayoutSlots } from '../../../display/layoutRegistry';
-import { requireTypographySlot } from '../../../display/typographySlots';
-import { getTypographyClassName } from '../../../config/typography';
-import { cn } from '../../../utils/cn';
-import { BodyCopy, QuoteText } from '../atoms';
-import { ActionGroup, DesignerPortraitRail, SectionHeader, SupportBlock } from '../molecules';
-import { BaseSectionProps, sectionOrnaments, shellProps } from './sectionHelpers';
+import type { DesignerViewModel } from '../../../display/types.ts';
+import { textValue } from '../../../display/types.ts';
+import { getLayoutSlots } from '../../../display/layoutRegistry.ts';
+import { requireTypographySlot } from '../../../display/typographySlots.ts';
+import { getTypographyClassName } from '../../../config/typography.ts';
+import { cn } from '../../../utils/cn.ts';
+import { BodyCopy, QuoteText } from '../atoms.tsx';
+import { ActionGroup, DesignerPortraitRail, SectionHeader, SupportBlock } from '../molecules.tsx';
+import { BaseSectionProps, sectionOrnaments, shellProps } from './sectionHelpers.tsx';
 
 export function DesignerSection({
   sectionId,

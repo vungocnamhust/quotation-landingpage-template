@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { getTypographyClassName } from '../../config/typography';
-import { cn } from '../../utils/cn';
+import { getTypographyClassName } from '../../config/typography.ts';
+import { cn } from '../../utils/cn.ts';
 import { Copy, Check, Eye, EyeOff } from 'lucide-react';
-import type { PromptPreview } from '../quotation-workspace/useQuotationWorkspace';
+import type { PromptPreview } from '../quotation-workspace/useQuotationWorkspace.ts';
 
 type Props = {
   promptPreview?: PromptPreview;

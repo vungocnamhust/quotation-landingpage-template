@@ -7,27 +7,28 @@ import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Sparkles,
-  CheckCircle2,
   ExternalLink,
   Edit3,
   History,
   RotateCcw,
   AlertTriangle,
+  CheckCircle2,
 } from "lucide-react";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
-import type { QuoteRequestItem } from "../quotation-workspace/factsTypes";
+import { useToast } from "./ToastProvider.tsx";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
+import type { QuoteRequestItem } from "../quotation-workspace/factsTypes.ts";
 
-import LeadManagementCard from "./detail/LeadManagementCard";
-import ClientIdentityCard from "./detail/ClientIdentityCard";
-import JourneyRoutingCard from "./detail/JourneyRoutingCard";
-import TravelStyleCard from "./detail/TravelStyleCard";
-import AccommodationScopeCard from "./detail/AccommodationScopeCard";
-import ServiceScopeCard from "./detail/ServiceScopeCard";
-import SpecialRequirementsCard from "./detail/SpecialRequirementsCard";
-import CommercialPricingCard from "./detail/CommercialPricingCard";
-import ReadinessStrategyCard from "./detail/ReadinessStrategyCard";
-import DailyItineraryTimeline from "./detail/DailyItineraryTimeline";
+import LeadManagementCard from "./detail/LeadManagementCard.tsx";
+import ClientIdentityCard from "./detail/ClientIdentityCard.tsx";
+import JourneyRoutingCard from "./detail/JourneyRoutingCard.tsx";
+import TravelStyleCard from "./detail/TravelStyleCard.tsx";
+import AccommodationScopeCard from "./detail/AccommodationScopeCard.tsx";
+import ServiceScopeCard from "./detail/ServiceScopeCard.tsx";
+import SpecialRequirementsCard from "./detail/SpecialRequirementsCard.tsx";
+import CommercialPricingCard from "./detail/CommercialPricingCard.tsx";
+import ReadinessStrategyCard from "./detail/ReadinessStrategyCard.tsx";
+import DailyItineraryTimeline from "./detail/DailyItineraryTimeline.tsx";
 
 // Dynamic import modals to optimize initial bundle size (Vercel Best Practice: bundle-dynamic-imports)
 const EditRequestDrawer = dynamic(() => import("./EditRequestDrawer"), { ssr: false });
@@ -39,11 +40,11 @@ type Props = {
 
 export default function DetailRequestView({ request: initialRequest }: Props) {
   const router = useRouter();
+  const { toast } = useToast();
   const [currentLatestRequest, setCurrentLatestRequest] = useState<QuoteRequestItem>(initialRequest);
   const [activeRequest, setActiveRequest] = useState<QuoteRequestItem>(initialRequest);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const isInspectingPastRevision =
     activeRequest.current_revision !== undefined &&
@@ -72,33 +73,28 @@ export default function DetailRequestView({ request: initialRequest }: Props) {
     : [];
 
   const handleGenerateQuotation = () => {
+    toast(`Initializing quotation draft from request #${activeRequest.id}...`, "info");
     router.push(`/workspace/quotations/new?requestId=${activeRequest.id}`);
   };
 
   const handleEditSuccess = (updated: QuoteRequestItem) => {
     setCurrentLatestRequest(updated);
     setActiveRequest(updated);
-    setToastMessage(`Revision #${updated.current_revision || 1} saved successfully.`);
-    setTimeout(() => setToastMessage(null), 4000);
+    toast(`Revision #${updated.current_revision || 1} saved successfully.`, "success");
   };
 
   const handleSelectRevisionSnapshot = (snapshot: QuoteRequestItem) => {
     setActiveRequest(snapshot);
+    toast(`Viewing historical snapshot Revision #${snapshot.current_revision || 1} (Read-Only mode).`, "info");
   };
 
   const handleReturnToLatest = () => {
     setActiveRequest(currentLatestRequest);
+    toast(`Returned to active latest revision (v${currentLatestRequest.current_revision || 1}).`, "success");
   };
 
   return (
     <div className="flex flex-col gap-6 pb-16">
-      {/* Toast Notification */}
-      {toastMessage ? (
-        <div className="fixed top-4 right-4 z-50 flex items-center gap-2 rounded-[var(--radius-card)] bg-emerald-700 px-4 py-3 text-white shadow-xl animate-in fade-in slide-in-from-top-2">
-          <CheckCircle2 size={18} aria-hidden="true" />
-          <span className={cn(getTypographyClassName("bodySm"))}>{toastMessage}</span>
-        </div>
-      ) : null}
 
       {/* Past Revision Alert Banner */}
       {isInspectingPastRevision ? (

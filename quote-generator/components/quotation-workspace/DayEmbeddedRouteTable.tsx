@@ -1,19 +1,22 @@
 "use client";
 
 import { useCallback } from "react";
-import { Sparkles } from "lucide-react";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
-import { DestinationSelect } from "../destination/DestinationSelect";
-import type { DestinationRef } from "../destination/types";
-import { AccommodationSelect } from "../accommodation/AccommodationSelect";
-import type { AccommodationProfile } from "../accommodation/types";
-import { dateForItineraryDay } from "./factsTypes";
+import { Sparkles, Bed } from "lucide-react";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
+import { DestinationSelect } from "../destination/DestinationSelect.tsx";
+import type { DestinationRef } from "../destination/types.ts";
+import { AccommodationSelect } from "../accommodation/AccommodationSelect.tsx";
+import type { AccommodationProfile } from "../accommodation/types.ts";
+import { dateForItineraryDay } from "./factsTypes.ts";
+import { inferOvernightDestination } from "../../lib/prefillRules.ts";
 
 export type DayWithStayItem = {
   day_number: number;
   destination: string | null;
   destination_ref?: DestinationRef | null;
+  overnight?: string | null;
+  overnight_ref?: DestinationRef | null;
   accommodation_id: string | null;
   accommodation_name?: string | null;
   room_type?: string | null;
@@ -46,9 +49,21 @@ export default function DayEmbeddedRouteTable({
 
       let updatedItem = { ...currentDay, ...patch };
 
-      // If destination changed, check if we should auto-inherit from previous day if same destination
+      // If destination changed, check if overnight was in sync with destination
       if (patch.destination !== undefined && patch.destination !== currentDay.destination) {
-        if (prevDay && prevDay.destination === patch.destination && prevDay.accommodation_id && !patch.accommodation_id) {
+        const newDest = patch.destination;
+        if (!currentDay.overnight || currentDay.overnight === currentDay.destination) {
+          updatedItem.overnight = inferOvernightDestination(newDest, currentDay.overnight ?? null);
+          updatedItem.overnight_ref = patch.destination_ref ?? null;
+        }
+
+        // Auto-inherit accommodation from previous day if same destination or overnight
+        if (
+          prevDay &&
+          (prevDay.destination === newDest || prevDay.overnight === newDest) &&
+          prevDay.accommodation_id &&
+          !patch.accommodation_id
+        ) {
           updatedItem = {
             ...updatedItem,
             accommodation_id: prevDay.accommodation_id,
@@ -60,11 +75,13 @@ export default function DayEmbeddedRouteTable({
 
       next[index] = updatedItem;
 
-      // Smart Cascade: If this day's hotel changed, and subsequent contiguous days have the same destination,
-      // cascade down if contiguous same destination
+      // Smart Cascade: If this day's hotel changed, cascade down if subsequent contiguous days share the same destination/overnight
       if (patch.accommodation_id !== undefined || patch.room_type !== undefined) {
         for (let i = index + 1; i < next.length; i++) {
-          if (next[i].destination === updatedItem.destination) {
+          const isSameTarget =
+            next[i].destination === updatedItem.destination ||
+            next[i].overnight === updatedItem.overnight;
+          if (isSameTarget) {
             next[i] = {
               ...next[i],
               accommodation_id: updatedItem.accommodation_id,
@@ -91,7 +108,7 @@ export default function DayEmbeddedRouteTable({
             Daily Route & Stays Blueprint
           </h3>
           <p className={cn(getTypographyClassName("caption"), "mt-0.5 text-[var(--color-muted)]")}>
-            Each day embeds its destination and overnight stay. Stays are automatically consolidated.
+            Map out daytime destinations, overnight sleeping locations, and hotel stays day by day.
           </p>
         </div>
         {onAutoSuggestStays ? (
@@ -117,15 +134,16 @@ export default function DayEmbeddedRouteTable({
           const isSameHotelAsPrev =
             prevDay &&
             day.accommodation_id &&
-            prevDay.accommodation_id === day.accommodation_id &&
-            prevDay.destination === day.destination;
+            prevDay.accommodation_id === day.accommodation_id;
+
+          const effectiveOvernight = day.overnight || day.destination || null;
 
           return (
             <div
               key={index}
               className="grid gap-3 rounded-[var(--radius-card)] border border-[var(--color-border-strong)] bg-[var(--color-surface-muted)] p-4 shadow-2xs sm:grid-cols-12 items-start"
             >
-              {/* Day Header & Badge */}
+              {/* Day Header & Badges */}
               <div className="sm:col-span-12 flex flex-wrap items-center justify-between gap-2 border-b border-[var(--color-border)] pb-2">
                 <div className="flex items-center gap-2">
                   <span className={cn(getTypographyClassName("cardTitle"), "text-[var(--color-on-surface)]")}>
@@ -138,17 +156,26 @@ export default function DayEmbeddedRouteTable({
                   ) : null}
                 </div>
 
-                {isSameHotelAsPrev ? (
-                  <span className={cn(getTypographyClassName("caption"), "rounded-full bg-emerald-50 text-emerald-700 px-2 py-0.5 border border-emerald-200")}>
-                    🔁 Continuing stay: {day.accommodation_name || "Same hotel"}
-                  </span>
-                ) : null}
+                <div className="flex flex-wrap items-center gap-2">
+                  {effectiveOvernight ? (
+                    <span className={cn(getTypographyClassName("caption"), "flex items-center gap-1 rounded-full bg-[var(--color-surface)] px-2.5 py-0.5 border border-[var(--color-border)] text-[var(--color-muted)]")}>
+                      <Bed size={12} className="text-[var(--color-accent)] shrink-0" aria-hidden="true" />
+                      <span>Overnight: <strong className="text-[var(--color-on-surface)]">{effectiveOvernight}</strong></span>
+                    </span>
+                  ) : null}
+
+                  {isSameHotelAsPrev ? (
+                    <span className={cn(getTypographyClassName("caption"), "rounded-full bg-emerald-50 text-emerald-700 px-2 py-0.5 border border-emerald-200")}>
+                      🔁 Continuing stay: {day.accommodation_name || "Same hotel"}
+                    </span>
+                  ) : null}
+                </div>
               </div>
 
-              {/* Destination Column */}
-              <div className="sm:col-span-5">
+              {/* 1. Day Destination Column */}
+              <div className="sm:col-span-4">
                 <DestinationSelect
-                  label="Destination"
+                  label="Day Destination"
                   value={day.destination}
                   variant="compact"
                   size="md"
@@ -167,23 +194,51 @@ export default function DayEmbeddedRouteTable({
                 />
               </div>
 
-              {/* Accommodation Column */}
-              <div className="sm:col-span-7 flex flex-col gap-2">
+              {/* 2. Overnight Destination / Sleeping Point Column */}
+              <div className="sm:col-span-4">
+                <DestinationSelect
+                  label="Overnight Location"
+                  value={day.overnight || day.destination}
+                  variant="compact"
+                  size="md"
+                  onChange={(dest, ref) => {
+                    const destName =
+                      typeof dest === "string"
+                        ? dest
+                        : Array.isArray(dest)
+                          ? dest[0]?.name ?? null
+                          : null;
+                    updateDay(index, {
+                      overnight: destName,
+                      overnight_ref: ref ?? null,
+                    });
+                  }}
+                />
+              </div>
+
+              {/* 3. Overnight Accommodation Column */}
+              <div className="sm:col-span-4 flex flex-col gap-2">
                 <AccommodationSelect
                   label="Overnight Accommodation"
                   value={day.accommodation_id}
                   name={day.accommodation_name}
-                  destination={day.destination}
-                  destinationId={day.destination_ref?.id}
+                  destination={day.overnight || day.destination}
+                  destinationId={day.overnight_ref?.id || day.destination_ref?.id}
                   variant="compact"
                   size="md"
-                  onChange={(profile: AccommodationProfile | null) =>
-                    updateDay(index, {
-                      accommodation_id: profile?.id ?? null,
-                      accommodation_name: profile?.name ?? null,
+                  onChange={(profile: AccommodationProfile | null, id, customName) => {
+                    const accName = profile?.name ?? customName ?? null;
+                    const patch: Partial<DayWithStayItem> = {
+                      accommodation_id: profile?.id ?? id ?? null,
+                      accommodation_name: accName,
                       room_type: profile?.room_type ?? day.room_type ?? null,
-                    })
-                  }
+                    };
+                    if (profile?.destination) {
+                      patch.overnight = profile.destination;
+                      patch.overnight_ref = profile.destination_ref ?? null;
+                    }
+                    updateDay(index, patch);
+                  }}
                 />
               </div>
 

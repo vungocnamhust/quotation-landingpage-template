@@ -5,13 +5,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import useSWR from "swr";
 import { LayoutDashboard, FileText, Inbox, PlusCircle, Boxes } from "lucide-react";
-import { getTypographyClassName } from "../../config/typography";
-import { apiErrorMessage, quotationFetch } from "../../lib/apiError";
-import { cn } from "../../utils/cn";
-import { ToastProvider } from "./ToastProvider";
-import { NotificationBellButton } from "./NotificationBellButton";
-import { NotificationCenterDrawer } from "./NotificationCenterDrawer";
-import { useNotifications } from "./useNotifications";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { apiErrorMessage, quotationFetch } from "../../lib/apiError.ts";
+import { cn } from "../../utils/cn.ts";
+import { ToastProvider } from "./ToastProvider.tsx";
+import { NotificationBellButton } from "./NotificationBellButton.tsx";
+import { NotificationCenterDrawer } from "./NotificationCenterDrawer.tsx";
+import { useNotifications } from "./useNotifications.ts";
 
 const API_BASE = process.env.NEXT_PUBLIC_QUOTATION_API_URL ?? "";
 const fetcher = <T,>(url: string) =>

@@ -7,11 +7,11 @@ import {
   useState,
 } from "react";
 import { ChevronDown, Search, X, Check, Loader2, Sparkles, Building2, Settings2, Plus } from "lucide-react";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
-import type { PartnerProfile, PartnerSelectProps } from "./types";
-import { usePartnerSearch } from "./usePartnerSearch";
-import { PartnerManageDrawer, PartnerTierBadge, type PartnerDrawerMode } from "./PartnerManageDrawer";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
+import type { PartnerProfile, PartnerSelectProps } from "./types.ts";
+import { usePartnerSearch } from "./usePartnerSearch.ts";
+import { PartnerManageDrawer, PartnerTierBadge, type PartnerDrawerMode } from "./PartnerManageDrawer.tsx";
 
 export function PartnerSelect({
   value,

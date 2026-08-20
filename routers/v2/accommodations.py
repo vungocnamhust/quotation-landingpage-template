@@ -38,15 +38,31 @@ async def list_accommodations(
     active: Literal["true", "false", "all"] = "true",
     query: str = "",
     destinationId: str | None = None,
+    destination: str | None = None,
     principal: Principal = Depends(require_editor),
 ):
     h = _get_helpers()
     async with h._get_db_session_factory()() as session:
         await h._seed_destination_catalog(session)
+        from repositories.destination_repository import DestinationRepository
+        dest_repo = DestinationRepository(session)
+        resolved_dest_id = destinationId
+        if destinationId:
+            direct = await dest_repo.get(destinationId)
+            if direct is None:
+                clean_target = destinationId.removeprefix("dst_").replace("-", " ")
+                resolved = await dest_repo.resolve(clean_target)
+                if resolved is not None:
+                    resolved_dest_id = resolved.id
+        elif destination:
+            resolved = await dest_repo.resolve(destination)
+            if resolved is not None:
+                resolved_dest_id = resolved.id
+
         items = await AccommodationRepository(session).list_profiles(
             active_only={"true": True, "false": False, "all": None}[active],
             search=query,
-            destination_id=destinationId,
+            destination_id=resolved_dest_id,
         )
         return {"items": [await h._serialize_accommodation(item, session) for item in items]}
 

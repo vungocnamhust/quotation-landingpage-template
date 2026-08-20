@@ -39,7 +39,7 @@ def consolidate_stays_from_day_accommodations(
         acc_id = day.get("accommodation_id")
         acc_name = day.get("accommodation_name")
         room_type = day.get("room_type") or "Standard Room"
-        destination = day.get("destination")
+        destination = day.get("overnight") or day.get("destination")
 
         if not acc_id and not acc_name:
             # Day with no hotel assigned (e.g. overnight transit, night train, or final departure day)

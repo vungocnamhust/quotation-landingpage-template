@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import SectionOutlineNav, { type SectionOutlineItem } from '../ui/SectionOutlineNav';
-import { getTypographyClassName } from '../../config/typography';
-import { cn } from '../../utils/cn';
+import SectionOutlineNav, { type SectionOutlineItem } from '../ui/SectionOutlineNav.tsx';
+import { getTypographyClassName } from '../../config/typography.ts';
+import { cn } from '../../utils/cn.ts';
 
 export type FactSectionId = 'trip' | 'travellers' | 'programme' | 'services' | 'commercial' | 'seller';
 

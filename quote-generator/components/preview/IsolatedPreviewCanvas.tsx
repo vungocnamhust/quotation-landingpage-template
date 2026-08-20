@@ -3,11 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X, Monitor, Tablet, Smartphone, FileText, ExternalLink, Minimize2, Maximize2 } from "lucide-react";
-import type { DisplayDocument } from "../../display/runtimePageBuilder";
-import type { ViewMode } from "../../display/contracts";
-import DisplayPage from "../DisplayPage";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
+import type { DisplayDocument } from "../../display/runtimePageBuilder.ts";
+import type { ViewMode } from "../../display/contracts.ts";
+import DisplayPage from "../DisplayPage.tsx";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
 
 export type DevicePreset = "desktop" | "tablet" | "mobile" | "pdf";
 

@@ -1,6 +1,8 @@
 import type { QuotationFacts, QuoteRequestItem } from "../components/quotation-workspace/factsTypes.ts";
 import { resolveClientDisplayName } from "./rules/partyRules.ts";
-import { currencyDivisor, inferRatesFromGroupTotal } from "./rules/pricingRules.ts";
+import { pricingReconciler } from "./rules/pricingReconciler.ts";
+import { deriveRouteFromItinerary, formatRouteString } from "./rules/routeRules.ts";
+import { POPULAR_DESTINATIONS } from "../components/destination/useDestinationSearch.ts";
 
 /**
  * Pure utility function to build initial QuotationFacts from a QuoteRequestItem.
@@ -18,36 +20,69 @@ export function buildInitialFactsFromRequest(
   const rawItinerary = payload.itinerary_days as Array<Record<string, unknown>> | undefined;
   const itineraryDays =
     Array.isArray(rawItinerary) && rawItinerary.length > 0
-      ? rawItinerary.map((d, i) => ({
-          day_number: Number(d.day_number) || i + 1,
-          destination: (d.destination as string) || null,
-          destination_ref: null,
-          summary: (d.summary as string) || null,
-          overnight: (d.destination as string) || null,
-          meals: ["Breakfast"],
-          highlights: [],
-          notes: [],
-          sense_of_pace: "balanced" as const,
-          display_date: (d.display_date as string) || null,
-          accommodation_id: null,
-          accommodation_name: null,
-          room_type: null,
-        }))
+      ? rawItinerary.map((d, i) => {
+          const destName = (d.destination as string) || null;
+          const overnightName = (d.overnight as string) || destName || null;
+          const matchedRef = destName
+            ? POPULAR_DESTINATIONS.find(
+                (p) =>
+                  p.name.toLowerCase() === destName.toLowerCase() ||
+                  p.slug.toLowerCase() === destName.toLowerCase() ||
+                  p.id.toLowerCase() === destName.toLowerCase()
+              ) ?? null
+            : null;
+          return {
+            day_number: Number(d.day_number) || i + 1,
+            destination: destName,
+            destination_ref: matchedRef,
+            summary: (d.summary as string) || null,
+            overnight: overnightName,
+            meals: Array.isArray(d.meals) && d.meals.length > 0 ? (d.meals as string[]) : ["Breakfast"],
+            highlights: Array.isArray(d.highlights) ? (d.highlights as string[]) : [],
+            notes: Array.isArray(d.notes) ? (d.notes as string[]) : [],
+            sense_of_pace: (d.sense_of_pace as "relaxed" | "balanced" | "fast") || "balanced",
+            display_date: (d.display_date as string) || null,
+            accommodation_id: (d.accommodation_id as string) || null,
+            accommodation_name: (d.accommodation_name as string) || null,
+            room_type: (d.room_type as string) || null,
+          };
+        })
       : fallback.trip_facts.itinerary;
-
 
   const adults = quoteRequest.adults ?? fallback.customer_facts.adults ?? 2;
   const children = quoteRequest.children ?? fallback.customer_facts.children ?? 0;
   const kidAges = quoteRequest.kid_ages ?? fallback.customer_facts.kid_ages ?? [];
 
   const budget = payload.budget ? Number(payload.budget) : null;
-  const currency = (payload.currency as string) || "USD";
-  const divisor = currencyDivisor(currency);
-  const totalMinor = budget
-    ? Math.round(budget * divisor)
-    : fallback.pricing_facts.options[0]?.group_total_amount_minor ?? 700000;
+  const budgetBasis = (payload.budget_basis as string || "Total trip").toLowerCase();
+  const isPerPerson = budgetBasis.includes("per person") || budgetBasis.includes("per_person");
 
-  const { perAdultMinor, perChildMinor } = inferRatesFromGroupTotal(totalMinor, adults, children, 0.75);
+  const currency = (payload.currency as string) || "USD";
+  const divisor = pricingReconciler.currencyDivisor(currency);
+
+  let perAdultMinor: number | null = null;
+  let perChildMinor: number | null = null;
+  let totalMinor: number | null = null;
+
+  if (budget !== null && budget > 0) {
+    const budgetMinor = Math.round(budget * divisor);
+    if (isPerPerson) {
+      perAdultMinor = budgetMinor;
+      perChildMinor = children > 0 ? Math.round(perAdultMinor * 0.75) : null;
+      totalMinor = pricingReconciler.calculateOptionTotal(perAdultMinor, perChildMinor, adults, children);
+    } else {
+      totalMinor = budgetMinor;
+      const inferred = pricingReconciler.inferOptionRatesFromTotal(totalMinor, adults, children, 0.75);
+      perAdultMinor = inferred.perAdultMinor;
+      perChildMinor = inferred.perChildMinor;
+    }
+  } else {
+    totalMinor = fallback.pricing_facts.options[0]?.group_total_amount_minor ?? 700000;
+    const inferred = pricingReconciler.inferOptionRatesFromTotal(totalMinor, adults, children, 0.75);
+    perAdultMinor = inferred.perAdultMinor;
+    perChildMinor = inferred.perChildMinor;
+  }
+
   const effectiveAdultMinor = perAdultMinor ?? totalMinor;
 
   const routeMeta = deriveRouteFromItinerary(itineraryDays);

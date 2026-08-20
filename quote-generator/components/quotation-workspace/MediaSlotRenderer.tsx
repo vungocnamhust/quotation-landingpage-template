@@ -3,11 +3,11 @@
 import dynamic from "next/dynamic";
 import { useMemo, useState, useTransition } from "react";
 import { Sparkles } from "lucide-react";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
-import { apiErrorMessage, quotationFetch } from "../../lib/apiError";
-import type { EditableBrochureContract } from "./useQuotationWorkspace";
-import type { DraftMediaRef, DraftMediaSelections, DraftMediaSlotValue } from "./factsTypes";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
+import { apiErrorMessage, quotationFetch } from "../../lib/apiError.ts";
+import type { EditableBrochureContract } from "./useQuotationWorkspace.ts";
+import type { DraftMediaRef, DraftMediaSelections, DraftMediaSlotValue } from "./factsTypes.ts";
 
 const MediaPicker = dynamic(() => import("./MediaPicker"));
 const API_BASE = process.env.NEXT_PUBLIC_QUOTATION_API_URL ?? "";

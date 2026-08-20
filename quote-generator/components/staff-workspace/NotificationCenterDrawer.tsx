@@ -14,9 +14,10 @@ import {
   FileText,
   Inbox,
 } from "lucide-react";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
-import type { NotificationItem } from "./useNotifications";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
+import type { NotificationItem } from "./useNotifications.ts";
+import { useToast } from "./ToastProvider.tsx";
 
 interface NotificationCenterDrawerProps {
   isOpen: boolean;
@@ -74,6 +75,7 @@ export function NotificationCenterDrawer({
   onMarkAllAsRead,
 }: NotificationCenterDrawerProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"all" | "unread">("all");
   const [markingAll, setMarkingAll] = useState(false);
 
@@ -97,6 +99,9 @@ export function NotificationCenterDrawer({
     try {
       setMarkingAll(true);
       await onMarkAllAsRead();
+      toast("All notifications marked as read.", "info");
+    } catch {
+      toast("Could not mark notifications as read.", "error");
     } finally {
       setMarkingAll(false);
     }

@@ -10,11 +10,11 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
-import { CheckCircle2, XCircle, Info, X } from "lucide-react";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
+import { CheckCircle2, XCircle, AlertTriangle, Info, Loader2, X } from "lucide-react";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
 
-export type ToastType = "success" | "error" | "info";
+export type ToastType = "success" | "error" | "info" | "warning" | "loading";
 export type NotificationAction = { label: string; onClick: () => void };
 
 export type ToastItem = {
@@ -26,11 +26,28 @@ export type ToastItem = {
   scope?: string;
 };
 
+export type ToastOptions = {
+  persistent?: boolean;
+  action?: NotificationAction;
+  scope?: string;
+};
+
+export type PromiseToastMessages<T> = {
+  loading: string;
+  success: string | ((data: T) => string);
+  error: string | ((error: unknown) => string);
+};
+
 interface ToastContextValue {
-  toast: (message: string, type?: ToastType) => void;
-  notify: (input: Omit<ToastItem, "id">) => void;
+  toast: (message: string, type?: ToastType, options?: ToastOptions) => string;
+  notify: (input: Omit<ToastItem, "id">) => string;
   dismiss: (id: string) => void;
   clearScope: (scope: string) => void;
+  promise: <T>(
+    promiseFn: Promise<T> | (() => Promise<T>),
+    messages: PromiseToastMessages<T>,
+    options?: { scope?: string }
+  ) => Promise<T>;
 }
 
 const ToastContext = createContext<ToastContextValue | null>(null);
@@ -68,7 +85,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     return () => document.removeEventListener("keydown", handler);
   }, [toasts.length]);
 
-  const notify = useCallback((input: Omit<ToastItem, "id">) => {
+  const notify = useCallback((input: Omit<ToastItem, "id">): string => {
     const id =
       typeof crypto !== "undefined" && crypto.randomUUID
         ? crypto.randomUUID()
@@ -79,16 +96,27 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       return [...retained, { ...input, id }];
     });
 
-    if (!input.persistent) {
+    if (!input.persistent && input.type !== "loading") {
       setTimeout(() => {
         setToasts((prev) => prev.filter((t) => t.id !== id));
-      }, 4000);
+      }, input.type === "error" || input.type === "warning" ? 6000 : 4000);
     }
+
+    return id;
   }, []);
 
-  const toast = useCallback((message: string, type: ToastType = "info") => {
-    notify({ message, type });
-  }, [notify]);
+  const toast = useCallback(
+    (message: string, type: ToastType = "info", options?: ToastOptions): string => {
+      return notify({
+        message,
+        type,
+        persistent: options?.persistent,
+        action: options?.action,
+        scope: options?.scope,
+      });
+    },
+    [notify]
+  );
 
   const dismiss = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
@@ -98,14 +126,56 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setToasts((prev) => prev.filter((item) => item.scope !== scope));
   }, []);
 
+  const promise = useCallback(
+    async <T,>(
+      promiseOrFn: Promise<T> | (() => Promise<T>),
+      messages: PromiseToastMessages<T>,
+      options?: { scope?: string }
+    ): Promise<T> => {
+      const toastScope = options?.scope ?? `promise-${Math.random().toString(36).slice(2, 8)}`;
+      notify({
+        message: messages.loading,
+        type: "loading",
+        persistent: true,
+        scope: toastScope,
+      });
+
+      try {
+        const promiseInstance = typeof promiseOrFn === "function" ? promiseOrFn() : promiseOrFn;
+        const result = await promiseInstance;
+        const successMsg =
+          typeof messages.success === "function" ? messages.success(result) : messages.success;
+        notify({
+          message: successMsg,
+          type: "success",
+          scope: toastScope,
+        });
+        return result;
+      } catch (err: unknown) {
+        const errorMsg =
+          typeof messages.error === "function" ? messages.error(err) : messages.error;
+        notify({
+          message: errorMsg,
+          type: "error",
+          persistent: true,
+          scope: toastScope,
+        });
+        throw err;
+      }
+    },
+    [notify]
+  );
+
   const icons: Record<ToastType, ReactNode> = {
     success: <CheckCircle2 size={16} aria-hidden="true" />,
     error: <XCircle size={16} aria-hidden="true" />,
+    warning: <AlertTriangle size={16} aria-hidden="true" />,
     info: <Info size={16} aria-hidden="true" />,
+    loading: <Loader2 size={16} className="animate-spin" aria-hidden="true" />,
   };
 
   return (
-    <ToastContext.Provider value={{ toast, notify, dismiss, clearScope }}>
+    <ToastContext.Provider value={{ toast, notify, dismiss, clearScope, promise }}>
       {children}
       {mounted
         ? createPortal(
@@ -118,7 +188,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               {toasts.map((t) => (
                 <div
                   key={t.id}
-                  role="alert"
+                  role={t.type === "error" || t.type === "warning" ? "alert" : "status"}
                   className={cn("toast-item", `toast-item--${t.type}`)}
                 >
                   <span

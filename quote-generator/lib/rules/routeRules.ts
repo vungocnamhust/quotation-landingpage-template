@@ -3,8 +3,6 @@
  * Zero React dependencies, 100% deterministic.
  */
 
-import type { CanonicalDay } from "./tripReconciler.ts";
-
 export type DestinationRef = {
   id: string;
   name: string;
@@ -65,12 +63,19 @@ export type DerivedRouteMetadata = {
   displayRouteText: string | null;
 };
 
+export type RouteDayLike = {
+  destination?: string | null;
+  destination_ref?: DestinationRef | null;
+  overnight?: string | null;
+  [key: string]: unknown;
+};
+
 /**
  * Automatically derive route metadata (arrival city, departure city, destinations list, display route text)
  * from an itinerary list.
  */
 export function deriveRouteFromItinerary(
-  itinerary: CanonicalDay[] | null | undefined
+  itinerary: RouteDayLike[] | null | undefined
 ): DerivedRouteMetadata {
   if (!itinerary || !Array.isArray(itinerary) || itinerary.length === 0) {
     return {

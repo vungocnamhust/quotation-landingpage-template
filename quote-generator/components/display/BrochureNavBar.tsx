@@ -2,11 +2,11 @@
 
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
-import type { NavViewModel, TypographySlotMap } from '../../display/types';
-import { textValue } from '../../display/types';
-import { requireTypographySlot } from '../../display/typographySlots';
-import { cn } from '../../utils/cn';
-import { ActionButton, DisplayTitle, MetaText, TextLink, editableProps } from './atoms';
+import type { NavViewModel, TypographySlotMap } from '../../display/types.ts';
+import { textValue } from '../../display/types.ts';
+import { requireTypographySlot } from '../../display/typographySlots.ts';
+import { cn } from '../../utils/cn.ts';
+import { ActionButton, DisplayTitle, MetaText, TextLink, editableProps } from './atoms.tsx';
 
 interface BrochureNavBarProps {
   viewModel: NavViewModel;
@@ -18,6 +18,7 @@ export default function BrochureNavBar({
   typography,
 }: BrochureNavBarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [copiedType, setCopiedType] = useState<string | null>(null);
 
   useEffect(() => {
     const syncScrolled = () => {
@@ -85,10 +86,21 @@ export default function BrochureNavBar({
                 <button
                   key={action.type}
                   type="button"
+                  onClick={async () => {
+                    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                      try {
+                        await navigator.clipboard.writeText(window.location.href);
+                        setCopiedType(action.type);
+                        setTimeout(() => setCopiedType(null), 2000);
+                      } catch {
+                        // clipboard unsupported or denied
+                      }
+                    }
+                  }}
                   className="display-nav__secondary-action"
                   aria-label={textValue(action.label)}
                 >
-                  <span>{textValue(action.label)}</span>
+                  <span>{copiedType === action.type ? '✓ Link Copied' : textValue(action.label)}</span>
                 </button>
               )
             )}

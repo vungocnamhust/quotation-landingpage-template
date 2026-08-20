@@ -1,6 +1,6 @@
 import { cache } from 'react';
-import type { LanguageCode } from '../display/contracts';
-import type { BrandRenderProfile } from '../display/types';
+import type { LanguageCode } from '../display/contracts.ts';
+import type { BrandRenderProfile } from '../display/types.ts';
 
 const INTERNAL_API_BASE = process.env.QUOTATION_INTERNAL_API_URL
   ?? process.env.NEXT_PUBLIC_QUOTATION_API_URL

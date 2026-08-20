@@ -9,11 +9,11 @@ import {
   type KeyboardEvent,
 } from "react";
 import { ChevronDown, Search, X, Check, Loader2, Sparkles, Hotel, Settings2 } from "lucide-react";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
-import type { AccommodationProfile, AccommodationSelectProps } from "./types";
-import { useAccommodationSearch } from "./useAccommodationSearch";
-import { AccommodationManageDrawer, type AccommodationDrawerMode } from "./AccommodationManageDrawer";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
+import type { AccommodationProfile, AccommodationSelectProps } from "./types.ts";
+import { useAccommodationSearch } from "./useAccommodationSearch.ts";
+import { AccommodationManageDrawer, type AccommodationDrawerMode } from "./AccommodationManageDrawer.tsx";
 
 export function AccommodationSelect({
   value,
@@ -21,6 +21,7 @@ export function AccommodationSelect({
   destinationId,
   destination,
   onChange,
+  allowCustom = true,
   label,
   placeholder = "Select accommodation...",
   disabled = false,
@@ -48,6 +49,7 @@ export function AccommodationSelect({
   const { items, isLoading, mutate } = useAccommodationSearch(query, {
     active: "true",
     destinationId: destinationId || undefined,
+    destination: destination || undefined,
     initialSelectedId: value,
   });
 
@@ -86,7 +88,16 @@ export function AccommodationSelect({
 
   const handleSelect = useCallback(
     (profile: AccommodationProfile) => {
-      onChange?.(profile, profile.id);
+      onChange?.(profile, profile.id, profile.name);
+      setIsOpen(false);
+      setQuery("");
+    },
+    [onChange]
+  );
+
+  const handleSelectCustom = useCallback(
+    (customName: string) => {
+      onChange?.(null, null, customName.trim());
       setIsOpen(false);
       setQuery("");
     },
@@ -96,10 +107,18 @@ export function AccommodationSelect({
   const handleClear = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      onChange?.(null, null);
+      onChange?.(null, null, null);
     },
     [onChange]
   );
+
+  const trimmedQuery = query.trim();
+  const hasExactMatch = activeProfiles.some(
+    (p) => p.name.toLowerCase() === trimmedQuery.toLowerCase()
+  );
+  const showCustomOption = allowCustom && trimmedQuery.length > 0 && !hasExactMatch;
+
+  const totalOptionsCount = activeProfiles.length + (showCustomOption ? 1 : 0);
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (!isOpen) {
@@ -113,15 +132,22 @@ export function AccommodationSelect({
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setHighlightedIndex((prev) =>
-        prev < activeProfiles.length - 1 ? prev + 1 : prev
+        prev < totalOptionsCount - 1 ? prev + 1 : prev
       );
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : 0));
     } else if (e.key === "Enter") {
       e.preventDefault();
-      if (activeProfiles[highlightedIndex]) {
-        handleSelect(activeProfiles[highlightedIndex]);
+      if (showCustomOption && highlightedIndex === 0) {
+        handleSelectCustom(trimmedQuery);
+      } else {
+        const profileIndex = showCustomOption ? highlightedIndex - 1 : highlightedIndex;
+        if (activeProfiles[profileIndex]) {
+          handleSelect(activeProfiles[profileIndex]);
+        } else if (showCustomOption) {
+          handleSelectCustom(trimmedQuery);
+        }
       }
     } else if (e.key === "Escape") {
       e.preventDefault();
@@ -217,7 +243,7 @@ export function AccommodationSelect({
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.stopPropagation();
-                  onChange?.(null);
+                  onChange?.(null, null, null);
                 }
               }}
               className="rounded-full p-1 hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-on-surface)] transition-colors cursor-pointer"
@@ -286,10 +312,16 @@ export function AccommodationSelect({
                 <Loader2 size={16} className="animate-spin" aria-hidden="true" />
                 <span className={cn(getTypographyClassName("caption"))}>Loading accommodations...</span>
               </div>
-            ) : activeProfiles.length === 0 ? (
+            ) : totalOptionsCount === 0 ? (
               <div className="py-6 text-center text-[var(--color-muted)]">
                 <Hotel size={24} className="mx-auto mb-1 opacity-40" aria-hidden="true" />
-                <p className={cn(getTypographyClassName("bodySm"))}>No accommodations match &quot;{query}&quot;</p>
+                <p className={cn(getTypographyClassName("bodySm"))}>
+                  {trimmedQuery
+                    ? `No accommodations match "${trimmedQuery}"`
+                    : destination
+                    ? `No accommodations configured for ${destination} yet`
+                    : "No accommodations available"}
+                </p>
                 {allowManage ? (
                   <button
                     type="button"
@@ -307,45 +339,76 @@ export function AccommodationSelect({
                 ) : null}
               </div>
             ) : (
-              activeProfiles.map((profile, index) => {
-                const isSelected = profile.id === value;
-                const isHighlighted = index === highlightedIndex;
-
-                return (
+              <>
+                {/* Custom Hotel Name Quick Entry */}
+                {showCustomOption ? (
                   <button
-                    key={profile.id}
                     type="button"
                     role="option"
-                    aria-selected={isSelected}
-                    onClick={() => handleSelect(profile)}
-                    onMouseEnter={() => setHighlightedIndex(index)}
+                    aria-selected={highlightedIndex === 0}
+                    onClick={() => handleSelectCustom(trimmedQuery)}
+                    onMouseEnter={() => setHighlightedIndex(0)}
                     className={cn(
-                      "flex w-full items-center justify-between gap-2.5 rounded-[var(--radius-button)] px-2.5 py-2 text-left transition-colors cursor-pointer",
-                      isHighlighted
-                        ? "bg-[var(--color-surface-muted)] text-[var(--color-on-surface)]"
-                        : "text-[var(--color-on-surface)]",
-                      isSelected ? "bg-[var(--color-accent-wash)] text-[var(--color-accent)]" : ""
+                      "flex w-full items-center gap-2 rounded-[var(--radius-button)] px-2.5 py-2 text-left transition-colors cursor-pointer border border-dashed border-[var(--color-accent)]/40 bg-[var(--color-accent-wash)]/40",
+                      highlightedIndex === 0
+                        ? "bg-[var(--color-accent-wash)] text-[var(--color-accent)]"
+                        : "text-[var(--color-accent)]"
                     )}
                   >
+                    <Sparkles size={14} className="shrink-0 text-[var(--color-accent)]" aria-hidden="true" />
                     <div className="min-w-0 flex-1">
-                      <span className="block truncate">{profile.name}</span>
-                      <span
-                        className={cn(
-                          getTypographyClassName("caption"),
-                          "block truncate text-[var(--color-muted)]"
-                        )}
-                      >
-                        {profile.destination}
-                        {profile.room_type ? ` · ${profile.room_type}` : ""}
+                      <span className={cn(getTypographyClassName("bodySm"), "block truncate")}>
+                        Use &quot;{trimmedQuery}&quot; as hotel name
+                      </span>
+                      <span className={cn(getTypographyClassName("caption"), "block text-[var(--color-muted)]")}>
+                        Custom hotel entry for this itinerary day
                       </span>
                     </div>
-
-                    {isSelected ? (
-                      <Check size={16} className="text-[var(--color-accent)] shrink-0" aria-hidden="true" />
-                    ) : null}
                   </button>
-                );
-              })
+                ) : null}
+
+                {/* Profiles List */}
+                {activeProfiles.map((profile, index) => {
+                  const actualIndex = showCustomOption ? index + 1 : index;
+                  const isSelected = profile.id === value;
+                  const isHighlighted = actualIndex === highlightedIndex;
+
+                  return (
+                    <button
+                      key={profile.id}
+                      type="button"
+                      role="option"
+                      aria-selected={isSelected}
+                      onClick={() => handleSelect(profile)}
+                      onMouseEnter={() => setHighlightedIndex(actualIndex)}
+                      className={cn(
+                        "flex w-full items-center justify-between gap-2.5 rounded-[var(--radius-button)] px-2.5 py-2 text-left transition-colors cursor-pointer",
+                        isHighlighted
+                          ? "bg-[var(--color-surface-muted)] text-[var(--color-on-surface)]"
+                          : "text-[var(--color-on-surface)]",
+                        isSelected ? "bg-[var(--color-accent-wash)] text-[var(--color-accent)]" : ""
+                      )}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <span className="block truncate">{profile.name}</span>
+                        <span
+                          className={cn(
+                            getTypographyClassName("caption"),
+                            "block truncate text-[var(--color-muted)]"
+                          )}
+                        >
+                          {profile.destination || profile.display_city || "Accommodation"}
+                          {profile.room_type ? ` · ${profile.room_type}` : ""}
+                        </span>
+                      </div>
+
+                      {isSelected ? (
+                        <Check size={16} className="text-[var(--color-accent)] shrink-0" aria-hidden="true" />
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </>
             )}
           </div>
 
@@ -399,7 +462,7 @@ export function AccommodationSelect({
           profiles={items}
           onClose={() => setDrawerMode(null)}
           onSaved={(saved) => {
-            onChange?.(saved);
+            onChange?.(saved, saved.id, saved.name);
           }}
           onMutate={mutate}
         />

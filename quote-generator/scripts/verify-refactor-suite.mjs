@@ -564,6 +564,72 @@ test('tripAdapter: bidirectional sync between QuoteRequestFormState and Canonica
 });
 
 // ==========================================
+// 9. Route Rules & Route Sequence Synchronization
+// ==========================================
+console.log('\n🗺️  9. Testing Route Rules & Sequence Synchronization (lib/rules/routeRules.ts)...');
+
+import {
+  parseRouteTokens,
+  formatRouteString,
+  deriveRouteFromItinerary,
+} from '../lib/rules/routeRules.ts';
+
+test('routeRules.parseRouteTokens: accurately parses arrow, dash, comma, and newline delimiters', () => {
+  const parsed1 = parseRouteTokens('Ho Chi Minh -> Mekong Delta -> Da Nang -> Hanoi');
+  assert.deepEqual(parsed1, ['Ho Chi Minh', 'Mekong Delta', 'Da Nang', 'Hanoi']);
+
+  const parsed2 = parseRouteTokens('Hanoi – Halong Bay — Hue, Hoi An\nSaigon');
+  assert.deepEqual(parsed2, ['Hanoi', 'Halong Bay', 'Hue', 'Hoi An', 'Saigon']);
+});
+
+test('routeRules.formatRouteString: formats clean standardized brochure route string', () => {
+  const formatted = formatRouteString(['Hanoi', 'Halong Bay', 'Hue']);
+  assert.equal(formatted, 'Hanoi – Halong Bay – Hue');
+});
+
+test('routeRules.deriveRouteFromItinerary: extracts arrivalCity, departureCity, and unique destinations in order', () => {
+  const days = [
+    { day_number: 1, destination: 'Ho Chi Minh City', overnight: 'Ho Chi Minh City' },
+    { day_number: 2, destination: 'Mekong Delta', overnight: 'Can Tho' },
+    { day_number: 3, destination: 'Da Nang', overnight: 'Da Nang' },
+    { day_number: 4, destination: 'Hanoi', overnight: 'Hanoi' },
+  ];
+
+  const meta = deriveRouteFromItinerary(days);
+  assert.equal(meta.arrivalCity, 'Ho Chi Minh City');
+  assert.equal(meta.departureCity, 'Hanoi');
+  assert.deepEqual(meta.destinations, ['Ho Chi Minh City', 'Mekong Delta', 'Da Nang', 'Hanoi']);
+  assert.equal(meta.displayRouteText, 'Ho Chi Minh City – Mekong Delta – Da Nang – Hanoi');
+});
+
+test('tripReconciler.applyRouteSequence: expands itinerary, recalculates dates and syncs route metadata', () => {
+  const initial = {
+    startDate: '2026-11-01',
+    endDate: null,
+    durationDays: null,
+    durationNights: null,
+    itinerary: [],
+    lang: 'en',
+  };
+
+  const updated = tripReconciler.applyRouteSequence(initial, [
+    'Ho Chi Minh City',
+    'Mekong Delta',
+    'Da Nang',
+    'Hanoi',
+  ]);
+
+  assert.equal(updated.itinerary.length, 4);
+  assert.equal(updated.startDate, '2026-11-01');
+  assert.equal(updated.endDate, '2026-11-04');
+  assert.equal(updated.durationDays, 4);
+  assert.equal(updated.durationNights, 3);
+  assert.equal(updated.arrivalCity, 'Ho Chi Minh City');
+  assert.equal(updated.departureCity, 'Hanoi');
+  assert.deepEqual(updated.destinations, ['Ho Chi Minh City', 'Mekong Delta', 'Da Nang', 'Hanoi']);
+});
+
+// ==========================================
 // Summary
 // ==========================================
 console.log('\n==========================================');

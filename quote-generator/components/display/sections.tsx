@@ -1,1 +1,1 @@
-export * from './sections/index';
+export * from './sections/index.ts';

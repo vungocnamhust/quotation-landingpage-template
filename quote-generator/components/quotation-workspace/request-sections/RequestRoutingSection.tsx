@@ -7,10 +7,12 @@ import CustomSelect from "../../ui/CustomSelect.tsx";
 import { DestinationSelect } from "../../destination/DestinationSelect.tsx";
 import { RouteSequenceInput } from "../../destination/RouteSequenceInput.tsx";
 import type { DestinationRef } from "../../destination/types.ts";
-import { DateInput } from "../../date/index.tsx";
+import { DateInput } from "../../date/DateInput.tsx";
 import KidAgesInput from "../KidAgesInput.tsx";
 import RoomConfigInput from "../RoomConfigInput.tsx";
 import { calculateDuration, formatTravelDatesLabel } from "../../../lib/rules/datesRules.ts";
+import { partyAdapter } from "../../../lib/rules/partyAdapter.ts";
+import { partyReconciler } from "../../../lib/rules/partyReconciler.ts";
 import type { QuoteRequestFormState } from "../../../lib/quoteRequestPayload.ts";
 
 type Props = {
@@ -73,7 +75,12 @@ function Field({
   );
 }
 
-export function RequestRoutingSection({ state, onChange, disabled = false }: Props) {
+export function RequestRoutingSection({
+  state,
+  onChange,
+  onApplyRouteToItinerary,
+  disabled = false,
+}: Props) {
   const isTraveller = state.role === "traveller";
   const [advisorDateMode, setAdvisorDateMode] = useState<"exact" | "flexible">(() => {
     return state.arrival_date && state.departure_date ? "exact" : state.raw_dates_text ? "flexible" : "exact";
@@ -304,7 +311,12 @@ export function RequestRoutingSection({ state, onChange, disabled = false }: Pro
           disabled={disabled}
           value={state.adults}
           onChange={(val) =>
-            onChange((prev) => ({ ...prev, adults: Math.max(1, parseInt(val, 10) || 1) }))
+            onChange((prev) => {
+              const count = Math.max(1, parseInt(val, 10) || 1);
+              const canonical = partyAdapter.fromQuoteRequest(prev);
+              const updated = partyReconciler.setAdults(canonical, count);
+              return partyAdapter.syncToQuoteRequest(updated, prev);
+            })
           }
         />
 
@@ -317,9 +329,9 @@ export function RequestRoutingSection({ state, onChange, disabled = false }: Pro
           onChange={(val) => {
             const count = Math.max(0, parseInt(val, 10) || 0);
             onChange((prev) => {
-              const currentAges = [...prev.kid_ages];
-              while (currentAges.length < count) currentAges.push(6);
-              return { ...prev, children: count, kid_ages: currentAges.slice(0, count) };
+              const canonical = partyAdapter.fromQuoteRequest(prev);
+              const updated = partyReconciler.setChildren(canonical, count);
+              return partyAdapter.syncToQuoteRequest(updated, prev);
             });
           }}
         />
@@ -331,7 +343,12 @@ export function RequestRoutingSection({ state, onChange, disabled = false }: Pro
           disabled={disabled}
           value={state.infants}
           onChange={(val) =>
-            onChange((prev) => ({ ...prev, infants: Math.max(0, parseInt(val, 10) || 0) }))
+            onChange((prev) => {
+              const count = Math.max(0, parseInt(val, 10) || 0);
+              const canonical = partyAdapter.fromQuoteRequest(prev);
+              const updated = partyReconciler.setInfants(canonical, count);
+              return partyAdapter.syncToQuoteRequest(updated, prev);
+            })
           }
         />
       </div>
@@ -340,7 +357,17 @@ export function RequestRoutingSection({ state, onChange, disabled = false }: Pro
       <KidAgesInput
         childrenCount={state.children}
         kidAges={state.kid_ages}
-        onChange={(ages) => onChange((prev) => ({ ...prev, kid_ages: ages }))}
+        disabled={disabled}
+        onChange={(ages) =>
+          onChange((prev) => {
+            const canonical = partyAdapter.fromQuoteRequest(prev);
+            const updated = partyReconciler.reconcileParty({
+              ...canonical,
+              kidAges: ages,
+            });
+            return partyAdapter.syncToQuoteRequest(updated, prev);
+          })
+        }
       />
 
       {/* Smart Room Configuration Input with Presets */}
@@ -349,6 +376,7 @@ export function RequestRoutingSection({ state, onChange, disabled = false }: Pro
           value={state.room_configuration}
           adults={state.adults}
           childrenCount={state.children}
+          kidAges={state.kid_ages}
           disabled={disabled}
           onChange={(val) => onChange((prev) => ({ ...prev, room_configuration: val }))}
         />

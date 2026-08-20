@@ -1,16 +1,16 @@
 'use client';
 
 import { useCallback, useState, useTransition } from 'react';
-import { apiErrorMessage } from '../../lib/apiError';
-import { useToast } from '../staff-workspace/ToastProvider';
-import { cloneCandidate } from './SectionContentFields';
+import { apiErrorMessage } from '../../lib/apiError.ts';
+import { useToast } from '../staff-workspace/ToastProvider.tsx';
+import { cloneCandidate } from './SectionContentFields.tsx';
 import type {
   ContentCandidate,
   ContentDraft,
   DocumentResponse,
   PromptPreview,
-} from '../quotation-workspace/useQuotationWorkspace';
-import { SCOPE_BY_SECTION_TYPE, type Mode } from './useContentStudioState';
+} from '../quotation-workspace/useQuotationWorkspace.ts';
+import { SCOPE_BY_SECTION_TYPE, type Mode } from './useContentStudioState.ts';
 
 export type UseContentGenerationOptions = {
   quotationId: string;
@@ -120,8 +120,9 @@ export function useContentGeneration({
       setPromptPreview(res.promptPreview);
     } catch (err) {
       console.error('Failed to preview prompt', err);
+      toast(apiErrorMessage(err) || 'Failed to generate prompt preview.', 'error');
     }
-  }, [activeCustomInstruction, lang, mode, quotationId, resources, scope]);
+  }, [activeCustomInstruction, lang, mode, quotationId, resources, scope, toast]);
 
   const generate = useCallback(() => {
     if (!scope || !editor?.generation) return;
@@ -139,7 +140,8 @@ export function useContentGeneration({
               generationMode: mode,
               instruction: activeCustomInstruction ?? '',
             }),
-          }
+          },
+          'Content generation failed.'
         );
         setGeneratedDraft(response.draft);
         setWorkingCandidate(cloneCandidate(response.draft.candidate));
@@ -201,16 +203,16 @@ export function useContentGeneration({
       return;
     }
 
-    setBatchState({
-      isRunning: true,
-      generatingScope: uniqueScopes[0],
-      completedCount: 0,
-      totalCount: uniqueScopes.length,
-    });
-    setMessage(`Batch generating ${uniqueScopes.length} content sections…`);
-
     startTransition(async () => {
       let completed = 0;
+      let failedCount = 0;
+      setBatchState({
+        isRunning: true,
+        generatingScope: uniqueScopes[0],
+        completedCount: 0,
+        totalCount: uniqueScopes.length,
+      });
+
       for (const scopeItem of uniqueScopes) {
         setBatchState({
           isRunning: true,
@@ -242,6 +244,7 @@ export function useContentGeneration({
             }
           );
         } catch (err) {
+          failedCount++;
           console.error(`Batch generation failed for scope ${scopeItem}`, err);
         }
         completed++;
@@ -262,12 +265,18 @@ export function useContentGeneration({
       await resources.refresh();
       clearScope('content:generate');
       setMessage(
-        `Batch generation completed (${completed}/${uniqueScopes.length} sections ready). Click any section to review.`
+        `Batch generation completed (${completed - failedCount}/${uniqueScopes.length} sections ready).`
       );
-      toast(
-        `All ${uniqueScopes.length} content sections generated successfully!`,
-        'success'
-      );
+      if (failedCount === 0) {
+        toast(`All ${uniqueScopes.length} content sections generated successfully!`, 'success');
+      } else if (failedCount === uniqueScopes.length) {
+        toast(`Batch generation failed for all ${uniqueScopes.length} sections. Check facts requirements.`, 'error');
+      } else {
+        toast(
+          `Generated ${uniqueScopes.length - failedCount}/${uniqueScopes.length} sections. ${failedCount} failed.`,
+          'warning'
+        );
+      }
     });
   }, [
     activeCustomInstruction,

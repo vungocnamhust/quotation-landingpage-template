@@ -53,9 +53,9 @@ export const tripAdapter = {
       durationNights: duration.durationNights ?? (canonicalDays.length ? Math.max(0, canonicalDays.length - 1) : null),
       arrivalCity: routeMeta.arrivalCity || formState.arrival_city?.trim() || null,
       departureCity: routeMeta.departureCity || formState.departure_city?.trim() || null,
-      destinations: routeMeta.destinations.length > 0 ? routeMeta.destinations : (formState.destinations || []),
-      destinationRefs: routeMeta.destinationRefs.length > 0 ? routeMeta.destinationRefs : (formState.destination_refs || []),
-      displayRouteText: routeMeta.displayRouteText || formatRouteString(formState.destinations),
+      destinations: routeMeta.destinations.length > 0 ? routeMeta.destinations : (formState.destination ? [formState.destination] : []),
+      destinationRefs: routeMeta.destinationRefs.length > 0 ? routeMeta.destinationRefs : [],
+      displayRouteText: routeMeta.displayRouteText || formState.destination || null,
       routingConstraints: formState.routing_constraints || null,
       itinerary: canonicalDays,
       lang: "en",
@@ -96,12 +96,7 @@ export const tripAdapter = {
         raw_dates_text: rawDatesText,
         arrival_city: canonical.arrivalCity || prev.arrival_city || "",
         departure_city: canonical.departureCity || prev.departure_city || "",
-        destinations: canonical.destinations && canonical.destinations.length > 0
-          ? canonical.destinations
-          : prev.destinations,
-        destination_refs: canonical.destinationRefs && canonical.destinationRefs.length > 0
-          ? canonical.destinationRefs
-          : prev.destination_refs,
+        destination: canonical.destinations?.[0] || prev.destination || "",
         routing_constraints:
           canonical.routingConstraints !== undefined && canonical.routingConstraints !== null
             ? canonical.routingConstraints
@@ -185,7 +180,14 @@ export const tripAdapter = {
     });
 
     const destinationRefs = routeDestinationRefsFromItinerary(itinerary);
-    const destinations = destinationRefs.map((r) => r.name);
+    const destinations =
+      destinationRefs.length > 0
+        ? destinationRefs.map((r) => r.name)
+        : Array.from(
+            new Set(
+              itinerary.map((d) => d.destination).filter((d): d is string => Boolean(d))
+            )
+          );
     const displayRouteText = canonical.displayRouteText || formatRouteString(destinations);
 
     return {

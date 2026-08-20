@@ -1,11 +1,11 @@
 import Image from 'next/image';
 import type { CSSProperties, ReactNode } from 'react';
-import type { DisplayDocument } from '../../display/runtimePageBuilder';
-import type { InclusionItemViewModel, ItineraryDayViewModel, TextValue } from '../../display/types';
-import { textValue } from '../../display/types';
-import { getTypographyClassName } from '../../config/typography';
-import { AvatarFrame, BodyCopy, DisplayTitle, ImageFrame, Kicker, MetaText, PriceText, QuoteText } from './atoms';
-import RouteMapClientIsland from './RouteMapClientIsland';
+import type { DisplayDocument } from '../../display/runtimePageBuilder.ts';
+import type { InclusionItemViewModel, ItineraryDayViewModel, TextValue } from '../../display/types.ts';
+import { textValue } from '../../display/types.ts';
+import { getTypographyClassName } from '../../config/typography.ts';
+import { AvatarFrame, BodyCopy, DisplayTitle, ImageFrame, Kicker, MetaText, PriceText, QuoteText } from './atoms.tsx';
+import RouteMapClientIsland from './RouteMapClientIsland.tsx';
 
 type PdfPageProps = {
   documentModel: DisplayDocument;

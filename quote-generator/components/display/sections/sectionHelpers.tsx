@@ -8,14 +8,14 @@ import type {
   SectionDisplayConfig,
   ThemeDefinition,
   TypographySlotMap,
-} from '../../../display/types';
-import { textValue } from '../../../display/types';
-import type { ViewMode } from '../../../display/contracts';
-import { getTypographyClassName } from '../../../config/typography';
-import { buildSectionFrameClassName } from '../../../display/layoutRegistry';
-import { requireTypographySlot } from '../../../display/typographySlots';
-import { cn } from '../../../utils/cn';
-import { DisplayTitle, MetaText } from '../atoms';
+} from '../../../display/types.ts';
+import { textValue } from '../../../display/types.ts';
+import type { ViewMode } from '../../../display/contracts.ts';
+import { getTypographyClassName } from '../../../config/typography.ts';
+import { buildSectionFrameClassName } from '../../../display/layoutRegistry.ts';
+import { requireTypographySlot } from '../../../display/typographySlots.ts';
+import { cn } from '../../../utils/cn.ts';
+import { DisplayTitle, MetaText } from '../atoms.tsx';
 
 export interface BaseSectionProps<T> {
   sectionId: PublicSectionId;

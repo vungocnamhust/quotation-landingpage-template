@@ -10,10 +10,10 @@ import {
   Database,
   CheckCircle2,
 } from "lucide-react";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
-import type { ReviewResponse, WorkflowResponse } from "./useQuotationWorkspace";
-import type { ResolvedHandoff } from "./editableHandoff";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
+import type { ReviewResponse, WorkflowResponse } from "./useQuotationWorkspace.ts";
+import type { ResolvedHandoff } from "./editableHandoff.ts";
 
 export type Stage = "facts" | "content" | "design" | "review";
 

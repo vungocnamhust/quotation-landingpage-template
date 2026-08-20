@@ -14,6 +14,7 @@ from db.models.quote_request import QuoteRequest, QuoteRequestRevision
 from db.models.partner import PartnerProfile
 from db.models.travel_designer import TravelDesignerBrandDefault, TravelDesignerProfile
 from db.models.travel_style import TravelStyleTag
+from db.models.rooming_heuristic import RoomingHeuristicRule
 
 __all__ = [
     "Brand",
@@ -34,6 +35,7 @@ __all__ = [
     "PublicationRelease",
     "PublicationJob",
     "PublicationTarget",
+    "RoomingHeuristicRule",
     "TravelDesignerBrandDefault",
     "TravelDesignerProfile",
     "TravelStyleTag",

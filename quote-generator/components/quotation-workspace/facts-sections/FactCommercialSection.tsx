@@ -1,13 +1,13 @@
 "use client";
 
-import { getTypographyClassName } from "../../../config/typography";
-import { cn } from "../../../utils/cn";
-import CustomSelect from "../../ui/CustomSelect";
+import { getTypographyClassName } from "../../../config/typography.ts";
+import { cn } from "../../../utils/cn.ts";
+import CustomSelect from "../../ui/CustomSelect.tsx";
 import type {
   PricingFact,
   PricingOptionFact,
   QuotationFacts,
-} from "../factsTypes";
+} from "../factsTypes.ts";
 import {
   CURRENCY_OPTIONS,
   formatMinorAmount,
@@ -15,12 +15,9 @@ import {
   MAX_COMMERCIAL_OPTIONS,
   minorAmountFromInput,
   minorAmountToInput,
-} from "../factsTypes";
-import {
-  inferCommercialPerTraveler,
-  inferCommercialTotal,
-  inferDefaultCurrency,
-} from "../../../lib/prefillRules";
+} from "../factsTypes.ts";
+import { inferDefaultCurrency } from "../../../lib/prefillRules.ts";
+import { pricingReconciler } from "../../../lib/rules/pricingReconciler.ts";
 
 const lines = (values: string[]) => values.join("\n");
 const toLines = (value: string) => value.split("\n");
@@ -130,6 +127,8 @@ export function FactCommercialSection({
   onRemovePricingOption,
   onUpdate,
 }: Props) {
+  const safeAdults = Math.max(1, adults ?? 2);
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
@@ -152,14 +151,18 @@ export function FactCommercialSection({
       {pricing.options.map((option, index) => {
         const defaultCurr =
           option.currency || inferDefaultCurrency(brandId, market);
+        const perTravelerVal = option.per_adult_amount_minor ?? option.per_traveler_amount_minor;
+
         const expectedTotal =
-          adults && option.per_traveler_amount_minor
-            ? inferCommercialTotal(option.per_traveler_amount_minor, adults)
+          perTravelerVal !== null && perTravelerVal !== undefined
+            ? pricingReconciler.calculateOptionTotal(perTravelerVal, option.per_child_amount_minor, safeAdults, 0)
             : null;
+
         const expectedPerTraveler =
-          adults && option.group_total_amount_minor
-            ? inferCommercialPerTraveler(option.group_total_amount_minor, adults)
+          option.group_total_amount_minor !== null && option.group_total_amount_minor !== undefined
+            ? pricingReconciler.inferOptionRatesFromTotal(option.group_total_amount_minor, safeAdults, 0).perAdultMinor
             : null;
+
         const inconsistent =
           expectedTotal !== null &&
           option.group_total_amount_minor !== null &&
@@ -202,7 +205,7 @@ export function FactCommercialSection({
               type="number"
               disabled={readOnly}
               value={minorAmountToInput(
-                option.per_traveler_amount_minor,
+                perTravelerVal,
                 option.currency || defaultCurr
               )}
               onChange={(value) => {
@@ -211,12 +214,13 @@ export function FactCommercialSection({
                   option.currency || defaultCurr
                 );
                 const autoTotal =
-                  option.group_total_amount_minor === null
-                    ? inferCommercialTotal(perTraveler, adults)
+                  option.group_total_amount_minor === null && perTraveler !== null
+                    ? pricingReconciler.calculateOptionTotal(perTraveler, option.per_child_amount_minor, safeAdults, 0)
                     : option.group_total_amount_minor;
                 onPatchPricingOption(index, {
                   currency: option.currency || defaultCurr,
                   per_traveler_amount_minor: perTraveler,
+                  per_adult_amount_minor: perTraveler,
                   group_total_amount_minor: autoTotal,
                 });
               }}
@@ -237,13 +241,14 @@ export function FactCommercialSection({
                   option.currency || defaultCurr
                 );
                 const autoPerTraveler =
-                  option.per_traveler_amount_minor === null
-                    ? inferCommercialPerTraveler(groupTotal, adults)
-                    : option.per_traveler_amount_minor;
+                  perTravelerVal === null && groupTotal !== null
+                    ? pricingReconciler.inferOptionRatesFromTotal(groupTotal, safeAdults, 0).perAdultMinor
+                    : perTravelerVal;
                 onPatchPricingOption(index, {
                   currency: option.currency || defaultCurr,
                   group_total_amount_minor: groupTotal,
                   per_traveler_amount_minor: autoPerTraveler,
+                  per_adult_amount_minor: autoPerTraveler,
                 });
               }}
             />
@@ -251,7 +256,7 @@ export function FactCommercialSection({
             {inconsistent ? (
               <div className="sm:col-span-2 flex flex-col gap-2 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface-muted)] p-3 text-[var(--color-muted)]">
                 <p className={cn(getTypographyClassName("caption"))}>
-                  {`For ${adults} adults, the per traveler price equals ${formatMinorAmount(
+                  {`For ${safeAdults} adults, the per traveler price equals ${formatMinorAmount(
                     expectedTotal,
                     option.currency || defaultCurr,
                     lang
@@ -289,6 +294,7 @@ export function FactCommercialSection({
                         onClick={() =>
                           onPatchPricingOption(index, {
                             per_traveler_amount_minor: expectedPerTraveler,
+                            per_adult_amount_minor: expectedPerTraveler,
                           })
                         }
                         className={cn(

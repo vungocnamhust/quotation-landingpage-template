@@ -2,11 +2,11 @@
 
 import { useCallback, useState } from "react";
 import useSWR from "swr";
-import { apiErrorMessage, quotationFetch } from "../../lib/apiError";
+import { apiErrorMessage, quotationFetch } from "../../lib/apiError.ts";
 import type {
   QuoteRequestItem,
   QuoteRequestRevisionMeta,
-} from "../quotation-workspace/factsTypes";
+} from "../quotation-workspace/factsTypes.ts";
 
 const API_BASE = process.env.NEXT_PUBLIC_QUOTATION_API_URL ?? "";
 

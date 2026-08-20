@@ -4,11 +4,11 @@ import { useSearchParams } from "next/navigation";
 import { useState, useTransition, useMemo } from "react";
 import useSWR from "swr";
 import { Search, FileText, LayoutGrid, List } from "lucide-react";
-import { getTypographyClassName } from "../../config/typography";
-import { apiErrorMessage, quotationFetch } from "../../lib/apiError";
-import { cn } from "../../utils/cn";
-import { WorkspaceQuotationCard, QuotationItem } from "./WorkspaceQuotationCard";
-import { WorkspaceQuotationTable } from "./WorkspaceQuotationTable";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { apiErrorMessage, quotationFetch } from "../../lib/apiError.ts";
+import { cn } from "../../utils/cn.ts";
+import { WorkspaceQuotationCard, QuotationItem } from "./WorkspaceQuotationCard.tsx";
+import { WorkspaceQuotationTable } from "./WorkspaceQuotationTable.tsx";
 
 const API_BASE = process.env.NEXT_PUBLIC_QUOTATION_API_URL ?? "";
 

@@ -1,13 +1,13 @@
 "use client";
 
-import { getTypographyClassName } from "../../../config/typography";
-import { cn } from "../../../utils/cn";
-import CustomSelect from "../../ui/CustomSelect";
-import { TravelDesignerSelect } from "../../travel-designer/TravelDesignerSelect";
-import { PartnerSelect } from "../../partner/PartnerSelect";
-import { DateInput } from "../../date";
-import QuoteRequestRoleSelector from "../QuoteRequestRoleSelector";
-import type { QuoteRequestFormState } from "../../../lib/quoteRequestPayload";
+import { getTypographyClassName } from "../../../config/typography.ts";
+import { cn } from "../../../utils/cn.ts";
+import CustomSelect from "../../ui/CustomSelect.tsx";
+import { TravelDesignerSelect } from "../../travel-designer/TravelDesignerSelect.tsx";
+import { PartnerSelect } from "../../partner/PartnerSelect.tsx";
+import { DateInput } from "../../date/index.ts";
+import QuoteRequestRoleSelector from "../QuoteRequestRoleSelector.tsx";
+import type { QuoteRequestFormState } from "../../../lib/quoteRequestPayload.ts";
 
 type Props = {
   state: QuoteRequestFormState;

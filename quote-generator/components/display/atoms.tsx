@@ -1,10 +1,10 @@
 import Image from 'next/image';
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
-import type { TypographyVariant } from '../../config/typography';
-import type { ComponentColorRole, TextValue } from '../../display/types';
-import { textValue } from '../../display/types';
-import { getTypographyClassName } from '../../config/typography';
-import { cn } from '../../utils/cn';
+import type { TypographyVariant } from '../../config/typography.ts';
+import type { ComponentColorRole, TextValue } from '../../display/types.ts';
+import { textValue } from '../../display/types.ts';
+import { getTypographyClassName } from '../../config/typography.ts';
+import { cn } from '../../utils/cn.ts';
 
 function toneClassName(tone: 'default' | 'muted' | 'accent' | 'inverse' = 'default') {
   return tone === 'muted' ? 'text-[var(--color-muted)]' : tone === 'accent' ? 'text-[var(--color-accent)]' : 'text-[var(--color-on-surface)]';

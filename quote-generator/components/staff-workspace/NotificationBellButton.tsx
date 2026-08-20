@@ -1,8 +1,8 @@
 "use client";
 
 import { Bell } from "lucide-react";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
 
 interface NotificationBellButtonProps {
   unreadCount: number;

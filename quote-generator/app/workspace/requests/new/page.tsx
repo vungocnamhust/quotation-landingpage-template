@@ -6,11 +6,13 @@ import Link from "next/link";
 import QuoteRequestForm from "../../../../components/quotation-workspace/QuoteRequestForm";
 import BasicItineraryDayGrid from "../../../../components/quotation-workspace/BasicItineraryDayGrid";
 import { useQuoteRequestForm } from "../../../../components/quotation-workspace/useQuoteRequestForm";
+import { useToast } from "../../../../components/staff-workspace/ToastProvider";
 import { getTypographyClassName } from "../../../../config/typography";
 import { cn } from "../../../../utils/cn";
 
 export default function NewQuoteRequestPage() {
   const router = useRouter();
+  const { toast } = useToast();
 
   const {
     formState,
@@ -27,6 +29,7 @@ export default function NewQuoteRequestPage() {
   } = useQuoteRequestForm({
     initialRole: "traveller",
     onSuccess: (created) => {
+      toast(`Journey request #${created.id} created successfully. Redirecting to detail view...`, "success");
       router.push(`/workspace/requests/${encodeURIComponent(created.id)}`);
     },
   });

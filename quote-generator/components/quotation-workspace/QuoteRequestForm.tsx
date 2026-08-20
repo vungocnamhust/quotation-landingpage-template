@@ -1,14 +1,14 @@
 "use client";
 
-import { type QuoteRequestFormState } from "../../lib/quoteRequestPayload";
-import { RequestIdentitySection } from "./request-sections/RequestIdentitySection";
-import { RequestRoutingSection } from "./request-sections/RequestRoutingSection";
-import { RequestTravelStyleSection } from "./request-sections/RequestTravelStyleSection";
-import AccommodationScopeSection from "./AccommodationScopeSection";
-import ServiceScopeSection from "./ServiceScopeSection";
-import SpecialRequirementsSection from "./SpecialRequirementsSection";
-import CommercialPricingSection from "./CommercialPricingSection";
-import ReadinessAndStrategySection from "./ReadinessAndStrategySection";
+import { type QuoteRequestFormState } from "../../lib/quoteRequestPayload.ts";
+import { RequestIdentitySection } from "./request-sections/RequestIdentitySection.tsx";
+import { RequestRoutingSection } from "./request-sections/RequestRoutingSection.tsx";
+import { RequestTravelStyleSection } from "./request-sections/RequestTravelStyleSection.tsx";
+import AccommodationScopeSection from "./AccommodationScopeSection.tsx";
+import ServiceScopeSection from "./ServiceScopeSection.tsx";
+import SpecialRequirementsSection from "./SpecialRequirementsSection.tsx";
+import CommercialPricingSection from "./CommercialPricingSection.tsx";
+import ReadinessAndStrategySection from "./ReadinessAndStrategySection.tsx";
 
 import type { DestinationRef } from "../destination/types.ts";
 

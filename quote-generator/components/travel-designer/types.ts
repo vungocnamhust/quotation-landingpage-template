@@ -1,4 +1,4 @@
-import type { TravelDesignerInput, TravelDesignerProfile } from "../../lib/quotationApi";
+import type { TravelDesignerInput, TravelDesignerProfile } from "../../lib/quotationApi.ts";
 
 export type { TravelDesignerInput, TravelDesignerProfile };
 

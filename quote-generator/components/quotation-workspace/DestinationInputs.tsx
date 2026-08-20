@@ -1,9 +1,9 @@
 "use client";
 
-import { DestinationSelect } from "../destination/DestinationSelect";
-import type { DestinationRef } from "./factsTypes";
+import { DestinationSelect } from "../destination/DestinationSelect.tsx";
+import type { DestinationRef } from "./factsTypes.ts";
 
-export type { DestinationRef } from "./factsTypes";
+export type { DestinationRef } from "./factsTypes.ts";
 
 /**
  * Backward-compatibility wrapper for DestinationInput using the new unified DestinationSelect component.

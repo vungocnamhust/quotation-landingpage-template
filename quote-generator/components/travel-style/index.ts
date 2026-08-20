@@ -1,3 +1,3 @@
-export * from "./types";
-export * from "./useTravelStyles";
-export * from "./TravelStyleSelect";
+export * from "./types.ts";
+export * from "./useTravelStyles.ts";
+export * from "./TravelStyleSelect.tsx";

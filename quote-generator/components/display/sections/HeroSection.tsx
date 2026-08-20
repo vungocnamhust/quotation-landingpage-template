@@ -1,9 +1,9 @@
-import type { HeroViewModel } from '../../../display/types';
-import { getLayoutSlots } from '../../../display/layoutRegistry';
-import { requireTypographySlot } from '../../../display/typographySlots';
-import { ActionButton, BodyCopy, DisplayTitle, Kicker, MetaText } from '../atoms';
-import { HeroRuleMeta } from '../molecules';
-import { BaseSectionProps, SectionOverlay, sectionOrnaments, shellProps } from './sectionHelpers';
+import type { HeroViewModel } from '../../../display/types.ts';
+import { getLayoutSlots } from '../../../display/layoutRegistry.ts';
+import { requireTypographySlot } from '../../../display/typographySlots.ts';
+import { ActionButton, BodyCopy, DisplayTitle, Kicker, MetaText } from '../atoms.tsx';
+import { HeroRuleMeta } from '../molecules.tsx';
+import { BaseSectionProps, SectionOverlay, sectionOrnaments, shellProps } from './sectionHelpers.tsx';
 
 export function HeroSection({
   sectionId,

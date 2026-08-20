@@ -1,31 +1,36 @@
 "use client";
 
 import { useCallback, useMemo, type Dispatch, type ReactNode, type SetStateAction } from "react";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
-import CustomSelect from "../ui/CustomSelect";
-import { DestinationSelect } from "../destination/DestinationSelect";
-import { TravelDesignerSelect } from "../travel-designer/TravelDesignerSelect";
-import { AccommodationSelect } from "../accommodation/AccommodationSelect";
-import { TravelStyleSelect } from "../travel-style/TravelStyleSelect";
-import { DateInput } from "../date";
-import { RichTextEditor } from "../ui/RichTextEditor";
-import type { AccommodationProfile } from "../../lib/quotationApi";
-import { BrochureAssetsEditor, MediaSlotRenderer, type MediaSlotValue, type MediaWorkspace } from "./MediaSlotRenderer";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
+import CustomSelect from "../ui/CustomSelect.tsx";
+import { DestinationSelect } from "../destination/DestinationSelect.tsx";
+import { TravelDesignerSelect } from "../travel-designer/TravelDesignerSelect.tsx";
+import { AccommodationSelect } from "../accommodation/AccommodationSelect.tsx";
+import { TravelStyleSelect } from "../travel-style/TravelStyleSelect.tsx";
+import { DateInput } from "../date/index.ts";
+import { RichTextEditor } from "../ui/RichTextEditor.tsx";
+import type { AccommodationProfile } from "../../lib/quotationApi.ts";
+import { BrochureAssetsEditor, MediaSlotRenderer, type MediaSlotValue, type MediaWorkspace } from "./MediaSlotRenderer.tsx";
 import {
   inferCommercialPerTraveler,
   inferCommercialTotal,
   inferDefaultCurrency,
   validateHotelDates,
-} from "../../lib/prefillRules";
+} from "../../lib/prefillRules.ts";
 import {
   applyRouteDates,
+  patchHotelInFacts,
+  patchPricingOptionWithInference,
   syncHotelsFromItineraryOvernights,
   updateCustomerCounts,
   updateCustomerName,
+  updateDayAccommodationInFacts,
   updateItineraryDayDestination,
   updateTravelStyle,
-} from "../../lib/prefillEngine";
+} from "../../lib/prefillEngine.ts";
+import { pricingAdapter } from "../../lib/rules/pricingAdapter.ts";
+import { pricingReconciler } from "../../lib/rules/pricingReconciler.ts";
 import {
   createPricingOption,
   CURRENCY_OPTIONS,
@@ -246,19 +251,34 @@ export default function QuotationIntakeForm({
   const patchDay = useCallback(
     (index: number, patch: Partial<ItineraryDayFact>) =>
       patchFacts((current) => {
+        if (
+          patch.accommodation_id !== undefined ||
+          patch.accommodation_name !== undefined ||
+          patch.room_type !== undefined
+        ) {
+          return updateDayAccommodationInFacts(current, index, patch);
+        }
         const rawDays = current.trip_facts.itinerary;
         const days: ItineraryDayFact[] = Array.isArray(rawDays) ? rawDays : [];
         const itinerary = days.map((day, dayIndex) =>
           dayIndex === index ? { ...day, ...patch } : day
         );
         const destination_refs = routeDestinationRefsFromItinerary(itinerary);
+        const destinations =
+          destination_refs.length > 0
+            ? destination_refs.map((r) => r.name)
+            : Array.from(
+                new Set(
+                  itinerary.map((d) => d.destination).filter((d): d is string => Boolean(d))
+                )
+              );
         return {
           ...current,
           trip_facts: {
             ...current.trip_facts,
             itinerary,
             destination_refs,
-            destinations: destination_refs.map((ref) => ref.name),
+            destinations,
           },
         };
       }),
@@ -274,15 +294,7 @@ export default function QuotationIntakeForm({
 
   const patchHotel = useCallback(
     (index: number, patch: Partial<HotelFact>) =>
-      patchFacts((current) => ({
-        ...current,
-        service_facts: {
-          ...current.service_facts,
-          hotels: current.service_facts.hotels.map((hotel, hotelIndex) =>
-            hotelIndex === index ? { ...hotel, ...patch } : hotel
-          ),
-        },
-      })),
+      patchFacts((current) => patchHotelInFacts(current, index, patch)),
     [patchFacts]
   );
 
@@ -326,48 +338,27 @@ export default function QuotationIntakeForm({
 
   const addPricingOption = useCallback(
     () =>
-      patchFacts((current) =>
-        current.pricing_facts.options.length >= MAX_COMMERCIAL_OPTIONS
-          ? current
-          : {
-              ...current,
-              pricing_facts: {
-                ...current.pricing_facts,
-                options: [
-                  ...current.pricing_facts.options,
-                  createPricingOption(current.pricing_facts.options.length + 1),
-                ],
-              },
-            }
-      ),
+      patchFacts((current) => {
+        const canonical = pricingAdapter.fromQuotationFacts(current);
+        const updated = pricingReconciler.addOption(canonical);
+        return pricingAdapter.syncToQuotationFacts(updated, current);
+      }),
     [patchFacts]
   );
 
   const patchPricingOption = useCallback(
     (index: number, patch: Partial<PricingOptionFact>) =>
-      patchFacts((current) => ({
-        ...current,
-        pricing_facts: {
-          ...current.pricing_facts,
-          options: current.pricing_facts.options.map((option, optionIndex) =>
-            optionIndex === index ? { ...option, ...patch } : option
-          ),
-        },
-      })),
+      patchFacts((current) => patchPricingOptionWithInference(current, index, patch)),
     [patchFacts]
   );
 
   const removePricingOption = useCallback(
     (index: number) =>
-      patchFacts((current) => ({
-        ...current,
-        pricing_facts: {
-          ...current.pricing_facts,
-          options: current.pricing_facts.options.filter(
-            (_, optionIndex) => optionIndex !== index
-          ),
-        },
-      })),
+      patchFacts((current) => {
+        const canonical = pricingAdapter.fromQuotationFacts(current);
+        const updated = pricingReconciler.removeOption(canonical, index);
+        return pricingAdapter.syncToQuotationFacts(updated, current);
+      }),
     [patchFacts]
   );
 

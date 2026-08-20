@@ -1,10 +1,11 @@
 "use client";
 
-import { MapPin, Calendar, Users, BedDouble, AlertCircle, Plane } from "lucide-react";
-import DetailSectionCard from "./DetailSectionCard";
-import DetailField from "./DetailField";
-import { getTypographyClassName } from "../../../config/typography";
-import { cn } from "../../../utils/cn";
+import { MapPin, Calendar, Users, BedDouble, AlertCircle, Plane, ArrowRight } from "lucide-react";
+import DetailSectionCard from "./DetailSectionCard.tsx";
+import DetailField from "./DetailField.tsx";
+import { getTypographyClassName } from "../../../config/typography.ts";
+import { cn } from "../../../utils/cn.ts";
+import { formatRouteString } from "../../../lib/rules/routeRules.ts";
 
 type Props = {
   destinations?: string[];
@@ -41,7 +42,7 @@ export default function JourneyRoutingCard({
     rawDatesText ||
     (startDate ? `${startDate} ${endDate ? `→ ${endDate}` : ""}` : "Dates flexible / undecided");
 
-  const destinationsText = destinations.length > 0 ? destinations.join(" & ") : "Not specified";
+  const destinationsText = formatRouteString(destinations) || "Not specified";
 
   return (
     <DetailSectionCard
@@ -49,6 +50,38 @@ export default function JourneyRoutingCard({
       subtitle="Destination route, travel dates, party headcount & room setups"
       icon={<MapPin size={18} aria-hidden="true" />}
     >
+      {/* Visual Connected Route Chain */}
+      {destinations.length > 0 ? (
+        <div className="flex flex-col gap-1.5 rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-3">
+          <span className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>
+            Planned Route Sequence:
+          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            {destinations.map((dest, idx) => (
+              <div key={idx} className="flex items-center gap-2">
+                <span
+                  className={cn(
+                    getTypographyClassName("caption"),
+                    "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 shadow-2xs",
+                    idx === 0
+                      ? "border-emerald-300 bg-emerald-50 text-emerald-900"
+                      : idx === destinations.length - 1
+                        ? "border-amber-300 bg-amber-50 text-amber-900"
+                        : "border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-on-surface)]"
+                  )}
+                >
+                  <span className={cn(getTypographyClassName("overline"), "opacity-70")}>{idx + 1}.</span>
+                  <span>{dest}</span>
+                </span>
+                {idx < destinations.length - 1 ? (
+                  <ArrowRight size={13} className="text-[var(--color-accent)] opacity-80" aria-hidden="true" />
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       <div className="grid gap-3 sm:grid-cols-2">
         <DetailField
           label="Destinations"

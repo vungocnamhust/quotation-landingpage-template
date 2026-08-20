@@ -2,11 +2,11 @@
 
 import React, { useState } from "react";
 import { Search, PackageOpen } from "lucide-react";
-import { getTypographyClassName } from "../../../config/typography";
-import { cn } from "../../../utils/cn";
-import { DataViewToggle, type ViewModeOption } from "./DataViewToggle";
-import { DataGrid } from "./DataGrid";
-import { DataTable, type ColumnDef } from "./DataTable";
+import { getTypographyClassName } from "../../../config/typography.ts";
+import { cn } from "../../../utils/cn.ts";
+import { DataViewToggle, type ViewModeOption } from "./DataViewToggle.tsx";
+import { DataGrid } from "./DataGrid.tsx";
+import { DataTable, type ColumnDef } from "./DataTable.tsx";
 
 export interface FilterOption {
   label: string;

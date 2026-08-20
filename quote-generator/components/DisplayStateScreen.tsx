@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import type { StateSectionId } from '../display/types';
-import { BodyCopy, DisplayTitle, Kicker } from './display/atoms';
+import type { StateSectionId } from '../display/types.ts';
+import { BodyCopy, DisplayTitle, Kicker } from './display/atoms.tsx';
 
 const STATE_COPY: Record<StateSectionId, { title: string; body: string; actionLabel?: string }> = {
   loading: { title: 'Loading quotation', body: 'The published quotation is being prepared.' },

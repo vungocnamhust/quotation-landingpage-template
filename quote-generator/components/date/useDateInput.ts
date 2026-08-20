@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useRef, type ChangeEvent } from "react";
-import { isValidIsoDate } from "../../lib/rules/datesRules";
+import { isValidIsoDate } from "../../lib/rules/datesRules.ts";
 
 export interface UseDateInputOptions {
   value?: string | null;

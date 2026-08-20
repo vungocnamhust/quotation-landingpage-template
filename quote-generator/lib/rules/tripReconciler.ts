@@ -12,13 +12,12 @@ import {
 } from "./datesRules.ts";
 import {
   deriveRouteFromItinerary,
-  formatRouteString,
   type DestinationRef,
 } from "./routeRules.ts";
 
 export type CanonicalDay = {
   id?: string;
-  day_number: number;
+  day_number: number | null;
   destination: string | null;
   destination_ref?: DestinationRef | null;
   overnight: string | null;

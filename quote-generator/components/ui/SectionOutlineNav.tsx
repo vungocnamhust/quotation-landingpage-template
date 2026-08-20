@@ -1,8 +1,8 @@
 "use client";
 
 import { CheckCircle2, AlertCircle, Circle, Loader2, Sparkles } from "lucide-react";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
 
 export interface SectionOutlineItem {
   id: string;

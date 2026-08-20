@@ -1,9 +1,9 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import type { RouteMapViewModel, TypographySlotMap } from '../../display/types';
-import { textValue } from '../../display/types';
-import type { ViewMode } from '../../display/contracts';
+import type { RouteMapViewModel, TypographySlotMap } from '../../display/types.ts';
+import { textValue } from '../../display/types.ts';
+import type { ViewMode } from '../../display/contracts.ts';
 
 const RouteMapExperience = dynamic(() => import('./RouteMapExperience'), {
   ssr: false,

@@ -1,4 +1,4 @@
-import type { DestinationRef } from "../quotation-workspace/factsTypes";
+import type { DestinationRef } from "../quotation-workspace/factsTypes.ts";
 
 export type { DestinationRef };
 

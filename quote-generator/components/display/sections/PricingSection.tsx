@@ -1,10 +1,10 @@
-import type { PricingViewModel } from '../../../display/types';
-import { getLayoutSlots } from '../../../display/layoutRegistry';
-import { requireTypographySlot } from '../../../display/typographySlots';
-import { cn } from '../../../utils/cn';
-import { BodyCopy, DisplayTitle, MetaText } from '../atoms';
-import { InvestmentRow } from '../molecules';
-import { BaseSectionProps, sectionOrnaments, shellProps } from './sectionHelpers';
+import type { PricingViewModel } from '../../../display/types.ts';
+import { getLayoutSlots } from '../../../display/layoutRegistry.ts';
+import { requireTypographySlot } from '../../../display/typographySlots.ts';
+import { cn } from '../../../utils/cn.ts';
+import { BodyCopy, DisplayTitle, MetaText } from '../atoms.tsx';
+import { InvestmentRow } from '../molecules.tsx';
+import { BaseSectionProps, sectionOrnaments, shellProps } from './sectionHelpers.tsx';
 
 export function PricingSection({
   sectionId,

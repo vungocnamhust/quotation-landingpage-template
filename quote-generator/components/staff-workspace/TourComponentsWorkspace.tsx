@@ -2,25 +2,25 @@
 
 import { useMemo } from "react";
 import { Building2, Palette, Plus } from "lucide-react";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
-import { DataViewContainer } from "../ui/data-view/DataViewContainer";
-import type { AccommodationProfile } from "../../lib/quotationApi";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
+import { DataViewContainer } from "../ui/data-view/DataViewContainer.tsx";
+import type { AccommodationProfile } from "../../lib/quotationApi.ts";
 import {
   CATEGORIES,
   type FlatTravelStyleTag,
   type GenericComponentItem,
-} from "./tourComponentsCatalog";
-import { useTourComponentsState } from "./useTourComponentsState";
-import { useAccommodationManager } from "./accommodations/useAccommodationManager";
-import { useTravelStyleCatalog } from "./travel-styles/useTravelStyleCatalog";
-import { AccommodationCard } from "./accommodations/AccommodationCard";
-import { createAccommodationColumns } from "./accommodations/AccommodationColumns";
-import { AccommodationDrawerModal } from "./accommodations/AccommodationDrawerModal";
-import { TravelStyleCard } from "./travel-styles/TravelStyleCard";
-import { createTravelStyleColumns } from "./travel-styles/TravelStyleColumns";
-import { GenericCatalogCard } from "./catalog/GenericCatalogCard";
-import { createGenericCatalogColumns } from "./catalog/GenericCatalogColumns";
+} from "./tourComponentsCatalog.ts";
+import { useTourComponentsState } from "./useTourComponentsState.ts";
+import { useAccommodationManager } from "./accommodations/useAccommodationManager.ts";
+import { useTravelStyleCatalog } from "./travel-styles/useTravelStyleCatalog.ts";
+import { AccommodationCard } from "./accommodations/AccommodationCard.tsx";
+import { createAccommodationColumns } from "./accommodations/AccommodationColumns.tsx";
+import { AccommodationDrawerModal } from "./accommodations/AccommodationDrawerModal.tsx";
+import { TravelStyleCard } from "./travel-styles/TravelStyleCard.tsx";
+import { createTravelStyleColumns } from "./travel-styles/TravelStyleColumns.tsx";
+import { GenericCatalogCard } from "./catalog/GenericCatalogCard.tsx";
+import { createGenericCatalogColumns } from "./catalog/GenericCatalogColumns.tsx";
 
 export default function TourComponentsWorkspace() {
   const {

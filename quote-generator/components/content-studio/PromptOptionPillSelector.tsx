@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { getTypographyClassName } from '../../config/typography';
-import { cn } from '../../utils/cn';
+import { getTypographyClassName } from '../../config/typography.ts';
+import { cn } from '../../utils/cn.ts';
 import { Info, Tag, Check, Plus, Shield, Sparkles, Building, FileText, Database, Pin } from 'lucide-react';
-import type { ContentFactInput } from '../quotation-workspace/useQuotationWorkspace';
+import type { ContentFactInput } from '../quotation-workspace/useQuotationWorkspace.ts';
 import {
   BRAND_OPTIONS,
   CONSTRAINT_OPTIONS,
@@ -12,7 +12,7 @@ import {
   MODE_OPTIONS,
   type PromptCategoryKey,
   type PromptOptionItem,
-} from './promptOptionsCatalog';
+} from './promptOptionsCatalog.ts';
 
 export {
   BRAND_OPTIONS,

@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
-import { getTypographyClassName } from "../../../config/typography";
-import { cn } from "../../../utils/cn";
-import AccommodationProfileForm from "../../quotation-workspace/AccommodationProfileForm";
-import type { AccommodationProfile, AccommodationProfileInput } from "../../../lib/quotationApi";
-import type { DestinationRef } from "../../destination/types";
+import { getTypographyClassName } from "../../../config/typography.ts";
+import { cn } from "../../../utils/cn.ts";
+import AccommodationProfileForm from "../../quotation-workspace/AccommodationProfileForm.tsx";
+import type { AccommodationProfile, AccommodationProfileInput } from "../../../lib/quotationApi.ts";
+import type { DestinationRef } from "../../destination/types.ts";
 
 interface Props {
   isOpen: boolean;

@@ -5,10 +5,11 @@
 
 import { useDeferredValue, useEffect, useMemo, useState, useTransition } from "react";
 import useSWR from "swr";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
-import { formatApiError } from "./factsTypes";
-import { quotationFetch } from "../../lib/apiError";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
+import { formatApiError } from "./factsTypes.ts";
+import { quotationFetch } from "../../lib/apiError.ts";
+import { useToast } from "../staff-workspace/ToastProvider.tsx";
 
 const API_BASE = process.env.NEXT_PUBLIC_QUOTATION_API_URL ?? "";
 const PAGE_SIZE = 60;
@@ -62,49 +63,76 @@ async function fetchLibraryPage(url: string): Promise<Children> {
 }
 const isActiveSync = (status?: SyncRun["status"]) => status === "queued" || status === "indexing" || status === "previewing";
 
-export default function MediaPicker({ onSelect, onConfirm, context, selectionMode = 'single', maxSelection = 1, initialSelection = [] }: { onSelect?: (r2Key: string) => void; onConfirm?: (r2Keys: string[]) => void; context?: MediaPickerContext; selectionMode?: 'single' | 'multiple'; maxSelection?: number; initialSelection?: string[] }) {
-  const [prefix, setPrefix] = useState("");
+export default function MediaPicker({ onSelect, onConfirm, context, selectionMode = 'single', maxSelection = 1, initialSelection = [], initialPrefix }: { onSelect?: (r2Key: string) => void; onConfirm?: (r2Keys: string[]) => void; context?: MediaPickerContext; selectionMode?: 'single' | 'multiple'; maxSelection?: number; initialSelection?: string[]; initialPrefix?: string }) {
+  const { toast } = useToast();
+  const [selected, setSelected] = useState<string[]>(initialSelection);
+  const [prefix, setPrefix] = useState(initialPrefix ?? "");
   const [query, setQuery] = useState("");
-  const deferredQuery = useDeferredValue(query.trim());
+  const deferredQuery = useDeferredValue(query);
   const [cursor, setCursor] = useState(0);
   const [items, setItems] = useState<Item[]>([]);
-  const [message, setMessage] = useState("");
   const [file, setFile] = useState<File | null>(null);
-  const [pending, startTransition] = useTransition();
   const [syncRunId, setSyncRunId] = useState<string | null>(null);
-  const [selected, setSelected] = useState<string[]>(() => initialSelection.slice(0, maxSelection));
-  const queryParams = new URLSearchParams({ prefix, cursor: String(cursor), limit: String(PAGE_SIZE) });
-  const libraryUrl = deferredQuery ? `${API_BASE}/api/v2/media-library/search?${new URLSearchParams({ prefix, query: deferredQuery, cursor: String(cursor), limit: String(PAGE_SIZE) })}` : `${API_BASE}/api/v2/media-library/children?${queryParams}`;
-  const { data, error, mutate } = useSWR<Children>(libraryUrl, fetchLibraryPage);
-  const { data: syncRun } = useSWR<SyncRun>(syncRunId ? `${API_BASE}/api/v2/media-library/sync/${syncRunId}` : null, async (url) => requestJson(url) as Promise<SyncRun>, { refreshInterval: (current) => isActiveSync(current?.status) ? 1000 : 0 });
-  const canUpload = Boolean(context && (context.kind === "team" ? context.travelDesignerId : context.destinationId) && (context.kind !== "accommodation" || context.accommodationName));
-  const crumbs = useMemo(() => (prefix ? prefix.split("/") : []), [prefix]);
+  const [message, setMessage] = useState("Browse the indexed R2 library.");
+  const [pending, startTransition] = useTransition();
+
+  const active = useMemo(() => {
+    const search = new URLSearchParams();
+    search.set("prefix", prefix);
+    search.set("cursor", String(cursor));
+    search.set("limit", String(PAGE_SIZE));
+    if (deferredQuery.trim()) search.set("query", deferredQuery.trim());
+    return deferredQuery.trim() ? `${API_BASE}/api/v2/media-library/search?${search}` : `${API_BASE}/api/v2/media-library/children?${search}`;
+  }, [cursor, deferredQuery, prefix]);
+
+  const { data, error, mutate } = useSWR<Children>(active, fetchLibraryPage, { revalidateOnFocus: false });
+  const { data: syncRun } = useSWR<SyncRun>(
+    syncRunId ? `${API_BASE}/api/v2/media-library/sync/${syncRunId}` : null,
+    async (url) => requestJson(url) as Promise<SyncRun>,
+    { refreshInterval: (latest) => (isActiveSync(latest?.status) ? 1000 : 0), revalidateOnFocus: false }
+  );
 
   useEffect(() => {
-    if (!data) return;
+    if (!data?.items) return;
     const timer = window.setTimeout(() => {
-      setItems((current) => cursor === 0 ? data.items : uniqueBy([...current, ...data.items], (item) => item.r2Key));
+      setItems((current) => (cursor === 0 ? data.items : uniqueBy([...current, ...data.items], (item) => item.r2Key)));
     }, 0);
     return () => window.clearTimeout(timer);
   }, [cursor, data]);
+
   useEffect(() => {
-    if (!syncRun || isActiveSync(syncRun.status)) return;
-    void mutate();
+    if (!syncRun) return;
     const timer = window.setTimeout(() => {
-      if (syncRun.status === "completed") setMessage(`R2 refresh complete · ${syncRun.indexedCount} images indexed.`);
-      if (syncRun.status === "failed") setMessage(syncRun.errorMessage || "R2 refresh failed. Retry when the media service is available.");
+      if (syncRun.status === "completed") {
+        const msg = `R2 refresh complete · ${syncRun.indexedCount} images indexed.`;
+        setMessage(msg);
+        toast(msg, "success");
+        void mutate();
+      }
+      if (syncRun.status === "failed") {
+        const errMsg = syncRun.errorMessage || "R2 refresh failed. Retry when the media service is available.";
+        setMessage(errMsg);
+        toast(errMsg, "error");
+      }
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [mutate, syncRun]);
+  }, [mutate, syncRun, toast]);
+
+  const canUpload = Boolean(context && (context.kind === "team" ? context.travelDesignerId : context.destinationId) && (context.kind !== "accommodation" || context.accommodationName));
+  const crumbs = useMemo(() => (prefix ? prefix.split("/") : []), [prefix]);
 
   const navigate = (nextPrefix: string) => { setPrefix(nextPrefix); setQuery(""); setCursor(0); setItems([]); };
   const refreshFromR2 = () => startTransition(async () => {
     try {
       const payload = await requestJson(`${API_BASE}/api/v2/media-library/sync`, { method: "POST" }) as SyncRun;
       setSyncRunId(payload.id);
-      setMessage(payload.reused ? "A media refresh is already running." : "Refreshing the R2 media index…");
+      const msg = payload.reused ? "A media refresh is already running." : "Refreshing the R2 media index…";
+      setMessage(msg);
+      toast(msg, "info");
     } catch (requestError) {
-      setMessage(requestError instanceof Error ? requestError.message : "R2 refresh could not be started.");
+      const errMsg = requestError instanceof Error ? requestError.message : "R2 refresh could not be started.";
+      setMessage(errMsg);
+      toast(errMsg, "error");
     }
   });
   const upload = () => startTransition(async () => {
@@ -119,11 +147,15 @@ export default function MediaPicker({ onSelect, onConfirm, context, selectionMod
       const payload = await requestJson(`${API_BASE}/api/v2/media-library/uploads`, { method: "POST", body: form }) as { r2Key?: unknown };
       if (typeof payload.r2Key !== "string") throw new Error("Upload returned an invalid response.");
       const uploadedKey: string = payload.r2Key;
-      setMessage("Image uploaded and added to the selection.");
+      const msg = "Image uploaded and added to the selection.";
+      setMessage(msg);
+      toast(msg, "success");
       setCursor(0); setItems([]); await mutate();
       setSelected((current) => selectionMode === 'single' ? [uploadedKey] : current.includes(uploadedKey) ? current : [...current, uploadedKey].slice(0, maxSelection));
     } catch (requestError) {
-      setMessage(requestError instanceof Error ? requestError.message : "Upload failed.");
+      const errMsg = requestError instanceof Error ? requestError.message : "Upload failed.";
+      setMessage(errMsg);
+      toast(errMsg, "error");
     }
   });
   const activeSync = isActiveSync(syncRun?.status);

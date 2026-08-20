@@ -2,45 +2,43 @@
 
 import { useCallback, useMemo } from "react";
 import type { DayWithStayItem } from "./DayEmbeddedRouteTable.tsx";
-import type { HotelFact, ItineraryDayFact, QuotationFacts } from "./factsTypes.ts";
+import type { ItineraryDayFact, QuotationFacts } from "./factsTypes.ts";
 import { ensureFactsDefaults, routeDestinationRefsFromItinerary } from "./factsTypes.ts";
-import { inferOvernightDestination } from "../../lib/prefillRules.ts";
-import { consolidateStaysFromDayItems } from "../../lib/rules/staysRules.ts";
+import { POPULAR_DESTINATIONS } from "../destination/useDestinationSearch.ts";
+import { staysAdapter } from "../../lib/rules/staysAdapter.ts";
+import { staysReconciler } from "../../lib/rules/staysReconciler.ts";
 
 export function deriveDayWithStays(facts: QuotationFacts): DayWithStayItem[] {
-  const itinerary = facts.trip_facts.itinerary;
-  const hotels = facts.service_facts.hotels;
+  const safe = ensureFactsDefaults(facts);
+  const canonical = staysAdapter.fromQuotationFacts(safe);
+  const hydratedItinerary = staysReconciler.syncItineraryFromStays(
+    canonical.itinerary,
+    safe.service_facts.hotels,
+    safe.trip_facts.start_date
+  );
 
-  return itinerary.map((day, idx) => {
-    // 1. If day already has accommodation attached, prioritize it
-    if (day.accommodation_id || day.accommodation_name) {
-      return {
-        day_number: day.day_number ?? idx + 1,
-        destination: day.destination,
-        destination_ref: day.destination_ref,
-        accommodation_id: day.accommodation_id ?? null,
-        accommodation_name: day.accommodation_name ?? null,
-        room_type: day.room_type ?? null,
-        summary: day.summary,
-      };
-    }
-
-    // 2. Attempt to match hotel with day destination/overnight
-    const matchingHotel =
-      hotels.find(
-        (h) =>
-          (h.destination && day.destination && h.destination.toLowerCase() === day.destination.toLowerCase()) ||
-          (h.destination && day.overnight && h.destination.toLowerCase() === day.overnight.toLowerCase())
-      ) || hotels[idx];
+  return hydratedItinerary.map((day, idx) => {
+    const dest = day.destination ?? null;
+    const overnight = day.overnight ?? dest ?? null;
+    const overnightRef = overnight
+      ? POPULAR_DESTINATIONS.find(
+          (p) =>
+            p.name.toLowerCase() === overnight.toLowerCase() ||
+            p.slug.toLowerCase() === overnight.toLowerCase() ||
+            p.id.toLowerCase() === overnight.toLowerCase()
+        ) ?? null
+      : null;
 
     return {
       day_number: day.day_number ?? idx + 1,
-      destination: day.destination,
-      destination_ref: day.destination_ref,
-      accommodation_id: matchingHotel?.accommodation_id ?? null,
-      accommodation_name: matchingHotel?.name ?? null,
-      room_type: matchingHotel?.room_type ?? null,
-      summary: day.summary,
+      destination: dest,
+      destination_ref: day.destination_ref ?? null,
+      overnight,
+      overnight_ref: overnightRef,
+      accommodation_id: day.accommodation_id ?? null,
+      accommodation_name: day.accommodation_name ?? null,
+      room_type: day.room_type ?? null,
+      summary: day.summary ?? null,
     };
   });
 }
@@ -53,15 +51,17 @@ export function syncRouteTableToFacts(
 
   const itinerary: ItineraryDayFact[] = items.map((item, idx) => {
     const existing = safe.trip_facts.itinerary[idx];
+    const resolvedOvernight =
+      item.overnight !== undefined
+        ? item.overnight
+        : (existing?.overnight || item.destination);
+
     return {
       day_number: item.day_number,
       destination: item.destination,
       destination_ref: item.destination_ref ?? null,
       summary: item.summary,
-      overnight: inferOvernightDestination(
-        item.destination,
-        existing?.overnight || item.destination
-      ),
+      overnight: resolvedOvernight,
       highlights: existing?.highlights ?? [],
       meals: existing?.meals ?? ["Breakfast"],
       notes: existing?.notes ?? [],
@@ -74,11 +74,21 @@ export function syncRouteTableToFacts(
   });
 
   const destinationRefs = routeDestinationRefsFromItinerary(itinerary);
+  const destinations =
+    destinationRefs.length > 0
+      ? destinationRefs.map((r) => r.name)
+      : Array.from(
+          new Set(
+            itinerary.map((d) => d.destination).filter((d): d is string => Boolean(d))
+          )
+        );
 
-  // Consolidate contiguous stays from day items using domain rules
-  const consolidatedHotels = consolidateStaysFromDayItems(items, safe.trip_facts.start_date);
-  const hotels: HotelFact[] =
-    consolidatedHotels.length > 0 ? consolidatedHotels : safe.service_facts.hotels;
+  const stays = staysReconciler.reconcileStaysFromItinerary(
+    itinerary,
+    safe.trip_facts.start_date,
+    safe.service_facts.hotels
+  );
+  const hotels = staysReconciler.toHotelFacts(stays);
 
   return {
     ...safe,
@@ -86,7 +96,7 @@ export function syncRouteTableToFacts(
       ...safe.trip_facts,
       itinerary,
       destination_refs: destinationRefs,
-      destinations: destinationRefs.map((r) => r.name),
+      destinations,
     },
     service_facts: {
       ...safe.service_facts,

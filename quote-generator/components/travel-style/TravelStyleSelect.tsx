@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { Tag, Plus, X, Sparkles } from "lucide-react";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
-import type { TravelStyleSelectProps } from "./types";
-import { useTravelStyles } from "./useTravelStyles";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
+import type { TravelStyleSelectProps } from "./types.ts";
+import { useTravelStyles } from "./useTravelStyles.ts";
 
 export function TravelStyleSelect({
   label = "Travel Style",

@@ -2,8 +2,8 @@
 
 import { useMemo } from "react";
 import useSWR from "swr";
-import { listTravelStyles } from "../../../lib/quotationApi";
-import type { FlatTravelStyleTag } from "../tourComponentsCatalog";
+import { listTravelStyles } from "../../../lib/quotationApi.ts";
+import type { FlatTravelStyleTag } from "../tourComponentsCatalog.ts";
 
 export function useTravelStyleCatalog(
   enabled: boolean,

@@ -1,9 +1,9 @@
 "use client";
 
 import { Calendar, Bed, MapPin } from "lucide-react";
-import DetailSectionCard from "./DetailSectionCard";
-import { getTypographyClassName } from "../../../config/typography";
-import { cn } from "../../../utils/cn";
+import DetailSectionCard from "./DetailSectionCard.tsx";
+import { getTypographyClassName } from "../../../config/typography.ts";
+import { cn } from "../../../utils/cn.ts";
 
 type ItineraryDayItem = {
   day_number?: number | null;

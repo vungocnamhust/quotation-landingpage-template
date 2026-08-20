@@ -1,9 +1,9 @@
 "use client";
 
 import { User, Briefcase } from "lucide-react";
-import { getTypographyClassName } from "../../config/typography";
-import { cn } from "../../utils/cn";
-import type { QuoteRequestRole } from "./factsTypes";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { cn } from "../../utils/cn.ts";
+import type { QuoteRequestRole } from "./factsTypes.ts";
 
 type Props = {
   value: QuoteRequestRole;

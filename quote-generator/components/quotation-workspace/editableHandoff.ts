@@ -1,4 +1,4 @@
-import type { EditableBrochureContract, EditableHandoff } from './useQuotationWorkspace';
+import type { EditableBrochureContract, EditableHandoff } from './useQuotationWorkspace.ts';
 
 export type InspectorDescriptor = EditableBrochureContract['fields'][number];
 

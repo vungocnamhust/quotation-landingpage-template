@@ -1,7 +1,7 @@
 "use client";
 
-import { PartnerSelect } from "../partner/PartnerSelect";
-import type { PartnerProfile } from "../partner/types";
+import { PartnerSelect } from "../partner/PartnerSelect.tsx";
+import type { PartnerProfile } from "../partner/types.ts";
 
 type Props = {
   value: string | null;

@@ -1,4 +1,4 @@
-import type { TravelStyleCategoryGroup, TravelStyleTagItem } from "../../lib/quotationApi";
+import type { TravelStyleCategoryGroup, TravelStyleTagItem } from "../../lib/quotationApi.ts";
 
 export type { TravelStyleCategoryGroup, TravelStyleTagItem };
 

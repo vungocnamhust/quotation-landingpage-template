@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
-import type { DisplayDocument } from "../../display/runtimePageBuilder";
-import type { ViewMode } from "../../display/contracts";
-import IsolatedPreviewCanvas, { type DevicePreset } from "../preview/IsolatedPreviewCanvas";
+import type { DisplayDocument } from "../../display/runtimePageBuilder.ts";
+import type { ViewMode } from "../../display/contracts.ts";
+import IsolatedPreviewCanvas, { type DevicePreset } from "../preview/IsolatedPreviewCanvas.tsx";
 
 export interface BrochurePreviewModalProps {
   isOpen: boolean;

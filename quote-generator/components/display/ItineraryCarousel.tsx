@@ -2,10 +2,10 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
-import type { TextValue, TypographySlotMap } from '../../display/types';
-import { textValue } from '../../display/types';
-import { requireTypographySlot } from '../../display/typographySlots';
-import { getTypographyClassName } from '../../config/typography';
+import type { TextValue, TypographySlotMap } from '../../display/types.ts';
+import { textValue } from '../../display/types.ts';
+import { requireTypographySlot } from '../../display/typographySlots.ts';
+import { getTypographyClassName } from '../../config/typography.ts';
 
 export default function ItineraryCarousel({
   images,

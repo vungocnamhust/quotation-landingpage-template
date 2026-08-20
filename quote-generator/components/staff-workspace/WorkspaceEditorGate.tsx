@@ -1,10 +1,10 @@
 "use client";
 
 import useSWR from "swr";
-import QuotationWorkspaceClient from "../quotation-workspace/QuotationWorkspaceClient";
-import { getTypographyClassName } from "../../config/typography";
-import { quotationFetch } from "../../lib/apiError";
-import { cn } from "../../utils/cn";
+import QuotationWorkspaceClient from "../quotation-workspace/QuotationWorkspaceClient.tsx";
+import { getTypographyClassName } from "../../config/typography.ts";
+import { quotationFetch } from "../../lib/apiError.ts";
+import { cn } from "../../utils/cn.ts";
 
 const API_BASE = process.env.NEXT_PUBLIC_QUOTATION_API_URL ?? "";
 type Overview = { quotation: { locale: string } };

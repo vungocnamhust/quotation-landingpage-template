@@ -1,10 +1,10 @@
 "use client";
 
-import { getTypographyClassName } from "../../../config/typography";
-import { cn } from "../../../utils/cn";
-import { DayEditorCard } from "./DayEditorCard";
-import type { ItineraryDayFact, TripFact } from "../factsTypes";
-import type { MediaWorkspace } from "../MediaSlotRenderer";
+import { getTypographyClassName } from "../../../config/typography.ts";
+import { cn } from "../../../utils/cn.ts";
+import { DayEditorCard } from "./DayEditorCard.tsx";
+import type { ItineraryDayFact, TripFact } from "../factsTypes.ts";
+import type { MediaWorkspace } from "../MediaSlotRenderer.tsx";
 
 type Props = {
   trip: TripFact;

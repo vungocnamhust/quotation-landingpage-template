@@ -1,9 +1,9 @@
 'use client';
 
-import { cn } from '../../utils/cn';
-import { getTypographyClassName } from '../../config/typography';
-import type { ContentCandidate, ContentEditorField } from '../quotation-workspace/useQuotationWorkspace';
-import { RichTextEditor } from '../ui/RichTextEditor';
+import { cn } from '../../utils/cn.ts';
+import { getTypographyClassName } from '../../config/typography.ts';
+import type { ContentCandidate, ContentEditorField } from '../quotation-workspace/useQuotationWorkspace.ts';
+import { RichTextEditor } from '../ui/RichTextEditor.tsx';
 
 export function cloneCandidate(value: ContentCandidate): ContentCandidate {
   return JSON.parse(JSON.stringify(value)) as ContentCandidate;

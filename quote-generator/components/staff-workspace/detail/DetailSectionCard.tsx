@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import { getTypographyClassName } from "../../../config/typography";
-import { cn } from "../../../utils/cn";
+import { getTypographyClassName } from "../../../config/typography.ts";
+import { cn } from "../../../utils/cn.ts";
 
 type Props = {
   title: string;
