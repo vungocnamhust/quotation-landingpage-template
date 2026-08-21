@@ -21,6 +21,7 @@ class DestinationCatalogRequest(BaseModel):
     provinceSlug: str | None = None
     latitude: float
     longitude: float
+    mediaPrefix: str | None = None
 
     @field_validator("canonicalName", "slug")
     @classmethod

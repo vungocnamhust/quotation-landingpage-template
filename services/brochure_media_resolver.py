@@ -69,7 +69,7 @@ def destination_aliases(destination_ref: Any, fallback_ref: Any = None) -> set[s
     aliases: set[str] = set()
 
     # 1. Raw fields inspection
-    for field in ("id", "destinationId", "slug", "name", "segmentCity", "destination", "city", "overnight"):
+    for field in ("id", "destinationId", "slug", "name", "segmentCity", "destination", "city", "overnight", "media_prefix", "mediaPrefix"):
         val = str(destination.get(field) or fallback.get(field) or "").strip()
         if not val or val.startswith(("day-", "hotel-", "stay-")):
             continue

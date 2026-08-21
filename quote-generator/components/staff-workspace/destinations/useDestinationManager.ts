@@ -20,6 +20,7 @@ export const blankDestinationInput = (): DestinationCatalogInput => ({
   latitude: 0,
   longitude: 0,
   aliases: [],
+  mediaPrefix: null,
 });
 
 export function profileToInput(profile: DestinationProfile): DestinationCatalogInput {
@@ -32,6 +33,7 @@ export function profileToInput(profile: DestinationProfile): DestinationCatalogI
     latitude: profile.latitude ?? 0,
     longitude: profile.longitude ?? 0,
     aliases: profile.aliases ?? [],
+    mediaPrefix: profile.mediaPrefix ?? null,
   };
 }
 
@@ -129,6 +131,7 @@ export function useDestinationManager(
         ...draft,
         canonicalName: draft.canonicalName.trim(),
         slug: draft.slug.trim(),
+        mediaPrefix: draft.mediaPrefix?.trim() || null,
         aliases: normalizedAliases,
       };
 

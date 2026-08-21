@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPin, CheckCircle2, XCircle } from "lucide-react";
+import { MapPin, CheckCircle2, XCircle, Folder } from "lucide-react";
 import { getTypographyClassName } from "../../../config/typography.ts";
 import { cn } from "../../../utils/cn.ts";
 import type { DestinationProfile } from "../../../lib/quotationApi.ts";
@@ -103,6 +103,25 @@ export function createDestinationColumns(
               —
             </span>
           )}
+        </div>
+      ),
+    },
+    {
+      key: "mediaFolder",
+      header: "Media Folder",
+      render: (profile) => (
+        <div className="flex items-center gap-1.5 max-w-[220px]">
+          <Folder size={13} className="shrink-0 text-[var(--color-muted)]" />
+          <span
+            className={cn(
+              getTypographyClassName("caption"),
+              "font-mono truncate",
+              profile.mediaPrefix ? "text-[var(--color-accent)]" : "text-[var(--color-muted)]"
+            )}
+            title={profile.mediaPrefix || profile.defaultMediaPrefix || `destination/${profile.slug}`}
+          >
+            {profile.mediaPrefix || profile.defaultMediaPrefix || `destination/${profile.slug}`}
+          </span>
         </div>
       ),
     },

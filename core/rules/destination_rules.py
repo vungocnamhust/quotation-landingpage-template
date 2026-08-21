@@ -5,6 +5,18 @@ It serves as the Single Source of Truth for destination text matching and catalo
 """
 from __future__ import annotations
 
+import unicodedata
+
+
+def remove_diacritics(text: str) -> str:
+    """Normalize and strip Vietnamese / international diacritics."""
+    if not text:
+        return ""
+    text = text.replace("đ", "d").replace("Đ", "d")
+    normalized = unicodedata.normalize("NFD", text)
+    return "".join(c for c in normalized if unicodedata.category(c) != "Mn")
+
+
 # Supported destination slugs (Vietnam provinces + Indochina / SE Asia gateways)
 VALID_DESTINATION_SLUGS: set[str] = {
     # Vietnam

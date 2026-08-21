@@ -314,6 +314,8 @@ export type DestinationProfile = {
   longitude: number | null;
   isActive: boolean;
   aliases: string[];
+  mediaPrefix?: string | null;
+  defaultMediaPrefix?: string;
   matchedFrom?: string;
 };
 
@@ -326,6 +328,7 @@ export type DestinationCatalogInput = {
   latitude: number;
   longitude: number;
   aliases: string[];
+  mediaPrefix?: string | null;
 };
 
 export type DestinationListResponse = {

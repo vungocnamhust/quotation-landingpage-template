@@ -7771,6 +7771,8 @@ async def search_media_library(prefix: str, query: str, cursor: int = 0, limit: 
 
 
 async def _serialize_destination(repository: DestinationRepository, item, *, matched_from: str | None = None) -> dict[str, Any]:
+    geo_parts = [item.country_slug, item.region_slug, item.province_slug, item.slug]
+    default_media_prefix = "/".join(p for p in geo_parts if p) or item.slug
     payload = {
         "id": item.id,
         "name": item.canonical_name,
@@ -7781,6 +7783,8 @@ async def _serialize_destination(repository: DestinationRepository, item, *, mat
         "latitude": float(item.latitude) if item.latitude is not None else None,
         "longitude": float(item.longitude) if item.longitude is not None else None,
         "isActive": item.is_active,
+        "mediaPrefix": item.media_prefix,
+        "defaultMediaPrefix": default_media_prefix,
         "aliases": await repository.aliases_for(item.id),
     }
     if matched_from is not None:
@@ -7807,10 +7811,21 @@ async def _save_destination(session, payload: DestinationCatalogRequest, item=No
             province_slug=payload.provinceSlug,
             latitude=payload.latitude,
             longitude=payload.longitude,
+            media_prefix=payload.mediaPrefix,
         )
     if payload.slug != item.slug:
         raise HTTPException(status_code=422, detail={"message": "Destination slug is immutable.", "missingInputs": ["slug"]})
-    return await repository.update(item, canonical_name=payload.canonicalName, aliases=payload.aliases, country_slug=payload.countrySlug, region_slug=payload.regionSlug, province_slug=payload.provinceSlug, latitude=payload.latitude, longitude=payload.longitude)
+    return await repository.update(
+        item,
+        canonical_name=payload.canonicalName,
+        aliases=payload.aliases,
+        country_slug=payload.countrySlug,
+        region_slug=payload.regionSlug,
+        province_slug=payload.provinceSlug,
+        latitude=payload.latitude,
+        longitude=payload.longitude,
+        media_prefix=payload.mediaPrefix,
+    )
 
 
 from routers.v2.destinations import (

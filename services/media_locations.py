@@ -27,6 +27,9 @@ class MediaLocation:
 
 
 def destination_location(destination: DestinationCatalog) -> MediaLocation:
+    if destination.media_prefix and destination.media_prefix.strip():
+        leaf_prefix = destination.media_prefix.strip().strip("/")
+        return MediaLocation("destination", leaf_prefix, "destination", destination.id, destination_id=destination.id)
     parts = [destination.country_slug, destination.region_slug, destination.province_slug, destination.slug]
     if not all(parts):
         raise ValueError("Destination geographic mapping is incomplete.")

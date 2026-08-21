@@ -26,6 +26,7 @@ class DestinationCatalog(Base):
     latitude: Mapped[float | None] = mapped_column(Numeric(8, 5), nullable=True)
     longitude: Mapped[float | None] = mapped_column(Numeric(8, 5), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default="true")
+    media_prefix: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     mapping_version: Mapped[str] = mapped_column(String(64), nullable=False, default="resolver-v1", server_default="resolver-v1")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, type KeyboardEvent } from "react";
-import { X, Plus, MapPin, Globe, Compass, Tag } from "lucide-react";
+import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
+import { X, Plus, MapPin, Globe, Compass, Tag, Folder } from "lucide-react";
 import { getTypographyClassName } from "../../../config/typography.ts";
 import { cn } from "../../../utils/cn.ts";
 import type { DestinationCatalogInput, DestinationProfile } from "../../../lib/quotationApi.ts";
@@ -71,6 +71,16 @@ function DestinationDrawerModalContent({
 }: Props) {
   const [aliasInput, setAliasInput] = useState("");
   const [isSlugCustomized, setIsSlugCustomized] = useState(() => Boolean(editing));
+
+  const defaultPrefix = useMemo(() => {
+    const parts = [
+      draft.countrySlug || "vietnam",
+      draft.regionSlug,
+      draft.provinceSlug,
+      draft.slug || "destination",
+    ].filter(Boolean);
+    return `destination/${parts.join("/")}`;
+  }, [draft.countrySlug, draft.regionSlug, draft.provinceSlug, draft.slug]);
 
   const handleNameChange = (name: string) => {
     if (!editing && !isSlugCustomized) {
@@ -385,6 +395,48 @@ function DestinationDrawerModalContent({
                 )}
               >
                 Required for interactive map routing and distance calculations.
+              </span>
+            </div>
+
+            {/* R2 Media Folder Prefix */}
+            <div className="flex flex-col gap-1.5">
+              <label
+                htmlFor="media-prefix-input"
+                className={cn(
+                  getTypographyClassName("label"),
+                  "flex items-center gap-1.5 text-[var(--color-on-surface)]"
+                )}
+              >
+                <Folder size={13} className="text-[var(--color-muted)]" />
+                <span>R2 Media Folder Prefix</span>
+                <span className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)] ml-1")}>
+                  (Optional)
+                </span>
+              </label>
+              <input
+                id="media-prefix-input"
+                type="text"
+                value={draft.mediaPrefix ?? ""}
+                onChange={(e) =>
+                  onDraftChange({
+                    ...draft,
+                    mediaPrefix: e.target.value || null,
+                  })
+                }
+                placeholder={`e.g. ${defaultPrefix}`}
+                className={cn(
+                  getTypographyClassName("bodyMd"),
+                  "min-h-11 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3.5 font-mono text-[var(--color-on-surface)] placeholder:text-[var(--color-muted)] focus:border-[var(--color-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-wash)]"
+                )}
+              />
+              <span
+                className={cn(
+                  getTypographyClassName("caption"),
+                  "text-[var(--color-muted)]"
+                )}
+              >
+                Leave empty to automatically use the standard folder convention:{" "}
+                <code className="rounded bg-[var(--color-surface-muted)] px-1 py-0.5">{defaultPrefix}</code>
               </span>
             </div>
 

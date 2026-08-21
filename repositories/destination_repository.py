@@ -16,10 +16,10 @@ class DestinationRepository:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
-    async def upsert(self, *, destination_id: str, canonical_name: str, slug: str, aliases: list[str], country_slug: str | None = None, region_slug: str | None = None, province_slug: str | None = None, latitude: float | None = None, longitude: float | None = None) -> DestinationCatalog:
+    async def upsert(self, *, destination_id: str, canonical_name: str, slug: str, aliases: list[str], country_slug: str | None = None, region_slug: str | None = None, province_slug: str | None = None, latitude: float | None = None, longitude: float | None = None, media_prefix: str | None = None) -> DestinationCatalog:
         item = await self.session.get(DestinationCatalog, destination_id)
         if item is None:
-            item = DestinationCatalog(id=destination_id, canonical_name=canonical_name, slug=slug, country_slug=country_slug, region_slug=region_slug, province_slug=province_slug, latitude=latitude, longitude=longitude)
+            item = DestinationCatalog(id=destination_id, canonical_name=canonical_name, slug=slug, country_slug=country_slug, region_slug=region_slug, province_slug=province_slug, latitude=latitude, longitude=longitude, media_prefix=media_prefix)
             self.session.add(item)
         else:
             # Seed calls are intentionally non-destructive: once an administrator
@@ -28,6 +28,8 @@ class DestinationRepository:
                 item.latitude = latitude
             if item.longitude is None and longitude is not None:
                 item.longitude = longitude
+            if item.media_prefix is None and media_prefix is not None:
+                item.media_prefix = media_prefix
         for alias in {normalize_destination(value) for value in [canonical_name, slug, *aliases] if normalize_destination(value)}:
             existing = await self.session.scalar(select(DestinationAlias).where(DestinationAlias.normalized_alias == alias))
             if existing is None:
@@ -56,8 +58,8 @@ class DestinationRepository:
                 return value
         return None
 
-    async def create(self, *, destination_id: str, canonical_name: str, slug: str, aliases: list[str], country_slug: str | None, region_slug: str | None, province_slug: str | None, latitude: float, longitude: float) -> DestinationCatalog:
-        item = DestinationCatalog(id=destination_id, canonical_name=canonical_name, slug=slug, country_slug=country_slug, region_slug=region_slug, province_slug=province_slug, latitude=latitude, longitude=longitude, is_active=True)
+    async def create(self, *, destination_id: str, canonical_name: str, slug: str, aliases: list[str], country_slug: str | None, region_slug: str | None, province_slug: str | None, latitude: float, longitude: float, media_prefix: str | None = None) -> DestinationCatalog:
+        item = DestinationCatalog(id=destination_id, canonical_name=canonical_name, slug=slug, country_slug=country_slug, region_slug=region_slug, province_slug=province_slug, latitude=latitude, longitude=longitude, media_prefix=media_prefix, is_active=True)
         self.session.add(item)
         for alias in {normalize_destination(value) for value in [canonical_name, slug, *aliases] if normalize_destination(value)}:
             digest = hashlib.sha256(alias.encode("utf-8")).hexdigest()[:20]
@@ -65,10 +67,11 @@ class DestinationRepository:
         await self.session.flush()
         return item
 
-    async def update(self, item: DestinationCatalog, *, canonical_name: str, aliases: list[str], country_slug: str | None, region_slug: str | None, province_slug: str | None, latitude: float, longitude: float) -> DestinationCatalog:
+    async def update(self, item: DestinationCatalog, *, canonical_name: str, aliases: list[str], country_slug: str | None, region_slug: str | None, province_slug: str | None, latitude: float, longitude: float, media_prefix: str | None = None) -> DestinationCatalog:
         item.canonical_name = canonical_name
         item.country_slug, item.region_slug, item.province_slug = country_slug, region_slug, province_slug
         item.latitude, item.longitude = latitude, longitude
+        item.media_prefix = media_prefix
         for alias in {normalize_destination(value) for value in [canonical_name, item.slug, *aliases] if normalize_destination(value)}:
             existing = await self.session.scalar(select(DestinationAlias).where(DestinationAlias.normalized_alias == alias))
             if existing is None:
@@ -153,5 +156,60 @@ class DestinationRepository:
             item = await self.session.scalar(fallback_stmt)
             if item is not None:
                 return item
+
+        # 3. Dynamic Fuzzy & Token-based Substring Matcher over DB Aliases (Layer 3)
+        # Enables automatic matching for newly added destinations and aliases without code changes.
+        import difflib
+        import re
+        from core.rules.destination_rules import remove_diacritics
+
+        clean_input = remove_diacritics(value).casefold().strip()
+        input_words = re.findall(r"\b\w+\b", clean_input)
+        input_text = " ".join(input_words)
+        if not input_text:
+            return None
+
+        alias_stmt = (
+            select(DestinationCatalog, DestinationAlias.normalized_alias)
+            .join(DestinationAlias, DestinationAlias.destination_id == DestinationCatalog.id)
+            .where(DestinationCatalog.is_active.is_(True))
+        )
+        alias_rows = (await self.session.execute(alias_stmt)).all()
+
+        best_item: DestinationCatalog | None = None
+        best_score = 0.0
+
+        for dest, alias_str in alias_rows:
+            clean_alias = remove_diacritics(alias_str).casefold().strip()
+            alias_words = re.findall(r"\b\w+\b", clean_alias)
+            alias_text = " ".join(alias_words)
+            if not alias_text:
+                continue
+
+            # Check 3.1: Multi-word / single significant word containment in input
+            alias_regex = r"\b" + re.escape(alias_text) + r"\b"
+            if re.search(alias_regex, input_text):
+                containment_score = 0.85 + min(0.14, len(alias_words) * 0.05)
+                if containment_score > best_score:
+                    best_score = containment_score
+                    best_item = dest
+                continue
+
+            # Check 3.2: Reverse containment (input is a sub-phrase of alias)
+            if len(input_words) >= 2 and re.search(r"\b" + re.escape(input_text) + r"\b", alias_text):
+                containment_score = 0.82 + min(0.10, len(input_words) * 0.04)
+                if containment_score > best_score:
+                    best_score = containment_score
+                    best_item = dest
+                continue
+
+            # Check 3.3: SequenceMatcher ratio
+            ratio = difflib.SequenceMatcher(None, input_text, alias_text).ratio()
+            if ratio >= 0.80 and ratio > best_score:
+                best_score = ratio
+                best_item = dest
+
+        if best_item is not None and best_score >= 0.80:
+            return best_item
 
         return None

@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from "react";
-import { MapPin, CheckCircle2, XCircle, Globe, Compass } from "lucide-react";
+import { MapPin, CheckCircle2, XCircle, Globe, Compass, Folder } from "lucide-react";
 import { getTypographyClassName } from "../../../config/typography.ts";
 import { cn } from "../../../utils/cn.ts";
 import type { DestinationProfile } from "../../../lib/quotationApi.ts";
@@ -112,6 +112,23 @@ export const DestinationCard = memo(function DestinationCard({
               No GPS coordinates set
             </span>
           )}
+        </div>
+
+        {/* Media Folder */}
+        <div
+          className={cn(
+            getTypographyClassName("caption"),
+            "mt-2 flex items-center gap-1.5 text-[var(--color-muted)]"
+          )}
+        >
+          <Folder size={13} className="shrink-0 text-[var(--color-muted)]" />
+          <span className="font-mono truncate">
+            {profile.mediaPrefix ? (
+              <span className="text-[var(--color-accent)]">{profile.mediaPrefix}</span>
+            ) : (
+              <span>{profile.defaultMediaPrefix || `destination/${profile.slug}`}</span>
+            )}
+          </span>
         </div>
 
         {/* Aliases */}
