@@ -138,11 +138,16 @@ export default function RouteMapExperience({
       return;
     }
 
+    const isPdf = viewMode === 'pdf';
     const map = L.map(mapContainerRef.current, {
-      zoomControl: true,
-      attributionControl: true,
+      zoomControl: !isPdf,
+      attributionControl: !isPdf,
       scrollWheelZoom: false,
-      dragging: true,
+      dragging: !isPdf,
+      touchZoom: !isPdf,
+      doubleClickZoom: !isPdf,
+      boxZoom: !isPdf,
+      keyboard: !isPdf,
     });
 
     const bounds = L.latLngBounds(points as LatLngExpression[]);
@@ -250,11 +255,15 @@ export default function RouteMapExperience({
           markerColor: mapColors.marker,
           activeMarkerColor: mapColors.activeMarker,
         }),
+        interactive: viewMode !== 'pdf',
       })
-        .addTo(map)
-        .on('click', () => {
+        .addTo(map);
+
+      if (viewMode !== 'pdf') {
+        marker.on('click', () => {
           setActiveSequence(segment.sequence);
         });
+      }
 
       markerMapRef.current.set(segment.sequence, marker);
     });
@@ -293,7 +302,7 @@ export default function RouteMapExperience({
   }, [activeSequence, mapColors, points, typography, viewMode, viewModel.segments]);
 
   return (
-    <div className={cn('display-route-map', viewMode === 'mobile' && 'is-mobile')}>
+    <div className={cn('display-route-map', viewMode === 'mobile' && 'is-mobile', viewMode === 'pdf' && 'is-pdf')}>
       <div className="display-route-map__screen">
         <div className="display-route-map__screen-map">
           <div className="display-route-map__canvas">

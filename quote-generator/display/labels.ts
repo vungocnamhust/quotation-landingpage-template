@@ -6,7 +6,6 @@ const I18N_LABELS = {
     brochureTheme: 'BROCHURE THEME',
     routeMapOverview: 'Route map overview',
     hotelTelephonePrefix: 'TEL',
-    confirmedMainOption: 'CONFIRMED MAIN OPTION',
     consideredInFull: 'Considered in Full',
     classic: 'Classic',
     image: 'Image',
@@ -51,6 +50,15 @@ const I18N_LABELS = {
     inclusionsDescription: 'Detailed inclusions and exclusions for this proposal.',
     bookingTermsTitle: 'Booking Terms',
     bookingTermsDescription: 'Terms are shared clearly before confirmation.',
+    termDepositLabel: 'Deposit',
+    termDepositBody:
+      'A deposit of 30% of the total tour cost is required upon confirmation of the booking. This deposit is non-refundable.\n\nFor bookings confirmed within 60 days of arrival, full payment of 100% of the total tour cost is required at the time of confirmation.',
+    termBalanceLabel: 'Balance',
+    termBalanceBody:
+      'The remaining 70% balance must be paid no later than 60 days prior to the scheduled arrival date.',
+    termCancellationLabel: 'Cancellation',
+    termCancellationBody:
+      'Written notice required. Cancellation fees apply based on arrival date:\n• > 45 days prior: Deposit forfeited (30%)\n• 45 – 31 days prior: 50% of total tour cost\n• 30 – 20 days prior: 75% of total tour cost\n• < 20 days prior: 100% of total tour cost\n\nAny non-refundable payments, cancellation charges or penalties imposed by hotels, airlines, cruise operators and other service providers may also apply.',
     finalizationKicker: 'NEXT STEPS',
     finalizationTitle: 'Finalization Checklist',
     finalizationDescription: 'The remaining details we will confirm together.',
@@ -73,7 +81,6 @@ const I18N_LABELS = {
     brochureTheme: 'BROCHURE THEME',
     routeMapOverview: 'Tổng quan bản đồ hành trình',
     hotelTelephonePrefix: 'ĐT',
-    confirmedMainOption: 'LỰA CHỌN CHÍNH ĐÃ XÁC NHẬN',
     consideredInFull: 'Được Cân Nhắc Trọn Vẹn',
     classic: 'Bản đồ',
     image: 'Hình ảnh',
@@ -118,6 +125,15 @@ const I18N_LABELS = {
     inclusionsDescription: 'Chi tiết các dịch vụ bao gồm và không bao gồm trong đề xuất này.',
     bookingTermsTitle: 'Điều Khoản Đặt Chỗ',
     bookingTermsDescription: 'Điều khoản được chia sẻ minh bạch trước khi xác nhận.',
+    termDepositLabel: 'Đặt cọc',
+    termDepositBody:
+      'Khoản đặt cọc 30% tổng chi phí chuyến đi được yêu cầu ngay khi xác nhận đặt chỗ. Khoản đặt cọc này không hoàn lại.\n\nĐối với các đặt chỗ được xác nhận trong vòng 60 ngày trước ngày khởi hành, cần thanh toán 100% tổng chi phí tại thời điểm xác nhận.',
+    termBalanceLabel: 'Thanh toán còn lại',
+    termBalanceBody:
+      'Số tiền 70% còn lại phải được thanh toán không muộn hơn 60 ngày trước ngày khởi hành dự kiến.',
+    termCancellationLabel: 'Hủy dịch vụ',
+    termCancellationBody:
+      'Yêu cầu thông báo bằng văn bản. Phí hủy dịch vụ áp dụng dựa trên ngày khởi hành:\n• > 45 ngày trước khởi hành: Mất cọc (30%)\n• 45 – 31 ngày trước khởi hành: 50% tổng chi phí tour\n• 30 – 20 ngày trước khởi hành: 75% tổng chi phí tour\n• < 20 ngày trước khởi hành: 100% tổng chi phí tour\n\nMọi khoản thanh toán không hoàn lại hoặc chi phí phạt từ khách sạn, hãng hàng không, du thuyền và đối tác cung cấp dịch vụ có thể áp dụng thêm.',
     finalizationKicker: 'BƯỚC TIẾP THEO',
     finalizationTitle: 'Thông Tin Xác Nhận',
     finalizationDescription: 'Những chi tiết còn lại chúng ta sẽ cùng xác nhận.',
@@ -140,7 +156,6 @@ const I18N_LABELS = {
     brochureTheme: 'نمط الكتيب',
     routeMapOverview: 'نظرة عامة على خريطة الرحلة',
     hotelTelephonePrefix: 'هاتف',
-    confirmedMainOption: 'الخيار الرئيسي المؤكد',
     consideredInFull: 'اختيار مدروس بالكامل',
     classic: 'الخريطة',
     image: 'الصور',
@@ -185,6 +200,15 @@ const I18N_LABELS = {
     inclusionsDescription: 'تفاصيل الخدمات المشمولة والمستثناة من هذا المقترح.',
     bookingTermsTitle: 'شروط الحجز',
     bookingTermsDescription: 'تتم مشاركة الشروط بوضوح قبل التأكيد.',
+    termDepositLabel: 'العربون',
+    termDepositBody:
+      'يلزم دفع عربون بنسبة 30% من إجمالي تكلفة الجولة عند تأكيد الحجز. هذا العربون غير قابل للاسترداد.\n\nبالنسبة للحجوزات المؤكدة في غضون 60 يومًا من تاريخ الوصول، يلزم سداد كامل المبلغ بنسبة 100% في وقت التأكيد.',
+    termBalanceLabel: 'الرصيد المتبقي',
+    termBalanceBody:
+      'يجب سداد الرصيد المتبقي البالغ 70% في موعد لا يتجاوز 60 يومًا قبل تاريخ الوصول المقرر.',
+    termCancellationLabel: 'الإلغاء',
+    termCancellationBody:
+      'يلزم تقديم إشعار خطي. تطبق رسوم الإلغاء بناءً على تاريخ الوصول:\n• أكثر من 45 يومًا: مصادرة العربون (30%)\n• 45 - 31 يومًا: 50% من إجمالي تكلفة الجولة\n• 30 - 20 يومًا: 75% من إجمالي تكلفة الجولة\n• أقل من 20 يومًا: 100% من إجمالي تكلفة الجولة\n\nقد تنطبق أيضًا أي مدفوعات غير قابلة للاسترداد أو غرامات مفروضة من الفنادق وشركات الطيران ومقدمي الخدمات.',
     finalizationKicker: 'الخطوات التالية',
     finalizationTitle: 'قائمة التحقق النهائية',
     finalizationDescription: 'التفاصيل المتبقية التي سنؤكدها معا.',

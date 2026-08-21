@@ -80,6 +80,19 @@ class DayOutput(_CopyModel):
         return cleaned
 
 
+class BrochureNarrativeBatchOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    hero: HeroOutput
+    overview_letter: OverviewOutput
+    route: RouteOutput
+    itinerary: ItineraryOutput
+
+
+class ItineraryDaysBatchOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    days: list[DayOutput] = Field(min_length=1, max_length=64)
+
+
 def normalize_instruction(instruction: str) -> str:
     return " ".join(instruction.split())
 
@@ -90,7 +103,7 @@ def default_instruction(scope: str, mode: str) -> str:
 
 
 class SectionContentGenerator:
-    """One typed Pydantic AI request per scope, never a broad narrative result."""
+    """One typed Pydantic AI request per scope, or parallel dual-stream batch generation."""
 
     _models: dict[str, Type[_CopyModel]] = {
         "hero": HeroOutput,
@@ -126,7 +139,6 @@ class SectionContentGenerator:
             facts_snapshot=facts_snapshot,
             brand_id=brand.brand_id,
         )
-
 
     @staticmethod
     def _system_prompt(brand: BrandProfile, scope: str = "hero") -> str:
@@ -206,4 +218,95 @@ class SectionContentGenerator:
             "userPrompt": bundle.user_prompt,
             "promptVersion": bundle.version,
         }
+
+    async def generate_narrative_batch(
+        self,
+        *,
+        brand: BrandProfile,
+        facts_snapshot: dict[str, Any],
+        mode: str,
+        instruction: str = "",
+    ) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
+        effective_instruction = normalize_instruction(instruction) or default_instruction("brochure_narrative_batch", mode)
+        source = "custom" if normalize_instruction(instruction) else "default"
+        bundle = self.build_prompt_bundle(
+            scope="brochure_narrative_batch",
+            brand=brand,
+            facts_snapshot=facts_snapshot,
+            mode=mode,
+            instruction=effective_instruction,
+        )
+        agent = Agent(
+            model=llm_client.get_model(),
+            output_type=BrochureNarrativeBatchOutput,
+            system_prompt=bundle.system_prompt,
+            retries=2,
+        )
+        try:
+            result = await agent.run(bundle.user_prompt)
+        except Exception as exc:
+            raise ContentGenerationError("Narrative batch generation did not return valid copy. Please retry.") from exc
+
+        output: BrochureNarrativeBatchOutput = result.output
+        candidates = {
+            "hero": self._candidate("hero", output.hero),
+            "overview_letter": self._candidate("overview_letter", output.overview_letter),
+            "route": self._candidate("route", output.route),
+            "itinerary": self._candidate("itinerary", output.itinerary),
+        }
+        metadata = {
+            "instructionSource": source,
+            "effectiveInstruction": effective_instruction,
+            "brandPolicyVersion": BRAND_POLICY_VERSION,
+            "systemPrompt": bundle.system_prompt,
+            "userPrompt": bundle.user_prompt,
+            "promptVersion": bundle.version,
+        }
+        return candidates, metadata
+
+    async def generate_itinerary_days_batch(
+        self,
+        *,
+        brand: BrandProfile,
+        facts_snapshot: dict[str, Any],
+        mode: str,
+        instruction: str = "",
+    ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+        effective_instruction = normalize_instruction(instruction) or default_instruction("itinerary_days_batch", mode)
+        source = "custom" if normalize_instruction(instruction) else "default"
+        bundle = self.build_prompt_bundle(
+            scope="itinerary_days_batch",
+            brand=brand,
+            facts_snapshot=facts_snapshot,
+            mode=mode,
+            instruction=effective_instruction,
+        )
+        agent = Agent(
+            model=llm_client.get_model(),
+            output_type=ItineraryDaysBatchOutput,
+            system_prompt=bundle.system_prompt,
+            retries=2,
+        )
+        try:
+            result = await agent.run(bundle.user_prompt)
+        except Exception as exc:
+            raise ContentGenerationError("Itinerary days batch generation did not return valid copy. Please retry.") from exc
+
+        output: ItineraryDaysBatchOutput = result.output
+        input_days = facts_snapshot.get("itinerary_days") or facts_snapshot.get("itinerary") or []
+        candidates = []
+        for idx, day_model in enumerate(output.days):
+            day_num = input_days[idx].get("day_number") if idx < len(input_days) and isinstance(input_days[idx], dict) else idx + 1
+            day_data = day_model.model_dump(mode="json")
+            candidates.append({"dayNumber": day_num, **day_data})
+
+        metadata = {
+            "instructionSource": source,
+            "effectiveInstruction": effective_instruction,
+            "brandPolicyVersion": BRAND_POLICY_VERSION,
+            "systemPrompt": bundle.system_prompt,
+            "userPrompt": bundle.user_prompt,
+            "promptVersion": bundle.version,
+        }
+        return candidates, metadata
 

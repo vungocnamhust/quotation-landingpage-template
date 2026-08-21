@@ -28,9 +28,9 @@ export default function BrandSwitcherHeader() {
   const searchParams = useSearchParams();
 
   const brands: { key: BrandKey; name: string; icon: string; tag: string }[] = [
-    { key: 'vietnam-safar', name: 'Vietnam Safar', icon: '🌿', tag: 'Tropical Wild' },
-    { key: 'capella-travel', name: 'Capella Travel', icon: '👑', tag: 'Ultra Luxury' },
-    { key: 'selvara', name: 'Selvara', icon: '🧘', tag: 'Eco Wellness' },
+    { key: 'vietnam-safar', name: 'Vietnam Safar', icon: '🌿', tag: 'Relaxed Escapes' },
+    { key: 'capella-travel', name: 'Capella Travel', icon: '👑', tag: 'Premium Heritage' },
+    { key: 'selvara', name: 'Selvara', icon: '🧘', tag: 'Luxury Slow Travel' },
   ];
 
   useEffect(() => {

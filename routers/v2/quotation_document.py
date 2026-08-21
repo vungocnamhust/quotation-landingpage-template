@@ -55,6 +55,11 @@ class ContentDraftCreateRequest(BaseModel):
     instruction: str = Field(default="", max_length=2000)
 
 
+class ContentDraftBatchCreateRequest(BaseModel):
+    generationMode: Literal["storytelling", "detailed"] = "storytelling"
+    instruction: str = Field(default="", max_length=2000)
+
+
 class ContentDraftPatchRequest(BaseModel):
     candidate: dict[str, Any]
 
@@ -422,6 +427,54 @@ async def create_content_drafts_v2(
         return {"draft": h._serialize_content_draft(items[0])}
 
 
+@router.post("/{quotation_id}/content-drafts/batch-generate")
+async def batch_generate_content_drafts_v2(
+    quotation_id: str,
+    payload: ContentDraftBatchCreateRequest,
+    lang: str | None = None,
+    principal: Principal = Depends(require_editor),
+):
+    h = _get_helpers()
+    await h.require_owned_quotation(quotation_id, principal)
+    _quotation, lang = await h._resolve_v2_locale(quotation_id, lang)
+    async with h._get_db_session_factory()() as session:
+        quotes, documents, drafts = QuotationRepository(session), QuotationDocumentRepository(session), ContentDraftRepository(session)
+        quotation = await quotes.get_quotation_by_id(quotation_id)
+        request = await quotes.get_latest_quotation_request(quotation_id) if quotation else None
+        document = await documents.get_current_document(quotation_id, lang) if quotation else None
+        if quotation is None or request is None or document is None:
+            raise HTTPException(status_code=404, detail="Quotation content context was not found.")
+        request_payload = None
+        if quotation.opportunity_id:
+            from repositories.quote_request_repository import QuoteRequestRepository
+            quote_req = await QuoteRequestRepository(session).get_by_id(quotation.opportunity_id)
+            if quote_req and quote_req.payload_json:
+                request_payload = quote_req.payload_json
+        if not request_payload and request.request_json:
+            request_payload = request.request_json
+        facts, resolved = await h._resolve_v2_facts(CreateQuoteRequestV1.model_validate(h.normalize_legacy_facts_snapshot(request.request_json)))
+        try:
+            brand = await BrandRepository(session).get_active(quotation.brand_id)
+            if brand is None:
+                raise HTTPException(status_code=422, detail={"message": "Brand is unavailable for content generation.", "missingInputs": ["brand_id"]})
+            items = await ContentDraftService(drafts, h._brand_generation_profile(brand)).create_batch(
+                quotation_id=quotation_id,
+                payload=facts,
+                facts_hash=resolved["factsHash"],
+                document_revision=document.revision,
+                lang=lang,
+                mode=payload.generationMode,
+                instruction=payload.instruction,
+                request_payload=request_payload,
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail={"message": str(exc)}) from exc
+        except ContentGenerationError as exc:
+            raise HTTPException(status_code=503, detail={"message": str(exc)}) from exc
+        await session.commit()
+        return {"ok": True, "drafts": [h._serialize_content_draft(item) for item in items], "count": len(items)}
+
+
 @router.post("/{quotation_id}/content-drafts/prompt-preview")
 async def preview_content_draft_prompt_v2(
     quotation_id: str,
@@ -583,3 +636,77 @@ async def apply_content_draft_v2(
         draft.status = "applied"
         await session.commit()
         return {"ok": True, "document": merged, "currentRevision": saved.revision}
+
+
+@router.post("/{quotation_id}/content-drafts/apply-all")
+async def apply_all_content_drafts_v2(
+    quotation_id: str,
+    payload: ContentDraftApplyRequest,
+    lang: str | None = None,
+    principal: Principal = Depends(require_editor),
+):
+    h = _get_helpers()
+    await h.require_owned_quotation(quotation_id, principal)
+    _quotation, lang = await h._resolve_v2_locale(quotation_id, lang)
+    async with h._get_db_session_factory()() as session:
+        quotes, documents, drafts = QuotationRepository(session), QuotationDocumentRepository(session), ContentDraftRepository(session)
+        quotation = await quotes.get_quotation_by_id(quotation_id)
+        current = await documents.get_current_document(quotation_id, lang)
+        if quotation is None or current is None:
+            raise HTTPException(status_code=404, detail="Quotation or current document was not found.")
+
+        if payload.baseRevision != current.revision:
+            raise HTTPException(
+                status_code=409,
+                detail={"message": "Document revision conflict.", "currentRevision": current.revision},
+            )
+
+        pending_drafts = await drafts.list(quotation_id, lang)
+        active_drafts = [d for d in pending_drafts if d.status in ("draft", "stale") and d.candidate_json]
+
+        if not active_drafts:
+            return {"ok": True, "document": current.document_json, "currentRevision": current.revision, "appliedCount": 0}
+
+        merged = copy.deepcopy(current.document_json)
+        applied_ids = []
+        for draft in active_drafts:
+            try:
+                merged = ContentDraftService.apply_candidate(merged, draft.scope, draft.candidate_json)
+                applied_ids.append(draft.id)
+            except Exception:
+                pass
+
+        try:
+            saved = await documents.save_current_document(
+                quotation_id=quotation_id,
+                lang=lang,
+                document_json=merged,
+                expected_revision=current.revision,
+            )
+        except DocumentRevisionConflictError as exc:
+            raise HTTPException(
+                status_code=409,
+                detail={"message": "Document revision conflict.", "currentRevision": exc.current_revision},
+            ) from exc
+
+        merged.setdefault("meta", {})["revision"] = saved.revision
+        await documents.append_document_revision(
+            quotation_id=quotation_id,
+            lang=lang,
+            revision=saved.revision,
+            document_json=merged,
+            change_source="apply_all_content_drafts",
+        )
+
+        for draft in active_drafts:
+            if draft.id in applied_ids:
+                draft.status = "applied"
+                draft.source_document_revision = saved.revision
+
+        await session.commit()
+        return {
+            "ok": True,
+            "document": merged,
+            "currentRevision": saved.revision,
+            "appliedCount": len(applied_ids),
+        }

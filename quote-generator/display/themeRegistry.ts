@@ -1,7 +1,7 @@
-import { brochureTheme } from './themes/brochureTheme';
-import type { ThemeDefinition } from './types';
-import type { ThemeId } from './contracts';
-import { validateThemeDefinition } from './validateTheme';
+import { brochureTheme } from './themes/brochureTheme.ts';
+import type { ThemeDefinition } from './types.ts';
+import type { ThemeId } from './contracts.ts';
+import { validateThemeDefinition } from './validateTheme.ts';
 
 export const themeRegistry: Record<ThemeId, ThemeDefinition> = {
   brochure: validateThemeDefinition(brochureTheme),

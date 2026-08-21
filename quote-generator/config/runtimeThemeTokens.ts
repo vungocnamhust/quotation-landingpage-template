@@ -75,12 +75,34 @@ function resolveScope({ id, palette, recipe, viewMode, tokens }: {
   assertContrast(primaryTextRef, primary.surface, palette, `${id} primary action`, 4.5);
   assertContrast('onContrast', 'contrast', palette, `${id} contrast text`, 4.5);
   assertContrast(focus, resolved.surface, palette, `${id} focus ring`, 3);
+
+  const surfaceHex = resolved.surface === 'transparent' ? palette.canvas : palette[resolved.surface];
+  const resolvedAccentHex = resolveReference(palette, resolved.accent);
+  const accentTextHex =
+    resolvedAccentHex === 'transparent'
+      ? resolveReference(palette, resolved.onSurface)
+      : getContrastRatio(resolvedAccentHex, surfaceHex) >= 4.5
+        ? resolvedAccentHex
+        : getContrastRatio(palette.accentAlt, surfaceHex) >= 4.5
+          ? palette.accentAlt
+          : getContrastRatio(palette.onContrast, surfaceHex) >= 4.5
+            ? palette.onContrast
+            : palette.ink;
+
+  const onAccentHex =
+    resolvedAccentHex === 'transparent'
+      ? palette.ink
+      : getContrastRatio(palette.onContrast, resolvedAccentHex) >= getContrastRatio(palette.ink, resolvedAccentHex)
+        ? palette.onContrast
+        : palette.ink;
+
   return {
     id,
     style: {
       '--color-surface': resolveReference(palette, resolved.surface), '--color-surface-white': '#faf9f8', '--color-paper': palette.paper, '--color-card': palette.paper, '--color-surface-muted': palette.canvas,
-      '--color-on-surface': resolveReference(palette, resolved.onSurface), '--color-muted': resolveReference(palette, resolved.muted),
+      '--color-on-surface': resolveReference(palette, resolved.onSurface), '--color-on-surface-muted': resolveReference(palette, resolved.muted), '--color-muted': resolveReference(palette, resolved.muted),
       '--color-accent': resolveReference(palette, resolved.accent), '--color-accent-alt': resolveReference(palette, resolved.accentAlt),
+      '--color-accent-text': accentTextHex, '--color-on-accent': onAccentHex,
       '--color-contrast': palette.contrast, '--color-on-contrast': palette.onContrast, '--color-accent-wash': withOpacity(palette.accent, 0.1),
       '--color-border': withOpacity(palette[resolved.border.color], resolved.border.opacity), '--color-border-strong': withOpacity(palette[resolved.strongBorder.color], resolved.strongBorder.opacity),
       '--color-action-primary-surface': resolveReference(palette, primary.surface), '--color-action-primary-text': resolveReference(palette, primaryTextRef), '--color-action-primary-border': withOpacity(palette[primary.border.color], primary.border.opacity),

@@ -194,18 +194,18 @@ export const BRANDS_DATA: Record<BrandKey, BrandInfo> = {
     id: 'vietnam-safar',
     name: 'Vietnam Safar',
     logoGlyph: '🌿',
-    tagline: 'Wild Vietnam & Tropical Expeditions',
-    badge: 'Tropical Nature Expedition',
+    tagline: 'Easy Travel. Good Times.',
+    badge: 'Relaxed Escapes',
     description:
-      'Những hành trình thiên nhiên được thiết kế với nhịp điệu mạnh mẽ, giàu khám phá và mang cảm giác chạm rất gần vào bản địa.',
-    mood: 'Rực rỡ, hoang dã, nhiều chuyển động, giàu cảm giác khám phá',
+      'Simple journeys, warm service, no fuss — made for travellers who just want to enjoy the ride.',
+    mood: 'Laid-back, direct, warm — like a local friend who knows exactly where to take you',
     targetAudience:
-      'Nhóm bạn yêu trekking, nhà thám hiểm hiện đại, khách quốc tế muốn thấy Việt Nam nguyên bản theo nhịp nhanh và giàu hình ảnh.',
+      'Arabic-speaking travellers who prefer relaxed, fuss-free experiences. They value clarity over poetry, comfort over ceremony, and a guide who gets to the point.',
     toneOfVoice:
-      'Tràn năng lượng, chắc nhịp, gợi cảm giác khám phá nhưng vẫn tinh chỉnh như một hành trình cao cấp.',
+      'Friendly and plain-spoken. No luxury vocabulary, no elaborate metaphors — just honest, welcoming language that makes the next step obvious.',
     typography: {
       styleNote:
-        'Cormorant cho heading, Montserrat cho body, bảng màu lấy cảm hứng từ rừng nhiệt đới và giấy ngà.',
+        'Cormorant Garamond cho heading & accent, Montserrat cho body & UI shell.',
     },
     contact: {
       phone: '+84 901 234 567',
@@ -220,7 +220,7 @@ export const BRANDS_DATA: Record<BrandKey, BrandInfo> = {
         ink: '#11130f',
         mutedInk: '#2c2a29',
         accent: '#095f43',
-        accentAlt: '#b7894b',
+        accentAlt: '#8b642e',
         contrast: '#0d3f32',
         onContrast: '#ffffff',
         focus: '#095f43',
@@ -542,18 +542,18 @@ export const BRANDS_DATA: Record<BrandKey, BrandInfo> = {
     id: 'capella-travel',
     name: 'Capella Travel',
     logoGlyph: '👑',
-    tagline: 'Bespoke Ultra-Luxury & Elite Journeys',
-    badge: 'Ultra Luxury Heritage',
+    tagline: 'Crafted Journeys. Lasting Impressions.',
+    badge: 'Premium Heritage',
     description:
-      'Brochure được điều chỉnh về phía quý phái, trang trọng và giàu cảm giác curated, nhưng vẫn giữ cùng contract layout và section API.',
-    mood: 'Kiêu sa, nghi thức, yên tĩnh, chính xác, giàu cảm giác bespoke',
+      'Refined travel across 3–4 star international properties — where heritage, precision, and personal service define the experience.',
+    mood: 'Graceful, assured, warm — premium that earns its name through craft, not price tags',
     targetAudience:
-      'Gia đình thượng lưu, doanh nhân cao cấp, khách cần itinerary riêng tư với dịch vụ hoàn toàn được điều phối.',
+      'International travellers and families seeking premium-grade experiences with genuine cultural depth. They expect attention to detail, heritage character, and service that anticipates rather than reacts.',
     toneOfVoice:
-      'Trang trọng, mềm nhưng chắc, tập trung vào sự hiếm có, chiều sâu dịch vụ và độ chỉn chu.',
+      'Measured and gracious — never stiff, never flashy. Each sentence carries weight. The tone suggests quiet authority: a host who has done this many times and knows exactly what makes a journey memorable.',
     typography: {
       styleNote:
-        'Cormorant dùng cho heading và cả accent để tăng chất heritage; scale rộng hơn cho hero và section title.',
+        'Cormorant Garamond cho heading & accent, Montserrat cho body & UI shell; mở rộng scale cho pageTitle và tăng letter-spacing.',
     },
     contact: {
       phone: '+84 888 100 100',
@@ -568,10 +568,10 @@ export const BRANDS_DATA: Record<BrandKey, BrandInfo> = {
         ink: '#171511',
         mutedInk: '#2c2a29',
         accent: '#d4af37',
-        accentAlt: '#a98338',
-        contrast: '#a98338',
+        accentAlt: '#7a591a',
+        contrast: '#5e4514',
         onContrast: '#ffffff',
-        focus: '#a98338',
+        focus: '#7a591a',
         storyContrast: '#333333',
         investmentSurface: '#333333',
         investmentText: '#ffffff',
@@ -897,18 +897,18 @@ export const BRANDS_DATA: Record<BrandKey, BrandInfo> = {
     id: 'selvara',
     name: 'Selvara Journeys',
     logoGlyph: '🧘',
-    tagline: 'Eco-Luxury & Mindful Sanctuary Retreats',
-    badge: 'Mindful Eco-Retreat',
+    tagline: 'Slow Down. Go Deeper.',
+    badge: 'Luxury Slow Travel',
     description:
-      'Theme brochure được chuyển sang nhịp dịu hơn, nhiều breathing room hơn và dùng typography/body scale mềm hơn cho các đoạn đọc dài.',
-    mood: 'Tĩnh, sáng, chữa lành, ít áp lực thị giác, ưu tiên cảm giác thở',
+      'Unhurried luxury at 4–5 star depth — journeys built around cultural understanding, local research, and stories worth telling.',
+    mood: 'Still and rich — the luxury of time, the pleasure of knowing a place rather than merely visiting it',
     targetAudience:
-      'Khách tìm retreat sinh thái, wellness traveller, cặp đôi hoặc gia đình cần một hành trình chữa lành có cấu trúc rõ.',
+      'Sophisticated international travellers at the 4–5 star tier who travel to understand, not only to see. They read destination essays, care about provenance, and want an itinerary that reads like a book they will remember.',
     toneOfVoice:
-      'Mềm, có khoảng lặng, nhẹ nhưng không mơ hồ; luôn gợi cảm giác cân bằng và chăm sóc.',
+      'Literary and unhurried. Rich in cultural context without becoming academic. The voice should feel like a knowledgeable companion — one who has sat at that table, heard that story, and wants to share every layer of it.',
     typography: {
       styleNote:
-        'Body dùng Jost để tăng softness và readability, accent quay lại serif để giữ cảm giác hữu cơ nhưng đủ nghiêm.',
+        'Cormorant Garamond cho heading & accent, Montserrat cho body & UI shell; tăng line-height để tạo nhịp thở thoáng đạt.',
     },
     contact: {
       phone: '+84 933 222 111',
@@ -922,11 +922,11 @@ export const BRANDS_DATA: Record<BrandKey, BrandInfo> = {
         paper: '#f9f6f0',
         ink: '#11130f',
         mutedInk: '#2c2a29',
-        accent: '#a98338',
-        accentAlt: '#a98338',
-        contrast: '#a98338',
+        accent: '#7a591a',
+        accentAlt: '#7a591a',
+        contrast: '#524018',
         onContrast: '#ffffff',
-        focus: '#a98338',
+        focus: '#7a591a',
         storyContrast: '#0d3f32',
         investmentSurface: '#0d3f32',
         investmentText: '#ffffff',

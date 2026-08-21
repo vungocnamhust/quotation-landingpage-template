@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Loader2, Sparkles } from 'lucide-react';
+import { CheckCircle2, Loader2, Sparkles } from 'lucide-react';
 import SectionOutlineNav from '../ui/SectionOutlineNav.tsx';
 import { getTypographyClassName } from '../../config/typography.ts';
 import { cn } from '../../utils/cn.ts';
@@ -162,6 +162,7 @@ export default function ContentStudioClient({
     handleBatchGenerateAll,
     saveDraft,
     apply,
+    applyAll,
     discard,
     handleProceedToDesign,
   } = useContentGeneration({
@@ -181,6 +182,10 @@ export default function ContentStudioClient({
     onProceedToDesign,
   });
 
+  const pendingDraftsCount = (resources.draftsData?.drafts ?? []).filter(
+    (d) => d.status === 'draft' || d.status === 'stale'
+  ).length;
+
   const outlineItems = useMemo(
     () =>
       readiness.map((item) => {
@@ -193,11 +198,12 @@ export default function ContentStudioClient({
           : SCOPE_BY_SECTION_TYPE[item.sectionType] ?? item.sectionType;
         const hasUnreviewedDraft = Boolean(
           (resources.draftsData?.drafts ?? []).find(
-            (d) => d.scope === itemScope && d.status === 'draft'
+            (d) => d.scope === itemScope && (d.status === 'draft' || d.status === 'stale')
           )
         );
         const isCurrentlyGenerating =
-          batchState.isRunning && batchState.generatingScope === itemScope;
+          batchState.isRunning &&
+          (batchState.generatingScope === itemScope || batchState.generatingScope === 'all');
 
         return {
           id: item.sectionId,
@@ -222,29 +228,44 @@ export default function ContentStudioClient({
   );
 
   const batchHeaderAction = (
-    <button
-      type="button"
-      onClick={handleBatchGenerateAll}
-      disabled={batchState.isRunning || pending}
-      className={cn(
-        getTypographyClassName('buttonPrimary'),
-        'min-h-10 w-full rounded-[var(--radius-button)] bg-[color-mix(in_srgb,var(--color-accent)_90%,black)] hover:bg-[var(--color-accent)] !text-white px-3 py-2 flex items-center justify-center gap-2 shadow-xs transition-all disabled:opacity-50 cursor-pointer'
-      )}
-    >
-      {batchState.isRunning ? (
-        <>
-          <Loader2 size={15} className="animate-spin text-white shrink-0" />
-          <span>
-            Generating ({batchState.completedCount}/{batchState.totalCount})…
-          </span>
-        </>
-      ) : (
-        <>
-          <Sparkles size={15} className="text-amber-200 shrink-0" />
-          <span>Generate all sections</span>
-        </>
-      )}
-    </button>
+    <div className="flex flex-col gap-2 w-full">
+      <button
+        type="button"
+        onClick={handleBatchGenerateAll}
+        disabled={batchState.isRunning || pending}
+        className={cn(
+          getTypographyClassName('buttonPrimary'),
+          'min-h-10 w-full rounded-[var(--radius-button)] bg-[color-mix(in_srgb,var(--color-accent)_90%,black)] hover:bg-[var(--color-accent)] !text-white px-3 py-2 flex items-center justify-center gap-2 shadow-xs transition-all disabled:opacity-50 cursor-pointer'
+        )}
+      >
+        {batchState.isRunning ? (
+          <>
+            <Loader2 size={15} className="animate-spin text-white shrink-0" />
+            <span>Generating drafts…</span>
+          </>
+        ) : (
+          <>
+            <Sparkles size={15} className="text-amber-200 shrink-0" />
+            <span>Generate all sections</span>
+          </>
+        )}
+      </button>
+
+      {pendingDraftsCount > 0 ? (
+        <button
+          type="button"
+          onClick={applyAll}
+          disabled={pending || batchState.isRunning}
+          className={cn(
+            getTypographyClassName('buttonSecondary'),
+            'min-h-9 w-full rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] hover:bg-[var(--color-accent-wash)] text-[var(--color-on-surface)] px-3 py-1.5 flex items-center justify-center gap-1.5 shadow-2xs transition-all disabled:opacity-50 cursor-pointer'
+          )}
+        >
+          <CheckCircle2 size={14} className="text-[var(--color-accent)] shrink-0" />
+          <span>Apply all ({pendingDraftsCount}) to brochure</span>
+        </button>
+      ) : null}
+    </div>
   );
 
   const outlineFooter = onProceedToDesign ? (
@@ -259,8 +280,8 @@ export default function ContentStudioClient({
     >
       {pending
         ? 'Applying content…'
-        : draft || workingCandidate
-        ? 'Apply & proceed to Design'
+        : pendingDraftsCount > 0 || workingCandidate
+        ? `Apply (${pendingDraftsCount || 1}) & proceed to Design`
         : 'Proceed to Design'}
     </button>
   ) : undefined;

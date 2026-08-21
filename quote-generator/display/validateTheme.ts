@@ -1,6 +1,6 @@
-import { layoutRegistry, shellRegistry } from './layoutRegistry';
-import { VIEW_MODES } from './contracts';
-import type { ThemeDefinition } from './types';
+import { layoutRegistry, shellRegistry } from './layoutRegistry.ts';
+import { VIEW_MODES } from './contracts.ts';
+import type { ThemeDefinition } from './types.ts';
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) {

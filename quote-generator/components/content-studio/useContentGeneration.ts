@@ -204,78 +204,47 @@ export function useContentGeneration({
     }
 
     startTransition(async () => {
-      let completed = 0;
-      let failedCount = 0;
       setBatchState({
         isRunning: true,
-        generatingScope: uniqueScopes[0],
+        generatingScope: 'all',
         completedCount: 0,
         totalCount: uniqueScopes.length,
       });
 
-      for (const scopeItem of uniqueScopes) {
-        setBatchState({
-          isRunning: true,
-          generatingScope: scopeItem,
-          completedCount: completed,
-          totalCount: uniqueScopes.length,
-        });
-        try {
-          const itemEditor =
-            resources.documentData?.contentRegistry?.[scopeItem];
-          const defaultInst = itemEditor?.defaultInstructions?.[mode] ?? '';
-          const customInst =
-            activeCustomInstruction && scopeItem === scope
-              ? activeCustomInstruction
-              : null;
-
-          await resources.request<{ draft: ContentDraft }>(
-            `/api/v2/quotations/${quotationId}/content-drafts?lang=${encodeURIComponent(
-              lang
-            )}`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                scope: scopeItem,
-                generationMode: mode,
-                instruction: customInst ?? defaultInst,
-              }),
-            }
-          );
-        } catch (err) {
-          failedCount++;
-          console.error(`Batch generation failed for scope ${scopeItem}`, err);
-        }
-        completed++;
-        setBatchState({
-          isRunning: true,
-          generatingScope: scopeItem,
-          completedCount: completed,
-          totalCount: uniqueScopes.length,
-        });
-      }
-
-      setBatchState({
-        isRunning: false,
-        generatingScope: null,
-        completedCount: completed,
-        totalCount: uniqueScopes.length,
-      });
-      await resources.refresh();
-      clearScope('content:generate');
-      setMessage(
-        `Batch generation completed (${completed - failedCount}/${uniqueScopes.length} sections ready).`
-      );
-      if (failedCount === 0) {
-        toast(`All ${uniqueScopes.length} content sections generated successfully!`, 'success');
-      } else if (failedCount === uniqueScopes.length) {
-        toast(`Batch generation failed for all ${uniqueScopes.length} sections. Check facts requirements.`, 'error');
-      } else {
-        toast(
-          `Generated ${uniqueScopes.length - failedCount}/${uniqueScopes.length} sections. ${failedCount} failed.`,
-          'warning'
+      try {
+        const res = await resources.request<{
+          ok: boolean;
+          drafts: ContentDraft[];
+          count: number;
+        }>(
+          `/api/v2/quotations/${quotationId}/content-drafts/batch-generate?lang=${encodeURIComponent(
+            lang
+          )}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              generationMode: mode,
+              instruction: activeCustomInstruction ?? '',
+            }),
+          },
+          'Batch generation failed.'
         );
+
+        await resources.refresh();
+        clearScope('content:generate');
+        const count = res.count ?? res.drafts?.length ?? uniqueScopes.length;
+        setMessage(`Batch generation completed (${count} sections ready).`);
+        toast(`All ${count} content sections generated successfully!`, 'success');
+      } catch (err) {
+        reportFailure('generate', err);
+      } finally {
+        setBatchState({
+          isRunning: false,
+          generatingScope: null,
+          completedCount: uniqueScopes.length,
+          totalCount: uniqueScopes.length,
+        });
       }
     });
   }, [
@@ -285,8 +254,8 @@ export function useContentGeneration({
     mode,
     quotationId,
     readiness,
+    reportFailure,
     resources,
-    scope,
     toast,
   ]);
 
@@ -438,13 +407,13 @@ export function useContentGeneration({
     toast,
   ]);
 
-  const handleProceedToDesign = useCallback(() => {
+  const applyAll = useCallback(() => {
     startTransition(async () => {
-      if (workingCandidate && scope) {
-        try {
-          let activeDraft = draft;
+      try {
+        if (workingCandidate && scope) {
+          const activeDraft = draft;
           if (!activeDraft) {
-            const created = await resources.request<{ draft: ContentDraft }>(
+            await resources.request<{ draft: ContentDraft }>(
               `/api/v2/quotations/${quotationId}/content-drafts/manual?lang=${encodeURIComponent(
                 lang
               )}`,
@@ -458,9 +427,8 @@ export function useContentGeneration({
                 }),
               }
             );
-            activeDraft = created.draft;
           } else {
-            const patched = await resources.request<{ draft: ContentDraft }>(
+            await resources.request<{ draft: ContentDraft }>(
               `/api/v2/quotations/${quotationId}/content-drafts/${activeDraft.id}`,
               {
                 method: 'PATCH',
@@ -468,29 +436,103 @@ export function useContentGeneration({
                 body: JSON.stringify({ candidate: workingCandidate }),
               }
             );
-            activeDraft = patched.draft;
           }
-          await resources.request(
-            `/api/v2/quotations/${quotationId}/content-drafts/${activeDraft.id}/apply`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                baseRevision:
-                  resources.documentData?.currentRevision ??
-                  activeDraft.sourceDocumentRevision,
-              }),
-            }
-          );
-          await resources.refresh();
-          setGeneratedDraft(null);
-          setLocalCandidate(null);
-          clearScope('content:apply');
-          toast('Content applied to canonical brochure.', 'success');
-        } catch (error) {
-          reportFailure('apply', error);
-          return;
         }
+
+        const res = await resources.request<{
+          ok: boolean;
+          currentRevision: number;
+          appliedCount: number;
+        }>(
+          `/api/v2/quotations/${quotationId}/content-drafts/apply-all?lang=${encodeURIComponent(
+            lang
+          )}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              baseRevision: resources.documentData?.currentRevision ?? 1,
+            }),
+          },
+          'Failed to apply all content drafts.'
+        );
+
+        await resources.refresh();
+        setGeneratedDraft(null);
+        setLocalCandidate(null);
+        clearScope('content:apply');
+        const countMsg = res.appliedCount ? `${res.appliedCount} ` : '';
+        setMessage(`Applied ${countMsg}drafts to the canonical brochure.`);
+        toast(`All ${countMsg}content drafts applied to brochure!`, 'success');
+      } catch (error) {
+        reportFailure('apply', error);
+      }
+    });
+  }, [
+    clearScope,
+    draft,
+    lang,
+    quotationId,
+    reportFailure,
+    resources,
+    scope,
+    setGeneratedDraft,
+    setLocalCandidate,
+    toast,
+    workingCandidate,
+  ]);
+
+  const handleProceedToDesign = useCallback(() => {
+    startTransition(async () => {
+      try {
+        if (workingCandidate && scope) {
+          const activeDraft = draft;
+          if (!activeDraft) {
+            await resources.request<{ draft: ContentDraft }>(
+              `/api/v2/quotations/${quotationId}/content-drafts/manual?lang=${encodeURIComponent(
+                lang
+              )}`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  scope,
+                  candidate: workingCandidate,
+                  baseRevision: resources.documentData?.currentRevision,
+                }),
+              }
+            );
+          } else {
+            await resources.request<{ draft: ContentDraft }>(
+              `/api/v2/quotations/${quotationId}/content-drafts/${activeDraft.id}`,
+              {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ candidate: workingCandidate }),
+              }
+            );
+          }
+        }
+
+        await resources.request(
+          `/api/v2/quotations/${quotationId}/content-drafts/apply-all?lang=${encodeURIComponent(
+            lang
+          )}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              baseRevision: resources.documentData?.currentRevision ?? 1,
+            }),
+          }
+        );
+        await resources.refresh();
+        setGeneratedDraft(null);
+        setLocalCandidate(null);
+        clearScope('content:apply');
+      } catch (error) {
+        reportFailure('apply', error);
+        return;
       }
       onProceedToDesign?.();
     });
@@ -505,7 +547,6 @@ export function useContentGeneration({
     scope,
     setGeneratedDraft,
     setLocalCandidate,
-    toast,
     workingCandidate,
   ]);
 
@@ -520,6 +561,7 @@ export function useContentGeneration({
     handleBatchGenerateAll,
     saveDraft,
     apply,
+    applyAll,
     discard,
     handleProceedToDesign,
   };

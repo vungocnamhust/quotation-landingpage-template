@@ -3,9 +3,9 @@ import type {
   LayoutVariantId,
   ShellVariantDefinition,
   ShellVariantId,
-} from './types';
-import type { ViewMode } from './contracts';
-import { cn } from '../utils/cn';
+} from './types.ts';
+import type { ViewMode } from './contracts.ts';
+import { cn } from '../utils/cn.ts';
 
 export const shellRegistry: Record<ShellVariantId, ShellVariantDefinition> = {
   'shell-none': {

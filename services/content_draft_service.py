@@ -248,6 +248,175 @@ class ContentDraftService:
         self.validate_candidate(scope, candidate)
         return [await self.repository.create(id=f"cd_{uuid.uuid4().hex[:20]}", quotation_id=quotation_id, lang=lang, scope=scope, generation_mode=mode, status="draft", facts_hash=facts_hash, source_document_revision=document_revision, prompt_version=prompt_version, facts_snapshot=snapshot, candidate_json=candidate, missing_inputs=[], generation_metadata={**metadata, "instructionSource": generation["instructionSource"], "systemPrompt": generation.get("systemPrompt", ""), "userPrompt": generation.get("userPrompt", ""), "promptVersion": generation.get("promptVersion", "v1"), "llmCalled": True, "generationStatus": "generated", "latencyMs": round((time.perf_counter() - started) * 1000), "warnings": []})]
 
+    async def create_batch(
+        self,
+        *,
+        quotation_id: str,
+        payload: CreateQuoteRequestV1,
+        facts_hash: str,
+        document_revision: int,
+        lang: str,
+        mode: str,
+        instruction: str = "",
+        request_payload: dict[str, Any] | None = None,
+    ) -> list[Any]:
+        import asyncio
+        request_brief = extract_request_brief(request_payload)
+
+        # 1. Prepare Narrative facts snapshot
+        narrative_snapshot = {
+            "trip": {
+                "destinations": payload.trip_facts.destinations,
+                "start_date": payload.trip_facts.start_date,
+                "end_date": payload.trip_facts.end_date,
+                "duration_days": payload.trip_facts.duration_days,
+                "duration_nights": payload.trip_facts.duration_nights,
+                "travel_pace": payload.trip_facts.travel_pace,
+            },
+            "customer": {
+                "customer_name": payload.customer_facts.customer_name,
+                "adults": payload.customer_facts.adults,
+                "children": payload.customer_facts.children,
+            },
+            "itinerary_overview": [
+                {
+                    "day_number": day.day_number,
+                    "destination": day.destination,
+                    "summary": day.summary,
+                    "overnight": day.overnight,
+                }
+                for day in payload.trip_facts.itinerary
+            ],
+        }
+        if request_brief:
+            narrative_snapshot["request_brief"] = request_brief
+
+        # 2. Prepare Days facts snapshot
+        days_snapshot = {
+            "itinerary_days": [
+                {
+                    "day_number": day.day_number,
+                    "destination": day.destination,
+                    "summary": day.summary,
+                    "highlights": day.highlights,
+                    "meals": day.meals,
+                    "overnight": day.overnight,
+                    "accommodation_name": getattr(day, "accommodation_name", None),
+                }
+                for day in payload.trip_facts.itinerary
+            ]
+        }
+        if request_brief:
+            days_snapshot["request_brief"] = request_brief
+
+        # 3. Launch both tasks in parallel with asyncio.gather
+        started = time.perf_counter()
+        tasks = [
+            self.generator.generate_narrative_batch(
+                brand=self.brand_profile,
+                facts_snapshot=narrative_snapshot,
+                mode=mode,
+                instruction=instruction,
+            )
+        ]
+        has_itinerary_days = bool(payload.trip_facts.itinerary)
+        if has_itinerary_days:
+            tasks.append(
+                self.generator.generate_itinerary_days_batch(
+                    brand=self.brand_profile,
+                    facts_snapshot=days_snapshot,
+                    mode=mode,
+                    instruction=instruction,
+                )
+            )
+
+        results = await asyncio.gather(*tasks)
+        narrative_candidates, narrative_gen = results[0]
+        days_candidates, days_gen = results[1] if has_itinerary_days else ([], {})
+        duration_ms = round((time.perf_counter() - started) * 1000)
+
+        created_drafts = []
+
+        # 4. Save Narrative scopes: hero, overview_letter, route, itinerary
+        for scope_key, candidate in narrative_candidates.items():
+            spec = scope_spec(scope_key)
+            self.validate_candidate(scope_key, candidate)
+            prompt_version = _fingerprint(
+                spec=spec, lang=lang, mode=mode, facts_hash=facts_hash, instruction=instruction or default_instruction("brochure_narrative_batch", mode)
+            )
+            draft = await self.repository.create(
+                id=f"cd_{uuid.uuid4().hex[:20]}",
+                quotation_id=quotation_id,
+                lang=lang,
+                scope=scope_key,
+                generation_mode=mode,
+                status="draft",
+                facts_hash=facts_hash,
+                source_document_revision=document_revision,
+                prompt_version=prompt_version,
+                facts_snapshot=self.facts_snapshot(payload, scope_key, request_brief=request_brief),
+                candidate_json=candidate,
+                missing_inputs=[],
+                generation_metadata={
+                    "mode": mode,
+                    "recipeVersion": spec.recipe_version,
+                    "schemaVersion": spec.schema_version,
+                    "brandPolicyVersion": BRAND_POLICY_VERSION,
+                    "instructionSource": narrative_gen.get("instructionSource", "default"),
+                    "systemPrompt": narrative_gen.get("systemPrompt", ""),
+                    "userPrompt": narrative_gen.get("userPrompt", ""),
+                    "promptVersion": narrative_gen.get("promptVersion", "v1"),
+                    "llmCalled": True,
+                    "batchGeneration": True,
+                    "generationStatus": "generated",
+                    "latencyMs": duration_ms,
+                    "warnings": [],
+                },
+            )
+            created_drafts.append(draft)
+
+        # 5. Save Itinerary Days scopes: itinerary:day:1 .. itinerary:day:N
+        for day_candidate in days_candidates:
+            day_num = day_candidate.get("dayNumber", 1)
+            scope_key = f"itinerary:day:{day_num}"
+            spec = scope_spec(scope_key)
+            self.validate_candidate(scope_key, day_candidate)
+            prompt_version = _fingerprint(
+                spec=spec, lang=lang, mode=mode, facts_hash=facts_hash, instruction=instruction or default_instruction("itinerary_days_batch", mode)
+            )
+            draft = await self.repository.create(
+                id=f"cd_{uuid.uuid4().hex[:20]}",
+                quotation_id=quotation_id,
+                lang=lang,
+                scope=scope_key,
+                generation_mode=mode,
+                status="draft",
+                facts_hash=facts_hash,
+                source_document_revision=document_revision,
+                prompt_version=prompt_version,
+                facts_snapshot=self.facts_snapshot(payload, scope_key, request_brief=request_brief),
+                candidate_json=day_candidate,
+                missing_inputs=[],
+                generation_metadata={
+                    "mode": mode,
+                    "recipeVersion": spec.recipe_version,
+                    "schemaVersion": spec.schema_version,
+                    "brandPolicyVersion": BRAND_POLICY_VERSION,
+                    "instructionSource": days_gen.get("instructionSource", "default"),
+                    "systemPrompt": days_gen.get("systemPrompt", ""),
+                    "userPrompt": days_gen.get("userPrompt", ""),
+                    "promptVersion": days_gen.get("promptVersion", "v1"),
+                    "llmCalled": True,
+                    "batchGeneration": True,
+                    "generationStatus": "generated",
+                    "latencyMs": duration_ms,
+                    "warnings": [],
+                },
+            )
+            created_drafts.append(draft)
+
+        return created_drafts
+
     def preview_prompt(
         self,
         payload: CreateQuoteRequestV1,

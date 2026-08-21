@@ -7,7 +7,13 @@ import { getTypographyClassName } from '../../config/typography.ts';
 import { cn } from '../../utils/cn.ts';
 
 function toneClassName(tone: 'default' | 'muted' | 'accent' | 'inverse' = 'default') {
-  return tone === 'muted' ? 'text-[var(--color-muted)]' : tone === 'accent' ? 'text-[var(--color-accent)]' : 'text-[var(--color-on-surface)]';
+  return tone === 'muted'
+    ? 'text-[var(--color-muted)]'
+    : tone === 'accent'
+      ? 'text-[var(--color-accent-text,var(--color-accent))]'
+      : tone === 'inverse'
+        ? 'text-[var(--color-on-contrast)]'
+        : 'text-[var(--color-on-surface)]';
 }
 
 export function editableProps(value: TextValue) {
@@ -93,20 +99,20 @@ export function QuoteText({ children, variant = 'quote', className, tone = 'defa
 }
 
 export function Badge({ children, className }: { children: ReactNode; className?: string }) {
-  return <span className={cn('inline-flex items-center gap-2 rounded-[var(--radius-pill)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3 py-1.5 text-[var(--color-accent)]', className)}>{children}</span>;
+  return <span className={cn('inline-flex items-center gap-2 rounded-[var(--radius-pill)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3 py-1.5 text-[var(--color-accent-text,var(--color-accent))]', className)}>{children}</span>;
 }
 export function Tag({ children, className }: { children: ReactNode; className?: string }) {
   return <span className={cn('inline-flex items-center rounded-[var(--radius-pill)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1 text-[var(--color-muted)]', className)}>{children}</span>;
 }
 export function IconChip({ children, className }: { children: ReactNode; className?: string }) {
-  return <span className={cn('inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-accent)] shadow-sm', className)}>{children}</span>;
+  return <span className={cn('inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-accent-text,var(--color-accent))] shadow-sm', className)}>{children}</span>;
 }
 
 export function ActionButton({ children, className, colorRole = 'primary', typographyVariant = 'buttonPrimary', ...props }: Omit<ComponentPropsWithoutRef<'a'>, 'children'> & { children: TextValue; colorRole?: ComponentColorRole; typographyVariant?: TypographyVariant }) {
   return <a className={cn(getTypographyClassName(typographyVariant), 'inline-flex items-center justify-center gap-2 px-[1.188rem] py-[0.813rem] transition-all duration-200 hover:-translate-y-0.5', colorRole === 'primary' ? 'rounded-none border border-[var(--color-action-primary-border)] bg-[var(--color-action-primary-surface)] !text-[var(--color-action-primary-text)] shadow-[0_8px_24px_color-mix(in_srgb,var(--color-contrast)_15%,transparent)]' : 'rounded-none border border-[var(--color-action-secondary-border)] bg-[var(--color-action-secondary-surface)] !text-[var(--color-action-secondary-text)]', className)} {...editableProps(children)} {...props}>{parseFormattedContent(children)}</a>;
 }
 export function TextLink({ children, className, typographyVariant, colorRole = 'secondary', ...props }: Omit<ComponentPropsWithoutRef<'a'>, 'children'> & { children: TextValue; typographyVariant: TypographyVariant; colorRole?: Extract<ComponentColorRole, 'primary' | 'secondary'> }) {
-  return <a className={cn(getTypographyClassName(typographyVariant), colorRole === 'primary' ? 'text-[var(--color-action-primary-text)] underline-offset-4 transition-colors hover:underline' : 'text-[var(--color-action-secondary-text)] underline-offset-4 transition-colors hover:text-[var(--color-accent)] hover:underline', className)} {...editableProps(children)} {...props}>{parseFormattedContent(children)}</a>;
+  return <a className={cn(getTypographyClassName(typographyVariant), colorRole === 'primary' ? 'text-[var(--color-action-primary-text)] underline-offset-4 transition-colors hover:underline' : 'text-[var(--color-action-secondary-text)] underline-offset-4 transition-colors hover:text-[var(--color-accent-text,var(--color-accent))] hover:underline', className)} {...editableProps(children)} {...props}>{parseFormattedContent(children)}</a>;
 }
 
 interface ImageFrameProps { src: string; alt: TextValue; className?: string; sizes?: string; priority?: boolean; variant?: 'card' | 'editorial'; }

@@ -1,4 +1,4 @@
-import { BRANDS_DATA, type BrandKey } from '../data/brandsData';
+import { BRANDS_DATA, type BrandKey } from '../data/brandsData.ts';
 import type {
   BrandColorPalette,
   BrandRenderProfile,
@@ -8,8 +8,8 @@ import type {
   ResolvedColorScope,
   ResolvedColorSlots,
   ThemeDefinition,
-} from '../display/types';
-import type { ViewMode } from '../display/contracts';
+} from '../display/types.ts';
+import type { ViewMode } from '../display/contracts.ts';
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition)
@@ -114,6 +114,26 @@ function resolveScope({
   assertContrast('onContrast', 'contrast', palette, `${id} contrast text`, 4.5);
   assertContrast(focus, resolved.surface, palette, `${id} focus ring`, 3);
 
+  const surfaceHex = resolved.surface === 'transparent' ? palette.canvas : palette[resolved.surface];
+  const resolvedAccentHex = resolveReference(palette, resolved.accent);
+  const accentTextHex =
+    resolvedAccentHex === 'transparent'
+      ? resolveReference(palette, resolved.onSurface)
+      : getContrastRatio(resolvedAccentHex, surfaceHex) >= 4.5
+        ? resolvedAccentHex
+        : getContrastRatio(palette.accentAlt, surfaceHex) >= 4.5
+          ? palette.accentAlt
+          : getContrastRatio(palette.onContrast, surfaceHex) >= 4.5
+            ? palette.onContrast
+            : palette.ink;
+
+  const onAccentHex =
+    resolvedAccentHex === 'transparent'
+      ? palette.ink
+      : getContrastRatio(palette.onContrast, resolvedAccentHex) >= getContrastRatio(palette.ink, resolvedAccentHex)
+        ? palette.onContrast
+        : palette.ink;
+
   return {
     id,
     style: {
@@ -123,9 +143,12 @@ function resolveScope({
       '--color-card': palette.paper,
       '--color-surface-muted': palette.canvas,
       '--color-on-surface': resolveReference(palette, resolved.onSurface),
+      '--color-on-surface-muted': resolveReference(palette, resolved.muted),
       '--color-muted': resolveReference(palette, resolved.muted),
       '--color-accent': resolveReference(palette, resolved.accent),
       '--color-accent-alt': resolveReference(palette, resolved.accentAlt),
+      '--color-accent-text': accentTextHex,
+      '--color-on-accent': onAccentHex,
       '--color-contrast': palette.contrast,
       '--color-on-contrast': palette.onContrast,
       '--color-accent-wash': withOpacity(palette.accent, 0.1),

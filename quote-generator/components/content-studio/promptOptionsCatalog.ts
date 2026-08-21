@@ -16,22 +16,22 @@ export const BRAND_OPTIONS: PromptOptionItem[] = [
     id: 'capella_travel',
     category: 'brands',
     label: 'Capella Travel',
-    description: 'Polished urban luxury & bespoke hospitality',
-    detailText: 'Brand Voice: Cosmopolitan, refined, high-touch luxury service. Emphasizes curated urban elegance and personalized itineraries.',
+    description: '3–4 star international · Heritage & premium',
+    detailText: 'Brand Voice: Capella speaks to discerning travellers who appreciate quality without ostentation. Heritage properties, thoughtful curation, and a tone that is polished but never stiff. Warmth lives in the details.',
   },
   {
     id: 'selvara',
     category: 'brands',
     label: 'Selvara Journeys',
-    description: 'Sanctuary, nature, tranquility & wellness',
-    detailText: 'Brand Voice: Quiet luxury, immersive nature, wellness & eco-mindful retreats. Focuses on peaceful luxury and eco-harmony.',
+    description: '4–5 star international · Luxury slow travel & cultural depth',
+    detailText: 'Brand Voice: Selvara writes like a travel essayist, not a catalogue. Every destination is a chapter, every hotel a character, every ritual worth a paragraph. Speak in layers — cultural context, sensory detail, local nuance — for guests who read before they book.',
   },
   {
     id: 'vietnam_safar',
     category: 'brands',
     label: 'Vietnam Safar',
-    description: 'Authentic heritage, immersive exploration',
-    detailText: 'Brand Voice: Authentic local heritage, vivid cultural storytelling, active discovery. Warm and deeply rooted in local traditions.',
+    description: 'Simple, relaxed & straight to the point',
+    detailText: 'Brand Voice: Built for Arabic-speaking travellers who value clarity and ease. No flourish, no filler — just warm, direct communication that feels like a trusted friend planning the trip for you. Keep it light, keep it real.',
   },
 ];
 

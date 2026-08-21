@@ -92,20 +92,24 @@ const FONT_CATALOG = {
     label: 'Montserrat',
     cssValue: 'var(--font-montserrat), sans-serif',
   },
-  jost: {
-    label: 'Jost',
-    cssValue: 'var(--font-jost), sans-serif',
+  notoSansArabic: {
+    label: 'Noto Sans Arabic',
+    cssValue: 'var(--font-noto-sans-arabic), sans-serif',
   },
-  allura: {
-    label: 'Allura',
-    cssValue: 'var(--font-allura), cursive',
+  cairo: {
+    label: 'Cairo',
+    cssValue: 'var(--font-cairo), sans-serif',
+  },
+  amiri: {
+    label: 'Amiri',
+    cssValue: 'var(--font-amiri), serif',
   },
 } satisfies Record<string, FontDefinition>;
 
 const BASE_FONT_ROLES: Record<FontFamilyRole, FontDefinition> = {
   heading: FONT_CATALOG.cormorant,
   body: FONT_CATALOG.montserrat,
-  accent: FONT_CATALOG.allura,
+  accent: FONT_CATALOG.cormorant,
 };
 
 const BASE_VARIANTS: Record<TypographyVariant, TypographyRule> = {
@@ -472,15 +476,7 @@ const BASE_VARIANTS: Record<TypographyVariant, TypographyRule> = {
 
 const BRAND_FONT_OVERRIDES: Partial<
   Record<BrandKey, Partial<Record<FontFamilyRole, FontDefinition>>>
-> = {
-  'capella-travel': {
-    accent: FONT_CATALOG.cormorant,
-  },
-  selvara: {
-    body: FONT_CATALOG.jost,
-    accent: FONT_CATALOG.cormorant,
-  },
-};
+> = {};
 
 const BRAND_VARIANT_OVERRIDES: Partial<
   Record<BrandKey, Partial<Record<TypographyVariant, PartialTypographyRule>>>
@@ -657,7 +653,7 @@ const THEME_VIEW_MODE_OVERRIDES: Record<
       },
       dayBody: {
         fontSize: '9.6pt',
-        lineHeight: '1.58',
+        lineHeight: '1.42',
       },
       hotelTitle: {
         fontSize: '14pt',
@@ -849,7 +845,7 @@ function buildVariableBlock(brandKey: BrandKey, themeId: ThemeId, viewMode: View
     [TypographyVariant, TypographyRule]
   >) {
     const prefix = `  --${getTypographyClassName(variant)}`;
-    lines.push(`${prefix}-font-family: ${config.fonts[rule.fontFamilyRole].cssValue};`);
+    lines.push(`${prefix}-font-family: var(--font-${rule.fontFamilyRole});`);
     lines.push(`${prefix}-font-size: ${rule.fontSize};`);
     lines.push(`${prefix}-line-height: ${rule.lineHeight};`);
     lines.push(`${prefix}-font-weight: ${rule.fontWeight};`);
@@ -878,6 +874,31 @@ function buildSemanticClassBlock() {
 }`
     )
     .join('\n\n');
+}
+
+function buildArabicBlock() {
+  return `html[lang="ar"],
+:root[data-lang="ar"],
+[dir="rtl"] {
+  --font-heading: var(--font-amiri), var(--font-noto-sans-arabic), Georgia, serif !important;
+  --font-body: var(--font-noto-sans-arabic), var(--font-cairo), sans-serif !important;
+  --font-accent: var(--font-amiri), var(--font-noto-sans-arabic), serif !important;
+  --serif: var(--font-amiri), var(--font-noto-sans-arabic), Georgia, serif !important;
+  --sans: var(--font-noto-sans-arabic), var(--font-cairo), sans-serif !important;
+  --font-accent: var(--font-amiri), var(--font-noto-sans-arabic), serif !important;
+}
+
+html[lang="ar"] body,
+:root[data-lang="ar"] body,
+[dir="rtl"] body {
+  font-family: var(--font-body) !important;
+}
+
+html[lang="ar"] [class*="typo-"],
+:root[data-lang="ar"] [class*="typo-"],
+[dir="rtl"] [class*="typo-"] {
+  letter-spacing: normal !important;
+}`;
 }
 
 function buildPrintBlock() {
@@ -942,6 +963,7 @@ export function buildTypographyStyleSheet() {
   font: inherit;
 }`,
     buildSemanticClassBlock(),
+    buildArabicBlock(),
     buildPrintBlock(),
   ].join('\n\n');
 }

@@ -5,7 +5,7 @@ import type {
   ThemeDefinition,
   PublicSectionId,
   TypographySlotMap,
-} from '../types';
+} from '../types.ts';
 
 const defaultVisible = {
   desktop: true,
@@ -91,9 +91,9 @@ const colorRecipe: ThemeColorRecipe = {
         secondary: { surface: 'transparent', text: 'onContrast', border: { color: 'onContrast', opacity: 0.36 } },
       },
       timeline: { route: 'accentAlt', marker: 'storyContrast', active: 'accentAlt' },
-      overlay: { start: { color: 'storyContrast', opacity: 0.35 }, end: { color: 'storyContrast', opacity: 0.20 } },
+      overlay: { start: { color: 'storyContrast', opacity: 0.70 }, end: { color: 'storyContrast', opacity: 0.50 } },
       shadow: { color: 'ink', opacity: 0.26 }, ornamentOpacity: 0.15,
-      viewModeAdjustments: { mobile: { overlay: { start: { color: 'storyContrast', opacity: 0.35 }, end: { color: 'storyContrast', opacity: 0.20 } } }, pdf: { overlay: { start: { color: 'storyContrast', opacity: 0.35 }, end: { color: 'storyContrast', opacity: 0.20 } } } },
+      viewModeAdjustments: { mobile: { overlay: { start: { color: 'storyContrast', opacity: 0.75 }, end: { color: 'storyContrast', opacity: 0.55 } } }, pdf: { overlay: { start: { color: 'storyContrast', opacity: 0.65 }, end: { color: 'storyContrast', opacity: 0.45 } } } },
     },
     editorialPaper: {
       surface: 'paper', onSurface: 'ink', muted: 'mutedInk', accent: 'accent', accentAlt: 'accentAlt',
@@ -767,9 +767,10 @@ export const brochureTheme: ThemeDefinition = {
         printBehavior: { pageTemplate: 'pricing', avoidBreakInside: true },
       }),
       pdf: config('pricing', {
+        colorScope: 'editorialPaper',
         layoutVariant: 'pricing-investment-ledger',
         shellVariant: 'shell-pdf-page-framed',
-        backgroundVariant: 'investment',
+        backgroundVariant: 'paper',
         spacingVariant: 'page',
         alignment: 'split',
         surfaceStyle: 'framed',

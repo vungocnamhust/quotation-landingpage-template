@@ -5,7 +5,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
 cd "$ROOT/quote-generator"
 
 echo "[display] running typography lint"
-npm run lint:typography
+node scripts/lint-typography.mjs
 
 status=0
 

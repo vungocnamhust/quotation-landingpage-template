@@ -1,4 +1,4 @@
-import { quotationFetch, apiErrorMessage } from "./apiError.ts";
+import { quotationFetch } from "./apiError.ts";
 import type { PricingOptionFact, QuotationFacts } from "../components/quotation-workspace/factsTypes.ts";
 import { staysAdapter } from "./rules/staysAdapter.ts";
 import { staysReconciler } from "./rules/staysReconciler.ts";
@@ -176,16 +176,42 @@ export async function runQuotationFastTrackPipeline({
   }
 
   // ---------------------------------------------------------------------------
-  // Step 3: Auto-generate and apply AI content sections
+  // Step 3: Auto-generate and apply AI content sections via Fast Batching
   // ---------------------------------------------------------------------------
   onProgress?.({
     stage: "content_generation",
-    message: "Preparing content sections for batch storytelling generation...",
-    current: 0,
-    total: 1,
+    message: "Generating luxury storytelling narratives and daily itinerary in parallel...",
+    current: 1,
+    total: 2,
   });
 
   try {
+    // 1. Batch generate all drafts in parallel on backend
+    const batchRes = await quotationFetch<{
+      ok: boolean;
+      drafts: Array<{ id: string; scope: string }>;
+      count: number;
+    }>(
+      `${API_BASE}/api/v2/quotations/${quotationId}/content-drafts/batch-generate?lang=${encodeURIComponent(lang)}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          generationMode: "storytelling",
+          instruction: "",
+        }),
+      },
+      "Failed to batch generate content drafts."
+    );
+
+    onProgress?.({
+      stage: "content_generation",
+      message: `Applying all generated narratives (${batchRes.count ?? batchRes.drafts?.length ?? "all"}) to brochure...`,
+      current: 2,
+      total: 2,
+    });
+
+    // 2. Fetch current revision
     const docRes = await quotationFetch<{
       document: Record<string, unknown>;
       currentRevision: number;
@@ -199,75 +225,20 @@ export async function runQuotationFastTrackPipeline({
       baseRevision = docRes.currentRevision;
     }
 
-    const docItinerary = docRes.document?.itinerary as
-      | { days?: Array<{ dayNumber?: number }> }
-      | undefined;
-    const dayCount = docItinerary?.days?.length ?? facts.trip_facts.itinerary.length ?? 0;
-
-    const scopesToGenerate: string[] = [
-      "hero",
-      "overview",
-      "route_map",
-      ...Array.from({ length: dayCount }, (_, idx) => `itinerary:day:${idx + 1}`),
-      "inclusions_exclusions",
-    ];
-
-    const totalScopes = scopesToGenerate.length;
-
-    for (let i = 0; i < scopesToGenerate.length; i++) {
-      const scope = scopesToGenerate[i];
-      const scopeLabel = scope.startsWith("itinerary:day:")
-        ? `Day ${scope.replace("itinerary:day:", "")}`
-        : scope.replace("_", " ");
-
-      onProgress?.({
-        stage: "content_generation",
-        message: `Generating AI narrative copy for ${scopeLabel} (${i + 1}/${totalScopes})...`,
-        current: i + 1,
-        total: totalScopes,
-      });
-
-      try {
-        // 1. Generate content draft
-        const draftRes = await quotationFetch<{
-          draft: { id: string; candidate_json?: Record<string, unknown> };
-        }>(
-          `${API_BASE}/api/v2/quotations/${quotationId}/content-drafts?lang=${encodeURIComponent(lang)}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              scope,
-              generationMode: "storytelling",
-              instruction: "",
-            }),
-          },
-          `Failed to generate draft for ${scope}.`
-        );
-
-        // 2. Apply content draft to canonical document
-        if (draftRes.draft?.id) {
-          const applyRes = await quotationFetch<{
-            ok: boolean;
-            currentRevision: number;
-          }>(
-            `${API_BASE}/api/v2/quotations/${quotationId}/content-drafts/${draftRes.draft.id}/apply`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ baseRevision }),
-            },
-            `Failed to apply draft for ${scope}.`
-          );
-
-          if (applyRes.currentRevision) {
-            baseRevision = applyRes.currentRevision;
-          }
-        }
-      } catch (scopeErr) {
-        console.warn(`Content generation skipped for scope '${scope}':`, apiErrorMessage(scopeErr));
-      }
-    }
+    // 3. Apply all drafts in 1 atomic database transaction
+    await quotationFetch<{
+      ok: boolean;
+      currentRevision: number;
+      appliedCount: number;
+    }>(
+      `${API_BASE}/api/v2/quotations/${quotationId}/content-drafts/apply-all?lang=${encodeURIComponent(lang)}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ baseRevision }),
+      },
+      "Failed to apply content drafts to brochure."
+    );
   } catch (contentErr) {
     console.warn("Content batch generation encountered warning:", contentErr);
   }

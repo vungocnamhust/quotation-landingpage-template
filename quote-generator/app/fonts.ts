@@ -1,4 +1,4 @@
-import { Allura, Cormorant_Garamond, Jost, Montserrat } from 'next/font/google';
+import { Amiri, Cairo, Cormorant_Garamond, Montserrat, Noto_Sans_Arabic } from 'next/font/google';
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin', 'latin-ext', 'vietnamese'],
@@ -10,28 +10,39 @@ const cormorant = Cormorant_Garamond({
 
 const montserrat = Montserrat({
   subsets: ['latin', 'latin-ext', 'vietnamese'],
+  style: ['normal', 'italic'],
   weight: ['400', '500', '600', '700'],
   display: 'swap',
   variable: '--font-montserrat',
 });
 
-const jost = Jost({
-  subsets: ['latin', 'latin-ext'],
-  weight: ['400', '500', '600', '700'],
+const notoSansArabic = Noto_Sans_Arabic({
+  subsets: ['arabic'],
+  weight: ['300', '400', '500', '600', '700'],
   display: 'swap',
-  variable: '--font-jost',
+  variable: '--font-noto-sans-arabic',
 });
 
-const allura = Allura({
-  subsets: ['latin', 'latin-ext', 'vietnamese'],
-  weight: '400',
+const cairo = Cairo({
+  subsets: ['latin', 'arabic'],
+  weight: ['300', '400', '600', '700'],
   display: 'swap',
-  variable: '--font-allura',
+  variable: '--font-cairo',
+});
+
+const amiri = Amiri({
+  subsets: ['latin', 'arabic'],
+  style: ['normal', 'italic'],
+  weight: ['400', '700'],
+  display: 'swap',
+  variable: '--font-amiri',
 });
 
 export const typographyFontVariables = [
   cormorant.variable,
   montserrat.variable,
-  jost.variable,
-  allura.variable,
+  notoSansArabic.variable,
+  cairo.variable,
+  amiri.variable,
 ].join(' ');
+

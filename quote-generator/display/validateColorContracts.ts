@@ -1,7 +1,7 @@
-import { BRANDS_DATA, type BrandKey } from '../data/brandsData';
-import { resolveColorSlots } from '../config/themeTokens';
-import { VIEW_MODES } from './contracts';
-import { themeRegistry } from './themeRegistry';
+import { BRANDS_DATA, type BrandKey } from '../data/brandsData.ts';
+import { resolveColorSlots } from '../config/themeTokens.ts';
+import { VIEW_MODES } from './contracts.ts';
+import { themeRegistry } from './themeRegistry.ts';
 
 export function validateColorContracts() {
   for (const brandKey of Object.keys(BRANDS_DATA) as BrandKey[]) {

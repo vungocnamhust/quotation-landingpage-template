@@ -168,9 +168,7 @@ export interface ColorScopeRecipe {
   };
   shadow: { color: PaletteColorKey; opacity: number };
   ornamentOpacity: number;
-  viewModeAdjustments?: Partial<Record<ViewMode, Partial<Pick<ColorScopeRecipe,
-    'border' | 'strongBorder' | 'overlay' | 'shadow' | 'ornamentOpacity'
-  >>>>;
+  viewModeAdjustments?: Partial<Record<ViewMode, Partial<ColorScopeRecipe>>>;
 }
 
 export interface ThemeColorRecipe {
@@ -499,6 +497,7 @@ export interface HotelCardViewModel {
 }
 
 export interface HotelsViewModel {
+  kicker?: TextValue;
   title: TextValue;
   description: TextValue;
   cards: HotelCardViewModel[];
@@ -521,8 +520,6 @@ export interface PriceOptionViewModel {
   label: TextValue;
   groupTotalPrice: TextValue;
   perTravelerPrice: TextValue;
-  isConfirmedMainOption: boolean;
-  isAlternativeOption: boolean;
 }
 
 export interface PricingViewModel {
@@ -532,7 +529,6 @@ export interface PricingViewModel {
   options: PriceOptionViewModel[];
   importantNote?: TextValue;
   importantNoteLabel: TextValue;
-  confirmedMainOptionLabel: TextValue;
 }
 
 export type InclusionItemViewModel =
@@ -543,6 +539,7 @@ export type InclusionItemViewModel =
     };
 
 export interface InclusionsExclusionsViewModel {
+  kicker?: TextValue;
   title: TextValue;
   inclusionsTitle?: TextValue;
   exclusionsTitle?: TextValue;
