@@ -181,74 +181,83 @@ function PdfLetter({ documentModel }: { documentModel: DisplayDocument }) {
       ornamentVariant="none"
       className="pdf-letter"
     >
-      <header className="pdf-letter__header">
-        <Kicker variant="chapterKicker">{letter.chapterKicker}</Kicker>
-        <DisplayTitle as="h2" variant="letterTitle">
-          {letter.title}
-        </DisplayTitle>
-        <hr className="pdf-letter__header-rule" />
-      </header>
-      <div className="pdf-letter__grid">
-        <aside className="pdf-letter__decor-col">
-          {textValue(letter.highlight) ? (
-            <QuoteText variant="letterHighlight">{letter.highlight}</QuoteText>
-          ) : (
-            <div />
-          )}
-          <Image
-            src="/assets/brands/indochine_icon/ruong_bac_thang.svg"
-            alt=""
-            width={160}
-            height={120}
-            unoptimized
-            style={{ width: '100%', maxWidth: '160px', opacity: 0.85, height: 'auto' }}
-          />
-        </aside>
-        <article className="pdf-letter__body-col">
-          <div className="pdf-letter__paragraphs">
-            <BodyCopy variant="letterBody">{letter.greeting}</BodyCopy>
-            <BodyCopy variant="letterBody">{letter.intro}</BodyCopy>
-            {letter.body.map((paragraph, index) => (
-              <BodyCopy key={`letter-para-${index}`} variant="letterBody">
-                {paragraph}
-              </BodyCopy>
-            ))}
-            <BodyCopy variant="letterBody">{letter.outro}</BodyCopy>
-          </div>
-          <div className="pdf-letter__signature">
-            <DisplayTitle as="h3" variant="signatureName">
-              {letter.signatureName}
-            </DisplayTitle>
-            <div className="pdf-letter__signature-meta">
-              <MetaText variant="signatureMeta">{letter.signatureRole}</MetaText>
-              {letter.signatureContactLine ? (
-                <>
-                  <span className={getTypographyClassName('caption')}>·</span>
-                  <MetaText variant="signatureMeta">{letter.signatureContactLine}</MetaText>
-                </>
-              ) : null}
+      <div className="page-inner">
+        <header className="pdf-letter__header">
+          <Kicker variant="chapterKicker">{letter.chapterKicker}</Kicker>
+          <DisplayTitle as="h2" variant="letterTitle">
+            {letter.title}
+          </DisplayTitle>
+          <hr className="pdf-letter__header-rule" />
+        </header>
+        <div className="pdf-letter__grid">
+          <aside className="pdf-letter__decor-col">
+            {textValue(letter.highlight) ? (
+              <QuoteText variant="letterHighlight">{letter.highlight}</QuoteText>
+            ) : (
+              <div />
+            )}
+            <Image
+              src="/assets/brands/indochine_icon/ruong_bac_thang.svg"
+              alt=""
+              width={160}
+              height={120}
+              unoptimized
+              style={{ width: '100%', maxWidth: '160px', opacity: 0.85, height: 'auto' }}
+            />
+          </aside>
+          <article className="pdf-letter__body-col">
+            <div className="pdf-letter__paragraphs">
+              <BodyCopy variant="letterBody">{letter.greeting}</BodyCopy>
+              <BodyCopy variant="letterBody">{letter.intro}</BodyCopy>
+              {letter.body.map((paragraph, index) => (
+                <BodyCopy key={`letter-para-${index}`} variant="letterBody">
+                  {paragraph}
+                </BodyCopy>
+              ))}
+              <BodyCopy variant="letterBody">{letter.outro}</BodyCopy>
             </div>
-          </div>
-        </article>
+            <div className="pdf-letter__signature">
+              <DisplayTitle as="h3" variant="signatureName">
+                {letter.signatureName}
+              </DisplayTitle>
+              <div className="pdf-letter__signature-meta">
+                <MetaText variant="signatureMeta">{letter.signatureRole}</MetaText>
+                {letter.signatureContactLine ? (
+                  <>
+                    <span className={getTypographyClassName('caption')}>·</span>
+                    <MetaText variant="signatureMeta">{letter.signatureContactLine}</MetaText>
+                  </>
+                ) : null}
+              </div>
+            </div>
+          </article>
+        </div>
       </div>
     </PdfPage>
   );
 }
 
 function PdfRouteMapSvg({ route }: { route: DisplayDocument['page']['routeMap'] }) {
-  if (!route.isInteractiveAvailable) {
-    return <div className="display-route-map__unavailable" role="status">{textValue(route.unavailableMessage)}</div>;
-  }
-  const mapCenter = route.mapViewport.center;
-  if (!mapCenter) {
-    return <div className="display-route-map__unavailable" role="status">{textValue(route.unavailableMessage)}</div>;
-  }
-  const latSpan = Math.max(route.mapViewport.latSpan, 0.5);
-  const lngSpan = Math.max(route.mapViewport.lngSpan, 0.5);
-  const projectedPoints = route.interactiveMarkers.map((marker) => ({
-    ...marker,
-    ...normalizePoint(marker.coordinates, mapCenter, latSpan, lngSpan),
-  }));
+  const mapCenter = route.mapViewport.center || [16.0, 107.5];
+  const latSpan = Math.max(route.mapViewport.latSpan || 8, 0.5);
+  const lngSpan = Math.max(route.mapViewport.lngSpan || 8, 0.5);
+  const sourceMarkers = route.interactiveMarkers.length > 0
+    ? route.interactiveMarkers
+    : route.segments.map((s) => ({
+        sequence: s.sequence,
+        coordinates: s.coordinates,
+        title: s.title,
+        city: s.city,
+        dayLabel: s.dayLabel,
+      }));
+
+  const projectedPoints = sourceMarkers.map((marker, idx) => {
+    const coords = marker.coordinates || [16.0 + (idx - 2) * 2, 107.5 + (idx % 2 === 0 ? -1 : 1)];
+    return {
+      ...marker,
+      ...normalizePoint(coords, mapCenter, latSpan, lngSpan),
+    };
+  });
 
   const activeSegment =
     route.segments.find((segment) => segment.sequence === route.initialActiveSegment) ?? route.segments[0];
@@ -546,13 +555,15 @@ function PdfItinerary({ documentModel }: { documentModel: DisplayDocument }) {
           borderVariant="none"
           ornamentVariant="none"
         >
-          <div className="pdf-itinerary__pair">
-            {pair.map((day) => (
-              <PdfItineraryDay
-                key={textValue(day.dayLabel) || textValue(day.title)}
-                day={day}
-              />
-            ))}
+          <div className="page-inner">
+            <div className="pdf-itinerary__pair">
+              {pair.map((day) => (
+                <PdfItineraryDay
+                  key={textValue(day.dayLabel) || textValue(day.title)}
+                  day={day}
+                />
+              ))}
+            </div>
           </div>
         </PdfPage>
       ))}
@@ -577,89 +588,91 @@ function PdfHotels({ documentModel }: { documentModel: DisplayDocument }) {
             borderVariant="none"
             ornamentVariant={isLastPage ? 'van-mieu' : 'none'}
           >
-            <div className="hotel-plan-container">
-              {chunk.map((hotel: HotelCardViewModel, cardIndex: number) => {
-                const isEven = cardIndex % 2 === 1;
-                const telephone = hotel.telephone;
-                const telephonePrefix = hotel.telephonePrefix;
-                const datesText = hotel.dateRanges.map(textValue).filter(Boolean).join(' · ');
+            <div className="page-inner">
+              <div className="hotel-plan-container">
+                {chunk.map((hotel: HotelCardViewModel, cardIndex: number) => {
+                  const isEven = cardIndex % 2 === 1;
+                  const telephone = hotel.telephone;
+                  const telephonePrefix = hotel.telephonePrefix;
+                  const datesText = hotel.dateRanges.map(textValue).filter(Boolean).join(' · ');
 
-                return (
-                  <article
-                    key={textValue(hotel.name) || `hotel-${cardIndex}`}
-                    className="hotel-card-editorial"
-                  >
-                    <div className={`hotel-editorial-grid ${isEven ? 'even-row' : 'odd-row'}`}>
-                      <div className="hotel-images-group">
-                        <div className="hotel-image-wrapper">
-                          <ImageFrame
-                            src={hotel.hotelImage}
-                            alt={hotel.hotelImageAlt}
-                            variant="editorial"
-                          />
-                        </div>
-                        <div>
+                  return (
+                    <article
+                      key={textValue(hotel.name) || `hotel-${cardIndex}`}
+                      className="hotel-card-editorial"
+                    >
+                      <div className={`hotel-editorial-grid ${isEven ? 'even-row' : 'odd-row'}`}>
+                        <div className="hotel-images-group">
                           <div className="hotel-image-wrapper">
                             <ImageFrame
-                              src={hotel.roomImage}
-                              alt={hotel.roomImageAlt}
+                              src={hotel.hotelImage}
+                              alt={hotel.hotelImageAlt}
                               variant="editorial"
                             />
                           </div>
-                          {hotel.roomType ? (
-                            <div style={{ marginTop: '4px' }}>
-                              <MetaText variant="caption">{hotel.roomType}</MetaText>
+                          <div>
+                            <div className="hotel-image-wrapper">
+                              <ImageFrame
+                                src={hotel.roomImage}
+                                alt={hotel.roomImageAlt}
+                                variant="editorial"
+                              />
                             </div>
+                            {hotel.roomType ? (
+                              <div style={{ marginTop: '4px' }}>
+                                <MetaText variant="caption">{hotel.roomType}</MetaText>
+                              </div>
+                            ) : null}
+                          </div>
+                        </div>
+
+                        <div className="hotel-info-block">
+                          <MetaText variant="caption">{hotel.city}</MetaText>
+                          <DisplayTitle as="h3" variant="hotelTitle">
+                            {hotel.name}
+                          </DisplayTitle>
+                          {hotel.intro ? (
+                            <BodyCopy variant="hotelBody">{hotel.intro}</BodyCopy>
                           ) : null}
+                          <div className="hotel-tags">
+                            {datesText ? (
+                              <span className={getTypographyClassName('caption')}>
+                                {datesText}
+                              </span>
+                            ) : null}
+                            {telephone && textValue(telephone) ? (
+                              <span className={getTypographyClassName('caption')}>
+                                {textValue(telephonePrefix) || 'TEL:'} {textValue(telephone)}
+                              </span>
+                            ) : null}
+                          </div>
                         </div>
                       </div>
-
-                      <div className="hotel-info-block">
-                        <MetaText variant="caption">{hotel.city}</MetaText>
-                        <DisplayTitle as="h3" variant="hotelTitle">
-                          {hotel.name}
-                        </DisplayTitle>
-                        {hotel.intro ? (
-                          <BodyCopy variant="hotelBody">{hotel.intro}</BodyCopy>
-                        ) : null}
-                        <div className="hotel-tags">
-                          {datesText ? (
-                            <span className={getTypographyClassName('caption')}>
-                              {datesText}
-                            </span>
-                          ) : null}
-                          {telephone && textValue(telephone) ? (
-                            <span className={getTypographyClassName('caption')}>
-                              {textValue(telephonePrefix) || 'TEL:'} {textValue(telephone)}
-                            </span>
-                          ) : null}
-                        </div>
-                      </div>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-
-            {isLastPage && roomNotes && textValue(roomNotes) ? (
-              <div className="hotel-room-notes">
-                <span className={getTypographyClassName('label')}>
-                  Room Notes &amp; Special Requests:{' '}
-                </span>
-                <span
-                  className={getTypographyClassName('bodySm')}
-                  {...(typeof roomNotes === 'string'
-                    ? {}
-                    : {
-                        'data-editable': roomNotes.path,
-                        'data-edit-owner': roomNotes.owner,
-                        'data-edit-mode': roomNotes.mode,
-                      })}
-                >
-                  {textValue(roomNotes)}
-                </span>
+                    </article>
+                  );
+                })}
               </div>
-            ) : null}
+
+              {isLastPage && roomNotes && textValue(roomNotes) ? (
+                <div className="hotel-room-notes">
+                  <span className={getTypographyClassName('label')}>
+                    Room Notes &amp; Special Requests:{' '}
+                  </span>
+                  <span
+                    className={getTypographyClassName('bodySm')}
+                    {...(typeof roomNotes === 'string'
+                      ? {}
+                      : {
+                          'data-editable': roomNotes.path,
+                          'data-edit-owner': roomNotes.owner,
+                          'data-edit-mode': roomNotes.mode,
+                        })}
+                  >
+                    {textValue(roomNotes)}
+                  </span>
+                </div>
+              ) : null}
+            </div>
           </PdfPage>
         );
       })}
@@ -680,67 +693,69 @@ function PdfPricing({ documentModel }: { documentModel: DisplayDocument }) {
       ornamentVariant="cloud"
       className="pdf-pricing-page"
     >
-      <Kicker variant="chapterKicker">{pricing.kicker}</Kicker>
-      <div style={{ margin: '8px 0' }}>
-        <DisplayTitle as="h2" variant="investmentTitle">
-          {pricing.title}
-        </DisplayTitle>
-      </div>
-      {pricing.description ? (
-        <div style={{ marginBottom: '20px' }}>
-          <BodyCopy variant="bodyLg">
-            {pricing.description}
-          </BodyCopy>
+      <div className="page-inner" style={{ justifyContent: 'center', height: 'calc(100% - 38px)' }}>
+        <Kicker variant="chapterKicker">{pricing.kicker}</Kicker>
+        <div style={{ margin: '8px 0' }}>
+          <DisplayTitle as="h2" variant="investmentTitle">
+            {pricing.title}
+          </DisplayTitle>
         </div>
-      ) : null}
+        {pricing.description ? (
+          <div style={{ marginBottom: '20px' }}>
+            <BodyCopy variant="bodyLg">
+              {pricing.description}
+            </BodyCopy>
+          </div>
+        ) : null}
 
-      <div className="price-cards">
-        {pricing.options.map((option: PriceOptionViewModel, index: number) => (
-          <article
-            key={option.index || textValue(option.displayIndex) || textValue(option.label)}
-            className="price-card"
-          >
-            <div className={`price-card__num ${getTypographyClassName('investmentTitle')}`}>
-              {index + 1 < 10 ? `0${index + 1}` : index + 1}
-            </div>
-            <div>
-              <DisplayTitle as="h3" variant="cardTitle">
-                {option.label}
-              </DisplayTitle>
-            </div>
-            <div>
-              <PriceText variant="investmentValue">{option.groupTotalPrice}</PriceText>
-              {option.perTravelerPrice && textValue(option.perTravelerPrice) ? (
-                <div style={{ marginTop: '2px' }}>
-                  <MetaText variant="caption">
-                    {`Per person: ${textValue(option.perTravelerPrice)}`}
-                  </MetaText>
-                </div>
-              ) : null}
-            </div>
-            <div>
-              {option.isConfirmedMainOption ? (
-                <div className={`price-card__badge-confirmed ${getTypographyClassName('caption')}`}>
-                  {textValue(pricing.confirmedMainOptionLabel) || '✓ CONFIRMED MAIN OPTION'}
-                </div>
-              ) : (
-                <div className={`price-card__badge-alternative ${getTypographyClassName('caption')}`}>
-                  ALTERNATIVE OPTION
-                </div>
-              )}
-            </div>
-          </article>
-        ))}
-      </div>
-
-      {note && textValue(note) ? (
-        <div className="price-important-note">
-          <span className={getTypographyClassName('label')}>
-            {textValue(noteLabel) || 'Important Note'}:
-          </span>
-          <BodyCopy variant="bodySm">{note}</BodyCopy>
+        <div className="price-cards">
+          {pricing.options.map((option: PriceOptionViewModel, index: number) => (
+            <article
+              key={option.index || textValue(option.displayIndex) || textValue(option.label)}
+              className="price-card"
+            >
+              <div className={`price-card__num ${getTypographyClassName('investmentTitle')}`}>
+                {index + 1 < 10 ? `0${index + 1}` : index + 1}
+              </div>
+              <div>
+                <DisplayTitle as="h3" variant="cardTitle">
+                  {option.label}
+                </DisplayTitle>
+              </div>
+              <div>
+                <PriceText variant="investmentValue">{option.groupTotalPrice}</PriceText>
+                {option.perTravelerPrice && textValue(option.perTravelerPrice) ? (
+                  <div style={{ marginTop: '2px' }}>
+                    <MetaText variant="caption">
+                      {`Per person: ${textValue(option.perTravelerPrice)}`}
+                    </MetaText>
+                  </div>
+                ) : null}
+              </div>
+              <div>
+                {option.isConfirmedMainOption ? (
+                  <div className={`price-card__badge-confirmed ${getTypographyClassName('caption')}`}>
+                    {textValue(pricing.confirmedMainOptionLabel) || '✓ CONFIRMED MAIN OPTION'}
+                  </div>
+                ) : (
+                  <div className={`price-card__badge-alternative ${getTypographyClassName('caption')}`}>
+                    ALTERNATIVE OPTION
+                  </div>
+                )}
+              </div>
+            </article>
+          ))}
         </div>
-      ) : null}
+
+        {note && textValue(note) ? (
+          <div className="price-important-note">
+            <span className={getTypographyClassName('label')}>
+              {textValue(noteLabel) || 'Important Note'}:
+            </span>
+            <BodyCopy variant="bodySm">{note}</BodyCopy>
+          </div>
+        ) : null}
+      </div>
     </PdfPage>
   );
 }
@@ -764,36 +779,38 @@ function PdfDetails({ documentModel }: { documentModel: DisplayDocument }) {
         borderVariant="none"
         ornamentVariant="none"
       >
-        <Kicker variant="overline">Package Inclusions &amp; Exclusions</Kicker>
-        <div style={{ margin: '8px 0 20px' }}>
-          <DisplayTitle as="h2" variant="sectionTitle">
-            {details.title}
-          </DisplayTitle>
-        </div>
-        <div className="pdf-details__two-col">
-          <div className="pdf-details__panel">
-            <DisplayTitle as="h3" variant="cardTitle">
-              {details.inclusionsTitle || 'Inclusions'}
+        <div className="page-inner">
+          <Kicker variant="overline">Package Inclusions &amp; Exclusions</Kicker>
+          <div style={{ margin: '8px 0 20px' }}>
+            <DisplayTitle as="h2" variant="sectionTitle">
+              {details.title}
             </DisplayTitle>
-            <ul>
-              {details.inclusions.map((item, index) => (
-                <li key={`inc-${index}`}>
-                  <BodyCopy variant="bodySm">{inclusionText(item)}</BodyCopy>
-                </li>
-              ))}
-            </ul>
           </div>
-          <div className="pdf-details__panel">
-            <DisplayTitle as="h3" variant="cardTitle">
-              {details.exclusionsTitle || 'Exclusions'}
-            </DisplayTitle>
-            <ul>
-              {details.exclusions.map((item, index) => (
-                <li key={`exc-${index}`}>
-                  <BodyCopy variant="bodySm">{item}</BodyCopy>
-                </li>
-              ))}
-            </ul>
+          <div className="pdf-details__two-col">
+            <div className="pdf-details__panel">
+              <DisplayTitle as="h3" variant="cardTitle">
+                {details.inclusionsTitle || 'Inclusions'}
+              </DisplayTitle>
+              <ul>
+                {details.inclusions.map((item, index) => (
+                  <li key={`inc-${index}`}>
+                    <BodyCopy variant="bodySm">{inclusionText(item)}</BodyCopy>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="pdf-details__panel">
+              <DisplayTitle as="h3" variant="cardTitle">
+                {details.exclusionsTitle || 'Exclusions'}
+              </DisplayTitle>
+              <ul>
+                {details.exclusions.map((item, index) => (
+                  <li key={`exc-${index}`}>
+                    <BodyCopy variant="bodySm">{item}</BodyCopy>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
       </PdfPage>
@@ -805,25 +822,27 @@ function PdfDetails({ documentModel }: { documentModel: DisplayDocument }) {
         borderVariant="none"
         ornamentVariant="cloud"
       >
-        <div className="pdf-terms__grid">
-          <div>
-            <Kicker variant="chapterKicker">{terms.kicker}</Kicker>
-            <div style={{ margin: '8px 0 14px' }}>
-              <DisplayTitle as="h2" variant="termTitle">
-                {terms.title}
-              </DisplayTitle>
-            </div>
-            <BodyCopy variant="termBody">{terms.description}</BodyCopy>
-          </div>
-          <div className="pdf-terms__rows">
-            {terms.terms.map((term, index) => (
-              <div key={`term-${index}`} className="pdf-terms__row">
-                <DisplayTitle as="h3" variant="cardTitle">
-                  {term.label}
+        <div className="page-inner">
+          <div className="pdf-terms__grid">
+            <div>
+              <Kicker variant="chapterKicker">{terms.kicker}</Kicker>
+              <div style={{ margin: '8px 0 14px' }}>
+                <DisplayTitle as="h2" variant="termTitle">
+                  {terms.title}
                 </DisplayTitle>
-                <BodyCopy variant="termBody">{term.bodyRichText}</BodyCopy>
               </div>
-            ))}
+              <BodyCopy variant="termBody">{terms.description}</BodyCopy>
+            </div>
+            <div className="pdf-terms__rows">
+              {terms.terms.map((term, index) => (
+                <div key={`term-${index}`} className="pdf-terms__row">
+                  <DisplayTitle as="h3" variant="cardTitle">
+                    {term.label}
+                  </DisplayTitle>
+                  <BodyCopy variant="termBody">{term.bodyRichText}</BodyCopy>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </PdfPage>
@@ -841,53 +860,55 @@ function PdfDesigner({ documentModel }: { documentModel: DisplayDocument }) {
       borderVariant="none"
       ornamentVariant="cyclo"
     >
-      <div className="pdf-designer__circle-decor-1" />
-      <div className="pdf-designer__circle-decor-2" />
+      <div className="page-inner" style={{ position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
+        <div className="pdf-designer__circle-decor-1" />
+        <div className="pdf-designer__circle-decor-2" />
 
-      <div className="pdf-designer__grid">
-        <div style={{ textAlign: 'center' }}>
-          <div className="pdf-designer__avatar-frame">
-            <ImageFrame src={designer.avatar} alt={designer.avatarAlt} variant="editorial" />
-          </div>
-          <div style={{ margin: '0 0 2px' }}>
-            <DisplayTitle as="h3" variant="signatureName">
-              {designer.name}
-            </DisplayTitle>
-          </div>
-          {designer.subtitle ? (
-            <MetaText variant="signatureMeta">{designer.subtitle}</MetaText>
-          ) : null}
-          <div style={{ marginTop: '8px', marginBottom: '14px' }}>
-            <Kicker variant="label">{designer.signatureLabel || 'TRAVEL DESIGNER'}</Kicker>
-          </div>
-          <div
-            style={{
-              width: '40px',
-              height: '1px',
-              background: 'var(--color-accent)',
-              margin: '0 auto 16px',
-            }}
-          />
-          <QuoteText variant="quote">{designer.experienceNote}</QuoteText>
-        </div>
-
-        <div className="pdf-designer__right-col">
-          <div>
-            <Kicker variant="chapterKicker">{designer.kicker}</Kicker>
-            <div style={{ margin: '8px 0 16px' }}>
-              <DisplayTitle as="h2" variant="designerTitle">
-                {designer.title}
+        <div className="pdf-designer__grid">
+          <div style={{ textAlign: 'center' }}>
+            <div className="pdf-designer__avatar-frame">
+              <ImageFrame src={designer.avatar} alt={designer.avatarAlt} variant="editorial" />
+            </div>
+            <div style={{ margin: '0 0 2px' }}>
+              <DisplayTitle as="h3" variant="signatureName">
+                {designer.name}
               </DisplayTitle>
             </div>
-            <QuoteText variant="designerQuote">{designer.quote}</QuoteText>
+            {designer.subtitle ? (
+              <MetaText variant="signatureMeta">{designer.subtitle}</MetaText>
+            ) : null}
+            <div style={{ marginTop: '8px', marginBottom: '14px' }}>
+              <Kicker variant="label">{designer.signatureLabel || 'TRAVEL DESIGNER'}</Kicker>
+            </div>
+            <div
+              style={{
+                width: '40px',
+                height: '1px',
+                background: 'var(--color-accent)',
+                margin: '0 auto 16px',
+              }}
+            />
+            <QuoteText variant="quote">{designer.experienceNote}</QuoteText>
           </div>
-          <div className="pdf-designer__actions">
-            <a href="https://wa.me/84913393119" className={`pdf-designer__whatsapp-btn ${getTypographyClassName('buttonPrimary')}`}>
-              CHAT ON WHATSAPP
-            </a>
-            <a href="mailto:sales@capellatravel.com" className={`pdf-designer__email-btn ${getTypographyClassName('buttonPrimary')}`}>
-              EMAIL
-            </a>
+
+          <div className="pdf-designer__right-col">
+            <div>
+              <Kicker variant="chapterKicker">{designer.kicker}</Kicker>
+              <div style={{ margin: '8px 0 16px' }}>
+                <DisplayTitle as="h2" variant="designerTitle">
+                  {designer.title}
+                </DisplayTitle>
+              </div>
+              <QuoteText variant="designerQuote">{designer.quote}</QuoteText>
+            </div>
+            <div className="pdf-designer__actions">
+              <a href="https://wa.me/84913393119" className={`pdf-designer__whatsapp-btn ${getTypographyClassName('buttonPrimary')}`}>
+                CHAT ON WHATSAPP
+              </a>
+              <a href="mailto:sales@capellatravel.com" className={`pdf-designer__email-btn ${getTypographyClassName('buttonPrimary')}`}>
+                EMAIL
+              </a>
+            </div>
           </div>
         </div>
       </div>
