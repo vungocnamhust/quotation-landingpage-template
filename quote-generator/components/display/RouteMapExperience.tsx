@@ -195,6 +195,12 @@ export default function RouteMapExperience({
     };
   }, [points, viewMode]);
 
+  const isInitialRenderRef = useRef(true);
+
+  useEffect(() => {
+    isInitialRenderRef.current = true;
+  }, [points, viewMode]);
+
   useEffect(() => {
     if (!mapRef.current) {
       return;
@@ -253,17 +259,32 @@ export default function RouteMapExperience({
       markerMapRef.current.set(segment.sequence, marker);
     });
 
+    if (viewMode === 'pdf') {
+      return;
+    }
+
+    if (isInitialRenderRef.current) {
+      isInitialRenderRef.current = false;
+      return;
+    }
+
     const nextMarker = markerMapRef.current.get(activeSequence);
     if (nextMarker) {
       const targetLatLng = nextMarker.getLatLng();
+      const rawZoom = typeof map.getZoom === 'function' ? map.getZoom() : undefined;
+      const minZoom = viewMode === 'mobile' ? 6.4 : 7.6;
+      const currentZoom = typeof rawZoom === 'number' && Number.isFinite(rawZoom) ? rawZoom : minZoom;
+      const targetZoom = Math.max(currentZoom, minZoom);
+
       if (
         targetLatLng &&
         typeof targetLatLng.lat === 'number' &&
         typeof targetLatLng.lng === 'number' &&
-        !Number.isNaN(targetLatLng.lat) &&
-        !Number.isNaN(targetLatLng.lng)
+        Number.isFinite(targetLatLng.lat) &&
+        Number.isFinite(targetLatLng.lng) &&
+        Number.isFinite(targetZoom)
       ) {
-        map.flyTo(targetLatLng, Math.max(map.getZoom(), viewMode === 'mobile' ? 6.4 : 7.6), {
+        map.flyTo(targetLatLng, targetZoom, {
           animate: true,
           duration: 0.6,
         });

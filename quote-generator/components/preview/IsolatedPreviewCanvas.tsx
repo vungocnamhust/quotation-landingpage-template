@@ -2,17 +2,33 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { X, Monitor, Tablet, Smartphone, FileText, ExternalLink, Minimize2, Maximize2 } from "lucide-react";
+import {
+  X,
+  Monitor,
+  Tablet,
+  Smartphone,
+  FileText,
+  ExternalLink,
+  Minimize2,
+  Maximize2,
+  Sliders,
+  Expand,
+  Shrink,
+} from "lucide-react";
 import type { DisplayDocument } from "../../display/runtimePageBuilder.ts";
 import type { ViewMode } from "../../display/contracts.ts";
 import DisplayPage from "../DisplayPage.tsx";
 import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
+import { useViewportScale, type ZoomLevel } from "./useViewportScale.ts";
 
 export type DevicePreset = "desktop" | "tablet" | "mobile" | "pdf";
+export type DesktopDisplayMode = "scaled" | "fullscreen";
 
 export interface IsolatedPreviewFrameProps {
   devicePreset: DevicePreset;
+  desktopMode?: DesktopDisplayMode;
+  scale?: number;
   children: React.ReactNode;
   className?: string;
   onClose?: () => void;
@@ -20,12 +36,13 @@ export interface IsolatedPreviewFrameProps {
 
 export function IsolatedPreviewFrame({
   devicePreset,
+  desktopMode = "scaled",
+  scale = 1,
   children,
   className,
 }: IsolatedPreviewFrameProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [iframeMounted, setIframeMounted] = useState(false);
-
   const [mountNode, setMountNode] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -79,7 +96,9 @@ export function IsolatedPreviewFrame({
       currentParentStyles.forEach((node) => {
         const identifier = node.textContent || (node as HTMLLinkElement).href;
         const exists = Array.from(doc.head.children).some(
-          (child) => child.textContent === node.textContent || (child as HTMLLinkElement).href === (node as HTMLLinkElement).href
+          (child) =>
+            child.textContent === node.textContent ||
+            (child as HTMLLinkElement).href === (node as HTMLLinkElement).href
         );
         if (!exists && identifier) {
           doc.head.appendChild(node.cloneNode(true));
@@ -94,6 +113,58 @@ export function IsolatedPreviewFrame({
     };
   }, [devicePreset]);
 
+  // Desktop Scaled Mode (1920px standard viewport with GPU transform scaling)
+  if (devicePreset === "desktop" && desktopMode === "scaled") {
+    const scaledWidth = 1920 * scale;
+    return (
+      <div
+        className={cn(
+          "relative flex flex-col items-center justify-start transition-all duration-200 ease-out",
+          className
+        )}
+        style={{ width: `${scaledWidth}px`, maxWidth: "100%" }}
+      >
+        <div
+          className="relative rounded-xl border border-neutral-800 bg-[var(--color-surface)] text-[var(--color-on-surface)] shadow-2xl overflow-hidden"
+          style={{
+            width: "1920px",
+            height: scale > 0 ? `calc(100vh / ${scale} - 64px)` : "1080px",
+            minHeight: "1080px",
+            transform: `scale(${scale})`,
+            transformOrigin: "top left",
+          }}
+        >
+          <iframe
+            ref={iframeRef}
+            title="Live Preview Canvas (Desktop 1920px Scaled)"
+            className="w-full h-full border-none block"
+          />
+          {iframeMounted && mountNode ? createPortal(children, mountNode) : null}
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop Fullscreen Mode (100% Native full width/height preview)
+  if (devicePreset === "desktop" && desktopMode === "fullscreen") {
+    return (
+      <div
+        className={cn(
+          "w-full h-full bg-[var(--color-surface)] text-[var(--color-on-surface)] overflow-hidden flex flex-col",
+          className
+        )}
+      >
+        <iframe
+          ref={iframeRef}
+          title="Live Preview Canvas (Desktop Fullscreen)"
+          className="w-full h-full border-none block"
+        />
+        {iframeMounted && mountNode ? createPortal(children, mountNode) : null}
+      </div>
+    );
+  }
+
+  // Mobile / Tablet / PDF presets
   return (
     <div
       className={cn(
@@ -102,9 +173,7 @@ export function IsolatedPreviewFrame({
           ? "w-[375px] my-4 rounded-[36px] border-[10px] border-neutral-800 ring-1 ring-white/10 min-h-[720px] max-h-[92vh]"
           : devicePreset === "tablet"
           ? "w-[768px] my-4 rounded-2xl border-4 border-neutral-800 ring-1 ring-white/10 min-h-[900px] max-h-[95vh]"
-          : devicePreset === "pdf"
-          ? "w-[800px] my-4 rounded-md border border-neutral-700 min-h-[1100px]"
-          : "w-full max-w-6xl my-2 rounded-xl border border-neutral-800 h-full",
+          : "w-[800px] my-4 rounded-md border border-neutral-700 min-h-[1100px]",
         className
       )}
     >
@@ -121,6 +190,11 @@ export function IsolatedPreviewFrame({
 export interface IsolatedPreviewDockProps {
   activeDevice: DevicePreset;
   onDeviceChange: (device: DevicePreset) => void;
+  desktopMode: DesktopDisplayMode;
+  onDesktopModeChange: (mode: DesktopDisplayMode) => void;
+  zoom: ZoomLevel;
+  onZoomChange: (zoom: ZoomLevel) => void;
+  currentScale: number;
   onClose?: () => void;
   publishedUrl?: string | null;
 }
@@ -128,19 +202,36 @@ export interface IsolatedPreviewDockProps {
 export function IsolatedPreviewDock({
   activeDevice,
   onDeviceChange,
+  desktopMode,
+  onDesktopModeChange,
+  zoom,
+  onZoomChange,
+  currentScale,
   onClose,
   publishedUrl,
 }: IsolatedPreviewDockProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  const devicePresets: Array<{ id: DevicePreset; label: string; icon: React.ComponentType<{ size?: number; className?: string }> }> = [
+  const devicePresets: Array<{
+    id: DevicePreset;
+    label: string;
+    icon: React.ComponentType<{ size?: number; className?: string }>;
+  }> = [
     { id: "desktop", label: "Desktop (1920px)", icon: Monitor },
     { id: "tablet", label: "Tablet (768px)", icon: Tablet },
     { id: "mobile", label: "Mobile (375px)", icon: Smartphone },
     { id: "pdf", label: "PDF Print (A4)", icon: FileText },
   ];
 
-  const activePreset = devicePresets.find((p) => p.id === activeDevice) ?? devicePresets[0];
+  const zoomOptions: Array<{ label: string; value: ZoomLevel }> = [
+    { label: "Fit", value: "fit" },
+    { label: "100%", value: 1 },
+    { label: "75%", value: 0.75 },
+    { label: "50%", value: 0.5 },
+  ];
+
+  const activePreset =
+    devicePresets.find((p) => p.id === activeDevice) ?? devicePresets[0];
   const ActiveIcon = activePreset.icon;
 
   if (isCollapsed) {
@@ -157,9 +248,14 @@ export function IsolatedPreviewDock({
         >
           <ActiveIcon size={14} />
           <span>{activePreset.label}</span>
+          {activeDevice === "desktop" && desktopMode === "scaled" ? (
+            <span className="opacity-70">
+              ({Math.round(currentScale * 100)}%)
+            </span>
+          ) : null}
           <Maximize2 size={12} className="ml-1 text-[var(--color-muted)]" />
         </button>
-        {onClose && (
+        {onClose ? (
           <button
             type="button"
             onClick={onClose}
@@ -168,16 +264,21 @@ export function IsolatedPreviewDock({
           >
             <X size={14} />
           </button>
-        )}
+        ) : null}
       </div>
     );
   }
 
   return (
-    <div className="fixed top-4 right-4 z-[10001] flex flex-col gap-3 rounded-[var(--radius-card)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] p-4 shadow-2xl backdrop-blur-md max-w-xs text-[var(--color-on-surface)] animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed top-4 right-4 z-[10001] flex flex-col gap-3 rounded-[var(--radius-card)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] p-4 shadow-2xl backdrop-blur-md w-72 text-[var(--color-on-surface)] animate-in fade-in zoom-in-95 duration-200">
       {/* Dock Header */}
       <div className="flex items-center justify-between gap-3 border-b border-[var(--color-border)] pb-2.5">
-        <span className={cn(getTypographyClassName("overline"), "text-[var(--color-muted)]")}>
+        <span
+          className={cn(
+            getTypographyClassName("overline"),
+            "text-[var(--color-muted)]"
+          )}
+        >
           LIVE PREVIEW DOCK
         </span>
         <div className="flex items-center gap-1">
@@ -189,7 +290,7 @@ export function IsolatedPreviewDock({
           >
             <Minimize2 size={14} />
           </button>
-          {onClose && (
+          {onClose ? (
             <button
               type="button"
               onClick={onClose}
@@ -198,12 +299,16 @@ export function IsolatedPreviewDock({
             >
               <X size={14} />
             </button>
-          )}
+          ) : null}
         </div>
       </div>
 
       {/* Device Presets List */}
-      <div className="flex flex-col gap-1.5" role="group" aria-label="Device viewports">
+      <div
+        className="flex flex-col gap-1.5"
+        role="group"
+        aria-label="Device viewports"
+      >
         {devicePresets.map((preset) => {
           const Icon = preset.icon;
           const isActive = activeDevice === preset.id;
@@ -230,6 +335,107 @@ export function IsolatedPreviewDock({
         })}
       </div>
 
+      {/* Desktop Mode & Scale Controls (Visible only for Desktop) */}
+      {activeDevice === "desktop" ? (
+        <div className="flex flex-col gap-2.5 rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-2.5">
+          <div className="flex items-center justify-between">
+            <span
+              className={cn(
+                getTypographyClassName("caption"),
+                "text-[var(--color-muted)]"
+              )}
+            >
+              Display Mode
+            </span>
+            <span
+              className={cn(
+                getTypographyClassName("caption"),
+                "text-[var(--color-muted)]"
+              )}
+            >
+              {desktopMode === "scaled"
+                ? `${Math.round(currentScale * 100)}%`
+                : "100%"}
+            </span>
+          </div>
+
+          {/* Desktop Mode Toggle */}
+          <div
+            className="grid grid-cols-2 gap-1 rounded-[var(--radius-button)] border border-[var(--color-border)] bg-[var(--color-surface)] p-1"
+            role="radiogroup"
+            aria-label="Desktop Display Mode"
+          >
+            <button
+              type="button"
+              role="radio"
+              aria-checked={desktopMode === "scaled"}
+              onClick={() => onDesktopModeChange("scaled")}
+              className={cn(
+                getTypographyClassName("caption"),
+                "flex items-center justify-center gap-1.5 rounded-[calc(var(--radius-button)-2px)] py-1.5 transition-all cursor-pointer",
+                desktopMode === "scaled"
+                  ? "bg-[var(--color-accent-wash)] text-[var(--color-on-surface)] shadow-2xs border border-[var(--color-border-strong)]"
+                  : "text-[var(--color-muted)] hover:text-[var(--color-on-surface)]"
+              )}
+            >
+              <Shrink size={12} />
+              <span>1920px Fit</span>
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={desktopMode === "fullscreen"}
+              onClick={() => onDesktopModeChange("fullscreen")}
+              className={cn(
+                getTypographyClassName("caption"),
+                "flex items-center justify-center gap-1.5 rounded-[calc(var(--radius-button)-2px)] py-1.5 transition-all cursor-pointer",
+                desktopMode === "fullscreen"
+                  ? "bg-[var(--color-accent-wash)] text-[var(--color-on-surface)] shadow-2xs border border-[var(--color-border-strong)]"
+                  : "text-[var(--color-muted)] hover:text-[var(--color-on-surface)]"
+              )}
+            >
+              <Expand size={12} />
+              <span>Full Width</span>
+            </button>
+          </div>
+
+          {/* Zoom Level Selector (When in Scaled Mode) */}
+          {desktopMode === "scaled" ? (
+            <div className="flex flex-col gap-1.5 pt-1">
+              <div className="flex items-center gap-1 text-[var(--color-muted)]">
+                <Sliders size={12} />
+                <span className={cn(getTypographyClassName("caption"))}>
+                  Zoom Scale
+                </span>
+              </div>
+              <div
+                className="grid grid-cols-4 gap-1"
+                role="group"
+                aria-label="Zoom Level"
+              >
+                {zoomOptions.map((opt) => (
+                  <button
+                    key={String(opt.value)}
+                    type="button"
+                    onClick={() => onZoomChange(opt.value)}
+                    className={cn(
+                      getTypographyClassName("caption"),
+                      "rounded-[var(--radius-button)] py-1 text-center transition-all cursor-pointer",
+                      zoom === opt.value
+                        ? "bg-[var(--color-surface)] border border-[var(--color-border-strong)] text-[var(--color-on-surface)] shadow-2xs"
+                        : "border border-transparent text-[var(--color-muted)] hover:bg-[var(--color-surface)]/60 hover:text-[var(--color-on-surface)]"
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      {/* Public URL Action */}
       {publishedUrl ? (
         <a
           href={publishedUrl}
@@ -251,6 +457,7 @@ export function IsolatedPreviewDock({
 export interface IsolatedPreviewCanvasProps {
   documentModel: DisplayDocument;
   initialDevicePreset?: DevicePreset;
+  initialDesktopMode?: DesktopDisplayMode;
   publishedUrl?: string | null;
   onClose?: () => void;
   showControlDock?: boolean;
@@ -259,27 +466,57 @@ export interface IsolatedPreviewCanvasProps {
 export default function IsolatedPreviewCanvas({
   documentModel,
   initialDevicePreset = "desktop",
+  initialDesktopMode = "scaled",
   publishedUrl,
   onClose,
   showControlDock = true,
 }: IsolatedPreviewCanvasProps) {
   const [device, setDevice] = useState<DevicePreset>(initialDevicePreset);
+  const [desktopMode, setDesktopMode] =
+    useState<DesktopDisplayMode>(initialDesktopMode);
 
-  const resolvedViewMode: ViewMode = device === "pdf" ? "pdf" : device === "mobile" ? "mobile" : "desktop";
+  const { scale, zoom, setZoom, containerRef } = useViewportScale({
+    targetWidth: 1920,
+    padding: 32,
+    initialZoom: "fit",
+    enabled: device === "desktop" && desktopMode === "scaled",
+  });
+
+  const resolvedViewMode: ViewMode =
+    device === "pdf" ? "pdf" : device === "mobile" ? "mobile" : "desktop";
+
+  const isFullscreen = device === "desktop" && desktopMode === "fullscreen";
 
   return (
-    <div className="relative flex flex-col items-center justify-start w-full h-full min-h-screen bg-neutral-950 p-4 sm:p-6 overflow-y-auto">
-      {showControlDock && (
+    <div
+      ref={containerRef}
+      className={cn(
+        "relative flex flex-col items-center w-full h-full min-h-screen bg-neutral-950 overflow-y-auto",
+        isFullscreen ? "p-0 justify-start" : "p-4 sm:p-6 justify-start"
+      )}
+    >
+      {showControlDock ? (
         <IsolatedPreviewDock
           activeDevice={device}
           onDeviceChange={setDevice}
+          desktopMode={desktopMode}
+          onDesktopModeChange={setDesktopMode}
+          zoom={zoom}
+          onZoomChange={setZoom}
+          currentScale={scale}
           onClose={onClose}
           publishedUrl={publishedUrl}
         />
-      )}
+      ) : null}
 
-      <IsolatedPreviewFrame devicePreset={device}>
-        <DisplayPage documentModel={{ ...documentModel, viewMode: resolvedViewMode }} />
+      <IsolatedPreviewFrame
+        devicePreset={device}
+        desktopMode={desktopMode}
+        scale={scale}
+      >
+        <DisplayPage
+          documentModel={{ ...documentModel, viewMode: resolvedViewMode }}
+        />
       </IsolatedPreviewFrame>
     </div>
   );

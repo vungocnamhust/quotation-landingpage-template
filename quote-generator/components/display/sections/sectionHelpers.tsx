@@ -133,13 +133,15 @@ export function StaticRouteMapPanel({
   if (!mapCenter) {
     return <div className="display-route-map__unavailable" role="status">{textValue(viewModel.unavailableMessage)}</div>;
   }
+  const latSpan = Math.max(viewModel.mapViewport.latSpan, 0.5);
+  const lngSpan = Math.max(viewModel.mapViewport.lngSpan, 0.5);
   const projectedPoints = viewModel.interactiveMarkers.map((marker) => ({
     ...marker,
     ...normalizePoint(
       marker.coordinates,
       mapCenter,
-      viewModel.mapViewport.latSpan,
-      viewModel.mapViewport.lngSpan
+      latSpan,
+      lngSpan
     ),
   }));
 
@@ -147,7 +149,7 @@ export function StaticRouteMapPanel({
     viewModel.segments.find((segment) => segment.sequence === viewModel.initialActiveSegment) ?? viewModel.segments[0];
 
   const routePath = projectedPoints.reduce((pathStr, point, index) => {
-    if (index === 0) return `M ${point.x} ${point.y}`;
+    if (index === 0) return `M ${point.x.toFixed(2)} ${point.y.toFixed(2)}`;
     const prev = projectedPoints[index - 1];
     const midX = (prev.x + point.x) / 2;
     const midY = (prev.y + point.y) / 2;
@@ -177,15 +179,15 @@ export function StaticRouteMapPanel({
             {projectedPoints.map((point) => (
               <g key={point.sequence}>
                 <circle
-                  cx={point.x}
-                  cy={point.y}
-                  r={activeSegment.sequence === point.sequence ? 3.2 : 2.3}
+                  cx={point.x.toFixed(2)}
+                  cy={point.y.toFixed(2)}
+                  r={activeSegment?.sequence === point.sequence ? 3.2 : 2.3}
                   className={cn(
                     'display-route-map__marker display-route-map__marker--pdf',
-                    activeSegment.sequence === point.sequence && 'is-active'
+                    activeSegment?.sequence === point.sequence && 'is-active'
                   )}
                 />
-                <text x={point.x} y={point.y - 5} textAnchor="middle" className={cn('display-route-map__marker-label', getTypographyClassName(requireTypographySlot(typography, 'index')))}>
+                <text x={point.x.toFixed(2)} y={(point.y - 5).toFixed(2)} textAnchor="middle" className={cn('display-route-map__marker-label', getTypographyClassName(requireTypographySlot(typography, 'index')))}>
                   {textValue(point.dayLabel)}
                 </text>
               </g>

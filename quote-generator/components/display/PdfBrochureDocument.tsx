@@ -5,7 +5,7 @@ import type { InclusionItemViewModel, ItineraryDayViewModel, TextValue } from '.
 import { textValue } from '../../display/types.ts';
 import { getTypographyClassName } from '../../config/typography.ts';
 import { AvatarFrame, BodyCopy, DisplayTitle, ImageFrame, Kicker, MetaText, PriceText, QuoteText } from './atoms.tsx';
-import RouteMapClientIsland from './RouteMapClientIsland.tsx';
+import { normalizePoint } from './sections/sectionHelpers.tsx';
 
 type PdfPageProps = {
   documentModel: DisplayDocument;
@@ -102,6 +102,76 @@ function PdfLetter({ documentModel }: { documentModel: DisplayDocument }) {
   </PdfPage>;
 }
 
+function PdfRouteMapSvg({ route }: { route: DisplayDocument['page']['routeMap'] }) {
+  if (!route.isInteractiveAvailable) {
+    return <div className="display-route-map__unavailable" role="status">{textValue(route.unavailableMessage)}</div>;
+  }
+  const mapCenter = route.mapViewport.center;
+  if (!mapCenter) {
+    return <div className="display-route-map__unavailable" role="status">{textValue(route.unavailableMessage)}</div>;
+  }
+  const latSpan = Math.max(route.mapViewport.latSpan, 0.5);
+  const lngSpan = Math.max(route.mapViewport.lngSpan, 0.5);
+  const projectedPoints = route.interactiveMarkers.map((marker) => ({
+    ...marker,
+    ...normalizePoint(
+      marker.coordinates,
+      mapCenter,
+      latSpan,
+      lngSpan
+    ),
+  }));
+
+  const activeSegment =
+    route.segments.find((segment) => segment.sequence === route.initialActiveSegment) ?? route.segments[0];
+
+  const routePath = projectedPoints.reduce((pathStr, point, index) => {
+    if (index === 0) return `M ${point.x.toFixed(2)} ${point.y.toFixed(2)}`;
+    const prev = projectedPoints[index - 1];
+    const midX = (prev.x + point.x) / 2;
+    const midY = (prev.y + point.y) / 2;
+    const dx = point.x - prev.x;
+    const dy = point.y - prev.y;
+    const len = Math.sqrt(dx * dx + dy * dy);
+    const offset = Math.max(1.5, Math.min(6, len * 0.12));
+    const ctrlX = midX - (dy / (len || 1)) * offset;
+    const ctrlY = midY + (dx / (len || 1)) * offset;
+    return `${pathStr} Q ${ctrlX.toFixed(2)} ${ctrlY.toFixed(2)} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`;
+  }, '');
+
+  return (
+    <svg
+      viewBox="0 0 100 100"
+      className="display-route-map__svg"
+      aria-label={textValue(route.overviewAriaLabel)}
+      data-editable={typeof route.overviewAriaLabel === 'string' ? undefined : route.overviewAriaLabel.path}
+      data-edit-owner={typeof route.overviewAriaLabel === 'string' ? undefined : route.overviewAriaLabel.owner}
+      data-edit-mode={typeof route.overviewAriaLabel === 'string' ? undefined : route.overviewAriaLabel.mode}
+      preserveAspectRatio="none"
+    >
+      <path d={routePath} className="pdf-route__line" />
+      {projectedPoints.map((point) => (
+        <g key={point.sequence}>
+          <circle
+            cx={point.x.toFixed(2)}
+            cy={point.y.toFixed(2)}
+            r={activeSegment?.sequence === point.sequence ? '3.2' : '2.3'}
+            className="pdf-route__marker"
+          />
+          <text
+            x={point.x.toFixed(2)}
+            y={(point.y - 5).toFixed(2)}
+            textAnchor="middle"
+            className={`pdf-route__marker-text ${getTypographyClassName('caption')}`}
+          >
+            {textValue(point.dayLabel)}
+          </text>
+        </g>
+      ))}
+    </svg>
+  );
+}
+
 function PdfRouteMap({ documentModel }: { documentModel: DisplayDocument }) {
   const route = documentModel.page.routeMap;
   const quoteText =
@@ -118,22 +188,7 @@ function PdfRouteMap({ documentModel }: { documentModel: DisplayDocument }) {
         </DisplayTitle>
       </header>
       <div className="pdf-route__map">
-        <RouteMapClientIsland
-          viewModel={route}
-          typography={{
-            title: 'routeMapTitle',
-            body: 'routeMapBody',
-            kicker: 'chapterKicker',
-            metaPrimary: 'timelineTitle',
-            metaSecondary: 'timelineMeta',
-          }}
-          mapColors={{
-            route: 'var(--color-accent)',
-            marker: 'var(--color-accent)',
-            activeMarker: 'var(--color-accent)',
-          }}
-          viewMode="pdf"
-        />
+        <PdfRouteMapSvg route={route} />
       </div>
       <div className={`pdf-route__summary pdf-route__summary--${count === 1 ? 'single' : 'multiple'}`}>
         {route.segments.map((segment) => (
