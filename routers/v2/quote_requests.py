@@ -187,6 +187,8 @@ async def generate_quotation_from_request(
         return GenerateQuotationFromRequestResponseSchema(**res)
     except KeyError as err:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(err)) from err
+    except HTTPException:
+        raise
     except Exception as err:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to generate quotation: {err}") from err
 

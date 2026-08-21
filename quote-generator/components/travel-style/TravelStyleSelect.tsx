@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Tag, Plus, X, Sparkles } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
@@ -21,11 +21,13 @@ export function TravelStyleSelect({
   const [activeCategory, setActiveCategory] = useState<string>("group_composition");
   const [customTag, setCustomTag] = useState("");
 
-  const currentValue = value ?? "";
-  const selectedTags = currentValue
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
+  const selectedTags = useMemo(() => {
+    const raw = (value ?? "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    return Array.from(new Set(raw));
+  }, [value]);
 
   const toggleTag = (tagName: string) => {
     if (disabled) return;
@@ -41,11 +43,13 @@ export function TravelStyleSelect({
   const handleAddCustomTag = (e: React.FormEvent) => {
     e.preventDefault();
     if (!customTag.trim() || disabled) return;
-    const tagToAdd = customTag.trim();
-    if (!selectedTags.includes(tagToAdd)) {
-      const next = [...selectedTags, tagToAdd];
-      onChange?.(next.join(", "));
-    }
+    const newTags = customTag
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (newTags.length === 0) return;
+    const combined = Array.from(new Set([...selectedTags, ...newTags]));
+    onChange?.(combined.length > 0 ? combined.join(", ") : null);
     setCustomTag("");
   };
 
@@ -82,9 +86,9 @@ export function TravelStyleSelect({
             <Sparkles size={12} className="text-[var(--color-accent)]" aria-hidden="true" />
             <span>Applied:</span>
           </span>
-          {selectedTags.map((tag) => (
+          {selectedTags.map((tag, index) => (
             <span
-              key={tag}
+              key={`selected-tag-${tag}-${index}`}
               className={cn(
                 getTypographyClassName("caption"),
                 "inline-flex items-center gap-1 rounded-full border border-[var(--color-accent)] bg-[var(--color-accent-wash)] px-2.5 py-0.5 text-[var(--color-accent)]"
@@ -108,13 +112,13 @@ export function TravelStyleSelect({
 
       {/* Category Tabs */}
       <div className="flex flex-wrap gap-1 border-b border-[var(--color-border)] pb-2">
-        {categories.map((cat) => {
+        {categories.map((cat, catIdx) => {
           const isActive = cat.category_id === activeCategory;
           const count = cat.tags.filter((t) => selectedTags.includes(t.name_en)).length;
 
           return (
             <button
-              key={cat.category_id}
+              key={cat.category_id || `cat-${catIdx}`}
               type="button"
               disabled={disabled}
               onClick={() => setActiveCategory(cat.category_id)}
@@ -146,12 +150,13 @@ export function TravelStyleSelect({
       {/* Tag Chips for Active Category */}
       {currentCategoryObj && (
         <div className="flex flex-wrap gap-2 pt-1">
-          {currentCategoryObj.tags.map((tag) => {
+          {currentCategoryObj.tags.map((tag, tagIdx) => {
             const isSelected = selectedTags.includes(tag.name_en);
+            const tagKey = tag.id ? `tag-${tag.id}` : `tag-${tag.slug || tag.name_en}-${tagIdx}`;
 
             return (
               <button
-                key={tag.id}
+                key={tagKey}
                 type="button"
                 disabled={disabled}
                 onClick={() => toggleTag(tag.name_en)}

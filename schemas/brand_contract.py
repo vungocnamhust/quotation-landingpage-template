@@ -52,6 +52,7 @@ class BrandRenderProfileContract(BaseModel):
             raise ValueError(f"palette contains invalid #RRGGBB values: {', '.join(sorted(invalid))}")
         checks = (
             ("ink", "canvas", 4.5, "body text"),
+            ("ink", "paper", 4.5, "paper text"),
             ("onContrast", "contrast", 4.5, "contrast text"),
             ("focus", "canvas", 3.0, "focus ring"),
         )
@@ -66,6 +67,14 @@ class BrandRenderProfileContract(BaseModel):
                 raise ValueError(
                     f"{label} contrast is {ratio:.2f}:1; required minimum is {minimum}:1"
                 )
+        action_contrast = max(
+            _contrast_ratio(palette["ink"], palette["accent"]),
+            _contrast_ratio(palette["onContrast"], palette["accent"]),
+        )
+        if action_contrast < 4.5:
+            raise ValueError(
+                f"primary action contrast is {action_contrast:.2f}:1; required minimum is 4.5:1"
+            )
         return palette
 
     @field_validator("radii")

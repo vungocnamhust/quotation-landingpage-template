@@ -49,22 +49,64 @@ async def get_active_travel_designer(principal: EditorPrincipalDep):
     return profile
 
 
+import os
+
+
+def _is_admin_principal(principal: Principal) -> bool:
+    if principal.source == "local":
+        return True
+    configured_roles = {
+        role.strip().lower()
+        for role in os.getenv("QUOTE_ADMIN_ROLES", "quote_admin,admin,supervisor").split(",")
+        if role.strip()
+    }
+    roles = {
+        role.strip().lower()
+        for role in (principal.role or "").split(",")
+        if role.strip()
+    }
+    return bool(configured_roles.intersection(roles))
+
+
 async def require_owned_v2_quotation(
     quotation_id: str,
     principal: EditorPrincipalDep,
 ):
-    """Hide unassigned/foreign quotation IDs while enforcing V2 ownership."""
+    """Enforce V2 quotation access with multi-tier authorization policy."""
     async with _session_factory()() as session:
         quotation = await QuotationRepository(session).get_quotation_by_id(quotation_id)
+        if quotation is None or quotation.template_name != V2_RENDERER_NAME:
+            raise HTTPException(status_code=404, detail=f"Quotation '{quotation_id}' was not found.")
+
+        # 1. Service token & internal gateway bypass
+        if principal.is_service:
+            return quotation
+
+        # 2. Local development & Admin roles bypass
+        if _is_admin_principal(principal):
+            return quotation
+
+        # 3. Unassigned quotation is accessible to authenticated staff
+        if not quotation.designer_profile_id and not quotation.created_by_profile_id:
+            return quotation
+
+        # 4. Authenticated Travel Designer profile check
         designer = await TravelDesignerRepository(session).get_active_by_email(principal.email) if principal.email else None
-        if (
-            quotation is None
-            or quotation.template_name != V2_RENDERER_NAME
-            or designer is None
-            or (quotation.designer_profile_id != designer.id and quotation.created_by_profile_id != designer.id)
-        ):
-            raise HTTPException(status_code=404, detail="Quotation was not found.")
-    return quotation
+        if designer is None:
+            raise HTTPException(
+                status_code=403,
+                detail="An active Travel Designer profile is required to access this quotation. Contact your DMC administrator.",
+            )
+
+        # 5. Assigned designer OR original creator check
+        if quotation.designer_profile_id == designer.id or quotation.created_by_profile_id == designer.id:
+            return quotation
+
+        # 6. Explicit 403 Forbidden for unauthorized users
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access denied. Quotation '{quotation_id}' is owned by designer '{quotation.designer_profile_id}'.",
+        )
 
 
 OwnedV2QuotationDep = Annotated[object, Depends(require_owned_v2_quotation)]

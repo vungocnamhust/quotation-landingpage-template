@@ -123,15 +123,16 @@ def convert_request_to_quotation_facts(
                 extracted_dests.append(overnight_loc)
             itinerary_facts.append({
                 "day_number": day.day_number,
+                "title": day.title or None,
                 "destination": dest,
                 "destination_ref": day.destination_ref if isinstance(day.destination_ref, dict) else None,
                 "summary": day.summary or f"Day {day.day_number} exploration",
                 "overnight": overnight_loc,
-                "meals": default_meals,
-                "highlights": [],
-                "notes": [],
-                "sense_of_pace": "balanced",
-                "display_date": date_for_itinerary_day(start_date, day.day_number),
+                "meals": day.meals if day.meals and len(day.meals) > 0 else default_meals,
+                "highlights": day.highlights if day.highlights else [],
+                "notes": day.notes if day.notes else [],
+                "sense_of_pace": day.sense_of_pace or "balanced",
+                "display_date": day.display_date or date_for_itinerary_day(start_date, day.day_number),
                 "accommodation_id": day.accommodation_id,
                 "accommodation_name": day.accommodation_name,
                 "room_type": day.room_type,
@@ -608,7 +609,7 @@ class QuoteRequestService:
             source_kind="manual",
             source_snapshot_at=datetime.now().astimezone(),
             designer_profile_id=resolved_designer_id,
-            created_by_profile_id=resolved_designer_id,
+            created_by_profile_id=created_by_profile_id or resolved_designer_id,
         )
 
         # Create quotation request snapshot

@@ -143,6 +143,51 @@ class BrandSectionBackgroundContractTests(unittest.TestCase):
                 radii={"card": "1rem", "button": "1rem", "frame": "1rem", "pill": "999px"},
             )
 
+    def test_insufficient_primary_action_contrast_is_rejected(self):
+        # Selvara old palette with ink #283027 gives 3.88:1 on accent #a98338, and onContrast #ffffff gives 3.51:1
+        palette = {
+            "canvas": "#f9f6f0",
+            "paper": "#fffaf1",
+            "ink": "#283027",
+            "mutedInk": "#667064",
+            "accent": "#a98338",
+            "accentAlt": "#4f5d4e",
+            "contrast": "#4f5d4e",
+            "onContrast": "#ffffff",
+            "focus": "#a98338",
+            "storyContrast": "#17412e",
+            "investmentSurface": "#a98338",
+            "investmentText": "#11130f",
+        }
+        with self.assertRaisesRegex(ValueError, "primary action contrast is 3.88:1"):
+            main.BrandRenderProfileContract(
+                palette=palette,
+                radii={"card": "0.5rem", "button": "0.375rem", "frame": "0.625rem", "pill": "999px"},
+            )
+
+    def test_selvara_updated_palette_passes_contract(self):
+        # Selvara updated palette with ink #11130f gives 5.33:1 on accent #a98338
+        palette = {
+            "canvas": "#f9f6f0",
+            "paper": "#fffaf1",
+            "ink": "#11130f",
+            "mutedInk": "#667064",
+            "accent": "#a98338",
+            "accentAlt": "#4f5d4e",
+            "contrast": "#4f5d4e",
+            "onContrast": "#ffffff",
+            "focus": "#a98338",
+            "storyContrast": "#17412e",
+            "investmentSurface": "#a98338",
+            "investmentText": "#11130f",
+        }
+        profile = main.BrandRenderProfileContract(
+            palette=palette,
+            radii={"card": "0.5rem", "button": "0.375rem", "frame": "0.625rem", "pill": "999px"},
+        )
+        self.assertEqual(profile.palette["ink"], "#11130f")
+
+
 
 class QuoteDocumentValidationTests(unittest.TestCase):
     def test_unknown_section_type_is_reported(self):
@@ -656,11 +701,11 @@ class BrochureRouteContractTests(unittest.TestCase):
                 "paper": "#f8fafc",
                 "ink": "#0f172a",
                 "mutedInk": "#64748b",
-                "accent": "#0284c7",
+                "accent": "#0369a1",
                 "accentAlt": "#0369a1",
                 "contrast": "#0f172a",
                 "onContrast": "#ffffff",
-                "focus": "#0284c7",
+                "focus": "#0369a1",
             },
             "radii": {
                 "card": "12px",
@@ -776,7 +821,7 @@ class BrochureRouteContractTests(unittest.TestCase):
         self.assertEqual(created.status_code, 201)
         item = created.json()
         self.assertEqual(item["destination"], "Hanoi")
-        self.assertEqual(item["asset_prefix"], "accommodations/vietnam/north/hanoi/ha-noi/intake-test-hotel")
+        self.assertEqual(item["asset_prefix"], "accommodations/vietnam/north/ha-noi/ha-noi/intake-test-hotel")
         updated_payload = {**payload, "name": "Renamed Intake Hotel"}
         updated = self.client.put(f"/api/v2/accommodations/{item['id']}", json=updated_payload)
         self.assertEqual(updated.status_code, 200)

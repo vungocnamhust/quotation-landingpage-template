@@ -18,6 +18,7 @@ import {
 export type CanonicalDay = {
   id?: string;
   day_number: number | null;
+  title?: string | null;
   destination: string | null;
   destination_ref?: DestinationRef | null;
   overnight: string | null;
@@ -126,6 +127,7 @@ export const tripReconciler = {
       nextItinerary.push({
         id: existingDay?.id || `day_${Date.now()}_${dayNum}`,
         day_number: dayNum,
+        title: existingDay?.title || null,
         destination: destName,
         destination_ref: destRef ?? existingDay?.destination_ref ?? null,
         overnight,
@@ -192,6 +194,7 @@ export const tripReconciler = {
     const newDay: CanonicalDay = {
       id: defaultDayPayload?.id || `day_${Date.now()}_${newDayNumber}`,
       day_number: newDayNumber,
+      title: defaultDayPayload?.title || null,
       destination: initialDest,
       destination_ref: defaultDayPayload?.destination_ref ?? null,
       overnight: defaultDayPayload?.overnight || initialDest,
@@ -334,6 +337,7 @@ export const tripReconciler = {
           nextItinerary.push({
             id: `day_${Date.now()}_${dayNum}`,
             day_number: dayNum,
+            title: null,
             destination: null,
             overnight: null,
             display_date: projectedLabel,

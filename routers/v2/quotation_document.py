@@ -390,6 +390,14 @@ async def create_content_drafts_v2(
         document = await documents.get_current_document(quotation_id, lang) if quotation else None
         if quotation is None or request is None or document is None:
             raise HTTPException(status_code=404, detail="Quotation content context was not found.")
+        request_payload = None
+        if quotation.opportunity_id:
+            from repositories.quote_request_repository import QuoteRequestRepository
+            quote_req = await QuoteRequestRepository(session).get_by_id(quotation.opportunity_id)
+            if quote_req and quote_req.payload_json:
+                request_payload = quote_req.payload_json
+        if not request_payload and request.request_json:
+            request_payload = request.request_json
         facts, resolved = await h._resolve_v2_facts(CreateQuoteRequestV1.model_validate(h.normalize_legacy_facts_snapshot(request.request_json)))
         try:
             brand = await BrandRepository(session).get_active(quotation.brand_id)
@@ -404,6 +412,7 @@ async def create_content_drafts_v2(
                 scope=payload.scope,
                 mode=payload.generationMode,
                 instruction=payload.instruction,
+                request_payload=request_payload,
             )
         except ValueError as exc:
             raise HTTPException(status_code=422, detail={"message": str(exc)}) from exc
@@ -430,6 +439,14 @@ async def preview_content_draft_prompt_v2(
         document = await documents.get_current_document(quotation_id, lang) if quotation else None
         if quotation is None or request is None or document is None:
             raise HTTPException(status_code=404, detail="Quotation content context was not found.")
+        request_payload = None
+        if quotation.opportunity_id:
+            from repositories.quote_request_repository import QuoteRequestRepository
+            quote_req = await QuoteRequestRepository(session).get_by_id(quotation.opportunity_id)
+            if quote_req and quote_req.payload_json:
+                request_payload = quote_req.payload_json
+        if not request_payload and request.request_json:
+            request_payload = request.request_json
         facts, _resolved = await h._resolve_v2_facts(CreateQuoteRequestV1.model_validate(h.normalize_legacy_facts_snapshot(request.request_json)))
         try:
             brand = await BrandRepository(session).get_active(quotation.brand_id)
@@ -440,6 +457,7 @@ async def preview_content_draft_prompt_v2(
                 scope=payload.scope,
                 mode=payload.generationMode,
                 instruction=payload.instruction,
+                request_payload=request_payload,
             )
         except ValueError as exc:
             raise HTTPException(status_code=422, detail={"message": str(exc)}) from exc

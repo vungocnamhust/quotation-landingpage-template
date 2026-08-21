@@ -185,8 +185,12 @@ export function useContentStudioState({
     const tripFacts =
       (facts.trip_facts as Record<string, unknown> | undefined) ?? {};
     const resolvedFacts = resources.factsData?.resolvedFacts;
+    const requestBrief = resources.factsData?.requestBrief;
     const normalizedFacts = {
       ...facts,
+      ...(requestBrief && typeof requestBrief === 'object' && Object.keys(requestBrief).length > 0
+        ? { request_brief: requestBrief }
+        : {}),
       trip_facts: {
         ...tripFacts,
         duration_days:
@@ -226,7 +230,7 @@ export function useContentStudioState({
           }
         : {},
     };
-  }, [facts, lang, resources.factsData?.resolvedFacts, scope]);
+  }, [facts, lang, resources.factsData?.requestBrief, resources.factsData?.resolvedFacts, scope]);
 
   return {
     mode,

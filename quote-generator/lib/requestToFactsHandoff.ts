@@ -8,7 +8,7 @@ import { partyReconciler } from "./rules/partyReconciler.ts";
 import { pricingReconciler } from "./rules/pricingReconciler.ts";
 import { getDefaultMeals, tripReconciler, type CanonicalDay, type CanonicalTrip } from "./rules/tripReconciler.ts";
 import { staysReconciler, type CanonicalStay } from "./rules/staysReconciler.ts";
-import { deriveRouteFromItinerary, formatRouteString } from "./rules/routeRules.ts";
+import { formatRouteString } from "./rules/routeRules.ts";
 import { POPULAR_DESTINATIONS } from "../components/destination/useDestinationSearch.ts";
 
 /**
@@ -19,7 +19,8 @@ import { POPULAR_DESTINATIONS } from "../components/destination/useDestinationSe
 export function buildInitialFactsFromRequest(
   quoteRequest: QuoteRequestItem | null | undefined,
   fallback: QuotationFacts,
-  targetLang?: string
+  targetLang?: string,
+  defaultDesignerId?: string | null
 ): QuotationFacts {
   if (!quoteRequest) return fallback;
 
@@ -131,13 +132,18 @@ export function buildInitialFactsFromRequest(
       return {
         id: `day_${d.day_number || i + 1}`,
         day_number: Number(d.day_number) || i + 1,
+        title: (d.title as string) || null,
         destination: destName,
         destination_ref: matchedRef,
         summary: (d.summary as string) || null,
         overnight: overnightName,
-        meals: rawMeals,
-        highlights: Array.isArray(d.highlights) ? (d.highlights as string[]) : [],
-        notes: Array.isArray(d.notes) ? (d.notes as string[]) : [],
+        meals: rawMeals.map((s) => String(s).trim()).filter(Boolean),
+        highlights: Array.isArray(d.highlights)
+          ? (d.highlights as string[]).map((s) => String(s).trim()).filter(Boolean)
+          : [],
+        notes: Array.isArray(d.notes)
+          ? (d.notes as string[]).map((s) => String(s).trim()).filter(Boolean)
+          : [],
         sense_of_pace: (d.sense_of_pace as "relaxed" | "balanced" | "fast") || "balanced",
         display_date: (d.display_date as string) || null,
         accommodation_id: (d.accommodation_id as string) || null,
@@ -269,7 +275,9 @@ export function buildInitialFactsFromRequest(
   const hydratedItinerary: ItineraryDayFact[] = syncedTrip.itinerary.map((d, index) => {
     const existing = fallback.trip_facts.itinerary[index];
     return {
+      id: d.id || existing?.id,
       day_number: d.day_number || index + 1,
+      title: (d.title as string) ?? existing?.title ?? null,
       destination: d.destination || null,
       destination_ref: d.destination_ref ?? null,
       overnight: d.overnight || d.destination || null,
@@ -294,6 +302,7 @@ export function buildInitialFactsFromRequest(
       travel_designer_id:
         quoteRequest.created_by_profile_id ||
         (payload.travel_designer_id as string) ||
+        defaultDesignerId ||
         fallback.presentation_options.travel_designer_id,
       partner_id: quoteRequest.partner_id || (payload.partner_id as string) || fallback.presentation_options.partner_id,
     },
@@ -323,17 +332,17 @@ export function buildInitialFactsFromRequest(
       kid_ages: reconciledParty.kidAges,
       party_label: reconciledParty.partyLabel,
       greeting_name: reconciledParty.greetingName,
-      market: reconciledParty.market,
-      nationality: reconciledParty.nationality,
-      travel_style: reconciledParty.travelStyle,
-      guest_profile: reconciledParty.travelStyle,
+      market: reconciledParty.market ?? null,
+      nationality: reconciledParty.nationality ?? null,
+      travel_style: reconciledParty.travelStyle ?? null,
+      guest_profile: reconciledParty.travelStyle ?? null,
       advisor_name: quoteRequest.role === "advisor" ? quoteRequest.customer_name : null,
       advisor_agency: quoteRequest.role === "advisor" ? quoteRequest.company_name : null,
     },
     service_facts: {
       ...fallback.service_facts,
       hotels: finalHotels,
-      room_notes: reconciledParty.roomNotes,
+      room_notes: reconciledParty.roomNotes ?? null,
     },
     pricing_facts: {
       ...fallback.pricing_facts,

@@ -197,23 +197,31 @@ export function PromptOptionPillSelector({
   const [pinnedOptionId, setPinnedOptionId] = useState<string | null>(null);
   const [isInspectorHovered, setIsInspectorHovered] = useState<boolean>(false);
 
-  const categories: Array<{ key: PromptCategoryKey; label: string; icon: React.ReactNode }> = [
-    { key: 'brands', label: 'Brand Voice', icon: <Building className="w-3.5 h-3.5 text-[var(--color-accent)]" /> },
-    { key: 'modes', label: 'Writing Mode', icon: <Sparkles className="w-3.5 h-3.5 text-[var(--color-accent)]" /> },
-    { key: 'ground_rules', label: 'Ground Rules', icon: <FileText className="w-3.5 h-3.5 text-[var(--color-accent)]" /> },
-    { key: 'facts', label: `Facts Used (${factInputs.length})`, icon: <Database className="w-3.5 h-3.5 text-[var(--color-accent)]" /> },
-    { key: 'constraints', label: 'Constraints', icon: <Shield className="w-3.5 h-3.5 text-[var(--color-accent)]" /> },
-  ];
+  const getBriefFactOptions = (): PromptOptionItem[] => {
+    const requestBrief = facts?.request_brief as Record<string, unknown> | undefined;
+    if (!requestBrief || typeof requestBrief !== 'object') return [];
+    return Object.entries(requestBrief)
+      .filter(([, val]) => val !== undefined && val !== null && val !== '' && !(Array.isArray(val) && val.length === 0))
+      .map(([key, val]) => ({
+        id: `request_brief.${key}`,
+        category: 'facts' as const,
+        label: factKeyLabel(key),
+        description: `Path: request_brief.${key}`,
+        detailText: `Request Brief (${factKeyLabel(key)})`,
+        factValue: formatFactPillSummary(val),
+        rawValue: val,
+      }));
+  };
 
   const getFactOptions = (): PromptOptionItem[] => {
-    return factInputs.map((input) => {
+    const baseOptions = factInputs.map((input) => {
       const rawVal = readFact(facts, input.path);
       const nights = input.id === 'duration' ? readFact(facts, ['trip_facts', 'duration_nights']) : undefined;
       const formatted = typeof rawVal === 'number' && typeof nights === 'number' ? `${rawVal} days / ${nights} nights` : formatFactPillSummary(rawVal);
 
       return {
         id: input.id,
-        category: 'facts',
+        category: 'facts' as const,
         label: input.label,
         description: `Path: ${input.path.join('.')}`,
         detailText: `Injected Fact (${input.required ? 'Required' : 'Optional'})`,
@@ -221,7 +229,19 @@ export function PromptOptionPillSelector({
         rawValue: rawVal,
       };
     });
+    const briefOptions = getBriefFactOptions();
+    return [...baseOptions, ...briefOptions];
   };
+
+  const factOptions = getFactOptions();
+
+  const categories: Array<{ key: PromptCategoryKey; label: string; icon: React.ReactNode }> = [
+    { key: 'brands', label: 'Brand Voice', icon: <Building className="w-3.5 h-3.5 text-[var(--color-accent)]" /> },
+    { key: 'modes', label: 'Writing Mode', icon: <Sparkles className="w-3.5 h-3.5 text-[var(--color-accent)]" /> },
+    { key: 'ground_rules', label: 'Ground Rules', icon: <FileText className="w-3.5 h-3.5 text-[var(--color-accent)]" /> },
+    { key: 'facts', label: `Facts Used (${factOptions.length})`, icon: <Database className="w-3.5 h-3.5 text-[var(--color-accent)]" /> },
+    { key: 'constraints', label: 'Constraints', icon: <Shield className="w-3.5 h-3.5 text-[var(--color-accent)]" /> },
+  ];
 
   const getCategoryOptions = (cat: PromptCategoryKey): PromptOptionItem[] => {
     switch (cat) {
@@ -232,7 +252,7 @@ export function PromptOptionPillSelector({
       case 'ground_rules':
         return GROUND_RULE_OPTIONS;
       case 'facts':
-        return getFactOptions();
+        return factOptions;
       case 'constraints':
         return CONSTRAINT_OPTIONS;
       default:

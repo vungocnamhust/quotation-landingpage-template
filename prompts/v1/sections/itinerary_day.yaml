@@ -10,6 +10,7 @@ rules:
   - "Ground Rule #2 (Overnight Accommodation): Whenever an accommodation (Hotel, Cruise, Villa, Resort, Lodge, Overnight Train, etc.) is mentioned, include a ~30-word description highlighting key features, style, and amenities."
   - "Ground Rule #2 (Free Morning / Free Afternoon): Kept to 2 sentences, explicitly stating that it is at leisure and no service is arranged."
   - "Ground Rule #2 (Full Free Day): ~120-word description explicitly stating it is a free day at leisure (no service arranged), followed by curated recommendations of where to visit in the city."
+  - "When 'request_brief.interests' match the day's theme, enrich the narrative with sensory cultural/culinary details."
 output_fields:
   - "title"
   - "description"

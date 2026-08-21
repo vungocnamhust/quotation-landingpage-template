@@ -116,11 +116,11 @@ class PhaseEMigrationTests(unittest.TestCase):
                 "paper": "#f8fafc",
                 "ink": "#0f172a",
                 "mutedInk": "#64748b",
-                "accent": "#0284c7",
+                "accent": "#0369a1",
                 "accentAlt": "#0369a1",
                 "contrast": "#0f172a",
                 "onContrast": "#ffffff",
-                "focus": "#0284c7",
+                "focus": "#0369a1",
             },
             "radii": {
                 "card": "12px",

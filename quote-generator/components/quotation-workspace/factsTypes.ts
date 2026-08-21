@@ -30,6 +30,7 @@ export function routeDestinationRefsFromItinerary(
 export type ItineraryDayFact = {
   id?: string;
   day_number: number | null;
+  title?: string | null;
   destination: string | null;
   destination_ref?: DestinationRef | null;
   summary: string | null;
@@ -181,6 +182,7 @@ export type QuotationFacts = {
   presentation_options: {
     template_id: string | null;
     travel_designer_id: string | null;
+    partner_id?: string | null;
   };
   trip_facts: {
     destinations: string[];
@@ -306,22 +308,38 @@ export function serializeFactsForApi(
         facts.trip_facts.destination_refs?.map((ref) => ref.name) ??
         facts.trip_facts.destinations,
       special_requirements: normalizedLines(facts.trip_facts.special_requirements),
-      itinerary: facts.trip_facts.itinerary.map((day) => {
-        const serializedDay = { ...day, highlights: normalizedLines(day.highlights), meals: normalizedLines(day.meals), notes: normalizedLines(day.notes) };
-        delete serializedDay.destination_ref;
-        return serializedDay;
-      }),
+      itinerary: facts.trip_facts.itinerary.map((day) => ({
+        id: day.id,
+        day_number: day.day_number ?? null,
+        destination: day.destination ?? null,
+        summary: day.summary ?? null,
+        overnight: day.overnight ?? null,
+        meals: normalizedLines(day.meals),
+        highlights: normalizedLines(day.highlights),
+        notes: normalizedLines(day.notes),
+        sense_of_pace: day.sense_of_pace ?? null,
+        display_date: day.display_date ?? null,
+      })),
     },
     customer_facts: facts.customer_facts,
     service_facts: {
       ...facts.service_facts,
       inclusions: normalizedLines(facts.service_facts.inclusions),
       exclusions: normalizedLines(facts.service_facts.exclusions),
-      hotels: facts.service_facts.hotels.map((hotel) => {
-        const serializedHotel = { ...hotel };
-        delete serializedHotel.destination_ref;
-        return serializedHotel;
-      }),
+      hotels: facts.service_facts.hotels.map((hotel) => ({
+        accommodation_id: hotel.accommodation_id ?? null,
+        destination: hotel.destination ?? null,
+        name: hotel.name ?? null,
+        room_type: hotel.room_type ?? null,
+        check_in: hotel.check_in ?? null,
+        check_out: hotel.check_out ?? null,
+        intro: hotel.intro ?? null,
+        phone: hotel.phone ?? null,
+        display_city: hotel.display_city ?? null,
+        display_date: hotel.display_date ?? null,
+        hotel_asset: hotel.hotel_asset ?? null,
+        room_asset: hotel.room_asset ?? null,
+      })),
     },
     pricing_facts: {
       ...facts.pricing_facts,
@@ -567,7 +585,7 @@ export function createItineraryDay({ index, startDate }: { index: number; startD
   const stableId = `day_${dayNumber}_${Math.random().toString(36).slice(2, 9)}`;
   return {
     id: stableId,
-    day_number: dayNumber, destination: null, destination_ref: null, summary: null, overnight: null,
+    day_number: dayNumber, title: null, destination: null, destination_ref: null, summary: null, overnight: null,
     meals: [], highlights: [], notes: [], sense_of_pace: null,
     display_date: dateForItineraryDay(startDate, dayNumber),
     accommodation_id: null, accommodation_name: null, room_type: null,
@@ -584,13 +602,27 @@ export function isRenderablePricingOption(option: PricingOptionFact): boolean {
 }
 
 export function serializeCommercialOptions(options: PricingOptionFact[]): PricingOptionFact[] {
-  return options.filter((option) => Boolean(
-    option.currency
-    || option.per_traveler_amount_minor !== null
-    || option.per_adult_amount_minor !== null
-    || option.per_child_amount_minor !== null
-    || option.group_total_amount_minor !== null,
-  ));
+  return options
+    .filter((option) => Boolean(
+      option.currency
+      || option.per_traveler_amount_minor !== null
+      || option.per_adult_amount_minor !== null
+      || option.per_child_amount_minor !== null
+      || option.group_total_amount_minor !== null,
+    ))
+    .map((option) => {
+      const perAdult = option.per_adult_amount_minor ?? option.per_traveler_amount_minor ?? null;
+      const perTraveler = option.per_traveler_amount_minor ?? option.per_adult_amount_minor ?? null;
+      return {
+        id: option.id,
+        label: option.label,
+        currency: option.currency,
+        per_traveler_amount_minor: perTraveler,
+        group_total_amount_minor: option.group_total_amount_minor,
+        per_adult_amount_minor: perAdult,
+        per_child_amount_minor: option.per_child_amount_minor ?? null,
+      };
+    });
 }
 
 export const emptyFacts = (): QuotationFacts => ({

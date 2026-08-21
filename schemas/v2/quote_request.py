@@ -340,6 +340,7 @@ class MinimalItineraryDayWithStayOverrideSchema(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     day_number: int = Field(ge=1)
+    title: str | None = None
     destination: str | None = None
     destination_ref: dict[str, Any] | None = None
     overnight: str | None = None
@@ -347,6 +348,11 @@ class MinimalItineraryDayWithStayOverrideSchema(BaseModel):
     accommodation_name: str | None = None
     room_type: str | None = None
     summary: str | None = None
+    meals: list[str] = Field(default_factory=list)
+    highlights: list[str] = Field(default_factory=list)
+    notes: list[str] = Field(default_factory=list)
+    sense_of_pace: str | None = None
+    display_date: str | None = None
 
 
 class MinimalCommercialPricingOverrideSchema(BaseModel):

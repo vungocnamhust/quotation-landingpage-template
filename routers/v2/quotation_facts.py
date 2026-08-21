@@ -62,12 +62,27 @@ async def get_quotation_facts_v2(
         canonical, resolved = await h._resolve_v2_facts(payload)
         if canonical.presentation_options.travel_designer_id is None and quotation.designer_profile_id:
             canonical.presentation_options.travel_designer_id = quotation.designer_profile_id
-        return h._facts_response(
+
+        request_payload = None
+        if quotation.opportunity_id:
+            from repositories.quote_request_repository import QuoteRequestRepository
+            quote_req = await QuoteRequestRepository(session).get_by_id(quotation.opportunity_id)
+            if quote_req and quote_req.payload_json:
+                request_payload = quote_req.payload_json
+        if not request_payload and request.request_json:
+            request_payload = request.request_json
+        from services.content_draft_service import extract_request_brief
+        request_brief = extract_request_brief(request_payload)
+
+        res = h._facts_response(
             quotation=quotation,
             request_json=canonical.model_dump(mode="json"),
             document=(document.document_json if document else {}),
             resolved_facts=resolved,
         )
+        if request_brief:
+            res["requestBrief"] = request_brief
+        return res
 
 
 @router.put("/{quotation_id}/facts")

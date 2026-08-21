@@ -41,9 +41,9 @@ export function createGenericCatalogColumns(): ColumnDef<GenericComponentItem>[]
       header: "Tags",
       render: (item) => (
         <div className="flex flex-wrap items-center gap-1.5">
-          {item.tags.map((tag) => (
+          {item.tags.map((tag, idx) => (
             <span
-              key={tag}
+              key={`col-tag-${tag}-${idx}`}
               className={cn(
                 getTypographyClassName("caption"),
                 "inline-flex items-center gap-1 rounded bg-[var(--color-accent-wash)] px-2 py-0.5 text-[var(--color-accent)]"

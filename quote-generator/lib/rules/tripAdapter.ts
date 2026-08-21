@@ -32,6 +32,7 @@ export const tripAdapter = {
     const canonicalDays: CanonicalDay[] = days.map((d, index) => ({
       id: d.id || `day_${d.day_number || index + 1}`,
       day_number: d.day_number || index + 1,
+      title: d.title || null,
       destination: d.destination || null,
       destination_ref: d.destination_ref_id
         ? { id: d.destination_ref_id, name: d.destination || "", slug: "" }
@@ -39,9 +40,9 @@ export const tripAdapter = {
       overnight: d.overnight || d.destination || null,
       display_date: d.display_date || null,
       summary: d.summary || null,
-      meals: d.meals || [],
-      highlights: d.highlights || [],
-      notes: d.notes || [],
+      meals: (d.meals || []).map((s) => s.trim()).filter(Boolean),
+      highlights: (d.highlights || []).map((s) => s.trim()).filter(Boolean),
+      notes: (d.notes || []).map((s) => s.trim()).filter(Boolean),
     }));
 
     const routeMeta = deriveRouteFromItinerary(canonicalDays);
@@ -78,14 +79,15 @@ export const tripAdapter = {
     const itineraryDays: BasicDayItem[] = canonical.itinerary.map((d, index) => ({
       id: (d.id as string) || `day_${d.day_number || index + 1}`,
       day_number: d.day_number || index + 1,
+      title: (d.title as string) || "",
       destination: d.destination || "",
       destination_ref_id: d.destination_ref?.id || null,
       overnight: d.overnight || d.destination || "",
       display_date: d.display_date || "",
       summary: (d.summary as string) || "",
-      meals: d.meals || [],
-      highlights: d.highlights || [],
-      notes: d.notes || [],
+      meals: (d.meals || []).map((s) => s.trim()).filter(Boolean),
+      highlights: (d.highlights || []).map((s) => s.trim()).filter(Boolean),
+      notes: (d.notes || []).map((s) => s.trim()).filter(Boolean),
     }));
 
     return {
@@ -119,14 +121,15 @@ export const tripAdapter = {
     const canonicalDays: CanonicalDay[] = trip.itinerary.map((d, index) => ({
       id: d.id || `day_${d.day_number || index + 1}`,
       day_number: d.day_number || index + 1,
+      title: d.title || null,
       destination: d.destination || null,
       destination_ref: d.destination_ref ?? null,
       overnight: d.overnight || d.destination || null,
       display_date: d.display_date || null,
       summary: d.summary || null,
-      meals: d.meals || [],
-      highlights: d.highlights || [],
-      notes: d.notes || [],
+      meals: (d.meals || []).map((s) => s.trim()).filter(Boolean),
+      highlights: (d.highlights || []).map((s) => s.trim()).filter(Boolean),
+      notes: (d.notes || []).map((s) => s.trim()).filter(Boolean),
       sense_of_pace: d.sense_of_pace || "balanced",
       accommodation_id: d.accommodation_id || null,
       accommodation_name: d.accommodation_name || null,
@@ -162,17 +165,19 @@ export const tripAdapter = {
 
     const itinerary: ItineraryDayFact[] = canonical.itinerary.map((d, index) => {
       const existing = safe.trip_facts.itinerary.find((item) => item.id && item.id === d.id) || safe.trip_facts.itinerary[index];
+      const rawMeals = d.meals && d.meals.length ? d.meals : existing?.meals ?? ["Breakfast"];
       return {
         id: d.id || existing?.id,
         day_number: d.day_number || index + 1,
+        title: (d.title as string) ?? existing?.title ?? null,
         destination: d.destination || null,
         destination_ref: d.destination_ref ?? null,
         overnight: d.overnight || d.destination || null,
         display_date: d.display_date || null,
         summary: (d.summary as string) || null,
-        meals: d.meals && d.meals.length ? d.meals : existing?.meals ?? ["Breakfast"],
-        highlights: d.highlights ?? existing?.highlights ?? [],
-        notes: d.notes ?? existing?.notes ?? [],
+        meals: rawMeals.map((s) => s.trim()).filter(Boolean),
+        highlights: (d.highlights ?? existing?.highlights ?? []).map((s) => s.trim()).filter(Boolean),
+        notes: (d.notes ?? existing?.notes ?? []).map((s) => s.trim()).filter(Boolean),
         sense_of_pace: (d.sense_of_pace as string) || existing?.sense_of_pace || "balanced",
         accommodation_id: (d.accommodation_id as string) || existing?.accommodation_id || null,
         accommodation_name: (d.accommodation_name as string) || existing?.accommodation_name || null,

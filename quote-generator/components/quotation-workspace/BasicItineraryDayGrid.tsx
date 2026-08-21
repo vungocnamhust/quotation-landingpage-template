@@ -12,6 +12,7 @@ import { tripReconciler, type CanonicalDay } from "../../lib/rules/tripReconcile
 export type BasicDayItem = {
   id?: string;
   day_number: number;
+  title?: string;
   destination: string;
   destination_ref_id?: string | null;
   display_date: string;
@@ -61,6 +62,7 @@ export default function BasicItineraryDayGrid({
         reconciled.itinerary.map((d, i) => ({
           id: d.id || `day_${i + 1}`,
           day_number: d.day_number || i + 1,
+          title: (d.title as string) || "",
           destination: d.destination || "",
           display_date: d.display_date || "",
           summary: (d.summary as string) || "",
@@ -97,6 +99,7 @@ export default function BasicItineraryDayGrid({
         reconciled.itinerary.map((d, i) => ({
           id: d.id || `day_${i + 1}`,
           day_number: d.day_number || i + 1,
+          title: (d.title as string) || "",
           destination: d.destination || "",
           display_date: d.display_date || "",
           summary: (d.summary as string) || "",
@@ -133,6 +136,7 @@ export default function BasicItineraryDayGrid({
         reconciled.itinerary.map((d, i) => ({
           id: d.id || `day_${i + 1}`,
           day_number: d.day_number || i + 1,
+          title: (d.title as string) || "",
           destination: d.destination || "",
           display_date: d.display_date || "",
           summary: (d.summary as string) || "",
@@ -268,21 +272,39 @@ export default function BasicItineraryDayGrid({
                       />
                     </div>
 
-                    <label className="flex flex-col gap-1">
-                      <span className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>
-                        Short Summary / Highlights:
-                      </span>
-                      <input
-                        type="text"
-                        placeholder="e.g. Arrival in Hanoi, airport transfer & evening food tour"
-                        value={day.summary}
-                        onChange={(e) => handleFieldChange(idx, "summary", e.target.value)}
-                        className={cn(
-                          getTypographyClassName("bodySm"),
-                          "h-9 w-full rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-2.5 text-[var(--color-on-surface)] focus:outline-none focus:ring-1 focus:ring-[var(--color-focus)]"
-                        )}
-                      />
-                    </label>
+                    <div className="grid gap-2">
+                      <label className="flex flex-col gap-1">
+                        <span className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>
+                          Day Title (Optional):
+                        </span>
+                        <input
+                          type="text"
+                          placeholder="e.g. Arrival in Hanoi & Old Quarter Walk"
+                          value={day.title || ""}
+                          onChange={(e) => handleFieldChange(idx, "title", e.target.value)}
+                          className={cn(
+                            getTypographyClassName("bodySm"),
+                            "h-9 w-full rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-2.5 text-[var(--color-on-surface)] focus:outline-none focus:ring-1 focus:ring-[var(--color-focus)]"
+                          )}
+                        />
+                      </label>
+
+                      <label className="flex flex-col gap-1">
+                        <span className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>
+                          Short Summary / Highlights:
+                        </span>
+                        <input
+                          type="text"
+                          placeholder="e.g. Arrival in Hanoi, airport transfer & evening food tour"
+                          value={day.summary}
+                          onChange={(e) => handleFieldChange(idx, "summary", e.target.value)}
+                          className={cn(
+                            getTypographyClassName("bodySm"),
+                            "h-9 w-full rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-2.5 text-[var(--color-on-surface)] focus:outline-none focus:ring-1 focus:ring-[var(--color-focus)]"
+                          )}
+                        />
+                      </label>
+                    </div>
                   </div>
                 );
               })}

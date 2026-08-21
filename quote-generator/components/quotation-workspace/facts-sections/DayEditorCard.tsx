@@ -7,6 +7,7 @@ import { DestinationSelect } from "../../destination/DestinationSelect.tsx";
 import { AccommodationSelect } from "../../accommodation/AccommodationSelect.tsx";
 import type { ItineraryDayFact } from "../factsTypes.ts";
 import { dateForItineraryDay } from "../factsTypes.ts";
+import { formatDisplayDate, isValidIsoDate } from "../../../lib/rules/datesRules.ts";
 import { MediaSlotRenderer, type MediaWorkspace } from "../MediaSlotRenderer.tsx";
 
 const lines = (values: string[]) => values.join("\n");
@@ -142,9 +143,13 @@ export const DayEditorCard = memo(function DayEditorCard({
   const complete = Boolean(
     day.destination && (day.summary || day.highlights.length)
   );
-  const derivedDate =
+  const rawDate =
     day.display_date ||
     dateForItineraryDay(startDate, day.day_number ?? index + 1);
+  const derivedDate =
+    rawDate && isValidIsoDate(rawDate)
+      ? formatDisplayDate(rawDate)
+      : rawDate || null;
 
   return (
     <article
@@ -176,6 +181,7 @@ export const DayEditorCard = memo(function DayEditorCard({
           >
             Day {day.day_number ?? index + 1}
             {derivedDate ? ` · ${derivedDate}` : ""}
+            {day.title ? ` · ${day.title}` : ""}
           </span>
           <span
             className={cn(
@@ -234,6 +240,17 @@ export const DayEditorCard = memo(function DayEditorCard({
               });
             }}
           />
+
+          <div className="sm:col-span-2">
+            <Field
+              label="Day title"
+              placeholder="e.g. Arrival in Ho Chi Minh City & Orientation"
+              disabled={readOnly}
+              value={day.title ?? ""}
+              onChange={(value) => patch("title", value || null)}
+            />
+          </div>
+
           <DestinationSelect
             label="Overnight"
             disabled={readOnly}
@@ -247,6 +264,14 @@ export const DayEditorCard = memo(function DayEditorCard({
                     : null;
               patch("overnight", overnightName);
             }}
+          />
+
+          <Field
+            label="Display date"
+            placeholder="e.g. Day 1 · 09 Nov 2026"
+            disabled={readOnly}
+            value={day.display_date}
+            onChange={(value) => patch("display_date", value || null)}
           />
 
           {/* OVERNIGHT ACCOMMODATION / HOTEL */}
@@ -271,7 +296,7 @@ export const DayEditorCard = memo(function DayEditorCard({
                 label="Select Hotel"
                 value={day.accommodation_id ?? null}
                 name={day.accommodation_name ?? null}
-                destination={day.destination || day.overnight}
+                destination={day.overnight || day.destination}
                 destinationId={day.destination_ref?.id}
                 disabled={readOnly}
                 variant="compact"
@@ -311,24 +336,35 @@ export const DayEditorCard = memo(function DayEditorCard({
             />
           </div>
 
-          <Field
-            label="Sense of pace"
-            disabled={readOnly}
-            value={day.sense_of_pace}
-            onChange={(value) =>
-              patch(
-                "sense_of_pace",
-                (value || null) as ItineraryDayFact["sense_of_pace"]
-              )
-            }
-          />
-          <Field
-            label="Display date"
-            placeholder="e.g. Day 1 · 09 Nov 2026"
-            disabled={readOnly}
-            value={day.display_date}
-            onChange={(value) => patch("display_date", value || null)}
-          />
+          <div className="sm:col-span-2 flex flex-col gap-2">
+            <span className={cn(getTypographyClassName("label"), "flex justify-between gap-3 text-[var(--color-muted)]")}>
+              <span>Sense of pace</span>
+              <span className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>Optional</span>
+            </span>
+            <div className="flex gap-2">
+              {(["relaxed", "balanced", "fast"] as const).map((pace) => {
+                const isSelected = (day.sense_of_pace || "balanced") === pace;
+                return (
+                  <button
+                    key={pace}
+                    type="button"
+                    disabled={readOnly}
+                    onClick={() => patch("sense_of_pace", pace)}
+                    className={cn(
+                      getTypographyClassName("caption"),
+                      "flex-1 min-h-10 rounded-[var(--radius-button)] border px-3 py-1.5 capitalize transition-all cursor-pointer",
+                      isSelected
+                        ? "border-[var(--color-accent)] bg-[var(--color-accent-wash)] text-[var(--color-accent)] shadow-2xs"
+                        : "border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-muted)] hover:text-[var(--color-on-surface)] hover:bg-[var(--color-surface-hover)]",
+                      readOnly ? "opacity-60 cursor-not-allowed" : ""
+                    )}
+                  >
+                    {pace}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
           <div className="sm:col-span-2">
             <Area

@@ -85,6 +85,7 @@ export async function runQuotationFastTrackPipeline({
         );
         return hydrated.map((day) => ({
           day_number: day.day_number,
+          title: day.title ?? null,
           destination: day.destination,
           destination_ref: day.destination_ref ?? null,
           overnight: day.overnight ?? day.destination ?? null,
@@ -92,6 +93,11 @@ export async function runQuotationFastTrackPipeline({
           accommodation_name: day.accommodation_name ?? null,
           room_type: day.room_type ?? null,
           summary: day.summary ?? null,
+          meals: (day.meals ?? []).map((s) => s.trim()).filter(Boolean),
+          highlights: (day.highlights ?? []).map((s) => s.trim()).filter(Boolean),
+          notes: (day.notes ?? []).map((s) => s.trim()).filter(Boolean),
+          sense_of_pace: day.sense_of_pace ?? "balanced",
+          display_date: day.display_date ?? null,
         }));
       })(),
       pricing: {

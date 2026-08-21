@@ -35,6 +35,16 @@ export default function RequestRecapPanel({ request, className }: Props) {
     return list;
   }, [payload]);
 
+  const interests = useMemo(() => {
+    if (Array.isArray(payload.interests)) {
+      return payload.interests.map(String).filter(Boolean);
+    }
+    if (typeof payload.interests === "string" && payload.interests.trim()) {
+      return [payload.interests.trim()];
+    }
+    return [];
+  }, [payload.interests]);
+
   const constraints = useMemo(() => {
     const list: Array<{ label: string; value: string }> = [];
     if (payload.must_have) list.push({ label: "Must-Have", value: String(payload.must_have) });
@@ -43,6 +53,8 @@ export default function RequestRecapPanel({ request, className }: Props) {
     if (payload.halal) list.push({ label: "Halal/Prayer", value: String(payload.halal) });
     if (payload.mobility) list.push({ label: "Mobility", value: String(payload.mobility) });
     if (payload.health_considerations) list.push({ label: "Health", value: String(payload.health_considerations) });
+    if (payload.dining_level) list.push({ label: "Dining Level", value: String(payload.dining_level) });
+    if (payload.client_context) list.push({ label: "Client Context", value: String(payload.client_context) });
     if (payload.private_vehicle) list.push({ label: "Private Vehicle", value: String(payload.private_vehicle) });
     if (payload.vehicle_preference) list.push({ label: "Vehicle Type", value: String(payload.vehicle_preference) });
     if (payload.guide_scope) list.push({ label: "Guide Scope", value: String(payload.guide_scope) });
@@ -159,13 +171,23 @@ export default function RequestRecapPanel({ request, className }: Props) {
       </div>
 
       {/* 3. Style, Pacing & Vision */}
-      {(request.travel_style || payload.travel_pace || priorities.length > 0) ? (
+      {(request.travel_style || payload.travel_pace || payload.occasion || payload.primary_theme || interests.length > 0 || priorities.length > 0) ? (
         <div className="flex flex-col gap-2 rounded-[var(--radius-button)] bg-[var(--color-surface-muted)] p-3 border border-[var(--color-border)]">
           <div className="flex items-center gap-2 text-[var(--color-muted)]">
             <Compass size={15} aria-hidden="true" />
             <span className={cn(getTypographyClassName("label"))}>Travel Style & Vision</span>
           </div>
           <div className="flex flex-wrap gap-1.5">
+            {payload.occasion ? (
+              <span className={cn(getTypographyClassName("caption"), "rounded-md bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5")}>
+                🎉 {String(payload.occasion)}
+              </span>
+            ) : null}
+            {payload.primary_theme ? (
+              <span className={cn(getTypographyClassName("caption"), "rounded-md bg-teal-50 text-teal-800 border border-teal-200 px-2 py-0.5")}>
+                🏷️ {String(payload.primary_theme)}
+              </span>
+            ) : null}
             {request.travel_style ? (
               <span className={cn(getTypographyClassName("caption"), "rounded-md bg-[var(--color-accent-wash)] text-[var(--color-accent)] px-2 py-0.5 border border-transparent")}>
                 ✨ {request.travel_style}
@@ -176,6 +198,17 @@ export default function RequestRecapPanel({ request, className }: Props) {
                 Pacing: {String(payload.travel_pace)}
               </span>
             ) : null}
+            {interests.map((item, idx) => (
+              <span
+                key={`interest-${idx}`}
+                className={cn(
+                  getTypographyClassName("caption"),
+                  "rounded-md bg-sky-50 text-sky-800 border border-sky-200 px-2 py-0.5"
+                )}
+              >
+                🌿 {item}
+              </span>
+            ))}
             {priorities.map((p, idx) => (
               <span
                 key={idx}

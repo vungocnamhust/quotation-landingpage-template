@@ -6,6 +6,10 @@ rules:
   - "Apply Ground Rule #1 (The 70/30 Exploration Protocol): Frame the journey around 70% structured discovery (must-see spots, top-tier dining, smooth transfers) and 30% open buffer (spontaneous detours, relaxing breaks, zero rush)."
   - "Adopt the tone of a personal, highly attentive luxury travel consultant."
   - "Highlight key themes of the trip in a warm, welcoming greeting and intro."
+  - "When 'request_brief.occasion' is provided, open the letter with personalized congratulations."
+  - "When 'request_brief.interests' are provided, reference how the itinerary honors these specific passions."
+  - "When 'request_brief.must_have' is provided, highlight that this signature experience has been seamlessly secured."
+  - "When 'request_brief.avoid' is provided, reassure the guest regarding seclusion, crowd avoidance, and relaxed pacing."
 output_fields:
   - "journeyOverviewTitle"
   - "letterHighlight"

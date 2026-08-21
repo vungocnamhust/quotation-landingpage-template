@@ -13,7 +13,7 @@ export type ContentFactInput = { id: string; label: string; path: Array<string |
 export type ContentEditor = { owner: 'fact' | 'fact-derived' | 'content' | 'design'; generation: boolean; editor: 'narrative' | 'fact-preview' | 'checklist'; recipeVersion: string; schemaVersion: string; fields: ContentEditorField[]; factInputs: ContentFactInput[]; defaultInstructions: { storytelling: string; detailed: string } | null };
 export type PromptPreview = { version: string; scope: string; mode: string; systemPrompt: string; userPrompt: string; modeContract: string; effectiveInstruction: string; factsSnapshot: Record<string, unknown> };
 export type ContentDraft = { id: string; scope: string; generationMode: 'storytelling' | 'detailed' | 'manual'; status: 'draft' | 'applied' | 'discarded' | 'stale'; candidate: ContentCandidate; missingInputs: Array<{ path: string; reason: string }>; generation: { cached?: boolean; latencyMs?: number; warnings?: string[]; llmCalled?: boolean; generationStatus?: string; instructionSource?: 'default' | 'custom' | 'manual'; systemPrompt?: string; userPrompt?: string; promptVersion?: string }; sourceDocumentRevision: number; factsSnapshot: { trip?: { title?: string; destinations?: string[] }; itineraryDay?: { destination?: string; summary?: string } }; editor?: ContentEditor };
-export type FactsResponse = { facts: QuotationFacts; resolvedFacts: ResolvedFacts; source: { kind?: string; opportunityId?: string | null; snapshotAt?: string | null }; baselineLang: 'en' | 'vi' | 'ar' };
+export type FactsResponse = { facts: QuotationFacts; resolvedFacts: ResolvedFacts; source: { kind?: string; opportunityId?: string | null; snapshotAt?: string | null }; baselineLang: 'en' | 'vi' | 'ar'; requestBrief?: Record<string, unknown> };
 export type EditableHandoff = {
   stage: 'facts' | 'content' | 'design';
   section: string;
@@ -64,14 +64,28 @@ export function useQuotationWorkspace(quotationId: string, lang: string) {
     brands: `${API_BASE}/api/v2/brands`,
     publications: `${API_BASE}/api/v2/quotations/${quotationId}/publications?lang=${encodeURIComponent(lang)}`,
   }), [lang, quotationId]);
-  const facts = useSWR<FactsResponse>(urls.facts, getJson);
-  const document = useSWR<DocumentResponse>(urls.document, getJson);
-  const drafts = useSWR<DraftsResponse>(urls.drafts, getJson);
-  const review = useSWR<ReviewResponse>(urls.review, getJson);
-  const workflow = useSWR<WorkflowResponse>(urls.workflow, getJson);
-  const options = useSWR<QuotationOptions>(urls.options, getJson);
-  const brands = useSWR<BrandResponse>(urls.brands, getJson);
-  const publications = useSWR<PublicationResponse>(urls.publications, getJson);
+
+  const swrConfig = useMemo(
+    () => ({
+      shouldRetryOnError: (err: unknown) => {
+        if (err && typeof err === 'object' && 'status' in err) {
+          const status = (err as { status: number }).status;
+          if (status === 401 || status === 403 || status === 404) return false;
+        }
+        return true;
+      },
+      errorRetryCount: 2,
+    }),
+    []
+  );
+  const facts = useSWR<FactsResponse>(urls.facts, getJson, swrConfig);
+  const document = useSWR<DocumentResponse>(urls.document, getJson, swrConfig);
+  const drafts = useSWR<DraftsResponse>(urls.drafts, getJson, swrConfig);
+  const review = useSWR<ReviewResponse>(urls.review, getJson, swrConfig);
+  const workflow = useSWR<WorkflowResponse>(urls.workflow, getJson, swrConfig);
+  const options = useSWR<QuotationOptions>(urls.options, getJson, swrConfig);
+  const brands = useSWR<BrandResponse>(urls.brands, getJson, swrConfig);
+  const publications = useSWR<PublicationResponse>(urls.publications, getJson, swrConfig);
   const refresh = useCallback(async () => {
     await Promise.all([facts.mutate(), document.mutate(), drafts.mutate(), review.mutate(), workflow.mutate(), brands.mutate(), publications.mutate()]);
   }, [brands, document, drafts, facts, publications, review, workflow]);

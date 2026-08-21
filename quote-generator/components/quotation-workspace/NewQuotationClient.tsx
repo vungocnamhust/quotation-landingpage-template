@@ -35,16 +35,22 @@ function QuotationIntakeInner({
   requestId,
   options,
   personalWorkspace,
+  defaultDesignerId,
 }: {
   quoteRequest: QuoteRequestItem | null;
   requestId: string | null;
   options: QuotationOptions;
   personalWorkspace: boolean;
+  defaultDesignerId?: string | null;
 }) {
   const router = useRouter();
-  const [facts, setFacts] = useState<QuotationFacts>(() =>
-    buildInitialFactsFromRequest(quoteRequest, createBrochureFacts())
-  );
+  const [facts, setFacts] = useState<QuotationFacts>(() => {
+    const initial = buildInitialFactsFromRequest(quoteRequest, createBrochureFacts(), undefined, defaultDesignerId);
+    if (defaultDesignerId && !initial.presentation_options.travel_designer_id) {
+      initial.presentation_options.travel_designer_id = defaultDesignerId;
+    }
+    return initial;
+  });
   const [fieldErrors, setFieldErrors] = useState<Array<{ path: string; message: string }>>([]);
   const [isPending, startTransition] = useTransition();
   const [fastTrackProgress, setFastTrackProgress] = useState<FastTrackProgress | null>(null);
@@ -265,6 +271,12 @@ export default function NewQuotationClient({ personalWorkspace = false }: { pers
     fetchJson
   );
 
+  // Load Current User / Travel Designer profile
+  const { data: meData } = useSWR<{ profile?: { id: string; name: string; email: string } }>(
+    `${API_BASE}/api/v2/workspace/me`,
+    fetchJson
+  );
+
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-[100rem] flex-col gap-6 px-4 py-8 sm:px-6 lg:px-10">
       {/* Top Header */}
@@ -296,6 +308,7 @@ export default function NewQuotationClient({ personalWorkspace = false }: { pers
             requestId={requestId}
             options={options}
             personalWorkspace={personalWorkspace}
+            defaultDesignerId={meData?.profile?.id ?? null}
           />
         )
       ) : (

@@ -7,6 +7,7 @@ rules:
   - "Title must be concise (max 160 characters)."
   - "Hero introduction (lede) must be evocative yet restrained (max 500 characters)."
   - "Cover kicker, primary meta, secondary meta, and footer text must reflect luxury travel standards without fabricating facts."
+  - "When 'request_brief.primary_theme' or 'request_brief.occasion' is present, adapt the cover kicker or subtitle to reflect this milestone."
 output_fields:
   - "title"
   - "lede"

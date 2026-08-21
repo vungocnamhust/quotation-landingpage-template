@@ -45,9 +45,9 @@ export const GenericCatalogCard = memo(function GenericCatalogCard({ item }: Pro
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-1.5">
-          {item.tags.map((tag) => (
+          {item.tags.map((tag, idx) => (
             <span
-              key={tag}
+              key={`tag-${tag}-${idx}`}
               className={cn(
                 getTypographyClassName("caption"),
                 "inline-flex items-center gap-1 rounded bg-[var(--color-accent-wash)] px-2 py-0.5 text-[var(--color-accent)]"

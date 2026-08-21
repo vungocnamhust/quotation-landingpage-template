@@ -400,3 +400,71 @@ class TestQuoteRequestService(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(hotels[0]["check_in"], "2026-11-01")
         self.assertEqual(hotels[0]["check_out"], "2026-11-03")
 
+    async def test_generate_quotation_preserves_creator_when_assigned_to_different_designer(self):
+        from unittest.mock import patch
+        mock_session = AsyncMock()
+        service = QuoteRequestService(mock_session)
+
+        req = QuoteRequest(
+            id="req_preservation_001",
+            role="traveller",
+            customer_name="Alice Smith",
+            email="alice@example.com",
+            destinations=["Hanoi"],
+            start_date="2026-11-01",
+            end_date="2026-11-03",
+            adults=2,
+            children=0,
+            payload_json={"brand_id": "selvara", "travel_designer_id": "td_assigned"},
+        )
+        service.repo.get_by_id = AsyncMock(return_value=req)
+        service.repo.update_status = AsyncMock()
+
+        from quote_document import CreateQuoteRequestV1
+        mock_quotation = MagicMock(id="quo_test_123")
+        mock_saved_doc = MagicMock(revision=1)
+        mock_canonical = CreateQuoteRequestV1.model_validate({
+            "brand_id": "selvara",
+            "presentation_options": {"theme_id": "brochure", "layout_version": 1, "travel_designer_id": "td_assigned"},
+            "trip_facts": {"destinations": ["Hanoi"], "itinerary": []},
+            "customer_facts": {"customer_name": "Alice Smith"},
+            "pricing_facts": {"conditions": [], "options": []},
+            "service_facts": {"hotels": [], "inclusions": [], "exclusions": []},
+            "booking_facts": {"title": "Terms", "description": "Standard terms apply", "items": []},
+            "finalization_facts": {"required_title": "Required", "after_confirmation_title": "After", "required_items": [], "after_confirmation_items": []},
+            "designer_facts": {},
+        })
+        mock_resolved = {
+            "duration": {"label": "3 days / 2 nights"},
+            "routeLabel": "Hanoi",
+            "travelDateLabel": "01 - 03 Nov 2026",
+            "itinerary": [],
+        }
+
+        with patch("main._resolve_v2_facts", new_callable=AsyncMock, return_value=(mock_canonical, mock_resolved)), \
+             patch("main._serialize_travel_designer", return_value={"id": "td_assigned", "name": "Assigned Designer"}), \
+             patch("repositories.quotation_repository.QuotationRepository.create_quotation", new_callable=AsyncMock) as mock_create_quote, \
+             patch("repositories.quotation_repository.QuotationRepository.create_quotation_request", new_callable=AsyncMock), \
+             patch("repositories.quotation_repository.QuotationDocumentRepository.save_current_document", new_callable=AsyncMock, return_value=mock_saved_doc), \
+             patch("repositories.quotation_repository.QuotationDocumentRepository.append_document_revision", new_callable=AsyncMock), \
+             patch("services.outbox_service.OutboxService.emit_event", new_callable=AsyncMock), \
+             patch("repositories.travel_designer_repository.TravelDesignerRepository.get_profile", new_callable=AsyncMock) as mock_get_profile:
+
+            mock_profile = MagicMock(id="td_assigned", email="assigned@example.com", name="Assigned Designer")
+            mock_get_profile.return_value = mock_profile
+            mock_create_quote.return_value = mock_quotation
+
+            # User who clicks generate is td_creator, while the quote is assigned to td_assigned
+            result = await service.generate_quotation_from_request(
+                request_id="req_preservation_001",
+                created_by_profile_id="td_creator",
+            )
+
+            self.assertEqual(result["quotation_id"], "quo_test_123")
+            mock_create_quote.assert_called_once()
+            call_kwargs = mock_create_quote.call_args.kwargs
+            # Verify creator profile ID was preserved and not overwritten by resolved designer
+            self.assertEqual(call_kwargs["created_by_profile_id"], "td_creator")
+            self.assertEqual(call_kwargs["designer_profile_id"], "td_assigned")
+
+

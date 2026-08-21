@@ -141,10 +141,19 @@ export function ContentGenerationPanel({
     const clone: Record<string, unknown> = { ...facts };
     if (disabledFactIds.length) {
       for (const disabledId of disabledFactIds) {
-        const targetInput = factInputs.find((i) => i.id === disabledId);
-        if (targetInput && targetInput.path.length > 0) {
-          const topKey = targetInput.path[0];
-          delete clone[topKey];
+        if (disabledId.startsWith('request_brief.')) {
+          const briefKey = disabledId.replace('request_brief.', '');
+          if (clone.request_brief && typeof clone.request_brief === 'object') {
+            const briefClone = { ...(clone.request_brief as Record<string, unknown>) };
+            delete briefClone[briefKey];
+            clone.request_brief = Object.keys(briefClone).length ? briefClone : undefined;
+          }
+        } else {
+          const targetInput = factInputs.find((i) => i.id === disabledId);
+          if (targetInput && targetInput.path.length > 0) {
+            const topKey = targetInput.path[0];
+            delete clone[topKey];
+          }
         }
       }
     }
@@ -285,6 +294,7 @@ export function ContentGenerationPanel({
 }
 
 export function FactsUsed({ factInputs, facts }: { factInputs: ContentFactInput[]; facts?: Record<string, unknown> }) {
+  const requestBrief = facts?.request_brief as Record<string, unknown> | undefined;
   return (
     <div className="grid min-w-0 max-w-full gap-2">
       <p className={cn(getTypographyClassName('label'), 'text-[var(--color-muted)]')}>FACTS USED IN PROMPT</p>
@@ -304,6 +314,21 @@ export function FactsUsed({ factInputs, facts }: { factInputs: ContentFactInput[
           </div>
         );
       })}
+      {requestBrief && typeof requestBrief === 'object' && Object.keys(requestBrief).length > 0 ? (
+        <>
+          <p className={cn(getTypographyClassName('label'), 'mt-2 text-[var(--color-accent)]')}>REQUEST BRIEF CONTEXT</p>
+          {Object.entries(requestBrief).map(([key, val]) => (
+            <div key={`brief-${key}`} className="min-w-0 overflow-hidden rounded-[var(--radius-button)] border border-[var(--color-border)] p-3 bg-[var(--color-surface-muted)]">
+              <p className={cn(getTypographyClassName('label'), 'break-words text-[var(--color-accent)]')}>
+                {factKeyLabel(key)} · request brief
+              </p>
+              <div className="mt-1 min-w-0">
+                <FactValue value={val} />
+              </div>
+            </div>
+          ))}
+        </>
+      ) : null}
     </div>
   );
 }

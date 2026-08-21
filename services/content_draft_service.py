@@ -62,6 +62,32 @@ def _fingerprint(*, spec, lang: str, mode: str, facts_hash: str, instruction: st
     return f"cs3-{sha256(json.dumps(payload, sort_keys=True).encode('utf-8')).hexdigest()[:60]}"
 
 
+REQUEST_BRIEF_KEYS = [
+    "occasion",
+    "primary_theme",
+    "travel_pace",
+    "interests",
+    "must_have",
+    "avoid",
+    "dietary",
+    "halal",
+    "mobility",
+    "dining_level",
+    "client_context",
+]
+
+
+def extract_request_brief(request_payload: dict[str, Any] | None) -> dict[str, Any]:
+    request_brief: dict[str, Any] = {}
+    if not request_payload or not isinstance(request_payload, dict):
+        return request_brief
+    for key in REQUEST_BRIEF_KEYS:
+        val = request_payload.get(key)
+        if val is not None and val != "" and val != [] and val != {}:
+            request_brief[key] = val
+    return request_brief
+
+
 class ContentDraftService:
     def __init__(self, repository: ContentDraftRepository, brand_profile: BrandProfile) -> None:
         self.repository = repository
@@ -95,13 +121,19 @@ class ContentDraftService:
         return [{"path": path, "reason": "Required Facts are missing for this section."} for path in spec.required_facts if not _fact_value(payload, path)]
 
     @staticmethod
-    def facts_snapshot(payload: CreateQuoteRequestV1, scope: str) -> dict[str, Any]:
+    def facts_snapshot(payload: CreateQuoteRequestV1, scope: str, request_brief: dict[str, Any] | None = None) -> dict[str, Any]:
         if scope.startswith("itinerary:day:"):
             number = int(scope.rsplit(":", 1)[-1])
             day = next((item for item in payload.trip_facts.itinerary if item.day_number == number), None)
-            return {"itineraryDay": {"dayNumber": number, "destination": day.destination if day else "", "summary": day.summary if day else "", "highlights": day.highlights if day else [], "meals": day.meals if day else [], "overnight": day.overnight if day else ""}}
+            snapshot = {"itineraryDay": {"dayNumber": number, "destination": day.destination if day else "", "summary": day.summary if day else "", "highlights": day.highlights if day else [], "meals": day.meals if day else [], "overnight": day.overnight if day else ""}}
+            if request_brief:
+                snapshot["request_brief"] = request_brief
+            return snapshot
         spec = scope_spec(scope)
-        return {"facts": {path: _fact_value(payload, path) for path in spec.fact_allowlist}}
+        snapshot = {"facts": {path: _fact_value(payload, path) for path in spec.fact_allowlist}}
+        if request_brief:
+            snapshot["request_brief"] = request_brief
+        return snapshot
 
     @staticmethod
     def deterministic_rich_candidate(payload: CreateQuoteRequestV1, scope: str) -> dict[str, Any]:
@@ -178,7 +210,19 @@ class ContentDraftService:
                         merged.setdefault(key, {}).update(candidate[key])
         return QuoteDocumentV1.model_validate(merged).model_dump(mode="json")
 
-    async def create(self, *, quotation_id: str, payload: CreateQuoteRequestV1, facts_hash: str, document_revision: int, lang: str, scope: str, mode: str, instruction: str = "") -> list[Any]:
+    async def create(
+        self,
+        *,
+        quotation_id: str,
+        payload: CreateQuoteRequestV1,
+        facts_hash: str,
+        document_revision: int,
+        lang: str,
+        scope: str,
+        mode: str,
+        instruction: str = "",
+        request_payload: dict[str, Any] | None = None,
+    ) -> list[Any]:
         spec = scope_spec(scope)
         if spec.owner != "content":
             raise ValueError(f"{scope} is Fact-owned and cannot be generated or edited in Content Studio.")
@@ -189,7 +233,8 @@ class ContentDraftService:
         if cached:
             cached.generation_metadata = {**cached.generation_metadata, "cached": True}
             return [cached]
-        snapshot = self.facts_snapshot(payload, scope)
+        request_brief = extract_request_brief(request_payload)
+        snapshot = self.facts_snapshot(payload, scope, request_brief=request_brief)
         missing = self.missing_for_scope(payload, scope)
         metadata = {"mode": mode, "recipeVersion": spec.recipe_version, "schemaVersion": spec.schema_version, "brandPolicyVersion": BRAND_POLICY_VERSION, "instructionSource": "custom" if normalized_instruction else "default", "instructionHash": sha256(effective_instruction.encode("utf-8")).hexdigest()[:16]}
         if missing:
@@ -203,11 +248,19 @@ class ContentDraftService:
         self.validate_candidate(scope, candidate)
         return [await self.repository.create(id=f"cd_{uuid.uuid4().hex[:20]}", quotation_id=quotation_id, lang=lang, scope=scope, generation_mode=mode, status="draft", facts_hash=facts_hash, source_document_revision=document_revision, prompt_version=prompt_version, facts_snapshot=snapshot, candidate_json=candidate, missing_inputs=[], generation_metadata={**metadata, "instructionSource": generation["instructionSource"], "systemPrompt": generation.get("systemPrompt", ""), "userPrompt": generation.get("userPrompt", ""), "promptVersion": generation.get("promptVersion", "v1"), "llmCalled": True, "generationStatus": "generated", "latencyMs": round((time.perf_counter() - started) * 1000), "warnings": []})]
 
-    def preview_prompt(self, payload: CreateQuoteRequestV1, scope: str, mode: str, instruction: str = "") -> dict[str, Any]:
+    def preview_prompt(
+        self,
+        payload: CreateQuoteRequestV1,
+        scope: str,
+        mode: str,
+        instruction: str = "",
+        request_payload: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         spec = scope_spec(scope)
         if spec.owner != "content":
             raise ValueError(f"{scope} is Fact-owned and has no prompt preview.")
-        snapshot = self.facts_snapshot(payload, scope)
+        request_brief = extract_request_brief(request_payload)
+        snapshot = self.facts_snapshot(payload, scope, request_brief=request_brief)
         bundle = self.generator.build_prompt_bundle(
             scope=spec.scope,
             brand=self.brand_profile,

@@ -51,8 +51,9 @@ class WorkspaceOwnershipTests(unittest.TestCase):
             first = await designers.create_profile(profile_id="td_first", email="first@example.com", name="First")
             second = await designers.create_profile(profile_id="td_second", email="second@example.com", name="Second")
             quotes = QuotationRepository(session)
-            await quotes.create_quotation(quotation_id="quo_first", brand_id="brand", template_name="quote-generator", baseline_lang="en", title="First journey", customer_name="Client", designer_profile_id=first.id)
-            await quotes.create_quotation(quotation_id="quo_second", brand_id="brand", template_name="quote-generator", baseline_lang="en", title="Second journey", designer_profile_id=second.id)
+            await quotes.create_quotation(quotation_id="quo_first", brand_id="brand", template_name="quote-generator", baseline_lang="en", title="First journey", customer_name="Client", designer_profile_id=first.id, created_by_profile_id=first.id)
+            await quotes.create_quotation(quotation_id="quo_second", brand_id="brand", template_name="quote-generator", baseline_lang="en", title="Second journey", designer_profile_id=second.id, created_by_profile_id=second.id)
+            await quotes.create_quotation(quotation_id="quo_shared", brand_id="brand", template_name="quote-generator", baseline_lang="en", title="Shared journey", designer_profile_id=second.id, created_by_profile_id=first.id)
             await quotes.create_quotation(quotation_id="quo_unassigned", brand_id="brand", template_name="quote-generator", baseline_lang="en", title="Unassigned")
             await session.commit()
 
@@ -60,9 +61,39 @@ class WorkspaceOwnershipTests(unittest.TestCase):
         headers = {"X-DMC-Email": "first@example.com"}
         listed = self.client.get("/api/v2/workspace/quotations", headers=headers)
         self.assertEqual(listed.status_code, 200)
-        self.assertEqual({item["id"] for item in listed.json()["items"]}, {"quo_first", "quo_second", "quo_unassigned"})
-        self.assertEqual(self.client.get("/api/v2/workspace/quotations/quo_second/overview", headers=headers).status_code, 404)
-        self.assertEqual(self.client.get("/api/v2/workspace/quotations/quo_unassigned/overview", headers=headers).status_code, 404)
+        self.assertEqual({item["id"] for item in listed.json()["items"]}, {"quo_first", "quo_second", "quo_shared", "quo_unassigned"})
+        # Foreign quote returns 403 Forbidden
+        self.assertEqual(self.client.get("/api/v2/workspace/quotations/quo_second/overview", headers=headers).status_code, 403)
+        # Unassigned quote is accessible to authenticated staff
+        self.assertEqual(self.client.get("/api/v2/workspace/quotations/quo_unassigned/overview", headers=headers).status_code, 200)
+
+    def test_creator_and_assigned_designer_both_have_access(self):
+        # First designer is the creator of quo_shared
+        headers_first = {"X-DMC-Email": "first@example.com"}
+        resp_first = self.client.get("/api/v2/workspace/quotations/quo_shared/overview", headers=headers_first)
+        self.assertEqual(resp_first.status_code, 200)
+
+        # Second designer is the assigned designer of quo_shared
+        headers_second = {"X-DMC-Email": "second@example.com"}
+        resp_second = self.client.get("/api/v2/workspace/quotations/quo_shared/overview", headers=headers_second)
+        self.assertEqual(resp_second.status_code, 200)
+
+    def test_admin_role_can_access_any_quotation(self):
+        headers = {"X-DMC-Email": "admin@example.com", "X-DMC-Role": "quote_admin"}
+        # Admin can access second designer's quotation
+        resp = self.client.get("/api/v2/workspace/quotations/quo_second/overview", headers=headers)
+        self.assertEqual(resp.status_code, 200)
+
+    def test_local_bypass_can_access_any_quotation(self):
+        with patch.dict(os.environ, {"DMC_GATEWAY_ENABLED": "false", "ENVIRONMENT": "local"}):
+            # Local request without headers
+            resp = self.client.get("/api/v2/workspace/quotations/quo_second/overview")
+            self.assertEqual(resp.status_code, 200)
+
+    def test_nonexistent_quotation_returns_404(self):
+        headers = {"X-DMC-Email": "first@example.com"}
+        resp = self.client.get("/api/v2/workspace/quotations/quo_nonexistent/overview", headers=headers)
+        self.assertEqual(resp.status_code, 404)
 
     def test_missing_profile_is_forbidden(self):
         response = self.client.get("/api/v2/workspace/me", headers={"X-DMC-Email": "missing@example.com"})
