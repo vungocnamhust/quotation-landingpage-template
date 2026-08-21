@@ -55,12 +55,23 @@ def _get_helpers():
 
 
 @router.get("")
-async def search_destinations(query: str = "", limit: int = 20, principal: Principal = Depends(require_editor)):
+async def search_destinations(
+    query: str = "",
+    active: str = "true",
+    countrySlug: str | None = None,
+    limit: int = 20,
+    principal: Principal = Depends(require_editor),
+):
     h = _get_helpers()
     async with h._get_db_session_factory()() as session:
         await h._seed_destination_catalog(session)
         await session.commit()
-        rows = await DestinationRepository(session).search(query, limit=max(1, min(limit, 50)))
+        rows = await DestinationRepository(session).search(
+            query,
+            active=active,
+            country_slug=countrySlug,
+            limit=max(1, min(limit, 200)),
+        )
         items: list[dict[str, Any]] = []
         seen_ids: set[str] = set()
         for item, alias in rows:

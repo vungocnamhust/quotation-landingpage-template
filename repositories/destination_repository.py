@@ -82,11 +82,42 @@ class DestinationRepository:
         await self.session.flush()
         return item
 
-    async def search(self, query: str, *, limit: int = 20) -> list[tuple[DestinationCatalog, str]]:
+    async def search(
+        self,
+        query: str = "",
+        *,
+        active: str = "true",
+        country_slug: str | None = None,
+        limit: int = 20,
+    ) -> list[tuple[DestinationCatalog, str | None]]:
         normalized = normalize_destination(query)
-        stmt = select(DestinationCatalog, DestinationAlias.normalized_alias).join(DestinationAlias, DestinationAlias.destination_id == DestinationCatalog.id).where(DestinationCatalog.is_active.is_(True))
-        if normalized:
-            stmt = stmt.where(or_(DestinationCatalog.canonical_name.ilike(f"%{query}%"), DestinationAlias.normalized_alias.ilike(f"%{normalized}%")))
+        if not normalized:
+            stmt = select(DestinationCatalog)
+            if active == "true":
+                stmt = stmt.where(DestinationCatalog.is_active.is_(True))
+            elif active == "false":
+                stmt = stmt.where(DestinationCatalog.is_active.is_(False))
+            if country_slug:
+                stmt = stmt.where(DestinationCatalog.country_slug == country_slug)
+            stmt = stmt.order_by(DestinationCatalog.canonical_name.asc()).limit(limit)
+            rows = (await self.session.scalars(stmt)).all()
+            return [(item, None) for item in rows]
+
+        stmt = select(DestinationCatalog, DestinationAlias.normalized_alias).join(
+            DestinationAlias, DestinationAlias.destination_id == DestinationCatalog.id
+        )
+        if active == "true":
+            stmt = stmt.where(DestinationCatalog.is_active.is_(True))
+        elif active == "false":
+            stmt = stmt.where(DestinationCatalog.is_active.is_(False))
+        if country_slug:
+            stmt = stmt.where(DestinationCatalog.country_slug == country_slug)
+        stmt = stmt.where(
+            or_(
+                DestinationCatalog.canonical_name.ilike(f"%{query}%"),
+                DestinationAlias.normalized_alias.ilike(f"%{normalized}%"),
+            )
+        )
         rows = (await self.session.execute(stmt.order_by(DestinationCatalog.canonical_name.asc()).limit(limit))).all()
         return [(row[0], row[1]) for row in rows]
 

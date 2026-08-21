@@ -1,11 +1,11 @@
 "use client";
 
 import { useMemo } from "react";
-import { Building2, Palette, Plus } from "lucide-react";
+import { Building2, Palette, Plus, MapPin } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
 import { DataViewContainer } from "../ui/data-view/DataViewContainer.tsx";
-import type { AccommodationProfile } from "../../lib/quotationApi.ts";
+import type { AccommodationProfile, DestinationProfile } from "../../lib/quotationApi.ts";
 import {
   CATEGORIES,
   type FlatTravelStyleTag,
@@ -14,9 +14,13 @@ import {
 import { useTourComponentsState } from "./useTourComponentsState.ts";
 import { useAccommodationManager } from "./accommodations/useAccommodationManager.ts";
 import { useTravelStyleCatalog } from "./travel-styles/useTravelStyleCatalog.ts";
+import { useDestinationManager } from "./destinations/useDestinationManager.ts";
 import { AccommodationCard } from "./accommodations/AccommodationCard.tsx";
 import { createAccommodationColumns } from "./accommodations/AccommodationColumns.tsx";
 import { AccommodationDrawerModal } from "./accommodations/AccommodationDrawerModal.tsx";
+import { DestinationCard } from "./destinations/DestinationCard.tsx";
+import { createDestinationColumns } from "./destinations/DestinationColumns.tsx";
+import { DestinationDrawerModal } from "./destinations/DestinationDrawerModal.tsx";
 import { TravelStyleCard } from "./travel-styles/TravelStyleCard.tsx";
 import { createTravelStyleColumns } from "./travel-styles/TravelStyleColumns.tsx";
 import { GenericCatalogCard } from "./catalog/GenericCatalogCard.tsx";
@@ -39,18 +43,19 @@ export default function TourComponentsWorkspace() {
 
   const isAccommodationActive = activeCategory === "accommodations";
   const isTravelStyleActive = activeCategory === "travel_styles";
+  const isDestinationActive = activeCategory === "destinations";
 
   const {
     items: accommodationItems,
     isLoading: isAccommodationLoading,
     error: accommodationError,
-    isDrawerOpen,
-    editing,
-    draft,
+    isDrawerOpen: isAccommodationDrawerOpen,
+    editing: editingAccommodation,
+    draft: accommodationDraft,
     destinationRef,
-    pending,
-    message,
-    setDraft,
+    pending: isAccommodationPending,
+    message: accommodationMessage,
+    setDraft: setAccommodationDraft,
     setDestinationRef,
     openCreate: openCreateAccommodation,
     openEdit: openEditAccommodation,
@@ -66,9 +71,31 @@ export default function TourComponentsWorkspace() {
     error: travelStyleError,
   } = useTravelStyleCatalog(isTravelStyleActive, travelStyleGroupFilter, deferredSearch);
 
+  const {
+    items: destinationItems,
+    isLoading: isDestinationLoading,
+    error: destinationError,
+    isDrawerOpen: isDestinationDrawerOpen,
+    editing: editingDestination,
+    draft: destinationDraft,
+    pending: isDestinationPending,
+    message: destinationMessage,
+    setDraft: setDestinationDraft,
+    openCreate: openCreateDestination,
+    openEdit: openEditDestination,
+    closeDrawer: closeDestinationDrawer,
+    saveDestination,
+    toggleDestinationStatus,
+  } = useDestinationManager(isDestinationActive, activeFilter, deferredSearch);
+
   const accommodationColumns = useMemo(
     () => createAccommodationColumns(openEditAccommodation, toggleAccommodationStatus),
     [openEditAccommodation, toggleAccommodationStatus]
+  );
+
+  const destinationColumns = useMemo(
+    () => createDestinationColumns(openEditDestination, toggleDestinationStatus),
+    [openEditDestination, toggleDestinationStatus]
   );
 
   const travelStyleColumns = useMemo(() => createTravelStyleColumns(), []);
@@ -207,8 +234,55 @@ export default function TourComponentsWorkspace() {
           gridItemRenderer={(tag) => <TravelStyleCard key={tag.id} tag={tag} />}
           tableColumns={travelStyleColumns}
         />
+      ) : isDestinationActive ? (
+        /* Category 3: Real Database Destinations */
+        <DataViewContainer<DestinationProfile>
+          items={destinationItems}
+          keyExtractor={(item) => item.id}
+          search={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Search destinations by name or alias…"
+          filters={[
+            { label: "All", value: "all" },
+            { label: "Active", value: "true" },
+            { label: "Inactive", value: "false" },
+          ]}
+          activeFilter={activeFilter}
+          onFilterChange={(val) => setActiveFilter(val as "all" | "true" | "false")}
+          isLoading={isDestinationLoading}
+          error={destinationError}
+          emptyTitle={currentCategoryMeta.emptyTitle}
+          emptyDescription={
+            search
+              ? "No destinations match your search query."
+              : currentCategoryMeta.emptyDescription
+          }
+          emptyIcon={<MapPin size={40} className="mb-3 text-[var(--color-muted)]" />}
+          actionButton={
+            <button
+              type="button"
+              onClick={openCreateDestination}
+              className={cn(
+                getTypographyClassName("buttonPrimary"),
+                "flex items-center justify-center gap-2 rounded-[var(--radius-button)] bg-[var(--color-accent)] px-4 py-2.5 text-white shadow-xs transition-all hover:bg-[color-mix(in_srgb,var(--color-accent)_85%,black)] cursor-pointer"
+              )}
+            >
+              <Plus size={18} />
+              <span>{currentCategoryMeta.actionLabel}</span>
+            </button>
+          }
+          gridItemRenderer={(profile) => (
+            <DestinationCard
+              key={profile.id}
+              profile={profile}
+              onEdit={openEditDestination}
+              onToggleStatus={toggleDestinationStatus}
+            />
+          )}
+          tableColumns={destinationColumns}
+        />
       ) : (
-        /* Category 3..6: Cars, Experiences, Tickets, Destinations (Clean Empty State) */
+        /* Category 4..6: Cars, Experiences, Tickets (Clean Empty State) */
         <DataViewContainer<GenericComponentItem>
           items={genericItems}
           keyExtractor={(item) => item.id}
@@ -243,18 +317,31 @@ export default function TourComponentsWorkspace() {
 
       {/* Accommodations Drawer Modal */}
       <AccommodationDrawerModal
-        isOpen={isDrawerOpen}
-        editing={editing}
-        draft={draft}
+        isOpen={isAccommodationDrawerOpen}
+        editing={editingAccommodation}
+        draft={accommodationDraft}
         destinationRef={destinationRef}
-        pending={pending}
-        message={message}
+        pending={isAccommodationPending}
+        message={accommodationMessage}
         onClose={closeAccommodationDrawer}
-        onDraftChange={setDraft}
+        onDraftChange={setAccommodationDraft}
         onDestinationChange={setDestinationRef}
         onUploadAsset={(target, file) => void uploadAsset(target, file)}
         onSave={() => void saveAccommodation()}
       />
+
+      {/* Destinations Drawer Modal */}
+      <DestinationDrawerModal
+        isOpen={isDestinationDrawerOpen}
+        editing={editingDestination}
+        draft={destinationDraft}
+        pending={isDestinationPending}
+        message={destinationMessage}
+        onClose={closeDestinationDrawer}
+        onDraftChange={setDestinationDraft}
+        onSave={() => void saveDestination()}
+      />
     </main>
   );
 }
+

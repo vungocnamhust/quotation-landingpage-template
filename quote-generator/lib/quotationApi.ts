@@ -303,4 +303,80 @@ export async function listRoomingHeuristics(): Promise<RoomingHeuristicsListResp
   return request<RoomingHeuristicsListResponse>('/api/v2/rooming-heuristics');
 }
 
+export type DestinationProfile = {
+  id: string;
+  name: string;
+  slug: string;
+  countrySlug: string | null;
+  regionSlug: string | null;
+  provinceSlug: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  isActive: boolean;
+  aliases: string[];
+  matchedFrom?: string;
+};
+
+export type DestinationCatalogInput = {
+  canonicalName: string;
+  slug: string;
+  countrySlug: string | null;
+  regionSlug: string | null;
+  provinceSlug: string | null;
+  latitude: number;
+  longitude: number;
+  aliases: string[];
+};
+
+export type DestinationListResponse = {
+  items: DestinationProfile[];
+};
+
+export async function listDestinationsCatalog({
+  active = "true",
+  query = "",
+  countrySlug,
+  limit = 100,
+}: {
+  active?: "true" | "false" | "all";
+  query?: string;
+  countrySlug?: string;
+  limit?: number;
+} = {}): Promise<DestinationListResponse> {
+  const params = new URLSearchParams({ active });
+  if (query.trim()) params.set("query", query.trim());
+  if (countrySlug) params.set("countrySlug", countrySlug);
+  if (limit) params.set("limit", String(limit));
+  return request<DestinationListResponse>(`/api/v2/destinations?${params.toString()}`);
+}
+
+export async function getDestination(id: string): Promise<DestinationProfile> {
+  return request<DestinationProfile>(`/api/v2/destinations/${encodeURIComponent(id)}`);
+}
+
+export async function createDestination(input: DestinationCatalogInput): Promise<DestinationProfile> {
+  return request<DestinationProfile>("/api/v2/destinations", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+}
+
+export async function updateDestination(id: string, input: DestinationCatalogInput): Promise<DestinationProfile> {
+  return request<DestinationProfile>(`/api/v2/destinations/${encodeURIComponent(id)}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+}
+
+export async function updateDestinationStatus(id: string, isActive: boolean): Promise<DestinationProfile> {
+  return request<DestinationProfile>(`/api/v2/destinations/${encodeURIComponent(id)}/status`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ isActive }),
+  });
+}
+
+
 

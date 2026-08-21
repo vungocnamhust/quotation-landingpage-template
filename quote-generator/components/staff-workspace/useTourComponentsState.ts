@@ -37,19 +37,22 @@ export function useTourComponentsState() {
     router.replace(`/workspace/components?category=${key}`, { scroll: false });
   };
 
-  // Real empty storage for generic categories (Cars, Experiences, Tickets, Destinations)
+  // Real empty storage for generic categories (Cars, Experiences, Tickets)
   // Ready to connect to backend endpoint when available
   const [genericCatalogStore] = useState<
-    Record<Exclude<ComponentCategoryKey, "accommodations" | "travel_styles">, GenericComponentItem[]>
+    Record<Exclude<ComponentCategoryKey, "accommodations" | "travel_styles" | "destinations">, GenericComponentItem[]>
   >({
     cars: [],
     experiences: [],
     tickets: [],
-    destinations: [],
   });
 
   const genericItems = useMemo(() => {
-    if (activeCategory === "accommodations" || activeCategory === "travel_styles") {
+    if (
+      activeCategory === "accommodations" ||
+      activeCategory === "travel_styles" ||
+      activeCategory === "destinations"
+    ) {
       return [];
     }
     const list = genericCatalogStore[activeCategory] ?? [];

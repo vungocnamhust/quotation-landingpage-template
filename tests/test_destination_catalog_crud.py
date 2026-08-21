@@ -70,3 +70,45 @@ class DestinationCatalogCrudTests(unittest.TestCase):
         invalid = self.client.post("/api/v2/destinations", json={**payload, "slug": "invalid-map-city", "latitude": 91})
         self.assertEqual(invalid.status_code, 422)
 
+    def test_search_and_filter_destinations(self):
+        # 1. Create active destination in Thailand
+        th_payload = {
+            "canonicalName": "Bangkok Test",
+            "slug": "bangkok-test",
+            "aliases": ["Krung Thep"],
+            "countrySlug": "thailand",
+            "regionSlug": "central",
+            "provinceSlug": "bangkok",
+            "latitude": 13.7563,
+            "longitude": 100.5018,
+        }
+        th_created = self.client.post("/api/v2/destinations", json=th_payload)
+        self.assertEqual(th_created.status_code, 201)
+        th_id = th_created.json()["id"]
+
+        # 2. Search all with active=true
+        res_active = self.client.get("/api/v2/destinations?active=true")
+        self.assertEqual(res_active.status_code, 200)
+        items_active = res_active.json()["items"]
+        self.assertTrue(any(item["id"] == th_id for item in items_active))
+
+        # 3. Filter by countrySlug=thailand
+        res_country = self.client.get("/api/v2/destinations?countrySlug=thailand")
+        self.assertEqual(res_country.status_code, 200)
+        items_country = res_country.json()["items"]
+        self.assertTrue(all(item["countrySlug"] == "thailand" for item in items_country))
+        self.assertTrue(any(item["id"] == th_id for item in items_country))
+
+        # 4. Deactivate and check active=false and active=all
+        self.client.patch(f"/api/v2/destinations/{th_id}/status", json={"isActive": False})
+        res_inactive = self.client.get("/api/v2/destinations?active=false")
+        self.assertEqual(res_inactive.status_code, 200)
+        items_inactive = res_inactive.json()["items"]
+        self.assertTrue(any(item["id"] == th_id for item in items_inactive))
+
+        res_all = self.client.get("/api/v2/destinations?active=all")
+        self.assertEqual(res_all.status_code, 200)
+        items_all = res_all.json()["items"]
+        self.assertTrue(any(item["id"] == th_id for item in items_all))
+
+
