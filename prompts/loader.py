@@ -87,7 +87,12 @@ class PromptLoader:
         facts_snapshot: dict[str, Any] | None = None,
         disabled_rule_ids: list[str] | set[str] | None = None,
     ) -> list[dict[str, Any]]:
-        base_scope = "itinerary_day" if scope.startswith("itinerary:day:") else scope
+        matching_scopes = {scope}
+        if scope.startswith("itinerary:day:") or scope == "itinerary_days_batch":
+            matching_scopes.add("itinerary_day")
+        if scope == "brochure_narrative_batch":
+            matching_scopes.update(["hero", "overview_letter", "route", "itinerary"])
+
         rules_list = self._ground_rules.get("rules", [])
         active = []
         disabled_set = set(disabled_rule_ids or [])
@@ -98,7 +103,7 @@ class PromptLoader:
         is_free_day = False
         has_accommodation = False
 
-        if facts_snapshot and base_scope == "itinerary_day":
+        if facts_snapshot and "itinerary_day" in matching_scopes and scope != "itinerary_days_batch":
             acts = facts_snapshot.get("activities") or facts_snapshot.get("highlights") or []
             dest = facts_snapshot.get("destination") or facts_snapshot.get("summary")
             summary_lower = str(facts_snapshot.get("summary", "")).lower()
@@ -118,11 +123,11 @@ class PromptLoader:
             if r_id in disabled_set:
                 continue
             target_scopes = r.get("scopes", [])
-            if base_scope not in target_scopes:
+            if not any(s in target_scopes for s in matching_scopes):
                 continue
 
-            # Smart Filtering for itinerary_day rules
-            if base_scope == "itinerary_day" and facts_snapshot:
+            # Smart Filtering for single itinerary_day rules
+            if "itinerary_day" in matching_scopes and scope != "itinerary_days_batch" and facts_snapshot:
                 if r_id == "GR-TOUR-FULLDAY" and not is_tour and (is_city_only or is_free_day):
                     continue
                 if r_id == "GR-CITY-INTRO" and not is_city_only and (is_tour or is_free_day):

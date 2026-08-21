@@ -102,3 +102,40 @@ recipes:
     available_modes:
       - storytelling
       - detailed
+
+  brochure_narrative_batch:
+    name: "Brochure Narrative Suite Batch Recipe"
+    description: "Composition recipe for hero, overview letter, route, and itinerary header narrative suite"
+    components:
+      - role_base
+      - brand_voice
+      - mode_style
+      - ground_rules
+      - section_rules
+      - base_constraints
+      - validation
+    default_facts:
+      - trip.title
+      - trip.destinations
+      - trip.duration_days
+      - customer.name
+    available_modes:
+      - storytelling
+      - detailed
+
+  itinerary_days_batch:
+    name: "Itinerary Days Journey Arc Batch Recipe"
+    description: "Composition recipe for all itinerary daily descriptions in sequence"
+    components:
+      - role_base
+      - brand_voice
+      - mode_style
+      - ground_rules
+      - section_rules
+      - base_constraints
+      - validation
+    default_facts:
+      - itinerary_days
+    available_modes:
+      - storytelling
+      - detailed

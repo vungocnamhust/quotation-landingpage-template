@@ -15,3 +15,5 @@ default_instructions:
   route: "Describe the geographic journey as an unfolding narrative arc across destinations."
   itinerary: "Craft a high-level, story-rich introduction to the day-by-day journey."
   itinerary_day: "Write an immersive day narrative blending morning/afternoon experiences with sensory ambiance and bold attraction highlights."
+  brochure_narrative_batch: "Craft a harmonized luxury narrative suite (Hero cover, Designer welcome letter, Route summary, and Itinerary introduction) maintaining unified storytelling cadence."
+  itinerary_days_batch: "Craft an immersive day-by-day narrative journey across all itinerary days, ensuring fluid narrative transitions and vivid sensory details while honoring all facts."

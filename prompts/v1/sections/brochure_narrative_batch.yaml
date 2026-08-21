@@ -1,0 +1,17 @@
+# Section Rule & Prompt Configuration: Brochure Narrative Batch (Hero, Letter, Route, Itinerary Header)
+
+scope: "brochure_narrative_batch"
+title: "Brochure Narrative Suite (Hero, Overview Letter, Route Summary, Itinerary Intro)"
+rules:
+  - "Generate a complete, harmonized narrative suite comprising: Hero Cover, Overview Letter, Route Summary, and Itinerary Header."
+  - "Ensure narrative harmony across all 4 components: the hero cover kicker, the designer's personal welcome letter, the geographic route summary, and the itinerary header must share the same luxury voice and thematic resonance."
+  - "Hero: Title max 160 chars, evocative lede max 500 chars, cover kicker, primary/secondary meta, footer text."
+  - "Overview Letter: Warm, refined welcome letter with personalized greeting, letterHighlight (max 500 chars), letterIntro, letterBody2, letterOutro, letterSignOff, letterSender."
+  - "Route: Title max 160 chars, geographic description max 1600 chars, and mapSegmentDescriptions matching the provided stay segments."
+  - "Itinerary Header: Title max 160 chars, overview description max 1600 chars."
+  - "Ground all statements strictly in the provided facts and request brief without fabricating itineraries or services."
+output_fields:
+  - "hero"
+  - "overview_letter"
+  - "route"
+  - "itinerary"

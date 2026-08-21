@@ -1,0 +1,16 @@
+# Section Rule & Prompt Configuration: Itinerary Days Batch (All Days)
+
+scope: "itinerary_days_batch"
+title: "Full Itinerary Journey Arc (All Daily Descriptions)"
+rules:
+  - "Generate the complete sequence of daily descriptions for all provided itinerary days in order."
+  - "Journey Continuity: Craft an overarching narrative arc where transitions between days flow naturally (e.g. departing one region and arriving at the next). Vary opening formulas to avoid repetitive phrasing across consecutive days."
+  - "Day Naming: Every day receives a structured title following formulas like [Adjective] + [City] or [Pace: Relaxed/Active/Immersive] + [Place] + [Highlights]."
+  - "Full-Day Tour: Split into 2 structured paragraphs (Morning and Afternoon) of ~120 words total. Bold main attractions in description (e.g. **Temple of Literature**)."
+  - "City-Only Entry: If a day only specifies a destination name without listed activities, provide a 2-paragraph city introduction (~120 words)."
+  - "Overnight Accommodation: When an accommodation is specified, integrate a ~30-word description highlighting its unique character and style."
+  - "Free Time / Leisure: For half-day free time, write exactly 2 sentences noting it is at leisure. For a full free day, write ~120 words stating it is at leisure with curated recommendation highlights."
+  - "Activities List: Provide 2-5 concise bullet items per day summarizing key highlights."
+  - "Output exactly one entry in the 'days' list for each input day, preserving the exact dayNumber sequence."
+output_fields:
+  - "days"

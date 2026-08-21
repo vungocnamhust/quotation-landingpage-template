@@ -15,3 +15,5 @@ default_instructions:
   route: "Provide a clear geographic summary and segment-by-segment stop descriptions."
   itinerary: "Provide a direct, structured introduction summarizing the itinerary."
   itinerary_day: "Write a crisp, chronologically precise day description (~120 words for tour) with bold attraction highlights."
+  brochure_narrative_batch: "Write a complete, structured narrative suite (Hero, Letter, Route, and Itinerary) focusing on precise trip facts and clear presentation."
+  itinerary_days_batch: "Write structured, accurate day-by-day descriptions for all days with explicit morning/afternoon schedules and concise activity bullet points."
