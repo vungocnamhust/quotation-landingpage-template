@@ -78,6 +78,14 @@ export function IsolatedPreviewFrame({
       doc.head.appendChild(node.cloneNode(true));
     });
 
+    // Copy html dataset and class list (including typographyFontVariables and font classes)
+    doc.documentElement.className = document.documentElement.className;
+    Array.from(document.documentElement.attributes).forEach((attr) => {
+      if (attr.name.startsWith("data-") || attr.name === "class" || attr.name === "lang") {
+        doc.documentElement.setAttribute(attr.name, attr.value);
+      }
+    });
+
     // Copy body dataset and class list for brand/theme inheritance
     doc.body.className = document.body.className;
     Array.from(document.body.attributes).forEach((attr) => {

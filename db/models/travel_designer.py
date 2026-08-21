@@ -25,6 +25,9 @@ class TravelDesignerProfile(Base):
     image_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     storage_slug: Mapped[str | None] = mapped_column(String(255), nullable=True, unique=True)
     image_r2_key: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    # Free-form calligraphy characters the designer uses in their handwritten signature
+    # (e.g. "Nam H.", "V", "Linh"). NULL means no script glyph is rendered.
+    signature_initial: Mapped[str | None] = mapped_column(String(255), nullable=True)
     is_active: Mapped[bool] = mapped_column(nullable=False, default=True, server_default="true")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(

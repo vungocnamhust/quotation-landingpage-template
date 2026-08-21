@@ -3075,6 +3075,7 @@ def _legacy_build_brochure_draft_from_lang_ctx(lang_ctx: dict, quotation_id: str
         "assets": {
             "hero": _safe_asset_ref(hero_url),
             "itineraryDivider": _safe_asset_ref(lang_ctx.get("img_itinerary_divider")),
+            "staysDivider": _safe_asset_ref(lang_ctx.get("img_stays_divider")),
             "hotelDivider": _safe_asset_ref(lang_ctx.get("img_hotel_divider")),
         },
         "traveler": {
@@ -3185,6 +3186,7 @@ def _legacy_store_brochure_draft(ctx_data: dict, target_lang: str, draft: dict) 
     }
     ctx_data["hero_img"] = _asset_url(((draft.get("assets") or {}).get("hero")))
     ctx_data["img_itinerary_divider"] = _asset_url(((draft.get("assets") or {}).get("itineraryDivider")))
+    ctx_data["img_stays_divider"] = _asset_url(((draft.get("assets") or {}).get("staysDivider")))
     ctx_data["img_hotel_divider"] = _asset_url(((draft.get("assets") or {}).get("hotelDivider")))
     ctx_data["designer_img"] = _asset_url(((draft.get("designer") or {}).get("image")))
     return draft
@@ -3303,6 +3305,9 @@ def _legacy_apply_brochure_draft_to_lang_ctx(lang_ctx: dict, draft: dict):
     itinerary_divider = _asset_url(assets.get("itineraryDivider"))
     if itinerary_divider:
         lang_ctx["img_itinerary_divider"] = itinerary_divider
+    stays_divider = _asset_url(assets.get("staysDivider"))
+    if stays_divider:
+        lang_ctx["img_stays_divider"] = stays_divider
     hotel_divider = _asset_url(assets.get("hotelDivider"))
     if hotel_divider:
         lang_ctx["img_hotel_divider"] = hotel_divider
@@ -3494,6 +3499,7 @@ def _store_brochure_draft(ctx_data: dict, target_lang: str, draft: dict) -> dict
     }
     ctx_data["hero_img"] = _asset_url(((normalized.get("assets") or {}).get("hero")))
     ctx_data["img_itinerary_divider"] = _asset_url(((normalized.get("assets") or {}).get("itineraryDivider")))
+    ctx_data["img_stays_divider"] = _asset_url(((normalized.get("assets") or {}).get("staysDivider")))
     ctx_data["img_hotel_divider"] = _asset_url(((normalized.get("assets") or {}).get("hotelDivider")))
     ctx_data["designer_img"] = _asset_url(((normalized.get("designer") or {}).get("image")))
     return normalized
@@ -6960,7 +6966,7 @@ def _apply_travel_designer_snapshot(document: dict[str, Any], profile: dict[str,
     profile must never erase an editor's copy.
     """
     designer = document.setdefault("designer", {})
-    profile_fields = ("profileId", "name", "email", "phone", "image")
+    profile_fields = ("profileId", "name", "email", "phone", "image", "signatureInitial")
     if profile is None:
         for field in profile_fields:
             designer.pop(field, None)
@@ -6971,6 +6977,7 @@ def _apply_travel_designer_snapshot(document: dict[str, Any], profile: dict[str,
             "name": profile.get("name") or "",
             "email": profile.get("email") or "",
             "phone": profile.get("phone") or "",
+            "signatureInitial": profile.get("signatureInitial") or None,
             "image": {
                 "assetId": profile.get("imageAssetId") or "",
                 "r2Key": profile.get("imageR2Key") or "",
@@ -7342,7 +7349,7 @@ def _validate_v2_fact_media_fields(fields: Any) -> dict[str, Any]:
 def _set_fact_media_field(document: dict[str, Any], field_id: str, value: Any) -> None:
     if field_id == "brand.logo":
         document.setdefault("brand", {})["logo"] = value or {"status": "empty"}
-    elif field_id in {"assets.hero", "assets.itineraryDivider", "assets.hotelDivider"}:
+    elif field_id in {"assets.hero", "assets.itineraryDivider", "assets.staysDivider", "assets.hotelDivider"}:
         document.setdefault("assets", {})[field_id.rsplit(".", 1)[-1]] = value or {"status": "empty"}
     elif field_id.startswith("itinerary.days."):
         index = int(field_id.split(".")[2]); days = document.setdefault("itinerary", {}).setdefault("days", [])
@@ -7905,7 +7912,7 @@ def _serialize_travel_designer(profile) -> dict[str, Any]:
             image_url = _get_media_library_service().storage.build_public_url(profile.image_r2_key)
         except HTTPException:
             pass
-    return {"id": profile.id, "name": profile.name, "email": profile.email, "phone": profile.phone, "imageAssetId": profile.image_asset_id, "imageUrl": image_url, "imageR2Key": profile.image_r2_key, "isActive": profile.is_active}
+    return {"id": profile.id, "name": profile.name, "email": profile.email, "phone": profile.phone, "imageAssetId": profile.image_asset_id, "imageUrl": image_url, "imageR2Key": profile.image_r2_key, "signatureInitial": profile.signature_initial, "isActive": profile.is_active}
 
 
 async def _serialize_accommodation(profile, session) -> dict[str, Any]:

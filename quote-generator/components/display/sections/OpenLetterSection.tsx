@@ -3,6 +3,7 @@ import type { LetterViewModel } from '../../../display/types.ts';
 import { textValue } from '../../../display/types.ts';
 import { getLayoutSlots } from '../../../display/layoutRegistry.ts';
 import { requireTypographySlot } from '../../../display/typographySlots.ts';
+import { getTypographyClassName } from '../../../config/typography.ts';
 import { BodyCopy, DisplayTitle, MetaText, QuoteText } from '../atoms.tsx';
 import { SectionHeader } from '../molecules.tsx';
 import { BaseSectionProps, sectionOrnaments, shellProps } from './sectionHelpers.tsx';
@@ -15,6 +16,7 @@ export function OpenLetterSection({
   viewMode,
 }: BaseSectionProps<LetterViewModel>) {
   const slots = getLayoutSlots(displayConfig.layoutVariant, viewMode);
+  const glyphVariant = displayConfig.typographySlots?.signatureGlyph ?? 'signatureGlyph';
 
   return (
     <section id="letter" className={shellProps(sectionId, displayConfig, viewMode)}>
@@ -58,6 +60,15 @@ export function OpenLetterSection({
               <BodyCopy variant={requireTypographySlot(displayConfig.typographySlots, 'body')}>{viewModel.outro}</BodyCopy>
 
               <div className="display-letter__signature">
+                {viewModel.signatureGlyph && textValue(viewModel.signatureGlyph)?.trim() ? (
+                  <p
+                    aria-hidden="true"
+                    className={getTypographyClassName(glyphVariant)}
+                    style={{ marginBottom: '0.6rem', color: 'var(--color-on-surface)', opacity: 0.88 }}
+                  >
+                    {textValue(viewModel.signatureGlyph)}
+                  </p>
+                ) : null}
                 <DisplayTitle
                   as="h3"
                   variant={requireTypographySlot(displayConfig.typographySlots, 'signature')}

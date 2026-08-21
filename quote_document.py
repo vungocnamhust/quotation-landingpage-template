@@ -130,6 +130,7 @@ class QuoteDocumentBrand(QuoteBaseModel):
 class QuoteDocumentAssets(QuoteBaseModel):
     hero: QuoteAssetRef = Field(default_factory=QuoteAssetRef)
     itineraryDivider: QuoteAssetRef = Field(default_factory=QuoteAssetRef)
+    staysDivider: QuoteAssetRef = Field(default_factory=QuoteAssetRef)
     hotelDivider: QuoteAssetRef = Field(default_factory=QuoteAssetRef)
     themeOrnaments: Dict[str, QuoteAssetRef] = Field(default_factory=dict)
 
@@ -299,6 +300,8 @@ class QuoteDocumentDesigner(QuoteBaseModel):
     phone: str = ""
     email: str = ""
     image: QuoteAssetRef = Field(default_factory=QuoteAssetRef)
+    # Calligraphy characters for the handwritten signature glyph in the letter section.
+    signatureInitial: str | None = None
 
 
 class QuoteDocumentLayout(QuoteBaseModel):

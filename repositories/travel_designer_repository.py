@@ -63,6 +63,7 @@ class TravelDesignerRepository:
         image_url: str | None = None,
         storage_slug: str | None = None,
         image_r2_key: str | None = None,
+        signature_initial: str | None = None,
     ) -> TravelDesignerProfile:
         profile = TravelDesignerProfile(
             id=profile_id,
@@ -73,6 +74,7 @@ class TravelDesignerRepository:
             image_url=image_url,
             storage_slug=storage_slug,
             image_r2_key=image_r2_key,
+            signature_initial=(signature_initial or "").strip() or None,
             is_active=True,
         )
         self.session.add(profile)
@@ -90,6 +92,7 @@ class TravelDesignerRepository:
         image_url: str | None = None,
         storage_slug: str | None = None,
         image_r2_key: str | None = None,
+        signature_initial: str | None = None,
     ) -> TravelDesignerProfile:
         profile.email = normalize_designer_email(email)
         profile.name = name.strip()
@@ -98,6 +101,7 @@ class TravelDesignerRepository:
         profile.image_url = image_url or None
         profile.storage_slug = storage_slug or profile.storage_slug
         profile.image_r2_key = image_r2_key or None
+        profile.signature_initial = (signature_initial or "").strip() or None
         await self.session.flush()
         return profile
 

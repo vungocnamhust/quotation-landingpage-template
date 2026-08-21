@@ -19,6 +19,7 @@ class TravelDesignerProfileRequest(BaseModel):
     email: str
     phone: str = ""
     imageR2Key: str | None = None
+    signatureInitial: str | None = None
 
 
 class TravelDesignerBrandDefaultRequest(BaseModel):
@@ -61,6 +62,7 @@ async def create_travel_designer(payload: TravelDesignerProfileRequest, principa
             phone=payload.phone,
             storage_slug=storage_slug(payload.email.split("@", 1)[0]),
             image_r2_key=payload.imageR2Key,
+            signature_initial=payload.signatureInitial,
         )
         await session.commit()
         await session.refresh(profile)
@@ -82,6 +84,7 @@ async def update_travel_designer(profile_id: str, payload: TravelDesignerProfile
             phone=payload.phone,
             storage_slug=storage_slug(payload.email.split("@", 1)[0]),
             image_r2_key=payload.imageR2Key,
+            signature_initial=payload.signatureInitial,
         )
         await session.commit()
         await session.refresh(profile)

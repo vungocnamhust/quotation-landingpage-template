@@ -57,6 +57,11 @@ const I18N_LABELS = {
     itineraryNav: 'Itinerary',
     quotationNav: 'Quotation',
     termsNav: 'Terms',
+    journeyTogetherKicker: 'THE JOURNEY, BROUGHT TOGETHER',
+    journeyTogetherTitle: 'Considered in Full',
+    journeyTogetherTagline:
+      'The stays, private arrangements and experiences described so far are gathered here as one considered whole. What follows is the practical outline of the journey—quietly arranged, carefully paced and shaped around your comfort throughout.',
+    journeyTogetherClosing: 'The next section presents the journey in practical terms.',
   },
   vi: {
     beginJourney: 'BẮT ĐẦU HÀNH TRÌNH',
@@ -88,6 +93,11 @@ const I18N_LABELS = {
     itineraryNav: 'Lịch trình',
     quotationNav: 'Báo giá',
     termsNav: 'Điều khoản',
+    journeyTogetherKicker: 'HÀNH TRÌNH ĐƯỢC GẮN KẾT TRỌN VẸN',
+    journeyTogetherTitle: 'Được Cân Nhắc Trọn Vẹn',
+    journeyTogetherTagline:
+      'Các điểm lưu trú, dịch vụ riêng tư và trải nghiệm được mô tả đến đây tạo nên một tổng thể gắn kết. Phần tiếp theo trình bày lịch trình thực tế và chi phí của chuyến đi.',
+    journeyTogetherClosing: 'Phần tiếp theo trình bày các điều khoản thực tế của chuyến đi.',
   },
   ar: {
     beginJourney: 'ابدأ الرحلة',
@@ -119,6 +129,11 @@ const I18N_LABELS = {
     itineraryNav: 'برنامج الرحلة',
     quotationNav: 'عرض السعر',
     termsNav: 'الشروط',
+    journeyTogetherKicker: 'الرحلة متكاملة معاً',
+    journeyTogetherTitle: 'اختيار مدروس بالكامل',
+    journeyTogetherTagline:
+      'الإقامات والترتيبات الخاصة والتجارب الموضحة حتى الآن مجمعة هنا ككل مدروس.',
+    journeyTogetherClosing: 'يقدم القسم التالي الرحلة بشروط عملية.',
   },
 } as const;
 
@@ -318,6 +333,11 @@ export function buildPageViewModel({
       signatureName: letterSignatureName,
       signatureRole: letterSignatureRole,
       signatureContactLine: letterSignatureContactLine,
+      signatureGlyph:
+        brochure.designer.signatureInitial ||
+        letterSignatureName?.charAt(0) ||
+        brochure.designer.name?.charAt(0) ||
+        'H',
     },
     routeMap: {
       ...brochure.routeMap,
@@ -396,7 +416,23 @@ export function buildPageViewModel({
         introVisibility: 'full' as const,
       })),
     },
-    staysDivider: brochure.staysDivider,
+    staysDivider: {
+      image: brochure.staysDivider.image,
+      imageAlt: brochure.staysDivider.title,
+      kicker: brochure.staysDivider.kicker,
+      title: brochure.staysDivider.title,
+      tagline: brochure.staysDivider.tagline,
+      closing: brochure.staysDivider.closing,
+      pdfTitle: brochure.staysDivider.title,
+    },
+    journeyTogetherDivider: {
+      image: brochure.staysDivider.image,
+      imageAlt: brochure.staysDivider.title,
+      kicker: labels.journeyTogetherKicker,
+      title: labels.journeyTogetherTitle,
+      tagline: labels.journeyTogetherTagline,
+      closing: labels.journeyTogetherClosing,
+    },
     pricing: {
       ...brochure.pricing,
       importantNoteLabel: labels.importantNote,
@@ -404,9 +440,12 @@ export function buildPageViewModel({
         return {
           index: index + 1,
           displayIndex: `${index + 1}`.padStart(2, '0'),
-          label: option.optionName || option.category,
+          label: option.category || option.optionName || `Option 0${index + 1}`,
+          description: option.category && option.optionName ? option.optionName : undefined,
+          badge: index === 0 ? 'RECOMMENDED' : undefined,
           groupTotalPrice: option.totalPrice || '',
           perTravelerPrice: option.perPersonPrice,
+          groupTotalLabel: 'GROUP TOTAL',
         };
       }),
     },

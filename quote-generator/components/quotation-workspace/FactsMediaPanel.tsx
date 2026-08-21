@@ -68,7 +68,7 @@ function getFieldMediaTarget(
     };
   }
 
-  if (fieldId === 'assets.hero' || fieldId === 'assets.itineraryDivider' || fieldId === 'assets.hotelDivider') {
+  if (fieldId === 'assets.hero' || fieldId === 'assets.itineraryDivider' || fieldId === 'assets.staysDivider' || fieldId === 'assets.hotelDivider') {
     const firstDay = record(days[0]);
     const destRef = record(firstDay.destinationRef);
     const prefix =

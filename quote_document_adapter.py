@@ -139,6 +139,7 @@ def build_quote_document_from_lang_ctx(lang_ctx: dict, quotation_id: str, lang: 
             "assets": {
                 "hero": _asset_ref(lang_ctx.get("hero_img_custom") or lang_ctx.get("img_0")),
                 "itineraryDivider": _asset_ref(lang_ctx.get("img_itinerary_divider")),
+                "staysDivider": _asset_ref(lang_ctx.get("img_stays_divider")),
                 "hotelDivider": _asset_ref(lang_ctx.get("img_hotel_divider")),
             },
             "traveler": {
@@ -342,6 +343,7 @@ def apply_quote_document_to_lang_ctx(lang_ctx: dict, document: dict) -> None:
     lang_ctx["hero_img_custom"] = quote_document.assets.hero.url or lang_ctx.get("hero_img_custom")
     lang_ctx["img_0"] = quote_document.assets.hero.url or lang_ctx.get("img_0")
     lang_ctx["img_itinerary_divider"] = quote_document.assets.itineraryDivider.url or lang_ctx.get("img_itinerary_divider")
+    lang_ctx["img_stays_divider"] = quote_document.assets.staysDivider.url or lang_ctx.get("img_stays_divider")
     lang_ctx["img_hotel_divider"] = quote_document.assets.hotelDivider.url or lang_ctx.get("img_hotel_divider")
     lang_ctx["designer_img"] = quote_document.designer.image.url or lang_ctx.get("designer_img")
     lang_ctx["customer_name"] = quote_document.traveler.customerName or lang_ctx.get("customer_name")

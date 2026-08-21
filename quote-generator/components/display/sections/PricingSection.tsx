@@ -2,7 +2,7 @@ import type { PricingViewModel } from '../../../display/types.ts';
 import { getLayoutSlots } from '../../../display/layoutRegistry.ts';
 import { requireTypographySlot } from '../../../display/typographySlots.ts';
 import { cn } from '../../../utils/cn.ts';
-import { BodyCopy, DisplayTitle, MetaText } from '../atoms.tsx';
+import { BodyCopy, DisplayTitle, Kicker, MetaText } from '../atoms.tsx';
 import { InvestmentRow } from '../molecules.tsx';
 import { BaseSectionProps, sectionOrnaments, shellProps } from './sectionHelpers.tsx';
 
@@ -22,9 +22,9 @@ export function PricingSection({
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
           <div>
             {viewModel.kicker ? (
-              <MetaText variant={requireTypographySlot(displayConfig.typographySlots, 'label')} tone="accent" className="mb-2 block">
+              <Kicker variant={requireTypographySlot(displayConfig.typographySlots, 'kicker')} tone="accent" className="mb-2">
                 {viewModel.kicker}
-              </MetaText>
+              </Kicker>
             ) : null}
             <DisplayTitle as="h2" variant={requireTypographySlot(displayConfig.typographySlots, 'title')} tone="default">
               {viewModel.title}

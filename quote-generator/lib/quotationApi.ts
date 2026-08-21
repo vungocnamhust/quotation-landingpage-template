@@ -11,6 +11,8 @@ export type TravelDesignerProfile = {
   imageAssetId?: string | null;
   imageUrl?: string | null;
   imageR2Key?: string | null;
+  /** Free-form calligraphy characters rendered via the handwriting font (e.g. "Nam H.", "V"). */
+  signatureInitial?: string | null;
   isActive: boolean;
   createdAt?: string | null;
   updatedAt?: string | null;
@@ -56,6 +58,8 @@ export type TravelDesignerInput = {
   imageAssetId?: string | null;
   imageUrl?: string | null;
   imageR2Key?: string | null;
+  /** Free-form calligraphy characters for the handwritten signature glyph. */
+  signatureInitial?: string | null;
 };
 
 function apiUrl(path: string) {

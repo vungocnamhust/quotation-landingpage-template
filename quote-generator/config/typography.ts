@@ -1,7 +1,7 @@
 import type { ThemeId, ViewMode } from '../display/contracts';
 import type { BrandKey } from '../data/brandsData';
 
-export type FontFamilyRole = 'heading' | 'body' | 'accent';
+export type FontFamilyRole = 'heading' | 'body' | 'accent' | 'signature';
 
 export type TypographyVariant =
   | 'hero'
@@ -34,6 +34,7 @@ export type TypographyVariant =
   | 'letterBody'
   | 'signatureName'
   | 'signatureMeta'
+  | 'signatureGlyph'
   | 'routeMapTitle'
   | 'routeMapBody'
   | 'timelineTitle'
@@ -104,12 +105,20 @@ const FONT_CATALOG = {
     label: 'Amiri',
     cssValue: 'var(--font-amiri), serif',
   },
+  // Handwriting / calligraphy font for designer signature glyph.
+  // Font file must be placed at: quote-generator/public/fonts/buongiorno-rastellino.woff2
+  // Download from: https://www.myfonts.com/collections/buongiorno-rastellino-font-faridul-type-foundry
+  buongiornoRastellino: {
+    label: 'Buongiorno Rastellino',
+    cssValue: 'var(--font-buongiorno-rastellino), cursive',
+  },
 } satisfies Record<string, FontDefinition>;
 
 const BASE_FONT_ROLES: Record<FontFamilyRole, FontDefinition> = {
   heading: FONT_CATALOG.cormorant,
   body: FONT_CATALOG.montserrat,
   accent: FONT_CATALOG.cormorant,
+  signature: FONT_CATALOG.buongiornoRastellino,
 };
 
 const BASE_VARIANTS: Record<TypographyVariant, TypographyRule> = {
@@ -335,6 +344,17 @@ const BASE_VARIANTS: Record<TypographyVariant, TypographyRule> = {
     fontWeight: 500,
     letterSpacing: '0.06em',
     textTransform: 'none',
+  },
+  // Handwritten calligraphy glyph rendered above signatureName.
+  // Font: Buongiorno Rastellino (var(--font-buongiorno-rastellino)).
+  // The text is whatever the designer typed in their profile (free-form).
+  signatureGlyph: {
+    fontFamilyRole: 'signature',
+    fontSize: 'clamp(3rem, 5.5vw, 5.5rem)',
+    lineHeight: '1.1',
+    fontWeight: 400,
+    letterSpacing: '0em',
+    fontStyle: 'normal',
   },
   routeMapTitle: {
     fontFamilyRole: 'heading',
@@ -567,6 +587,9 @@ const THEME_VIEW_MODE_OVERRIDES: Record<
       letterBody: {
         fontSize: '0.96rem',
       },
+      signatureGlyph: {
+        fontSize: 'clamp(2.5rem, 10vw, 4rem)',
+      },
       termBody: {
         fontSize: '0.92rem',
       },
@@ -633,6 +656,10 @@ const THEME_VIEW_MODE_OVERRIDES: Record<
       },
       signatureMeta: {
         fontSize: '8pt',
+      },
+      signatureGlyph: {
+        fontSize: '30pt',
+        lineHeight: '1.05',
       },
       routeMapTitle: {
         fontSize: '18pt',
@@ -748,6 +775,7 @@ const VARIANT_TO_CLASSNAME: Record<TypographyVariant, string> = {
   letterBody: 'typo-letter-body',
   signatureName: 'typo-signature-name',
   signatureMeta: 'typo-signature-meta',
+  signatureGlyph: 'typo-signature-glyph',
   routeMapTitle: 'typo-route-map-title',
   routeMapBody: 'typo-route-map-body',
   timelineTitle: 'typo-timeline-title',
@@ -839,6 +867,7 @@ function buildVariableBlock(brandKey: BrandKey, themeId: ThemeId, viewMode: View
     `  --font-heading: ${config.fonts.heading.cssValue};`,
     `  --font-body: ${config.fonts.body.cssValue};`,
     `  --font-accent: ${config.fonts.accent.cssValue};`,
+    `  --font-signature: ${config.fonts.signature.cssValue};`,
   ];
 
   for (const [variant, rule] of Object.entries(config.variants) as Array<

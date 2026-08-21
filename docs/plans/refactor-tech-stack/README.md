@@ -32,6 +32,7 @@ Muc tieu la de team co the doc theo thu tu va implement truc tiep, khong can tu 
 10. [10-quotations-new-ui-ux.md](./10-quotations-new-ui-ux.md)
 11. [11-r2-media-file-contract.md](./11-r2-media-file-contract.md)
 12. [12-v2-brochure-workflow-gate.md](./12-v2-brochure-workflow-gate.md)
+13. [13-systemic-color-architecture-and-brand-theming.md](./13-systemic-color-architecture-and-brand-theming.md)
 
 ## Scope chot
 

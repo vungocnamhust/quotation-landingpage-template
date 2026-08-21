@@ -7,6 +7,7 @@ export * from './ItineraryDividerSection.tsx';
 export * from './ItinerarySection.tsx';
 export * from './HotelsSection.tsx';
 export * from './StaysDividerSection.tsx';
+export * from './JourneyTogetherDividerSection.tsx';
 export * from './PricingSection.tsx';
 export * from './InclusionsExclusionsSection.tsx';
 export * from './PaymentTermsSection.tsx';
@@ -19,8 +20,9 @@ import { OpenLetterSection } from './OpenLetterSection.tsx';
 import { RouteMapSection } from './RouteMapSection.tsx';
 import { ItineraryDividerSection } from './ItineraryDividerSection.tsx';
 import { ItinerarySection } from './ItinerarySection.tsx';
-import { HotelsSection } from './HotelsSection.tsx';
 import { StaysDividerSection } from './StaysDividerSection.tsx';
+import { HotelsSection } from './HotelsSection.tsx';
+import { JourneyTogetherDividerSection } from './JourneyTogetherDividerSection.tsx';
 import { PricingSection } from './PricingSection.tsx';
 import { InclusionsExclusionsSection } from './InclusionsExclusionsSection.tsx';
 import { PaymentTermsSection } from './PaymentTermsSection.tsx';
@@ -34,8 +36,9 @@ export const sectionRegistry = {
   routeMap: RouteMapSection,
   itineraryDivider: ItineraryDividerSection,
   itinerary: ItinerarySection,
-  hotels: HotelsSection,
   staysDivider: StaysDividerSection,
+  hotels: HotelsSection,
+  journeyTogetherDivider: JourneyTogetherDividerSection,
   pricing: PricingSection,
   inclusionsExclusions: InclusionsExclusionsSection,
   paymentTerms: PaymentTermsSection,

@@ -1,30 +1,39 @@
 import Image from 'next/image';
-import type { StaysDividerViewModel } from '../../../display/types.ts';
+import type { JourneyTogetherDividerViewModel } from '../../../display/types.ts';
 import { textValue } from '../../../display/types.ts';
 import { getLayoutSlots } from '../../../display/layoutRegistry.ts';
 import { requireTypographySlot } from '../../../display/typographySlots.ts';
 import { BodyCopy, DisplayTitle, Kicker, QuoteText } from '../atoms.tsx';
 import { BaseSectionProps, sectionOrnaments, shellProps } from './sectionHelpers.tsx';
 
-export function StaysDividerSection({
+export function JourneyTogetherDividerSection({
   sectionId,
   viewModel,
   displayConfig,
   theme,
   viewMode,
-}: BaseSectionProps<StaysDividerViewModel>) {
+}: BaseSectionProps<JourneyTogetherDividerViewModel>) {
   const slots = getLayoutSlots(displayConfig.layoutVariant, viewMode);
   const hasValidImage = typeof viewModel.image === 'string' && viewModel.image.trim() !== '';
 
   return (
-    <section id="divider-stays" className={shellProps(sectionId, displayConfig, viewMode)}>
+    <section id="divider-hotels" className={shellProps(sectionId, displayConfig, viewMode)}>
       {sectionOrnaments(theme, displayConfig.ornaments)}
       <div className="display-stays-divider__journey-line" aria-hidden="true" />
       <div className={slots.container}>
         {hasValidImage ? (
           <div className={slots.media}>
             <div className="display-stays-divider__image">
-              <Image src={viewModel.image} alt={textValue(viewModel.imageAlt)} data-editable={typeof viewModel.imageAlt === 'string' ? undefined : viewModel.imageAlt.path} data-edit-owner={typeof viewModel.imageAlt === 'string' ? undefined : viewModel.imageAlt.owner} data-edit-mode={typeof viewModel.imageAlt === 'string' ? undefined : viewModel.imageAlt.mode} fill sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" />
+              <Image
+                src={viewModel.image}
+                alt={textValue(viewModel.imageAlt)}
+                data-editable={typeof viewModel.imageAlt === 'string' ? undefined : viewModel.imageAlt.path}
+                data-edit-owner={typeof viewModel.imageAlt === 'string' ? undefined : viewModel.imageAlt.owner}
+                data-edit-mode={typeof viewModel.imageAlt === 'string' ? undefined : viewModel.imageAlt.mode}
+                fill
+                sizes="(min-width: 1024px) 50vw, 100vw"
+                className="object-cover"
+              />
             </div>
           </div>
         ) : null}

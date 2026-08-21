@@ -435,7 +435,7 @@ export default function DesignCanvas({
         (destRef?.slug ? `destination/${destRef.slug}` : undefined)
       );
     }
-    if (fieldId === 'assets.hero' || fieldId === 'assets.itineraryDivider' || fieldId === 'assets.hotelDivider') {
+    if (fieldId === 'assets.hero' || fieldId === 'assets.itineraryDivider' || fieldId === 'assets.staysDivider' || fieldId === 'assets.hotelDivider') {
       const firstDay = facts?.trip_facts?.itinerary?.[0];
       const destRef = firstDay?.destination_ref;
       return destRef?.mediaPrefix || destRef?.defaultMediaPrefix || undefined;

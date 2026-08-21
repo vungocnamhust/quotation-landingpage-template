@@ -40,11 +40,12 @@ function normalizeBrandRenderProfile(profile: BrandRenderProfile): BrandRenderPr
   const contrastText = palette.onContrast!;
 
   // Safety normalizer guard for legacy DB snapshots with muddy mustard background or poor contrast:
-  const isInvestmentLegible =
+  const isInvestmentLegible = Boolean(
     rawInvestmentSurface &&
     rawInvestmentText &&
-    getContrastRatio(rawInvestmentText, rawInvestmentSurface) >= 4.5 &&
-    rawInvestmentText.toLowerCase() === contrastText.toLowerCase();
+    rawInvestmentSurface !== palette.accent &&
+    getContrastRatio(rawInvestmentText, rawInvestmentSurface) >= 4.5
+  );
 
   const normalizedInvestmentSurface = isInvestmentLegible ? rawInvestmentSurface : contrastSurface;
   const normalizedInvestmentText = isInvestmentLegible ? rawInvestmentText : contrastText;
@@ -460,11 +461,44 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
         intro: contentCopy(stringValue(narrative.letterIntro), '/narrative/letterIntro', ''),
         body: [stringValue(narrative.letterBody2)].filter(Boolean).map((item) => contentCopy(item, '/narrative/letterBody2', '')),
         outro: contentCopy(stringValue(narrative.letterOutro), '/narrative/letterOutro', ''),
-        signatureName: contentCopy(stringValue(narrative.letterSignOff) || stringValue(designer.name), '/narrative/letterSignOff', ''),
-        signatureRole: contentCopy((stringValue(narrative.letterSender) || stringValue(designer.subtitle)).toUpperCase(), '/narrative/letterSender', ''),
+        signatureName: factCopy(
+          stringValue(designer.name) ||
+            stringValue(designer_facts.name) ||
+            stringValue(designerFacts.name) ||
+            stringValue(designer_facts.designer_name) ||
+            stringValue(designerFacts.designer_name) ||
+            'Eddie - Trung Hieu Pham',
+          '/designer/name',
+          'Eddie - Trung Hieu Pham',
+        ),
+        signatureRole: derivedCopy(
+          (
+            stringValue(designer.subtitle) ||
+            stringValue(designer_facts.seller_subtitle) ||
+            stringValue(designerFacts.seller_subtitle) ||
+            stringValue(designer_facts.designer_subtitle) ||
+            stringValue(designer.signatureLabel) ||
+            stringValue(narrative.letterSender) ||
+            'Travel Designer'
+          ).toUpperCase(),
+          '/designer/subtitle',
+        ),
         signatureContactLine: derivedCopy([email, phone].filter(Boolean).join(' · '), '/designer/contact'),
+        signatureGlyph: derivedCopy(
+          stringValue(designer.signatureInitial) ||
+            stringValue(designer.signature_initial) ||
+            stringValue(designer_facts.signature_initial) ||
+            stringValue(designerFacts.signature_initial) ||
+            stringValue(designer_facts.signatureInitial) ||
+            stringValue(designerFacts.signatureInitial) ||
+            (designer_facts.name || designerFacts.name || designer.name || narrative.letterSignOff
+              ? String(designer_facts.name || designerFacts.name || designer.name || narrative.letterSignOff).charAt(0)
+              : 'E'),
+          '/designer/signatureInitial',
+        ),
       },
       routeMap: {
+        kicker: designCopy(overrides, 'route.kicker', labels.routeMapNav),
         title: contentCopy(stringValue(route.title), '/route/title', labels.routeMapTitle),
         description: contentCopy(stringValue(route.description), '/route/description', labels.routeMapDescription),
         segments: routeSegments, overviewAriaLabel: designCopy(overrides, 'a11y.routeMapOverview', labels.routeMapOverview, 'ariaLabel'), isInteractiveAvailable, unavailableMessage: designCopy(overrides, 'route.unavailableMessage', labels.routeMapUnavailable), mapModes: [editable(labels.classic, '/labels/classic', 'system')],
@@ -472,8 +506,9 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
         mapViewport: { center: mapCenter, latSpan: 8, lngSpan: 8 },
         interactiveMarkers: routeSegments.map(({ sequence, coordinates, title, city, dayLabel }) => ({ sequence, coordinates, title, city, dayLabel })),
       },
-      itineraryDivider: { kicker: designCopy(overrides, 'itinerary.kicker', labels.itineraryNav), title: contentCopy(stringValue(itinerary.title), '/itinerary/title', labels.itineraryTitle), tagline: contentCopy(stringValue(itinerary.description), '/itinerary/description', labels.itineraryDescription), image: assetUrl(assets.itineraryDivider) || assetUrl(record(mediaOverrides['assets.itineraryDivider'])), imageAlt: assetAlt(assets.itineraryDivider, '/assets/itineraryDivider/altText', stringValue(itinerary.title)), exploreLabel: designCopy(overrides, 'itinerary.explore', labels.explore, 'actionLabel'), exploreHref: '#itinerary' },
+      itineraryDivider: { kicker: designCopy(overrides, 'itinerary.kicker', labels.itineraryNav), title: contentCopy(stringValue(itinerary.title), '/itinerary/title', labels.itineraryTitle), tagline: contentCopy(stringValue(itinerary.description), '/itinerary/description', labels.itineraryDescription), image: assetUrl(assets.itineraryDivider) || assetUrl(record(mediaOverrides['assets.itineraryDivider'])), imageAlt: assetAlt(assets.itineraryDivider, '/assets/itineraryDivider/altText', stringValue(itinerary.title)), exploreLabel: designCopy(overrides, 'itinerary.explore', labels.explore, 'actionLabel'), exploreHref: '#itinerary', showDivider: Boolean(overrides['itinerary.showDivider'] === 'true' || overrides['itinerary.showDivider'] === true) },
       itinerary: { kicker: designCopy(overrides, 'itinerary.kicker', labels.itineraryNav), title: contentCopy(stringValue(itinerary.title), '/itinerary/title', labels.itineraryTitle), description: contentCopy(stringValue(itinerary.description), '/itinerary/description', labels.itineraryDescription), days },
+      staysDivider: { image: assetUrl(assets.staysDivider) || assetUrl(record(mediaOverrides['assets.staysDivider'])) || (hotels.length > 0 ? hotels[0].roomImage || hotels[0].hotelImage : '') || assetUrl(assets.hero), imageAlt: assetAlt(assets.staysDivider, '/assets/staysDivider/altText', labels.staysDividerTitle), kicker: designCopy(overrides, 'stays.kicker', labels.stayPlanning), title: designCopy(overrides, 'stays.title', labels.staysDividerTitle), tagline: designCopy(overrides, 'stays.tagline', labels.staysDividerTagline), closing: designCopy(overrides, 'stays.closing', labels.staysDividerClosing), pdfTitle: designCopy(overrides, 'stays.pdfTitle', labels.staysDividerTitle) },
       hotels: {
         kicker: designCopy(overrides, 'stays.kicker', labels.stayPlanning),
         title: designCopy(overrides, 'stays.title', labels.stayPlanning),
@@ -485,9 +520,9 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
           'fact'
         ),
       },
-      staysDivider: { image: assetUrl(assets.hotelDivider) || assetUrl(record(mediaOverrides['assets.hotelDivider'])), imageAlt: assetAlt(assets.hotelDivider, '/assets/hotelDivider/altText', labels.staysDividerTitle), kicker: designCopy(overrides, 'stays.kicker', labels.stayPlanning), title: designCopy(overrides, 'stays.title', labels.staysDividerTitle), tagline: designCopy(overrides, 'stays.tagline', labels.staysDividerTagline), closing: designCopy(overrides, 'stays.closing', labels.staysDividerClosing), pdfTitle: designCopy(overrides, 'stays.pdfTitle', labels.consideredInFull) },
+      journeyTogetherDivider: { image: assetUrl(assets.hotelDivider) || assetUrl(record(mediaOverrides['assets.hotelDivider'])) || assetUrl(assets.hero), imageAlt: assetAlt(assets.hotelDivider, '/assets/hotelDivider/altText', labels.journeyTogetherTitle), kicker: designCopy(overrides, 'journeyTogether.kicker', stringValue(overrides['stays.kicker']).trim() || labels.journeyTogetherKicker), title: designCopy(overrides, 'journeyTogether.title', stringValue(overrides['stays.pdfTitle']).trim() || labels.journeyTogetherTitle), tagline: designCopy(overrides, 'journeyTogether.tagline', stringValue(overrides['stays.tagline']).trim() || labels.journeyTogetherTagline), closing: designCopy(overrides, 'journeyTogether.closing', stringValue(overrides['stays.closing']).trim() || labels.journeyTogetherClosing) },
       pricing: {
-        kicker: designCopy(overrides, 'pricing.kicker', ''),
+        kicker: designCopy(overrides, 'pricing.kicker', labels.quotationNav || 'INVESTMENT SUMMARY'),
         title: designCopy(overrides, 'pricing.title', labels.pricingTitle),
         description: designCopy(overrides, 'pricing.description', labels.pricingDescription),
         importantNote: editable(
@@ -540,6 +575,21 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
                 `/pricing/options/${index}/perTravelerAmountMinor`,
                 'fact'
               ),
+              description: editable(
+                stringValue(option.description) || stringValue(option.positioning) || stringValue(option.subtitle) || stringValue(option.optionName) || stringValue(option.notes) || '',
+                `/pricing/options/${index}/description`,
+                'fact'
+              ),
+              badge: editable(
+                stringValue(option.badge) || (option.isConfirmedMainOption || option.is_confirmed_main_option || option.confirmedMainOption || option.isRecommended || option.recommended ? 'RECOMMENDED' : ''),
+                `/pricing/options/${index}/badge`,
+                'fact'
+              ),
+              groupTotalLabel: editable(
+                PRICING_AMOUNT_LABELS[lang]?.total ? PRICING_AMOUNT_LABELS[lang].total.toUpperCase() : 'GROUP TOTAL',
+                '/labels/groupTotal',
+                'system'
+              ),
             };
           })
           .filter((option): option is NonNullable<typeof option> => option !== null),
@@ -564,7 +614,7 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
         subtitle: editable(stringValue(designer.subtitle) || stringValue(designer_facts.seller_subtitle) || stringValue(designerFacts.seller_subtitle) || 'Trung Hieu Pham', '/designer/subtitle', 'fact'),
         signatureLabel: factCopy(stringValue(designer.signature) || stringValue(designer_facts.designer_signature) || stringValue(designerFacts.designer_signature), '/designer/signature', DESIGNER_PRESENTATION_DEFAULTS.signature),
         experienceNote: factCopy(stringValue(designer.experience) || stringValue(designer_facts.designer_experience) || stringValue(designerFacts.designer_experience), '/designer/experience', DESIGNER_PRESENTATION_DEFAULTS.experience),
-        avatar: assetUrl(designer.image) || assetUrl(designer_facts.avatar) || assetUrl(designerFacts.avatar) || assetUrl(record(mediaOverrides['designer.avatar'])) || '/assets/dias_team/hieu.jpg',
+        avatar: assetUrl(designer.image) || assetUrl(designer_facts.avatar) || assetUrl(designerFacts.avatar) || assetUrl(record(mediaOverrides['designer.avatar'])) || '',
         avatarAlt: assetAlt(designer.image || designer_facts.avatar || designerFacts.avatar, '/designer/image/altText', stringValue(designer.name) || stringValue(designer_facts.designer_name) || 'Travel Designer'),
         contactActions: [
           { label: editable(labels.chatWhatsapp, '/labels/chatWhatsapp', 'system', 'actionLabel'), href: whatsappHref, emphasis: 'primary' as const, caption: derivedCopy(phone, '/designer/phone') },

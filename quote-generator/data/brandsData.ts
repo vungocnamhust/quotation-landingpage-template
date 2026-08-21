@@ -96,6 +96,8 @@ interface BrochureDesignerSource {
   avatar: string;
   finalRequirements: string[];
   confirmationItems: string[];
+  /** Optional calligraphy characters for the handwritten signature glyph. Usually set via designer profile at runtime. */
+  signatureInitial?: string;
 }
 
 interface BrandBrochureSource {
@@ -225,8 +227,8 @@ export const BRANDS_DATA: Record<BrandKey, BrandInfo> = {
         onContrast: '#ffffff',
         focus: '#095f43',
         storyContrast: '#0d3f32',
-        investmentSurface: '#0d3f32',
-        investmentText: '#ffffff',
+        investmentSurface: '#edf5f1',
+        investmentText: '#11130f',
       },
       radii: {
         card: '0.5rem',
@@ -509,6 +511,7 @@ export const BRANDS_DATA: Record<BrandKey, BrandInfo> = {
         name: 'Nguyen Hoang Nam',
         subtitle: 'Lead Expedition Designer',
         signatureLabel: 'Travel Designer',
+        signatureInitial: 'Nam',
         experienceNote:
           'Đồng hành từ giai đoạn chốt route, chọn stay, tối ưu khung giờ chụp ảnh cho đến các xử lý mềm về pacing.',
         avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=800&auto=format&fit=crop',
@@ -573,8 +576,8 @@ export const BRANDS_DATA: Record<BrandKey, BrandInfo> = {
         onContrast: '#ffffff',
         focus: '#7a591a',
         storyContrast: '#333333',
-        investmentSurface: '#333333',
-        investmentText: '#ffffff',
+        investmentSurface: '#fbf7ee',
+        investmentText: '#171511',
       },
       radii: {
         card: '0.5rem',
@@ -864,6 +867,7 @@ export const BRANDS_DATA: Record<BrandKey, BrandInfo> = {
         name: 'Victoria Le',
         subtitle: 'Private Journey Director',
         signatureLabel: 'Capella Travel',
+        signatureInitial: 'Victoria',
         experienceNote:
           'Phụ trách điều phối dịch vụ cao cấp, supplier hold, private access logistics và tone consistency trong toàn bộ guest journey.',
         avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=800&auto=format&fit=crop',
@@ -927,9 +931,9 @@ export const BRANDS_DATA: Record<BrandKey, BrandInfo> = {
         contrast: '#524018',
         onContrast: '#ffffff',
         focus: '#7a591a',
-        storyContrast: '#0d3f32',
-        investmentSurface: '#0d3f32',
-        investmentText: '#ffffff',
+        storyContrast: '#524018',
+        investmentSurface: '#f6f2ea',
+        investmentText: '#11130f',
       },
       radii: {
         card: '0.5rem',
@@ -1208,6 +1212,7 @@ export const BRANDS_DATA: Record<BrandKey, BrandInfo> = {
         name: 'Linh Dao',
         subtitle: 'Wellness Journey Designer',
         signatureLabel: 'Selvara Journeys',
+        signatureInitial: 'Linh',
         experienceNote:
           'Phụ trách sequencing cho retreat, chọn stay phù hợp tính khí khách và cân bằng giữa nghỉ, di chuyển và trải nghiệm có hướng dẫn.',
         avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=800&auto=format&fit=crop',

@@ -8,8 +8,9 @@ export type PublicSectionId =
   | 'routeMap'
   | 'itineraryDivider'
   | 'itinerary'
-  | 'hotels'
   | 'staysDivider'
+  | 'hotels'
+  | 'journeyTogetherDivider'
   | 'pricing'
   | 'inclusionsExclusions'
   | 'paymentTerms'
@@ -205,6 +206,8 @@ export interface TypographySlotMap {
   price?: TypographyVariant;
   action?: TypographyVariant;
   signature?: TypographyVariant;
+  /** Handwriting calligraphy glyph variant (Buongiorno Rastellino font). */
+  signatureGlyph?: TypographyVariant;
   footer?: TypographyVariant;
   label?: TypographyVariant;
   link?: TypographyVariant;
@@ -381,6 +384,8 @@ export interface LetterViewModel {
   contactLine?: string;
   decorAsset?: string;
   signatureContactLine?: TextValue;
+  /** Calligraphy glyph characters rendered in the handwriting font above signatureName. Optional — absent when designer has no signature_initial set. */
+  signatureGlyph?: TextValue;
 }
 
 export interface RouteSegmentViewModel {
@@ -397,6 +402,7 @@ export interface RouteSegmentViewModel {
 }
 
 export interface RouteMapViewModel {
+  kicker?: TextValue;
   title: TextValue;
   description: TextValue;
   segments: RouteSegmentViewModel[];
@@ -435,6 +441,7 @@ export interface ChapterDividerViewModel {
   imageAlt?: TextValue;
   closing?: TextValue;
   exploreLabel?: TextValue;
+  showDivider?: boolean;
   journeyMeta?: Array<{
     label: TextValue;
     value: TextValue;
@@ -510,16 +517,28 @@ export interface StaysDividerViewModel {
   kicker: TextValue;
   title: TextValue;
   tagline: TextValue;
+  closing?: TextValue;
+  pdfTitle?: TextValue;
+}
+
+export interface JourneyTogetherDividerViewModel {
+  image: string;
+  imageAlt: TextValue;
+  kicker: TextValue;
+  title: TextValue;
+  tagline: TextValue;
   closing: TextValue;
-  pdfTitle: TextValue;
 }
 
 export interface PriceOptionViewModel {
   index: number;
   displayIndex: TextValue;
   label: TextValue;
+  description?: TextValue;
+  badge?: TextValue;
   groupTotalPrice: TextValue;
   perTravelerPrice: TextValue;
+  groupTotalLabel?: TextValue;
 }
 
 export interface PricingViewModel {
@@ -620,8 +639,9 @@ export interface PageViewModel {
   routeMap: RouteMapViewModel;
   itineraryDivider: ChapterDividerViewModel;
   itinerary: ItinerarySectionViewModel;
-  hotels: HotelsViewModel;
   staysDivider: StaysDividerViewModel;
+  hotels: HotelsViewModel;
+  journeyTogetherDivider: JourneyTogetherDividerViewModel;
   pricing: PricingViewModel;
   inclusionsExclusions: InclusionsExclusionsViewModel;
   paymentTerms: PaymentTermsViewModel;

@@ -33,6 +33,7 @@ const blankDraft = (): TravelDesignerInput => ({
   imageAssetId: null,
   imageUrl: null,
   imageR2Key: null,
+  signatureInitial: null,
 });
 
 function initials(name: string) {
@@ -132,6 +133,7 @@ export function TravelDesignerManageDrawer({
           imageAssetId: editingProfile.imageAssetId ?? null,
           imageUrl: editingProfile.imageUrl ?? null,
           imageR2Key: editingProfile.imageR2Key ?? null,
+          signatureInitial: editingProfile.signatureInitial ?? null,
         }
       : blankDraft()
   );
@@ -162,6 +164,7 @@ export function TravelDesignerManageDrawer({
       imageAssetId: profile.imageAssetId ?? null,
       imageUrl: profile.imageUrl ?? null,
       imageR2Key: profile.imageR2Key ?? null,
+      signatureInitial: profile.signatureInitial ?? null,
     });
     setPortraitFile(null);
     setCurrentMode("edit");
@@ -330,6 +333,50 @@ export function TravelDesignerManageDrawer({
             <FormField label="Name" value={draft.name} onChange={(next) => setDraftField("name", next)} disabled={pending} />
             <FormField label="Email" type="email" value={draft.email} onChange={(next) => setDraftField("email", next)} disabled={pending} />
             <FormField label="Phone" value={draft.phone} onChange={(next) => setDraftField("phone", next)} disabled={pending} />
+
+            {/* Signature glyph field */}
+            <div className="flex flex-col gap-2">
+              <label className="flex flex-col gap-2">
+                <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>
+                  Chữ ký (Signature Glyph)
+                </span>
+                <input
+                  type="text"
+                  value={draft.signatureInitial ?? ""}
+                  disabled={pending}
+                  placeholder="e.g. Nam H., V, Linh…"
+                  onChange={(event) => setDraftField("signatureInitial", event.target.value || null)}
+                  className={cn(
+                    getTypographyClassName("bodyMd"),
+                    "min-h-11 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3 text-[var(--color-on-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus)] disabled:opacity-60"
+                  )}
+                />
+                <span className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>
+                  Ký tự tự do hiển thị bằng font Buongiorno Rastellino phía trên tên trong thư mở đầu.
+                  Để trống nếu không dùng chữ ký calligraphy.
+                </span>
+              </label>
+
+              {/* Live preview */}
+              {draft.signatureInitial ? (
+                <div
+                  className="rounded-[var(--radius-card)] border border-dashed border-[var(--color-border-strong)] bg-[var(--color-accent-wash)] px-5 py-4 text-center"
+                  aria-label="Signature preview"
+                >
+                  <span className={cn(getTypographyClassName("caption"), "mb-2 block text-[var(--color-muted)]")}>
+                    Preview chữ ký
+                  </span>
+                  <p
+                    className="typo-signature-glyph"
+                    style={{ color: "var(--color-on-surface)", opacity: 0.88 }}
+                    aria-hidden="true"
+                  >
+                    {draft.signatureInitial}
+                  </p>
+                </div>
+              ) : null}
+            </div>
+
             <label className="flex flex-col gap-2">
               <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>Portrait</span>
               <input
