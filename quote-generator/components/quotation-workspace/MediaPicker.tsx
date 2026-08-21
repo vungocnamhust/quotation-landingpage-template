@@ -63,7 +63,29 @@ async function fetchLibraryPage(url: string): Promise<Children> {
 }
 const isActiveSync = (status?: SyncRun["status"]) => status === "queued" || status === "indexing" || status === "previewing";
 
-export default function MediaPicker({ onSelect, onConfirm, context, selectionMode = 'single', maxSelection = 1, initialSelection = [], initialPrefix }: { onSelect?: (r2Key: string) => void; onConfirm?: (r2Keys: string[]) => void; context?: MediaPickerContext; selectionMode?: 'single' | 'multiple'; maxSelection?: number; initialSelection?: string[]; initialPrefix?: string }) {
+export type MediaPickerProps = {
+  onSelect?: (r2Key: string) => void;
+  onConfirm?: (r2Keys: string[]) => void;
+  onSelectFolder?: (folderPrefix: string) => void;
+  mode?: "asset" | "folder";
+  context?: MediaPickerContext;
+  selectionMode?: "single" | "multiple";
+  maxSelection?: number;
+  initialSelection?: string[];
+  initialPrefix?: string;
+};
+
+export default function MediaPicker({
+  onSelect,
+  onConfirm,
+  onSelectFolder,
+  mode = "asset",
+  context,
+  selectionMode = "single",
+  maxSelection = 1,
+  initialSelection = [],
+  initialPrefix,
+}: MediaPickerProps) {
   const { toast } = useToast();
   const [selected, setSelected] = useState<string[]>(initialSelection);
   const [prefix, setPrefix] = useState(initialPrefix ?? "");
@@ -75,6 +97,8 @@ export default function MediaPicker({ onSelect, onConfirm, context, selectionMod
   const [syncRunId, setSyncRunId] = useState<string | null>(null);
   const [message, setMessage] = useState("Browse the indexed R2 library.");
   const [pending, startTransition] = useTransition();
+
+  const isFolderMode = mode === "folder";
 
   const active = useMemo(() => {
     const search = new URLSearchParams();
@@ -118,7 +142,7 @@ export default function MediaPicker({ onSelect, onConfirm, context, selectionMod
     return () => window.clearTimeout(timer);
   }, [mutate, syncRun, toast]);
 
-  const canUpload = Boolean(context && (context.kind === "team" ? context.travelDesignerId : context.destinationId) && (context.kind !== "accommodation" || context.accommodationName));
+  const canUpload = !isFolderMode && Boolean(context && (context.kind === "team" ? context.travelDesignerId : context.destinationId) && (context.kind !== "accommodation" || context.accommodationName));
   const crumbs = useMemo(() => (prefix ? prefix.split("/") : []), [prefix]);
 
   const navigate = (nextPrefix: string) => { setPrefix(nextPrefix); setQuery(""); setCursor(0); setItems([]); };
@@ -167,6 +191,10 @@ export default function MediaPicker({ onSelect, onConfirm, context, selectionMod
     return current.length >= maxSelection ? current : [...current, r2Key];
   });
   const confirm = () => {
+    if (isFolderMode) {
+      if (onSelectFolder) onSelectFolder(prefix);
+      return;
+    }
     if (!selected.length) return;
     if (onConfirm) onConfirm(selected);
     else if (onSelect) selected.forEach(onSelect);
@@ -174,19 +202,138 @@ export default function MediaPicker({ onSelect, onConfirm, context, selectionMod
 
   return <section className="flex flex-col gap-4 rounded-[var(--radius-card)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] p-5 shadow-2xs">
     <div className="flex flex-wrap items-start justify-between gap-3">
-      <div><p className={cn(getTypographyClassName("cardTitle"), "text-[var(--color-on-surface)]")}>Media library</p><p className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>Only the selected R2 key is saved to the quotation document.</p></div>
+      <div>
+        <p className={cn(getTypographyClassName("cardTitle"), "text-[var(--color-on-surface)]")}>
+          {isFolderMode ? "R2 Folder Navigator" : "Media library"}
+        </p>
+        <p className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>
+          {isFolderMode
+            ? "Browse Cloudflare R2 folder tree to choose the asset directory for this item."
+            : "Only the selected R2 key is saved to the quotation document."}
+        </p>
+      </div>
       <button type="button" disabled={pending || activeSync} onClick={refreshFromR2} className={cn(getTypographyClassName("buttonSecondary"), "min-h-11 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-on-surface)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)] px-4 transition-all disabled:opacity-50")}>{activeSync ? "Refreshing R2…" : "Refresh from R2"}</button>
     </div>
     <p aria-live="polite" className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>{statusText}</p>
-    {canUpload ? <div className="flex flex-wrap items-center gap-3"><input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setFile(event.target.files?.[0] ?? null)} className={cn(getTypographyClassName("bodySm"), "min-h-11 text-[var(--color-on-surface)]")} /><button type="button" disabled={!file || pending} onClick={upload} className={cn(getTypographyClassName("buttonPrimary"), "min-h-11 rounded-[var(--radius-button)] bg-[var(--color-accent)] !text-white hover:bg-[color-mix(in_srgb,var(--color-accent)_85%,black)] px-4 shadow-md border border-transparent transition-all disabled:opacity-50")}>Upload to this location</button></div> : context ? <p className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>Complete the linked destination, accommodation or designer before uploading.</p> : null}
+    {canUpload ? <div className="flex flex-wrap items-center gap-3"><input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setFile(event.target.files?.[0] ?? null)} className={cn(getTypographyClassName("bodySm"), "min-h-11 text-[var(--color-on-surface)]")} /><button type="button" disabled={!file || pending} onClick={upload} className={cn(getTypographyClassName("buttonPrimary"), "min-h-11 rounded-[var(--radius-button)] bg-[var(--color-accent)] !text-white hover:bg-[color-mix(in_srgb,var(--color-accent)_85%,black)] px-4 shadow-md border border-transparent transition-all disabled:opacity-50")}>Upload to this location</button></div> : context && !isFolderMode ? <p className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>Complete the linked destination, accommodation or designer before uploading.</p> : null}
     {message ? <p aria-live="polite" className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>{message}</p> : null}
     {error ? <div className="flex flex-wrap items-center gap-3"><p role="alert" className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>{error instanceof Error ? error.message : "Media library could not be loaded."}</p><button type="button" onClick={() => void mutate()} className={cn(getTypographyClassName("buttonSecondary"), "min-h-11 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-on-surface)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)] px-3 transition-all")}>Retry</button></div> : null}
     <label className="flex flex-col gap-2"><span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>Search this folder</span><input value={query} onChange={(event) => { setQuery(event.target.value); setCursor(0); setItems([]); }} className={cn(getTypographyClassName("bodyMd"), "min-h-11 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3 text-[var(--color-on-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus)]")} /></label>
     <nav className="flex min-h-11 flex-wrap gap-2" aria-label="Media folders">{prefix ? <button type="button" onClick={() => navigate("")} className={cn(getTypographyClassName("buttonSecondary"), "min-h-11 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-on-surface)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)] px-3 transition-all")}>Library</button> : null}{crumbs.map((crumb, index) => <button type="button" key={`${crumb}-${index}`} onClick={() => navigate(crumbs.slice(0, index + 1).join("/"))} className={cn(getTypographyClassName("buttonSecondary"), "min-h-11 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-on-surface)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)] px-3 transition-all")}>{crumb}</button>)}</nav>
-    {!deferredQuery ? <div className="grid gap-3 sm:grid-cols-2">{data?.folders.map((folder) => <button type="button" key={folder.prefix} onClick={() => navigate(folder.prefix)} className={cn(getTypographyClassName("buttonSecondary"), "min-h-14 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface-white)] px-3.5 text-left text-[var(--color-on-surface)] shadow-2xs hover:border-[var(--color-accent)] transition-all")}>Folder · {folder.name}</button>)}</div> : null}
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{items.map((item) => { const checked = selected.includes(item.r2Key); return <button type="button" aria-pressed={checked} key={item.r2Key} onClick={() => toggle(item.r2Key)} className={cn('content-visibility-auto rounded-[var(--radius-button)] border p-3 text-left transition-all', checked ? 'border-[var(--color-focus)] ring-2 ring-[var(--color-focus)] bg-[var(--color-surface-white)]' : 'border-[var(--color-border-strong)] bg-[var(--color-surface)]')}>{item.previewUrl ? <img src={item.previewUrl} alt="" loading="lazy" className="h-full w-full object-cover rounded-[var(--radius-button)]" /> : <span className={cn(getTypographyClassName("caption"), "flex h-full items-center justify-center text-[var(--color-muted)]")}>{item.previewStatus === "pending" || item.previewStatus === "processing" ? "Preparing preview…" : "Preview unavailable"}</span>}<span className={cn(getTypographyClassName("bodySm"), "mt-2 block break-all text-[var(--color-on-surface)]")}>{item.fileName}</span><span className={cn(getTypographyClassName('caption'), 'mt-1 block text-[var(--color-muted)]')}>{item.classification ?? 'generic'} · {item.width && item.height ? `${item.width}×${item.height}` : item.previewStatus === 'ready' ? 'Preview ready' : 'Preview pending'}</span></button>; })}</div>
+    {!deferredQuery ? (
+      <div className="flex flex-col gap-2">
+        <p className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>Subfolders</p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {data?.folders.map((folder) => (
+            <div
+              key={folder.prefix}
+              className="flex items-center justify-between gap-2 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface-white)] p-2.5 shadow-2xs hover:border-[var(--color-accent)] transition-all"
+            >
+              <button
+                type="button"
+                onClick={() => navigate(folder.prefix)}
+                className={cn(getTypographyClassName("bodyMd"), "flex-1 text-left text-[var(--color-on-surface)] hover:text-[var(--color-accent)] cursor-pointer truncate")}
+              >
+                📁 {folder.name}
+              </button>
+              {isFolderMode ? (
+                <button
+                  type="button"
+                  onClick={() => onSelectFolder?.(folder.prefix)}
+                  className={cn(getTypographyClassName("caption"), "rounded-[var(--radius-button)] bg-[var(--color-accent-wash)] px-2.5 py-1 text-[var(--color-accent)] hover:bg-[var(--color-accent)] hover:!text-white transition-colors cursor-pointer shrink-0")}
+                >
+                  Select folder
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => navigate(folder.prefix)}
+                  className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)] hover:text-[var(--color-on-surface)] cursor-pointer")}
+                >
+                  Open →
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    ) : null}
+
+    {/* Items / Thumbnail preview grid */}
+    {items.length > 0 ? (
+      <div className="flex flex-col gap-2 border-t border-[var(--color-border)] pt-3">
+        <p className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>
+          {isFolderMode ? `Photos inside this folder (${items.length} indexed files)` : "Images in this folder"}
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {items.map((item) => {
+            const checked = selected.includes(item.r2Key);
+            return (
+              <div
+                key={item.r2Key}
+                onClick={() => { if (!isFolderMode) toggle(item.r2Key); }}
+                className={cn(
+                  "content-visibility-auto rounded-[var(--radius-button)] border p-3 text-left transition-all",
+                  !isFolderMode ? "cursor-pointer" : "",
+                  checked
+                    ? "border-[var(--color-focus)] ring-2 ring-[var(--color-focus)] bg-[var(--color-surface-white)]"
+                    : "border-[var(--color-border-strong)] bg-[var(--color-surface)]"
+                )}
+              >
+                {item.previewUrl ? (
+                  <img
+                    src={item.previewUrl}
+                    alt=""
+                    loading="lazy"
+                    className="h-28 w-full object-cover rounded-[var(--radius-button)]"
+                  />
+                ) : (
+                  <span className={cn(getTypographyClassName("caption"), "flex h-28 items-center justify-center text-[var(--color-muted)]")}>
+                    {item.previewStatus === "pending" || item.previewStatus === "processing" ? "Preparing preview…" : "Preview unavailable"}
+                  </span>
+                )}
+                <span className={cn(getTypographyClassName("bodySm"), "mt-2 block break-all text-[var(--color-on-surface)] truncate")}>
+                  {item.fileName}
+                </span>
+                <span className={cn(getTypographyClassName("caption"), "mt-1 block text-[var(--color-muted)]")}>
+                  {item.classification ?? "generic"} · {item.width && item.height ? `${item.width}×${item.height}` : item.previewStatus === "ready" ? "Preview ready" : "Preview pending"}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    ) : null}
+
     {!error && data && !data.folders.length && !items.length ? <p className={cn(getTypographyClassName("bodySm"), "text-[var(--color-muted)]")}>{deferredQuery ? "No indexed media matches this search." : "No indexed media is available in this folder. Refresh from R2 to load recent files."}</p> : null}
     {nextCursor !== null ? <button type="button" onClick={() => setCursor(nextCursor)} className={cn(getTypographyClassName("buttonSecondary"), "min-h-11 w-fit rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-on-surface)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)] px-4 transition-all")}>Load more</button> : null}
-    <div className="sticky bottom-0 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--color-border-strong)] bg-[var(--color-surface)] pt-3"><span className={cn(getTypographyClassName('caption'), 'text-[var(--color-muted)]')}>{selected.length}/{maxSelection} selected</span><button type="button" disabled={!selected.length} onClick={confirm} className={cn(getTypographyClassName('buttonPrimary'), 'min-h-11 rounded-[var(--radius-button)] bg-[var(--color-accent)] !text-white hover:bg-[color-mix(in_srgb,var(--color-accent)_85%,black)] px-5 shadow-md border border-transparent transition-all disabled:opacity-50')}>{selectionMode === 'multiple' ? 'Add selected images' : 'Use image'}</button></div>
+    
+    <div className="sticky bottom-0 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--color-border-strong)] bg-[var(--color-surface)] pt-3">
+      {isFolderMode ? (
+        <>
+          <div className="flex flex-col min-w-0">
+            <span className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>Active R2 Folder:</span>
+            <span className={cn(getTypographyClassName("bodySm"), "font-mono text-[var(--color-on-surface)] truncate")}>
+              {prefix ? `/${prefix}` : "/ (Root Directory)"}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={confirm}
+            className={cn(
+              getTypographyClassName("buttonPrimary"),
+              "min-h-11 rounded-[var(--radius-button)] bg-[var(--color-accent)] !text-white hover:bg-[color-mix(in_srgb,var(--color-accent)_85%,black)] px-5 shadow-md border border-transparent transition-all cursor-pointer"
+            )}
+          >
+            {prefix ? `Use current folder: /${prefix}` : "Use Root Folder"}
+          </button>
+        </>
+      ) : (
+        <>
+          <span className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>{selected.length}/{maxSelection} selected</span>
+          <button type="button" disabled={!selected.length} onClick={confirm} className={cn(getTypographyClassName("buttonPrimary"), "min-h-11 rounded-[var(--radius-button)] bg-[var(--color-accent)] !text-white hover:bg-[color-mix(in_srgb,var(--color-accent)_85%,black)] px-5 shadow-md border border-transparent transition-all disabled:opacity-50")}>{selectionMode === "multiple" ? "Add selected images" : "Use image"}</button>
+        </>
+      )}
+    </div>
   </section>;
 }

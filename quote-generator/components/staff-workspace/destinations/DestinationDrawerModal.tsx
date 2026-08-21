@@ -6,6 +6,7 @@ import { getTypographyClassName } from "../../../config/typography.ts";
 import { cn } from "../../../utils/cn.ts";
 import type { DestinationCatalogInput, DestinationProfile } from "../../../lib/quotationApi.ts";
 import { generateSlug } from "./useDestinationManager.ts";
+import MediaDrawer from "../../quotation-workspace/MediaDrawer.tsx";
 
 interface Props {
   isOpen: boolean;
@@ -71,6 +72,7 @@ function DestinationDrawerModalContent({
 }: Props) {
   const [aliasInput, setAliasInput] = useState("");
   const [isSlugCustomized, setIsSlugCustomized] = useState(() => Boolean(editing));
+  const [isFolderPickerOpen, setIsFolderPickerOpen] = useState(false);
 
   const defaultPrefix = useMemo(() => {
     const parts = [
@@ -399,46 +401,96 @@ function DestinationDrawerModalContent({
             </div>
 
             {/* R2 Media Folder Prefix */}
-            <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor="media-prefix-input"
-                className={cn(
-                  getTypographyClassName("label"),
-                  "flex items-center gap-1.5 text-[var(--color-on-surface)]"
-                )}
-              >
-                <Folder size={13} className="text-[var(--color-muted)]" />
-                <span>R2 Media Folder Prefix</span>
-                <span className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)] ml-1")}>
-                  (Optional)
+            <div className="flex flex-col gap-2 rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-4">
+              <div className="flex items-center justify-between gap-2">
+                <label
+                  className={cn(
+                    getTypographyClassName("label"),
+                    "flex items-center gap-1.5 text-[var(--color-on-surface)]"
+                  )}
+                >
+                  <Folder size={14} className="text-[var(--color-accent)]" />
+                  <span>R2 Media Folder Prefix</span>
+                </label>
+                <span
+                  className={cn(
+                    getTypographyClassName("caption"),
+                    "rounded-full px-2 py-0.5 border shrink-0",
+                    draft.mediaPrefix
+                      ? "bg-[var(--color-accent-wash)] text-[var(--color-accent)] border-[color-mix(in_srgb,var(--color-accent)_30%,transparent)]"
+                      : "bg-[var(--color-surface)] text-[var(--color-muted)] border-[var(--color-border)]"
+                  )}
+                >
+                  {draft.mediaPrefix ? "Custom Folder" : "Default Convention"}
                 </span>
-              </label>
-              <input
-                id="media-prefix-input"
-                type="text"
-                value={draft.mediaPrefix ?? ""}
-                onChange={(e) =>
-                  onDraftChange({
-                    ...draft,
-                    mediaPrefix: e.target.value || null,
-                  })
-                }
-                placeholder={`e.g. ${defaultPrefix}`}
-                className={cn(
-                  getTypographyClassName("bodyMd"),
-                  "min-h-11 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3.5 font-mono text-[var(--color-on-surface)] placeholder:text-[var(--color-muted)] focus:border-[var(--color-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-wash)]"
-                )}
-              />
+              </div>
+
+              {/* Frozen / Read-only Display Box */}
+              <div className="flex min-h-11 items-center justify-between gap-3 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3.5 py-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Folder size={15} className="shrink-0 text-[var(--color-muted)]" />
+                  <span
+                    className={cn(
+                      getTypographyClassName("bodyMd"),
+                      "font-mono truncate",
+                      draft.mediaPrefix ? "text-[var(--color-accent)]" : "text-[var(--color-on-surface)]"
+                    )}
+                    title={draft.mediaPrefix || defaultPrefix}
+                  >
+                    {draft.mediaPrefix || defaultPrefix}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {draft.mediaPrefix ? (
+                    <button
+                      type="button"
+                      onClick={() => onDraftChange({ ...draft, mediaPrefix: null })}
+                      className={cn(
+                        getTypographyClassName("caption"),
+                        "rounded-[calc(var(--radius-button)-4px)] border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-2 py-1 text-[var(--color-muted)] hover:text-[var(--color-on-surface)] transition-colors cursor-pointer"
+                      )}
+                      title="Reset to standard taxonomy folder convention"
+                    >
+                      Reset to Default
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={() => setIsFolderPickerOpen(true)}
+                    className={cn(
+                      getTypographyClassName("buttonSecondary"),
+                      "flex items-center gap-1 rounded-[calc(var(--radius-button)-2px)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3 py-1 text-[var(--color-on-surface)] hover:bg-[var(--color-surface-hover)] cursor-pointer"
+                    )}
+                  >
+                    <Folder size={13} />
+                    <span>Browse R2 Folders</span>
+                  </button>
+                </div>
+              </div>
+
               <span
                 className={cn(
                   getTypographyClassName("caption"),
                   "text-[var(--color-muted)]"
                 )}
               >
-                Leave empty to automatically use the standard folder convention:{" "}
-                <code className="rounded bg-[var(--color-surface-muted)] px-1 py-0.5">{defaultPrefix}</code>
+                {draft.mediaPrefix
+                  ? "Custom folder configured. Images will be prioritized from this Cloudflare R2 path."
+                  : "Using standard folder convention inferred from country, region, province, and slug."}
               </span>
             </div>
+
+            {/* Folder Picker Modal */}
+            <MediaDrawer
+              open={isFolderPickerOpen}
+              onClose={() => setIsFolderPickerOpen(false)}
+              mode="folder"
+              initialPrefix={draft.mediaPrefix || defaultPrefix}
+              onSelectFolder={(folder) => {
+                onDraftChange({ ...draft, mediaPrefix: folder ? folder.trim() : null });
+                setIsFolderPickerOpen(false);
+              }}
+            />
 
             {/* Aliases Tag Manager */}
             <div className="flex flex-col gap-2">

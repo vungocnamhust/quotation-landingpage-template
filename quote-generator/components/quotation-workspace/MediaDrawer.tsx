@@ -12,25 +12,37 @@ const MediaPicker = dynamic(() => import("./MediaPicker"), {
   ),
 });
 
+export type MediaDrawerProps = {
+  open: boolean;
+  onClose: () => void;
+  onSelect?: (r2Key: string) => void;
+  onConfirm?: (r2Keys: string[]) => void;
+  onSelectFolder?: (folderPrefix: string) => void;
+  mode?: "asset" | "folder";
+  title?: string;
+  description?: string;
+  context?: MediaPickerContext;
+  selectionMode?: "single" | "multiple";
+  maxSelection?: number;
+  initialSelection?: string[];
+  initialPrefix?: string;
+};
+
 export default function MediaDrawer({
   open,
   onClose,
   onSelect,
   onConfirm,
+  onSelectFolder,
+  mode = "asset",
+  title,
+  description,
   context,
-  selectionMode = 'single',
+  selectionMode = "single",
   maxSelection = 1,
   initialSelection = [],
-}: {
-  open: boolean;
-  onClose: () => void;
-  onSelect?: (r2Key: string) => void;
-  onConfirm?: (r2Keys: string[]) => void;
-  context?: MediaPickerContext;
-  selectionMode?: 'single' | 'multiple';
-  maxSelection?: number;
-  initialSelection?: string[];
-}) {
+  initialPrefix,
+}: MediaDrawerProps) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
@@ -71,6 +83,12 @@ export default function MediaDrawer({
     };
   }, [onClose, open]);
   if (!open) return null;
+
+  const defaultTitle = mode === "folder" ? "Choose R2 Storage Folder" : "Choose quotation media";
+  const defaultDescription = mode === "folder"
+    ? "Browse the indexed Cloudflare R2 bucket and select a directory."
+    : "This selection is saved to the canonical quotation document.";
+
   return (
     <div
       className="fixed inset-0 z-50 flex justify-end bg-[color-mix(in_srgb,var(--color-contrast)_38%,transparent)] backdrop-blur-sm"
@@ -94,7 +112,7 @@ export default function MediaDrawer({
                 "text-[var(--color-on-surface)]",
               )}
             >
-              Choose quotation media
+              {title || defaultTitle}
             </h2>
             <p
               className={cn(
@@ -102,7 +120,7 @@ export default function MediaDrawer({
                 "mt-1 text-[var(--color-muted)]",
               )}
             >
-              This selection is saved to the canonical quotation document.
+              {description || defaultDescription}
             </p>
           </div>
           <button
@@ -111,13 +129,23 @@ export default function MediaDrawer({
             onClick={onClose}
             className={cn(
               getTypographyClassName("buttonSecondary"),
-              "min-h-11 rounded-[var(--radius-button)] border border-[var(--color-border)] px-4 text-[var(--color-on-surface)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]",
+              "min-h-11 rounded-[var(--radius-button)] border border-[var(--color-border)] px-4 text-[var(--color-on-surface)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)] cursor-pointer",
             )}
           >
             Close
           </button>
         </div>
-        <MediaPicker onSelect={onSelect} onConfirm={onConfirm} context={context} selectionMode={selectionMode} maxSelection={maxSelection} initialSelection={initialSelection} />
+        <MediaPicker
+          onSelect={onSelect}
+          onConfirm={onConfirm}
+          onSelectFolder={onSelectFolder}
+          mode={mode}
+          context={context}
+          selectionMode={selectionMode}
+          maxSelection={maxSelection}
+          initialSelection={initialSelection}
+          initialPrefix={initialPrefix}
+        />
       </section>
     </div>
   );
