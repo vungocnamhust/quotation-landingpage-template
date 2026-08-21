@@ -93,13 +93,17 @@ docker compose -f docker-compose.local.yml up --build
 
 Compose local se start:
 
-- `postgres`
-- `migrate`
-- `app`
+- `postgres` (port `5433:5432`)
+- `migrate` (chay migration Core roi ket thuc)
+- `notification-migrate` (chay migration Notification roi ket thuc)
+- `app` (port `8111:8111`)
+- `notification-service` (port `8116:8116`)
+- `notification-worker`
 
 Local mapping:
 
 - app: `http://localhost:8111`
+- notification: `http://localhost:8116`
 - postgres host port: `5433`
 
 ### Published quotation preview on localhost
@@ -133,17 +137,24 @@ docker compose -f docker-compose.local-public-preview.yml down
 
 ### Buoc 3. Verify local
 
-Kiem tra app:
+Kiem tra Core app:
 
 ```bash
 curl http://localhost:8111/health/live
 curl http://localhost:8111/health/ready
 ```
 
+Kiem tra Notification app:
+
+```bash
+curl http://localhost:8116/health
+```
+
 Ky vong:
 
 - `/health/live` tra `200`
 - `/health/ready` tra `200`
+- Notification `/health` tra `200` (status `healthy` hoac `ok`)
 
 ### Buoc 4. Stop local
 
@@ -200,7 +211,7 @@ SELECT brand_id, :'designer_id'
 FROM unnest(ARRAY['capella_travel', 'selvara', 'vietnam_safar']) AS brand_id
 WHERE EXISTS (SELECT 1 FROM brands WHERE brands.id = brand_id)
 ON CONFLICT (brand_id) DO UPDATE
-SET designer_profile_id = EXCLUDED.designer_profile_id;prefillEn
+SET designer_profile_id = EXCLUDED.designer_profile_id;
 SQL
 
 docker compose -f docker-compose.production.yml up -d app quote-generator publication-worker nginx
@@ -379,10 +390,31 @@ docker compose -f docker-compose.local.yml restart app
 docker compose -f docker-compose.production.yml restart app
 ```
 
-### Re-run migration
+### Chay migration trong luc phat trien (Khong build lai container)
+
+Khi stack local dang chay, code duoc mount truc tiep qua volume (`.:/app`). Chay migration truc tiep trong container dang chay ma **khong can build hay pull lai image**:
 
 ```bash
-docker compose -f docker-compose.local.yml run --rm migrate
+# Core Backend (tren container app dang chay - 0.1s):
+docker compose -f docker-compose.local.yml exec app alembic upgrade head
+
+# Notification Subsystem (tren container notification-service dang chay):
+docker compose -f docker-compose.local.yml exec notification-service alembic -c notification/alembic.ini upgrade head
+```
+
+Neu cac container tren chua khoi dong, chay qua service `app` / `notification-service` de tranh bi trigger build image `migrate`:
+
+```bash
+# Core Backend:
+docker compose -f docker-compose.local.yml run --rm --no-deps app alembic upgrade head
+
+# Notification Subsystem:
+docker compose -f docker-compose.local.yml run --rm --no-deps notification-service alembic -c notification/alembic.ini upgrade head
+```
+
+### Re-run migration tren Production
+
+```bash
 docker compose -f docker-compose.production.yml run --rm migrate
 ```
 
