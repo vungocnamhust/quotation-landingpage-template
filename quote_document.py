@@ -407,6 +407,7 @@ def rich_content_values(document: QuoteDocumentV1) -> Dict[str, Any]:
 class TripFactDay(QuoteBaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    id: str | None = None
     day_number: int | None = None
     destination: str | None = None
     summary: str | None = None
@@ -445,8 +446,29 @@ class CreateQuotePricingOptionFact(QuoteBaseModel):
     id: str = ""
     label: str = Field(min_length=1, max_length=160)
     currency: str
-    per_traveler_amount_minor: int = Field(gt=0)
+    per_traveler_amount_minor: int | None = Field(default=None, gt=0)
     group_total_amount_minor: int = Field(gt=0)
+    per_adult_amount_minor: int | None = None
+    per_child_amount_minor: int | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def sync_pricing_amounts(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            traveler_val = data.get("per_traveler_amount_minor")
+            adult_val = data.get("per_adult_amount_minor")
+            if traveler_val is None and adult_val is not None:
+                data["per_traveler_amount_minor"] = adult_val
+            elif adult_val is None and traveler_val is not None:
+                data["per_adult_amount_minor"] = traveler_val
+        return data
+
+    @field_validator("per_traveler_amount_minor")
+    @classmethod
+    def require_positive_per_traveler(cls, value: int | None) -> int:
+        if value is None or value <= 0:
+            raise ValueError("per_traveler_amount_minor must be greater than 0")
+        return value
 
     @field_validator("label")
     @classmethod
@@ -478,6 +500,7 @@ class CreateQuoteCustomerFacts(QuoteBaseModel):
     children: int | None = None
     nationality: str | None = None
     guest_profile: str | None = None
+    travel_style: str | None = None
     market: str | None = None
     party_label: str | None = None
     greeting_name: str | None = None

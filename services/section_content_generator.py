@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from typing import Any, Type
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 from pydantic_ai import Agent
 
 import llm_client
@@ -24,9 +24,13 @@ class _CopyModel(BaseModel):
 
     @field_validator("*", mode="after")
     @classmethod
-    def _clean_text(cls, value: Any) -> Any:
+    def _clean_text(cls, value: Any, info: ValidationInfo) -> Any:
         if isinstance(value, str):
             value = " ".join(value.split())
+            if info.field_name in {"heroMeta1", "heroMeta2"}:
+                if "<" in value or ">" in value:
+                    raise ValueError("Copy must not contain HTML.")
+                return value
             if not value or "<" in value or ">" in value:
                 raise ValueError("Copy must be non-empty plain text without HTML.")
         return value
@@ -65,7 +69,7 @@ class ItineraryOutput(RouteOutput):
 class DayOutput(_CopyModel):
     title: str = Field(min_length=1, max_length=160)
     description: list[str] = Field(min_length=1, max_length=6)
-    activities: list[str] = Field(min_length=1, max_length=12)
+    activities: list[str] = Field(default_factory=list, max_length=12)
 
     @field_validator("description", "activities", mode="after")
     @classmethod

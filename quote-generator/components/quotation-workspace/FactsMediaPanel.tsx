@@ -77,23 +77,24 @@ export default function FactsMediaPanel({ quotationId, lang, document, currentRe
 
   const defaults = () => startTransition(async () => {
     try {
-      const preview = await quotationFetch<{ rationale: unknown[] }>(
+      const preview = await quotationFetch<{ rationale: unknown[]; appliedCount?: number; hasChanges?: boolean }>(
         `${API_BASE}/api/v2/quotations/${quotationId}/facts/media-defaults?lang=${encodeURIComponent(lang)}`,
         { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ baseRevision: currentRevision, dryRun: true }) },
         'Media defaults could not be previewed.'
       );
-      if (!preview.rationale.length) {
+      if (!preview.hasChanges && (!preview.rationale || !preview.rationale.length)) {
         const msg = 'No matching default media was found for empty slots.';
         setMessage(msg);
         toast(msg, 'info');
         return;
       }
-      await quotationFetch(
+      const applied = await quotationFetch<{ rationale: unknown[]; appliedCount?: number }>(
         `${API_BASE}/api/v2/quotations/${quotationId}/facts/media-defaults?lang=${encodeURIComponent(lang)}`,
         { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ baseRevision: currentRevision, dryRun: false }) },
         'Media defaults could not be applied.'
       );
-      const msg = `Applied ${preview.rationale.length} generated Fact media choices.`;
+      const count = applied.appliedCount ?? applied.rationale?.length ?? preview.rationale?.length ?? 0;
+      const msg = `Applied ${count} generated Fact media choices.`;
       setMessage(msg);
       toast(msg, 'success');
       await onSaved();

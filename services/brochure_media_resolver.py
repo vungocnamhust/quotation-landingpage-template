@@ -1,18 +1,34 @@
 """Deterministic canonical defaults for V2 brochure media.
 
 This deliberately consumes the indexed R2 catalogue, never a local assets
-directory.  The resolver is pure after catalogue loading so dry-runs and apply
+directory. The resolver is pure after catalogue loading so dry-runs and apply
 produce exactly the same patch for a given quotation/version/catalogue.
 """
 from __future__ import annotations
 
 import hashlib
+import re
+import unicodedata
 from dataclasses import dataclass
 from typing import Any, Iterable
 
+from core.rules.destination_rules import (
+    COUNTRY_GATEWAY_MAP,
+    DESTINATION_KEYWORD_MAP,
+    VALID_DESTINATION_SLUGS,
+    match_destination_slug,
+)
 
-RESOLVER_VERSION = "brochure-media-v1"
+
+RESOLVER_VERSION = "brochure-media-v2"
 GALLERY_LIMIT = 3
+
+_NON_ALPHANUM = re.compile(r"[^a-z0-9]+")
+_HOTEL_STOP_WORDS = {
+    "hotel", "resort", "spa", "and", "the", "grand", "luxury", "villas", "villas-and-spa",
+    "suites", "palace", "international", "khach", "san", "khach-san", "vietnam", "residence",
+    "boutique", "lodge", "retreat", "an", "a", "of", "in", "by", "premium", "collection",
+}
 
 
 @dataclass(frozen=True)
@@ -34,6 +50,109 @@ class Candidate:
     @property
     def landscape(self) -> bool:
         return self.width is None or self.height is None or self.width >= self.height
+
+
+def remove_diacritics(text: str) -> str:
+    """Normalize and strip Vietnamese / international diacritics."""
+    if not text:
+        return ""
+    text = text.replace("đ", "d").replace("Đ", "d")
+    normalized = unicodedata.normalize("NFD", text)
+    return "".join(c for c in normalized if unicodedata.category(c) != "Mn")
+
+
+def destination_aliases(destination_ref: Any, fallback_ref: Any = None) -> set[str]:
+    """Extract all possible normalized alias tokens for matching against R2 parent prefixes."""
+    destination = _record(destination_ref)
+    fallback = _record(fallback_ref)
+
+    aliases: set[str] = set()
+
+    # 1. Raw fields inspection
+    for field in ("id", "destinationId", "slug", "name", "segmentCity", "destination", "city", "overnight"):
+        val = str(destination.get(field) or fallback.get(field) or "").strip()
+        if not val or val.startswith(("day-", "hotel-", "stay-")):
+            continue
+        cleaned = val.casefold()
+        aliases.add(cleaned)
+        aliases.add(_NON_ALPHANUM.sub("-", cleaned).strip("-"))
+        aliases.add(_NON_ALPHANUM.sub("", cleaned))
+
+        no_accent = remove_diacritics(cleaned)
+        aliases.add(no_accent)
+        aliases.add(_NON_ALPHANUM.sub("-", no_accent).strip("-"))
+        aliases.add(_NON_ALPHANUM.sub("", no_accent))
+
+        # Match using domain rules
+        matched_slug = match_destination_slug(val)
+        if matched_slug:
+            aliases.add(matched_slug)
+            aliases.add(matched_slug.replace("-", ""))
+
+    # 2. Enrich with all aliases from DESTINATION_KEYWORD_MAP
+    matched_slugs = {a for a in aliases if a in VALID_DESTINATION_SLUGS}
+    for kw, target_slug in DESTINATION_KEYWORD_MAP.items():
+        if target_slug in matched_slugs or kw in aliases:
+            aliases.add(target_slug)
+            aliases.add(target_slug.replace("-", ""))
+            kw_no_accent = remove_diacritics(kw)
+            aliases.add(kw_no_accent)
+            aliases.add(_NON_ALPHANUM.sub("-", kw_no_accent).strip("-"))
+            aliases.add(_NON_ALPHANUM.sub("", kw_no_accent))
+
+    return {a for a in aliases if len(a) >= 2}
+
+
+def accommodation_distinct_tokens(name: str | None) -> set[str]:
+    """Extract distinctive brand/name tokens from hotel name."""
+    if not name:
+        return set()
+    cleaned = remove_diacritics(name.casefold())
+    tokens = {t for t in _NON_ALPHANUM.split(cleaned) if len(t) >= 3 and t not in _HOTEL_STOP_WORDS}
+    token_list = [t for t in _NON_ALPHANUM.split(cleaned) if len(t) >= 3 and t not in _HOTEL_STOP_WORDS]
+    if len(token_list) >= 2:
+        tokens.add("-".join(token_list))
+        tokens.add("".join(token_list))
+    return tokens
+
+
+def _matches_destination(candidate: Candidate, aliases: set[str]) -> bool:
+    if not aliases:
+        return False
+    path_norm = remove_diacritics(f"{candidate.parent_prefix}/{candidate.r2_key}".casefold())
+    segments = [s for s in _NON_ALPHANUM.split(path_norm) if s]
+    compact_path = "".join(segments)
+
+    for alias in aliases:
+        alias_clean = alias.strip("-")
+        alias_compact = alias_clean.replace("-", "")
+        if alias_clean in segments or alias_compact in segments:
+            return True
+        if f"/{alias_clean}" in path_norm or f"/{alias_compact}" in path_norm or f"-{alias_clean}" in path_norm:
+            return True
+        if f"{alias_clean}/" in path_norm or f"{alias_compact}/" in path_norm:
+            return True
+        if alias_compact and alias_compact in compact_path and len(alias_compact) >= 4:
+            return True
+    return False
+
+
+def _matches_accommodation(candidate: Candidate, hotel_tokens: set[str], dest_aliases: set[str]) -> tuple[bool, int]:
+    """Returns (is_match, tier) where tier 1 is exact hotel, tier 2 is dest accommodation, tier 3 is dest scenic."""
+    path_norm = remove_diacritics(f"{candidate.parent_prefix}/{candidate.r2_key}".casefold())
+    segments = [s for s in _NON_ALPHANUM.split(path_norm) if s]
+
+    if "accommodations" in segments:
+        for token in hotel_tokens:
+            if token in segments or f"/{token}" in path_norm or f"-{token}" in path_norm or token in candidate.r2_key.casefold():
+                return True, 1
+        if _matches_destination(candidate, dest_aliases):
+            return True, 2
+
+    if _matches_destination(candidate, dest_aliases):
+        return True, 3
+
+    return False, 4
 
 
 def _record(value: Any) -> dict[str, Any]:
@@ -71,9 +190,23 @@ class BrochureMediaResolver:
         catalogue is stale or has not indexed that object yet."""
         return bool(_r2(value))
 
-    def _pick(self, *, quotation_id: str, lang: str, field_id: str, pool: Iterable[Candidate], preferred: tuple[str, ...] = (), excluded: set[str] | None = None, limit: int = 1) -> list[Candidate]:
+    def _pick(
+        self,
+        *,
+        quotation_id: str,
+        lang: str,
+        field_id: str,
+        pool: Iterable[Candidate],
+        preferred: tuple[str, ...] = (),
+        excluded: set[str] | None = None,
+        limit: int = 1,
+    ) -> list[Candidate]:
         excluded = excluded or set()
         unique = {item.r2_key: item for item in pool if item.r2_key not in excluded}
+        if not unique and excluded:
+            # If all pool candidates were in excluded set, allow reusing pool if limit requires
+            unique = {item.r2_key: item for item in pool}
+
         def score(item: Candidate) -> tuple[int, int, int, int]:
             return (
                 0 if item.classification in preferred else 1,
@@ -83,80 +216,242 @@ class BrochureMediaResolver:
             )
         return sorted(unique.values(), key=score)[:limit]
 
-    def _destination_pool(self, destination_ref: Any, fallback_ref: Any = None) -> list[Candidate]:
-        destination = _record(destination_ref)
-        fallback = _record(fallback_ref)
-        destination_id = str(destination.get("id") or destination.get("destinationId") or fallback.get("destinationId") or "")
-        if destination_id.startswith(("day-", "hotel-", "stay-")):
-            destination_id = ""
-        slug = str(destination.get("slug") or fallback.get("slug") or "")
-        if not slug and not destination_id:
-            name = str(destination.get("name") or destination.get("segmentCity") or destination.get("destination") or fallback.get("name") or fallback.get("segmentCity") or fallback.get("destination") or fallback.get("city") or "")
-            if name:
-                slug = "-".join(name.casefold().split())
-        return [item for item in self.candidates if (destination_id and destination_id in item.parent_prefix) or (slug and f"/{slug}" in item.parent_prefix)]
+    def _destination_pool(self, primary_aliases: set[str], fallback_aliases: set[str] | None = None) -> list[Candidate]:
+        # Tier 1: Match primary destination aliases
+        tier1 = [item for item in self.candidates if _matches_destination(item, primary_aliases)]
+        if tier1:
+            return tier1
+        # Tier 2: Match fallback trip destination aliases
+        if fallback_aliases:
+            tier2 = [item for item in self.candidates if _matches_destination(item, fallback_aliases)]
+            if tier2:
+                return tier2
+        # Tier 3: All scenic / generic candidates
+        return list(self.candidates)
 
-    def _accommodation_pool(self, destination_ref: Any, name: Any) -> list[Candidate]:
-        slug = "-".join(str(name or "").casefold().split())
-        destination = _record(destination_ref)
-        destination_slug = str(destination.get("slug") or "")
-        return [item for item in self.candidates if "accommodations/" in item.parent_prefix and (not slug or slug in item.parent_prefix) and (not destination_slug or destination_slug in item.parent_prefix)]
+    def _accommodation_pool(self, hotel_tokens: set[str], dest_aliases: set[str], fallback_aliases: set[str] | None = None) -> list[Candidate]:
+        # Tier 1: Exact hotel brand/name token match under accommodations/
+        tier1 = [item for item in self.candidates if _matches_accommodation(item, hotel_tokens, dest_aliases)[1] == 1]
+        if tier1:
+            return tier1
+        # Tier 2: Destination accommodation match
+        tier2 = [item for item in self.candidates if _matches_accommodation(item, hotel_tokens, dest_aliases)[1] == 2]
+        if tier2:
+            return tier2
+        # Tier 3: Destination scenic match
+        tier3 = [item for item in self.candidates if _matches_accommodation(item, hotel_tokens, dest_aliases)[1] == 3]
+        if tier3:
+            return tier3
+        # Tier 4: Fallback trip destinations
+        if fallback_aliases:
+            tier4 = [item for item in self.candidates if _matches_destination(item, fallback_aliases)]
+            if tier4:
+                return tier4
+        # Tier 5: All candidates
+        return list(self.candidates)
 
     def resolve_missing(self, *, document: dict[str, Any], quotation_id: str, lang: str) -> dict[str, Any]:
         """Build a non-mutating patch. Existing values are never overwritten unless invalid."""
-        patch: dict[str, Any] = {"assets": {}, "itinerary": {}, "stays": {}}
+        assets_patch: dict[str, Any] = {}
+        itinerary_patch: dict[str, Any] = {}
+        stays_patch: dict[str, Any] = {}
         rationale: list[dict[str, Any]] = []
         used_covers: set[str] = set()
+
         assets = _record(document.get("assets"))
         for name in ("hero", "itineraryDivider", "hotelDivider"):
             if self._has_assigned_r2(assets.get(name)):
                 used_covers.add(_r2(assets.get(name)))
+
         days = _assets(_record(document.get("itinerary")).get("days"))
+        hotels = _assets(_record(document.get("stays")).get("hotels"))
+
+        # Pre-collect all trip destinations for fallback
+        trip_dest_aliases: set[str] = set()
+        for day in days:
+            trip_dest_aliases.update(destination_aliases(_record(day).get("destinationRef"), fallback_ref=day))
+        for hotel in hotels:
+            trip_dest_aliases.update(destination_aliases(_record(hotel).get("destinationRef"), fallback_ref=hotel))
+
         patched_days: dict[int, dict[str, Any]] = {}
         gallery_candidates: list[Candidate] = []
+
+        # 1. Resolve Day Galleries
         for index, day in enumerate(days):
             images = _record(_record(day).get("images"))
-            carousel_assets = [Candidate(_r2(asset), "", None, None, True) for asset in _assets(images.get("carousel")) if self._has_assigned_r2(asset)]
-            if carousel_assets:
-                gallery_candidates.extend(carousel_assets)
+            existing_carousel = [
+                Candidate(_r2(asset), "", None, None, True)
+                for asset in _assets(images.get("carousel"))
+                if self._has_assigned_r2(asset)
+            ]
+            if existing_carousel:
+                gallery_candidates.extend(existing_carousel)
                 continue
+
             field_id = f"itinerary.days.{index}.gallery"
-            pool = self._destination_pool(_record(day).get("destinationRef"), fallback_ref=day)
-            picks = self._pick(quotation_id=quotation_id, lang=lang, field_id=field_id, pool=pool, preferred=("hero", "generic"), limit=GALLERY_LIMIT)
+            day_aliases = destination_aliases(_record(day).get("destinationRef"), fallback_ref=day)
+            pool = self._destination_pool(day_aliases, fallback_aliases=trip_dest_aliases)
+            picks = self._pick(
+                quotation_id=quotation_id,
+                lang=lang,
+                field_id=field_id,
+                pool=pool,
+                preferred=("hero", "generic"),
+                limit=GALLERY_LIMIT,
+            )
             if picks:
                 patched_days[index] = {"images": {"carousel": [_ref(item) for item in picks]}}
                 gallery_candidates.extend(picks)
-                rationale.append({"fieldId": field_id, "candidateCount": len(pool), "reason": "exact destination catalogue"})
+                rationale.append({
+                    "fieldId": field_id,
+                    "candidateCount": len(pool),
+                    "reason": "destination catalogue" if any(_matches_destination(p, day_aliases) for p in picks) else "trip fallback catalogue",
+                })
+
         if patched_days:
-            patch["itinerary"]["days"] = patched_days
+            itinerary_patch["days"] = patched_days
+
+        # 2. Resolve assets.hero
         if not self._has_assigned_r2(assets.get("hero")):
-            pool = gallery_candidates or (self._destination_pool(_record(days[0]).get("destinationRef"), fallback_ref=days[0]) if days else [])
-            picks = self._pick(quotation_id=quotation_id, lang=lang, field_id="assets.hero", pool=pool, preferred=("hero",), excluded=used_covers)
+            first_day_aliases = destination_aliases(_record(days[0]).get("destinationRef"), fallback_ref=days[0]) if days else trip_dest_aliases
+            hero_pool = (
+                self._destination_pool(first_day_aliases, fallback_aliases=trip_dest_aliases)
+                or gallery_candidates
+                or list(self.candidates)
+            )
+            picks = self._pick(
+                quotation_id=quotation_id,
+                lang=lang,
+                field_id="assets.hero",
+                pool=hero_pool,
+                preferred=("hero", "generic"),
+                excluded=used_covers,
+            )
             if picks:
-                patch["assets"]["hero"] = _ref(picks[0]); used_covers.add(picks[0].r2_key)
-                rationale.append({"fieldId": "assets.hero", "candidateCount": len(pool), "reason": "itinerary gallery pool"})
-        for field_id, asset_name, day_index in (("assets.itineraryDivider", "itineraryDivider", len(days) // 2), ("assets.hotelDivider", "hotelDivider", 0)):
-            if self._has_assigned_r2(assets.get(asset_name)):
-                continue
-            pool = self._destination_pool(_record(days[day_index]).get("destinationRef"), fallback_ref=days[day_index]) if days else gallery_candidates
-            picks = self._pick(quotation_id=quotation_id, lang=lang, field_id=field_id, pool=pool, excluded=used_covers)
+                assets_patch["hero"] = _ref(picks[0])
+                used_covers.add(picks[0].r2_key)
+                rationale.append({
+                    "fieldId": "assets.hero",
+                    "candidateCount": len(hero_pool),
+                    "reason": "itinerary gallery pool" if picks[0] in gallery_candidates else "destination hero candidate",
+                })
+
+        # 3. Resolve assets.itineraryDivider
+        if not self._has_assigned_r2(assets.get("itineraryDivider")):
+            mid_index = len(days) // 2 if days else 0
+            mid_day_aliases = destination_aliases(_record(days[mid_index]).get("destinationRef"), fallback_ref=days[mid_index]) if days else trip_dest_aliases
+            divider_pool = (
+                self._destination_pool(mid_day_aliases, fallback_aliases=trip_dest_aliases)
+                or gallery_candidates
+                or list(self.candidates)
+            )
+            picks = self._pick(
+                quotation_id=quotation_id,
+                lang=lang,
+                field_id="assets.itineraryDivider",
+                pool=divider_pool,
+                preferred=("generic", "hero"),
+                excluded=used_covers,
+            )
             if picks:
-                patch["assets"][asset_name] = _ref(picks[0]); used_covers.add(picks[0].r2_key)
-                rationale.append({"fieldId": field_id, "candidateCount": len(pool), "reason": "unused destination asset"})
-        hotels = _assets(_record(document.get("stays")).get("hotels"))
+                assets_patch["itineraryDivider"] = _ref(picks[0])
+                used_covers.add(picks[0].r2_key)
+                rationale.append({
+                    "fieldId": "assets.itineraryDivider",
+                    "candidateCount": len(divider_pool),
+                    "reason": "mid-itinerary scenic asset",
+                })
+
+        # 4. Resolve assets.hotelDivider
+        if not self._has_assigned_r2(assets.get("hotelDivider")):
+            first_hotel_aliases = destination_aliases(_record(hotels[0]).get("destinationRef"), fallback_ref=hotels[0]) if hotels else trip_dest_aliases
+            hotel_divider_pool = (
+                self._destination_pool(first_hotel_aliases, fallback_aliases=trip_dest_aliases)
+                or gallery_candidates
+                or list(self.candidates)
+            )
+            picks = self._pick(
+                quotation_id=quotation_id,
+                lang=lang,
+                field_id="assets.hotelDivider",
+                pool=hotel_divider_pool,
+                preferred=("exterior", "interior", "generic"),
+                excluded=used_covers,
+            )
+            if picks:
+                assets_patch["hotelDivider"] = _ref(picks[0])
+                used_covers.add(picks[0].r2_key)
+                rationale.append({
+                    "fieldId": "assets.hotelDivider",
+                    "candidateCount": len(hotel_divider_pool),
+                    "reason": "hotel scenic asset",
+                })
+
+        # 5. Resolve Stays Hotels
         patched_hotels: dict[int, dict[str, Any]] = {}
         for index, hotel in enumerate(hotels):
-            hotel = _record(hotel); changes: dict[str, Any] = {}
-            exact = self._accommodation_pool(hotel.get("destinationRef"), hotel.get("name"))
-            destination = self._destination_pool(hotel.get("destinationRef"), fallback_ref=hotel)
-            if not self._has_assigned_r2(hotel.get("hotelImage")):
-                pick = self._pick(quotation_id=quotation_id, lang=lang, field_id=f"stays.hotels.{index}.hotelImage", pool=exact or destination, preferred=("exterior",))[0:1]
-                if pick: changes["hotelImage"] = _ref(pick[0])
-            if not self._has_assigned_r2(hotel.get("roomImage")):
-                pick = self._pick(quotation_id=quotation_id, lang=lang, field_id=f"stays.hotels.{index}.roomImage", pool=exact or destination, preferred=("room", "interior"))[0:1]
-                if pick: changes["roomImage"] = _ref(pick[0])
-            if changes:
-                patched_hotels[index] = changes
-                for field in changes: rationale.append({"fieldId": f"stays.hotels.{index}.{field}", "candidateCount": len(exact or destination), "reason": "accommodation catalogue" if exact else "destination fallback"})
-        if patched_hotels: patch["stays"]["hotels"] = patched_hotels
-        return {"resolverVersion": RESOLVER_VERSION, "patch": patch, "rationale": rationale}
+            hotel_rec = _record(hotel)
+            hotel_changes: dict[str, Any] = {}
+            hotel_name = hotel_rec.get("name")
+            hotel_dest_aliases = destination_aliases(hotel_rec.get("destinationRef"), fallback_ref=hotel_rec) or trip_dest_aliases
+            hotel_tokens = accommodation_distinct_tokens(hotel_name)
+
+            hotel_pool = self._accommodation_pool(hotel_tokens, hotel_dest_aliases, fallback_aliases=trip_dest_aliases)
+
+            if not self._has_assigned_r2(hotel_rec.get("hotelImage")):
+                picks = self._pick(
+                    quotation_id=quotation_id,
+                    lang=lang,
+                    field_id=f"stays.hotels.{index}.hotelImage",
+                    pool=hotel_pool,
+                    preferred=("exterior", "generic"),
+                )
+                if picks:
+                    hotel_changes["hotelImage"] = _ref(picks[0])
+
+            if not self._has_assigned_r2(hotel_rec.get("roomImage")):
+                picked_keys = {hotel_changes["hotelImage"]["r2Key"]} if "hotelImage" in hotel_changes else set()
+                picks = self._pick(
+                    quotation_id=quotation_id,
+                    lang=lang,
+                    field_id=f"stays.hotels.{index}.roomImage",
+                    pool=hotel_pool,
+                    preferred=("room", "interior", "generic"),
+                    excluded=picked_keys,
+                )
+                if picks:
+                    hotel_changes["roomImage"] = _ref(picks[0])
+
+            if hotel_changes:
+                patched_hotels[index] = hotel_changes
+                for field in hotel_changes:
+                    rationale.append({
+                        "fieldId": f"stays.hotels.{index}.{field}",
+                        "candidateCount": len(hotel_pool),
+                        "reason": "accommodation catalogue" if any("accommodations" in p.parent_prefix for p in hotel_pool) else "destination stay fallback",
+                    })
+
+        if patched_hotels:
+            stays_patch["hotels"] = patched_hotels
+
+        has_changes = bool(assets_patch or patched_days or patched_hotels)
+        patch = {
+            "assets": assets_patch,
+            "itinerary": itinerary_patch,
+            "stays": stays_patch,
+        }
+
+        applied_count = (
+            len(assets_patch)
+            + sum(len(d.get("images", {}).get("carousel", [])) for d in patched_days.values())
+            + sum(len(h) for h in patched_hotels.values())
+        )
+
+        return {
+            "resolverVersion": RESOLVER_VERSION,
+            "patch": patch,
+            "rationale": rationale,
+            "appliedCount": applied_count,
+            "hasChanges": has_changes,
+        }
+

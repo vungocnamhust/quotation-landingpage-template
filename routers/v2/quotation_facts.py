@@ -326,9 +326,27 @@ async def apply_quotation_media_defaults_v2(
             )
         next_document = copy.deepcopy(current.document_json)
         result = await h._apply_missing_media_defaults(session, next_document, quotation_id, effective_lang)
-        if payload.dryRun or not result["patch"]:
+        has_changes = result.get("hasChanges", False)
+        applied_count = result.get("appliedCount", 0)
+
+        if payload.dryRun or not has_changes:
             canonical = h._hydrate_canonical_quote_document(next_document, quotation, lang=effective_lang, revision=current.revision)
-            return {"ok": True, "dryRun": payload.dryRun, "applied": bool(result["patch"]), "document": canonical, "currentRevision": current.revision, "rationale": result["rationale"]}
+            return {
+                "ok": True,
+                "dryRun": payload.dryRun,
+                "applied": False,
+                "appliedCount": applied_count if payload.dryRun else 0,
+                "hasChanges": has_changes,
+                "document": canonical,
+                "currentRevision": current.revision,
+                "rationale": result["rationale"],
+                "message": (
+                    "No matching media found or all slots already assigned."
+                    if not has_changes
+                    else f"Previewed {applied_count} matching media defaults."
+                ),
+            }
+
         validated = h._normalize_quote_document_structure_or_422(
             h._hydrate_canonical_quote_document(next_document, quotation, lang=effective_lang, revision=payload.baseRevision)
         )
@@ -347,4 +365,15 @@ async def apply_quotation_media_defaults_v2(
             change_source="apply_media_defaults",
         )
         await session.commit()
-    return {"ok": True, "dryRun": False, "applied": True, "document": canonical, "currentRevision": saved.revision, "rationale": result["rationale"]}
+    return {
+        "ok": True,
+        "dryRun": False,
+        "applied": True,
+        "appliedCount": applied_count,
+        "hasChanges": True,
+        "document": canonical,
+        "currentRevision": saved.revision,
+        "rationale": result["rationale"],
+        "message": f"Successfully applied {applied_count} matching media defaults.",
+    }
+

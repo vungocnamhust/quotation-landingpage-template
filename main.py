@@ -7642,46 +7642,6 @@ async def put_quotation_presentation_overrides_v2(
     return {"ok": True, "document": canonical, "currentRevision": saved.revision}
 
 
-@app.post("/api/v2/quotations/{quotation_id}/facts/media-defaults")
-async def apply_quotation_media_defaults_v2(
-    quotation_id: str,
-    payload: PresentationMediaDefaultsRequest,
-    lang: str | None = None,
-    principal: Principal = Depends(require_editor),
-    _owned=Depends(require_owned_quotation),
-):
-    """Preview or atomically apply deterministic defaults to empty canonical slots."""
-    async with _get_db_session_factory()() as session:
-        quotes, documents = QuotationRepository(session), QuotationDocumentRepository(session)
-        quotation = await quotes.get_quotation_by_id(quotation_id)
-        if quotation is None or quotation.template_name != V2_RENDERER_NAME:
-            raise HTTPException(status_code=404, detail="Quotation was not found.")
-        effective_lang = lang or quotation.baseline_lang
-        current = await documents.get_current_document(quotation_id, effective_lang)
-        if current is None:
-            raise HTTPException(status_code=404, detail="Canonical document was not found.")
-        if current.revision != payload.baseRevision:
-            raise HTTPException(status_code=409, detail={"message": "Media defaults revision conflict.", "currentRevision": current.revision})
-        catalogue = await MediaLibraryRepository(session).list_active_candidates()
-        resolver = BrochureMediaResolver(Candidate(item.r2_key, item.parent_prefix, item.width, item.height, item.preview_status == "ready") for item in catalogue)
-        result = resolver.resolve_missing(document=copy.deepcopy(current.document_json), quotation_id=quotation_id, lang=effective_lang)
-        if payload.dryRun:
-            return {"ok": True, "dryRun": True, **result, "currentRevision": current.revision}
-        next_document = copy.deepcopy(current.document_json)
-        _apply_media_default_patch(next_document, result["patch"])
-        presentation = next_document.setdefault("presentation", {})
-        presentation["mediaDefaults"] = {"resolverVersion": result["resolverVersion"], "rationale": result["rationale"]}
-        validated = _normalize_quote_document_structure_or_422(_hydrate_canonical_quote_document(next_document, quotation, lang=effective_lang, revision=payload.baseRevision))
-        try:
-            saved = await documents.save_current_document(quotation_id=quotation_id, lang=effective_lang, document_json=validated, expected_revision=payload.baseRevision)
-        except DocumentRevisionConflictError as exc:
-            raise HTTPException(status_code=409, detail={"message": "Media defaults revision conflict.", "currentRevision": exc.current_revision}) from exc
-        canonical = _hydrate_canonical_quote_document(saved.document_json, quotation, lang=effective_lang, revision=saved.revision)
-        await documents.append_document_revision(quotation_id=quotation_id, lang=effective_lang, revision=saved.revision, document_json=canonical, change_source="apply_media_defaults")
-        await session.commit()
-    return {"ok": True, "dryRun": False, **result, "document": canonical, "currentRevision": saved.revision}
-
-
 def _serialize_media_sync_run(run) -> dict[str, Any]:
     return {
         "id": run.id,

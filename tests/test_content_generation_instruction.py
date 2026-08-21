@@ -155,3 +155,63 @@ class ContentGenerationInstructionTests(unittest.TestCase):
         self.assertEqual(repository.rows[0]["generation_mode"], "manual")
         self.assertEqual(repository.rows[0]["generation_metadata"]["generationStatus"], "manual")
         self.assertFalse(repository.rows[0]["generation_metadata"]["llmCalled"])
+
+    def test_day_output_accepts_empty_activities_and_optional_hero_meta(self):
+        day_empty_activities = DayOutput(
+            title="Day 2 · Mekong Delta",
+            description=["Chèo thuyền thúng"],
+            activities=[],
+        )
+        self.assertEqual(day_empty_activities.activities, [])
+
+        day_default_activities = DayOutput(
+            title="Day 2 · Mekong Delta",
+            description=["Chèo thuyền thúng"],
+        )
+        self.assertEqual(day_default_activities.activities, [])
+
+        hero_empty_meta = HeroOutput(
+            title="Private journey",
+            lede="Quiet luxury.",
+            coverKicker="Journey",
+            heroMeta1="",
+            heroMeta2="",
+            footerText="Review copy",
+        )
+        self.assertEqual(hero_empty_meta.heroMeta1, "")
+        self.assertEqual(hero_empty_meta.heroMeta2, "")
+
+    def test_manual_itinerary_day_candidate_with_empty_activities(self):
+        class Repository:
+            def __init__(self):
+                self.rows = []
+
+            async def create(self, **kwargs):
+                self.rows.append(kwargs)
+                return SimpleNamespace(**kwargs)
+
+        repository = Repository()
+        service = ContentDraftService(repository, BRAND_PROFILES["vietnam_safar"])
+        payload = CreateQuoteRequestV1.model_validate({"trip_facts": {"destinations": ["Mekong Delta"]}})
+        candidate = {
+            "dayNumber": 2,
+            "title": "Day 2 · Mekong Delta",
+            "description": ["Chèo thuyền thúng"],
+            "activities": [],
+        }
+
+        self.assertEqual(ContentDraftService.validate_candidate("itinerary:day:2", candidate), candidate)
+
+        import asyncio
+        asyncio.run(service.create_manual(
+            quotation_id="quo_6801f7395254",
+            payload=payload,
+            facts_hash="facts_hash",
+            document_revision=9,
+            lang="en",
+            scope="itinerary:day:2",
+            candidate=candidate,
+        ))
+        self.assertEqual(repository.rows[0]["candidate_json"]["activities"], [])
+        self.assertEqual(repository.rows[0]["generation_mode"], "manual")
+

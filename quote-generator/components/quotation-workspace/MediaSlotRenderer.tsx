@@ -110,25 +110,18 @@ export function MediaSlotRenderer({ workspace, editorRoute, context = {}, readOn
     </div>;
 }
 
+import { useMediaAutoFill } from "./useMediaAutoFill.ts";
+
 export function BrochureAssetsEditor({ workspace, readOnly, context }: { workspace: MediaWorkspace; readOnly?: boolean; context?: MediaSlotContext }) {
     return <div className="grid gap-3"><MediaSlotRenderer workspace={workspace} editorRoute="facts.brochureAssets" readOnly={readOnly} context={context} /><MediaDefaultsAction workspace={workspace} readOnly={readOnly} /></div>;
 }
 
 export function MediaDefaultsAction({ workspace, readOnly = false }: { workspace: MediaWorkspace; readOnly?: boolean }) {
-    const [message, setMessage] = useState("");
-    const [pending, startTransition] = useTransition();
     const { quotationId, lang, currentRevision, onSaved } = workspace;
+    const { generate, pending, message, lastResult } = useMediaAutoFill(workspace);
+
     if (readOnly || !quotationId || !lang || currentRevision === undefined || !onSaved) return null;
-    const generate = () => startTransition(async () => {
-        try {
-            await quotationFetch(`${API_BASE}/api/v2/quotations/${quotationId}/facts/media-defaults?lang=${encodeURIComponent(lang)}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ baseRevision: currentRevision, dryRun: false }),
-            }, "Missing media could not be generated.");
-            setMessage("Generated missing media defaults."); await onSaved();
-        } catch (error) { setMessage(apiErrorMessage(error)); }
-    });
+
     return (
       <div className="rounded-[var(--radius-card)] border-2 border-dashed border-[color-mix(in_srgb,var(--color-accent)_45%,var(--color-border-strong))] bg-[color-mix(in_srgb,var(--color-accent-wash)_40%,var(--color-surface-white))] p-4 flex flex-wrap items-center justify-between gap-3 shadow-xs">
         <div className="flex flex-wrap items-center gap-2.5 min-w-0">
@@ -140,10 +133,31 @@ export function MediaDefaultsAction({ workspace, readOnly = false }: { workspace
             Let AI find and assign matching destination & stay photos from R2
           </p>
         </div>
-        <button type="button" disabled={pending} onClick={generate} className={cn(getTypographyClassName("buttonSecondary"), "min-h-10 w-fit rounded-[var(--radius-button)] bg-[var(--color-accent)] !text-white hover:bg-[color-mix(in_srgb,var(--color-accent)_85%,black)] px-4 shadow-2xs transition-all disabled:opacity-50")}>
+        <button
+          type="button"
+          disabled={pending}
+          onClick={() => generate(false)}
+          className={cn(
+            getTypographyClassName("buttonSecondary"),
+            "min-h-10 w-fit rounded-[var(--radius-button)] bg-[var(--color-accent)] !text-white hover:bg-[color-mix(in_srgb,var(--color-accent)_85%,black)] px-4 shadow-2xs transition-all disabled:opacity-50 cursor-pointer"
+          )}
+        >
           {pending ? "Generating media…" : "✨ Generate missing media"}
         </button>
-        {message ? <p aria-live="polite" className={cn(getTypographyClassName("caption"), "w-full text-[var(--color-accent)]")}>{message}</p> : null}
+        {message ? (
+          <p
+            aria-live="polite"
+            className={cn(
+              getTypographyClassName("caption"),
+              "w-full",
+              lastResult?.applied
+                ? "text-[var(--color-accent)]"
+                : "text-[var(--color-on-surface)]"
+            )}
+          >
+            {message}
+          </p>
+        ) : null}
       </div>
     );
 }

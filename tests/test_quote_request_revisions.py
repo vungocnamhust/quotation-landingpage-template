@@ -1,9 +1,11 @@
 import os
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+import main
 from db.base import Base
 from schemas.v2.quote_request import QuoteRequestCreateSchema, QuoteRequestEditPayloadSchema
 from services.quote_request_service import QuoteRequestService
@@ -15,11 +17,14 @@ class TestQuoteRequestRevisions(unittest.IsolatedAsyncioTestCase):
         self.db_file.close()
         self.engine = create_async_engine(f"sqlite+aiosqlite:///{self.db_file.name}")
         self.session_factory = async_sessionmaker(self.engine, class_=AsyncSession, expire_on_commit=False)
+        self.session_patch = patch.object(main, "_get_db_session_factory", return_value=self.session_factory)
+        self.session_patch.start()
         async with self.engine.begin() as connection:
             await connection.exec_driver_sql("PRAGMA journal_mode=WAL")
             await connection.run_sync(Base.metadata.create_all)
 
     async def asyncTearDown(self):
+        self.session_patch.stop()
         await self.engine.dispose()
         if os.path.exists(self.db_file.name):
             os.unlink(self.db_file.name)
