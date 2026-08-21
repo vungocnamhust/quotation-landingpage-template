@@ -19,7 +19,7 @@ import {
   PriceText,
   QuoteText,
 } from './atoms.tsx';
-import { normalizePoint } from './sections/sectionHelpers.tsx';
+import RouteMapClientIsland from './RouteMapClientIsland.tsx';
 import {
   chunkItineraryDaysForPdf,
   chunkHotelsForPdf,
@@ -46,11 +46,16 @@ function PdfPage({
   borderVariant = 'none',
   ornamentVariant = 'none',
   showPageHeader = true,
-  watermark = true,
 }: PdfPageProps) {
   const colorScope = documentModel.colors.sections[scope as keyof typeof documentModel.colors.sections];
-  const brandName = textValue(documentModel.page.footer.text) || documentModel.tokens.brandKey || 'Indochine';
-  const quotationRef = [brandName, documentModel.quotationNumber].filter(Boolean).join(' · ');
+  const brandName =
+    textValue(documentModel.page.nav.brandName) ||
+    textValue(documentModel.page.hero.footerMeta) ||
+    documentModel.tokens.brandKey ||
+    'Indochine';
+  const logoSrc =
+    documentModel.page.nav.brandLogoSrc ||
+    documentModel.appChrome?.brandOptions?.[0]?.logoSrc;
   const hasIndochineBorder = borderVariant === 'indochine';
 
   return (
@@ -88,15 +93,15 @@ function PdfPage({
 
       {showPageHeader ? (
         <div className="pdf-page-header">
-          <span className="brand">
-            {documentModel.appChrome?.brandOptions?.[0]?.logoSrc ? (
+          <span className="brand" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+            {logoSrc ? (
               <Image
-                src={documentModel.appChrome.brandOptions[0].logoSrc}
-                alt=""
-                width={14}
-                height={14}
+                src={logoSrc}
+                alt={textValue(documentModel.page.nav.brandLogoAlt) || brandName}
+                width={80}
+                height={20}
                 unoptimized
-                style={{ objectFit: 'contain', display: 'inline-block' }}
+                style={{ maxHeight: '18px', width: 'auto', objectFit: 'contain', display: 'inline-block' }}
               />
             ) : null}
             <span className={getTypographyClassName('overline')}>
@@ -110,12 +115,6 @@ function PdfPage({
       ) : null}
 
       <div className="pdf-brochure-page__content">{children}</div>
-
-      {watermark ? (
-        <div className={`pdf-watermark ${getTypographyClassName('caption')}`}>
-          {`${quotationRef} · Confidential`}
-        </div>
-      ) : null}
     </section>
   );
 }
@@ -183,7 +182,7 @@ function PdfLetter({ documentModel }: { documentModel: DisplayDocument }) {
     >
       <div className="page-inner">
         <header className="pdf-letter__header">
-          <Kicker variant="chapterKicker">{letter.chapterKicker}</Kicker>
+          <Kicker variant="chapterKicker" tone="accent">{letter.chapterKicker}</Kicker>
           <DisplayTitle as="h2" variant="letterTitle">
             {letter.title}
           </DisplayTitle>
@@ -192,7 +191,7 @@ function PdfLetter({ documentModel }: { documentModel: DisplayDocument }) {
         <div className="pdf-letter__grid">
           <aside className="pdf-letter__decor-col">
             {textValue(letter.highlight) ? (
-              <QuoteText variant="letterHighlight">{letter.highlight}</QuoteText>
+              <QuoteText variant="letterHighlight" tone="accent">{letter.highlight}</QuoteText>
             ) : (
               <div />
             )}
@@ -207,25 +206,25 @@ function PdfLetter({ documentModel }: { documentModel: DisplayDocument }) {
           </aside>
           <article className="pdf-letter__body-col">
             <div className="pdf-letter__paragraphs">
-              <BodyCopy variant="letterBody">{letter.greeting}</BodyCopy>
-              <BodyCopy variant="letterBody">{letter.intro}</BodyCopy>
+              <BodyCopy variant="letterBody" tone="default">{letter.greeting}</BodyCopy>
+              <BodyCopy variant="letterBody" tone="default">{letter.intro}</BodyCopy>
               {letter.body.map((paragraph, index) => (
-                <BodyCopy key={`letter-para-${index}`} variant="letterBody">
+                <BodyCopy key={`letter-para-${index}`} variant="letterBody" tone="default">
                   {paragraph}
                 </BodyCopy>
               ))}
-              <BodyCopy variant="letterBody">{letter.outro}</BodyCopy>
+              <BodyCopy variant="letterBody" tone="default">{letter.outro}</BodyCopy>
             </div>
             <div className="pdf-letter__signature">
               <DisplayTitle as="h3" variant="signatureName">
                 {letter.signatureName}
               </DisplayTitle>
               <div className="pdf-letter__signature-meta">
-                <MetaText variant="signatureMeta">{letter.signatureRole}</MetaText>
+                <MetaText variant="signatureMeta" tone="accent">{letter.signatureRole}</MetaText>
                 {letter.signatureContactLine ? (
                   <>
                     <span className={getTypographyClassName('caption')}>·</span>
-                    <MetaText variant="signatureMeta">{letter.signatureContactLine}</MetaText>
+                    <MetaText variant="signatureMeta" tone="muted">{letter.signatureContactLine}</MetaText>
                   </>
                 ) : null}
               </div>
@@ -237,82 +236,12 @@ function PdfLetter({ documentModel }: { documentModel: DisplayDocument }) {
   );
 }
 
-function PdfRouteMapSvg({ route }: { route: DisplayDocument['page']['routeMap'] }) {
-  const mapCenter = route.mapViewport.center || [16.0, 107.5];
-  const latSpan = Math.max(route.mapViewport.latSpan || 8, 0.5);
-  const lngSpan = Math.max(route.mapViewport.lngSpan || 8, 0.5);
-  const sourceMarkers = route.interactiveMarkers.length > 0
-    ? route.interactiveMarkers
-    : route.segments.map((s) => ({
-        sequence: s.sequence,
-        coordinates: s.coordinates,
-        title: s.title,
-        city: s.city,
-        dayLabel: s.dayLabel,
-      }));
-
-  const projectedPoints = sourceMarkers.map((marker, idx) => {
-    const coords = marker.coordinates || [16.0 + (idx - 2) * 2, 107.5 + (idx % 2 === 0 ? -1 : 1)];
-    return {
-      ...marker,
-      ...normalizePoint(coords, mapCenter, latSpan, lngSpan),
-    };
-  });
-
-  const activeSegment =
-    route.segments.find((segment) => segment.sequence === route.initialActiveSegment) ?? route.segments[0];
-
-  const routePath = projectedPoints.reduce((pathStr, point, index) => {
-    if (index === 0) return `M ${point.x.toFixed(2)} ${point.y.toFixed(2)}`;
-    const prev = projectedPoints[index - 1];
-    const midX = (prev.x + point.x) / 2;
-    const midY = (prev.y + point.y) / 2;
-    const dx = point.x - prev.x;
-    const dy = point.y - prev.y;
-    const len = Math.sqrt(dx * dx + dy * dy);
-    const offset = Math.max(1.5, Math.min(6, len * 0.12));
-    const ctrlX = midX - (dy / (len || 1)) * offset;
-    const ctrlY = midY + (dx / (len || 1)) * offset;
-    return `${pathStr} Q ${ctrlX.toFixed(2)} ${ctrlY.toFixed(2)} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`;
-  }, '');
-
-  return (
-    <svg
-      viewBox="0 0 100 100"
-      className="display-route-map__svg"
-      aria-label={textValue(route.overviewAriaLabel)}
-      data-editable={typeof route.overviewAriaLabel === 'string' ? undefined : route.overviewAriaLabel.path}
-      data-edit-owner={typeof route.overviewAriaLabel === 'string' ? undefined : route.overviewAriaLabel.owner}
-      data-edit-mode={typeof route.overviewAriaLabel === 'string' ? undefined : route.overviewAriaLabel.mode}
-      preserveAspectRatio="none"
-    >
-      <path d={routePath} className="pdf-route__line" />
-      {projectedPoints.map((point) => (
-        <g key={point.sequence}>
-          <circle
-            cx={point.x.toFixed(2)}
-            cy={point.y.toFixed(2)}
-            r={activeSegment?.sequence === point.sequence ? '3.2' : '2.3'}
-            className="pdf-route__marker"
-          />
-          <text
-            x={point.x.toFixed(2)}
-            y={(point.y - 5).toFixed(2)}
-            textAnchor="middle"
-            className={`pdf-route__marker-text ${getTypographyClassName('caption')}`}
-          >
-            {textValue(point.dayLabel)}
-          </text>
-        </g>
-      ))}
-    </svg>
-  );
-}
-
 function PdfRouteMap({ documentModel }: { documentModel: DisplayDocument }) {
   const route = documentModel.page.routeMap;
+  const contrastScope = documentModel.colors.sections.chapterContrast;
   const quoteText =
-    textValue(documentModel.page.footer.secondaryMeta) ||
+    textValue(documentModel.page.hero.lede) ||
+    textValue(documentModel.page.letter.highlight) ||
     'Your journeys through Vietnam and Indochina, shaped around living heritage, quiet landscapes and the luxury of time.';
 
   return (
@@ -321,24 +250,45 @@ function PdfRouteMap({ documentModel }: { documentModel: DisplayDocument }) {
       scope="routeMap"
       borderVariant="none"
       ornamentVariant="cyclo"
+      watermark={false}
       className="pdf-route-page"
     >
       <div className="pdf-route__top-half">
-        <Kicker variant="chapterKicker">{route.title}</Kicker>
-        <DisplayTitle as="h2" variant="routeMapTitle">
+        <Kicker variant="chapterKicker" tone="accent" className="pdf-route__kicker">
+          {route.title}
+        </Kicker>
+        <DisplayTitle as="h2" variant="routeMapTitle" className="pdf-route__title">
           {route.title}
         </DisplayTitle>
         {route.description ? (
-          <BodyCopy variant="bodySm">{route.description}</BodyCopy>
+          <BodyCopy variant="bodySm" className="pdf-route__lede">
+            {route.description}
+          </BodyCopy>
         ) : null}
         <div className="pdf-route__map-frame">
-          <PdfRouteMapSvg route={route} />
+          <RouteMapClientIsland
+            viewModel={route}
+            typography={{
+              title: 'routeMapTitle',
+              body: 'bodySm',
+              kicker: 'overline',
+              index: 'caption',
+              metaPrimary: 'timelineTitle',
+              metaSecondary: 'caption',
+            }}
+            mapColors={{
+              route: 'var(--color-accent)',
+              marker: 'var(--color-primary)',
+              activeMarker: 'var(--color-accent)',
+            }}
+            viewMode="pdf"
+          />
         </div>
       </div>
 
       <div className="pdf-route__mid-tier">
         <div style={{ textAlign: 'center', marginBottom: '14px' }}>
-          <Kicker variant="overline">Route Overview</Kicker>
+          <Kicker variant="overline" tone="accent">Route Overview</Kicker>
         </div>
         <div className="pdf-route__timeline">
           {route.segments.map((segment, index) => (
@@ -354,11 +304,10 @@ function PdfRouteMap({ documentModel }: { documentModel: DisplayDocument }) {
                   <DisplayTitle as="h3" variant="timelineTitle">
                     {segment.city}
                   </DisplayTitle>
-                  {segment.duration ? (
-                    <MetaText variant="caption">{segment.duration}</MetaText>
-                  ) : null}
-                  {segment.hotelName ? (
-                    <MetaText variant="caption">{segment.hotelName}</MetaText>
+                  {segment.dayLabel || segment.duration ? (
+                    <MetaText variant="caption" tone="muted">
+                      {(segment.dayLabel ?? segment.duration) as TextValue}
+                    </MetaText>
                   ) : null}
                 </div>
               </div>
@@ -370,7 +319,10 @@ function PdfRouteMap({ documentModel }: { documentModel: DisplayDocument }) {
         </div>
       </div>
 
-      <div className="pdf-route__bottom-tier">
+      <div
+        className="pdf-route__bottom-tier display-color-scope display-color-scope--contrast"
+        style={contrastScope?.style as CSSProperties}
+      >
         <div className="pdf-route__quote-rule" />
         <blockquote className={`pdf-route__quote-text ${getTypographyClassName('quote')}`}>
           &ldquo;{quoteText}&rdquo;
@@ -400,7 +352,11 @@ function PdfChapterDivider({
   tagline?: TextValue;
   closing?: TextValue;
 }) {
-  const brandName = textValue(documentModel.page.footer.text) || documentModel.tokens.brandKey || 'Indochine';
+  const brandName =
+    textValue(documentModel.page.nav.brandName) ||
+    textValue(documentModel.page.hero.footerMeta) ||
+    documentModel.tokens.brandKey ||
+    'Indochine';
   const reference = [brandName, documentModel.quotationNumber].filter(Boolean).join(' · ');
 
   return (

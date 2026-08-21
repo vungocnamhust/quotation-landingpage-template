@@ -6,6 +6,7 @@ import { getTypographyClassName } from '../../config/typography.ts';
 import { cn } from '../../utils/cn.ts';
 import { apiErrorMessage, quotationFetch } from '../../lib/apiError.ts';
 import { useToast } from '../staff-workspace/ToastProvider.tsx';
+import type { MediaPickerContext } from './MediaPicker.tsx';
 
 const MediaDrawer = dynamic(() => import('./MediaDrawer'));
 const API_BASE = process.env.NEXT_PUBLIC_QUOTATION_API_URL ?? '';
@@ -15,6 +16,72 @@ type Descriptor = { fieldId: string; owner: string; kind: string; section: strin
 function record(value: unknown): RecordValue { return value && typeof value === 'object' && !Array.isArray(value) ? value as RecordValue : {}; }
 function label(id: string) { return id.replaceAll('.', ' · '); }
 function ref(value: unknown): MediaRef | null { const item = record(value); return typeof item.r2Key === 'string' && item.r2Key ? { r2Key: item.r2Key, status: 'ready', altText: typeof item.altText === 'string' ? item.altText : '' } : null; }
+
+function getFieldMediaTarget(
+  fieldId: string,
+  document: RecordValue
+): { initialPrefix?: string; context?: MediaPickerContext } {
+  const rawDays = record(document.itinerary).days;
+  const days: unknown[] = Array.isArray(rawDays) ? rawDays : [];
+  const rawHotels = record(document.stays).hotels;
+  const hotels: unknown[] = Array.isArray(rawHotels) ? rawHotels : [];
+
+  if (fieldId.startsWith('itinerary.days.')) {
+    const dayIndex = Number(fieldId.split('.')[2]);
+    const day = record(days[dayIndex]);
+    const destRef = record(day.destinationRef);
+    const prefix =
+      typeof destRef.mediaPrefix === 'string' && destRef.mediaPrefix
+        ? destRef.mediaPrefix
+        : typeof destRef.defaultMediaPrefix === 'string' && destRef.defaultMediaPrefix
+        ? destRef.defaultMediaPrefix
+        : typeof destRef.slug === 'string' && destRef.slug
+        ? `destination/${destRef.slug}`
+        : undefined;
+    const destId = typeof destRef.id === 'string' ? destRef.id : undefined;
+    return {
+      initialPrefix: prefix,
+      context: destId ? { kind: 'destination', destinationId: destId } : undefined,
+    };
+  }
+
+  if (fieldId.startsWith('stays.hotels.')) {
+    const hotelIndex = Number(fieldId.split('.')[2]);
+    const hotel = record(hotels[hotelIndex]);
+    const destRef = record(hotel.destinationRef);
+    const hotelName = typeof hotel.name === 'string' ? hotel.name : undefined;
+    const destId = typeof destRef.id === 'string' ? destRef.id : undefined;
+    const prefix =
+      typeof destRef.mediaPrefix === 'string' && destRef.mediaPrefix
+        ? destRef.mediaPrefix
+        : typeof destRef.defaultMediaPrefix === 'string' && destRef.defaultMediaPrefix
+        ? destRef.defaultMediaPrefix
+        : destId
+        ? 'accommodations'
+        : undefined;
+    return {
+      initialPrefix: prefix,
+      context:
+        destId && hotelName
+          ? { kind: 'accommodation', destinationId: destId, accommodationName: hotelName }
+          : undefined,
+    };
+  }
+
+  if (fieldId === 'assets.hero' || fieldId === 'assets.itineraryDivider' || fieldId === 'assets.hotelDivider') {
+    const firstDay = record(days[0]);
+    const destRef = record(firstDay.destinationRef);
+    const prefix =
+      typeof destRef.mediaPrefix === 'string' && destRef.mediaPrefix
+        ? destRef.mediaPrefix
+        : typeof destRef.defaultMediaPrefix === 'string' && destRef.defaultMediaPrefix
+        ? destRef.defaultMediaPrefix
+        : undefined;
+    return { initialPrefix: prefix };
+  }
+
+  return {};
+}
 
 export default function FactsMediaPanel({ quotationId, lang, document, currentRevision, contract, onSaved }: { quotationId: string; lang: string; document: RecordValue; currentRevision: number; contract?: { fields: Descriptor[] }; onSaved: () => Promise<unknown> | void }) {
   const { toast } = useToast();
@@ -112,6 +179,11 @@ export default function FactsMediaPanel({ quotationId, lang, document, currentRe
     setSelection(null);
   };
 
+  const activeTarget = useMemo(() => {
+    if (!selection) return {};
+    return getFieldMediaTarget(selection.fieldId, document);
+  }, [selection, document]);
+
   return (
     <section className="flex flex-col gap-4 rounded-[var(--radius-card)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] p-5 shadow-2xs">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -205,6 +277,8 @@ export default function FactsMediaPanel({ quotationId, lang, document, currentRe
         onClose={() => setSelection(null)}
         selectionMode={selection?.gallery ? 'multiple' : 'single'}
         maxSelection={selection?.gallery ? 3 : 1}
+        initialPrefix={activeTarget.initialPrefix}
+        context={activeTarget.context}
         onConfirm={confirm}
       />
     </section>

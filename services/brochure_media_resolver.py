@@ -69,7 +69,7 @@ def destination_aliases(destination_ref: Any, fallback_ref: Any = None) -> set[s
     aliases: set[str] = set()
 
     # 1. Raw fields inspection
-    for field in ("id", "destinationId", "slug", "name", "segmentCity", "destination", "city", "overnight", "media_prefix", "mediaPrefix"):
+    for field in ("id", "destinationId", "slug", "name", "segmentCity", "destination", "city", "overnight", "media_prefix", "mediaPrefix", "defaultMediaPrefix"):
         val = str(destination.get(field) or fallback.get(field) or "").strip()
         if not val or val.startswith(("day-", "hotel-", "stay-")):
             continue
@@ -83,11 +83,37 @@ def destination_aliases(destination_ref: Any, fallback_ref: Any = None) -> set[s
         aliases.add(_NON_ALPHANUM.sub("-", no_accent).strip("-"))
         aliases.add(_NON_ALPHANUM.sub("", no_accent))
 
+        # Extract individual path segments if value is a folder path
+        if "/" in val:
+            for sub_segment in val.split("/"):
+                sub_clean = sub_segment.strip().casefold()
+                if len(sub_clean) >= 2 and sub_clean not in ("destination", "accommodations", "vietnam", "thailand", "cambodia", "laos"):
+                    aliases.add(sub_clean)
+                    aliases.add(_NON_ALPHANUM.sub("-", sub_clean).strip("-"))
+                    aliases.add(_NON_ALPHANUM.sub("", sub_clean))
+                    no_accent_sub = remove_diacritics(sub_clean)
+                    aliases.add(no_accent_sub)
+                    aliases.add(_NON_ALPHANUM.sub("-", no_accent_sub).strip("-"))
+                    aliases.add(_NON_ALPHANUM.sub("", no_accent_sub))
+
         # Match using domain rules
         matched_slug = match_destination_slug(val)
         if matched_slug:
             aliases.add(matched_slug)
             aliases.add(matched_slug.replace("-", ""))
+
+    # 1.1 List aliases inspection
+    for key in ("aliases", "searchAliases"):
+        raw_list = destination.get(key) or fallback.get(key)
+        if isinstance(raw_list, (list, tuple, set)):
+            for item in raw_list:
+                if isinstance(item, str) and item.strip():
+                    item_clean = item.strip().casefold()
+                    aliases.add(item_clean)
+                    aliases.add(_NON_ALPHANUM.sub("-", item_clean).strip("-"))
+                    no_accent_item = remove_diacritics(item_clean)
+                    aliases.add(no_accent_item)
+                    aliases.add(_NON_ALPHANUM.sub("-", no_accent_item).strip("-"))
 
     # 2. Enrich with all aliases from DESTINATION_KEYWORD_MAP
     matched_slugs = {a for a in aliases if a in VALID_DESTINATION_SLUGS}

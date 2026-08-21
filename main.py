@@ -7012,7 +7012,14 @@ async def _canonicalize_quote_destinations(payload: CreateQuoteRequestV1) -> tup
             if item is None:
                 missing.append(path)
                 return None
-            return {"id": item.id, "name": item.canonical_name, "slug": item.slug}
+            default_prefix = destination_location(item)
+            return {
+                "id": item.id,
+                "name": item.canonical_name,
+                "slug": item.slug,
+                "mediaPrefix": item.media_prefix,
+                "defaultMediaPrefix": default_prefix,
+            }
 
         route: list[str] = []
         for index, value in enumerate(payload.trip_facts.destinations):
@@ -7482,6 +7489,60 @@ def _apply_media_default_patch(document: dict[str, Any], patch: dict[str, Any]) 
 
 
 async def _apply_missing_media_defaults(session, document: dict[str, Any], quotation_id: str, lang: str) -> dict[str, Any]:
+    # 1. Pre-hydrate destinationRef for itinerary days and hotels using DestinationRepository
+    dest_repo = DestinationRepository(session)
+    itinerary = document.get("itinerary") or {}
+    days = itinerary.get("days") or []
+    for day in days:
+        if isinstance(day, dict):
+            dest_val = day.get("destination") or day.get("city")
+            dest_ref = day.get("destinationRef")
+            query = dest_val or (dest_ref.get("name") if isinstance(dest_ref, dict) else None)
+            if query:
+                resolved = await dest_repo.resolve(str(query))
+                if resolved:
+                    if isinstance(dest_ref, dict):
+                        if not dest_ref.get("mediaPrefix") and resolved.media_prefix:
+                            dest_ref["mediaPrefix"] = resolved.media_prefix
+                        if not dest_ref.get("defaultMediaPrefix"):
+                            dest_ref["defaultMediaPrefix"] = destination_location(resolved)
+                        if not dest_ref.get("slug"):
+                            dest_ref["slug"] = resolved.slug
+                    else:
+                        day["destinationRef"] = {
+                            "id": resolved.id,
+                            "name": resolved.canonical_name,
+                            "slug": resolved.slug,
+                            "mediaPrefix": resolved.media_prefix,
+                            "defaultMediaPrefix": destination_location(resolved),
+                        }
+
+    stays = document.get("stays") or {}
+    hotels = stays.get("hotels") or []
+    for hotel in hotels:
+        if isinstance(hotel, dict):
+            dest_val = hotel.get("destination") or hotel.get("city")
+            dest_ref = hotel.get("destinationRef")
+            query = dest_val or (dest_ref.get("name") if isinstance(dest_ref, dict) else None)
+            if query:
+                resolved = await dest_repo.resolve(str(query))
+                if resolved:
+                    if isinstance(dest_ref, dict):
+                        if not dest_ref.get("mediaPrefix") and resolved.media_prefix:
+                            dest_ref["mediaPrefix"] = resolved.media_prefix
+                        if not dest_ref.get("defaultMediaPrefix"):
+                            dest_ref["defaultMediaPrefix"] = destination_location(resolved)
+                        if not dest_ref.get("slug"):
+                            dest_ref["slug"] = resolved.slug
+                    else:
+                        hotel["destinationRef"] = {
+                            "id": resolved.id,
+                            "name": resolved.canonical_name,
+                            "slug": resolved.slug,
+                            "mediaPrefix": resolved.media_prefix,
+                            "defaultMediaPrefix": destination_location(resolved),
+                        }
+
     catalogue = await MediaLibraryRepository(session).list_active_candidates()
     resolver = BrochureMediaResolver(
         Candidate(item.r2_key, item.parent_prefix, item.width, item.height, item.preview_status == "ready")

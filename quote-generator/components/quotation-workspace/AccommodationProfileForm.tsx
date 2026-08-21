@@ -207,6 +207,7 @@ export default function AccommodationProfileForm({
         open={activeMediaTarget !== null}
         onClose={() => setActiveMediaTarget(null)}
         selectionMode="single"
+        initialPrefix={destinationRef?.mediaPrefix || destinationRef?.defaultMediaPrefix || undefined}
         initialSelection={
           activeMediaTarget && draft[activeMediaTarget]
             ? [draft[activeMediaTarget]!]

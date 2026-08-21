@@ -13,6 +13,8 @@ export interface DestinationCatalogItem {
   longitude?: number | null;
   isActive?: boolean;
   aliases?: string[];
+  mediaPrefix?: string | null;
+  defaultMediaPrefix?: string;
   matchedFrom?: string;
 }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { DisplayDocument } from '../../display/runtimePageBuilder.ts';
 import { quotationFetch, apiErrorMessage } from '../../lib/apiError.ts';
 import type { EditableBrochureContract } from './useQuotationWorkspace.ts';
@@ -412,6 +412,37 @@ export default function DesignCanvas({
 
   const offset = selectedTop ?? 0;
 
+  const activeInitialPrefix = useMemo(() => {
+    if (!activeMediaMatch) return undefined;
+    const fieldId = activeMediaMatch.fieldId;
+    if (fieldId.startsWith('itinerary.days.')) {
+      const dayIndex = Number(fieldId.split('.')[2]);
+      const day = facts?.trip_facts?.itinerary?.[dayIndex];
+      const destRef = day?.destination_ref;
+      return (
+        destRef?.mediaPrefix ||
+        destRef?.defaultMediaPrefix ||
+        (destRef?.slug ? `destination/${destRef.slug}` : undefined)
+      );
+    }
+    if (fieldId.startsWith('stays.hotels.')) {
+      const hotelIndex = Number(fieldId.split('.')[2]);
+      const hotel = facts?.service_facts?.hotels?.[hotelIndex];
+      const destRef = hotel?.destination_ref;
+      return (
+        destRef?.mediaPrefix ||
+        destRef?.defaultMediaPrefix ||
+        (destRef?.slug ? `destination/${destRef.slug}` : undefined)
+      );
+    }
+    if (fieldId === 'assets.hero' || fieldId === 'assets.itineraryDivider' || fieldId === 'assets.hotelDivider') {
+      const firstDay = facts?.trip_facts?.itinerary?.[0];
+      const destRef = firstDay?.destination_ref;
+      return destRef?.mediaPrefix || destRef?.defaultMediaPrefix || undefined;
+    }
+    return undefined;
+  }, [activeMediaMatch, facts]);
+
   return (
     <>
       <section ref={sectionRef} className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
@@ -453,6 +484,7 @@ export default function DesignCanvas({
               r2Keys.map((k) => ({ r2Key: k, source: 'manual' }))
             );
           }}
+          initialPrefix={activeInitialPrefix}
           context={
             activeMediaMatch.slot.pickerContext === 'library'
               ? undefined

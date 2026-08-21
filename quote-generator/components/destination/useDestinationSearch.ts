@@ -60,6 +60,8 @@ export function useDestinationSearch(query: string) {
       id: item.id,
       name: item.name,
       slug: item.slug,
+      mediaPrefix: item.mediaPrefix ?? null,
+      defaultMediaPrefix: item.defaultMediaPrefix,
       matchedFrom: item.matchedFrom,
     }));
   }, [hasQuery, data]);

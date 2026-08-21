@@ -5,6 +5,8 @@ export type DestinationRef = {
   id: string;
   name: string;
   slug: string;
+  mediaPrefix?: string | null;
+  defaultMediaPrefix?: string;
   matchedFrom?: string;
 };
 
