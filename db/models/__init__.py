@@ -9,6 +9,8 @@ from db.models.quotation import (
     QuotationDocument,
     QuotationDocumentRevision,
     QuotationRequest,
+    QuotationVersionFacts,
+    QuotationVersionImpact,
 )
 from db.models.quote_request import QuoteRequest, QuoteRequestRevision
 from db.models.partner import PartnerProfile
@@ -30,6 +32,8 @@ __all__ = [
     "QuotationDocumentRevision",
     "QuotationPublication",
     "QuotationRequest",
+    "QuotationVersionFacts",
+    "QuotationVersionImpact",
     "QuoteRequest",
     "QuoteRequestRevision",
     "PublicationRelease",
@@ -40,5 +44,4 @@ __all__ = [
     "TravelDesignerProfile",
     "TravelStyleTag",
 ]
-
 

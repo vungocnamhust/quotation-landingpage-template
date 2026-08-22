@@ -6,7 +6,15 @@ from typing import Any
 from sqlalchemy import Select, and_, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from db.models.quotation import Quotation, QuotationContentDraft, QuotationDocument, QuotationDocumentRevision, QuotationRequest
+from db.models.quotation import (
+    Quotation,
+    QuotationContentDraft,
+    QuotationDocument,
+    QuotationDocumentRevision,
+    QuotationRequest,
+    QuotationVersionFacts,
+    QuotationVersionImpact,
+)
 from repositories.errors import DocumentRevisionConflictError
 
 _UNSET = object()
@@ -34,6 +42,11 @@ class QuotationRepository:
         source_snapshot_at: datetime | None = None,
         designer_profile_id: str | None = None,
         created_by_profile_id: str | None = None,
+        quotation_family_id: str | None = None,
+        business_version: int | None = None,
+        parent_quotation_id: str | None = None,
+        source_request_id: str | None = None,
+        source_request_revision: int | None = None,
     ) -> Quotation:
         quotation = Quotation(
             id=quotation_id,
@@ -49,12 +62,59 @@ class QuotationRepository:
             template_name=template_name,
             designer_profile_id=designer_profile_id,
             created_by_profile_id=created_by_profile_id or designer_profile_id,
+            quotation_family_id=quotation_family_id,
+            business_version=business_version,
+            parent_quotation_id=parent_quotation_id,
+            source_request_id=source_request_id,
+            source_request_revision=source_request_revision,
             customer_name=customer_name,
             title=title,
         )
         self.session.add(quotation)
         await self.session.flush()
         return quotation
+
+    async def list_versions_for_request_revision(self, request_id: str, revision: int) -> list[Quotation]:
+        result = await self.session.scalars(
+            select(Quotation)
+            .where(Quotation.source_request_id == request_id, Quotation.source_request_revision == revision)
+            .order_by(Quotation.quotation_family_id.asc(), Quotation.business_version.asc(), Quotation.created_at.asc())
+        )
+        return list(result.all())
+
+    async def next_business_version(self, quotation_family_id: str) -> int:
+        value = await self.session.scalar(
+            select(func.max(Quotation.business_version)).where(Quotation.quotation_family_id == quotation_family_id)
+        )
+        return int(value or 0) + 1
+
+    async def get_version_facts(self, quotation_id: str) -> QuotationVersionFacts | None:
+        return await self.session.scalar(
+            select(QuotationVersionFacts).where(QuotationVersionFacts.quotation_id == quotation_id)
+        )
+
+    async def create_version_facts(
+        self,
+        *,
+        quotation_id: str,
+        canonical_facts_json: dict[str, Any],
+        resolved_facts_json: dict[str, Any],
+        facts_hash: str,
+        source_request_id: str | None,
+        source_request_revision: int | None,
+    ) -> QuotationVersionFacts:
+        row = QuotationVersionFacts(
+            quotation_id=quotation_id,
+            canonical_facts_json=canonical_facts_json,
+            resolved_facts_json=resolved_facts_json,
+            facts_hash=facts_hash,
+            source_request_id=source_request_id,
+            source_request_revision=source_request_revision,
+        )
+        self.session.add(row)
+        await self.session.flush()
+        return row
+
 
     async def create_quotation_request(
         self,
@@ -174,6 +234,42 @@ class QuotationRepository:
             quotation.current_version = current_version
         await self.session.flush()
         return quotation
+
+
+class QuotationVersionImpactRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self.session = session
+
+    async def create_many(self, quotation_id: str, impacts: list[dict[str, str]]) -> list[QuotationVersionImpact]:
+        rows = [QuotationVersionImpact(quotation_id=quotation_id, **impact) for impact in impacts]
+        self.session.add_all(rows)
+        await self.session.flush()
+        return rows
+
+    async def list(self, quotation_id: str, *, pending_only: bool = False) -> list[QuotationVersionImpact]:
+        statement = select(QuotationVersionImpact).where(QuotationVersionImpact.quotation_id == quotation_id)
+        if pending_only:
+            statement = statement.where(QuotationVersionImpact.status == "pending")
+        result = await self.session.scalars(
+            statement.order_by(QuotationVersionImpact.stage, QuotationVersionImpact.scope, QuotationVersionImpact.id)
+        )
+        return list(result.all())
+
+    async def resolve(self, quotation_id: str, impact_id: int, *, note: str, profile_id: str | None) -> QuotationVersionImpact | None:
+        row = await self.session.scalar(
+            select(QuotationVersionImpact).where(
+                QuotationVersionImpact.id == impact_id,
+                QuotationVersionImpact.quotation_id == quotation_id,
+            )
+        )
+        if row is None:
+            return None
+        row.status = "resolved"
+        row.resolution_note = note
+        row.resolved_by_profile_id = profile_id
+        row.resolved_at = datetime.now().astimezone()
+        await self.session.flush()
+        return row
 
 
 class QuotationDocumentRepository:

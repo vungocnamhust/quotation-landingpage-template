@@ -3,7 +3,7 @@ from repositories.accommodation_repository import AccommodationRepository
 from repositories.errors import DocumentRevisionConflictError
 from repositories.media_repository import MediaRepository
 from repositories.publication_repository import PublicationRepository, PublicationTargetRepository
-from repositories.quotation_repository import ContentDraftRepository, QuotationDocumentRepository, QuotationRepository
+from repositories.quotation_repository import ContentDraftRepository, QuotationDocumentRepository, QuotationRepository, QuotationVersionImpactRepository
 
 __all__ = [
     "BrandRepository",
@@ -15,4 +15,5 @@ __all__ = [
     "ContentDraftRepository",
     "QuotationDocumentRepository",
     "QuotationRepository",
+    "QuotationVersionImpactRepository",
 ]

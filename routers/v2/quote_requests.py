@@ -15,6 +15,8 @@ from schemas.v2.quote_request import (
     QuoteRequestRevisionDetailSchema,
     QuoteRequestRevisionSummarySchema,
     QuoteRequestRevisionsListResponseSchema,
+    RequestQuotationVersionsResponseSchema,
+    QuotationVersionSummarySchema,
     QuoteRequestUpdateSchema,
 )
 from services.quote_request_service import QuoteRequestService
@@ -132,6 +134,34 @@ async def get_quote_request_revision(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(err)) from err
 
 
+@router.get("/{request_id}/revisions/{revision}/quotation-versions", response_model=RequestQuotationVersionsResponseSchema)
+async def list_quotation_versions_for_request_revision(
+    request_id: str,
+    revision: int,
+    session: DbSessionDep,
+) -> RequestQuotationVersionsResponseSchema:
+    service = QuoteRequestService(session)
+    try:
+        await service.get_request_revision(request_id, revision)
+    except KeyError as err:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(err)) from err
+    from repositories.quotation_repository import QuotationRepository
+    versions = await QuotationRepository(session).list_versions_for_request_revision(request_id, revision)
+    return RequestQuotationVersionsResponseSchema(
+        request_id=request_id,
+        request_revision=revision,
+        items=[QuotationVersionSummarySchema(
+            quotation_id=item.id,
+            quotation_family_id=item.quotation_family_id or "",
+            business_version=item.business_version or 0,
+            parent_quotation_id=item.parent_quotation_id,
+            status=item.status,
+            title=item.title,
+            created_at=item.created_at,
+        ) for item in versions],
+    )
+
+
 @router.patch("/{request_id}", response_model=QuoteRequestResponseSchema)
 async def update_quote_request(
     request_id: str,
@@ -191,4 +221,3 @@ async def generate_quotation_from_request(
         raise
     except Exception as err:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to generate quotation: {err}") from err
-

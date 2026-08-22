@@ -14,6 +14,7 @@ from repositories import (
     ContentDraftRepository,
     QuotationDocumentRepository,
     QuotationRepository,
+    QuotationVersionImpactRepository,
 )
 from repositories.errors import DocumentRevisionConflictError
 from schemas.brand_contract import _require_active_v2_brand, _serialize_brand_render_profile
@@ -632,6 +633,13 @@ async def apply_content_draft_v2(
         merged.setdefault("meta", {})["revision"] = saved.revision
         await documents.append_document_revision(quotation_id=quotation_id, lang=draft.lang, revision=saved.revision, document_json=merged, change_source="apply_content_draft")
         draft.status = "applied"
+        # Applying reviewed canonical content is the explicit resolution for
+        # the matching successor-version impact, never an automatic mutation.
+        for impact in await QuotationVersionImpactRepository(session).list(quotation_id, pending_only=True):
+            if impact.stage == "content" and impact.scope == draft.scope:
+                await QuotationVersionImpactRepository(session).resolve(
+                    quotation_id, impact.id, note="Resolved by applying reviewed content draft.", profile_id=None
+                )
         await drafts.mark_pending_drafts_stale(quotation_id)
         draft.status = "applied"
         await session.commit()

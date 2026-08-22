@@ -58,6 +58,7 @@ from repositories import (
     PublicationTargetRepository,
     QuotationDocumentRepository,
     QuotationRepository,
+    QuotationVersionImpactRepository,
 )
 from services.facts_resolver import FactsResolutionError, FactsResolver
 from services.facts_contract import normalize_legacy_facts_snapshot
@@ -102,6 +103,7 @@ from routers.v2.media import router as legacy_media_router
 from routers.v2.workspace import router as workspace_router
 from routers.v2.quotation_facts import router as quotation_facts_router
 from routers.v2.quotation_document import router as quotation_document_router
+from routers.v2.quotation_versions import router as quotation_versions_router
 from routers.v2.destinations import router as destinations_router
 from routers.v2.accommodations import router as accommodations_router
 from routers.v2.travel_designers import router as travel_designers_router
@@ -205,6 +207,7 @@ app.include_router(legacy_media_router)
 app.include_router(workspace_router)
 app.include_router(quotation_facts_router)
 app.include_router(quotation_document_router)
+app.include_router(quotation_versions_router)
 app.include_router(destinations_router)
 app.include_router(accommodations_router)
 app.include_router(travel_designers_router)
@@ -4916,8 +4919,31 @@ async def create_canonical_quotation_v2(payload: CreateQuoteRequestV1, principal
     try:
         async with _get_db_session_factory()() as session:
             quotes, documents = QuotationRepository(session), QuotationDocumentRepository(session)
-            quotation = await quotes.create_quotation(quotation_id=quotation_id, opportunity_id=canonical.opportunity_id, brand_id=canonical.brand_id or "", template_name=V2_RENDERER_NAME, baseline_lang=lang, customer_name=canonical.customer_facts.customer_name, title="Untitled journey", status="draft", source_kind="manual", source_snapshot_at=datetime.now().astimezone(), designer_profile_id=designer.id, created_by_profile_id=creator_designer.id)
+            # Direct intake still enters the same provenance model as a staff
+            # Request. It is intentionally internal and never impersonates a
+            # customer-submitted Request.
+            from repositories.quote_request_repository import QuoteRequestRepository
+            internal_request_id = f"req_internal_{uuid.uuid4().hex[:12]}"
+            internal_request = await QuoteRequestRepository(session).create_request(
+                request_id=internal_request_id,
+                role="traveller",
+                customer_name=canonical.customer_facts.customer_name or "Internal quotation",
+                email=f"{internal_request_id}@internal.invalid",
+                destinations=canonical.trip_facts.destinations,
+                start_date=canonical.trip_facts.start_date,
+                end_date=canonical.trip_facts.end_date,
+                adults=canonical.customer_facts.adults,
+                children=canonical.customer_facts.children,
+                kid_ages=canonical.customer_facts.kid_ages,
+                travel_style=canonical.customer_facts.travel_style,
+                special_requirements="\n".join(canonical.trip_facts.special_requirements),
+                payload_json={**canonical.model_dump(mode="json"), "internal_intake": True},
+                created_by_profile_id=creator_designer.id,
+            )
+            quotation = await quotes.create_quotation(quotation_id=quotation_id, opportunity_id=internal_request.id, brand_id=canonical.brand_id or "", template_name=V2_RENDERER_NAME, baseline_lang=lang, customer_name=canonical.customer_facts.customer_name, title="Untitled journey", status="draft", source_kind="manual", source_snapshot_at=datetime.now().astimezone(), designer_profile_id=designer.id, created_by_profile_id=creator_designer.id, quotation_family_id=quotation_id, business_version=1, source_request_id=internal_request.id, source_request_revision=1)
             await quotes.create_quotation_request(quotation_id=quotation_id, request_json=canonical.model_dump(mode="json"))
+            await quotes.create_version_facts(quotation_id=quotation_id, canonical_facts_json=canonical.model_dump(mode="json"), resolved_facts_json=resolved, facts_hash=resolved["factsHash"], source_request_id=internal_request.id, source_request_revision=1)
+            await QuoteRequestRepository(session).update_status(request_id=internal_request.id, status="quotation_created", linked_quotation_id=quotation_id)
             await _apply_missing_media_defaults(session, document, quotation_id, lang)
             saved = await documents.save_current_document(quotation_id=quotation_id, lang=lang, document_json=document, expected_revision=0)
             document["meta"]["revision"] = saved.revision
@@ -8785,6 +8811,7 @@ async def _canonical_review_status(quotation_id: str, lang: str | None = None) -
             raise HTTPException(status_code=404, detail="Quotation review state was not found.")
         facts, resolved = await _resolve_v2_facts(CreateQuoteRequestV1.model_validate(normalize_legacy_facts_snapshot(request_row.request_json)))
         content = await drafts.list(quotation_id, lang)
+        pending_impacts = await QuotationVersionImpactRepository(session).list(quotation_id, pending_only=True)
         # A pending AI candidate is not a publish blocker by itself. Publish
         # readiness is determined from the canonical document: every enabled
         pending_drafts = sorted({item.scope for item in content if item.status == "draft"})
@@ -8814,7 +8841,8 @@ async def _canonical_review_status(quotation_id: str, lang: str | None = None) -
         presentation_errors.extend(pdf_layout_errors)
         publications = await targets.list_targets(quotation_id, locale=lang)
         summary = [{"targetId": item.id, "brandId": item.brand_id, "status": item.status, "activeReleaseId": item.active_release_id} for item in publications]
-        return {"ready": not resolved["missingInputs"] and not content_blockers and asset_readiness["ready"] and not presentation_errors, "missingInputs": resolved["missingInputs"], "blockingDrafts": pending_drafts, "contentBlockers": content_blockers, "contentReadiness": content_readiness, "presentationErrors": presentation_errors, "assetReadiness": asset_readiness, "currentRevision": document.revision, "publicationTargets": summary}
+        impact_blockers = [f"impact:{item.stage}:{item.scope}" for item in pending_impacts]
+        return {"ready": not resolved["missingInputs"] and not content_blockers and asset_readiness["ready"] and not presentation_errors and not impact_blockers, "missingInputs": resolved["missingInputs"], "blockingDrafts": pending_drafts, "contentBlockers": content_blockers, "contentReadiness": content_readiness, "presentationErrors": presentation_errors, "assetReadiness": asset_readiness, "impactBlockers": impact_blockers, "currentRevision": document.revision, "publicationTargets": summary}
 
 
 @app.get("/api/v2/quotations/{quotation_id}/review-status")
@@ -8844,7 +8872,7 @@ async def _canonical_workflow(quotation_id: str, lang: str | None = None) -> dic
         # Missing publish media must still block review/publish, but must not
         # prevent staff from opening the canvas to see and correct the owner.
         "design": {"ready": facts_ready and not unresolved and not review["presentationErrors"], "presentationErrors": review["presentationErrors"], "assetReadiness": review["assetReadiness"]},
-        "review": {"ready": review["ready"], "blockers": [*review["missingInputs"], *(item["path"] for item in unresolved), *review["presentationErrors"], *review["assetReadiness"]["missing"], *review["assetReadiness"]["invalid"]]},
+        "review": {"ready": review["ready"], "blockers": [*review["missingInputs"], *(item["path"] for item in unresolved), *review["presentationErrors"], *review["assetReadiness"]["missing"], *review["assetReadiness"]["invalid"], *review.get("impactBlockers", [])]},
         "publicationTargets": review["publicationTargets"],
     }
 

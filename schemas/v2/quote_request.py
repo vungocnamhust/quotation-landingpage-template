@@ -329,6 +329,22 @@ class QuoteRequestRevisionsListResponseSchema(BaseModel):
     items: list[QuoteRequestRevisionSummarySchema]
 
 
+class QuotationVersionSummarySchema(BaseModel):
+    quotation_id: str
+    quotation_family_id: str
+    business_version: int
+    parent_quotation_id: str | None = None
+    status: str
+    title: str | None = None
+    created_at: datetime
+
+
+class RequestQuotationVersionsResponseSchema(BaseModel):
+    request_id: str
+    request_revision: int
+    items: list[QuotationVersionSummarySchema] = Field(default_factory=list)
+
+
 class QuoteRequestListResponseSchema(BaseModel):
     items: list[QuoteRequestResponseSchema]
     total: int
@@ -378,6 +394,7 @@ class QuotationMinimalOverridesSchema(BaseModel):
     kid_ages: list[int] = Field(default_factory=list)
     start_date: str | None = None
     end_date: str | None = None
+    request_revision: int | None = Field(default=None, ge=1)
 
     itinerary_with_stays: list[MinimalItineraryDayWithStayOverrideSchema] = Field(default_factory=list)
     pricing: MinimalCommercialPricingOverrideSchema | None = None
@@ -392,5 +409,3 @@ class GenerateQuotationFromRequestResponseSchema(BaseModel):
     status: str = "draft"
     current_revision: int = 1
     facts_snapshot: dict[str, Any] = Field(default_factory=dict)
-
-

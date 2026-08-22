@@ -105,6 +105,7 @@ export default function QuotationWorkspaceClient({
   const [editableFacts, setEditableFacts] = useState<QuotationFacts | null>(
     null
   );
+  const [isEditingQuotation, setIsEditingQuotation] = useState(false);
   const [pending, startTransition] = useTransition();
   const workspace = useQuotationWorkspace(quotationId, lang);
   const refreshWorkspace = workspace.refresh;
@@ -114,6 +115,7 @@ export default function QuotationWorkspaceClient({
   const { data: workflowData } = workspace.workflow;
   const { data: options } = workspace.options;
   const { data: brandsResponse } = workspace.brands;
+  const { data: impactsData } = workspace.impacts;
 
   const opportunityId =
     factsData?.source?.opportunityId ||
@@ -222,6 +224,23 @@ export default function QuotationWorkspaceClient({
 
   function saveFacts(facts: QuotationFacts) {
     void saveFactsWithRefresh(facts, { targetStageAfterSave: "content" });
+  }
+
+  function createBusinessVersion(facts: QuotationFacts) {
+    if (!documentData) return;
+    startTransition(async () => {
+      try {
+        const result = await workspace.request<{ redirectUrl: string }>(
+          `/api/v2/quotations/${quotationId}/versions`,
+          { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ facts, baseRevision: documentData.currentRevision }) },
+          "Unable to create the quotation version."
+        );
+        toast("New quotation version created. Review the impacted content and design.", "success");
+        router.push(result.redirectUrl);
+      } catch (error) {
+        notify({ message: apiErrorMessage(error), type: "error", persistent: true, scope: "quotation:version", action: { label: "Retry", onClick: () => createBusinessVersion(facts) } });
+      }
+    });
   }
 
   function savePresentation() {
@@ -338,7 +357,8 @@ export default function QuotationWorkspaceClient({
     return false;
   };
 
-  const editable = factsData?.source?.kind === "manual";
+  const immutableFacts = factsData?.businessVersion?.immutable === true;
+  const editable = factsData?.source?.kind === "manual" && (!immutableFacts || isEditingQuotation);
 
   const activeFacts =
     editableFacts ??
@@ -461,6 +481,9 @@ export default function QuotationWorkspaceClient({
                 <span>Request Recap</span>
               </button>
             ) : null}
+            {immutableFacts && !isEditingQuotation ? (
+              <button type="button" onClick={() => setIsEditingQuotation(true)} className={cn(getTypographyClassName("buttonSecondary"), "flex items-center gap-2 min-h-11 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-4 text-[var(--color-on-surface)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)]")}>Edit Quotation</button>
+            ) : null}
 
             <button
               type="button"
@@ -548,10 +571,12 @@ export default function QuotationWorkspaceClient({
             options={options}
             resolvedFacts={factsData.resolvedFacts}
             readOnly={!editable}
-            allowSubmitWhenReadOnly={!editable}
+            allowSubmitWhenReadOnly={!editable && !immutableFacts}
             isDirty={isFactsDirty}
             sourceNote={
-              editable
+              isEditingQuotation
+                ? `Editing creates business version ${(factsData?.businessVersion?.number ?? 0) + 1}; the current version remains immutable.`
+                : editable
                 ? "Manual quotation · changes create a new fact revision and stale older candidates."
                 : `DMC Core owns this snapshot${
                     factsData?.source?.opportunityId
@@ -565,7 +590,7 @@ export default function QuotationWorkspaceClient({
             }
             onChange={updateEditableFacts}
             onSubmit={() =>
-              editable ? saveFacts(activeFacts) : savePresentation()
+              isEditingQuotation ? createBusinessVersion(activeFacts) : editable ? saveFacts(activeFacts) : savePresentation()
             }
             pending={pending || isWorkflowSaving}
             deepLink={factsDeepLink}
@@ -580,7 +605,9 @@ export default function QuotationWorkspaceClient({
               }
             } : undefined}
             submitLabel={
-              editable
+              isEditingQuotation
+                ? "Create new quotation version"
+                : editable
                 ? "Save facts & prepare content"
                 : "Save presentation choices"
             }
@@ -622,6 +649,12 @@ export default function QuotationWorkspaceClient({
         ) : null}
 
         {stage === "content" ? (
+          <>
+          {impactsData?.items.some((item) => item.status === "pending") ? (
+            <div className="rounded-[var(--radius-card)] border border-[var(--color-border-strong)] bg-[var(--color-accent-wash)] p-4">
+              <p className={cn(getTypographyClassName("bodyMd"), "text-[var(--color-on-surface)]")}>Review the pending impacts before publishing. Content scopes are shown below; resolve each item after applying or retaining reviewed work.</p>
+            </div>
+          ) : null}
           <ContentStudioClient
             quotationId={quotationId}
             lang={lang}
@@ -644,6 +677,7 @@ export default function QuotationWorkspaceClient({
               request: workspace.request,
             }}
           />
+          </>
         ) : null}
 
         {stage === "design" && documentData ? (
@@ -672,7 +706,7 @@ export default function QuotationWorkspaceClient({
                   model={liveDocumentModel}
                   document={documentData.document}
                   currentRevision={documentData.currentRevision}
-                  canEditDesignerFacts={editable}
+                  canEditDesignerFacts={editable && !immutableFacts}
                   contract={documentData.editableContract}
                   facts={factsData?.facts}
                   onSaved={() => workspace.refresh()}
@@ -682,6 +716,7 @@ export default function QuotationWorkspaceClient({
                         factsData.facts,
                         next
                       );
+                      if (immutableFacts) throw new Error("Designer Facts are immutable; use Design overrides.");
                       await workspace.saveFacts(updatedFacts);
                       toast("Presentation copy saved to Facts.", "success");
                     } catch (error) {

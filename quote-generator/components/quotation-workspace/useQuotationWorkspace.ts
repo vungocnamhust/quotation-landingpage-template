@@ -13,7 +13,9 @@ export type ContentFactInput = { id: string; label: string; path: Array<string |
 export type ContentEditor = { owner: 'fact' | 'fact-derived' | 'content' | 'design'; generation: boolean; editor: 'narrative' | 'fact-preview' | 'checklist'; recipeVersion: string; schemaVersion: string; fields: ContentEditorField[]; factInputs: ContentFactInput[]; defaultInstructions: { storytelling: string; detailed: string } | null };
 export type PromptPreview = { version: string; scope: string; mode: string; systemPrompt: string; userPrompt: string; modeContract: string; effectiveInstruction: string; factsSnapshot: Record<string, unknown> };
 export type ContentDraft = { id: string; scope: string; generationMode: 'storytelling' | 'detailed' | 'manual'; status: 'draft' | 'applied' | 'discarded' | 'stale'; candidate: ContentCandidate; missingInputs: Array<{ path: string; reason: string }>; generation: { cached?: boolean; latencyMs?: number; warnings?: string[]; llmCalled?: boolean; generationStatus?: string; instructionSource?: 'default' | 'custom' | 'manual'; systemPrompt?: string; userPrompt?: string; promptVersion?: string }; sourceDocumentRevision: number; factsSnapshot: { trip?: { title?: string; destinations?: string[] }; itineraryDay?: { destination?: string; summary?: string } }; editor?: ContentEditor };
-export type FactsResponse = { facts: QuotationFacts; resolvedFacts: ResolvedFacts; source: { kind?: string; opportunityId?: string | null; snapshotAt?: string | null }; baselineLang: 'en' | 'vi' | 'ar'; requestBrief?: Record<string, unknown> };
+export type FactsResponse = { facts: QuotationFacts; resolvedFacts: ResolvedFacts; source: { kind?: string; opportunityId?: string | null; snapshotAt?: string | null }; baselineLang: 'en' | 'vi' | 'ar'; requestBrief?: Record<string, unknown>; businessVersion?: { familyId: string; number: number; parentQuotationId?: string | null; sourceRequestId?: string | null; sourceRequestRevision?: number | null; immutable: boolean } };
+export type QuotationImpact = { id: number; stage: 'content' | 'design'; scope: string; action: 'review_content' | 'review_design'; sourcePath: string; targetPath?: string | null; explanation: string; status: 'pending' | 'resolved'; resolutionNote?: string | null; resolvedAt?: string | null };
+export type ImpactsResponse = { items: QuotationImpact[] };
 export type EditableHandoff = {
   stage: 'facts' | 'content' | 'design';
   section: string;
@@ -63,6 +65,7 @@ export function useQuotationWorkspace(quotationId: string, lang: string) {
     options: `${API_BASE}/api/v2/quotation-options`,
     brands: `${API_BASE}/api/v2/brands`,
     publications: `${API_BASE}/api/v2/quotations/${quotationId}/publications?lang=${encodeURIComponent(lang)}`,
+    impacts: `${API_BASE}/api/v2/quotations/${quotationId}/impacts`,
   }), [lang, quotationId]);
 
   const swrConfig = useMemo(
@@ -86,9 +89,10 @@ export function useQuotationWorkspace(quotationId: string, lang: string) {
   const options = useSWR<QuotationOptions>(urls.options, getJson, swrConfig);
   const brands = useSWR<BrandResponse>(urls.brands, getJson, swrConfig);
   const publications = useSWR<PublicationResponse>(urls.publications, getJson, swrConfig);
+  const impacts = useSWR<ImpactsResponse>(urls.impacts, getJson, swrConfig);
   const refresh = useCallback(async () => {
-    await Promise.all([facts.mutate(), document.mutate(), drafts.mutate(), review.mutate(), workflow.mutate(), brands.mutate(), publications.mutate()]);
-  }, [brands, document, drafts, facts, publications, review, workflow]);
+    await Promise.all([facts.mutate(), document.mutate(), drafts.mutate(), review.mutate(), workflow.mutate(), brands.mutate(), publications.mutate(), impacts.mutate()]);
+  }, [brands, document, drafts, facts, impacts, publications, review, workflow]);
   const saveFacts = useCallback(async (value: QuotationFacts) => {
     if (!document.data) throw new Error('The current document revision is not loaded.');
     await quotationFetch(`${urls.facts}?baseRevision=${document.data.currentRevision}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(serializeFactsForApi(value)) }, 'Facts could not be saved.');
@@ -100,5 +104,5 @@ export function useQuotationWorkspace(quotationId: string, lang: string) {
     await refresh();
   }, [document.data, lang, quotationId, refresh]);
   const request = useCallback(<T,>(path: string, init?: RequestInit, fallback?: string) => quotationFetch<T>(`${API_BASE}${path}`, init, fallback), []);
-  return { urls, facts, document, drafts, review, workflow, options, brands, publications, refresh, saveFacts, savePresentation, request };
+  return { urls, facts, document, drafts, review, workflow, options, brands, publications, impacts, refresh, saveFacts, savePresentation, request };
 }

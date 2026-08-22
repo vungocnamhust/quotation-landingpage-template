@@ -27,6 +27,15 @@ class Quotation(Base):
     baseline_lang: Mapped[str] = mapped_column(String(5), nullable=False, default="en", server_default="en")
     current_revision: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
     current_version: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    # Business-versioning is deliberately distinct from ``current_version``:
+    # the latter is the immutable public publication-release number.
+    quotation_family_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    business_version: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    parent_quotation_id: Mapped[str | None] = mapped_column(
+        ForeignKey("quotations.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    source_request_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    source_request_revision: Mapped[int | None] = mapped_column(Integer, nullable=True)
     template_name: Mapped[str] = mapped_column(String(255), nullable=False)
     designer_profile_id: Mapped[str | None] = mapped_column(
         ForeignKey("travel_designer_profiles.id", ondelete="SET NULL"),
@@ -145,3 +154,43 @@ class QuotationContentDraft(Base):
     generation_metadata: Mapped[dict[str, Any]] = mapped_column(JSON_VARIANT, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
+
+
+class QuotationVersionFacts(Base):
+    """The one immutable, canonical Facts snapshot for a new-model version."""
+
+    __tablename__ = "quotation_version_facts"
+    __table_args__ = (UniqueConstraint("quotation_id", name="uq_quotation_version_facts_quotation"),)
+
+    id: Mapped[int] = mapped_column(BIGINT_PK_VARIANT, primary_key=True, autoincrement=True)
+    quotation_id: Mapped[str] = mapped_column(ForeignKey("quotations.id", ondelete="CASCADE"), nullable=False)
+    canonical_facts_json: Mapped[dict[str, Any]] = mapped_column(JSON_VARIANT, nullable=False)
+    resolved_facts_json: Mapped[dict[str, Any]] = mapped_column(JSON_VARIANT, nullable=False)
+    facts_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    source_request_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    source_request_revision: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+
+
+class QuotationVersionImpact(Base):
+    """A required, auditable review created while carrying a version forward."""
+
+    __tablename__ = "quotation_version_impacts"
+    __table_args__ = (
+        Index("ix_quotation_version_impacts_quotation_status", "quotation_id", "status"),
+        UniqueConstraint("quotation_id", "stage", "scope", "source_path", name="uq_quotation_version_impact_target"),
+    )
+
+    id: Mapped[int] = mapped_column(BIGINT_PK_VARIANT, primary_key=True, autoincrement=True)
+    quotation_id: Mapped[str] = mapped_column(ForeignKey("quotations.id", ondelete="CASCADE"), nullable=False)
+    stage: Mapped[str] = mapped_column(String(16), nullable=False)
+    scope: Mapped[str] = mapped_column(String(128), nullable=False)
+    action: Mapped[str] = mapped_column(String(32), nullable=False)
+    source_path: Mapped[str] = mapped_column(String(255), nullable=False)
+    target_path: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    explanation: Mapped[str] = mapped_column(String(1000), nullable=False)
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="pending", server_default="pending")
+    resolution_note: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    resolved_by_profile_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())

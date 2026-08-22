@@ -55,11 +55,14 @@ async def get_quotation_facts_v2(
         quotes, documents = QuotationRepository(session), QuotationDocumentRepository(session)
         quotation = await quotes.get_quotation_by_id(quotation_id)
         request = await quotes.get_latest_quotation_request(quotation_id)
-        if quotation is None or request is None:
+        version_facts = await quotes.get_version_facts(quotation_id)
+        if quotation is None or (request is None and version_facts is None):
             raise HTTPException(status_code=404, detail="Quotation facts were not found.")
         document = await documents.get_current_document(quotation_id, quotation.baseline_lang)
-        payload = CreateQuoteRequestV1.model_validate(h.normalize_legacy_facts_snapshot(request.request_json))
-        canonical, resolved = await h._resolve_v2_facts(payload)
+        snapshot = version_facts.canonical_facts_json if version_facts is not None else request.request_json
+        payload = CreateQuoteRequestV1.model_validate(h.normalize_legacy_facts_snapshot(snapshot))
+        canonical = payload
+        resolved = version_facts.resolved_facts_json if version_facts is not None else (await h._resolve_v2_facts(payload))[1]
         if canonical.presentation_options.travel_designer_id is None and quotation.designer_profile_id:
             canonical.presentation_options.travel_designer_id = quotation.designer_profile_id
 
@@ -69,7 +72,7 @@ async def get_quotation_facts_v2(
             quote_req = await QuoteRequestRepository(session).get_by_id(quotation.opportunity_id)
             if quote_req and quote_req.payload_json:
                 request_payload = quote_req.payload_json
-        if not request_payload and request.request_json:
+        if not request_payload and request and request.request_json:
             request_payload = request.request_json
         from services.content_draft_service import extract_request_brief
         request_brief = extract_request_brief(request_payload)
@@ -82,6 +85,15 @@ async def get_quotation_facts_v2(
         )
         if request_brief:
             res["requestBrief"] = request_brief
+        if quotation.quotation_family_id:
+            res["businessVersion"] = {
+                "familyId": quotation.quotation_family_id,
+                "number": quotation.business_version,
+                "parentQuotationId": quotation.parent_quotation_id,
+                "sourceRequestId": quotation.source_request_id,
+                "sourceRequestRevision": quotation.source_request_revision,
+                "immutable": True,
+            }
         return res
 
 
@@ -110,6 +122,8 @@ async def put_quotation_facts_v2(
         quotation = await quotes.get_quotation_by_id(quotation_id)
         if quotation is None:
             raise HTTPException(status_code=404, detail="Quotation was not found.")
+        if quotation.quotation_family_id:
+            raise HTTPException(status_code=409, detail={"message": "Facts are immutable for a business quotation version. Create an Edit Quotation version.", "code": "immutable_facts", "editQuotationId": quotation_id})
         if quotation.source_kind != "manual":
             raise HTTPException(status_code=403, detail="Facts are read-only for this quotation source.")
         if canonical.brand_id != quotation.brand_id:
@@ -200,6 +214,8 @@ async def put_quotation_fact_media_v2(
         quotation = await quotes.get_quotation_by_id(quotation_id)
         if quotation is None or quotation.template_name != V2_RENDERER_NAME:
             raise HTTPException(status_code=404, detail="Quotation was not found.")
+        if quotation.quotation_family_id:
+            raise HTTPException(status_code=409, detail={"message": "Fact media is immutable for a business quotation version. Update it in Design.", "code": "immutable_facts"})
         effective_lang = lang or quotation.baseline_lang
         current = await documents.get_current_document(quotation_id, effective_lang)
         if current is None:
@@ -256,6 +272,8 @@ async def put_quotation_fact_designer_v2(
         profile = await designers.get_profile(payload.designerProfileId)
         if quotation is None or quotation.template_name != V2_RENDERER_NAME:
             raise HTTPException(status_code=404, detail="Quotation was not found.")
+        if quotation.quotation_family_id:
+            raise HTTPException(status_code=409, detail={"message": "Designer Facts are immutable for a business quotation version. Update Design instead.", "code": "immutable_facts"})
         if profile is None or not profile.is_active:
             raise HTTPException(
                 status_code=422,
@@ -379,4 +397,3 @@ async def apply_quotation_media_defaults_v2(
         "rationale": result["rationale"],
         "message": f"Successfully applied {applied_count} matching media defaults.",
     }
-

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import re
 import uuid
 from datetime import datetime, timedelta
@@ -532,7 +533,21 @@ class QuoteRequestService:
         if not req:
             raise KeyError(f"QuoteRequest {request_id} not found.")
 
-        facts = convert_request_to_quotation_facts(req, overrides)
+        source_revision = overrides.request_revision if overrides and overrides.request_revision else req.current_revision
+        source_req = req
+        if source_revision != req.current_revision:
+            revision_snapshot = await self.repo.get_revision_by_number(request_id, source_revision)
+            if revision_snapshot is None:
+                raise KeyError(f"Revision {source_revision} for QuoteRequest {request_id} not found.")
+            source_req = copy.copy(req)
+            for field in (
+                "role", "customer_name", "email", "phone", "company_name", "market", "preferred_contact",
+                "destinations", "start_date", "end_date", "raw_dates_text", "adults", "children", "kid_ages",
+                "children_details", "travel_style", "special_requirements", "payload_json",
+            ):
+                setattr(source_req, field, copy.deepcopy(getattr(revision_snapshot, field)))
+
+        facts = convert_request_to_quotation_facts(source_req, overrides)
 
         effective_brand = facts.get("brand_id") or (req.payload_json or {}).get("brand_id") or brand_id
         effective_designer = (
@@ -610,6 +625,10 @@ class QuoteRequestService:
             source_snapshot_at=datetime.now().astimezone(),
             designer_profile_id=resolved_designer_id,
             created_by_profile_id=created_by_profile_id or resolved_designer_id,
+            quotation_family_id=quotation_id,
+            business_version=1,
+            source_request_id=req.id,
+            source_request_revision=source_revision,
         )
 
         # Create quotation request snapshot
@@ -617,7 +636,14 @@ class QuoteRequestService:
             quotation_id=quotation_id,
             request_json=canonical.model_dump(mode="json"),
         )
+        await quo_repo.create_version_facts(
+            quotation_id=quotation.id,
+            canonical_facts_json=canonical.model_dump(mode="json"),
+            resolved_facts_json=resolved,
             facts_hash=resolved.get("factsHash", ""),
+            source_request_id=req.id,
+            source_request_revision=source_revision,
+        )
 
         # Apply missing media defaults from catalog
         try:
@@ -683,4 +709,3 @@ class QuoteRequestService:
             "current_revision": saved.revision,
             "facts_snapshot": canonical.model_dump(mode="json"),
         }
-

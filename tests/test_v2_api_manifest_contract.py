@@ -56,6 +56,8 @@ EXPECTED_V2_OPERATIONS = {
     ("/api/v2/quotations/{quotation_id}/facts/designer", "PUT"),
     ("/api/v2/quotations/{quotation_id}/facts/media", "PUT"),
     ("/api/v2/quotations/{quotation_id}/facts/media-defaults", "POST"),
+    ("/api/v2/quotations/{quotation_id}/impacts", "GET"),
+    ("/api/v2/quotations/{quotation_id}/impacts/{impact_id}/resolve", "POST"),
     ("/api/v2/quotations/{quotation_id}/presentation", "PUT"),
     ("/api/v2/quotations/{quotation_id}/presentation/copy-overrides", "PUT"),
     ("/api/v2/quotations/{quotation_id}/presentation/overrides", "PUT"),
@@ -64,6 +66,7 @@ EXPECTED_V2_OPERATIONS = {
     ("/api/v2/quotations/{quotation_id}/publications", "GET"),
     ("/api/v2/quotations/{quotation_id}/publish", "POST"),
     ("/api/v2/quotations/{quotation_id}/review-status", "GET"),
+    ("/api/v2/quotations/{quotation_id}/versions", "POST"),
     ("/api/v2/quotations/{quotation_id}/workflow", "GET"),
     ("/api/v2/rooming-heuristics", "GET"),
     ("/api/v2/rooming-heuristics/evaluate", "POST"),
@@ -75,6 +78,7 @@ EXPECTED_V2_OPERATIONS = {
     ("/api/v2/workspace/requests/{request_id}", "GET"), ("/api/v2/workspace/requests/{request_id}", "PATCH"), ("/api/v2/workspace/requests/{request_id}", "PUT"),
     ("/api/v2/workspace/requests/{request_id}/revisions", "GET"),
     ("/api/v2/workspace/requests/{request_id}/revisions/{revision}", "GET"),
+    ("/api/v2/workspace/requests/{request_id}/revisions/{revision}/quotation-versions", "GET"),
     ("/api/v2/workspace/requests/{request_id}/generate-quotation", "POST"),
 }
 
