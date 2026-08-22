@@ -275,7 +275,7 @@ export function HotelEditorialCard({
   );
 }
 
-export function InvestmentRow({
+export function InvestmentHero({
   option,
   typography,
 }: {
@@ -283,22 +283,206 @@ export function InvestmentRow({
   typography: TypographySlotMap;
 }) {
   return (
-    <article className="display-investment-row">
-      <div className="display-investment-row__content">
-        <MetaText variant={requireTypographySlot(typography, 'index')} tone="muted" className="display-investment-row__index">
-          {option.displayIndex}
-        </MetaText>
-        <DisplayTitle as="h3" variant={requireTypographySlot(typography, 'metaPrimary')} tone="default" className="display-investment-row__category">
+    <article className="display-investment-hero">
+      {option.label ? (
+        <DisplayTitle
+          as="h3"
+          variant={requireTypographySlot(typography, 'metaPrimary')}
+          tone="accent"
+          className="display-investment-hero__label"
+        >
           {option.label}
         </DisplayTitle>
-      </div>
-      <div className="display-investment-row__value">
-        <PriceText variant={requireTypographySlot(typography, 'price')} tone="default" className="display-investment-row__total">
+      ) : null}
+      <div className="display-investment-hero__price-block">
+        <PriceText
+          variant={requireTypographySlot(typography, 'price')}
+          tone="default"
+          className="display-investment-hero__total"
+        >
           {option.groupTotalPrice}
         </PriceText>
-        <PriceText variant={requireTypographySlot(typography, 'price')} tone="default" className="display-investment-row__pax">
-          {option.perTravelerPrice}
+        {option.groupTotalLabel ? (
+          <MetaText
+            variant={requireTypographySlot(typography, 'label')}
+            tone="accent"
+            className="display-investment-hero__price-label"
+          >
+            {option.groupTotalLabel}
+          </MetaText>
+        ) : null}
+      </div>
+      <div className="display-investment-hero__meta">
+        {option.perTravelerPrice ? (
+          <PriceText
+            variant={requireTypographySlot(typography, 'body')}
+            tone="muted"
+            className="display-investment-hero__pax"
+          >
+            {option.perTravelerPrice}
+          </PriceText>
+        ) : null}
+        {option.description ? (
+          <BodyCopy
+            variant={requireTypographySlot(typography, 'metaSecondary')}
+            tone="muted"
+            className="display-investment-hero__desc"
+          >
+            {option.description}
+          </BodyCopy>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
+export function InvestmentComparisonCard({
+  option,
+  typography,
+  isLast,
+}: {
+  option: PriceOptionViewModel;
+  typography: TypographySlotMap;
+  isLast?: boolean;
+}) {
+  return (
+    <article className={cn('display-investment-comparison', !isLast && 'display-investment-comparison--bordered')}>
+      <div className="display-investment-comparison__header">
+        <div className="display-investment-comparison__title-line">
+          <DisplayTitle
+            as="h3"
+            variant={requireTypographySlot(typography, 'metaPrimary')}
+            tone="default"
+            className="display-investment-comparison__title"
+          >
+            {option.label}
+          </DisplayTitle>
+          {option.isSelection || option.badge ? (
+            <span className="display-investment-comparison__selection">
+              <MetaText variant={requireTypographySlot(typography, 'badge')} tone="accent">
+                {option.badge || 'OUR SELECTION'}
+              </MetaText>
+            </span>
+          ) : null}
+        </div>
+        {option.description ? (
+          <BodyCopy
+            variant={requireTypographySlot(typography, 'metaSecondary')}
+            tone="muted"
+            className="display-investment-comparison__desc"
+          >
+            {option.description}
+          </BodyCopy>
+        ) : null}
+      </div>
+
+      <div className="display-investment-comparison__price">
+        <PriceText
+          variant={requireTypographySlot(typography, 'price')}
+          tone="default"
+          className="display-investment-comparison__total"
+        >
+          {option.groupTotalPrice}
         </PriceText>
+        {option.groupTotalLabel ? (
+          <MetaText
+            variant={requireTypographySlot(typography, 'label')}
+            tone="accent"
+            className="display-investment-comparison__price-label"
+          >
+            {option.groupTotalLabel}
+          </MetaText>
+        ) : null}
+        {option.perTravelerPrice ? (
+          <PriceText
+            variant={requireTypographySlot(typography, 'body')}
+            tone="muted"
+            className="display-investment-comparison__pax"
+          >
+            {option.perTravelerPrice}
+          </PriceText>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
+export function InvestmentRow({
+  option,
+  typography,
+  hideIndex = false,
+}: {
+  option: PriceOptionViewModel;
+  typography: TypographySlotMap;
+  hideIndex?: boolean;
+}) {
+  return (
+    <article className="display-investment-row">
+      <div className="display-investment-row__content">
+        {!hideIndex && option.displayIndex ? (
+          <MetaText
+            variant={requireTypographySlot(typography, 'index')}
+            tone="accent"
+            className="display-investment-row__index"
+          >
+            {option.displayIndex}
+          </MetaText>
+        ) : null}
+        <div className="display-investment-row__identity">
+          <div className="display-investment-row__title-line">
+            <DisplayTitle
+              as="h3"
+              variant={requireTypographySlot(typography, 'metaPrimary')}
+              tone="default"
+              className="display-investment-row__category"
+            >
+              {option.label}
+            </DisplayTitle>
+            {option.isSelection || option.badge ? (
+              <span className="display-investment-row__selection">
+                <MetaText variant={requireTypographySlot(typography, 'badge')} tone="accent">
+                  {option.badge || 'OUR SELECTION'}
+                </MetaText>
+              </span>
+            ) : null}
+          </div>
+          {option.description ? (
+            <BodyCopy
+              variant={requireTypographySlot(typography, 'metaSecondary')}
+              tone="muted"
+              className="display-investment-row__desc"
+            >
+              {option.description}
+            </BodyCopy>
+          ) : null}
+        </div>
+      </div>
+      <div className="display-investment-row__value">
+        <PriceText
+          variant={requireTypographySlot(typography, 'price')}
+          tone="default"
+          className="display-investment-row__total"
+        >
+          {option.groupTotalPrice}
+        </PriceText>
+        {option.groupTotalLabel ? (
+          <MetaText
+            variant={requireTypographySlot(typography, 'label')}
+            tone="accent"
+            className="display-investment-row__price-label"
+          >
+            {option.groupTotalLabel}
+          </MetaText>
+        ) : null}
+        {option.perTravelerPrice ? (
+          <PriceText
+            variant={requireTypographySlot(typography, 'body')}
+            tone="muted"
+            className="display-investment-row__pax"
+          >
+            {option.perTravelerPrice}
+          </PriceText>
+        ) : null}
       </div>
     </article>
   );

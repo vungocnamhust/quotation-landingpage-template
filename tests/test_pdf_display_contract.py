@@ -48,6 +48,12 @@ class PdfDisplayContractTests(unittest.TestCase):
         self.assertIn("shouldShowTier3OnLastPage = isLastPage && pair.length === 1", itinerary_chunk)
         self.assertIn("<PdfFooterTier3 documentModel={documentModel} />", itinerary_chunk)
 
+    def test_pdf_route_map_renders_full_bleed_single_canvas_without_separate_tiers(self):
+        source = (ROOT / "quote-generator/components/display/PdfBrochureDocument.tsx").read_text(encoding="utf-8")
+        route_map_chunk = source[source.index("function PdfRouteMap"):source.index("function PdfChapterDivider")]
+        self.assertIn("pdf-route-page--fullbleed", route_map_chunk)
+        self.assertNotIn("pdf-route__mid-tier", route_map_chunk)
+
 
 if __name__ == "__main__":
     unittest.main()

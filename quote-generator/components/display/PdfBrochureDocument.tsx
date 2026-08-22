@@ -286,86 +286,40 @@ function PdfLetter({ documentModel }: { documentModel: DisplayDocument }) {
 
 function PdfRouteMap({ documentModel }: { documentModel: DisplayDocument }) {
   const route = documentModel.page.routeMap;
-  const shouldShowTier3 = route.segments.length <= 4;
+  const quotationNumber = documentModel.quotationNumber || 'QUO-2026';
+  const quoteText = 'Your journeys through Vietnam and Indochina, shaped around living heritage, quiet landscapes and the luxury of time.';
 
   return (
     <PdfPage
       documentModel={documentModel}
       scope="routeMap"
       borderVariant="none"
-      ornamentVariant="cyclo"
+      ornamentVariant="none"
       watermark={false}
-      className="pdf-route-page"
+      showPageHeader={false}
+      showPageFooter={false}
+      className="pdf-route-page pdf-route-page--fullbleed"
     >
-      <div className="pdf-route__top-half">
-        <Kicker variant="chapterKicker" tone="accent" className="pdf-route__kicker">
-          {route.kicker || 'GEOGRAPHIC ROUTE'}
-        </Kicker>
-        <DisplayTitle as="h2" variant="routeMapTitle" className="pdf-route__title">
-          {route.title}
-        </DisplayTitle>
-        {route.description ? (
-          <BodyCopy variant="bodySm" className="pdf-route__lede">
-            {route.description}
-          </BodyCopy>
-        ) : null}
-        <div className="pdf-route__map-frame">
-          <RouteMapClientIsland
-            viewModel={route}
-            typography={{
-              title: 'routeMapTitle',
-              body: 'bodySm',
-              kicker: 'overline',
-              index: 'caption',
-              metaPrimary: 'timelineTitle',
-              metaSecondary: 'caption',
-            }}
-            mapColors={{
-              route: 'var(--color-accent)',
-              marker: 'var(--color-primary)',
-              activeMarker: 'var(--color-accent)',
-            }}
-            viewMode="pdf"
-          />
-        </div>
-      </div>
-
-      <div className="pdf-route__mid-tier">
-        <div style={{ textAlign: 'center', marginBottom: '14px' }}>
-          <Kicker variant="overline" tone="accent">Route Overview</Kicker>
-        </div>
-        <div className="pdf-route__timeline">
-          {route.segments.map((segment, index) => (
-            <div
-              key={segment.sequence || `seg-${index}`}
-              style={{ display: 'contents' }}
-            >
-              <div className="pdf-route__timeline-item">
-                <div className={`pdf-route__timeline-dot ${getTypographyClassName('caption')}`}>
-                  {index + 1}
-                </div>
-                <div className="pdf-route__timeline-info">
-                  <DisplayTitle as="h3" variant="timelineTitle">
-                    {segment.city}
-                  </DisplayTitle>
-                  {segment.dayLabel || segment.duration ? (
-                    <MetaText variant="caption" tone="muted">
-                      {(segment.dayLabel ?? segment.duration) as TextValue}
-                    </MetaText>
-                  ) : null}
-                </div>
-              </div>
-              {index < route.segments.length - 1 ? (
-                <div className="pdf-route__timeline-connector" />
-              ) : null}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {shouldShowTier3 ? (
-        <PdfFooterTier3 documentModel={documentModel} className="pdf-route__bottom-tier" />
-      ) : null}
+      <RouteMapClientIsland
+        viewModel={route}
+        typography={{
+          title: 'routeMapTitle',
+          body: 'bodySm',
+          kicker: 'overline',
+          index: 'caption',
+          metaPrimary: 'timelineTitle',
+          metaSecondary: 'caption',
+        }}
+        mapColors={{
+          route: 'var(--color-accent)',
+          marker: 'var(--color-primary)',
+          activeMarker: 'var(--color-accent)',
+        }}
+        viewMode="pdf"
+        quotationNumber={quotationNumber}
+        pageNumber="03"
+        quoteText={quoteText}
+      />
     </PdfPage>
   );
 }
@@ -760,6 +714,8 @@ function PdfPricing({ documentModel }: { documentModel: DisplayDocument }) {
   const pricing = documentModel.page.pricing;
   const noteLabel = pricing.importantNoteLabel;
   const note = pricing.importantNote;
+  const options = pricing.options;
+  const optionCount = options.length;
 
   return (
     <PdfPage
@@ -769,8 +725,8 @@ function PdfPricing({ documentModel }: { documentModel: DisplayDocument }) {
       ornamentVariant="none"
       className="pdf-pricing-page"
     >
-      <div className="page-inner">
-        <header className="pdf-pricing__header">
+      <div className={`page-inner ${optionCount === 1 ? 'pdf-pricing-page-inner--hero' : ''}`}>
+        <header className={`pdf-pricing__header ${optionCount === 1 ? 'pdf-pricing__header--centered' : ''}`}>
           {pricing.kicker ? (
             <Kicker variant="chapterKicker" tone="accent">{pricing.kicker}</Kicker>
           ) : null}
@@ -786,61 +742,139 @@ function PdfPricing({ documentModel }: { documentModel: DisplayDocument }) {
           ) : null}
         </header>
 
-        <div className="pdf-pricing-collection">
-          {pricing.options.map((option: PriceOptionViewModel, index: number) => {
-            const displayIdx = textValue(option.displayIndex) || (index + 1 < 10 ? `0${index + 1}` : `${index + 1}`);
-            const badgeStr = textValue(option.badge);
-            const descStr = textValue(option.description);
-            const groupTotalLabelStr = textValue(option.groupTotalLabel) || 'GROUP TOTAL';
+        {optionCount === 1 ? (
+          <div className="pdf-pricing-hero">
+            {options[0].label ? (
+              <DisplayTitle as="h3" variant="investmentComparisonTitle" tone="accent" className="pdf-pricing-hero__label">
+                {options[0].label}
+              </DisplayTitle>
+            ) : null}
+            <div className="pdf-pricing-hero__price-block">
+              <PriceText variant="investmentHeroValue" className="pdf-pricing-hero__amount">
+                {options[0].groupTotalPrice}
+              </PriceText>
+              {options[0].groupTotalLabel ? (
+                <div className={`pdf-pricing-hero__price-label ${getTypographyClassName('overline')}`}>
+                  {textValue(options[0].groupTotalLabel)}
+                </div>
+              ) : null}
+            </div>
+            <div className="pdf-pricing-hero__meta">
+              {options[0].perTravelerPrice && textValue(options[0].perTravelerPrice) ? (
+                <div className={`pdf-pricing-hero__pax ${getTypographyClassName('investmentHeroMeta')}`}>
+                  {textValue(options[0].perTravelerPrice)}
+                </div>
+              ) : null}
+              {options[0].description && textValue(options[0].description) ? (
+                <BodyCopy variant="bodySm" tone="muted" className="pdf-pricing-hero__desc">
+                  {options[0].description}
+                </BodyCopy>
+              ) : null}
+            </div>
+          </div>
+        ) : optionCount === 2 ? (
+          <div className="pdf-pricing-comparison">
+            {options.map((option: PriceOptionViewModel, index: number) => {
+              const badgeStr = textValue(option.badge) || (option.isSelection ? 'OUR SELECTION' : '');
+              const groupTotalLabelStr = textValue(option.groupTotalLabel) || 'GROUP TOTAL';
+              const isLast = index === options.length - 1;
 
-            return (
-              <article
-                key={option.index || displayIdx || textValue(option.label)}
-                className="pdf-pricing-row"
-              >
-                <div className="pdf-pricing-row__main">
-                  <div className={`pdf-pricing-row__index ${getTypographyClassName('overline')}`}>
-                    {displayIdx}
-                  </div>
-                  <div className="pdf-pricing-row__identity">
-                    <div className="pdf-pricing-row__title-line">
-                      <DisplayTitle as="h3" variant="investmentTitle" className="pdf-pricing-row__title">
+              return (
+                <article
+                  key={option.index || textValue(option.label) || index}
+                  className={`pdf-pricing-comparison__col ${!isLast ? 'pdf-pricing-comparison__col--bordered' : ''}`}
+                >
+                  <div className="pdf-pricing-comparison__header">
+                    <div className="pdf-pricing-comparison__title-line">
+                      <DisplayTitle as="h3" variant="investmentComparisonTitle" className="pdf-pricing-comparison__title">
                         {option.label}
                       </DisplayTitle>
                       {badgeStr ? (
-                        <span className={`pdf-pricing-row__badge ${getTypographyClassName('overline')}`}>
+                        <span className={`pdf-pricing-comparison__badge ${getTypographyClassName('investmentSelectionText')}`}>
                           {badgeStr}
                         </span>
                       ) : null}
                     </div>
                     {option.description && textValue(option.description) ? (
-                      <BodyCopy variant="bodySm" tone="muted" className="pdf-pricing-row__desc">
+                      <BodyCopy variant="bodySm" tone="muted" className="pdf-pricing-comparison__desc">
                         {option.description}
                       </BodyCopy>
                     ) : null}
                   </div>
-                </div>
 
-                <div className="pdf-pricing-row__price">
-                  <PriceText variant="investmentValue" className="pdf-pricing-row__amount">
-                    {option.groupTotalPrice}
-                  </PriceText>
-                  <div className={`pdf-pricing-row__price-label ${getTypographyClassName('overline')}`}>
-                    {groupTotalLabelStr}
-                  </div>
-                  {option.perTravelerPrice && textValue(option.perTravelerPrice) ? (
-                    <div className={`pdf-pricing-row__pax ${getTypographyClassName('caption')}`}>
-                      {textValue(option.perTravelerPrice)}
+                  <div className="pdf-pricing-comparison__price">
+                    <PriceText variant="investmentValue" className="pdf-pricing-comparison__amount">
+                      {option.groupTotalPrice}
+                    </PriceText>
+                    <div className={`pdf-pricing-comparison__price-label ${getTypographyClassName('overline')}`}>
+                      {groupTotalLabelStr}
                     </div>
-                  ) : null}
-                </div>
-              </article>
-            );
-          })}
-        </div>
+                    {option.perTravelerPrice && textValue(option.perTravelerPrice) ? (
+                      <div className={`pdf-pricing-comparison__pax ${getTypographyClassName('caption')}`}>
+                        {textValue(option.perTravelerPrice)}
+                      </div>
+                    ) : null}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="pdf-pricing-collection">
+            {options.map((option: PriceOptionViewModel, index: number) => {
+              const displayIdx = textValue(option.displayIndex) || (index + 1 < 10 ? `0${index + 1}` : `${index + 1}`);
+              const badgeStr = textValue(option.badge) || (option.isSelection ? 'OUR SELECTION' : '');
+              const groupTotalLabelStr = textValue(option.groupTotalLabel) || 'GROUP TOTAL';
+
+              return (
+                <article
+                  key={option.index || displayIdx || textValue(option.label)}
+                  className="pdf-pricing-row"
+                >
+                  <div className="pdf-pricing-row__main">
+                    <div className={`pdf-pricing-row__index ${getTypographyClassName('overline')}`}>
+                      {displayIdx}
+                    </div>
+                    <div className="pdf-pricing-row__identity">
+                      <div className="pdf-pricing-row__title-line">
+                        <DisplayTitle as="h3" variant="investmentTitle" className="pdf-pricing-row__title">
+                          {option.label}
+                        </DisplayTitle>
+                        {badgeStr ? (
+                          <span className={`pdf-pricing-row__badge ${getTypographyClassName('investmentSelectionText')}`}>
+                            {badgeStr}
+                          </span>
+                        ) : null}
+                      </div>
+                      {option.description && textValue(option.description) ? (
+                        <BodyCopy variant="bodySm" tone="muted" className="pdf-pricing-row__desc">
+                          {option.description}
+                        </BodyCopy>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <div className="pdf-pricing-row__price">
+                    <PriceText variant="investmentValue" className="pdf-pricing-row__amount">
+                      {option.groupTotalPrice}
+                    </PriceText>
+                    <div className={`pdf-pricing-row__price-label ${getTypographyClassName('overline')}`}>
+                      {groupTotalLabelStr}
+                    </div>
+                    {option.perTravelerPrice && textValue(option.perTravelerPrice) ? (
+                      <div className={`pdf-pricing-row__pax ${getTypographyClassName('caption')}`}>
+                        {textValue(option.perTravelerPrice)}
+                      </div>
+                    ) : null}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
 
         {note && textValue(note) ? (
-          <div className="pdf-pricing-basis">
+          <div className={`pdf-pricing-basis ${optionCount === 1 ? 'pdf-pricing-basis--centered' : ''}`}>
             <div className={`pdf-pricing-basis__label ${getTypographyClassName('overline')}`}>
               {textValue(noteLabel) || 'PRICING BASIS'}
             </div>
