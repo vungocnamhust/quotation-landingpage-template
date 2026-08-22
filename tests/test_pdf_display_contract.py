@@ -107,8 +107,10 @@ class PdfDisplayContractTests(unittest.TestCase):
         css = (ROOT / "quote-generator/app/globals.css").read_text(encoding="utf-8")
 
         self.assertIn("pdf-pricing-basis__divider", source)
+        self.assertIn("cleanGroupTotal", source)
         self.assertIn(".pdf-pricing-basis__divider", css)
         self.assertIn(".pdf-pricing-page-inner--hero", css)
+        self.assertIn(".pdf-pricing-page .pdf-brochure-page__content", css)
         self.assertNotIn("pdf-pricing__header--centered", source)
         self.assertNotIn("pdf-pricing-basis--centered", source)
 

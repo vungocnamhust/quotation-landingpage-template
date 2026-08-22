@@ -756,35 +756,41 @@ function PdfPricing({ documentModel }: { documentModel: DisplayDocument }) {
         </header>
 
         {optionCount === 1 ? (
-          <div className="pdf-pricing-hero">
-            {options[0].label ? (
-              <DisplayTitle as="h3" variant="investmentComparisonTitle" tone="accent" className="pdf-pricing-hero__label">
-                {options[0].label}
-              </DisplayTitle>
-            ) : null}
-            <div className="pdf-pricing-hero__price-block">
-              <PriceText variant="investmentHeroValue" className="pdf-pricing-hero__amount">
-                {options[0].groupTotalPrice}
-              </PriceText>
-              {options[0].groupTotalLabel ? (
-                <div className={`pdf-pricing-hero__price-label ${getTypographyClassName('overline')}`}>
-                  {textValue(options[0].groupTotalLabel)}
+          (() => {
+            const rawGroupTotal = textValue(options[0].groupTotalPrice);
+            const cleanGroupTotal = rawGroupTotal.replace(/\s*(group total|tổng đoàn)\s*$/i, '').trim();
+            const groupTotalLabelStr = textValue(options[0].groupTotalLabel) || 'GROUP TOTAL';
+
+            return (
+              <div className="pdf-pricing-hero">
+                {options[0].label ? (
+                  <DisplayTitle as="h3" variant="investmentComparisonTitle" tone="accent" className="pdf-pricing-hero__label">
+                    {options[0].label}
+                  </DisplayTitle>
+                ) : null}
+                <div className="pdf-pricing-hero__price-block">
+                  <PriceText variant="investmentHeroValue" className="pdf-pricing-hero__amount">
+                    {cleanGroupTotal || options[0].groupTotalPrice}
+                  </PriceText>
+                  <div className={`pdf-pricing-hero__price-label ${getTypographyClassName('overline')}`}>
+                    {groupTotalLabelStr}
+                  </div>
                 </div>
-              ) : null}
-            </div>
-            <div className="pdf-pricing-hero__meta">
-              {options[0].perTravelerPrice && textValue(options[0].perTravelerPrice) ? (
-                <div className={`pdf-pricing-hero__pax ${getTypographyClassName('investmentHeroMeta')}`}>
-                  {textValue(options[0].perTravelerPrice)}
+                <div className="pdf-pricing-hero__meta">
+                  {options[0].perTravelerPrice && textValue(options[0].perTravelerPrice) ? (
+                    <div className={`pdf-pricing-hero__pax ${getTypographyClassName('investmentHeroMeta')}`}>
+                      {textValue(options[0].perTravelerPrice)}
+                    </div>
+                  ) : null}
+                  {options[0].description && textValue(options[0].description) ? (
+                    <BodyCopy variant="bodySm" tone="muted" className="pdf-pricing-hero__desc">
+                      {options[0].description}
+                    </BodyCopy>
+                  ) : null}
                 </div>
-              ) : null}
-              {options[0].description && textValue(options[0].description) ? (
-                <BodyCopy variant="bodySm" tone="muted" className="pdf-pricing-hero__desc">
-                  {options[0].description}
-                </BodyCopy>
-              ) : null}
-            </div>
-          </div>
+              </div>
+            );
+          })()
         ) : optionCount === 2 ? (
           <div className="pdf-pricing-comparison">
             {options.map((option: PriceOptionViewModel, index: number) => {

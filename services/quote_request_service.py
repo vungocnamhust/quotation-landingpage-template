@@ -617,6 +617,7 @@ class QuoteRequestService:
             quotation_id=quotation_id,
             request_json=canonical.model_dump(mode="json"),
         )
+            facts_hash=resolved.get("factsHash", ""),
 
         # Apply missing media defaults from catalog
         try:
