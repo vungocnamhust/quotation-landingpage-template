@@ -1,6 +1,6 @@
 import { getBrandThemeTokensFromProfile, resolveColorSlotsFromProfile, getContrastRatio } from '../config/runtimeThemeTokens.ts';
 import { DESIGNER_PRESENTATION_DEFAULTS } from '../config/designerPresentationDefaults.ts';
-import type { AppChromeViewModel, BrandColorPalette, BrandRenderProfile, BrandThemeTokens, EditableText, EditableTextMode, EditableTextOwner, PageViewModel, PaymentTermItemViewModel, PublicSectionId, ResolvedColorSlots, ThemeDefinition } from './types.ts';
+import type { AppChromeViewModel, BrandColorPalette, BrandRenderProfile, BrandThemeTokens, EditableText, EditableTextMode, EditableTextOwner, PageViewModel, PaymentTermItemViewModel, PublicSectionId, ResolvedColorSlots, RouteSegmentViewModel, ThemeDefinition } from './types.ts';
 import type { LanguageCode, ViewMode } from './contracts.ts';
 import { getLanguageLabels, PRICING_AMOUNT_LABELS } from './labels.ts';
 import { getThemeDefinition } from './themeRegistry.ts';
@@ -327,19 +327,23 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
     return CANONICAL_COORDS[cleanKey] || null;
   };
 
-  const explicitSegments = recordList(route.staySegments);
-  const derivedDaySegments: Array<{
-    sequence: string;
-    displayName: string;
+  // 3-Step Destination Resolution Algorithm:
+  // Step 1: Extract unique ordered set of destinations from rawDaysList
+  // Step 2: Compute dayStart and dayEnd for each distinct destination
+  // Step 3: Build RouteSegmentViewModel with canonical GPS coordinates and badge labels
+  interface DestinationInfo {
+    name: string;
+    dayNumbers: number[];
     dayStart: number;
     dayEnd: number;
-    daysLabel: string;
-    nightsLabel: string;
-    hotelName: string;
-    hotelImage: unknown;
-    mapSegmentDesc: string;
+    hotelName?: string;
+    hotelImage?: unknown;
+    desc?: string;
     coords: [number, number];
-  }> = [];
+  }
+
+  const destinationMap = new Map<string, DestinationInfo>();
+  const destinationOrder: string[] = [];
 
   if (rawDaysList.length > 0) {
     rawDaysList.forEach((day, index) => {
@@ -349,72 +353,74 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
           : typeof day.day_number === 'number'
           ? day.day_number
           : index + 1;
-      const destName = stringValue(day.segmentCity) || stringValue(day.destination) || stringValue(day.city) || stringValue(day.overnight);
-      if (!destName) return;
+
+      // Primary destination name (prefer destination / segmentCity / destinationRef)
+      const rawDest =
+        stringValue(day.segmentCity) ||
+        stringValue(day.destination) ||
+        stringValue(day.city) ||
+        stringValue(record(day.destinationRef).name) ||
+        stringValue(record(day.overnightRef).name) ||
+        stringValue(day.overnight);
+
+      if (!rawDest) return;
 
       const dayDestRef = record(day.destinationRef) || record(day.overnightRef);
-      const coords = lookupCoords(destName, dayDestRef.coordinates);
+      const coords = lookupCoords(rawDest, dayDestRef.coordinates);
       if (!coords) return;
 
-      const last = derivedDaySegments[derivedDaySegments.length - 1];
-      if (last && last.displayName.toLowerCase() === destName.toLowerCase()) {
-        last.dayEnd = dayNum;
-        last.daysLabel = `${labels.dayPlural} ${last.dayStart}–${last.dayEnd}`;
-        const nights = Math.max(1, last.dayEnd - last.dayStart + 1);
-        last.nightsLabel = `${nights} ${nights === 1 ? 'Night' : 'Nights'}`;
+      const key = rawDest.toLowerCase().trim();
+      const existing = destinationMap.get(key);
+
+      if (existing) {
+        existing.dayNumbers.push(dayNum);
+        existing.dayStart = Math.min(existing.dayStart, dayNum);
+        existing.dayEnd = Math.max(existing.dayEnd, dayNum);
+        if (!existing.hotelName && day.overnight) {
+          existing.hotelName = stringValue(day.overnight);
+        }
       } else {
-        derivedDaySegments.push({
-          sequence: String(derivedDaySegments.length + 1).padStart(2, '0'),
-          displayName: destName,
+        destinationOrder.push(key);
+        destinationMap.set(key, {
+          name: rawDest,
+          dayNumbers: [dayNum],
           dayStart: dayNum,
           dayEnd: dayNum,
-          daysLabel: `${labels.daySingular} ${dayNum}`,
-          nightsLabel: '1 Night',
           hotelName: stringValue(day.overnight),
           hotelImage: (record(day.images).hero as unknown) || day.hero_image || day.image,
-          mapSegmentDesc: stringValue(day.title) || (listText(day.activities)[0] ?? ''),
+          desc: stringValue(day.title) || (listText(day.activities)[0] ?? ''),
           coords,
         });
       }
     });
   }
 
-  const sourceStaySegments =
-    derivedDaySegments.length >= explicitSegments.length && derivedDaySegments.length > 0
-      ? derivedDaySegments
-      : explicitSegments;
+  const routeSegments: RouteSegmentViewModel[] = destinationOrder.map((key, index) => {
+    const info = destinationMap.get(key)!;
+    const base = `/route/destinations/${index}`;
+    const hasRange = info.dayEnd > info.dayStart;
+    const badgeLabel = hasRange ? `${info.dayStart}-${info.dayEnd}` : `${info.dayStart}`;
+    const dayLabel = hasRange
+      ? `${labels.dayPlural} ${info.dayStart}–${info.dayEnd}`
+      : `${labels.daySingular} ${info.dayStart}`;
 
-  const routeSegments = sourceStaySegments.flatMap((item, index) => {
-    const segment = item as QuoteRecord;
-    const rawCoordinates = segment.coords;
-    const coords = lookupCoords(stringValue(segment.displayName), rawCoordinates);
-    if (!coords) return [];
-    const base = `/route/staySegments/${index}`;
-    const dayStart = Number(segment.dayStart);
-    const dayEnd = Number(segment.dayEnd);
-    const hasDayRange = Number.isSafeInteger(dayStart) && dayStart > 0 && Number.isSafeInteger(dayEnd) && dayEnd >= dayStart;
-    const dayLabel = hasDayRange ? `${dayEnd === dayStart ? labels.daySingular : labels.dayPlural} ${dayStart}${dayEnd === dayStart ? '' : `–${dayEnd}`}` : stringValue(segment.daysLabel);
-    const activityPreviews = recordList(segment.activityPreviews);
-    const activityFallback = activityPreviews
-      .map((act) => {
-        const lbl = stringValue(act.label);
-        const sum = stringValue(act.summary);
-        return lbl && sum ? `${lbl}: ${sum}` : sum || lbl;
-      })
-      .filter(Boolean)
-      .join(' ');
-    const rawDesc = stringValue(segment.mapSegmentDesc) || activityFallback;
     return {
       sequence: String(index + 1).padStart(2, '0'),
-      title: derivedCopy(stringValue(segment.displayName), `${base}/displayName`),
-      description: contentCopy(rawDesc, `${base}/mapSegmentDesc`, ''),
-      sidebarLabel: derivedCopy(stringValue(segment.daysLabel) || stringValue(segment.mapSegmentDuration), `${base}/daysLabel`),
-      duration: derivedCopy(stringValue(segment.nightsLabel) || stringValue(segment.mapSegmentDuration), `${base}/nightsLabel`),
-      hotelName: derivedCopy(stringValue(segment.hotelName), `${base}/hotelName`),
-      coordinates: coords,
+      title: derivedCopy(info.name, `${base}/displayName`),
+      description: contentCopy(info.desc || '', `${base}/mapSegmentDesc`, ''),
+      sidebarLabel: derivedCopy(dayLabel, `${base}/daysLabel`),
+      duration: derivedCopy(
+        `${info.dayNumbers.length} ${info.dayNumbers.length === 1 ? 'Day' : 'Days'}`,
+        `${base}/nightsLabel`
+      ),
+      hotelName: derivedCopy(info.hotelName || '', `${base}/hotelName`),
+      coordinates: info.coords,
       dayLabel: derivedCopy(dayLabel, `${base}/dayStart`),
-      city: derivedCopy(stringValue(segment.displayName), `${base}/displayName`),
-      image: assetUrl(segment.hotelImage),
+      city: derivedCopy(info.name, `${base}/displayName`),
+      image: assetUrl(info.hotelImage),
+      dayStart: info.dayStart,
+      dayEnd: info.dayEnd,
+      badgeLabel,
     };
   });
 
@@ -531,9 +537,8 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
       introVisibility: 'full' as const,
     };
   });
-  const sourceSegments = recordList(route.staySegments);
   const mapCenter = routeSegments[0]?.coordinates;
-  const isInteractiveAvailable = sourceSegments.length > 0 && routeSegments.length === sourceSegments.length && Boolean(mapCenter);
+  const isInteractiveAvailable = routeSegments.length > 0 && Boolean(mapCenter);
 
   return {
     theme,

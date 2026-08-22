@@ -412,6 +412,9 @@ export interface RouteSegmentViewModel {
   dayLabel: TextValue;
   city: TextValue;
   image?: string;
+  dayStart?: number;
+  dayEnd?: number;
+  badgeLabel?: string;
 }
 
 export interface RouteMapViewModel {

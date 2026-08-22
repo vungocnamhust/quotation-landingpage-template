@@ -4,6 +4,7 @@ import { useCallback, useState, useTransition } from 'react';
 import { apiErrorMessage } from '../../lib/apiError.ts';
 import { useToast } from '../staff-workspace/ToastProvider.tsx';
 import { cloneCandidate } from './SectionContentFields.tsx';
+import { contentReconciler } from '../../lib/rules/contentReconciler.ts';
 import type {
   ContentCandidate,
   ContentDraft,
@@ -234,8 +235,27 @@ export function useContentGeneration({
         await resources.refresh();
         clearScope('content:generate');
         const count = res.count ?? res.drafts?.length ?? uniqueScopes.length;
-        setMessage(`Batch generation completed (${count} sections ready).`);
-        toast(`All ${count} content sections generated successfully!`, 'success');
+        const drafts = res.drafts ?? [];
+        let hasAnyOverflow = false;
+        for (const d of drafts) {
+          if (d.candidate) {
+            const check = contentReconciler.validateCandidatePdfBudget(d.scope, d.candidate as Record<string, unknown>);
+            if (!check.isValid) {
+              hasAnyOverflow = true;
+              break;
+            }
+          }
+        }
+        if (hasAnyOverflow) {
+          setMessage(`Batch generation completed (${count} sections ready), but some exceed PDF A4 budgets.`);
+          toast(
+            '⚠️ Batch generation completed, but some sections exceed PDF A4 budgets. Please review highlighted items.',
+            'warning'
+          );
+        } else {
+          setMessage(`Batch generation completed (${count} sections ready).`);
+          toast(`All ${count} content sections generated successfully!`, 'success');
+        }
       } catch (err) {
         reportFailure('generate', err);
       } finally {

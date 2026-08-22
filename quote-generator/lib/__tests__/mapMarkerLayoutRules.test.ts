@@ -5,6 +5,7 @@ import {
   getStemOffsetForAnchor,
   getMarkerBoundingBox,
   segmentIntersectsBox,
+  generateContinuousSmoothSpline,
   type MarkerPointInput,
 } from '../rules/mapMarkerLayoutRules.ts';
 
@@ -82,32 +83,82 @@ test('SCERA resolves full 5-destination itinerary with zero route occlusion', ()
   }
 });
 
-test('getStemOffsetForAnchor returns valid micro-scale geometry', () => {
+test('getStemOffsetForAnchor returns zero offset for direct pin placement', () => {
   const topCenter = getStemOffsetForAnchor('top-center');
   assert.equal(topCenter.x, 0);
-  assert.equal(topCenter.y, -5);
-  assert.equal(topCenter.needleLength, 5);
-
-  const topElevated = getStemOffsetForAnchor('top-elevated');
-  assert.equal(topElevated.x, 0);
-  assert.equal(topElevated.y, -16);
-  assert.equal(topElevated.needleLength, 16);
-
-  const left = getStemOffsetForAnchor('left');
-  assert.equal(left.x, -8);
-  assert.equal(left.y, 0);
+  assert.equal(topCenter.y, 0);
+  assert.equal(topCenter.needleLength, 0);
 
   const right = getStemOffsetForAnchor('right');
-  assert.equal(right.x, 8);
+  assert.equal(right.x, 0);
   assert.equal(right.y, 0);
+  assert.equal(right.needleLength, 0);
 });
 
-test('getMarkerBoundingBox calculates exact 2/3 micro-scale bounds', () => {
+test('getMarkerBoundingBox calculates exact direct pin bounds', () => {
   const pt = { x: 100, y: 200 };
   const box = getMarkerBoundingBox(pt, 'right', 55, 16);
 
-  assert.equal(box.minX, 100 + 8);
-  assert.equal(box.maxX, 100 + 8 + 55);
+  assert.equal(box.minX, 100 - 8);
+  assert.equal(box.maxX, 100 - 8 + 55);
   assert.equal(box.minY, 200 - 8);
   assert.equal(box.maxY, 200 + 8);
+});
+
+test('generateContinuousSmoothSpline generates C1 continuous curved path starting and ending at exact waypoints', () => {
+  const waypoints: Array<[number, number]> = [
+    [10.7769, 106.7009], // Saigon
+    [21.0285, 105.8542], // Hanoi
+    [20.2506, 105.9745], // Ninh Binh
+    [20.9505, 107.0734], // Ha Long Bay
+  ];
+
+  const spline = generateContinuousSmoothSpline(waypoints, {
+    tension: 0.4,
+    samplesPerSegment: 20,
+    eastwardBiasScale: 0.12,
+  });
+
+  // Verify non-empty and adequate sampling
+  assert.ok(spline.length > 50);
+
+  // Exact start and end coordinate snapping
+  assert.equal(spline[0][0], waypoints[0][0]);
+  assert.equal(spline[0][1], waypoints[0][1]);
+  assert.equal(spline[spline.length - 1][0], waypoints[waypoints.length - 1][0]);
+  assert.equal(spline[spline.length - 1][1], waypoints[waypoints.length - 1][1]);
+
+  // Verify Eastward bowing on Saigon -> Hanoi leg (max longitude should exceed midpoint longitude)
+  const midpointLng = (waypoints[0][1] + waypoints[1][1]) / 2;
+  const leg1Sample = spline.slice(5, 15);
+  const hasEastwardBowing = leg1Sample.some((pt) => pt[1] > midpointLng);
+  assert.ok(hasEastwardBowing, 'North-South haul should bow Eastward towards the sea');
+});
+
+test('resolveMarkerCollisions ensures no bounding box overlap for close vertical points', () => {
+  const points: MarkerPointInput[] = [
+    { sequence: '01', x: 300, y: 150, city: 'Hanoi', visible: true },
+    { sequence: '02', x: 305, y: 200, city: 'Ninh Binh', visible: true },
+  ];
+
+  const results = resolveMarkerCollisions(points, {
+    containerWidth: 800,
+    containerHeight: 1100,
+    capsuleWidth: 55,
+    capsuleHeight: 16,
+  });
+
+  const p1 = results.get('01');
+  const p2 = results.get('02');
+
+  assert.ok(p1 && p2);
+  assert.ok(p1.anchorDirection);
+  assert.ok(p2.anchorDirection);
+  // Verify that the two bounding boxes do not overlap
+  const minOverlap =
+    p1.boundingBox.maxX < p2.boundingBox.minX ||
+    p1.boundingBox.minX > p2.boundingBox.maxX ||
+    p1.boundingBox.maxY < p2.boundingBox.minY ||
+    p1.boundingBox.minY > p2.boundingBox.maxY;
+  assert.ok(minOverlap, 'Close waypoints must have disjoint bounding boxes');
 });

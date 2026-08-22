@@ -36,29 +36,76 @@ class _CopyModel(BaseModel):
         return value
 
 
+from core.rules.content_budgets import get_content_budget_registry
+
+_budget_reg = get_content_budget_registry("v1")
+
+
 class HeroOutput(_CopyModel):
-    title: str = Field(min_length=1, max_length=160)
-    lede: str = Field(min_length=1, max_length=500)
-    coverKicker: str = Field(min_length=1, max_length=120)
-    heroMeta1: str = Field(default="", max_length=160)
-    heroMeta2: str = Field(default="", max_length=160)
-    footerText: str = Field(min_length=1, max_length=500)
+    title: str = Field(
+        min_length=_budget_reg.get_spec("hero", "trip_title").min_chars if _budget_reg.get_spec("hero", "trip_title") else 1,
+        max_length=_budget_reg.get_max_chars("hero", "trip_title", 160),
+    )
+    lede: str = Field(
+        min_length=_budget_reg.get_spec("hero", "trip_lede").min_chars if _budget_reg.get_spec("hero", "trip_lede") else 1,
+        max_length=_budget_reg.get_max_chars("hero", "trip_lede", 500),
+    )
+    coverKicker: str = Field(
+        min_length=_budget_reg.get_spec("hero", "cover_kicker").min_chars if _budget_reg.get_spec("hero", "cover_kicker") else 1,
+        max_length=_budget_reg.get_max_chars("hero", "cover_kicker", 120),
+    )
+    heroMeta1: str = Field(default="", max_length=_budget_reg.get_max_chars("hero", "hero_meta_1", 160))
+    heroMeta2: str = Field(default="", max_length=_budget_reg.get_max_chars("hero", "hero_meta_2", 160))
+    footerText: str = Field(
+        min_length=_budget_reg.get_spec("hero", "footer_text").min_chars if _budget_reg.get_spec("hero", "footer_text") else 1,
+        max_length=_budget_reg.get_max_chars("hero", "footer_text", 500),
+    )
 
 
 class OverviewOutput(_CopyModel):
-    journeyOverviewTitle: str = Field(min_length=1, max_length=160)
-    letterHighlight: str = Field(min_length=1, max_length=500)
-    letterGreeting: str = Field(min_length=1, max_length=160)
-    letterIntro: str = Field(min_length=1, max_length=1600)
-    letterBody2: str = Field(min_length=1, max_length=1600)
-    letterOutro: str = Field(min_length=1, max_length=1600)
-    letterSignOff: str = Field(min_length=1, max_length=160)
-    letterSender: str = Field(min_length=1, max_length=160)
+    journeyOverviewTitle: str = Field(
+        min_length=_budget_reg.get_spec("overview_letter", "overview_title").min_chars if _budget_reg.get_spec("overview_letter", "overview_title") else 1,
+        max_length=_budget_reg.get_max_chars("overview_letter", "overview_title", 160),
+    )
+    letterHighlight: str = Field(
+        min_length=_budget_reg.get_spec("overview_letter", "letter_highlight").min_chars if _budget_reg.get_spec("overview_letter", "letter_highlight") else 1,
+        max_length=_budget_reg.get_max_chars("overview_letter", "letter_highlight", 500),
+    )
+    letterGreeting: str = Field(
+        min_length=_budget_reg.get_spec("overview_letter", "letter_greeting").min_chars if _budget_reg.get_spec("overview_letter", "letter_greeting") else 1,
+        max_length=_budget_reg.get_max_chars("overview_letter", "letter_greeting", 160),
+    )
+    letterIntro: str = Field(
+        min_length=_budget_reg.get_spec("overview_letter", "letter_intro").min_chars if _budget_reg.get_spec("overview_letter", "letter_intro") else 1,
+        max_length=_budget_reg.get_max_chars("overview_letter", "letter_intro", 1600),
+    )
+    letterBody2: str = Field(
+        min_length=_budget_reg.get_spec("overview_letter", "letter_body").min_chars if _budget_reg.get_spec("overview_letter", "letter_body") else 1,
+        max_length=_budget_reg.get_max_chars("overview_letter", "letter_body", 1600),
+    )
+    letterOutro: str = Field(
+        min_length=_budget_reg.get_spec("overview_letter", "letter_outro").min_chars if _budget_reg.get_spec("overview_letter", "letter_outro") else 1,
+        max_length=_budget_reg.get_max_chars("overview_letter", "letter_outro", 1600),
+    )
+    letterSignOff: str = Field(
+        min_length=_budget_reg.get_spec("overview_letter", "letter_signoff").min_chars if _budget_reg.get_spec("overview_letter", "letter_signoff") else 1,
+        max_length=_budget_reg.get_max_chars("overview_letter", "letter_signoff", 160),
+    )
+    letterSender: str = Field(
+        min_length=_budget_reg.get_spec("overview_letter", "letter_sender").min_chars if _budget_reg.get_spec("overview_letter", "letter_sender") else 1,
+        max_length=_budget_reg.get_max_chars("overview_letter", "letter_sender", 160),
+    )
 
 
 class RouteOutput(_CopyModel):
-    title: str = Field(min_length=1, max_length=160)
-    description: str = Field(min_length=1, max_length=1600)
+    title: str = Field(
+        min_length=_budget_reg.get_spec("route", "route_title").min_chars if _budget_reg.get_spec("route", "route_title") else 1,
+        max_length=_budget_reg.get_max_chars("route", "route_title", 160),
+    )
+    description: str = Field(
+        min_length=_budget_reg.get_spec("route", "route_description").min_chars if _budget_reg.get_spec("route", "route_description") else 1,
+        max_length=_budget_reg.get_max_chars("route", "route_description", 1600),
+    )
     mapSegmentDescriptions: list[str] = Field(default_factory=list, max_length=64)
 
 
@@ -67,9 +114,15 @@ class ItineraryOutput(RouteOutput):
 
 
 class DayOutput(_CopyModel):
-    title: str = Field(min_length=1, max_length=160)
+    title: str = Field(
+        min_length=_budget_reg.get_spec("itinerary_day", "title").min_chars if _budget_reg.get_spec("itinerary_day", "title") else 1,
+        max_length=_budget_reg.get_max_chars("itinerary_day", "title", 160),
+    )
     description: list[str] = Field(min_length=1, max_length=6)
-    activities: list[str] = Field(default_factory=list, max_length=12)
+    activities: list[str] = Field(
+        default_factory=list,
+        max_length=_budget_reg.get_spec("itinerary_day", "activities").max_items if _budget_reg.get_spec("itinerary_day", "activities") else 12,
+    )
 
     @field_validator("description", "activities", mode="after")
     @classmethod

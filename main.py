@@ -7463,6 +7463,9 @@ def _pdf_layout_preflight(document: dict[str, Any]) -> list[str]:
     regions, not viewport breakpoints.  Keeping this server-side makes a PDF
     release fail before Chromium can silently clip a page.
     """
+    from core.rules.content_budgets import get_content_budget_registry
+
+    ceilings = get_content_budget_registry("v1").get_pdf_ceilings_map()
     errors: list[str] = []
     itinerary = (document.get("itinerary") or {}).get("days") or []
     for index, day in enumerate(itinerary):
@@ -7472,9 +7475,9 @@ def _pdf_layout_preflight(document: dict[str, Any]) -> list[str]:
         title = str(day.get("title") or "").strip()
         description = day.get("description") or []
         description_text = " ".join(str(item) for item in description if isinstance(item, str)) if isinstance(description, list) else str(description)
-        if len(title) > 170:
+        if len(title) > ceilings.get("day_title", 170):
             errors.append(f"/itinerary/days/{index}/title")
-        if len(description_text) > 1_150:
+        if len(description_text) > ceilings.get("day_description", 1150):
             errors.append(f"/itinerary/days/{index}/description")
     hotels = (document.get("stays") or {}).get("hotels") or []
     for index, hotel in enumerate(hotels):
@@ -7482,8 +7485,40 @@ def _pdf_layout_preflight(document: dict[str, Any]) -> list[str]:
             errors.append(f"/stays/hotels/{index}")
             continue
         copy_length = sum(len(str(hotel.get(key) or "")) for key in ("name", "city", "hotelDate", "tel", "roomType", "intro"))
-        if copy_length > 2_100:
+        if copy_length > ceilings.get("hotel_total_copy", 2100):
             errors.append(f"/stays/hotels/{index}")
+
+    narrative = document.get("narrative") or {}
+    if isinstance(narrative, dict):
+        highlight = str(narrative.get("letterHighlight") or "")
+        if len(highlight) > ceilings.get("overview_highlight", 500):
+            errors.append("/narrative/letterHighlight")
+        letter_keys = ("journeyOverviewTitle", "letterGreeting", "letterIntro", "letterBody2", "letterOutro", "letterSignOff", "letterSender", "letterHighlight")
+        total_letter_length = sum(len(str(narrative.get(k) or "")) for k in letter_keys)
+        if total_letter_length > ceilings.get("overview_letter_total", 4000):
+            errors.append("/narrative")
+
+    route = document.get("route") or {}
+    if isinstance(route, dict):
+        map_segment_descs = route.get("mapSegmentDescriptions") or []
+        if isinstance(map_segment_descs, list):
+            for index, desc in enumerate(map_segment_descs):
+                if len(str(desc or "")) > ceilings.get("route_stop_description", 500):
+                    errors.append(f"/route/mapSegmentDescriptions/{index}")
+        stay_segments = route.get("staySegments") or []
+        if isinstance(stay_segments, list):
+            for index, seg in enumerate(stay_segments):
+                if isinstance(seg, dict) and len(str(seg.get("mapSegmentDesc") or "")) > ceilings.get("route_stop_description", 500):
+                    errors.append(f"/route/staySegments/{index}/mapSegmentDesc")
+
+    booking_terms = (document.get("booking") or {}).get("items") or (document.get("booking") or {}).get("terms") or (document.get("booking_facts") or {}).get("items") or document.get("booking_terms") or []
+    if isinstance(booking_terms, list) and len(booking_terms) > ceilings.get("payment_terms_max_count", 4):
+        errors.append("/booking/items")
+    if isinstance(booking_terms, list):
+        for index, term in enumerate(booking_terms):
+            if isinstance(term, dict) and len(str(term.get("body") or term.get("bodyRichText") or "")) > ceilings.get("payment_term_body", 1600):
+                errors.append(f"/booking/items/{index}/body")
+
     return errors
 
 

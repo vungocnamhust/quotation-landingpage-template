@@ -52,6 +52,13 @@ export const MODE_OPTIONS: PromptOptionItem[] = [
   },
 ];
 
+import contentBudgetsData from '../../config/contentBudgets.json' with { type: 'json' };
+
+const dayDescBudget = contentBudgetsData?.budgets?.itinerary_day?.description;
+const dayDescTarget = dayDescBudget?.targetWords ?? '~120 words';
+const dayDescMax = dayDescBudget?.pdfCeilingChars ?? 1150;
+const dayDescBuffer = dayDescBudget?.bufferChars ?? 350;
+
 export const GROUND_RULE_OPTIONS: PromptOptionItem[] = [
   {
     id: 'GR-7030',
@@ -71,15 +78,15 @@ export const GROUND_RULE_OPTIONS: PromptOptionItem[] = [
     id: 'GR-TOUR-FULLDAY',
     category: 'ground_rules',
     label: '[GR-TOUR-FULLDAY] Full-Day Excursion',
-    description: '2-paragraph guided tour (~120 words)',
-    detailText: 'Rule Text: ~120 words split into Morning & Afternoon paragraphs. Highlight key attractions in bold (e.g. **Temple of Literature**).',
+    description: `2-paragraph guided tour (${dayDescTarget})`,
+    detailText: `Rule Text: ${dayDescTarget} (600–800 chars) split into Morning & Afternoon paragraphs. Leaves ~${dayDescBuffer}-char buffer under PDF A4 ceiling (${dayDescMax} chars). Bold key attractions (e.g. **Temple of Literature**).`,
   },
   {
     id: 'GR-CITY-INTRO',
     category: 'ground_rules',
     label: '[GR-CITY-INTRO] City Intro Entry',
-    description: 'City overview for open days (~120 words)',
-    detailText: 'Rule Text: When entry specifies only a destination, write a full-day city overview & orientation (~120 words).',
+    description: `City overview for open days (${dayDescTarget})`,
+    detailText: `Rule Text: When entry specifies only a destination, write a full-day city overview & orientation (${dayDescTarget}).`,
   },
   {
     id: 'GR-ACCOMMODATION',
@@ -100,7 +107,7 @@ export const GROUND_RULE_OPTIONS: PromptOptionItem[] = [
     category: 'ground_rules',
     label: '[GR-FREE-FULL-DAY] Full Free Day',
     description: 'Full day at leisure with recommendations',
-    detailText: 'Rule Text: ~120-word description explicitly stating a free day at leisure (no service arranged), followed by curated recommendations.',
+    detailText: `Rule Text: ${dayDescTarget} description explicitly stating a free day at leisure (no service arranged), followed by curated recommendations.`,
   },
 ];
 

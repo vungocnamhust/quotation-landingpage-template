@@ -1,4 +1,8 @@
 # Ground Rules Configuration: Standardized & Modular Rule-ID Indexing
+# Note on Length Governance & Buffer:
+# Word count targets (~120 words ≈ 600-800 characters) provide an optimal editorial cadence
+# while leaving a safe ~350-550 character buffer beneath the hard PDF A4 ceiling (1,150 characters)
+# for consultant manual adjustments without triggering layout overflow.
 
 rules:
   - id: "GR-7030"

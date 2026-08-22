@@ -8,6 +8,7 @@ import { cn } from '../../utils/cn.ts';
 import { ContentDraftActions } from './ContentDraftActions.tsx';
 import { ContentGenerationPanel, FactsUsed } from './ContentGenerationPanel.tsx';
 import { SectionContentFields } from './SectionContentFields.tsx';
+import { contentReconciler } from '../../lib/rules/contentReconciler.ts';
 import type {
   ContentFactInput,
   DocumentResponse,
@@ -196,11 +197,15 @@ export default function ContentStudioClient({
         const itemScope = item.sectionId.startsWith('itinerary:day:')
           ? item.sectionId
           : SCOPE_BY_SECTION_TYPE[item.sectionType] ?? item.sectionType;
-        const hasUnreviewedDraft = Boolean(
-          (resources.draftsData?.drafts ?? []).find(
-            (d) => d.scope === itemScope && (d.status === 'draft' || d.status === 'stale')
-          )
+        const draftObj = (resources.draftsData?.drafts ?? []).find(
+          (d) => d.scope === itemScope && (d.status === 'draft' || d.status === 'stale')
         );
+        const hasUnreviewedDraft = Boolean(draftObj);
+        const candidateToCheck = (isSelected && workingCandidate) ? workingCandidate : draftObj?.candidate;
+        const budgetValidation = candidateToCheck
+          ? contentReconciler.validateCandidatePdfBudget(itemScope, candidateToCheck as Record<string, unknown>)
+          : { isValid: true };
+        const hasBudgetOverflow = !budgetValidation.isValid;
         const isCurrentlyGenerating =
           batchState.isRunning &&
           (batchState.generatingScope === itemScope || batchState.generatingScope === 'all');
@@ -213,6 +218,8 @@ export default function ContentStudioClient({
           status: item.status,
           badge: isCurrentlyGenerating
             ? { text: 'Generating…', variant: 'generating' as const }
+            : hasBudgetOverflow
+            ? { text: 'Over A4 Limit', variant: 'warning' as const }
             : hasUnreviewedDraft
             ? { text: 'Draft', variant: 'draft' as const }
             : undefined,
@@ -222,6 +229,7 @@ export default function ContentStudioClient({
       readiness,
       selected?.sectionId,
       resources.draftsData?.drafts,
+      workingCandidate,
       batchState.isRunning,
       batchState.generatingScope,
     ]

@@ -1,0 +1,616 @@
+{
+  "version": "v1",
+  "pdfCeilings": {
+    "trip-title": 160,
+    "trip_title": 160,
+    "hero-lede": 500,
+    "trip_lede": 500,
+    "hero-kicker": 120,
+    "cover_kicker": 120,
+    "hero-meta-primary": 160,
+    "hero_meta_1": 160,
+    "hero-meta-secondary": 160,
+    "hero_meta_2": 160,
+    "hero-footer": 500,
+    "footer_text": 500,
+    "overview-title": 160,
+    "overview_title": 160,
+    "overview-highlight": 500,
+    "letter_highlight": 500,
+    "overview-greeting": 160,
+    "letter_greeting": 160,
+    "overview-intro": 1600,
+    "letter_intro": 1600,
+    "overview-body": 1600,
+    "letter_body": 1600,
+    "overview-outro": 1600,
+    "letter_outro": 1600,
+    "overview-signoff": 160,
+    "letter_signoff": 160,
+    "overview-sender": 160,
+    "letter_sender": 160,
+    "overview-total-copy": 4000,
+    "total_letter": 4000,
+    "route-title": 160,
+    "route_title": 160,
+    "route-description": 1600,
+    "route_description": 1600,
+    "route-stop-descriptions": 500,
+    "map_segment_descriptions": 500,
+    "itinerary-title": 160,
+    "itinerary_title": 160,
+    "itinerary-description": 1600,
+    "itinerary_description": 1600,
+    "day-title": 170,
+    "title": 170,
+    "day-description": 1150,
+    "description": 1150,
+    "day-activities": 400,
+    "activities": 400,
+    "hotel-intro": 300,
+    "hotel_intro": 300,
+    "hotel-total-copy": 2100,
+    "hotel_total_copy": 2100,
+    "booking-terms-count": 1600,
+    "items_count": 1600,
+    "booking-term-body": 1600,
+    "item_body": 1600,
+    "day_title": 170,
+    "day_description": 1150,
+    "hero_title": 160,
+    "hero_lede": 500,
+    "overview_highlight": 500,
+    "overview_letter_total": 4000,
+    "route_stop_description": 500,
+    "payment_terms_max_count": 4,
+    "payment_term_body": 1600
+  },
+  "budgets": {
+    "hero": {
+      "trip_title": {
+        "fieldId": "trip-title",
+        "label": "Trip Title",
+        "path": [
+          "trip",
+          "title"
+        ],
+        "control": "input",
+        "required": true,
+        "minChars": 1,
+        "maxChars": 160,
+        "pdfCeilingChars": 160,
+        "targetWords": "3–8 words",
+        "targetParagraphs": null,
+        "targetFormula": null,
+        "promptRule": "Write refined, concise brochure title (max 160 characters).",
+        "bufferChars": null,
+        "maxItems": null,
+        "pdfMaxItems": null
+      },
+      "trip_lede": {
+        "fieldId": "hero-lede",
+        "label": "Hero Introduction",
+        "path": [
+          "trip",
+          "lede"
+        ],
+        "control": "textarea",
+        "required": true,
+        "minChars": 1,
+        "maxChars": 500,
+        "pdfCeilingChars": 500,
+        "targetWords": "30–50 words",
+        "targetParagraphs": null,
+        "targetFormula": null,
+        "promptRule": "Hero introduction (lede) must be evocative yet restrained (max 500 characters).",
+        "bufferChars": null,
+        "maxItems": null,
+        "pdfMaxItems": null
+      },
+      "cover_kicker": {
+        "fieldId": "hero-kicker",
+        "label": "Cover Kicker",
+        "path": [
+          "narrative",
+          "coverKicker"
+        ],
+        "control": "input",
+        "required": true,
+        "minChars": 1,
+        "maxChars": 120,
+        "pdfCeilingChars": 120,
+        "targetWords": null,
+        "targetParagraphs": null,
+        "targetFormula": null,
+        "promptRule": "Concise chapter kicker reflecting milestone.",
+        "bufferChars": null,
+        "maxItems": null,
+        "pdfMaxItems": null
+      },
+      "hero_meta_1": {
+        "fieldId": "hero-meta-primary",
+        "label": "Hero Primary Meta",
+        "path": [
+          "narrative",
+          "heroMeta1"
+        ],
+        "control": "input",
+        "required": false,
+        "minChars": 0,
+        "maxChars": 160,
+        "pdfCeilingChars": 160,
+        "targetWords": null,
+        "targetParagraphs": null,
+        "targetFormula": null,
+        "promptRule": null,
+        "bufferChars": null,
+        "maxItems": null,
+        "pdfMaxItems": null
+      },
+      "hero_meta_2": {
+        "fieldId": "hero-meta-secondary",
+        "label": "Hero Secondary Meta",
+        "path": [
+          "narrative",
+          "heroMeta2"
+        ],
+        "control": "input",
+        "required": false,
+        "minChars": 0,
+        "maxChars": 160,
+        "pdfCeilingChars": 160,
+        "targetWords": null,
+        "targetParagraphs": null,
+        "targetFormula": null,
+        "promptRule": null,
+        "bufferChars": null,
+        "maxItems": null,
+        "pdfMaxItems": null
+      },
+      "footer_text": {
+        "fieldId": "hero-footer",
+        "label": "Footer Text",
+        "path": [
+          "narrative",
+          "footerText"
+        ],
+        "control": "textarea",
+        "required": true,
+        "minChars": 1,
+        "maxChars": 500,
+        "pdfCeilingChars": 500,
+        "targetWords": null,
+        "targetParagraphs": null,
+        "targetFormula": null,
+        "promptRule": null,
+        "bufferChars": null,
+        "maxItems": null,
+        "pdfMaxItems": null
+      }
+    },
+    "overview_letter": {
+      "overview_title": {
+        "fieldId": "overview-title",
+        "label": "Overview Title",
+        "path": [
+          "narrative",
+          "journeyOverviewTitle"
+        ],
+        "control": "input",
+        "required": true,
+        "minChars": 1,
+        "maxChars": 160,
+        "pdfCeilingChars": 160,
+        "targetWords": null,
+        "targetParagraphs": null,
+        "targetFormula": null,
+        "promptRule": null,
+        "bufferChars": null,
+        "maxItems": null,
+        "pdfMaxItems": null
+      },
+      "letter_highlight": {
+        "fieldId": "overview-highlight",
+        "label": "Letter Highlight",
+        "path": [
+          "narrative",
+          "letterHighlight"
+        ],
+        "control": "textarea",
+        "required": true,
+        "minChars": 1,
+        "maxChars": 500,
+        "pdfCeilingChars": 500,
+        "targetWords": "15–30 words",
+        "targetParagraphs": null,
+        "targetFormula": null,
+        "promptRule": "Memorable pull-quote highlighting milestone or trip essence (max 500 characters).",
+        "bufferChars": null,
+        "maxItems": null,
+        "pdfMaxItems": null
+      },
+      "letter_greeting": {
+        "fieldId": "overview-greeting",
+        "label": "Greeting",
+        "path": [
+          "narrative",
+          "letterGreeting"
+        ],
+        "control": "input",
+        "required": true,
+        "minChars": 1,
+        "maxChars": 160,
+        "pdfCeilingChars": 160,
+        "targetWords": null,
+        "targetParagraphs": null,
+        "targetFormula": null,
+        "promptRule": null,
+        "bufferChars": null,
+        "maxItems": null,
+        "pdfMaxItems": null
+      },
+      "letter_intro": {
+        "fieldId": "overview-intro",
+        "label": "Letter Opening",
+        "path": [
+          "narrative",
+          "letterIntro"
+        ],
+        "control": "textarea",
+        "required": true,
+        "minChars": 1,
+        "maxChars": 1600,
+        "pdfCeilingChars": 1600,
+        "targetWords": null,
+        "targetParagraphs": null,
+        "targetFormula": null,
+        "promptRule": null,
+        "bufferChars": null,
+        "maxItems": null,
+        "pdfMaxItems": null
+      },
+      "letter_body": {
+        "fieldId": "overview-body",
+        "label": "Letter Body",
+        "path": [
+          "narrative",
+          "letterBody2"
+        ],
+        "control": "textarea",
+        "required": true,
+        "minChars": 1,
+        "maxChars": 1600,
+        "pdfCeilingChars": 1600,
+        "targetWords": null,
+        "targetParagraphs": null,
+        "targetFormula": null,
+        "promptRule": null,
+        "bufferChars": null,
+        "maxItems": null,
+        "pdfMaxItems": null
+      },
+      "letter_outro": {
+        "fieldId": "overview-outro",
+        "label": "Letter Closing",
+        "path": [
+          "narrative",
+          "letterOutro"
+        ],
+        "control": "textarea",
+        "required": true,
+        "minChars": 1,
+        "maxChars": 1600,
+        "pdfCeilingChars": 1600,
+        "targetWords": null,
+        "targetParagraphs": null,
+        "targetFormula": null,
+        "promptRule": null,
+        "bufferChars": null,
+        "maxItems": null,
+        "pdfMaxItems": null
+      },
+      "letter_signoff": {
+        "fieldId": "overview-signoff",
+        "label": "Sign-off",
+        "path": [
+          "narrative",
+          "letterSignOff"
+        ],
+        "control": "input",
+        "required": true,
+        "minChars": 1,
+        "maxChars": 160,
+        "pdfCeilingChars": 160,
+        "targetWords": null,
+        "targetParagraphs": null,
+        "targetFormula": null,
+        "promptRule": null,
+        "bufferChars": null,
+        "maxItems": null,
+        "pdfMaxItems": null
+      },
+      "letter_sender": {
+        "fieldId": "overview-sender",
+        "label": "Sender",
+        "path": [
+          "narrative",
+          "letterSender"
+        ],
+        "control": "input",
+        "required": true,
+        "minChars": 1,
+        "maxChars": 160,
+        "pdfCeilingChars": 160,
+        "targetWords": null,
+        "targetParagraphs": null,
+        "targetFormula": null,
+        "promptRule": null,
+        "bufferChars": null,
+        "maxItems": null,
+        "pdfMaxItems": null
+      },
+      "total_letter": {
+        "fieldId": "overview-total-copy",
+        "label": "Full Letter Total Copy",
+        "path": [
+          "total_letter"
+        ],
+        "control": "input",
+        "required": true,
+        "minChars": 1,
+        "maxChars": 1600,
+        "pdfCeilingChars": 4000,
+        "targetWords": null,
+        "targetParagraphs": null,
+        "targetFormula": null,
+        "promptRule": null,
+        "bufferChars": 1000,
+        "maxItems": null,
+        "pdfMaxItems": null
+      }
+    },
+    "route": {
+      "route_title": {
+        "fieldId": "route-title",
+        "label": "Route Title",
+        "path": [
+          "route",
+          "title"
+        ],
+        "control": "input",
+        "required": true,
+        "minChars": 1,
+        "maxChars": 160,
+        "pdfCeilingChars": 160,
+        "targetWords": null,
+        "targetParagraphs": null,
+        "targetFormula": null,
+        "promptRule": null,
+        "bufferChars": null,
+        "maxItems": null,
+        "pdfMaxItems": null
+      },
+      "route_description": {
+        "fieldId": "route-description",
+        "label": "Route Introduction",
+        "path": [
+          "route",
+          "description"
+        ],
+        "control": "textarea",
+        "required": true,
+        "minChars": 1,
+        "maxChars": 1600,
+        "pdfCeilingChars": 1600,
+        "targetWords": null,
+        "targetParagraphs": null,
+        "targetFormula": null,
+        "promptRule": null,
+        "bufferChars": null,
+        "maxItems": null,
+        "pdfMaxItems": null
+      },
+      "map_segment_descriptions": {
+        "fieldId": "route-stop-descriptions",
+        "label": "Route Stop Description",
+        "path": [
+          "route",
+          "mapSegmentDescriptions"
+        ],
+        "control": "string-list",
+        "required": true,
+        "minChars": 1,
+        "maxChars": 500,
+        "pdfCeilingChars": 500,
+        "targetWords": "15–25 words per stop",
+        "targetParagraphs": null,
+        "targetFormula": null,
+        "promptRule": "Concise summary for each stay/stop along the route (max 500 characters).",
+        "bufferChars": null,
+        "maxItems": null,
+        "pdfMaxItems": null
+      }
+    },
+    "itinerary": {
+      "itinerary_title": {
+        "fieldId": "itinerary-title",
+        "label": "Itinerary Title",
+        "path": [
+          "itinerary",
+          "title"
+        ],
+        "control": "input",
+        "required": true,
+        "minChars": 1,
+        "maxChars": 160,
+        "pdfCeilingChars": 160,
+        "targetWords": null,
+        "targetParagraphs": null,
+        "targetFormula": null,
+        "promptRule": null,
+        "bufferChars": null,
+        "maxItems": null,
+        "pdfMaxItems": null
+      },
+      "itinerary_description": {
+        "fieldId": "itinerary-description",
+        "label": "Itinerary Introduction",
+        "path": [
+          "itinerary",
+          "description"
+        ],
+        "control": "textarea",
+        "required": true,
+        "minChars": 1,
+        "maxChars": 1600,
+        "pdfCeilingChars": 1600,
+        "targetWords": null,
+        "targetParagraphs": null,
+        "targetFormula": null,
+        "promptRule": null,
+        "bufferChars": null,
+        "maxItems": null,
+        "pdfMaxItems": null
+      }
+    },
+    "itinerary_day": {
+      "title": {
+        "fieldId": "day-title",
+        "label": "Day Title",
+        "path": [
+          "title"
+        ],
+        "control": "input",
+        "required": true,
+        "minChars": 1,
+        "maxChars": 160,
+        "pdfCeilingChars": 170,
+        "targetWords": null,
+        "targetParagraphs": null,
+        "targetFormula": "[Adjective] + [City] or [Pace: Relaxed/Active/Immersive] + [Place] + [Highlights]",
+        "promptRule": "Title MUST follow formula '[Adjective] + [City]' or '[Pace] + [Place] + [Highlights]' (max 160 characters).",
+        "bufferChars": null,
+        "maxItems": null,
+        "pdfMaxItems": null
+      },
+      "description": {
+        "fieldId": "day-description",
+        "label": "Day Narrative",
+        "path": [
+          "description"
+        ],
+        "control": "string-list",
+        "required": true,
+        "minChars": 1,
+        "maxChars": 1200,
+        "pdfCeilingChars": 1150,
+        "targetWords": "~120 words",
+        "targetParagraphs": 2,
+        "targetFormula": null,
+        "promptRule": "~120 words split into 2 paragraphs (Morning and Afternoon). Bold main attractions (e.g. **Temple of Literature**).",
+        "bufferChars": 350,
+        "maxItems": null,
+        "pdfMaxItems": null
+      },
+      "activities": {
+        "fieldId": "day-activities",
+        "label": "Activities",
+        "path": [
+          "activities"
+        ],
+        "control": "string-list",
+        "required": false,
+        "minChars": 0,
+        "maxChars": 400,
+        "pdfCeilingChars": 400,
+        "targetWords": null,
+        "targetParagraphs": null,
+        "targetFormula": null,
+        "promptRule": "2–5 concise bullet items per day summarizing key highlights.",
+        "bufferChars": null,
+        "maxItems": 12,
+        "pdfMaxItems": null
+      }
+    },
+    "hotel_plan": {
+      "hotel_intro": {
+        "fieldId": "hotel-intro",
+        "label": "Hotel Feature Summary",
+        "path": [
+          "hotel_intro"
+        ],
+        "control": "input",
+        "required": true,
+        "minChars": 1,
+        "maxChars": 500,
+        "pdfCeilingChars": 300,
+        "targetWords": "~30 words",
+        "targetParagraphs": null,
+        "targetFormula": null,
+        "promptRule": "~30-word description highlighting key features, style, and amenities.",
+        "bufferChars": null,
+        "maxItems": null,
+        "pdfMaxItems": null
+      },
+      "hotel_total_copy": {
+        "fieldId": "hotel-total-copy",
+        "label": "Hotel Card Total Copy",
+        "path": [
+          "hotel_total_copy"
+        ],
+        "control": "input",
+        "required": true,
+        "minChars": 1,
+        "maxChars": 1600,
+        "pdfCeilingChars": 2100,
+        "targetWords": null,
+        "targetParagraphs": null,
+        "targetFormula": null,
+        "promptRule": null,
+        "bufferChars": null,
+        "maxItems": null,
+        "pdfMaxItems": null
+      }
+    },
+    "payment_terms": {
+      "items_count": {
+        "fieldId": "booking-terms-count",
+        "label": "Payment Terms Count",
+        "path": [
+          "items_count"
+        ],
+        "control": "input",
+        "required": true,
+        "minChars": 1,
+        "maxChars": 1600,
+        "pdfCeilingChars": 1600,
+        "targetWords": null,
+        "targetParagraphs": null,
+        "targetFormula": null,
+        "promptRule": null,
+        "bufferChars": null,
+        "maxItems": 4,
+        "pdfMaxItems": 4
+      },
+      "item_body": {
+        "fieldId": "booking-term-body",
+        "label": "Payment Term Body",
+        "path": [
+          "item_body"
+        ],
+        "control": "input",
+        "required": true,
+        "minChars": 1,
+        "maxChars": 1600,
+        "pdfCeilingChars": 1600,
+        "targetWords": null,
+        "targetParagraphs": null,
+        "targetFormula": null,
+        "promptRule": null,
+        "bufferChars": null,
+        "maxItems": null,
+        "pdfMaxItems": null
+      }
+    }
+  }
+}

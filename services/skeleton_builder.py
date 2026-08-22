@@ -48,11 +48,11 @@ class SkeletonBuilder:
         """Derive the route map from immutable Facts, never from generated copy."""
         grouped: list[list[dict[str, Any]]] = []
         for day in days:
-            point = day.get("destinationRef") or day.get("overnightRef") or {}
-            destination_id = point.get("id") or day.get("segmentCity") or day.get("overnight") or ""
+            point = day.get("overnightRef") or day.get("destinationRef") or {}
+            destination_id = point.get("id") or day.get("overnight") or day.get("segmentCity") or ""
             previous = grouped[-1][-1] if grouped else None
-            previous_point = (previous.get("destinationRef") or previous.get("overnightRef") or {}) if previous else {}
-            previous_id = previous_point.get("id") or (previous.get("segmentCity") if previous else "") or (previous.get("overnight") if previous else "") or ""
+            previous_point = (previous.get("overnightRef") or previous.get("destinationRef") or {}) if previous else {}
+            previous_id = previous_point.get("id") or (previous.get("overnight") if previous else "") or (previous.get("segmentCity") if previous else "") or ""
             if grouped and previous_id == destination_id:
                 grouped[-1].append(day)
             else:
@@ -62,8 +62,8 @@ class SkeletonBuilder:
         hotel_cursor = 0
         for index, group in enumerate(grouped, 1):
             first, last = group[0], group[-1]
-            point = last.get("destinationRef") or last.get("overnightRef") or {}
-            city = point.get("name") or last.get("segmentCity") or last.get("overnight") or ""
+            point = last.get("overnightRef") or last.get("destinationRef") or {}
+            city = point.get("name") or last.get("overnight") or last.get("segmentCity") or ""
             hotel = next((item for item in hotels[hotel_cursor:] if item.get("city") == city), None)
             if hotel is not None:
                 hotel_cursor = hotels.index(hotel) + 1

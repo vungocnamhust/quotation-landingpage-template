@@ -1,0 +1,289 @@
+# Unified Content Budgets & Metric Specification (Single Source of Truth)
+# Version: v1
+# Single source of truth for AI prompt targets, backend Pydantic schemas,
+# Content Registry field constraints, server-side PDF preflight, and frontend budget meters.
+
+version: "v1"
+
+budgets:
+  hero:
+    trip_title:
+      field_id: "trip-title"
+      label: "Trip Title"
+      path: ["trip", "title"]
+      control: "input"
+      required: true
+      min_chars: 1
+      max_chars: 160
+      pdf_ceiling_chars: 160
+      target_words: "3–8 words"
+      prompt_rule: "Write refined, concise brochure title (max 160 characters)."
+
+    trip_lede:
+      field_id: "hero-lede"
+      label: "Hero Introduction"
+      path: ["trip", "lede"]
+      control: "textarea"
+      required: true
+      min_chars: 1
+      max_chars: 500
+      pdf_ceiling_chars: 500
+      target_words: "30–50 words"
+      prompt_rule: "Hero introduction (lede) must be evocative yet restrained (max 500 characters)."
+
+    cover_kicker:
+      field_id: "hero-kicker"
+      label: "Cover Kicker"
+      path: ["narrative", "coverKicker"]
+      control: "input"
+      required: true
+      min_chars: 1
+      max_chars: 120
+      pdf_ceiling_chars: 120
+      prompt_rule: "Concise chapter kicker reflecting milestone."
+
+    hero_meta_1:
+      field_id: "hero-meta-primary"
+      label: "Hero Primary Meta"
+      path: ["narrative", "heroMeta1"]
+      control: "input"
+      required: false
+      min_chars: 0
+      max_chars: 160
+      pdf_ceiling_chars: 160
+
+    hero_meta_2:
+      field_id: "hero-meta-secondary"
+      label: "Hero Secondary Meta"
+      path: ["narrative", "heroMeta2"]
+      control: "input"
+      required: false
+      min_chars: 0
+      max_chars: 160
+      pdf_ceiling_chars: 160
+
+    footer_text:
+      field_id: "hero-footer"
+      label: "Footer Text"
+      path: ["narrative", "footerText"]
+      control: "textarea"
+      required: true
+      min_chars: 1
+      max_chars: 500
+      pdf_ceiling_chars: 500
+
+  overview_letter:
+    overview_title:
+      field_id: "overview-title"
+      label: "Overview Title"
+      path: ["narrative", "journeyOverviewTitle"]
+      control: "input"
+      required: true
+      min_chars: 1
+      max_chars: 160
+      pdf_ceiling_chars: 160
+
+    letter_highlight:
+      field_id: "overview-highlight"
+      label: "Letter Highlight"
+      path: ["narrative", "letterHighlight"]
+      control: "textarea"
+      required: true
+      min_chars: 1
+      max_chars: 500
+      pdf_ceiling_chars: 500
+      target_words: "15–30 words"
+      prompt_rule: "Memorable pull-quote highlighting milestone or trip essence (max 500 characters)."
+
+    letter_greeting:
+      field_id: "overview-greeting"
+      label: "Greeting"
+      path: ["narrative", "letterGreeting"]
+      control: "input"
+      required: true
+      min_chars: 1
+      max_chars: 160
+      pdf_ceiling_chars: 160
+
+    letter_intro:
+      field_id: "overview-intro"
+      label: "Letter Opening"
+      path: ["narrative", "letterIntro"]
+      control: "textarea"
+      required: true
+      min_chars: 1
+      max_chars: 1600
+      pdf_ceiling_chars: 1600
+
+    letter_body:
+      field_id: "overview-body"
+      label: "Letter Body"
+      path: ["narrative", "letterBody2"]
+      control: "textarea"
+      required: true
+      min_chars: 1
+      max_chars: 1600
+      pdf_ceiling_chars: 1600
+
+    letter_outro:
+      field_id: "overview-outro"
+      label: "Letter Closing"
+      path: ["narrative", "letterOutro"]
+      control: "textarea"
+      required: true
+      min_chars: 1
+      max_chars: 1600
+      pdf_ceiling_chars: 1600
+
+    letter_signoff:
+      field_id: "overview-signoff"
+      label: "Sign-off"
+      path: ["narrative", "letterSignOff"]
+      control: "input"
+      required: true
+      min_chars: 1
+      max_chars: 160
+      pdf_ceiling_chars: 160
+
+    letter_sender:
+      field_id: "overview-sender"
+      label: "Sender"
+      path: ["narrative", "letterSender"]
+      control: "input"
+      required: true
+      min_chars: 1
+      max_chars: 160
+      pdf_ceiling_chars: 160
+
+    total_letter:
+      field_id: "overview-total-copy"
+      label: "Full Letter Total Copy"
+      pdf_ceiling_chars: 4000
+      buffer_chars: 1000
+      buffer_rationale: "Accommodates 4 structured paragraphs comfortably inside single Indochine border page."
+
+  route:
+    route_title:
+      field_id: "route-title"
+      label: "Route Title"
+      path: ["route", "title"]
+      control: "input"
+      required: true
+      min_chars: 1
+      max_chars: 160
+      pdf_ceiling_chars: 160
+
+    route_description:
+      field_id: "route-description"
+      label: "Route Introduction"
+      path: ["route", "description"]
+      control: "textarea"
+      required: true
+      min_chars: 1
+      max_chars: 1600
+      pdf_ceiling_chars: 1600
+
+    map_segment_descriptions:
+      field_id: "route-stop-descriptions"
+      label: "Route Stop Description"
+      path: ["route", "mapSegmentDescriptions"]
+      control: "string-list"
+      required: true
+      min_chars: 1
+      max_chars: 500
+      pdf_ceiling_chars: 500
+      target_words: "15–25 words per stop"
+      prompt_rule: "Concise summary for each stay/stop along the route (max 500 characters)."
+
+  itinerary:
+    itinerary_title:
+      field_id: "itinerary-title"
+      label: "Itinerary Title"
+      path: ["itinerary", "title"]
+      control: "input"
+      required: true
+      min_chars: 1
+      max_chars: 160
+      pdf_ceiling_chars: 160
+
+    itinerary_description:
+      field_id: "itinerary-description"
+      label: "Itinerary Introduction"
+      path: ["itinerary", "description"]
+      control: "textarea"
+      required: true
+      min_chars: 1
+      max_chars: 1600
+      pdf_ceiling_chars: 1600
+
+  itinerary_day:
+    title:
+      field_id: "day-title"
+      label: "Day Title"
+      path: ["title"]
+      control: "input"
+      required: true
+      min_chars: 1
+      max_chars: 160
+      pdf_ceiling_chars: 170
+      target_formula: "[Adjective] + [City] or [Pace: Relaxed/Active/Immersive] + [Place] + [Highlights]"
+      prompt_rule: "Title MUST follow formula '[Adjective] + [City]' or '[Pace] + [Place] + [Highlights]' (max 160 characters)."
+
+    description:
+      field_id: "day-description"
+      label: "Day Narrative"
+      path: ["description"]
+      control: "string-list"
+      required: true
+      min_chars: 1
+      max_chars: 1200
+      pdf_ceiling_chars: 1150
+      target_words: "~120 words"
+      target_paragraphs: 2
+      buffer_chars: 350
+      buffer_rationale: "Target ~120 words (~700 chars) leaves ~350-450 chars buffer for manual additions without overflowing 2-days-per-page A4 layout."
+      prompt_rule: "~120 words split into 2 paragraphs (Morning and Afternoon). Bold main attractions (e.g. **Temple of Literature**)."
+
+    activities:
+      field_id: "day-activities"
+      label: "Activities"
+      path: ["activities"]
+      control: "string-list"
+      required: false
+      min_chars: 0
+      max_chars: 400
+      pdf_ceiling_chars: 400
+      target_items: "2–5 items"
+      max_items: 12
+      prompt_rule: "2–5 concise bullet items per day summarizing key highlights."
+
+  hotel_plan:
+    hotel_intro:
+      field_id: "hotel-intro"
+      label: "Hotel Feature Summary"
+      min_chars: 1
+      max_chars: 500
+      pdf_ceiling_chars: 300
+      target_words: "~30 words"
+      prompt_rule: "~30-word description highlighting key features, style, and amenities."
+
+    hotel_total_copy:
+      field_id: "hotel-total-copy"
+      label: "Hotel Card Total Copy"
+      pdf_ceiling_chars: 2100
+      buffer_rationale: "Sum of hotel name, city, dates, phone, room type, and intro fits 1-4 cards per A4 page."
+
+  payment_terms:
+    items_count:
+      field_id: "booking-terms-count"
+      label: "Payment Terms Count"
+      max_items: 4
+      pdf_max_items: 4
+      buffer_rationale: "Max 4 terms fit strictly onto Page 2 of Details A4 sheet without spilling over."
+
+    item_body:
+      field_id: "booking-term-body"
+      label: "Payment Term Body"
+      min_chars: 1
+      max_chars: 1600
+      pdf_ceiling_chars: 1600

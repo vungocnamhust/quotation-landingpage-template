@@ -101,10 +101,21 @@ class EditableBrochureContractTests(unittest.TestCase):
         document = {
             "itinerary": {"days": [{"title": "x" * 171, "description": ["brief"]}]},
             "stays": {"hotels": [{"name": "x" * 2_101}]},
+            "narrative": {"letterHighlight": "x" * 501, "letterIntro": "x" * 4_000},
+            "route": {"mapSegmentDescriptions": ["x" * 501]},
+            "booking": {"items": [{"body": "x" * 1601}, {}, {}, {}, {}]},
         }
         self.assertEqual(
             main._pdf_layout_preflight(document),
-            ["/itinerary/days/0/title", "/stays/hotels/0"],
+            [
+                "/itinerary/days/0/title",
+                "/stays/hotels/0",
+                "/narrative/letterHighlight",
+                "/narrative",
+                "/route/mapSegmentDescriptions/0",
+                "/booking/items",
+                "/booking/items/0/body",
+            ],
         )
 
     def test_pdf_media_registry_requires_three_usable_day_images_without_optional_designer_media(self):
@@ -144,7 +155,7 @@ class EditableBrochureContractTests(unittest.TestCase):
     def test_runtime_uses_canonical_gallery_before_legacy_slots(self):
         source = (Path(__file__).resolve().parents[1] / "quote-generator/display/runtimePageBuilder.ts").read_text()
         self.assertIn("const canonicalGallery = recordList(images.carousel)", source)
-        self.assertIn("const galleryAssets = canonicalGallery.length ? canonicalGallery : galleryOverride.length", source)
+        self.assertIn("const galleryAssets = galleryOverride.length ? galleryOverride : canonicalGallery.length ? canonicalGallery : [images.hero, images.small1, images.small2].filter(Boolean)", source)
 
     def test_runtime_emits_the_registry_owned_inclusion_heading_descriptors(self):
         source = (Path(__file__).resolve().parents[1] / "quote-generator/display/runtimePageBuilder.ts").read_text()

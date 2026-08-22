@@ -11,6 +11,7 @@ import { getLanguageLabels } from '../../display/labels.ts';
 import type { QuotationFacts } from '../../components/quotation-workspace/factsTypes.ts';
 import { formatRouteString, deriveRouteFromItinerary } from './routeRules.ts';
 import type { CanonicalDay, CanonicalTrip } from './tripReconciler.ts';
+import contentBudgetsData from '../../config/contentBudgets.json' with { type: 'json' };
 
 export type PdfTextBudgetResult = {
   isValid: boolean;
@@ -19,26 +20,32 @@ export type PdfTextBudgetResult = {
   overflow: number;
 };
 
+const pdfCeilings = (contentBudgetsData?.pdfCeilings || {}) as Record<string, number>;
+
 export const PDF_TEXT_BUDGETS: Record<string, number> = {
-  day_title: 170,
-  'itinerary:day:title': 170,
-  dayTitle: 170,
-  day_description: 1150,
-  'itinerary:day:description': 1150,
-  dayDescription: 1150,
-  daySummary: 1150,
-  hotel_intro: 300,
-  hotelIntro: 300,
-  hotel_total_copy: 2100,
-  hotelCopy: 2100,
-  hero_title: 160,
-  trip_title: 160,
-  heroTitle: 160,
-  hero_lede: 500,
-  heroLede: 500,
-  route_stop_description: 500,
-  mapSegmentDesc: 500,
-  overview_highlight: 500,
+  ...pdfCeilings,
+  day_title: pdfCeilings.day_title ?? 170,
+  'itinerary:day:title': pdfCeilings['day-title'] ?? 170,
+  dayTitle: pdfCeilings.day_title ?? 170,
+  day_description: pdfCeilings.day_description ?? 1150,
+  'itinerary:day:description': pdfCeilings['day-description'] ?? 1150,
+  dayDescription: pdfCeilings.day_description ?? 1150,
+  daySummary: pdfCeilings.day_description ?? 1150,
+  hotel_intro: pdfCeilings.hotel_intro ?? 300,
+  hotelIntro: pdfCeilings.hotel_intro ?? 300,
+  hotel_total_copy: pdfCeilings.hotel_total_copy ?? 2100,
+  hotelCopy: pdfCeilings.hotel_total_copy ?? 2100,
+  hero_title: pdfCeilings.hero_title ?? 160,
+  trip_title: pdfCeilings.trip_title ?? 160,
+  heroTitle: pdfCeilings.hero_title ?? 160,
+  hero_lede: pdfCeilings.hero_lede ?? 500,
+  heroLede: pdfCeilings.hero_lede ?? 500,
+  route_stop_description: pdfCeilings.route_stop_description ?? 500,
+  mapSegmentDesc: pdfCeilings.route_stop_description ?? 500,
+  overview_highlight: pdfCeilings.overview_highlight ?? 500,
+  overview_letter_total: pdfCeilings.overview_letter_total ?? 4000,
+  payment_terms_max_count: pdfCeilings.payment_terms_max_count ?? 4,
+  payment_term_body: pdfCeilings.payment_term_body ?? 1600,
 };
 
 export const DEFAULT_BUDGET_LIMIT = 1600;
@@ -572,7 +579,151 @@ export function checkDocumentPdfTextBudgets(document: Record<string, unknown>): 
     }
   });
 
+  const narrative = (document.narrative as Record<string, unknown>) || {};
+  if (typeof narrative === 'object' && narrative !== null) {
+    const highlight = String(narrative.letterHighlight || '');
+    const highlightCheck = validatePdfTextBudget('overview_highlight', highlight);
+    if (!highlightCheck.isValid) {
+      violations.push({
+        path: '/narrative/letterHighlight',
+        scope: 'overview_letter',
+        field: 'letterHighlight',
+        result: highlightCheck,
+      });
+    }
+
+    const letterKeys = ['journeyOverviewTitle', 'letterGreeting', 'letterIntro', 'letterBody2', 'letterOutro', 'letterSignOff', 'letterSender', 'letterHighlight'];
+    const totalLetterCopy = letterKeys.map((k) => String(narrative[k] || '')).join(' ');
+    const totalLetterCheck = validatePdfTextBudget('overview_letter_total', totalLetterCopy);
+    if (!totalLetterCheck.isValid) {
+      violations.push({
+        path: '/narrative',
+        scope: 'overview_letter',
+        field: 'overview_letter_total',
+        result: totalLetterCheck,
+      });
+    }
+  }
+
+  const route = (document.route as Record<string, unknown>) || {};
+  if (typeof route === 'object' && route !== null) {
+    const segmentDescs = Array.isArray(route.mapSegmentDescriptions)
+      ? (route.mapSegmentDescriptions as unknown[]).map(String)
+      : [];
+    segmentDescs.forEach((desc, index) => {
+      const segCheck = validatePdfTextBudget('route_stop_description', desc);
+      if (!segCheck.isValid) {
+        violations.push({
+          path: `/route/mapSegmentDescriptions/${index}`,
+          scope: 'route',
+          field: `mapSegmentDescriptions.${index}`,
+          result: segCheck,
+        });
+      }
+    });
+  }
+
+  const booking = (document.booking as Record<string, unknown>) || {};
+  const bookingItems = (Array.isArray(booking.items) ? booking.items : Array.isArray(booking.terms) ? booking.terms : Array.isArray(document.booking_terms) ? (document.booking_terms as unknown[]) : []) as Array<Record<string, unknown>>;
+  if (bookingItems.length > 4) {
+    violations.push({
+      path: '/booking/items',
+      scope: 'booking_terms',
+      field: 'items_count',
+      result: {
+        isValid: false,
+        current: bookingItems.length,
+        max: 4,
+        overflow: bookingItems.length - 4,
+      },
+    });
+  }
+  bookingItems.forEach((term, index) => {
+    if (!term || typeof term !== 'object') return;
+    const body = String(term.body || term.bodyRichText || '');
+    const bodyCheck = validatePdfTextBudget('payment_term_body', body);
+    if (!bodyCheck.isValid) {
+      violations.push({
+        path: `/booking/items/${index}/body`,
+        scope: 'booking_terms',
+        field: `items.${index}.body`,
+        result: bodyCheck,
+      });
+    }
+  });
+
   return violations;
+}
+
+/**
+ * Pure function: Validate a candidate object for a specific scope.
+ */
+export function validateCandidatePdfBudget(
+  scope: string,
+  candidate: Record<string, unknown> | null | undefined
+): {
+  isValid: boolean;
+  violations: Array<{ field: string; result: PdfTextBudgetResult }>;
+} {
+  if (!candidate || typeof candidate !== 'object') {
+    return { isValid: true, violations: [] };
+  }
+
+  const violations: Array<{ field: string; result: PdfTextBudgetResult }> = [];
+
+  if (scope.startsWith('itinerary:day:')) {
+    const title = String(candidate.title || '');
+    const titleCheck = validatePdfTextBudget('day_title', title);
+    if (!titleCheck.isValid) {
+      violations.push({ field: 'title', result: titleCheck });
+    }
+    const description = candidate.description;
+    const descCheck = validatePdfTextBudget('day_description', description as string | string[]);
+    if (!descCheck.isValid) {
+      violations.push({ field: 'description', result: descCheck });
+    }
+  } else if (scope === 'overview_letter') {
+    const narrative = (candidate.narrative as Record<string, unknown>) || candidate;
+    const highlight = String(narrative.letterHighlight || '');
+    const highlightCheck = validatePdfTextBudget('overview_highlight', highlight);
+    if (!highlightCheck.isValid) {
+      violations.push({ field: 'letterHighlight', result: highlightCheck });
+    }
+    const letterKeys = ['journeyOverviewTitle', 'letterGreeting', 'letterIntro', 'letterBody2', 'letterOutro', 'letterSignOff', 'letterSender', 'letterHighlight'];
+    const totalLetterCopy = letterKeys.map((k) => String(narrative[k] || '')).join(' ');
+    const totalLetterCheck = validatePdfTextBudget('overview_letter_total', totalLetterCopy);
+    if (!totalLetterCheck.isValid) {
+      violations.push({ field: 'overview_letter_total', result: totalLetterCheck });
+    }
+  } else if (scope === 'route') {
+    const route = (candidate.route as Record<string, unknown>) || candidate;
+    const segmentDescs = Array.isArray(route.mapSegmentDescriptions)
+      ? (route.mapSegmentDescriptions as unknown[]).map(String)
+      : [];
+    segmentDescs.forEach((desc, index) => {
+      const segCheck = validatePdfTextBudget('route_stop_description', desc);
+      if (!segCheck.isValid) {
+        violations.push({ field: `mapSegmentDescriptions.${index}`, result: segCheck });
+      }
+    });
+  } else if (scope === 'hero') {
+    const trip = (candidate.trip as Record<string, unknown>) || candidate;
+    const title = String(trip.title || '');
+    const titleCheck = validatePdfTextBudget('hero_title', title);
+    if (!titleCheck.isValid) {
+      violations.push({ field: 'title', result: titleCheck });
+    }
+    const lede = String(trip.lede || '');
+    const ledeCheck = validatePdfTextBudget('hero_lede', lede);
+    if (!ledeCheck.isValid) {
+      violations.push({ field: 'lede', result: ledeCheck });
+    }
+  }
+
+  return {
+    isValid: violations.length === 0,
+    violations,
+  };
 }
 
 export const contentReconciler = {
@@ -581,6 +732,7 @@ export const contentReconciler = {
   deriveDefaultCandidate,
   reconcileCandidateWithFacts,
   checkDocumentPdfTextBudgets,
+  validateCandidatePdfBudget,
   PDF_TEXT_BUDGETS,
   DEFAULT_BUDGET_LIMIT,
 };

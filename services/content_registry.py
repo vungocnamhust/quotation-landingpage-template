@@ -64,8 +64,26 @@ class ContentSectionSpec:
     default_instructions: DefaultInstructions | None = None
 
 
+from core.rules.content_budgets import get_content_budget_registry
+
+
 def _field(id: str, label: str, *path: str | int, control: EditorControl = "input", required: bool = True, min_length: int = 1, max_length: int = 1600) -> EditorField:
     return EditorField(id=id, label=label, path=path, control=control, required=required, min_length=min_length, max_length=max_length)
+
+
+def _budget_field(scope: str, field_key: str) -> EditorField:
+    spec = get_content_budget_registry("v1").get_spec(scope, field_key)
+    if spec:
+        return EditorField(
+            id=spec.field_id,
+            label=spec.label,
+            path=spec.path,
+            control=spec.control,  # type: ignore
+            required=spec.required,
+            min_length=spec.min_chars,
+            max_length=spec.max_chars,
+        )
+    raise ValueError(f"Unknown budget field: {scope}.{field_key}")
 
 
 def _fact(id: str, label: str, *path: str | int, required: bool = False) -> FactInput:
@@ -87,7 +105,14 @@ CONTENT_SECTION_REGISTRY: dict[str, ContentSectionSpec] = {
         "hero", "content", ("trip.title", "trip.lede", "narrative.coverKicker", "narrative.heroMeta1", "narrative.heroMeta2", "narrative.footerText"),
         ("trip_facts.destinations", "trip_facts.start_date", "trip_facts.end_date", "trip_facts.duration_days", "trip_facts.duration_nights", "customer_facts.customer_name"),
         ("trip_facts.destinations",), "narrative", generation=True, recipe_version="v4", schema_version="v1",
-        editor_fields=(_field("trip-title", "Trip title", "trip", "title", max_length=160), _field("hero-lede", "Hero introduction", "trip", "lede", control="textarea", max_length=500), _field("hero-kicker", "Cover kicker", "narrative", "coverKicker", max_length=120), _field("hero-meta-primary", "Hero primary meta", "narrative", "heroMeta1", required=False, min_length=0, max_length=160), _field("hero-meta-secondary", "Hero secondary meta", "narrative", "heroMeta2", required=False, min_length=0, max_length=160), _field("hero-footer", "Footer text", "narrative", "footerText", control="textarea", max_length=500)),
+        editor_fields=(
+            _budget_field("hero", "trip_title"),
+            _budget_field("hero", "trip_lede"),
+            _budget_field("hero", "cover_kicker"),
+            _budget_field("hero", "hero_meta_1"),
+            _budget_field("hero", "hero_meta_2"),
+            _budget_field("hero", "footer_text"),
+        ),
         fact_inputs=(
             _fact("destinations", "Destinations", "trip_facts", "destinations", required=True),
             _fact("guest-name", "Guest name", "customer_facts", "customer_name"),
@@ -101,7 +126,16 @@ CONTENT_SECTION_REGISTRY: dict[str, ContentSectionSpec] = {
         "overview_letter", "content", ("narrative.journeyOverviewTitle", "narrative.letterHighlight", "narrative.letterGreeting", "narrative.letterIntro", "narrative.letterBody2", "narrative.letterOutro", "narrative.letterSignOff", "narrative.letterSender"),
         ("trip_facts.destinations", "trip_facts.start_date", "trip_facts.end_date", "trip_facts.duration_days", "trip_facts.duration_nights", "customer_facts.customer_name"),
         ("trip_facts.destinations",), "narrative", generation=True, recipe_version="v4", schema_version="v1",
-        editor_fields=(_field("overview-title", "Overview title", "narrative", "journeyOverviewTitle", max_length=160), _field("overview-highlight", "Letter highlight", "narrative", "letterHighlight", control="textarea", max_length=500), _field("overview-greeting", "Greeting", "narrative", "letterGreeting", max_length=160), _field("overview-intro", "Letter opening", "narrative", "letterIntro", control="textarea"), _field("overview-body", "Letter body", "narrative", "letterBody2", control="textarea"), _field("overview-outro", "Letter closing", "narrative", "letterOutro", control="textarea"), _field("overview-signoff", "Sign-off", "narrative", "letterSignOff", max_length=160), _field("overview-sender", "Sender", "narrative", "letterSender", max_length=160)),
+        editor_fields=(
+            _budget_field("overview_letter", "overview_title"),
+            _budget_field("overview_letter", "letter_highlight"),
+            _budget_field("overview_letter", "letter_greeting"),
+            _budget_field("overview_letter", "letter_intro"),
+            _budget_field("overview_letter", "letter_body"),
+            _budget_field("overview_letter", "letter_outro"),
+            _budget_field("overview_letter", "letter_signoff"),
+            _budget_field("overview_letter", "letter_sender"),
+        ),
         fact_inputs=(
             _fact("destinations", "Destinations", "trip_facts", "destinations", required=True),
             _fact("guest-name", "Guest name", "customer_facts", "customer_name"),
@@ -111,8 +145,32 @@ CONTENT_SECTION_REGISTRY: dict[str, ContentSectionSpec] = {
         ),
         default_instructions=_brief("overview_letter"),
     ),
-    "route": ContentSectionSpec("route", "content", ("route.title", "route.description", "route.staySegments.*.mapSegmentDesc"), ("trip_facts.destinations", "trip_facts.itinerary"), ("trip_facts.destinations",), "narrative", generation=True, recipe_version="v5", schema_version="v2", editor_fields=(_field("route-title", "Route title", "route", "title", max_length=160), _field("route-description", "Route introduction", "route", "description", control="textarea"), _field("route-stop-descriptions", "Route-stop descriptions", "route", "mapSegmentDescriptions", control="string-list", max_length=500)), fact_inputs=(_fact("destinations", "Destinations", "trip_facts", "destinations", required=True), _fact("itinerary", "Itinerary days", "trip_facts", "itinerary")), default_instructions=_brief("route")),
-    "itinerary": ContentSectionSpec("itinerary", "content", ("itinerary.title", "itinerary.description"), ("trip_facts.itinerary",), ("trip_facts.itinerary",), "narrative", generation=True, recipe_version="v4", schema_version="v1", editor_fields=(_field("itinerary-title", "Itinerary title", "itinerary", "title", max_length=160), _field("itinerary-description", "Itinerary introduction", "itinerary", "description", control="textarea")), fact_inputs=(_fact("itinerary", "Itinerary days", "trip_facts", "itinerary", required=True),), default_instructions=_brief("itinerary")),
+    "route": ContentSectionSpec(
+        "route", "content", ("route.title", "route.description", "route.staySegments.*.mapSegmentDesc"),
+        ("trip_facts.destinations", "trip_facts.itinerary"), ("trip_facts.destinations",), "narrative",
+        generation=True, recipe_version="v5", schema_version="v2",
+        editor_fields=(
+            _budget_field("route", "route_title"),
+            _budget_field("route", "route_description"),
+            _budget_field("route", "map_segment_descriptions"),
+        ),
+        fact_inputs=(
+            _fact("destinations", "Destinations", "trip_facts", "destinations", required=True),
+            _fact("itinerary", "Itinerary days", "trip_facts", "itinerary"),
+        ),
+        default_instructions=_brief("route"),
+    ),
+    "itinerary": ContentSectionSpec(
+        "itinerary", "content", ("itinerary.title", "itinerary.description"),
+        ("trip_facts.itinerary",), ("trip_facts.itinerary",), "narrative",
+        generation=True, recipe_version="v4", schema_version="v1",
+        editor_fields=(
+            _budget_field("itinerary", "itinerary_title"),
+            _budget_field("itinerary", "itinerary_description"),
+        ),
+        fact_inputs=(_fact("itinerary", "Itinerary days", "trip_facts", "itinerary", required=True),),
+        default_instructions=_brief("itinerary"),
+    ),
     "hotel_plan": ContentSectionSpec("hotel_plan", "fact", ("stays.hotels", "stays.roomNotes"), ("service_facts.hotels",), ("service_facts.hotels",), "fact-preview"),
     "pricing": ContentSectionSpec("pricing", "fact", ("pricing.options", "pricing.conditions"), ("pricing_facts.options",), ("pricing_facts.options",), "fact-preview"),
     "inclusions_exclusions": ContentSectionSpec("inclusions_exclusions", "fact", ("content.sections.inclusions_exclusions",), ("service_facts.inclusions", "service_facts.exclusions"), ("service_facts.inclusions", "service_facts.exclusions"), "fact-preview", ("twoColumnList",)),
@@ -138,7 +196,21 @@ def content_owned_targets() -> tuple[str, ...]:
 
 def scope_spec(scope: str) -> ContentSectionSpec:
     if scope.startswith("itinerary:day:") and scope.rsplit(":", 1)[-1].isdigit():
-        return ContentSectionSpec(scope, "content", ("itinerary.days.*.title", "itinerary.days.*.description", "itinerary.days.*.activities"), ("trip_facts.itinerary",), ("trip_facts.itinerary",), "narrative", generation=True, recipe_version="v4", schema_version="v1", editor_fields=(_field("day-title", "Day title", "title", max_length=160), _field("day-description", "Day narrative paragraphs", "description", control="string-list", max_length=1200), _field("day-activities", "Activities", "activities", control="string-list", required=False, min_length=0, max_length=400)), fact_inputs=(_fact("day-destination", "Destination", "itineraryDay", "destination", required=True), _fact("day-summary", "Day summary", "itineraryDay", "summary", required=True), _fact("day-highlights", "Highlights", "itineraryDay", "highlights")), default_instructions=_brief("itinerary_day"))
+        return ContentSectionSpec(
+            scope, "content", ("itinerary.days.*.title", "itinerary.days.*.description", "itinerary.days.*.activities"),
+            ("trip_facts.itinerary",), ("trip_facts.itinerary",), "narrative", generation=True, recipe_version="v4", schema_version="v1",
+            editor_fields=(
+                _budget_field("itinerary_day", "title"),
+                _budget_field("itinerary_day", "description"),
+                _budget_field("itinerary_day", "activities"),
+            ),
+            fact_inputs=(
+                _fact("day-destination", "Destination", "itineraryDay", "destination", required=True),
+                _fact("day-summary", "Day summary", "itineraryDay", "summary", required=True),
+                _fact("day-highlights", "Highlights", "itineraryDay", "highlights"),
+            ),
+            default_instructions=_brief("itinerary_day"),
+        )
 
     try:
         return CONTENT_SECTION_REGISTRY[scope]

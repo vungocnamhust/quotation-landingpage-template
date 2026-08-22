@@ -196,7 +196,7 @@ describe('contentReconciler pure domain rules', () => {
   });
 
   describe('checkDocumentPdfTextBudgets scanner', () => {
-    it('detects violations in invalid documents', () => {
+    it('detects violations across all sections in invalid documents', () => {
       const doc = {
         itinerary: {
           days: [
@@ -209,14 +209,52 @@ describe('contentReconciler pure domain rules', () => {
             { name: 'Hotel 1', intro: 'Short intro' },
           ],
         },
+        narrative: {
+          letterHighlight: 'H'.repeat(550),
+          letterIntro: 'I'.repeat(4000),
+        },
+        route: {
+          mapSegmentDescriptions: ['Valid stop', 'S'.repeat(520)],
+        },
+        booking: {
+          items: [
+            { body: 'Short' },
+            { body: 'Short' },
+            { body: 'Short' },
+            { body: 'Short' },
+            { body: 'B'.repeat(1650) },
+          ],
+        },
       };
 
       const violations = checkDocumentPdfTextBudgets(doc);
-      assert.equal(violations.length, 2);
-      assert.equal(violations[0].path, '/itinerary/days/1/title');
-      assert.equal(violations[0].result.overflow, 30);
-      assert.equal(violations[1].path, '/itinerary/days/1/description');
-      assert.equal(violations[1].result.overflow, 50);
+      assert.ok(violations.some((v) => v.path === '/itinerary/days/1/title'));
+      assert.ok(violations.some((v) => v.path === '/itinerary/days/1/description'));
+      assert.ok(violations.some((v) => v.path === '/narrative/letterHighlight'));
+      assert.ok(violations.some((v) => v.path === '/narrative'));
+      assert.ok(violations.some((v) => v.path === '/route/mapSegmentDescriptions/1'));
+      assert.ok(violations.some((v) => v.path === '/booking/items'));
+      assert.ok(violations.some((v) => v.path === '/booking/items/4/body'));
+    });
+  });
+
+  describe('validateCandidatePdfBudget single-candidate validator', () => {
+    it('validates itinerary day candidate', () => {
+      const validCand = { title: 'Valid Title', description: ['Valid Desc'] };
+      assert.equal(contentReconciler.validateCandidatePdfBudget('itinerary:day:1', validCand).isValid, true);
+
+      const invalidCand = { title: 'T'.repeat(180), description: ['D'.repeat(1200)] };
+      const res = contentReconciler.validateCandidatePdfBudget('itinerary:day:1', invalidCand);
+      assert.equal(res.isValid, false);
+      assert.equal(res.violations.length, 2);
+    });
+
+    it('validates overview letter candidate', () => {
+      const validLetter = { narrative: { letterHighlight: 'Short highlight' } };
+      assert.equal(contentReconciler.validateCandidatePdfBudget('overview_letter', validLetter).isValid, true);
+
+      const invalidLetter = { narrative: { letterHighlight: 'H'.repeat(550) } };
+      assert.equal(contentReconciler.validateCandidatePdfBudget('overview_letter', invalidLetter).isValid, false);
     });
   });
 });
