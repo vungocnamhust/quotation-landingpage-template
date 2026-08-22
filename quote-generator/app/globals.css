@@ -658,6 +658,12 @@ img {
   background: var(--color-map-marker-veil);
 }
 
+.luxury-destination-marker.is-active .luxury-destination-marker__stem line {
+  stroke: var(--color-accent);
+  stroke-width: 2px;
+  opacity: 1;
+}
+
 .luxury-map-title,
 .luxury-map-lede,
 .luxury-map-flow-city,

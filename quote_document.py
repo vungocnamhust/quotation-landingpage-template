@@ -255,6 +255,8 @@ class QuoteDocumentPricingOption(QuoteBaseModel):
     label: str = ""
     currency: str = ""
     perTravelerAmountMinor: int | None = None
+    perAdultAmountMinor: int | None = None
+    perChildAmountMinor: int | None = None
     groupTotalAmountMinor: int | None = None
     # Release snapshots created before the typed V2 pricing contract retain
     # their already-formatted values. New V2 writes never populate these.
@@ -276,6 +278,14 @@ class QuoteDocumentPricingOption(QuoteBaseModel):
         normalized.setdefault("legacyTotalText", legacy_total)
         normalized.setdefault("isConfirmedMainOption", bool(normalized.pop("confirmedMainOption", False)))
         normalized.setdefault("isAlternativeOption", bool(normalized.pop("alternativeOption", False)))
+        if normalized.get("perAdultAmountMinor") is None and normalized.get("per_adult_amount_minor") is not None:
+            normalized["perAdultAmountMinor"] = normalized.get("per_adult_amount_minor")
+        if normalized.get("perChildAmountMinor") is None and normalized.get("per_child_amount_minor") is not None:
+            normalized["perChildAmountMinor"] = normalized.get("per_child_amount_minor")
+        if normalized.get("perAdultAmountMinor") is None and normalized.get("perTravelerAmountMinor") is not None:
+            normalized["perAdultAmountMinor"] = normalized.get("perTravelerAmountMinor")
+        if normalized.get("perTravelerAmountMinor") is None and normalized.get("perAdultAmountMinor") is not None:
+            normalized["perTravelerAmountMinor"] = normalized.get("perAdultAmountMinor")
         if not normalized.get("currency"):
             currency_match = re.search(r"\b(USD|VND|EUR|GBP|AUD)\b", f"{legacy_per_person} {legacy_total}", re.IGNORECASE)
             normalized["currency"] = currency_match.group(1).upper() if currency_match else ""

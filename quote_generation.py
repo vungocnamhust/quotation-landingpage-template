@@ -809,7 +809,9 @@ class QuoteGenerationService:
                             "id": option.id or f"price-{idx}",
                             "label": option.label,
                             "currency": option.currency,
-                            "perTravelerAmountMinor": option.per_traveler_amount_minor,
+                            "perTravelerAmountMinor": option.per_traveler_amount_minor or option.per_adult_amount_minor,
+                            "perAdultAmountMinor": option.per_adult_amount_minor or option.per_traveler_amount_minor,
+                            "perChildAmountMinor": option.per_child_amount_minor,
                             "groupTotalAmountMinor": option.group_total_amount_minor,
                         }
                         for idx, option in enumerate(pricing_options, 1)

@@ -42,3 +42,5 @@ export interface FullPageMapProps {
 }
 
 export type { MapTileStyle };
+export type { MarkerAnchorDirection, ResolvedMarkerPlacement } from '../../../lib/rules/mapMarkerLayoutRules.ts';
+

@@ -144,6 +144,13 @@ function QuotationIntakeInner({
               per_child_amount_minor: pricingOpt.per_child_amount_minor ?? null,
               group_total_amount_minor: pricingOpt.group_total_amount_minor ?? null,
             },
+            pricing_options: (facts.pricing_facts.options || []).map((opt, idx) => ({
+              label: opt.label || `Option ${idx + 1}`,
+              currency: opt.currency || "USD",
+              per_adult_amount_minor: opt.per_adult_amount_minor ?? opt.per_traveler_amount_minor ?? null,
+              per_child_amount_minor: opt.per_child_amount_minor ?? null,
+              group_total_amount_minor: opt.group_total_amount_minor ?? null,
+            })),
           };
 
           const res = await quotationFetch<{

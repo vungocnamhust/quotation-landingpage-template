@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import type { RouteMapViewModel, TypographySlotMap } from '../../../display/types.ts';
 import { textValue } from '../../../display/types.ts';
 import type { ViewMode } from '../../../display/contracts.ts';
@@ -8,6 +8,7 @@ import { MapDestinationMarker } from './MapDestinationMarker.tsx';
 import { BodyCopy, DisplayTitle, Kicker } from '../atoms.tsx';
 import { getTypographyClassName } from '../../../config/typography.ts';
 import { requireTypographySlot } from '../../../display/typographySlots.ts';
+import { resolveMarkerCollisions } from '../../../lib/rules/mapMarkerLayoutRules.ts';
 import { cn } from '../../../utils/cn.ts';
 
 interface MapFloatingOverlaysProps {
@@ -40,6 +41,33 @@ export function MapFloatingOverlays({
   // Compute summary stats for Route Summary
   const totalDestinations = viewModel.segments.length;
   const citiesSequence = viewModel.segments.map((s) => textValue(s.city)).filter(Boolean);
+
+  // Project points and compute collision-free layout
+  const projectedMarkers = useMemo(() => {
+    return viewModel.segments.map((segment, index) => {
+      const pt = project(segment.coordinates[0], segment.coordinates[1]);
+      return {
+        segment,
+        index,
+        projectedPoint: pt,
+        sequence: segment.sequence || `marker-${index}`,
+        city: textValue(segment.city),
+        dayLabel: textValue(segment.dayLabel),
+        x: pt.x,
+        y: pt.y,
+        visible: pt.visible,
+      };
+    });
+  }, [project, viewModel.segments]);
+
+  const markerPlacements = useMemo(() => {
+    return resolveMarkerCollisions(projectedMarkers, {
+      containerWidth: isPdf ? 794 : undefined,
+      containerHeight: isPdf ? 1123 : undefined,
+      collisionRadiusX: isPdf ? 150 : 140,
+      collisionRadiusY: isPdf ? 56 : 52,
+    });
+  }, [isPdf, projectedMarkers]);
 
   return (
     <div className="luxury-map-floating-overlays pointer-events-none absolute inset-0 z-[500] flex flex-col justify-between p-6 sm:p-10 select-none">
@@ -98,15 +126,16 @@ export function MapFloatingOverlays({
       <div className="luxury-map-mid-overlay pointer-events-auto absolute inset-0 z-[520]">
         <MapGeoLabels project={project} visibility={isPdf ? 'islands' : 'all'} />
 
-        {/* Projected Destination Pins / Pills */}
-        {viewModel.segments.map((segment, index) => {
-          const pt = project(segment.coordinates[0], segment.coordinates[1]);
+        {/* Projected Destination Pins / Pills with Collision Avoidance */}
+        {projectedMarkers.map(({ segment, index, projectedPoint, sequence }) => {
+          const placement = markerPlacements.get(sequence);
           return (
             <MapDestinationMarker
-              key={segment.sequence || `marker-${index}`}
+              key={sequence}
               segment={segment}
               index={index}
-              projectedPoint={pt}
+              projectedPoint={projectedPoint}
+              placement={placement}
               isActive={activeSequence === segment.sequence}
               typography={typography}
               onSelect={onSegmentSelect}

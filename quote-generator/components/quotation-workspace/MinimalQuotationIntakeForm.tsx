@@ -1,7 +1,7 @@
 "use client";
 
 import { type Dispatch, type ReactNode, type SetStateAction } from "react";
-import { Sparkles } from "lucide-react";
+import { Plus, Trash2, Sparkles } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
 import CustomSelect from "../ui/CustomSelect.tsx";
@@ -11,12 +11,12 @@ import KidAgesInput from "./KidAgesInput.tsx";
 import DayEmbeddedRouteTable from "./DayEmbeddedRouteTable.tsx";
 import TriPricingSection from "./TriPricingSection.tsx";
 import {
-  patchPricingOptionWithInference,
   updateCustomerCounts,
   updateCustomerKidAges,
   updateCustomerName,
 } from "../../lib/prefillEngine.ts";
 import {
+  MAX_COMMERCIAL_OPTIONS,
   type QuotationFacts,
   type QuotationOptions,
 } from "./factsTypes.ts";
@@ -42,23 +42,28 @@ const inputClass = cn(
 function SectionCard({
   title,
   description,
+  action,
   children,
 }: {
   title: string;
   description?: string;
+  action?: ReactNode;
   children: ReactNode;
 }) {
   return (
     <section className="flex flex-col gap-4 rounded-[var(--radius-card)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] p-5 shadow-[var(--elevation-card)] sm:p-6">
-      <div>
-        <h2 className={cn(getTypographyClassName("cardTitle"), "text-[var(--color-on-surface)]")}>
-          {title}
-        </h2>
-        {description ? (
-          <p className={cn(getTypographyClassName("caption"), "mt-1 text-[var(--color-muted)]")}>
-            {description}
-          </p>
-        ) : null}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className={cn(getTypographyClassName("cardTitle"), "text-[var(--color-on-surface)]")}>
+            {title}
+          </h2>
+          {description ? (
+            <p className={cn(getTypographyClassName("caption"), "mt-1 text-[var(--color-muted)]")}>
+              {description}
+            </p>
+          ) : null}
+        </div>
+        {action}
       </div>
       {children}
     </section>
@@ -84,6 +89,9 @@ export default function MinimalQuotationIntakeForm({
     handleStartDateChange,
     handleEndDateChange,
     handleDesignerChange,
+    handleAddPricingOption,
+    handleRemovePricingOption,
+    handlePatchPricingOption,
   } = useQuotationIntake({
     facts: inputFacts,
     options,
@@ -97,14 +105,6 @@ export default function MinimalQuotationIntakeForm({
     handleAddDay,
     handleRemoveDay,
   } = useRouteTableSync(facts, patchFacts);
-
-  const pricingOption = pricing.options[0] || {
-    id: "opt-standard",
-    label: "Standard Luxury Option",
-    currency: "USD",
-    per_traveler_amount_minor: 350000,
-    group_total_amount_minor: 700000,
-  };
 
   const handleFormSubmit = (targetStage: "facts" | "design") => {
     const gateResult = evaluateQuotationDraftReadiness(facts, dayWithStays);
@@ -353,32 +353,84 @@ export default function MinimalQuotationIntakeForm({
         />
       </SectionCard>
 
-      {/* 4. Commercial Pricing Tier Card */}
+      {/* 4. Commercial Pricing Options Card */}
       <SectionCard
-        title="4. Commercial Pricing Structure"
-        description="Optionally configure pricing tiers or per-person amounts."
+        title="4. Commercial Pricing Options"
+        description="Optionally configure up to 3 pricing tiers or packages (e.g. Standard, Premium, Deluxe)."
+        action={
+          <button
+            type="button"
+            disabled={pricing.options.length >= MAX_COMMERCIAL_OPTIONS}
+            onClick={() => handleAddPricingOption()}
+            className={cn(
+              getTypographyClassName("buttonSecondary"),
+              "flex items-center gap-1.5 rounded-[var(--radius-button)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1.5 text-[var(--color-on-surface)] transition-all hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+            )}
+          >
+            <Plus size={14} aria-hidden="true" />
+            <span>Add Option ({pricing.options.length}/{MAX_COMMERCIAL_OPTIONS})</span>
+          </button>
+        }
       >
-        <TriPricingSection
-          label={pricingOption.label}
-          currency={pricingOption.currency || "USD"}
-          perAdultMinor={pricingOption.per_adult_amount_minor ?? pricingOption.per_traveler_amount_minor}
-          perChildMinor={pricingOption.per_child_amount_minor ?? null}
-          groupTotalMinor={pricingOption.group_total_amount_minor}
-          adults={customer.adults ?? 2}
-          childrenCount={customer.children ?? 0}
-          onChange={(patch) =>
-            patchFacts((current) =>
-              patchPricingOptionWithInference(current, 0, {
-                label: patch.label,
-                currency: patch.currency,
-                per_adult_amount_minor: patch.perAdultMinor,
-                per_child_amount_minor: patch.perChildMinor,
-                per_traveler_amount_minor: patch.perAdultMinor,
-                group_total_amount_minor: patch.groupTotalMinor,
-              })
-            )
-          }
-        />
+        <div className="flex flex-col gap-4">
+          {pricing.options.map((opt, index) => (
+            <div
+              key={opt.id || `pricing-opt-${index}`}
+              className="flex flex-col gap-3 rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-xs"
+            >
+              <div className="flex items-center justify-between gap-3 border-b border-[var(--color-border)] pb-2.5">
+                <div className="flex items-center gap-2">
+                  <span
+                    className={cn(
+                      getTypographyClassName("caption"),
+                      "rounded-full px-2.5 py-0.5 border",
+                      index === 0
+                        ? "bg-[var(--color-accent-wash)] text-[var(--color-accent)] border-[var(--color-accent)]"
+                        : "bg-[var(--color-surface-muted)] text-[var(--color-muted)] border-[var(--color-border)]"
+                    )}
+                  >
+                    {index === 0 ? "Tier 1 (Primary)" : `Tier ${index + 1}`}
+                  </span>
+                  <span className={cn(getTypographyClassName("label"), "text-[var(--color-on-surface)]")}>
+                    {opt.label || `Option ${index + 1}`}
+                  </span>
+                </div>
+
+                {pricing.options.length > 1 ? (
+                  <button
+                    type="button"
+                    onClick={() => handleRemovePricingOption(index)}
+                    title="Remove this pricing tier"
+                    aria-label={`Remove option ${opt.label || index + 1}`}
+                    className="flex h-7 w-7 items-center justify-center rounded-[var(--radius-button)] text-[var(--color-muted)] transition-colors hover:bg-rose-50 hover:text-rose-600 cursor-pointer"
+                  >
+                    <Trash2 size={15} aria-hidden="true" />
+                  </button>
+                ) : null}
+              </div>
+
+              <TriPricingSection
+                label={opt.label}
+                currency={opt.currency || "USD"}
+                perAdultMinor={opt.per_adult_amount_minor ?? opt.per_traveler_amount_minor}
+                perChildMinor={opt.per_child_amount_minor ?? null}
+                groupTotalMinor={opt.group_total_amount_minor}
+                adults={customer.adults ?? 2}
+                childrenCount={customer.children ?? 0}
+                onChange={(patch) =>
+                  handlePatchPricingOption(index, {
+                    label: patch.label,
+                    currency: patch.currency,
+                    per_adult_amount_minor: patch.perAdultMinor,
+                    per_child_amount_minor: patch.perChildMinor,
+                    per_traveler_amount_minor: patch.perAdultMinor,
+                    group_total_amount_minor: patch.groupTotalMinor,
+                  })
+                }
+              />
+            </div>
+          ))}
+        </div>
       </SectionCard>
 
       {/* Submit Button Bar with Dual Actions */}
