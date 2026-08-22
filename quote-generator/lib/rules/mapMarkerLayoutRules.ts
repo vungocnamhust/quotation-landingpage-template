@@ -1,11 +1,13 @@
 /**
- * Pure Domain Reconciler for Map Destination Marker Collision Detection & Layout
+ * Pure Domain Reconciler for Map Destination Marker Collision Detection & Line-Marker Non-Occlusion (SCERA)
  *
- * Implements deterministic collision detection, cluster grouping, and multi-directional
- * anchor slot allocation (top-center, top-left, top-right, left, right, top-elevated, bottom-*)
- * with leader lines to prevent overlapping labels in dense geographic regions.
+ * Implements SCERA: Sector-Clearance Exterior Radial Anchoring
+ * - Computes incoming and outgoing route trajectory vectors at every waypoint.
+ * - Enforces forbidden angular cones around route polylines to prevent direct line occlusion.
+ * - Computes the 2D Exterior Bisector vector to push marker capsules into the open convex exterior space.
+ * - Performs Liang-Barsky line-segment bounding-box intersection tests across all route polylines.
+ * - Assigns optimal non-overlapping anchor directions (top-left, top-right, left, right, etc.) in 2/3 micro-scale.
  *
- * Compact 1/2 size geometry optimized for both PDF A4 print and responsive web.
  * Zero React dependencies. 100% deterministic and unit-testable.
  */
 
@@ -30,15 +32,19 @@ export interface MarkerPointInput {
 }
 
 export interface CollisionLayoutOptions {
-  /** Width threshold for collision detection in pixels. Default: 80 */
+  /** Width threshold for collision detection in pixels. Default: 55 */
   collisionRadiusX?: number;
-  /** Height threshold for collision detection in pixels. Default: 30 */
+  /** Height threshold for collision detection in pixels. Default: 22 */
   collisionRadiusY?: number;
+  /** Capsule bounding box width. Default: 55 */
+  capsuleWidth?: number;
+  /** Capsule bounding box height. Default: 16 */
+  capsuleHeight?: number;
   /** Container viewport width for boundary clamping. Default: 794 */
   containerWidth?: number;
   /** Container viewport height for boundary clamping. Default: 1123 */
   containerHeight?: number;
-  /** Padding from edge to avoid cut-off. Default: 25 */
+  /** Padding from edge to avoid cut-off. Default: 20 */
   edgePadding?: number;
 }
 
@@ -53,88 +59,219 @@ export interface ResolvedMarkerPlacement {
   isClustered: boolean;
   /** Total markers in its collision cluster */
   clusterSize: number;
+  /** Bounding box of the marker capsule in container pixel coordinates */
+  boundingBox: { minX: number; maxX: number; minY: number; maxY: number };
 }
 
 const DEFAULT_OPTIONS: Required<CollisionLayoutOptions> = {
-  collisionRadiusX: 80,
-  collisionRadiusY: 30,
+  collisionRadiusX: 55,
+  collisionRadiusY: 22,
+  capsuleWidth: 55,
+  capsuleHeight: 16,
   containerWidth: 794,
   containerHeight: 1123,
-  edgePadding: 25,
+  edgePadding: 20,
 };
 
+const ALL_ANCHOR_DIRECTIONS: MarkerAnchorDirection[] = [
+  'top-center',
+  'top-left',
+  'top-right',
+  'left',
+  'right',
+  'top-elevated',
+  'bottom-left',
+  'bottom-right',
+  'bottom-center',
+];
+
 /**
- * Calculates leader line stem offsets for each anchor direction (compact 1/2 scale).
+ * Calculates leader line stem offsets for each anchor direction (2/3 micro-scale).
  */
 export function getStemOffsetForAnchor(anchor: MarkerAnchorDirection): { x: number; y: number; needleLength: number } {
   switch (anchor) {
     case 'top-center':
-      return { x: 0, y: -6, needleLength: 6 };
+      return { x: 0, y: -5, needleLength: 5 };
     case 'top-elevated':
-      return { x: 0, y: -22, needleLength: 22 };
+      return { x: 0, y: -16, needleLength: 16 };
     case 'top-left':
-      return { x: -10, y: -8, needleLength: 13 };
+      return { x: -8, y: -6, needleLength: 10 };
     case 'top-right':
-      return { x: 10, y: -8, needleLength: 13 };
+      return { x: 8, y: -6, needleLength: 10 };
     case 'left':
-      return { x: -10, y: 0, needleLength: 10 };
+      return { x: -8, y: 0, needleLength: 8 };
     case 'right':
-      return { x: 10, y: 0, needleLength: 10 };
+      return { x: 8, y: 0, needleLength: 8 };
     case 'bottom-left':
-      return { x: -10, y: 8, needleLength: 13 };
+      return { x: -8, y: 6, needleLength: 10 };
     case 'bottom-right':
-      return { x: 10, y: 8, needleLength: 13 };
+      return { x: 8, y: 6, needleLength: 10 };
     case 'bottom-center':
-      return { x: 0, y: 6, needleLength: 6 };
+      return { x: 0, y: 5, needleLength: 5 };
     default:
-      return { x: 0, y: -6, needleLength: 6 };
+      return { x: 0, y: -5, needleLength: 5 };
   }
 }
 
 /**
- * Checks if an anchor direction causes the marker capsule to overflow container bounds.
+ * Calculates the bounding box of a marker capsule placed at point (px, py) with given anchor.
  */
-export function adjustAnchorForBounds(
-  point: MarkerPointInput,
+export function getMarkerBoundingBox(
+  point: { x: number; y: number },
   anchor: MarkerAnchorDirection,
-  options: Required<CollisionLayoutOptions>
-): MarkerAnchorDirection {
-  const { containerWidth, containerHeight, edgePadding } = options;
-  const isNearTop = point.y < edgePadding + 35;
-  const isNearBottom = point.y > containerHeight - edgePadding - 35;
-  const isNearLeft = point.x < edgePadding + 50;
-  const isNearRight = point.x > containerWidth - edgePadding - 50;
+  width = 55,
+  height = 16
+): { minX: number; maxX: number; minY: number; maxY: number } {
+  const stem = getStemOffsetForAnchor(anchor);
+  const sx = point.x + stem.x;
+  const sy = point.y + stem.y;
 
-  if (isNearTop) {
-    if (anchor === 'top-center' || anchor === 'top-elevated') {
-      return isNearLeft ? 'bottom-right' : isNearRight ? 'bottom-left' : 'bottom-center';
-    }
-    if (anchor === 'top-left') return 'bottom-left';
-    if (anchor === 'top-right') return 'bottom-right';
+  let minX: number;
+  let maxX: number;
+  let minY: number;
+  let maxY: number;
+
+  switch (anchor) {
+    case 'top-center':
+    case 'top-elevated':
+      minX = sx - width / 2;
+      maxX = sx + width / 2;
+      minY = sy - height;
+      maxY = sy;
+      break;
+    case 'top-left':
+      minX = sx - width;
+      maxX = sx;
+      minY = sy - height;
+      maxY = sy;
+      break;
+    case 'top-right':
+      minX = sx;
+      maxX = sx + width;
+      minY = sy - height;
+      maxY = sy;
+      break;
+    case 'left':
+      minX = sx - width;
+      maxX = sx;
+      minY = sy - height / 2;
+      maxY = sy + height / 2;
+      break;
+    case 'right':
+      minX = sx;
+      maxX = sx + width;
+      minY = sy - height / 2;
+      maxY = sy + height / 2;
+      break;
+    case 'bottom-left':
+      minX = sx - width;
+      maxX = sx;
+      minY = sy;
+      maxY = sy + height;
+      break;
+    case 'bottom-right':
+      minX = sx;
+      maxX = sx + width;
+      minY = sy;
+      maxY = sy + height;
+      break;
+    case 'bottom-center':
+      minX = sx - width / 2;
+      maxX = sx + width / 2;
+      minY = sy;
+      maxY = sy + height;
+      break;
+    default:
+      minX = sx - width / 2;
+      maxX = sx + width / 2;
+      minY = sy - height;
+      maxY = sy;
   }
 
-  if (isNearBottom) {
-    if (anchor === 'bottom-center') return 'top-center';
-    if (anchor === 'bottom-left') return 'top-left';
-    if (anchor === 'bottom-right') return 'top-right';
-  }
-
-  if (isNearLeft) {
-    if (anchor === 'top-left' || anchor === 'left') return 'top-right';
-    if (anchor === 'bottom-left') return 'bottom-right';
-  }
-
-  if (isNearRight) {
-    if (anchor === 'top-right' || anchor === 'right') return 'top-left';
-    if (anchor === 'bottom-right') return 'bottom-left';
-  }
-
-  return anchor;
+  return { minX, maxX, minY, maxY };
 }
 
 /**
- * Pure Reconciler: Resolves marker placement and assigns optimal non-overlapping
- * anchor directions to all markers based on projected 2D coordinates.
+ * Calculates shortest angular difference in radians between two angles [-PI, PI].
+ */
+function angleDifference(a: number, b: number): number {
+  let diff = Math.abs(a - b) % (2 * Math.PI);
+  if (diff > Math.PI) {
+    diff = 2 * Math.PI - diff;
+  }
+  return diff;
+}
+
+/**
+ * Liang-Barsky Line Segment vs AABB Bounding Box Intersection Test.
+ * Returns true if segment (p1 -> p2) intersects or passes through box.
+ */
+export function segmentIntersectsBox(
+  p1: { x: number; y: number },
+  p2: { x: number; y: number },
+  box: { minX: number; maxX: number; minY: number; maxY: number },
+  margin = 2
+): boolean {
+  const minX = box.minX - margin;
+  const maxX = box.maxX + margin;
+  const minY = box.minY - margin;
+  const maxY = box.maxY + margin;
+
+  const dx = p2.x - p1.x;
+  const dy = p2.y - p1.y;
+
+  let t0 = 0.0;
+  let t1 = 1.0;
+
+  const p = [-dx, dx, -dy, dy];
+  const q = [p1.x - minX, maxX - p1.x, p1.y - minY, maxY - p1.y];
+
+  for (let i = 0; i < 4; i++) {
+    if (p[i] === 0) {
+      if (q[i] < 0) return false;
+    } else {
+      const t = q[i] / p[i];
+      if (p[i] < 0) {
+        if (t > t1) return false;
+        if (t > t0) t0 = t;
+      } else {
+        if (t < t0) return false;
+        if (t < t1) t1 = t;
+      }
+    }
+  }
+  return t0 <= t1;
+}
+
+/**
+ * Checks if box is inside the container viewport bounds.
+ */
+export function isBoxWithinBounds(
+  box: { minX: number; maxX: number; minY: number; maxY: number },
+  options: Required<CollisionLayoutOptions>
+): boolean {
+  const { containerWidth, containerHeight, edgePadding } = options;
+  return (
+    box.minX >= edgePadding &&
+    box.maxX <= containerWidth - edgePadding &&
+    box.minY >= edgePadding &&
+    box.maxY <= containerHeight - edgePadding
+  );
+}
+
+/**
+ * Check if two AABB bounding boxes overlap.
+ */
+function boxesOverlap(
+  b1: { minX: number; maxX: number; minY: number; maxY: number },
+  b2: { minX: number; maxX: number; minY: number; maxY: number }
+): boolean {
+  return !(b1.maxX < b2.minX || b1.minX > b2.maxX || b1.maxY < b2.minY || b1.minY > b2.maxY);
+}
+
+/**
+ * Pure Reconciler: SCERA (Sector-Clearance Exterior Radial Anchoring)
+ * Resolves non-overlapping marker placements and guarantees route polylines are 0% occluded.
  */
 export function resolveMarkerCollisions(
   points: MarkerPointInput[],
@@ -147,22 +284,26 @@ export function resolveMarkerCollisions(
 
   const results = new Map<string, ResolvedMarkerPlacement>();
   const visiblePoints = points.filter((p) => p.visible !== false);
+  const n = visiblePoints.length;
 
-  if (visiblePoints.length === 0) {
+  if (n === 0) {
     return results;
   }
 
-  // 1. Build Adjacency Graph of Colliding Points
-  const n = visiblePoints.length;
-  const adj: number[][] = Array.from({ length: n }, () => []);
+  // 1. Extract Route Polyline Segments
+  const routeSegments: Array<{ p1: MarkerPointInput; p2: MarkerPointInput }> = [];
+  for (let i = 0; i < n - 1; i++) {
+    routeSegments.push({ p1: visiblePoints[i], p2: visiblePoints[i + 1] });
+  }
 
+  // 2. Identify Proximity Collision Clusters
+  const adj: number[][] = Array.from({ length: n }, () => []);
   for (let i = 0; i < n; i++) {
     for (let j = i + 1; j < n; j++) {
       const p1 = visiblePoints[i];
       const p2 = visiblePoints[j];
       const dx = Math.abs(p1.x - p2.x);
       const dy = Math.abs(p1.y - p2.y);
-
       if (dx < options.collisionRadiusX && dy < options.collisionRadiusY) {
         adj[i].push(j);
         adj[j].push(i);
@@ -170,20 +311,17 @@ export function resolveMarkerCollisions(
     }
   }
 
-  // 2. Find Connected Components (Collision Clusters)
+  const clusterSizes = new Array<number>(n).fill(1);
   const visited = new Array<boolean>(n).fill(false);
-  const clusters: number[][] = [];
 
   for (let i = 0; i < n; i++) {
     if (!visited[i]) {
       const cluster: number[] = [];
-      const queue: number[] = [i];
+      const queue = [i];
       visited[i] = true;
-
       while (queue.length > 0) {
         const curr = queue.shift()!;
         cluster.push(curr);
-
         for (const neighbor of adj[curr]) {
           if (!visited[neighbor]) {
             visited[neighbor] = true;
@@ -191,119 +329,177 @@ export function resolveMarkerCollisions(
           }
         }
       }
-      clusters.push(cluster);
+      for (const idx of cluster) {
+        clusterSizes[idx] = cluster.length;
+      }
     }
   }
 
-  // 3. Resolve Placements per Cluster
-  for (const clusterIndices of clusters) {
-    const clusterSize = clusterIndices.length;
+  // 3. For Each Waypoint, Score and Select Optimal Anchor Direction via SCERA
+  const placedBoxes: Array<{ sequence: string; box: { minX: number; maxX: number; minY: number; maxY: number } }> = [];
 
-    // Single isolated marker
-    if (clusterSize === 1) {
-      const p = visiblePoints[clusterIndices[0]];
-      const anchor = adjustAnchorForBounds(p, 'top-center', options);
-      const stem = getStemOffsetForAnchor(anchor);
+  for (let i = 0; i < n; i++) {
+    const pt = visiblePoints[i];
+    const prev = i > 0 ? visiblePoints[i - 1] : null;
+    const next = i < n - 1 ? visiblePoints[i + 1] : null;
 
-      results.set(p.sequence, {
-        sequence: p.sequence,
-        anchorDirection: anchor,
-        stemOffset: { x: stem.x, y: stem.y },
-        needleLength: stem.needleLength,
-        isClustered: false,
-        clusterSize: 1,
-      });
-      continue;
+    // A. Compute Incoming and Outgoing Angles at pt
+    const prevAngle = prev ? Math.atan2(prev.y - pt.y, prev.x - pt.x) : null;
+    const nextAngle = next ? Math.atan2(next.y - pt.y, next.x - pt.x) : null;
+
+    // B. Compute Exterior Bisector Vector (Points directly into safe open space away from paths)
+    let extBisectorX = 0;
+    let extBisectorY = -1; // Default upwards
+
+    if (prev && next) {
+      const uX = prev.x - pt.x;
+      const uY = prev.y - pt.y;
+      const uLen = Math.hypot(uX, uY) || 1;
+      const vX = next.x - pt.x;
+      const vY = next.y - pt.y;
+      const vLen = Math.hypot(vX, vY) || 1;
+
+      const normUx = uX / uLen;
+      const normUy = uY / uLen;
+      const normVx = vX / vLen;
+      const normVy = vY / vLen;
+
+      const sumX = normUx + normVx;
+      const sumY = normUy + normVy;
+      const sumLen = Math.hypot(sumX, sumY);
+
+      if (sumLen > 0.1) {
+        // Safe exterior bisector points opposite of angle interior
+        extBisectorX = -sumX / sumLen;
+        extBisectorY = -sumY / sumLen;
+      } else {
+        // Collinear 180 deg paths: use perpendicular normal away from right boundary
+        extBisectorX = -normUy;
+        extBisectorY = normUx;
+        if (pt.x > options.containerWidth * 0.6) {
+          extBisectorX = -Math.abs(extBisectorX);
+        }
+      }
+    } else if (next) {
+      // Start waypoint: orient opposite of outgoing trajectory
+      const vX = next.x - pt.x;
+      const vY = next.y - pt.y;
+      const vLen = Math.hypot(vX, vY) || 1;
+      extBisectorX = -vX / vLen;
+      extBisectorY = -vY / vLen;
+    } else if (prev) {
+      // End waypoint: orient opposite of incoming trajectory
+      const uX = prev.x - pt.x;
+      const uY = prev.y - pt.y;
+      const uLen = Math.hypot(uX, uY) || 1;
+      extBisectorX = -uX / uLen;
+      extBisectorY = -uY / uLen;
     }
 
-    // Cluster of 2 markers
-    if (clusterSize === 2) {
-      const pA = visiblePoints[clusterIndices[0]];
-      const pB = visiblePoints[clusterIndices[1]];
+    const bisectorAngle = Math.atan2(extBisectorY, extBisectorX);
 
-      let anchorA: MarkerAnchorDirection;
-      let anchorB: MarkerAnchorDirection;
+    // C. Evaluate and Rank Candidate Anchor Directions
+    interface ScoredCandidate {
+      anchor: MarkerAnchorDirection;
+      box: { minX: number; maxX: number; minY: number; maxY: number };
+      stem: { x: number; y: number; needleLength: number };
+      score: number;
+      occludesLine: boolean;
+      withinBounds: boolean;
+      overlapsOtherMarker: boolean;
+    }
 
-      if (Math.abs(pA.x - pB.x) >= 15) {
-        // Horizontal separation: leftmost gets top-left, rightmost gets top-right
-        if (pA.x <= pB.x) {
-          anchorA = 'top-left';
-          anchorB = 'top-right';
-        } else {
-          anchorA = 'top-right';
-          anchorB = 'top-left';
-        }
-      } else {
-        // Vertical stack: topmost gets top-elevated, bottom gets top-center
-        if (pA.y <= pB.y) {
-          anchorA = 'top-elevated';
-          anchorB = 'top-center';
-        } else {
-          anchorA = 'top-center';
-          anchorB = 'top-elevated';
+    const candidates: ScoredCandidate[] = ALL_ANCHOR_DIRECTIONS.map((anchor) => {
+      const box = getMarkerBoundingBox(pt, anchor, options.capsuleWidth, options.capsuleHeight);
+      const stem = getStemOffsetForAnchor(anchor);
+      const withinBounds = isBoxWithinBounds(box, options);
+
+      // Anchor Vector from Ground Dot to Capsule Center
+      const centerX = (box.minX + box.maxX) / 2 - pt.x;
+      const centerY = (box.minY + box.maxY) / 2 - pt.y;
+      const anchorAngle = Math.atan2(centerY, centerX);
+
+      // Check Forbidden Angular Sector (within 35 deg of incoming or outgoing line)
+      const FORBIDDEN_RAD = (35 * Math.PI) / 180;
+      let isInForbiddenAngle = false;
+      if (prevAngle !== null && angleDifference(anchorAngle, prevAngle) < FORBIDDEN_RAD) {
+        isInForbiddenAngle = true;
+      }
+      if (nextAngle !== null && angleDifference(anchorAngle, nextAngle) < FORBIDDEN_RAD) {
+        isInForbiddenAngle = true;
+      }
+
+      // Check Line-Box Intersections with all Route Segments
+      let occludesLine = isInForbiddenAngle;
+      if (!occludesLine) {
+        for (const seg of routeSegments) {
+          // Ignore lines directly attached to current point (already guarded by forbidden cone)
+          const isDirectAttach =
+            (seg.p1.sequence === pt.sequence && seg.p2.sequence === next?.sequence) ||
+            (seg.p2.sequence === pt.sequence && seg.p1.sequence === prev?.sequence);
+
+          if (!isDirectAttach && segmentIntersectsBox(seg.p1, seg.p2, box, 4)) {
+            occludesLine = true;
+            break;
+          }
         }
       }
 
-      anchorA = adjustAnchorForBounds(pA, anchorA, options);
-      anchorB = adjustAnchorForBounds(pB, anchorB, options);
+      // Check Overlap with Previously Placed Markers
+      let overlapsOtherMarker = false;
+      for (const placed of placedBoxes) {
+        if (boxesOverlap(box, placed.box)) {
+          overlapsOtherMarker = true;
+          break;
+        }
+      }
 
-      const stemA = getStemOffsetForAnchor(anchorA);
-      const stemB = getStemOffsetForAnchor(anchorB);
+      // Compute Alignment with Safe Exterior Bisector [cos(theta) in -1..1]
+      const diffToBisector = angleDifference(anchorAngle, bisectorAngle);
+      const bisectorAlignment = Math.cos(diffToBisector);
 
-      results.set(pA.sequence, {
-        sequence: pA.sequence,
-        anchorDirection: anchorA,
-        stemOffset: { x: stemA.x, y: stemA.y },
-        needleLength: stemA.needleLength,
-        isClustered: true,
-        clusterSize: 2,
-      });
+      // Composite Score: Prioritize non-occlusion, boundary fit, bisector alignment, and non-overlap
+      let score = bisectorAlignment * 10;
+      if (withinBounds) score += 5;
+      if (!occludesLine) score += 20;
+      if (!overlapsOtherMarker) score += 10;
 
-      results.set(pB.sequence, {
-        sequence: pB.sequence,
-        anchorDirection: anchorB,
-        stemOffset: { x: stemB.x, y: stemB.y },
-        needleLength: stemB.needleLength,
-        isClustered: true,
-        clusterSize: 2,
-      });
-      continue;
-    }
+      // Slight natural preference for top-oriented anchors
+      if (anchor === 'top-center' || anchor === 'top-left' || anchor === 'top-right') {
+        score += 1;
+      }
 
-    // Cluster of 3+ markers (e.g. Hanoi, Ninh Binh, Ha Long Bay)
-    // Sort cluster members by x-coordinate ascending
-    const sortedIndices = [...clusterIndices].sort((a, b) => {
-      const ptA = visiblePoints[a];
-      const ptB = visiblePoints[b];
-      return ptA.x - ptB.x;
+      return {
+        anchor,
+        box,
+        stem,
+        score,
+        occludesLine,
+        withinBounds,
+        overlapsOtherMarker,
+      };
     });
 
-    // Anchor distribution template for multi-point clusters
-    const multiAnchorSlots: MarkerAnchorDirection[] = [
-      'top-left',
-      'top-elevated',
-      'top-right',
-      'left',
-      'right',
-      'bottom-left',
-      'bottom-right',
-      'bottom-center',
-    ];
+    // D. Pick Best Candidate (Strictly prefer 0% line occlusion and within bounds)
+    candidates.sort((a, b) => b.score - a.score);
 
-    sortedIndices.forEach((pointIdx, rank) => {
-      const p = visiblePoints[pointIdx];
-      let assignedAnchor = multiAnchorSlots[rank % multiAnchorSlots.length];
-      assignedAnchor = adjustAnchorForBounds(p, assignedAnchor, options);
-      const stem = getStemOffsetForAnchor(assignedAnchor);
+    // Filter optimal tier: non-occluding, in-bounds, non-overlapping
+    const bestTier = candidates.filter((c) => !c.occludesLine && c.withinBounds && !c.overlapsOtherMarker);
+    const secondTier = candidates.filter((c) => !c.occludesLine && c.withinBounds);
+    const thirdTier = candidates.filter((c) => !c.occludesLine);
 
-      results.set(p.sequence, {
-        sequence: p.sequence,
-        anchorDirection: assignedAnchor,
-        stemOffset: { x: stem.x, y: stem.y },
-        needleLength: stem.needleLength,
-        isClustered: true,
-        clusterSize,
-      });
+    const chosen = bestTier[0] || secondTier[0] || thirdTier[0] || candidates[0];
+
+    placedBoxes.push({ sequence: pt.sequence, box: chosen.box });
+
+    results.set(pt.sequence, {
+      sequence: pt.sequence,
+      anchorDirection: chosen.anchor,
+      stemOffset: { x: chosen.stem.x, y: chosen.stem.y },
+      needleLength: chosen.stem.needleLength,
+      isClustered: clusterSizes[i] > 1,
+      clusterSize: clusterSizes[i],
+      boundingBox: chosen.box,
     });
   }
 

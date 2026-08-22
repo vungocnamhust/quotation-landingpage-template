@@ -107,6 +107,8 @@ export function LuxuryMapGeoCanvas({
 
     const routeColor = mapColors.route || 'var(--color-accent)';
 
+    const isPdf = tileStyle === 'carto-parchment-nolabels-pdf-v1';
+
     for (let i = 0; i < coordinates.length - 1; i++) {
       const p1 = coordinates[i];
       const p2 = coordinates[i + 1];
@@ -114,13 +116,13 @@ export function LuxuryMapGeoCanvas({
 
       const pathPoints = getCurvedRoutePoints(p1, p2);
       const isSegmentActive =
-        activeSequence === segments[i]?.sequence || activeSequence === segments[i + 1]?.sequence;
+        isPdf || activeSequence === segments[i]?.sequence || activeSequence === segments[i + 1]?.sequence;
 
       // Soft glow ambient background line
       const bgGlowLine = L.polyline(pathPoints, {
         color: routeColor,
-        weight: isSegmentActive ? 7 : 4,
-        opacity: isSegmentActive ? 0.35 : 0.18,
+        weight: isSegmentActive ? 6 : 4,
+        opacity: isSegmentActive ? 0.32 : 0.18,
         lineCap: 'round',
         lineJoin: 'round',
         interactive: false,
@@ -129,7 +131,7 @@ export function LuxuryMapGeoCanvas({
       // Foreground dashed trajectory line
       const mainDashedLine = L.polyline(pathPoints, {
         color: routeColor,
-        weight: isSegmentActive ? 3.5 : 2.5,
+        weight: isSegmentActive ? 3.2 : 2.5,
         opacity: isSegmentActive ? 1.0 : 0.85,
         dashArray: '6, 6',
         lineCap: 'round',
@@ -144,7 +146,7 @@ export function LuxuryMapGeoCanvas({
       polylinesRef.current.forEach((p) => p.remove());
       polylinesRef.current = [];
     };
-  }, [activeSequence, isMapReady, mapColors.route, mapInstance, segments]);
+  }, [activeSequence, isMapReady, mapColors.route, mapInstance, segments, tileStyle]);
 
   return (
     <div className={`luxury-map-geo-canvas${tileStyle === 'carto-parchment-nolabels-pdf-v1' ? ' luxury-map-geo-canvas--pdf' : ''} relative w-full h-full overflow-hidden select-none`}>

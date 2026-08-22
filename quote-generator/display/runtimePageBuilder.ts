@@ -261,9 +261,133 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
   const phone = stringValue(designer.phone);
   const whatsappHref = phone ? `https://wa.me/${phone.replace(/[^\d]/g, '').replace(/^00/, '')}` : '';
 
-  const routeSegments = recordList(route.staySegments).flatMap((segment, index) => {
-    const rawCoordinates = Array.isArray(segment.coords) && segment.coords.length === 2 ? [Number(segment.coords[0]), Number(segment.coords[1])] as [number, number] : null;
-    const coords = rawCoordinates && Number.isFinite(rawCoordinates[0]) && Number.isFinite(rawCoordinates[1]) && rawCoordinates[0] >= -90 && rawCoordinates[0] <= 90 && rawCoordinates[1] >= -180 && rawCoordinates[1] <= 180 ? rawCoordinates : null;
+  const rawDaysList =
+    recordList(itinerary.days).length > 0
+      ? recordList(itinerary.days)
+      : recordList(trip_facts.itinerary).length > 0
+      ? recordList(trip_facts.itinerary)
+      : recordList(tripFacts.itinerary).length > 0
+      ? recordList(tripFacts.itinerary)
+      : recordList(document.itinerary_days);
+
+  const CANONICAL_COORDS: Record<string, [number, number]> = {
+    'ho-chi-minh-city': [10.7769, 106.7009],
+    'ho chi minh city': [10.7769, 106.7009],
+    'ho chi minh': [10.7769, 106.7009],
+    'saigon': [10.7769, 106.7009],
+    'sai gon': [10.7769, 106.7009],
+    'tp. ho chi minh': [10.7769, 106.7009],
+    'mekong-delta': [10.0452, 105.7469],
+    'mekong delta': [10.0452, 105.7469],
+    'mekong': [10.0452, 105.7469],
+    'can tho': [10.0452, 105.7469],
+    'can-tho': [10.0452, 105.7469],
+    'hanoi': [21.0285, 105.8542],
+    'ha noi': [21.0285, 105.8542],
+    'ha-noi': [21.0285, 105.8542],
+    'ninh-binh': [20.2506, 105.9745],
+    'ninh binh': [20.2506, 105.9745],
+    'ha-long-bay': [20.9505, 107.0734],
+    'ha long bay': [20.9505, 107.0734],
+    'ha long': [20.9505, 107.0734],
+    'halong bay': [20.9505, 107.0734],
+    'quang-ninh': [20.9505, 107.0734],
+    'da-nang': [16.0544, 108.2022],
+    'da nang': [16.0544, 108.2022],
+    'hoi-an': [15.8801, 108.3380],
+    'hoi an': [15.8801, 108.3380],
+    'hue': [16.4637, 107.5909],
+    'sapa': [22.3364, 103.8438],
+    'lao-cai': [22.3364, 103.8438],
+    'nha-trang': [12.2388, 109.1967],
+    'nha trang': [12.2388, 109.1967],
+    'phu-quoc': [10.2899, 103.9840],
+    'phu quoc': [10.2899, 103.9840],
+    'ha-giang': [22.8233, 104.9839],
+    'ha giang': [22.8233, 104.9839],
+    'phong-nha': [17.5847, 106.2828],
+    'phong nha': [17.5847, 106.2828],
+    'siem-reap': [13.3671, 103.8448],
+    'siem reap': [13.3671, 103.8448],
+    'phnom-penh': [11.5564, 104.9282],
+    'phnom penh': [11.5564, 104.9282],
+    'luang-prabang': [19.8893, 102.1336],
+    'luang prabang': [19.8893, 102.1336],
+  };
+
+  const lookupCoords = (name: string, refCoords?: unknown): [number, number] | null => {
+    if (Array.isArray(refCoords) && refCoords.length === 2) {
+      const lat = Number(refCoords[0]);
+      const lng = Number(refCoords[1]);
+      if (Number.isFinite(lat) && Number.isFinite(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+        return [lat, lng];
+      }
+    }
+    const cleanKey = name.toLowerCase().trim().replace(/_/g, '-');
+    return CANONICAL_COORDS[cleanKey] || null;
+  };
+
+  const explicitSegments = recordList(route.staySegments);
+  const derivedDaySegments: Array<{
+    sequence: string;
+    displayName: string;
+    dayStart: number;
+    dayEnd: number;
+    daysLabel: string;
+    nightsLabel: string;
+    hotelName: string;
+    hotelImage: unknown;
+    mapSegmentDesc: string;
+    coords: [number, number];
+  }> = [];
+
+  if (rawDaysList.length > 0) {
+    rawDaysList.forEach((day, index) => {
+      const dayNum =
+        typeof day.dayNumber === 'number'
+          ? day.dayNumber
+          : typeof day.day_number === 'number'
+          ? day.day_number
+          : index + 1;
+      const destName = stringValue(day.segmentCity) || stringValue(day.destination) || stringValue(day.city) || stringValue(day.overnight);
+      if (!destName) return;
+
+      const dayDestRef = record(day.destinationRef) || record(day.overnightRef);
+      const coords = lookupCoords(destName, dayDestRef.coordinates);
+      if (!coords) return;
+
+      const last = derivedDaySegments[derivedDaySegments.length - 1];
+      if (last && last.displayName.toLowerCase() === destName.toLowerCase()) {
+        last.dayEnd = dayNum;
+        last.daysLabel = `${labels.dayPlural} ${last.dayStart}–${last.dayEnd}`;
+        const nights = Math.max(1, last.dayEnd - last.dayStart + 1);
+        last.nightsLabel = `${nights} ${nights === 1 ? 'Night' : 'Nights'}`;
+      } else {
+        derivedDaySegments.push({
+          sequence: String(derivedDaySegments.length + 1).padStart(2, '0'),
+          displayName: destName,
+          dayStart: dayNum,
+          dayEnd: dayNum,
+          daysLabel: `${labels.daySingular} ${dayNum}`,
+          nightsLabel: '1 Night',
+          hotelName: stringValue(day.overnight),
+          hotelImage: (record(day.images).hero as unknown) || day.hero_image || day.image,
+          mapSegmentDesc: stringValue(day.title) || (listText(day.activities)[0] ?? ''),
+          coords,
+        });
+      }
+    });
+  }
+
+  const sourceStaySegments =
+    derivedDaySegments.length >= explicitSegments.length && derivedDaySegments.length > 0
+      ? derivedDaySegments
+      : explicitSegments;
+
+  const routeSegments = sourceStaySegments.flatMap((item, index) => {
+    const segment = item as QuoteRecord;
+    const rawCoordinates = segment.coords;
+    const coords = lookupCoords(stringValue(segment.displayName), rawCoordinates);
     if (!coords) return [];
     const base = `/route/staySegments/${index}`;
     const dayStart = Number(segment.dayStart);
@@ -272,9 +396,9 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
     const dayLabel = hasDayRange ? `${dayEnd === dayStart ? labels.daySingular : labels.dayPlural} ${dayStart}${dayEnd === dayStart ? '' : `–${dayEnd}`}` : stringValue(segment.daysLabel);
     const activityPreviews = recordList(segment.activityPreviews);
     const activityFallback = activityPreviews
-      .map((item) => {
-        const lbl = stringValue(item.label);
-        const sum = stringValue(item.summary);
+      .map((act) => {
+        const lbl = stringValue(act.label);
+        const sum = stringValue(act.summary);
         return lbl && sum ? `${lbl}: ${sum}` : sum || lbl;
       })
       .filter(Boolean)
@@ -293,14 +417,6 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
       image: assetUrl(segment.hotelImage),
     };
   });
-  const rawDaysList =
-    recordList(itinerary.days).length > 0
-      ? recordList(itinerary.days)
-      : recordList(trip_facts.itinerary).length > 0
-      ? recordList(trip_facts.itinerary)
-      : recordList(tripFacts.itinerary).length > 0
-      ? recordList(tripFacts.itinerary)
-      : recordList(document.itinerary_days);
 
   const days = rawDaysList.map((day, index) => {
     const base = `/itinerary/days/${index}`;

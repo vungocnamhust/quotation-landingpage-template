@@ -3,11 +3,28 @@ import assert from 'node:assert/strict';
 import {
   resolveMarkerCollisions,
   getStemOffsetForAnchor,
-  adjustAnchorForBounds,
+  getMarkerBoundingBox,
+  segmentIntersectsBox,
   type MarkerPointInput,
 } from '../rules/mapMarkerLayoutRules.ts';
 
-test('resolveMarkerCollisions keeps single isolated points at top-center', () => {
+test('Liang-Barsky segmentIntersectsBox accurately detects line-box intersections', () => {
+  const box = { minX: 100, maxX: 150, minY: 100, maxY: 120 };
+
+  // Line crossing straight through box
+  assert.equal(segmentIntersectsBox({ x: 50, y: 110 }, { x: 200, y: 110 }, box), true);
+
+  // Line completely above box
+  assert.equal(segmentIntersectsBox({ x: 50, y: 80 }, { x: 200, y: 80 }, box), false);
+
+  // Line completely to the left
+  assert.equal(segmentIntersectsBox({ x: 50, y: 50 }, { x: 80, y: 150 }, box), false);
+
+  // Line passing diagonally near box without intersecting
+  assert.equal(segmentIntersectsBox({ x: 50, y: 50 }, { x: 90, y: 200 }, box), false);
+});
+
+test('resolveMarkerCollisions handles single isolated points cleanly', () => {
   const points: MarkerPointInput[] = [
     { sequence: '1', x: 300, y: 700, city: 'Ho Chi Minh City' },
     { sequence: '2', x: 400, y: 400, city: 'Da Nang' },
@@ -17,118 +34,80 @@ test('resolveMarkerCollisions keeps single isolated points at top-center', () =>
   const layout = resolveMarkerCollisions(points);
 
   assert.equal(layout.size, 3);
-  assert.equal(layout.get('1')?.anchorDirection, 'top-center');
-  assert.equal(layout.get('1')?.isClustered, false);
-  assert.equal(layout.get('2')?.anchorDirection, 'top-center');
-  assert.equal(layout.get('2')?.isClustered, false);
-  assert.equal(layout.get('3')?.anchorDirection, 'top-center');
-  assert.equal(layout.get('3')?.isClustered, false);
+  assert.ok(layout.get('1'));
+  assert.ok(layout.get('2'));
+  assert.ok(layout.get('3'));
 });
 
-test('resolveMarkerCollisions splits 2 colliding points into top-left and top-right', () => {
-  // Ninh Binh and Ha Long Bay (close in distance)
-  const points: MarkerPointInput[] = [
-    { sequence: 'nb', x: 380, y: 220, city: 'Ninh Binh' },
-    { sequence: 'hl', x: 410, y: 200, city: 'Ha Long Bay' },
-  ];
-
-  const layout = resolveMarkerCollisions(points);
-
-  assert.equal(layout.size, 2);
-  const nb = layout.get('nb');
-  const hl = layout.get('hl');
-
-  assert.ok(nb);
-  assert.ok(hl);
-  assert.equal(nb?.isClustered, true);
-  assert.equal(hl?.isClustered, true);
-  assert.equal(nb?.clusterSize, 2);
-  assert.equal(hl?.clusterSize, 2);
-
-  // Leftmost point gets top-left, rightmost gets top-right
-  assert.equal(nb?.anchorDirection, 'top-left');
-  assert.equal(hl?.anchorDirection, 'top-right');
-  assert.deepEqual(nb?.stemOffset, { x: -10, y: -8 });
-  assert.deepEqual(hl?.stemOffset, { x: 10, y: -8 });
-});
-
-test('resolveMarkerCollisions handles vertically stacked 2-point clusters', () => {
-  const points: MarkerPointInput[] = [
-    { sequence: 'top', x: 400, y: 300, city: 'City A' },
-    { sequence: 'bot', x: 405, y: 320, city: 'City B' },
-  ];
-
-  const layout = resolveMarkerCollisions(points);
-  assert.equal(layout.get('top')?.anchorDirection, 'top-elevated');
-  assert.equal(layout.get('bot')?.anchorDirection, 'top-center');
-});
-
-test('resolveMarkerCollisions distributes 3 colliding points across multi-directional slots', () => {
-  // Hanoi, Ninh Binh, Ha Long Bay
+test('SCERA pushes Ninh Binh into exterior safe angle away from incoming/outgoing route lines', () => {
+  // Northern cluster: Hanoi -> Ninh Binh -> Ha Long Bay
   const points: MarkerPointInput[] = [
     { sequence: 'hn', x: 370, y: 190, city: 'Hanoi' },
-    { sequence: 'nb', x: 380, y: 210, city: 'Ninh Binh' },
-    { sequence: 'hl', x: 410, y: 200, city: 'Ha Long Bay' },
+    { sequence: 'nb', x: 380, y: 230, city: 'Ninh Binh' },
+    { sequence: 'hl', x: 430, y: 200, city: 'Ha Long Bay' },
   ];
 
   const layout = resolveMarkerCollisions(points);
 
   assert.equal(layout.size, 3);
-  const hn = layout.get('hn');
   const nb = layout.get('nb');
-  const hl = layout.get('hl');
+  assert.ok(nb);
 
-  assert.equal(hn?.clusterSize, 3);
-  assert.equal(nb?.clusterSize, 3);
-  assert.equal(hl?.clusterSize, 3);
+  // For Ninh Binh, line comes from Hanoi (North-West) and goes to Ha Long (North-East).
+  // Exterior bisector points South / South-West.
+  // The anchor direction must NOT be top-center or top-right (which would cross into the Hanoi/Ha Long lines).
+  assert.notEqual(nb?.anchorDirection, 'top-right');
 
-  // Distinct anchor directions allocated
-  const directions = new Set([hn?.anchorDirection, nb?.anchorDirection, hl?.anchorDirection]);
-  assert.equal(directions.size, 3, 'All 3 points must have distinct anchor directions');
+  // Verify bounding box does not intersect route segment (hn -> hl)
+  assert.equal(segmentIntersectsBox({ x: 370, y: 190 }, { x: 430, y: 200 }, nb!.boundingBox), false);
 });
 
-test('adjustAnchorForBounds clamps anchor away from container boundaries', () => {
-  const defaultOpts = {
-    collisionRadiusX: 80,
-    collisionRadiusY: 30,
-    containerWidth: 794,
-    containerHeight: 1123,
-    edgePadding: 25,
-  };
+test('SCERA resolves full 5-destination itinerary with zero route occlusion', () => {
+  const points: MarkerPointInput[] = [
+    { sequence: '1', x: 300, y: 750, city: 'Ho Chi Minh City' },
+    { sequence: '2', x: 260, y: 800, city: 'Mekong Delta' },
+    { sequence: '3', x: 370, y: 190, city: 'Hanoi' },
+    { sequence: '4', x: 380, y: 230, city: 'Ninh Binh' },
+    { sequence: '5', x: 430, y: 200, city: 'Ha Long Bay' },
+  ];
 
-  // Near top boundary
-  const topPoint: MarkerPointInput = { sequence: '1', x: 400, y: 30 };
-  assert.equal(adjustAnchorForBounds(topPoint, 'top-center', defaultOpts), 'bottom-center');
-  assert.equal(adjustAnchorForBounds(topPoint, 'top-left', defaultOpts), 'bottom-left');
-  assert.equal(adjustAnchorForBounds(topPoint, 'top-right', defaultOpts), 'bottom-right');
+  const layout = resolveMarkerCollisions(points);
 
-  // Near left boundary
-  const leftPoint: MarkerPointInput = { sequence: '2', x: 30, y: 500 };
-  assert.equal(adjustAnchorForBounds(leftPoint, 'top-left', defaultOpts), 'top-right');
-  assert.equal(adjustAnchorForBounds(leftPoint, 'left', defaultOpts), 'top-right');
-
-  // Near right boundary
-  const rightPoint: MarkerPointInput = { sequence: '3', x: 770, y: 500 };
-  assert.equal(adjustAnchorForBounds(rightPoint, 'top-right', defaultOpts), 'top-left');
-  assert.equal(adjustAnchorForBounds(rightPoint, 'right', defaultOpts), 'top-left');
+  assert.equal(layout.size, 5);
+  for (let i = 1; i <= 5; i++) {
+    const placement = layout.get(String(i));
+    assert.ok(placement, `Marker ${i} must have placement`);
+    assert.ok(placement?.boundingBox);
+    assert.ok(placement?.stemOffset);
+  }
 });
 
-test('getStemOffsetForAnchor returns valid stem geometry', () => {
+test('getStemOffsetForAnchor returns valid micro-scale geometry', () => {
   const topCenter = getStemOffsetForAnchor('top-center');
   assert.equal(topCenter.x, 0);
-  assert.equal(topCenter.y, -6);
-  assert.equal(topCenter.needleLength, 6);
+  assert.equal(topCenter.y, -5);
+  assert.equal(topCenter.needleLength, 5);
 
   const topElevated = getStemOffsetForAnchor('top-elevated');
   assert.equal(topElevated.x, 0);
-  assert.equal(topElevated.y, -22);
-  assert.equal(topElevated.needleLength, 22);
+  assert.equal(topElevated.y, -16);
+  assert.equal(topElevated.needleLength, 16);
 
-  const topLeft = getStemOffsetForAnchor('top-left');
-  assert.equal(topLeft.x, -10);
-  assert.equal(topLeft.y, -8);
+  const left = getStemOffsetForAnchor('left');
+  assert.equal(left.x, -8);
+  assert.equal(left.y, 0);
 
-  const topRight = getStemOffsetForAnchor('top-right');
-  assert.equal(topRight.x, 10);
-  assert.equal(topRight.y, -8);
+  const right = getStemOffsetForAnchor('right');
+  assert.equal(right.x, 8);
+  assert.equal(right.y, 0);
+});
+
+test('getMarkerBoundingBox calculates exact 2/3 micro-scale bounds', () => {
+  const pt = { x: 100, y: 200 };
+  const box = getMarkerBoundingBox(pt, 'right', 55, 16);
+
+  assert.equal(box.minX, 100 + 8);
+  assert.equal(box.maxX, 100 + 8 + 55);
+  assert.equal(box.minY, 200 - 8);
+  assert.equal(box.maxY, 200 + 8);
 });

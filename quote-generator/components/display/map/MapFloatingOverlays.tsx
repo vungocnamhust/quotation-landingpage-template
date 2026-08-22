@@ -64,8 +64,10 @@ export function MapFloatingOverlays({
     return resolveMarkerCollisions(projectedMarkers, {
       containerWidth: isPdf ? 794 : undefined,
       containerHeight: isPdf ? 1123 : undefined,
-      collisionRadiusX: isPdf ? 150 : 140,
-      collisionRadiusY: isPdf ? 56 : 52,
+      collisionRadiusX: isPdf ? 60 : 55,
+      collisionRadiusY: isPdf ? 24 : 22,
+      capsuleWidth: 55,
+      capsuleHeight: 16,
     });
   }, [isPdf, projectedMarkers]);
 

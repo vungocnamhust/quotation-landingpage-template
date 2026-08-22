@@ -65,15 +65,19 @@ export function MapDestinationMarker({
   const titleSlot = requireTypographySlot(typography, 'metaPrimary');
   const captionSlot = requireTypographySlot(typography, 'metaSecondary');
 
-  const anchorDirection: MarkerAnchorDirection = placement?.anchorDirection || 'top-center';
-  const stemOffset = placement?.stemOffset || { x: 0, y: -10 };
+  // In PDF mode, ALL markers are displayed with the prominent accent highlight color
+  // without waiting for hover/active interaction.
+  const isStandout = isPdf || isActive;
 
-  const minX = Math.min(0, stemOffset.x) - 4;
-  const maxX = Math.max(0, stemOffset.x) + 4;
-  const minY = Math.min(0, stemOffset.y) - 4;
-  const maxY = Math.max(0, stemOffset.y) + 4;
-  const svgWidth = Math.max(8, maxX - minX);
-  const svgHeight = Math.max(8, maxY - minY);
+  const anchorDirection: MarkerAnchorDirection = placement?.anchorDirection || 'top-center';
+  const stemOffset = placement?.stemOffset || { x: 0, y: -5 };
+
+  const minX = Math.min(0, stemOffset.x) - 3;
+  const maxX = Math.max(0, stemOffset.x) + 3;
+  const minY = Math.min(0, stemOffset.y) - 3;
+  const maxY = Math.max(0, stemOffset.y) + 3;
+  const svgWidth = Math.max(6, maxX - minX);
+  const svgHeight = Math.max(6, maxY - minY);
 
   const capsuleTransform = getCapsuleTransform(anchorDirection);
 
@@ -82,8 +86,7 @@ export function MapDestinationMarker({
       className={cn(
         'luxury-destination-marker absolute transition-transform duration-200',
         `luxury-destination-marker--${anchorDirection}`,
-        isActive && 'is-active scale-105 z-[525]',
-        !isActive && 'z-[524] hover:scale-102'
+        isStandout ? 'is-active z-[525]' : 'z-[524] hover:scale-102'
       )}
       style={{
         left: `${projectedPoint.x}px`,
@@ -105,11 +108,11 @@ export function MapDestinationMarker({
           }
         }}
         className={cn(
-          'luxury-destination-marker__content relative group cursor-pointer select-none',
-          !isInteractive && 'cursor-default'
+          'luxury-destination-marker__content relative group select-none',
+          isInteractive ? 'cursor-pointer' : 'cursor-default'
         )}
       >
-        {/* Leader Line / Needle Stem */}
+        {/* Leader Line / Needle Stem (Slim 1.2px Accent Line) */}
         <svg
           className="luxury-destination-marker__stem pointer-events-none absolute overflow-visible"
           style={{
@@ -127,24 +130,27 @@ export function MapDestinationMarker({
             x2={stemOffset.x}
             y2={stemOffset.y}
             stroke="var(--color-accent)"
-            strokeWidth={1.5}
+            strokeWidth={1.2}
             strokeLinecap="round"
-            className="transition-colors duration-200 opacity-85"
+            className={cn(
+              'transition-opacity duration-200',
+              isStandout ? 'opacity-100' : 'opacity-65 group-hover:opacity-100'
+            )}
           />
         </svg>
 
-        {/* Geographic Ground Dot (Exact GPS Coordinate Center) */}
+        {/* Geographic Ground Dot (Exact GPS Coordinate Center, 4px) */}
         <div
           className={cn(
-            'luxury-destination-marker__ground-dot absolute left-0 top-0 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border border-white shadow-xs transition-transform',
-            isActive
+            'luxury-destination-marker__ground-dot absolute left-0 top-0 -translate-x-1/2 -translate-y-1/2 w-1 h-1 rounded-full border border-white shadow-xs transition-transform',
+            isStandout
               ? 'bg-[var(--color-accent)] ring-2 ring-[var(--color-accent)]/40'
-              : 'bg-[var(--color-primary)]'
+              : 'bg-[var(--color-primary)] group-hover:bg-[var(--color-accent)]'
           )}
           aria-hidden="true"
         />
 
-        {/* Floating Capsule Label */}
+        {/* Floating Micro Capsule Label (2/3 scale, elegant typography) */}
         <div
           className="luxury-destination-marker__capsule-wrapper absolute"
           style={{
@@ -155,17 +161,18 @@ export function MapDestinationMarker({
         >
           <div
             className={cn(
-              'luxury-destination-marker__pill flex items-center gap-1.5 px-2.5 py-1 rounded-full backdrop-blur-xs transition-all duration-200 whitespace-nowrap',
-              isPdf && 'luxury-destination-marker__pill--pdf'
+              'luxury-destination-marker__pill flex items-center gap-0.5 px-1 py-0.5 rounded-full backdrop-blur-xs transition-all duration-200 whitespace-nowrap',
+              isPdf && 'luxury-destination-marker__pill--pdf',
+              isStandout && 'border-[var(--color-accent)] shadow-xs'
             )}
           >
-            {/* Numbered Circle Dot */}
+            {/* Numbered Circle Dot (Micro 10px) */}
             <span
               className={cn(
-                'luxury-destination-marker__badge flex items-center justify-center w-5 h-5 rounded-full font-mono transition-colors shrink-0',
+                'luxury-destination-marker__badge flex items-center justify-center w-2.5 h-2.5 rounded-full font-mono transition-colors shrink-0',
                 getTypographyClassName('caption'),
-                isActive
-                  ? 'bg-[var(--color-accent)] text-white shadow-sm'
+                isStandout
+                  ? 'bg-[var(--color-accent)] text-white shadow-xs'
                   : 'bg-[var(--color-primary)] text-white group-hover:bg-[var(--color-accent)]'
               )}
             >
@@ -178,7 +185,7 @@ export function MapDestinationMarker({
                 className={cn(
                   getTypographyClassName(titleSlot),
                   'luxury-destination-marker__city font-serif transition-colors',
-                  isActive
+                  isStandout
                     ? 'text-[var(--color-accent)]'
                     : 'text-[var(--color-primary)] group-hover:text-[var(--color-accent)]'
                 )}
@@ -189,7 +196,7 @@ export function MapDestinationMarker({
                 <span
                   className={cn(
                     getTypographyClassName(captionSlot),
-                    'luxury-destination-marker__day text-[var(--color-on-surface-muted)]'
+                    'luxury-destination-marker__day text-[var(--color-on-surface-muted)] opacity-85'
                   )}
                 >
                   {dayLabel}
