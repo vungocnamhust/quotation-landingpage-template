@@ -739,7 +739,7 @@ function PdfPricing({ documentModel }: { documentModel: DisplayDocument }) {
       className="pdf-pricing-page"
     >
       <div className={`page-inner ${optionCount === 1 ? 'pdf-pricing-page-inner--hero' : ''}`}>
-        <header className={`pdf-pricing__header ${optionCount === 1 ? 'pdf-pricing__header--centered' : ''}`}>
+        <header className="pdf-pricing__header">
           {pricing.kicker ? (
             <Kicker variant="chapterKicker" tone="accent">{pricing.kicker}</Kicker>
           ) : null}
@@ -887,13 +887,27 @@ function PdfPricing({ documentModel }: { documentModel: DisplayDocument }) {
         )}
 
         {note && textValue(note) ? (
-          <div className={`pdf-pricing-basis ${optionCount === 1 ? 'pdf-pricing-basis--centered' : ''}`}>
-            <div className={`pdf-pricing-basis__label ${getTypographyClassName('overline')}`}>
-              {textValue(noteLabel) || 'PRICING BASIS'}
+          <div className="pdf-pricing-basis">
+            <div className="pdf-pricing-basis__divider-wrapper">
+              <Image
+                src="/assets/brands/indochine_icon/line_divider.svg"
+                alt=""
+                width={691}
+                height={19}
+                unoptimized
+                className="pdf-pricing-basis__divider"
+              />
             </div>
-            <BodyCopy variant="bodySm" tone="muted" className="pdf-pricing-basis__text">
-              {note}
-            </BodyCopy>
+            <div className="pdf-pricing-basis__content">
+              {noteLabel && textValue(noteLabel) ? (
+                <div className={`pdf-pricing-basis__label ${getTypographyClassName('overline')}`}>
+                  {textValue(noteLabel)}
+                </div>
+              ) : null}
+              <BodyCopy variant="bodySm" tone="muted" className="pdf-pricing-basis__text">
+                {note}
+              </BodyCopy>
+            </div>
           </div>
         ) : null}
       </div>

@@ -102,6 +102,16 @@ class PdfDisplayContractTests(unittest.TestCase):
         self.assertIn(".pdf-letter__highlight-block", css)
         self.assertIn(".pdf-letter__divider", css)
 
+    def test_pdf_pricing_1_option_layout_contract(self):
+        source = (ROOT / "quote-generator/components/display/PdfBrochureDocument.tsx").read_text(encoding="utf-8")
+        css = (ROOT / "quote-generator/app/globals.css").read_text(encoding="utf-8")
+
+        self.assertIn("pdf-pricing-basis__divider", source)
+        self.assertIn(".pdf-pricing-basis__divider", css)
+        self.assertIn(".pdf-pricing-page-inner--hero", css)
+        self.assertNotIn("pdf-pricing__header--centered", source)
+        self.assertNotIn("pdf-pricing-basis--centered", source)
+
 
 if __name__ == "__main__":
     unittest.main()
