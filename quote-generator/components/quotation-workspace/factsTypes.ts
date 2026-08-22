@@ -85,7 +85,7 @@ export type BookingItemFact = {
 export type QuotationCreationPayload = QuotationFacts & {
   factMediaSlots: Array<{
     fieldId: string;
-    value: { r2Key: string; status: "ready"; altText?: string; source?: "manual" | "auto" } | Array<{ r2Key: string; status: "ready"; altText?: string; source?: "manual" | "auto" }>;
+    value: { r2Key: string; status: "ready"; altText?: string; source?: "manual" | "auto" | "fallback" } | Array<{ r2Key: string; status: "ready"; altText?: string; source?: "manual" | "auto" | "fallback" }>;
   }>;
 };
 
@@ -96,8 +96,8 @@ export type QuotationCreationPayload = QuotationFacts & {
 export type DraftMediaRef = {
   r2Key: string;
   altText?: string;
-  status?: "ready";
-  source?: "manual" | "auto";
+  status?: "ready" | "review_required";
+  source?: "manual" | "auto" | "fallback";
 };
 export type DraftMediaSlotValue = DraftMediaRef | DraftMediaRef[] | null;
 export type DraftMediaSelections = Record<string, DraftMediaSlotValue>;
@@ -372,7 +372,7 @@ export function serializeDraftMediaSelections(
         r2Key: item.r2Key.trim(),
         status: "ready" as const,
         ...(item.altText?.trim() ? { altText: item.altText.trim() } : {}),
-        ...(item.source ? { source: item.source } : {}),
+        ...(item.source && item.source !== "fallback" ? { source: item.source } : {}),
       }));
     if (!ready.length) return [];
     return [{ fieldId, value: Array.isArray(value) ? ready : ready[0] }];

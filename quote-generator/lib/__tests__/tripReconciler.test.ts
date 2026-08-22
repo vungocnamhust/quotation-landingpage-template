@@ -247,6 +247,38 @@ describe('tripAdapter bidirectional schema mapping', () => {
     assert.equal(synced.itineraryDays[3].destination, 'Hue');
   });
 
+  it('synchronizes destination_refs and destinations when applying route sequence', () => {
+    const formState = getInitialQuoteRequestFormState('traveller');
+    formState.arrival_date = '2026-11-01';
+
+    const routeSequence = [
+      { id: 'dst_hanoi', name: 'Hanoi', slug: 'hanoi' },
+      { id: 'dst_halong', name: 'Halong', slug: 'halong' },
+      { id: 'dst_hue', name: 'Hue', slug: 'hue' },
+      { id: 'dst_hoi_an', name: 'Hoi An', slug: 'hoi-an' },
+    ];
+
+    const canonical = tripAdapter.fromQuoteRequest(formState, []);
+    const reconciled = tripReconciler.applyRouteSequence(canonical, routeSequence);
+    const synced = tripAdapter.syncToQuoteRequest(reconciled, formState);
+
+    assert.equal(synced.itineraryDays.length, 4);
+    assert.equal(synced.itineraryDays[0].destination, 'Hanoi');
+    assert.equal(synced.itineraryDays[1].destination, 'Halong');
+    assert.equal(synced.itineraryDays[2].destination, 'Hue');
+    assert.equal(synced.itineraryDays[3].destination, 'Hoi An');
+
+    // Verify formState has destination_refs and destinations synced
+    assert.deepEqual(synced.formState.destinations, ['Hanoi', 'Halong', 'Hue', 'Hoi An']);
+    assert.equal(synced.formState.destination_refs?.length, 4);
+    assert.equal(synced.formState.destination_refs?.[0].name, 'Hanoi');
+    assert.equal(synced.formState.destination_refs?.[3].name, 'Hoi An');
+    assert.equal(synced.formState.arrival_city, 'Hanoi');
+    assert.equal(synced.formState.departure_city, 'Hoi An');
+    assert.equal(synced.formState.arrival_date, '2026-11-01');
+    assert.equal(synced.formState.departure_date, '2026-11-04');
+  });
+
   it('adapts QuotationFacts back and forth with CanonicalTrip', () => {
     const facts = createBrochureFacts();
     facts.trip_facts.start_date = '2026-10-01';

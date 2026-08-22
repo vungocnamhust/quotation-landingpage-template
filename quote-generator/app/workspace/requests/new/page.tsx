@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import Link from "next/link";
 import QuoteRequestForm from "../../../../components/quotation-workspace/QuoteRequestForm";
-import BasicItineraryDayGrid from "../../../../components/quotation-workspace/BasicItineraryDayGrid";
 import { useQuoteRequestForm } from "../../../../components/quotation-workspace/useQuoteRequestForm";
 import { useToast } from "../../../../components/staff-workspace/ToastProvider";
 import { getTypographyClassName } from "../../../../config/typography";
@@ -73,22 +72,17 @@ export default function NewQuoteRequestPage() {
         </div>
       ) : null}
 
-      {/* 1. Primary Request Information Form */}
+      {/* Primary Request Information Form (includes Routing, Itinerary Days, Travel Style & Scopes) */}
       <QuoteRequestForm
         state={formState}
         onChange={setFormState}
         onApplyRouteToItinerary={applyRouteSequence}
+        itineraryDays={itineraryDays}
+        onAddItineraryDay={addItineraryDay}
+        onRemoveItineraryDay={removeItineraryDay}
+        onUpdateItineraryDay={updateItineraryDay}
+        onItineraryDaysChange={setItineraryDays}
         disabled={submitting}
-      />
-
-      {/* 2. Optional Basic Daily Itinerary Grid */}
-      <BasicItineraryDayGrid
-        days={itineraryDays}
-        startDate={formState.arrival_date}
-        onAddDay={addItineraryDay}
-        onRemoveDay={removeItineraryDay}
-        onUpdateDay={updateItineraryDay}
-        onChange={setItineraryDays}
       />
 
 

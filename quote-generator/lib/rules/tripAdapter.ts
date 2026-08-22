@@ -32,7 +32,7 @@ export const tripAdapter = {
     const canonicalDays: CanonicalDay[] = days.map((d, index) => ({
       id: d.id || `day_${d.day_number || index + 1}`,
       day_number: d.day_number || index + 1,
-      title: d.title || null,
+      title: null,
       destination: d.destination || null,
       destination_ref: d.destination_ref_id
         ? { id: d.destination_ref_id, name: d.destination || "", slug: "" }
@@ -54,8 +54,18 @@ export const tripAdapter = {
       durationNights: duration.durationNights ?? (canonicalDays.length ? Math.max(0, canonicalDays.length - 1) : null),
       arrivalCity: routeMeta.arrivalCity || formState.arrival_city?.trim() || null,
       departureCity: routeMeta.departureCity || formState.departure_city?.trim() || null,
-      destinations: routeMeta.destinations.length > 0 ? routeMeta.destinations : (formState.destination ? [formState.destination] : []),
-      destinationRefs: routeMeta.destinationRefs.length > 0 ? routeMeta.destinationRefs : [],
+      destinations:
+        routeMeta.destinations.length > 0
+          ? routeMeta.destinations
+          : formState.destinations && formState.destinations.length > 0
+            ? formState.destinations
+            : formState.destination
+              ? [formState.destination]
+              : [],
+      destinationRefs:
+        routeMeta.destinationRefs.length > 0
+          ? routeMeta.destinationRefs
+          : formState.destination_refs || [],
       displayRouteText: routeMeta.displayRouteText || formState.destination || null,
       routingConstraints: formState.routing_constraints || null,
       itinerary: canonicalDays,
@@ -79,7 +89,6 @@ export const tripAdapter = {
     const itineraryDays: BasicDayItem[] = canonical.itinerary.map((d, index) => ({
       id: (d.id as string) || `day_${d.day_number || index + 1}`,
       day_number: d.day_number || index + 1,
-      title: (d.title as string) || "",
       destination: d.destination || "",
       destination_ref_id: d.destination_ref?.id || null,
       overnight: d.overnight || d.destination || "",
@@ -99,6 +108,14 @@ export const tripAdapter = {
         arrival_city: canonical.arrivalCity || prev.arrival_city || "",
         departure_city: canonical.departureCity || prev.departure_city || "",
         destination: canonical.destinations?.[0] || prev.destination || "",
+        destination_refs:
+          canonical.destinationRefs && canonical.destinationRefs.length > 0
+            ? canonical.destinationRefs
+            : prev.destination_refs,
+        destinations:
+          canonical.destinations && canonical.destinations.length > 0
+            ? canonical.destinations
+            : prev.destinations,
         routing_constraints:
           canonical.routingConstraints !== undefined && canonical.routingConstraints !== null
             ? canonical.routingConstraints

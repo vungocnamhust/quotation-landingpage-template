@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Plus, Trash2, ChevronDown, ChevronUp, Calendar } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
@@ -12,7 +12,6 @@ import { tripReconciler, type CanonicalDay } from "../../lib/rules/tripReconcile
 export type BasicDayItem = {
   id?: string;
   day_number: number;
-  title?: string;
   destination: string;
   destination_ref_id?: string | null;
   display_date: string;
@@ -41,6 +40,14 @@ export default function BasicItineraryDayGrid({
   onUpdateDay,
 }: Props) {
   const [isOpen, setIsOpen] = useState(() => days.length > 0);
+  const prevLengthRef = useRef(days.length);
+
+  useEffect(() => {
+    if (days.length > 0 && prevLengthRef.current === 0) {
+      setIsOpen(true);
+    }
+    prevLengthRef.current = days.length;
+  }, [days.length]);
 
   const handleAddDay = () => {
     if (onAddDay) {
@@ -62,7 +69,6 @@ export default function BasicItineraryDayGrid({
         reconciled.itinerary.map((d, i) => ({
           id: d.id || `day_${i + 1}`,
           day_number: d.day_number || i + 1,
-          title: (d.title as string) || "",
           destination: d.destination || "",
           display_date: d.display_date || "",
           summary: (d.summary as string) || "",
@@ -99,7 +105,6 @@ export default function BasicItineraryDayGrid({
         reconciled.itinerary.map((d, i) => ({
           id: d.id || `day_${i + 1}`,
           day_number: d.day_number || i + 1,
-          title: (d.title as string) || "",
           destination: d.destination || "",
           display_date: d.display_date || "",
           summary: (d.summary as string) || "",
@@ -136,7 +141,6 @@ export default function BasicItineraryDayGrid({
         reconciled.itinerary.map((d, i) => ({
           id: d.id || `day_${i + 1}`,
           day_number: d.day_number || i + 1,
-          title: (d.title as string) || "",
           destination: d.destination || "",
           display_date: d.display_date || "",
           summary: (d.summary as string) || "",
@@ -158,14 +162,29 @@ export default function BasicItineraryDayGrid({
         className="flex items-center justify-between gap-3 p-5 text-left transition-colors hover:bg-[var(--color-surface-muted)] cursor-pointer"
       >
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-surface-muted)] text-[var(--color-muted)]">
+          <div
+            className={cn(
+              "flex h-9 w-9 items-center justify-center rounded-full transition-colors",
+              days.length > 0
+                ? "bg-[var(--color-accent-wash)] text-[var(--color-accent)]"
+                : "bg-[var(--color-surface-muted)] text-[var(--color-muted)]"
+            )}
+          >
             <Calendar size={18} aria-hidden="true" />
           </div>
           <div>
             <h3 className={cn(getTypographyClassName("cardTitle"), "text-[var(--color-on-surface)] flex items-center gap-2")}>
               <span>Basic Daily Itinerary</span>
-              <span className={cn(getTypographyClassName("caption"), "rounded-full bg-[var(--color-surface-muted)] px-2 py-0.5 text-[var(--color-muted)]")}>
-                Optional ({days.length} {days.length === 1 ? "day" : "days"})
+              <span
+                className={cn(
+                  getTypographyClassName("caption"),
+                  "rounded-full px-2 py-0.5 border transition-colors",
+                  days.length > 0
+                    ? "bg-[var(--color-accent-wash)] text-[var(--color-accent)] border-[var(--color-accent)]"
+                    : "bg-[var(--color-surface-muted)] text-[var(--color-muted)] border-[var(--color-border)]"
+                )}
+              >
+                {days.length > 0 ? `${days.length} ${days.length === 1 ? "day" : "days"}` : "Optional (0 days)"}
               </span>
             </h3>
             <p className={cn(getTypographyClassName("bodySm"), "text-[var(--color-muted)]")}>
@@ -272,39 +291,21 @@ export default function BasicItineraryDayGrid({
                       />
                     </div>
 
-                    <div className="grid gap-2">
-                      <label className="flex flex-col gap-1">
-                        <span className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>
-                          Day Title (Optional):
-                        </span>
-                        <input
-                          type="text"
-                          placeholder="e.g. Arrival in Hanoi & Old Quarter Walk"
-                          value={day.title || ""}
-                          onChange={(e) => handleFieldChange(idx, "title", e.target.value)}
-                          className={cn(
-                            getTypographyClassName("bodySm"),
-                            "h-9 w-full rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-2.5 text-[var(--color-on-surface)] focus:outline-none focus:ring-1 focus:ring-[var(--color-focus)]"
-                          )}
-                        />
-                      </label>
-
-                      <label className="flex flex-col gap-1">
-                        <span className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>
-                          Short Summary / Highlights:
-                        </span>
-                        <input
-                          type="text"
-                          placeholder="e.g. Arrival in Hanoi, airport transfer & evening food tour"
-                          value={day.summary}
-                          onChange={(e) => handleFieldChange(idx, "summary", e.target.value)}
-                          className={cn(
-                            getTypographyClassName("bodySm"),
-                            "h-9 w-full rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-2.5 text-[var(--color-on-surface)] focus:outline-none focus:ring-1 focus:ring-[var(--color-focus)]"
-                          )}
-                        />
-                      </label>
-                    </div>
+                    <label className="flex flex-col gap-1">
+                      <span className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>
+                        Short Summary / Highlights:
+                      </span>
+                      <input
+                        type="text"
+                        placeholder="e.g. Arrival in Hanoi, airport transfer & evening food tour"
+                        value={day.summary}
+                        onChange={(e) => handleFieldChange(idx, "summary", e.target.value)}
+                        className={cn(
+                          getTypographyClassName("bodySm"),
+                          "h-9 w-full rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-2.5 text-[var(--color-on-surface)] focus:outline-none focus:ring-1 focus:ring-[var(--color-focus)]"
+                        )}
+                      />
+                    </label>
                   </div>
                 );
               })}

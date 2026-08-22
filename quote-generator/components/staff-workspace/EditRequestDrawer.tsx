@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import { X, Save, Sparkles, AlertCircle } from "lucide-react";
 import QuoteRequestForm from "../quotation-workspace/QuoteRequestForm.tsx";
-import BasicItineraryDayGrid from "../quotation-workspace/BasicItineraryDayGrid.tsx";
 import { useQuoteRequestForm } from "../quotation-workspace/useQuoteRequestForm.ts";
 import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
@@ -134,22 +133,17 @@ function EditRequestDrawerContent({
             </p>
           </section>
 
-          {/* 1. Request Details Form */}
+          {/* Request Details Form (includes Routing, Itinerary Days, Travel Style & Scopes) */}
           <QuoteRequestForm
             state={formState}
             onChange={setFormState}
             onApplyRouteToItinerary={applyRouteSequence}
+            itineraryDays={itineraryDays}
+            onAddItineraryDay={addItineraryDay}
+            onRemoveItineraryDay={removeItineraryDay}
+            onUpdateItineraryDay={updateItineraryDay}
+            onItineraryDaysChange={setItineraryDays}
             disabled={submitting}
-          />
-
-          {/* 2. Basic Daily Itinerary Schedule */}
-          <BasicItineraryDayGrid
-            days={itineraryDays}
-            startDate={formState.arrival_date}
-            onAddDay={addItineraryDay}
-            onRemoveDay={removeItineraryDay}
-            onUpdateDay={updateItineraryDay}
-            onChange={setItineraryDays}
           />
 
 

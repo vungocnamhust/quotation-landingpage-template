@@ -4,6 +4,7 @@ import { type QuoteRequestFormState } from "../../lib/quoteRequestPayload.ts";
 import { RequestIdentitySection } from "./request-sections/RequestIdentitySection.tsx";
 import { RequestRoutingSection } from "./request-sections/RequestRoutingSection.tsx";
 import { RequestTravelStyleSection } from "./request-sections/RequestTravelStyleSection.tsx";
+import BasicItineraryDayGrid, { type BasicDayItem } from "./BasicItineraryDayGrid.tsx";
 import AccommodationScopeSection from "./AccommodationScopeSection.tsx";
 import ServiceScopeSection from "./ServiceScopeSection.tsx";
 import SpecialRequirementsSection from "./SpecialRequirementsSection.tsx";
@@ -18,6 +19,11 @@ type Props = {
   state: QuoteRequestFormState;
   onChange: (updater: (prev: QuoteRequestFormState) => QuoteRequestFormState) => void;
   onApplyRouteToItinerary?: (destinations: DestinationRef[]) => void;
+  itineraryDays?: BasicDayItem[];
+  onAddItineraryDay?: (defaultPayload?: Partial<BasicDayItem>) => void;
+  onRemoveItineraryDay?: (index: number) => void;
+  onUpdateItineraryDay?: (index: number, patch: Partial<BasicDayItem>) => void;
+  onItineraryDaysChange?: (days: BasicDayItem[]) => void;
   disabled?: boolean;
 };
 
@@ -25,6 +31,11 @@ export default function QuoteRequestForm({
   state,
   onChange,
   onApplyRouteToItinerary,
+  itineraryDays = [],
+  onAddItineraryDay,
+  onRemoveItineraryDay,
+  onUpdateItineraryDay,
+  onItineraryDaysChange,
   disabled = false,
 }: Props) {
   return (
@@ -40,7 +51,17 @@ export default function QuoteRequestForm({
         disabled={disabled}
       />
 
-      {/* 3. Travel Themes, Priorities & Experience Pace Section */}
+      {/* 3. Basic Daily Itinerary Schedule Grid (Positioned directly under Routing) */}
+      <BasicItineraryDayGrid
+        days={itineraryDays}
+        startDate={state.arrival_date}
+        onAddDay={onAddItineraryDay}
+        onRemoveDay={onRemoveItineraryDay}
+        onUpdateDay={onUpdateItineraryDay}
+        onChange={onItineraryDaysChange}
+      />
+
+      {/* 4. Travel Themes, Priorities & Experience Pace Section (Collapsible) */}
       <RequestTravelStyleSection state={state} onChange={onChange} disabled={disabled} />
 
       {/* 4. Functional Scope Sections */}
