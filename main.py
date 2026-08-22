@@ -72,7 +72,7 @@ from services.media_service import MediaService
 from services.storage.local_media_storage import LocalMediaStorage
 from services.storage.r2_storage import R2Storage, R2StorageConfigurationError
 from services.media_library_service import MediaLibraryService, is_allowed_prefix, normalize_library_prefix
-from services.brochure_media_resolver import BrochureMediaResolver, Candidate
+from services.media_default_service import MediaDefaultService
 from services.media_locations import accommodation_asset_location, accommodation_location, destination_default_media_prefix, destination_location, storage_slug, team_location
 from repositories.destination_repository import DestinationRepository
 from repositories.media_library_repository import MediaLibraryRepository
@@ -4944,7 +4944,7 @@ async def create_canonical_quotation_v2(payload: CreateQuoteRequestV1, principal
             await quotes.create_quotation_request(quotation_id=quotation_id, request_json=canonical.model_dump(mode="json"))
             await quotes.create_version_facts(quotation_id=quotation_id, canonical_facts_json=canonical.model_dump(mode="json"), resolved_facts_json=resolved, facts_hash=resolved["factsHash"], source_request_id=internal_request.id, source_request_revision=1)
             await QuoteRequestRepository(session).update_status(request_id=internal_request.id, status="quotation_created", linked_quotation_id=quotation_id)
-            await _apply_missing_media_defaults(session, document, quotation_id, lang)
+            await _apply_missing_media_defaults(session, document, quotation_id, lang, canonical.brand_id)
             saved = await documents.save_current_document(quotation_id=quotation_id, lang=lang, document_json=document, expected_revision=0)
             document["meta"]["revision"] = saved.revision
             await documents.append_document_revision(quotation_id=quotation_id, lang=lang, revision=saved.revision, document_json=document, change_source="create_facts")
@@ -7502,91 +7502,22 @@ async def _require_active_media_overrides(session, overrides: dict[str, Any]) ->
 
 
 def _apply_media_default_patch(document: dict[str, Any], patch: dict[str, Any]) -> None:
-    assets = patch.get("assets") or {}
-    if assets:
-        document.setdefault("assets", {}).update(assets)
-    for index, value in (patch.get("itinerary", {}).get("days", {}) or {}).items():
-        days = document.setdefault("itinerary", {}).setdefault("days", [])
-        if int(index) < len(days):
-            days[int(index)].setdefault("images", {}).update(value.get("images") or {})
-    for index, value in (patch.get("stays", {}).get("hotels", {}) or {}).items():
-        hotels = document.setdefault("stays", {}).setdefault("hotels", [])
-        if int(index) < len(hotels):
-            hotels[int(index)].update(value)
-            if "hotelImage" in value:
-                hotel_name = hotels[int(index)].get("name")
-                hotel_city = hotels[int(index)].get("city")
-                for seg in (document.get("route") or {}).get("staySegments") or []:
-                    if (hotel_name and seg.get("hotelName") == hotel_name) or (hotel_city and seg.get("displayName") == hotel_city):
-                        seg["hotelImage"] = value["hotelImage"]
+    MediaDefaultService.apply_patch(document, patch)
 
 
-async def _apply_missing_media_defaults(session, document: dict[str, Any], quotation_id: str, lang: str) -> dict[str, Any]:
-    # 1. Pre-hydrate destinationRef for itinerary days and hotels using DestinationRepository
-    dest_repo = DestinationRepository(session)
-    itinerary = document.get("itinerary") or {}
-    days = itinerary.get("days") or []
-    for day in days:
-        if isinstance(day, dict):
-            dest_val = day.get("destination") or day.get("city")
-            dest_ref = day.get("destinationRef")
-            query = dest_val or (dest_ref.get("name") if isinstance(dest_ref, dict) else None)
-            if query:
-                resolved = await dest_repo.resolve(str(query))
-                if resolved:
-                    if isinstance(dest_ref, dict):
-                        if not dest_ref.get("mediaPrefix") and resolved.media_prefix:
-                            dest_ref["mediaPrefix"] = resolved.media_prefix
-                        if not dest_ref.get("defaultMediaPrefix"):
-                            dest_ref["defaultMediaPrefix"] = destination_default_media_prefix(resolved)
-                        if not dest_ref.get("slug"):
-                            dest_ref["slug"] = resolved.slug
-                    else:
-                        day["destinationRef"] = {
-                            "id": resolved.id,
-                            "name": resolved.canonical_name,
-                            "slug": resolved.slug,
-                            "mediaPrefix": resolved.media_prefix,
-                            "defaultMediaPrefix": destination_default_media_prefix(resolved),
-                        }
-
-    stays = document.get("stays") or {}
-    hotels = stays.get("hotels") or []
-    for hotel in hotels:
-        if isinstance(hotel, dict):
-            dest_val = hotel.get("destination") or hotel.get("city")
-            dest_ref = hotel.get("destinationRef")
-            query = dest_val or (dest_ref.get("name") if isinstance(dest_ref, dict) else None)
-            if query:
-                resolved = await dest_repo.resolve(str(query))
-                if resolved:
-                    if isinstance(dest_ref, dict):
-                        if not dest_ref.get("mediaPrefix") and resolved.media_prefix:
-                            dest_ref["mediaPrefix"] = resolved.media_prefix
-                        if not dest_ref.get("defaultMediaPrefix"):
-                            dest_ref["defaultMediaPrefix"] = destination_default_media_prefix(resolved)
-                        if not dest_ref.get("slug"):
-                            dest_ref["slug"] = resolved.slug
-                    else:
-                        hotel["destinationRef"] = {
-                            "id": resolved.id,
-                            "name": resolved.canonical_name,
-                            "slug": resolved.slug,
-                            "mediaPrefix": resolved.media_prefix,
-                            "defaultMediaPrefix": destination_default_media_prefix(resolved),
-                        }
-
-    catalogue = await MediaLibraryRepository(session).list_active_candidates()
-    resolver = BrochureMediaResolver(
-        Candidate(item.r2_key, item.parent_prefix, item.width, item.height, item.preview_status == "ready")
-        for item in catalogue
+async def _apply_missing_media_defaults(
+    session,
+    document: dict[str, Any],
+    quotation_id: str,
+    lang: str,
+    brand_id: str | None = None,
+) -> dict[str, Any]:
+    return await MediaDefaultService(session).apply_missing(
+        document=document,
+        quotation_id=quotation_id,
+        lang=lang,
+        brand_id=brand_id,
     )
-    result = resolver.resolve_missing(document=document, quotation_id=quotation_id, lang=lang)
-    _apply_media_default_patch(document, result["patch"])
-    document.setdefault("presentation", {})["mediaDefaults"] = {
-        "resolverVersion": result["resolverVersion"], "rationale": result["rationale"],
-    }
-    return result
 
 
 @app.put("/api/v2/quotations/{quotation_id}/presentation")
@@ -8664,17 +8595,27 @@ async def _validate_release_asset_manifest(document: Any) -> dict[str, dict[str,
 async def _inspect_asset_readiness(document: Any) -> dict[str, Any]:
     """Inspect persisted media references for workflow/review readiness."""
     required_missing = _missing_required_fact_media(document) if isinstance(document, dict) else []
+    presentation = (document.get("presentation") or {}) if isinstance(document, dict) else {}
+    defaults = presentation.get("mediaDefaults") or {} if isinstance(presentation, dict) else {}
+    media_overrides = presentation.get("mediaOverrides") or {} if isinstance(presentation, dict) else {}
+    fallback_slots = defaults.get("fallbackSlots") or [] if isinstance(defaults, dict) else []
+    unresolved_fallbacks = [
+        str(field_id)
+        for field_id in fallback_slots
+        if isinstance(field_id, str)
+        and not (isinstance(media_overrides, dict) and isinstance(media_overrides.get(field_id), dict) and media_overrides[field_id].get("r2Key"))
+    ]
     try:
         manifest = _build_release_asset_manifest(document)
     except HTTPException as exc:
         detail = exc.detail if isinstance(exc.detail, dict) else {"message": str(exc.detail)}
-        return {"ready": False, "missing": required_missing, "invalid": [detail], "checkedAt": datetime.now(timezone.utc).isoformat()}
+        return {"ready": False, "missing": [*required_missing, *(f"fallback_review:{field_id}" for field_id in unresolved_fallbacks)], "invalid": [detail], "checkedAt": datetime.now(timezone.utc).isoformat()}
     if not manifest:
-        return {"ready": not required_missing, "missing": required_missing, "invalid": [], "checkedAt": datetime.now(timezone.utc).isoformat()}
+        return {"ready": not required_missing and not unresolved_fallbacks, "missing": [*required_missing, *(f"fallback_review:{field_id}" for field_id in unresolved_fallbacks)], "invalid": [], "checkedAt": datetime.now(timezone.utc).isoformat()}
     try:
         storage = R2Storage()
     except R2StorageConfigurationError as exc:
-        return {"ready": False, "missing": required_missing, "invalid": [{"message": str(exc)}], "checkedAt": datetime.now(timezone.utc).isoformat()}
+        return {"ready": False, "missing": [*required_missing, *(f"fallback_review:{field_id}" for field_id in unresolved_fallbacks)], "invalid": [{"message": str(exc)}], "checkedAt": datetime.now(timezone.utc).isoformat()}
     semaphore = asyncio.Semaphore(8)
     missing: list[str] = []
 
@@ -8687,8 +8628,8 @@ async def _inspect_asset_readiness(document: Any) -> dict[str, Any]:
 
     await asyncio.gather(*(check(key) for key in manifest.values()))
     return {
-        "ready": not missing and not required_missing,
-        "missing": sorted({*missing, *required_missing}),
+        "ready": not missing and not required_missing and not unresolved_fallbacks,
+        "missing": sorted({*missing, *required_missing, *(f"fallback_review:{field_id}" for field_id in unresolved_fallbacks)}),
         "invalid": [],
         "checkedAt": datetime.now(timezone.utc).isoformat(),
     }

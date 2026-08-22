@@ -442,6 +442,7 @@ class TestQuoteRequestService(unittest.IsolatedAsyncioTestCase):
         }
 
         with patch("main._resolve_v2_facts", new_callable=AsyncMock, return_value=(mock_canonical, mock_resolved)), \
+             patch("main._apply_missing_media_defaults", new_callable=AsyncMock), \
              patch("main._serialize_travel_designer", return_value={"id": "td_assigned", "name": "Assigned Designer"}), \
              patch("repositories.quotation_repository.QuotationRepository.create_quotation", new_callable=AsyncMock) as mock_create_quote, \
              patch("repositories.quotation_repository.QuotationRepository.create_quotation_request", new_callable=AsyncMock), \
@@ -466,5 +467,4 @@ class TestQuoteRequestService(unittest.IsolatedAsyncioTestCase):
             # Verify creator profile ID was preserved and not overwritten by resolved designer
             self.assertEqual(call_kwargs["created_by_profile_id"], "td_creator")
             self.assertEqual(call_kwargs["designer_profile_id"], "td_assigned")
-
 

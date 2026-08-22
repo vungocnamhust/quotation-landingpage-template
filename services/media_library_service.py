@@ -16,6 +16,7 @@ from services.media_service import build_preview_bytes, read_image_metadata
 from services.storage.r2_storage import R2Storage
 from services.media_service import PreparedImage
 from services.media_locations import MediaLocation
+from services.media_default_service import seed_brand_fallback_media
 
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 
@@ -66,6 +67,9 @@ class MediaLibraryService:
 
     async def process_run(self, run_id: str) -> None:
         try:
+            # These R2-backed fallbacks make quotation creation total even when
+            # a destination catalogue has not yet been populated.
+            await seed_brand_fallback_media(self.storage)
             async with self.session_factory() as session:
                 repository = MediaLibraryRepository(session)
                 run = await repository.get_sync_run(run_id)

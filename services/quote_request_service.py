@@ -645,12 +645,16 @@ class QuoteRequestService:
             source_request_revision=source_revision,
         )
 
-        # Apply missing media defaults from catalog
-        try:
-            await main._apply_missing_media_defaults(self.session, document, quotation_id, effective_lang)
-        except Exception:
-            # Tolerant of missing media library catalog in SQLite test harnesses
-            pass
+        # Missing catalogue imagery is represented by a brand fallback and a
+        # publish-time review gate. Infrastructure failures are intentionally
+        # not swallowed: a partially initialized quotation is unsafe.
+        await main._apply_missing_media_defaults(
+            self.session,
+            document,
+            quotation_id,
+            effective_lang,
+            effective_brand,
+        )
 
         # Save initial document revision
         saved = await doc_repo.save_current_document(

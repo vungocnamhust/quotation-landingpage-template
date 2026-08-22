@@ -271,7 +271,6 @@ class ContentDraftService:
                 "end_date": payload.trip_facts.end_date,
                 "duration_days": payload.trip_facts.duration_days,
                 "duration_nights": payload.trip_facts.duration_nights,
-                "travel_pace": payload.trip_facts.travel_pace,
             },
             "customer": {
                 "customer_name": payload.customer_facts.customer_name,
@@ -288,6 +287,10 @@ class ContentDraftService:
                 for day in payload.trip_facts.itinerary
             ],
         }
+        # Travel pace belongs to the originating Request brief, not immutable
+        # quotation Facts.  It is optional prompt context, never a Fact field.
+        if request_brief.get("travel_pace"):
+            narrative_snapshot["trip"]["travel_pace"] = request_brief["travel_pace"]
         if request_brief:
             narrative_snapshot["request_brief"] = request_brief
 
@@ -452,4 +455,3 @@ class ContentDraftService:
             facts_snapshot=self.facts_snapshot(payload, scope), candidate_json=validated, missing_inputs=[],
             generation_metadata={"generationStatus": "manual", "llmCalled": False, "warnings": [], "recipeVersion": spec.recipe_version, "schemaVersion": spec.schema_version, "brandPolicyVersion": BRAND_POLICY_VERSION, "instructionSource": "manual"},
         )
-

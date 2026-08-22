@@ -104,5 +104,25 @@ class BrochureMediaResolverTests(unittest.TestCase):
         self.assertEqual(result["patch"]["itinerary"], {})
         self.assertEqual(result["patch"]["stays"], {})
 
+    def test_brand_fallback_fills_every_required_trip_slot(self):
+        fallback = Candidate(
+            "shared/media/brand-fallbacks/selvara/selvara.png",
+            "shared/media/brand-fallbacks/selvara",
+            source="fallback",
+            review_required=True,
+        )
+        document = {
+            "assets": {},
+            "itinerary": {"days": [{"destination": "Unknown", "images": {}}, {"destination": "Elsewhere", "images": {}}]},
+            "stays": {"hotels": []},
+        }
+        result = BrochureMediaResolver([fallback]).resolve_missing(document=document, quotation_id="quo_fallback", lang="en")
+        self.assertEqual(result["patch"]["assets"]["hero"]["source"], "fallback")
+        self.assertEqual(result["patch"]["assets"]["itineraryDivider"]["status"], "review_required")
+        self.assertEqual(result["patch"]["assets"]["hotelDivider"]["source"], "fallback")
+        for day in result["patch"]["itinerary"]["days"].values():
+            self.assertTrue(day["images"]["carousel"])
+            self.assertEqual(day["images"]["carousel"][0]["source"], "fallback")
+        self.assertTrue(all(item["fallback"] for item in result["rationale"]))
 
 

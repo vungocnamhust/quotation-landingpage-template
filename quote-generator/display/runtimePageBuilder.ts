@@ -307,7 +307,7 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
     const heroImage = assetUrl(images.hero) || assetUrl(day.hero_image) || assetUrl(day.image);
     const galleryOverride = recordList(mediaOverrides[`itinerary.days.${index}.gallery`]);
     const canonicalGallery = recordList(images.carousel);
-    const galleryAssets = canonicalGallery.length ? canonicalGallery : galleryOverride.length ? galleryOverride : [images.hero, images.small1, images.small2].filter(Boolean);
+    const galleryAssets = galleryOverride.length ? galleryOverride : canonicalGallery.length ? canonicalGallery : [images.hero, images.small1, images.small2].filter(Boolean);
     const carouselImages = uniqueUrls(galleryAssets);
     const carouselImageAlts = galleryAssets
       .map((asset, itemIndex) => assetAlt(asset, `${base}/images/carousel/${itemIndex}/altText`, stringValue(day.title)))
@@ -382,18 +382,18 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
     }
 
     const hotelImg =
+      assetUrl(record(mediaOverrides[`stays.hotels.${index}.hotelImage`])) ||
       assetUrl(hotel.hotelImage) ||
       assetUrl(hotel.hotel_asset) ||
       assetUrl(hotel.hotel_img) ||
       assetUrl(hotel.image) ||
       assetUrl(hotel.asset) ||
-      assetUrl(record(mediaOverrides[`stays.hotels.${index}.hotelImage`])) ||
       '/assets/brands/vietnam_safar.png';
     const roomImg =
+      assetUrl(record(mediaOverrides[`stays.hotels.${index}.roomImage`])) ||
       assetUrl(hotel.roomImage) ||
       assetUrl(hotel.room_asset) ||
       assetUrl(hotel.room_img) ||
-      assetUrl(record(mediaOverrides[`stays.hotels.${index}.roomImage`])) ||
       hotelImg ||
       '/assets/brands/vietnam_safar.png';
 
@@ -450,7 +450,7 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
         metaPrimary: contentCopy(stringValue(narrative.heroMeta1) || stringValue(trip.durationText), '/narrative/heroMeta1', stringValue(trip.durationText)),
         metaSecondary: contentCopy(stringValue(narrative.heroMeta2) || stringValue(trip.routeText), '/narrative/heroMeta2', stringValue(trip.routeText)),
         primaryCta: { label: designCopy(overrides, 'hero.primaryCta', labels.beginJourney, 'actionLabel'), href: '#route-map', emphasis: 'primary' },
-        footerMeta: editable(brandName, '/presentation/identityOverrides/brandName', 'design'), backgroundImage: assetUrl(assets.hero) || assetUrl(record(mediaOverrides['assets.hero'])), backgroundImageAlt: assetAlt(assets.hero, '/assets/hero/altText', stringValue(trip.title) || brandName),
+        footerMeta: editable(brandName, '/presentation/identityOverrides/brandName', 'design'), backgroundImage: assetUrl(record(mediaOverrides['assets.hero'])) || assetUrl(assets.hero), backgroundImageAlt: assetAlt(assets.hero, '/assets/hero/altText', stringValue(trip.title) || brandName),
       },
       letter: {
         chapterKicker: designCopy(overrides, 'letter.kicker', labels.journeyOverviewKicker),
@@ -506,7 +506,7 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
         mapViewport: { center: mapCenter, latSpan: 8, lngSpan: 8 },
         interactiveMarkers: routeSegments.map(({ sequence, coordinates, title, city, dayLabel }) => ({ sequence, coordinates, title, city, dayLabel })),
       },
-      itineraryDivider: { kicker: designCopy(overrides, 'itinerary.kicker', labels.itineraryNav), title: contentCopy(stringValue(itinerary.title), '/itinerary/title', labels.itineraryTitle), tagline: contentCopy(stringValue(itinerary.description), '/itinerary/description', labels.itineraryDescription), image: assetUrl(assets.itineraryDivider) || assetUrl(record(mediaOverrides['assets.itineraryDivider'])), imageAlt: assetAlt(assets.itineraryDivider, '/assets/itineraryDivider/altText', stringValue(itinerary.title)), exploreLabel: designCopy(overrides, 'itinerary.explore', labels.explore, 'actionLabel'), exploreHref: '#itinerary', showDivider: Boolean(overrides['itinerary.showDivider'] === 'true' || overrides['itinerary.showDivider'] === true) },
+      itineraryDivider: { kicker: designCopy(overrides, 'itinerary.kicker', labels.itineraryNav), title: contentCopy(stringValue(itinerary.title), '/itinerary/title', labels.itineraryTitle), tagline: contentCopy(stringValue(itinerary.description), '/itinerary/description', labels.itineraryDescription), image: assetUrl(record(mediaOverrides['assets.itineraryDivider'])) || assetUrl(assets.itineraryDivider), imageAlt: assetAlt(assets.itineraryDivider, '/assets/itineraryDivider/altText', stringValue(itinerary.title)), exploreLabel: designCopy(overrides, 'itinerary.explore', labels.explore, 'actionLabel'), exploreHref: '#itinerary', showDivider: Boolean(overrides['itinerary.showDivider'] === 'true' || overrides['itinerary.showDivider'] === true) },
       itinerary: { kicker: designCopy(overrides, 'itinerary.kicker', labels.itineraryNav), title: contentCopy(stringValue(itinerary.title), '/itinerary/title', labels.itineraryTitle), description: contentCopy(stringValue(itinerary.description), '/itinerary/description', labels.itineraryDescription), days },
       staysDivider: { image: assetUrl(assets.staysDivider) || assetUrl(record(mediaOverrides['assets.staysDivider'])) || (hotels.length > 0 ? hotels[0].roomImage || hotels[0].hotelImage : '') || assetUrl(assets.hero), imageAlt: assetAlt(assets.staysDivider, '/assets/staysDivider/altText', labels.staysDividerTitle), kicker: designCopy(overrides, 'stays.kicker', labels.stayPlanning), title: designCopy(overrides, 'stays.title', labels.staysDividerTitle), tagline: designCopy(overrides, 'stays.tagline', labels.staysDividerTagline), closing: designCopy(overrides, 'stays.closing', labels.staysDividerClosing), pdfTitle: designCopy(overrides, 'stays.pdfTitle', labels.staysDividerTitle) },
       hotels: {
@@ -520,7 +520,7 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
           'fact'
         ),
       },
-      journeyTogetherDivider: { image: assetUrl(assets.hotelDivider) || assetUrl(record(mediaOverrides['assets.hotelDivider'])) || assetUrl(assets.hero), imageAlt: assetAlt(assets.hotelDivider, '/assets/hotelDivider/altText', labels.journeyTogetherTitle), kicker: designCopy(overrides, 'journeyTogether.kicker', stringValue(overrides['stays.kicker']).trim() || labels.journeyTogetherKicker), title: designCopy(overrides, 'journeyTogether.title', stringValue(overrides['stays.pdfTitle']).trim() || labels.journeyTogetherTitle), tagline: designCopy(overrides, 'journeyTogether.tagline', stringValue(overrides['stays.tagline']).trim() || labels.journeyTogetherTagline), closing: designCopy(overrides, 'journeyTogether.closing', stringValue(overrides['stays.closing']).trim() || labels.journeyTogetherClosing) },
+      journeyTogetherDivider: { image: assetUrl(record(mediaOverrides['assets.hotelDivider'])) || assetUrl(assets.hotelDivider) || assetUrl(assets.hero), imageAlt: assetAlt(assets.hotelDivider, '/assets/hotelDivider/altText', labels.journeyTogetherTitle), kicker: designCopy(overrides, 'journeyTogether.kicker', stringValue(overrides['stays.kicker']).trim() || labels.journeyTogetherKicker), title: designCopy(overrides, 'journeyTogether.title', stringValue(overrides['stays.pdfTitle']).trim() || labels.journeyTogetherTitle), tagline: designCopy(overrides, 'journeyTogether.tagline', stringValue(overrides['stays.tagline']).trim() || labels.journeyTogetherTagline), closing: designCopy(overrides, 'journeyTogether.closing', stringValue(overrides['stays.closing']).trim() || labels.journeyTogetherClosing) },
       pricing: {
         kicker: designCopy(overrides, 'pricing.kicker', labels.quotationNav || 'INVESTMENT SUMMARY'),
         title: designCopy(overrides, 'pricing.title', labels.pricingTitle),

@@ -66,7 +66,13 @@ async def create_quotation_business_version(quotation_id: str, payload: CreateQu
         rebuilt["presentation"] = copy.deepcopy(current.document_json.get("presentation") or {})
         if "viewOverrides" in current.document_json:
             rebuilt["viewOverrides"] = copy.deepcopy(current.document_json["viewOverrides"])
-        await h._apply_missing_media_defaults(session, rebuilt, next_id, predecessor.baseline_lang)
+        await h._apply_missing_media_defaults(
+            session,
+            rebuilt,
+            next_id,
+            predecessor.baseline_lang,
+            predecessor.brand_id,
+        )
         successor = await quotes.create_quotation(quotation_id=next_id, opportunity_id=predecessor.opportunity_id, brand_id=predecessor.brand_id, template_name=predecessor.template_name, baseline_lang=predecessor.baseline_lang, customer_name=canonical.customer_facts.customer_name, title=rebuilt.get("trip", {}).get("title") or predecessor.title, status="draft", source_kind=predecessor.source_kind, source_snapshot_at=predecessor.source_snapshot_at, designer_profile_id=predecessor.designer_profile_id, created_by_profile_id=predecessor.created_by_profile_id, quotation_family_id=predecessor.quotation_family_id, business_version=next_business_version, parent_quotation_id=predecessor.id, source_request_id=predecessor.source_request_id, source_request_revision=predecessor.source_request_revision)
         await quotes.create_quotation_request(quotation_id=next_id, request_json=canonical.model_dump(mode="json"))
         await quotes.create_version_facts(quotation_id=next_id, canonical_facts_json=canonical.model_dump(mode="json"), resolved_facts_json=resolved, facts_hash=resolved["factsHash"], source_request_id=predecessor.source_request_id, source_request_revision=predecessor.source_request_revision)

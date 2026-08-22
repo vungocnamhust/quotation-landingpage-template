@@ -20,7 +20,7 @@ from core.rules.destination_rules import (
 )
 
 
-RESOLVER_VERSION = "brochure-media-v2"
+RESOLVER_VERSION = "brochure-media-v3"
 GALLERY_LIMIT = 3
 
 _NON_ALPHANUM = re.compile(r"[^a-z0-9]+")
@@ -38,6 +38,8 @@ class Candidate:
     width: int | None = None
     height: int | None = None
     preview_ready: bool = False
+    source: str = "auto"
+    review_required: bool = False
 
     @property
     def classification(self) -> str:
@@ -198,12 +200,20 @@ def _stable_rank(quotation_id: str, lang: str, field_id: str, key: str) -> int:
 
 
 def _ref(candidate: Candidate) -> dict[str, str]:
-    return {"r2Key": candidate.r2_key, "status": "ready", "source": "auto", "resolverVersion": RESOLVER_VERSION}
+    result = {
+        "r2Key": candidate.r2_key,
+        "status": "review_required" if candidate.review_required else "ready",
+        "source": candidate.source,
+        "resolverVersion": RESOLVER_VERSION,
+    }
+    return result
 
 
 class BrochureMediaResolver:
     def __init__(self, candidates: Iterable[Candidate]) -> None:
         self.candidates = tuple(candidate for candidate in candidates if candidate.r2_key)
+        self.catalogue_candidates = tuple(candidate for candidate in self.candidates if not candidate.review_required)
+        self.fallback_candidates = tuple(candidate for candidate in self.candidates if candidate.review_required)
         self.valid_keys = {c.r2_key for c in self.candidates}
 
     def _is_valid_r2(self, value: Any) -> bool:
@@ -244,37 +254,37 @@ class BrochureMediaResolver:
 
     def _destination_pool(self, primary_aliases: set[str], fallback_aliases: set[str] | None = None) -> list[Candidate]:
         # Tier 1: Match primary destination aliases
-        tier1 = [item for item in self.candidates if _matches_destination(item, primary_aliases)]
+        tier1 = [item for item in self.catalogue_candidates if _matches_destination(item, primary_aliases)]
         if tier1:
             return tier1
         # Tier 2: Match fallback trip destination aliases
         if fallback_aliases:
-            tier2 = [item for item in self.candidates if _matches_destination(item, fallback_aliases)]
+            tier2 = [item for item in self.catalogue_candidates if _matches_destination(item, fallback_aliases)]
             if tier2:
                 return tier2
         # Tier 3: All scenic / generic candidates
-        return list(self.candidates)
+        return list(self.catalogue_candidates or self.fallback_candidates)
 
     def _accommodation_pool(self, hotel_tokens: set[str], dest_aliases: set[str], fallback_aliases: set[str] | None = None) -> list[Candidate]:
         # Tier 1: Exact hotel brand/name token match under accommodations/
-        tier1 = [item for item in self.candidates if _matches_accommodation(item, hotel_tokens, dest_aliases)[1] == 1]
+        tier1 = [item for item in self.catalogue_candidates if _matches_accommodation(item, hotel_tokens, dest_aliases)[1] == 1]
         if tier1:
             return tier1
         # Tier 2: Destination accommodation match
-        tier2 = [item for item in self.candidates if _matches_accommodation(item, hotel_tokens, dest_aliases)[1] == 2]
+        tier2 = [item for item in self.catalogue_candidates if _matches_accommodation(item, hotel_tokens, dest_aliases)[1] == 2]
         if tier2:
             return tier2
         # Tier 3: Destination scenic match
-        tier3 = [item for item in self.candidates if _matches_accommodation(item, hotel_tokens, dest_aliases)[1] == 3]
+        tier3 = [item for item in self.catalogue_candidates if _matches_accommodation(item, hotel_tokens, dest_aliases)[1] == 3]
         if tier3:
             return tier3
         # Tier 4: Fallback trip destinations
         if fallback_aliases:
-            tier4 = [item for item in self.candidates if _matches_destination(item, fallback_aliases)]
+            tier4 = [item for item in self.catalogue_candidates if _matches_destination(item, fallback_aliases)]
             if tier4:
                 return tier4
         # Tier 5: All candidates
-        return list(self.candidates)
+        return list(self.catalogue_candidates or self.fallback_candidates)
 
     def resolve_missing(self, *, document: dict[str, Any], quotation_id: str, lang: str) -> dict[str, Any]:
         """Build a non-mutating patch. Existing values are never overwritten unless invalid."""
@@ -332,6 +342,7 @@ class BrochureMediaResolver:
                     "fieldId": field_id,
                     "candidateCount": len(pool),
                     "reason": "destination catalogue" if any(_matches_destination(p, day_aliases) for p in picks) else "trip fallback catalogue",
+                    "fallback": any(item.review_required for item in picks),
                 })
 
         if patched_days:
@@ -360,6 +371,7 @@ class BrochureMediaResolver:
                     "fieldId": "assets.hero",
                     "candidateCount": len(hero_pool),
                     "reason": "itinerary gallery pool" if picks[0] in gallery_candidates else "destination hero candidate",
+                    "fallback": picks[0].review_required,
                 })
 
         # 3. Resolve assets.itineraryDivider
@@ -386,6 +398,7 @@ class BrochureMediaResolver:
                     "fieldId": "assets.itineraryDivider",
                     "candidateCount": len(divider_pool),
                     "reason": "mid-itinerary scenic asset",
+                    "fallback": picks[0].review_required,
                 })
 
         # 4. Resolve assets.hotelDivider
@@ -411,6 +424,7 @@ class BrochureMediaResolver:
                     "fieldId": "assets.hotelDivider",
                     "candidateCount": len(hotel_divider_pool),
                     "reason": "hotel scenic asset",
+                    "fallback": picks[0].review_required,
                 })
 
         # 5. Resolve Stays Hotels
@@ -455,6 +469,7 @@ class BrochureMediaResolver:
                         "fieldId": f"stays.hotels.{index}.{field}",
                         "candidateCount": len(hotel_pool),
                         "reason": "accommodation catalogue" if any("accommodations" in p.parent_prefix for p in hotel_pool) else "destination stay fallback",
+                        "fallback": bool(_record(hotel_changes[field]).get("source") == "fallback"),
                     })
 
         if patched_hotels:
@@ -480,4 +495,3 @@ class BrochureMediaResolver:
             "appliedCount": applied_count,
             "hasChanges": has_changes,
         }
-

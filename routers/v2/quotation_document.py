@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import copy
+import logging
+import uuid
 from typing import Annotated, Any, Dict, Literal
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, ConfigDict, Field
@@ -23,6 +25,7 @@ from services.section_registry import SECTION_REGISTRY
 
 
 router = APIRouter(prefix="/api/v2/quotations", tags=["quotation-document"])
+log = logging.getLogger(__name__)
 
 
 class QuoteDocumentUpsertRequest(BaseModel):
@@ -48,6 +51,7 @@ class PresentationOverridesRequest(BaseModel):
     baseRevision: int
     copyOverrides: dict[str, str] = Field(default_factory=dict)
     identityOverrides: dict[str, Any] = Field(default_factory=dict)
+    mediaOverrides: dict[str, Any] = Field(default_factory=dict)
 
 
 class ContentDraftCreateRequest(BaseModel):
@@ -321,6 +325,9 @@ async def put_quotation_presentation_overrides_v2(
     await h.require_owned_quotation(quotation_id, principal)
     copy_overrides = h._validate_v2_copy_overrides(payload.copyOverrides)
     identity = h._validate_v2_identity_overrides(payload.identityOverrides)
+    media_overrides = h._validate_v2_fact_media_slots(
+        [{"fieldId": field_id, "value": value} for field_id, value in payload.mediaOverrides.items()]
+    ) if payload.mediaOverrides else {}
 
     async with h._get_db_session_factory()() as session:
         quotes, documents = QuotationRepository(session), QuotationDocumentRepository(session)
@@ -332,11 +339,13 @@ async def put_quotation_presentation_overrides_v2(
         if current is None:
             raise HTTPException(status_code=404, detail="Canonical document was not found.")
         next_document = copy.deepcopy(current.document_json)
+        if media_overrides:
+            await h._require_active_media_overrides(session, media_overrides)
         presentation = next_document.setdefault("presentation", {})
         current_copy = presentation.get("copyOverrides") or {}
         current_identity = presentation.get("identityOverrides") or {}
         presentation["copyOverrides"] = h._validate_v2_copy_overrides({**current_copy, **copy_overrides})
-        presentation["mediaOverrides"] = presentation.get("mediaOverrides") or {}
+        presentation["mediaOverrides"] = {**(presentation.get("mediaOverrides") or {}), **media_overrides}
         presentation["identityOverrides"] = {**current_identity, **identity}
         try:
             validated = h._validate_quote_document_or_422(
@@ -436,6 +445,7 @@ async def batch_generate_content_drafts_v2(
     principal: Principal = Depends(require_editor),
 ):
     h = _get_helpers()
+    request_id = f"content-batch-{uuid.uuid4().hex}"
     await h.require_owned_quotation(quotation_id, principal)
     _quotation, lang = await h._resolve_v2_locale(quotation_id, lang)
     async with h._get_db_session_factory()() as session:
@@ -468,11 +478,23 @@ async def batch_generate_content_drafts_v2(
                 instruction=payload.instruction,
                 request_payload=request_payload,
             )
+            await session.commit()
+        except HTTPException:
+            await session.rollback()
+            raise
         except ValueError as exc:
+            await session.rollback()
             raise HTTPException(status_code=422, detail={"message": str(exc)}) from exc
         except ContentGenerationError as exc:
-            raise HTTPException(status_code=503, detail={"message": str(exc)}) from exc
-        await session.commit()
+            await session.rollback()
+            raise HTTPException(status_code=503, detail={"message": str(exc), "requestId": request_id, "retryable": True}) from exc
+        except DocumentRevisionConflictError as exc:
+            await session.rollback()
+            raise HTTPException(status_code=409, detail={"message": "Content generation revision conflict.", "currentRevision": exc.current_revision}) from exc
+        except Exception as exc:
+            await session.rollback()
+            log.exception("content batch generation failed request_id=%s quotation_id=%s", request_id, quotation_id)
+            raise HTTPException(status_code=500, detail={"message": "Content generation failed unexpectedly. Retry or contact support with the request ID.", "requestId": request_id}) from exc
         return {"ok": True, "drafts": [h._serialize_content_draft(item) for item in items], "count": len(items)}
 
 

@@ -67,6 +67,7 @@ function resolverRationale(workspace: MediaWorkspace, fieldId: string): string |
 
 function sourceLabel(values: MediaRef[], rationale: string | null, profileAssetKey?: string | null): string {
     if (!values.length) return "Empty — choose an image or generate a matching default.";
+    if (values.some((value) => value.source === "fallback" || value.status === "review_required")) return "Brand fallback — replace before publication";
     if (values.some((value) => value.source === "auto")) return rationale ? `R2 default · ${rationale}` : "R2 default";
     if (profileAssetKey && values.length === 1 && values[0].r2Key === profileAssetKey) return "Profile default";
     return "Manual or profile selection";

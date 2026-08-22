@@ -312,13 +312,13 @@ export default function DesignCanvas({
   ): Promise<void> => {
     try {
       await quotationFetch(
-        `${API_BASE}/api/v2/quotations/${quotationId}/facts/media?lang=${encodeURIComponent(lang)}`,
+        `${API_BASE}/api/v2/quotations/${quotationId}/presentation/overrides?lang=${encodeURIComponent(lang)}`,
         {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             baseRevision: currentRevision,
-            slots: [{ fieldId, value: mediaValue }],
+            mediaOverrides: { [fieldId]: mediaValue },
           }),
         },
         'Media could not be saved.'

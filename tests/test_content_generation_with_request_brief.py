@@ -298,7 +298,31 @@ class ContentGenerationWithRequestBriefTests(unittest.TestCase):
         self.assertEqual(brief["avoid"], "Long driving")
         self.assertNotIn("budget", brief)
 
+    def test_batch_generation_reads_travel_pace_from_request_brief_not_facts(self):
+        class Repository:
+            async def create(self, **_kwargs):
+                raise AssertionError("no drafts are expected for this empty generator response")
+
+        service = ContentDraftService(Repository(), BRAND_PROFILES["selvara"])
+        service.generator.generate_narrative_batch = AsyncMock(return_value=({}, {"instructionSource": "default"}))
+        payload = CreateQuoteRequestV1.model_validate({"trip_facts": {"destinations": ["Hanoi"]}})
+
+        import asyncio
+
+        items = asyncio.run(service.create_batch(
+            quotation_id="quo_batch",
+            payload=payload,
+            facts_hash="facts",
+            document_revision=1,
+            lang="en",
+            mode="storytelling",
+            request_payload={"travel_pace": "Relaxed"},
+        ))
+
+        self.assertEqual(items, [])
+        snapshot = service.generator.generate_narrative_batch.await_args.kwargs["facts_snapshot"]
+        self.assertEqual(snapshot["trip"]["travel_pace"], "Relaxed")
+
 
 if __name__ == "__main__":
     unittest.main()
-
