@@ -18,6 +18,7 @@ export function FullPageEditorialJourneyMap({
   quotationNumber,
   pageNumber = '03',
   quoteText,
+  onRenderStateChange,
 }: FullPageMapProps) {
   const [internalActiveSequence, setInternalActiveSequence] = useState(
     viewModel.initialActiveSegment || viewModel.segments[0]?.sequence || '1'
@@ -60,6 +61,8 @@ export function FullPageEditorialJourneyMap({
         mapColors={mapColors}
         activeSequence={activeSequence}
         isMapReady={isMapReady}
+        tileStyle={isPdf ? 'google-classic-pdf-v1' : 'google-classic-v1'}
+        onRenderStateChange={onRenderStateChange}
       />
 
       {/* Floating Art Direction Overlays */}

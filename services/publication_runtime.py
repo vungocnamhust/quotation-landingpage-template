@@ -14,6 +14,8 @@ from typing import Any
 
 log = logging.getLogger(__name__)
 
+PDF_MAP_RENDER_TIMEOUT_MS = 30_000
+
 
 def render_react_pdf_bytes(*, hostname: str, release_id: str) -> bytes:
     """Render the immutable private React release route to an A4 PDF."""
@@ -29,6 +31,17 @@ def render_react_pdf_bytes(*, hostname: str, release_id: str) -> bytes:
             page = browser.new_page()
             page.goto(f"{origin}/internal/releases/{release_id}/pdf", wait_until="networkidle", timeout=60_000)
             page.wait_for_selector('[data-render-ready="true"]', state="attached", timeout=15_000)
+            page.wait_for_selector('[data-map-render-state]', state="attached", timeout=PDF_MAP_RENDER_TIMEOUT_MS)
+            page.wait_for_function(
+                """() => {
+                    const map = document.querySelector('[data-map-render-state]');
+                    return map && ['ready', 'failed', 'unavailable'].includes(map.dataset.mapRenderState);
+                }""",
+                timeout=PDF_MAP_RENDER_TIMEOUT_MS,
+            )
+            map_state = page.locator('[data-map-render-state]').get_attribute('data-map-render-state')
+            if map_state == 'failed':
+                raise RuntimeError('PDF map tiles failed to render from the required Google classic source.')
             return page.pdf(format="A4", print_background=True, prefer_css_page_size=True)
         finally:
             browser.close()

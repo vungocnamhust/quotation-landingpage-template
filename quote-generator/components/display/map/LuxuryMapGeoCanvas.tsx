@@ -4,7 +4,9 @@ import type { LatLngExpression, Map as LeafletMap, Polyline, TileLayer } from 'l
 import L from 'leaflet';
 import React, { useEffect, useRef } from 'react';
 import type { RouteSegmentViewModel } from '../../../display/types.ts';
-import type { MapColors } from './types.ts';
+import type { MapColors, MapRenderState, MapTileStyle } from './types.ts';
+
+export const MAP_TILE_RENDER_TIMEOUT_MS = 30_000;
 
 interface LuxuryMapGeoCanvasProps {
   mapInstance: LeafletMap | null;
@@ -13,6 +15,8 @@ interface LuxuryMapGeoCanvasProps {
   mapColors: MapColors;
   activeSequence?: string;
   isMapReady: boolean;
+  tileStyle: MapTileStyle;
+  onRenderStateChange?: (state: MapRenderState) => void;
 }
 
 // Generates an elegant curved geodesic bezier path between two coordinates
@@ -46,6 +50,8 @@ export function LuxuryMapGeoCanvas({
   mapColors,
   activeSequence,
   isMapReady,
+  tileStyle,
+  onRenderStateChange,
 }: LuxuryMapGeoCanvasProps) {
   const tileLayerRef = useRef<TileLayer | null>(null);
   const polylinesRef = useRef<Polyline[]>([]);
@@ -54,23 +60,39 @@ export function LuxuryMapGeoCanvas({
   useEffect(() => {
     if (!mapInstance || !isMapReady) return;
 
-    // Use our server-side proxy route that serves high-availability tiles
-    const tileUrl = '/api/map-tiles/{z}/{x}/{y}?style=luxury-editorial-v1';
+    // PDF uses the Google classic raster from the approved prototype. Screen
+    // maps retain their resilient provider chain behind the same-origin route.
+    const tileUrl = `/api/map-tiles/{z}/{x}/{y}?style=${tileStyle}`;
+    let settled = false;
+    const report = (state: Extract<MapRenderState, 'ready' | 'failed'>) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeoutId);
+      onRenderStateChange?.(state);
+    };
+
+    onRenderStateChange?.('loading');
 
     tileLayerRef.current?.remove();
     const tileLayer = L.tileLayer(tileUrl, {
       maxZoom: 18,
       attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
       className: 'luxury-map-tile-layer',
-    }).addTo(mapInstance);
+    });
+
+    tileLayer.once('load', () => report('ready'));
+    tileLayer.once('tileerror', () => report('failed'));
+    const timeoutId = window.setTimeout(() => report('failed'), MAP_TILE_RENDER_TIMEOUT_MS);
+    tileLayer.addTo(mapInstance);
 
     tileLayerRef.current = tileLayer;
 
     return () => {
+      window.clearTimeout(timeoutId);
       tileLayer.remove();
       tileLayerRef.current = null;
     };
-  }, [isMapReady, mapInstance]);
+  }, [isMapReady, mapInstance, onRenderStateChange, tileStyle]);
 
   // Render Decorative Curved Route Lines
   useEffect(() => {

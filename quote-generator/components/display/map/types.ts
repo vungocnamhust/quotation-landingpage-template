@@ -1,5 +1,8 @@
 import type { ViewMode } from '../../../display/contracts.ts';
 import type { RouteMapViewModel, TypographySlotMap } from '../../../display/types.ts';
+import type { MapTileStyle } from '../../../lib/mapTileStyles.ts';
+
+export type MapRenderState = 'loading' | 'ready' | 'failed' | 'unavailable';
 
 export interface ProjectedPoint {
   x: number;
@@ -35,4 +38,7 @@ export interface FullPageMapProps {
   quotationNumber?: string;
   pageNumber?: string;
   quoteText?: string;
+  onRenderStateChange?: (state: MapRenderState) => void;
 }
+
+export type { MapTileStyle };

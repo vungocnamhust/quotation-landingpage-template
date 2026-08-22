@@ -54,6 +54,27 @@ class PdfDisplayContractTests(unittest.TestCase):
         self.assertIn("pdf-route-page--fullbleed", route_map_chunk)
         self.assertNotIn("pdf-route__mid-tier", route_map_chunk)
 
+    def test_pdf_map_is_pinned_to_google_classic_and_exposes_a_render_state(self):
+        canvas = (ROOT / "quote-generator/components/display/map/LuxuryMapGeoCanvas.tsx").read_text(encoding="utf-8")
+        island = (ROOT / "quote-generator/components/display/RouteMapClientIsland.tsx").read_text(encoding="utf-8")
+        full_page = (ROOT / "quote-generator/components/display/map/FullPageEditorialJourneyMap.tsx").read_text(encoding="utf-8")
+        route = (ROOT / "quote-generator/app/api/map-tiles/[z]/[x]/[y]/route.ts").read_text(encoding="utf-8")
+
+        self.assertIn("google-classic-pdf-v1", full_page)
+        self.assertIn("tileLayer.once('load'", canvas)
+        self.assertIn("tileLayer.once('tileerror'", canvas)
+        self.assertIn("data-map-render-state", island)
+        self.assertIn("resolveMapTileProviders", route)
+        self.assertIn("Unsupported map tile style.", route)
+
+    def test_publisher_waits_for_map_terminal_state_and_rejects_tile_failure(self):
+        source = (ROOT / "services/publication_runtime.py").read_text(encoding="utf-8")
+
+        self.assertIn("[data-map-render-state]", source)
+        self.assertIn("page.wait_for_function", source)
+        self.assertIn("map_state == 'failed'", source)
+        self.assertIn("PDF map tiles failed to render", source)
+
 
 if __name__ == "__main__":
     unittest.main()
