@@ -220,13 +220,45 @@ def convert_request_to_quotation_facts(
     ])
 
     # Commercial & Pricing Option Setup
-    currency = (overrides.pricing.currency if overrides and overrides.pricing and overrides.pricing.currency else (payload.get("currency") or "USD"))
+    currency = (
+        (overrides.pricing_options[0].currency if overrides and overrides.pricing_options and overrides.pricing_options[0].currency else None)
+        or (overrides.pricing.currency if overrides and overrides.pricing and overrides.pricing.currency else None)
+        or (payload.get("currency") or "USD")
+    )
     per_traveler_minor = 350000
     group_total_minor = 700000
     per_adult_minor = None
     per_child_minor = None
 
-    if overrides and overrides.pricing:
+    pricing_options: list[dict[str, Any]] = []
+
+    if overrides and overrides.pricing_options:
+        for idx, opt_ov in enumerate(overrides.pricing_options, start=1):
+            opt_curr = opt_ov.currency or currency
+            opt_adult = opt_ov.per_adult_amount_minor
+            opt_child = opt_ov.per_child_amount_minor
+            opt_total = opt_ov.group_total_amount_minor
+            opt_per_traveler = opt_adult
+
+            if opt_total is not None and opt_adult is None and adults > 0:
+                opt_per_traveler = int(opt_total / adults)
+                opt_adult = opt_per_traveler
+            elif opt_adult is not None and opt_total is None:
+                calculated_total = opt_adult * adults
+                if opt_child is not None and children > 0:
+                    calculated_total += opt_child * children
+                opt_total = calculated_total
+
+            pricing_options.append({
+                "id": f"opt-{idx}",
+                "label": opt_ov.label or f"Option {idx}",
+                "currency": opt_curr,
+                "per_traveler_amount_minor": opt_per_traveler or 350000,
+                "group_total_amount_minor": opt_total or 700000,
+                "per_adult_amount_minor": opt_adult,
+                "per_child_amount_minor": opt_child,
+            })
+    elif overrides and overrides.pricing:
         pricing_ov = overrides.pricing
         if pricing_ov.group_total_amount_minor is not None:
             group_total_minor = pricing_ov.group_total_amount_minor
@@ -238,6 +270,17 @@ def convert_request_to_quotation_facts(
             per_adult_minor = per_traveler_minor
         if pricing_ov.per_child_amount_minor is not None:
             per_child_minor = pricing_ov.per_child_amount_minor
+        pricing_options = [
+            {
+                "id": "opt-standard",
+                "label": pricing_ov.label or "Standard Luxury Option",
+                "currency": currency,
+                "per_traveler_amount_minor": per_traveler_minor,
+                "group_total_amount_minor": group_total_minor,
+                "per_adult_amount_minor": per_adult_minor,
+                "per_child_amount_minor": per_child_minor,
+            }
+        ]
     else:
         budget_raw = payload.get("budget")
         budget_basis = payload.get("budget_basis") or "Total trip"
@@ -250,16 +293,17 @@ def convert_request_to_quotation_facts(
                 group_total_minor = int(budget_val * 100)
                 per_traveler_minor = int((budget_val / adults) * 100) if adults > 0 else group_total_minor
         per_adult_minor = per_traveler_minor
-
-    pricing_options = [
-        {
-            "id": "opt-standard",
-            "label": (overrides.pricing.label if overrides and overrides.pricing and overrides.pricing.label else "Standard Luxury Option"),
-            "currency": currency,
-            "per_traveler_amount_minor": per_traveler_minor,
-            "group_total_amount_minor": group_total_minor,
-        }
-    ]
+        pricing_options = [
+            {
+                "id": "opt-standard",
+                "label": "Standard Luxury Option",
+                "currency": currency,
+                "per_traveler_amount_minor": per_traveler_minor,
+                "group_total_amount_minor": group_total_minor,
+                "per_adult_amount_minor": per_adult_minor,
+                "per_child_amount_minor": per_child_minor,
+            }
+        ]
 
     partner_id = req.partner_id or payload.get("partner_id")
     room_notes = payload.get("room_configuration") or payload.get("hotel_style") or None

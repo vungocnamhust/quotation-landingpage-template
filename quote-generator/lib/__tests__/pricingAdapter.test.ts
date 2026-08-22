@@ -4,6 +4,7 @@ import { pricingAdapter } from '../rules/pricingAdapter.ts';
 import { pricingReconciler } from '../rules/pricingReconciler.ts';
 import { createBrochureFacts } from '../../components/quotation-workspace/factsTypes.ts';
 import { getInitialQuoteRequestFormState } from '../quoteRequestPayload.ts';
+import { addPricingOptionInFacts, removePricingOptionInFacts } from '../prefillEngine.ts';
 
 describe('pricingAdapter bidirectional schema mapping', () => {
   describe('QuotationFacts <-> CanonicalCommercialPricing', () => {
@@ -107,6 +108,54 @@ describe('pricingAdapter bidirectional schema mapping', () => {
 
       const convertedTri = pricingAdapter.toTriPricing(canonicalOpt);
       assert.deepEqual(convertedTri, tri);
+    });
+  });
+
+  describe('addPricingOptionInFacts & removePricingOptionInFacts', () => {
+    it('adds and removes pricing options within 1 to 3 limit', () => {
+      const facts = addPricingOptionInFacts(createBrochureFacts(), 'Standard Tier');
+      assert.equal(facts.pricing_facts.options.length, 2);
+
+      // Start with 1 default option
+      const baseFacts = createBrochureFacts();
+      baseFacts.pricing_facts.options = [
+        {
+          id: 'opt-1',
+          label: 'Standard Option',
+          currency: 'USD',
+          per_adult_amount_minor: 350000,
+          group_total_amount_minor: 700000,
+        },
+      ];
+      assert.equal(baseFacts.pricing_facts.options.length, 1);
+
+      // Add Option 2
+      const withTwo = addPricingOptionInFacts(baseFacts, 'Premium Tier');
+      assert.equal(withTwo.pricing_facts.options.length, 2);
+      assert.equal(withTwo.pricing_facts.options[1].label, 'Premium Tier');
+
+      // Add Option 3
+      const withThree = addPricingOptionInFacts(withTwo, 'Deluxe Suite');
+      assert.equal(withThree.pricing_facts.options.length, 3);
+      assert.equal(withThree.pricing_facts.options[2].label, 'Deluxe Suite');
+
+      // Add Option 4 - should stay at 3 (MAX_COMMERCIAL_OPTIONS limit)
+      const withFour = addPricingOptionInFacts(withThree, 'Extra Tier');
+      assert.equal(withFour.pricing_facts.options.length, 3);
+
+      // Remove Option at index 1
+      const afterRemove = removePricingOptionInFacts(withThree, 1);
+      assert.equal(afterRemove.pricing_facts.options.length, 2);
+      assert.equal(afterRemove.pricing_facts.options[0].label, 'Standard Option');
+      assert.equal(afterRemove.pricing_facts.options[1].label, 'Deluxe Suite');
+
+      // Remove down to 1
+      const downToOne = removePricingOptionInFacts(afterRemove, 1);
+      assert.equal(downToOne.pricing_facts.options.length, 1);
+
+      // Attempt to remove the last remaining option - must preserve at least 1
+      const attemptEmpty = removePricingOptionInFacts(downToOne, 0);
+      assert.equal(attemptEmpty.pricing_facts.options.length, 1);
     });
   });
 });

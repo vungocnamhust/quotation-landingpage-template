@@ -398,6 +398,7 @@ class QuotationMinimalOverridesSchema(BaseModel):
 
     itinerary_with_stays: list[MinimalItineraryDayWithStayOverrideSchema] = Field(default_factory=list)
     pricing: MinimalCommercialPricingOverrideSchema | None = None
+    pricing_options: list[MinimalCommercialPricingOverrideSchema] = Field(default_factory=list)
 
 
 class GenerateQuotationFromRequestResponseSchema(BaseModel):

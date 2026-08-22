@@ -8,11 +8,17 @@ import { tripReconciler } from "../../lib/rules/tripReconciler.ts";
 import {
   ensureFactsDefaults,
   type ItineraryDayFact,
+  type PricingOptionFact,
   type QuotationFacts,
   type QuotationOptions,
 } from "./factsTypes.ts";
 
 import { addDayToRouteTable, removeDayFromRouteTable } from "./useRouteTableSync.ts";
+import {
+  addPricingOptionInFacts,
+  patchPricingOptionWithInference,
+  removePricingOptionInFacts,
+} from "../../lib/prefillEngine.ts";
 
 export type UseQuotationIntakeOptions = {
   facts: QuotationFacts;
@@ -107,6 +113,27 @@ export function useQuotationIntake({
     [patchFacts]
   );
 
+  const handleAddPricingOption = useCallback(
+    (defaultLabel?: string) => {
+      patchFacts((current) => addPricingOptionInFacts(current, defaultLabel));
+    },
+    [patchFacts]
+  );
+
+  const handleRemovePricingOption = useCallback(
+    (index: number) => {
+      patchFacts((current) => removePricingOptionInFacts(current, index));
+    },
+    [patchFacts]
+  );
+
+  const handlePatchPricingOption = useCallback(
+    (index: number, patch: Partial<PricingOptionFact>) => {
+      patchFacts((current) => patchPricingOptionWithInference(current, index, patch));
+    },
+    [patchFacts]
+  );
+
   return {
     facts,
     trip,
@@ -124,6 +151,9 @@ export function useQuotationIntake({
     addItineraryDay,
     removeItineraryDay,
     handleDesignerChange,
+    handleAddPricingOption,
+    handleRemovePricingOption,
+    handlePatchPricingOption,
   };
 }
 

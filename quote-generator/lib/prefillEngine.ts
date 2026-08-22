@@ -620,6 +620,34 @@ export function convertOptionCurrencyInFacts(
 }
 
 /**
+ * Single-pass updater when adding a new pricing option up to MAX_COMMERCIAL_OPTIONS.
+ */
+export function addPricingOptionInFacts(
+  input: QuotationFacts,
+  defaultLabel?: string
+): QuotationFacts {
+  const current = ensureFactsDefaults(input);
+  const canonical = pricingAdapter.fromQuotationFacts(current);
+  const updated = pricingReconciler.addOption(canonical, defaultLabel);
+  return pricingAdapter.syncToQuotationFacts(updated, current);
+}
+
+/**
+ * Single-pass updater when removing a pricing option at a given index safely.
+ * Preserves at least 1 pricing option.
+ */
+export function removePricingOptionInFacts(
+  input: QuotationFacts,
+  index: number
+): QuotationFacts {
+  const current = ensureFactsDefaults(input);
+  const canonical = pricingAdapter.fromQuotationFacts(current);
+  if (canonical.options.length <= 1) return current;
+  const updated = pricingReconciler.removeOption(canonical, index);
+  return pricingAdapter.syncToQuotationFacts(updated, current);
+}
+
+/**
  * Single-pass updater when changing travel style.
  * Updates both travel_style and guest_profile to guarantee backward compatibility.
  */

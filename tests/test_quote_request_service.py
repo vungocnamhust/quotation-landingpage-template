@@ -468,3 +468,56 @@ class TestQuoteRequestService(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(call_kwargs["created_by_profile_id"], "td_creator")
             self.assertEqual(call_kwargs["designer_profile_id"], "td_assigned")
 
+    def test_convert_request_to_quotation_facts_multiple_pricing_options(self):
+        from schemas.v2.quote_request import (
+            QuotationMinimalOverridesSchema,
+            MinimalCommercialPricingOverrideSchema,
+        )
+
+        req = MagicMock(spec=QuoteRequest)
+        req.adults = 2
+        req.children = 1
+        req.kid_ages = [6]
+        req.start_date = "2026-11-01"
+        req.end_date = "2026-11-05"
+        req.customer_name = "Mr. Wayne"
+        req.role = "traveller"
+        req.destinations = ["Hanoi", "Halong"]
+        req.special_requirements = None
+        req.children_details = None
+        req.created_by_profile_id = None
+        req.partner_id = None
+        req.payload_json = {"currency": "USD"}
+
+        overrides = QuotationMinimalOverridesSchema(
+            pricing_options=[
+                MinimalCommercialPricingOverrideSchema(
+                    label="Standard Option",
+                    currency="USD",
+                    per_adult_amount_minor=300000,
+                    per_child_amount_minor=150000,
+                    group_total_amount_minor=750000,
+                ),
+                MinimalCommercialPricingOverrideSchema(
+                    label="Premium Option",
+                    currency="USD",
+                    per_adult_amount_minor=450000,
+                    per_child_amount_minor=225000,
+                    group_total_amount_minor=1125000,
+                ),
+            ]
+        )
+
+        facts = convert_request_to_quotation_facts(req, overrides)
+        pricing_facts = facts.get("pricing_facts", {})
+        options = pricing_facts.get("options", [])
+
+        self.assertEqual(len(options), 2)
+        self.assertEqual(options[0]["label"], "Standard Option")
+        self.assertEqual(options[0]["per_traveler_amount_minor"], 300000)
+        self.assertEqual(options[0]["group_total_amount_minor"], 750000)
+
+        self.assertEqual(options[1]["label"], "Premium Option")
+        self.assertEqual(options[1]["per_traveler_amount_minor"], 450000)
+        self.assertEqual(options[1]["group_total_amount_minor"], 1125000)
+
