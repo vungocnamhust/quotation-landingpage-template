@@ -198,11 +198,22 @@ class QuoteDocumentDayImages(QuoteBaseModel):
     carousel: List[QuoteAssetRef] = Field(default_factory=list)
 
 
+class QuoteDocumentDestinationRef(QuoteBaseModel):
+    id: str
+    name: str = ""
+    slug: str = ""
+    coordinates: List[float] | None = None
+    mediaPrefix: str | None = None
+    defaultMediaPrefix: str | None = None
+
+
 class QuoteDocumentItineraryDay(QuoteBaseModel):
     id: str
     dayNumber: int
     dayDate: str = ""
     segmentCity: str = ""
+    destinationRef: QuoteDocumentDestinationRef | None = None
+    overnightRef: QuoteDocumentDestinationRef | None = None
     title: str = ""
     description: List[str] = Field(default_factory=list)
     overnight: str = ""
@@ -229,6 +240,7 @@ class QuoteDocumentHotel(QuoteBaseModel):
     hotelDate: str = ""
     tel: str = ""
     roomType: str = ""
+    destinationRef: QuoteDocumentDestinationRef | None = None
     hotelImage: QuoteAssetRef = Field(default_factory=QuoteAssetRef)
     roomImage: QuoteAssetRef = Field(default_factory=QuoteAssetRef)
 

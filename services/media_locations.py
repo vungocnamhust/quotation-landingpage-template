@@ -36,6 +36,10 @@ def destination_location(destination: DestinationCatalog) -> MediaLocation:
     return MediaLocation("destination", "/".join(parts), "destination", destination.id, destination_id=destination.id)
 
 
+def destination_default_media_prefix(destination: DestinationCatalog) -> str:
+    return destination_location(destination).leaf_prefix
+
+
 def accommodation_location(destination: DestinationCatalog, name: str, kind: str) -> MediaLocation:
     base = destination_location(destination)
     accommodation = storage_slug(name)

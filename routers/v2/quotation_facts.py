@@ -147,11 +147,14 @@ async def put_quotation_facts_v2(
             rebuilt["viewOverrides"] = copy.deepcopy(current.document_json["viewOverrides"])
         h._copy_fact_media_slots(current.document_json, rebuilt)
         await h._apply_missing_media_defaults(session, rebuilt, quotation_id, quotation.baseline_lang)
+        validated = h._normalize_quote_document_structure_or_422(
+            h._hydrate_canonical_quote_document(rebuilt, quotation, lang=quotation.baseline_lang, revision=baseRevision)
+        )
         try:
             saved = await documents.save_current_document(
                 quotation_id=quotation_id,
                 lang=quotation.baseline_lang,
-                document_json=rebuilt,
+                document_json=validated,
                 expected_revision=baseRevision,
             )
         except DocumentRevisionConflictError as exc:
@@ -163,12 +166,12 @@ async def put_quotation_facts_v2(
                     "currentDocument": exc.current_document,
                 },
             ) from exc
-        rebuilt["meta"]["revision"] = saved.revision
+        canonical_doc = h._hydrate_canonical_quote_document(saved.document_json, quotation, lang=quotation.baseline_lang, revision=saved.revision)
         await documents.append_document_revision(
             quotation_id=quotation_id,
             lang=quotation.baseline_lang,
             revision=saved.revision,
-            document_json=rebuilt,
+            document_json=canonical_doc,
             change_source="update_facts",
         )
         await quotes.create_quotation_request(quotation_id=quotation_id, request_json=canonical.model_dump(mode="json"))
@@ -177,7 +180,7 @@ async def put_quotation_facts_v2(
         return h._facts_response(
             quotation=quotation,
             request_json=canonical.model_dump(mode="json"),
-            document=rebuilt,
+            document=canonical_doc,
             resolved_facts=resolved,
         )
 

@@ -28,11 +28,16 @@ class FactsResolutionError(ValueError):
 
 def _as_ref(item: Any) -> dict[str, Any]:
     latitude, longitude = getattr(item, "latitude", None), getattr(item, "longitude", None)
+    media_prefix = getattr(item, "media_prefix", None)
+    geo_parts = [getattr(item, "country_slug", None), getattr(item, "region_slug", None), getattr(item, "province_slug", None), getattr(item, "slug", None)]
+    default_prefix = media_prefix if (media_prefix and media_prefix.strip()) else ("/".join(p for p in geo_parts if p) or getattr(item, "slug", None))
     return {
         "id": item.id,
         "name": item.canonical_name,
         "slug": item.slug,
         "coordinates": [float(latitude), float(longitude)] if latitude is not None and longitude is not None else None,
+        "mediaPrefix": media_prefix,
+        "defaultMediaPrefix": default_prefix,
     }
 
 

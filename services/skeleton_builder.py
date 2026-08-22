@@ -96,9 +96,11 @@ class SkeletonBuilder:
             number = day.day_number or index
             refs = resolved_itinerary[index - 1] if index - 1 < len(resolved_itinerary) else {}
             days.append({"id": f"day-{number}", "dayNumber": number, "dayDate": day.display_date or "", "segmentCity": day.destination or "", "destinationRef": refs.get("destinationRef"), "overnightRef": refs.get("overnightRef"), "factSummary": day.summary or "", "factHighlights": list(day.highlights), "title": "", "description": [], "overnight": day.overnight or "", "meals": day.meals, "activities": [], "notes": day.notes, "labelHighlights": "", "labelNotes": ""})
+        resolved_hotels = resolved_facts.get("hotels") or []
         hotels = []
         for index, hotel in enumerate(services.hotels, 1):
-            hotels.append({"id": f"hotel-{index}", "city": hotel.display_city or hotel.destination or "", "name": hotel.name or "", "introduction": hotel.intro or "", "hotelDate": hotel.display_date or self._hotel_date_range(hotel.check_in, hotel.check_out), "tel": hotel.phone or "", "roomType": hotel.room_type or "", "hotelImage": {"r2Key": hotel.hotel_asset or ""}, "roomImage": {"r2Key": hotel.room_asset or ""}})
+            hotel_ref = resolved_hotels[index - 1] if index - 1 < len(resolved_hotels) else {}
+            hotels.append({"id": f"hotel-{index}", "city": hotel.display_city or hotel.destination or "", "name": hotel.name or "", "introduction": hotel.intro or "", "hotelDate": hotel.display_date or self._hotel_date_range(hotel.check_in, hotel.check_out), "tel": hotel.phone or "", "roomType": hotel.room_type or "", "destinationRef": hotel_ref.get("destinationRef"), "hotelImage": {"r2Key": hotel.hotel_asset or ""}, "roomImage": {"r2Key": hotel.room_asset or ""}})
         stay_segments = self._build_stay_segments(days, hotels, lang=payload.lang or "en")
         for day in days:
             day.pop("factSummary", None)

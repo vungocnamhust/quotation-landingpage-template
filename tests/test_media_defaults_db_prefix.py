@@ -92,14 +92,20 @@ async def test_apply_missing_media_defaults_uses_db_destination_prefix(async_ses
         lang="en",
     )
 
-    # 5. Verify that destinationRef was pre-hydrated with custom media_prefix
+    # 5. Verify that destinationRef was pre-hydrated with custom media_prefix and string defaultMediaPrefix
     day1 = document["itinerary"]["days"][0]
     assert day1["destinationRef"] is not None
     assert day1["destinationRef"]["slug"] == "dak-lak"
     assert day1["destinationRef"]["mediaPrefix"] == "destination/custom-dak-lak-folder"
+    assert isinstance(day1["destinationRef"]["defaultMediaPrefix"], str)
 
     # 6. Verify that carousel images were picked from the custom dak-lak folder
     carousel = day1["images"]["carousel"]
     assert len(carousel) >= 1
     for img in carousel:
         assert img["r2Key"].startswith("destination/custom-dak-lak-folder/")
+
+    # 7. Verify document is JSON serializable
+    import json
+    json_str = json.dumps(document)
+    assert "destination/custom-dak-lak-folder" in json_str

@@ -72,7 +72,7 @@ from services.storage.local_media_storage import LocalMediaStorage
 from services.storage.r2_storage import R2Storage, R2StorageConfigurationError
 from services.media_library_service import MediaLibraryService, is_allowed_prefix, normalize_library_prefix
 from services.brochure_media_resolver import BrochureMediaResolver, Candidate
-from services.media_locations import accommodation_asset_location, accommodation_location, destination_location, storage_slug, team_location
+from services.media_locations import accommodation_asset_location, accommodation_location, destination_default_media_prefix, destination_location, storage_slug, team_location
 from repositories.destination_repository import DestinationRepository
 from repositories.media_library_repository import MediaLibraryRepository
 from repositories.travel_designer_repository import TravelDesignerRepository
@@ -7019,7 +7019,7 @@ async def _canonicalize_quote_destinations(payload: CreateQuoteRequestV1) -> tup
             if item is None:
                 missing.append(path)
                 return None
-            default_prefix = destination_location(item)
+            default_prefix = destination_default_media_prefix(item)
             return {
                 "id": item.id,
                 "name": item.canonical_name,
@@ -7512,7 +7512,7 @@ async def _apply_missing_media_defaults(session, document: dict[str, Any], quota
                         if not dest_ref.get("mediaPrefix") and resolved.media_prefix:
                             dest_ref["mediaPrefix"] = resolved.media_prefix
                         if not dest_ref.get("defaultMediaPrefix"):
-                            dest_ref["defaultMediaPrefix"] = destination_location(resolved)
+                            dest_ref["defaultMediaPrefix"] = destination_default_media_prefix(resolved)
                         if not dest_ref.get("slug"):
                             dest_ref["slug"] = resolved.slug
                     else:
@@ -7521,7 +7521,7 @@ async def _apply_missing_media_defaults(session, document: dict[str, Any], quota
                             "name": resolved.canonical_name,
                             "slug": resolved.slug,
                             "mediaPrefix": resolved.media_prefix,
-                            "defaultMediaPrefix": destination_location(resolved),
+                            "defaultMediaPrefix": destination_default_media_prefix(resolved),
                         }
 
     stays = document.get("stays") or {}
@@ -7538,7 +7538,7 @@ async def _apply_missing_media_defaults(session, document: dict[str, Any], quota
                         if not dest_ref.get("mediaPrefix") and resolved.media_prefix:
                             dest_ref["mediaPrefix"] = resolved.media_prefix
                         if not dest_ref.get("defaultMediaPrefix"):
-                            dest_ref["defaultMediaPrefix"] = destination_location(resolved)
+                            dest_ref["defaultMediaPrefix"] = destination_default_media_prefix(resolved)
                         if not dest_ref.get("slug"):
                             dest_ref["slug"] = resolved.slug
                     else:
@@ -7547,7 +7547,7 @@ async def _apply_missing_media_defaults(session, document: dict[str, Any], quota
                             "name": resolved.canonical_name,
                             "slug": resolved.slug,
                             "mediaPrefix": resolved.media_prefix,
-                            "defaultMediaPrefix": destination_location(resolved),
+                            "defaultMediaPrefix": destination_default_media_prefix(resolved),
                         }
 
     catalogue = await MediaLibraryRepository(session).list_active_candidates()
