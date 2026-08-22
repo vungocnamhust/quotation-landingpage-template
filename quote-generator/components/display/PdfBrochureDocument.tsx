@@ -777,7 +777,23 @@ function PdfPricing({ documentModel }: { documentModel: DisplayDocument }) {
                   </div>
                 </div>
                 <div className="pdf-pricing-hero__meta">
-                  {options[0].perTravelerPrice && textValue(options[0].perTravelerPrice) ? (
+                  {options[0].perAdultPrice && options[0].perChildPrice ? (
+                    <div className="flex flex-col gap-0.5 items-center">
+                      <div className="flex items-center justify-center gap-3">
+                        <div className={`pdf-pricing-hero__pax ${getTypographyClassName('investmentHeroMeta')}`}>
+                          {textValue(options[0].perAdultPrice)}
+                        </div>
+                        <div className={`pdf-pricing-hero__pax ${getTypographyClassName('investmentHeroMeta')}`}>
+                          {textValue(options[0].perChildPrice)}
+                        </div>
+                      </div>
+                      {options[0].pricingBreakdown && textValue(options[0].pricingBreakdown) ? (
+                        <div className={getTypographyClassName('caption')}>
+                          {textValue(options[0].pricingBreakdown)}
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : options[0].perTravelerPrice && textValue(options[0].perTravelerPrice) ? (
                     <div className={`pdf-pricing-hero__pax ${getTypographyClassName('investmentHeroMeta')}`}>
                       {textValue(options[0].perTravelerPrice)}
                     </div>
@@ -828,7 +844,21 @@ function PdfPricing({ documentModel }: { documentModel: DisplayDocument }) {
                     <div className={`pdf-pricing-comparison__price-label ${getTypographyClassName('overline')}`}>
                       {groupTotalLabelStr}
                     </div>
-                    {option.perTravelerPrice && textValue(option.perTravelerPrice) ? (
+                    {option.perAdultPrice && option.perChildPrice ? (
+                      <div className="flex flex-col gap-0.5">
+                        <div className={`pdf-pricing-comparison__pax ${getTypographyClassName('caption')}`}>
+                          {textValue(option.perAdultPrice)}
+                        </div>
+                        <div className={`pdf-pricing-comparison__pax ${getTypographyClassName('caption')}`}>
+                          {textValue(option.perChildPrice)}
+                        </div>
+                        {option.pricingBreakdown && textValue(option.pricingBreakdown) ? (
+                          <div className={getTypographyClassName('caption')}>
+                            {textValue(option.pricingBreakdown)}
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : option.perTravelerPrice && textValue(option.perTravelerPrice) ? (
                       <div className={`pdf-pricing-comparison__pax ${getTypographyClassName('caption')}`}>
                         {textValue(option.perTravelerPrice)}
                       </div>
@@ -880,7 +910,21 @@ function PdfPricing({ documentModel }: { documentModel: DisplayDocument }) {
                     <div className={`pdf-pricing-row__price-label ${getTypographyClassName('overline')}`}>
                       {groupTotalLabelStr}
                     </div>
-                    {option.perTravelerPrice && textValue(option.perTravelerPrice) ? (
+                    {option.perAdultPrice && option.perChildPrice ? (
+                      <div className="flex flex-col gap-0.5 items-end">
+                        <div className={`pdf-pricing-row__pax ${getTypographyClassName('caption')}`}>
+                          {textValue(option.perAdultPrice)}
+                        </div>
+                        <div className={`pdf-pricing-row__pax ${getTypographyClassName('caption')}`}>
+                          {textValue(option.perChildPrice)}
+                        </div>
+                        {option.pricingBreakdown && textValue(option.pricingBreakdown) ? (
+                          <div className={getTypographyClassName('caption')}>
+                            {textValue(option.pricingBreakdown)}
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : option.perTravelerPrice && textValue(option.perTravelerPrice) ? (
                       <div className={`pdf-pricing-row__pax ${getTypographyClassName('caption')}`}>
                         {textValue(option.perTravelerPrice)}
                       </div>

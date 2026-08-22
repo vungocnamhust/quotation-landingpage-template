@@ -154,27 +154,120 @@ export function FactCommercialSection({
       {pricing.options.map((option, index) => {
         const defaultCurr =
           option.currency || inferDefaultCurrency(brandId, market);
-        const perTravelerVal = option.per_adult_amount_minor ?? option.per_traveler_amount_minor;
+        const curr = option.currency || defaultCurr;
+        const perAdultVal = option.per_adult_amount_minor ?? option.per_traveler_amount_minor;
+        const perChildVal = option.per_child_amount_minor ?? null;
+
+        const currentOption = {
+          id: option.id || `opt_${index + 1}`,
+          label: option.label || `Option ${index + 1}`,
+          currency: curr,
+          perAdultMinor: perAdultVal ?? null,
+          perChildMinor: safeChildren > 0 ? perChildVal : null,
+          groupTotalMinor: option.group_total_amount_minor ?? null,
+          perTravelerMinor: perAdultVal ?? null,
+          childRatio:
+            (perAdultVal && perAdultVal > 0 && perChildVal !== null && perChildVal !== undefined)
+              ? perChildVal / perAdultVal
+              : 0.75,
+        };
+
+        const handleAdultChange = (valStr: string) => {
+          const minor = minorAmountFromInput(valStr, curr);
+          const updated = pricingReconciler.updateOptionPerAdult(
+            currentOption,
+            minor,
+            safeAdults,
+            safeChildren
+          );
+          onPatchPricingOption(index, {
+            currency: curr,
+            per_adult_amount_minor: updated.perAdultMinor,
+            per_traveler_amount_minor: updated.perAdultMinor,
+            per_child_amount_minor: updated.perChildMinor,
+            group_total_amount_minor: updated.groupTotalMinor,
+          });
+        };
+
+        const handleChildChange = (valStr: string) => {
+          const minor = minorAmountFromInput(valStr, curr);
+          const updated = pricingReconciler.updateOptionPerChild(
+            currentOption,
+            minor,
+            safeAdults,
+            safeChildren
+          );
+          onPatchPricingOption(index, {
+            currency: curr,
+            per_adult_amount_minor: updated.perAdultMinor,
+            per_traveler_amount_minor: updated.perAdultMinor,
+            per_child_amount_minor: updated.perChildMinor,
+            group_total_amount_minor: updated.groupTotalMinor,
+          });
+        };
+
+        const handleChildPreset = (ratio: number) => {
+          const updated = pricingReconciler.applyChildPreset(
+            currentOption,
+            ratio,
+            safeAdults,
+            safeChildren
+          );
+          onPatchPricingOption(index, {
+            currency: curr,
+            per_adult_amount_minor: updated.perAdultMinor,
+            per_traveler_amount_minor: updated.perAdultMinor,
+            per_child_amount_minor: updated.perChildMinor,
+            group_total_amount_minor: updated.groupTotalMinor,
+          });
+        };
+
+        const handleTotalChange = (valStr: string) => {
+          const totalMinor = minorAmountFromInput(valStr, curr);
+          const updated = pricingReconciler.updateOptionTotal(
+            currentOption,
+            totalMinor,
+            safeAdults,
+            safeChildren
+          );
+          onPatchPricingOption(index, {
+            currency: curr,
+            per_adult_amount_minor: updated.perAdultMinor,
+            per_traveler_amount_minor: updated.perAdultMinor,
+            per_child_amount_minor: updated.perChildMinor,
+            group_total_amount_minor: updated.groupTotalMinor,
+          });
+        };
+
+        const handleCurrencyChange = (nextCurrency: string) => {
+          const hasAmount = Boolean(perAdultVal || option.group_total_amount_minor);
+          const updated = pricingReconciler.convertOptionCurrency(
+            currentOption,
+            nextCurrency,
+            {
+              convertAmounts: hasAmount,
+              adults: safeAdults,
+              children: safeChildren,
+            }
+          );
+          onPatchPricingOption(index, {
+            currency: updated.currency,
+            per_adult_amount_minor: updated.perAdultMinor,
+            per_traveler_amount_minor: updated.perAdultMinor,
+            per_child_amount_minor: updated.perChildMinor,
+            group_total_amount_minor: updated.groupTotalMinor,
+          });
+        };
 
         const expectedTotal =
-          perTravelerVal !== null && perTravelerVal !== undefined
+          perAdultVal !== null && perAdultVal !== undefined
             ? pricingReconciler.calculateOptionTotal(
-                perTravelerVal,
-                option.per_child_amount_minor,
+                perAdultVal,
+                safeChildren > 0 ? perChildVal : null,
                 safeAdults,
                 safeChildren
               )
             : null;
-
-        const expectedRates =
-          option.group_total_amount_minor !== null && option.group_total_amount_minor !== undefined
-            ? pricingReconciler.inferOptionRatesFromTotal(
-                option.group_total_amount_minor,
-                safeAdults,
-                safeChildren
-              )
-            : null;
-        const expectedPerTraveler = expectedRates?.perAdultMinor ?? null;
 
         const inconsistent =
           expectedTotal !== null &&
@@ -185,86 +278,177 @@ export function FactCommercialSection({
           <div
             id={`pricing-option-${index}`}
             key={option.id}
-            className="grid gap-3 rounded-[var(--radius-card)] border border-[var(--color-border-strong)] bg-[var(--color-surface-white)] p-4 shadow-2xs sm:grid-cols-2"
+            className="flex flex-col gap-3 rounded-[var(--radius-card)] border border-[var(--color-border-strong)] bg-[var(--color-surface-white)] p-4 shadow-2xs"
           >
-            <Field
-              id={`pricing-${index}-label`}
-              label="Option label"
-              required
-              disabled={readOnly}
-              value={option.label}
-              onChange={(value) =>
-                onPatchPricingOption(index, { label: value })
-              }
-            />
-
-            <label className="flex flex-col gap-2">
-              <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>
-                Currency
-              </span>
-              <CustomSelect
-                options={CURRENCY_OPTIONS}
-                value={option.currency || defaultCurr}
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <Field
+                id={`pricing-${index}-label`}
+                label="Option label"
+                required
                 disabled={readOnly}
+                value={option.label}
                 onChange={(value) =>
-                  onPatchPricingOption(index, { currency: value })
+                  onPatchPricingOption(index, { label: value })
                 }
               />
-            </label>
 
-            <Field
-              label="Per traveler price"
-              required
-              type="number"
-              disabled={readOnly}
-              value={minorAmountToInput(
-                perTravelerVal,
-                option.currency || defaultCurr
-              )}
-              onChange={(value) => {
-                const perTraveler = minorAmountFromInput(
-                  value,
-                  option.currency || defaultCurr
-                );
-                onPatchPricingOption(index, {
-                  currency: option.currency || defaultCurr,
-                  per_traveler_amount_minor: perTraveler,
-                  per_adult_amount_minor: perTraveler,
-                });
-              }}
-            />
+              <label className="flex flex-col gap-2">
+                <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>
+                  Currency
+                </span>
+                <CustomSelect
+                  options={CURRENCY_OPTIONS}
+                  value={curr}
+                  disabled={readOnly}
+                  onChange={handleCurrencyChange}
+                />
+              </label>
 
-            <Field
-              label="Group total price"
-              required
-              type="number"
-              disabled={readOnly}
-              value={minorAmountToInput(
-                option.group_total_amount_minor,
-                option.currency || defaultCurr
-              )}
-              onChange={(value) => {
-                const groupTotal = minorAmountFromInput(
-                  value,
-                  option.currency || defaultCurr
-                );
-                onPatchPricingOption(index, {
-                  currency: option.currency || defaultCurr,
-                  group_total_amount_minor: groupTotal,
-                });
-              }}
-            />
+              {/* Price / Adult */}
+              <label className="flex flex-col gap-2">
+                <span className={cn(getTypographyClassName("label"), "flex justify-between text-[var(--color-muted)]")}>
+                  <span>Price / Adult</span>
+                  <span className={cn(getTypographyClassName("caption"), "text-[var(--color-accent)]")}>
+                    Required
+                  </span>
+                </span>
+                <input
+                  type="number"
+                  min={0}
+                  disabled={readOnly}
+                  placeholder="e.g. 4000"
+                  className={inputClass}
+                  value={minorAmountToInput(perAdultVal, curr)}
+                  onChange={(e) => handleAdultChange(e.target.value)}
+                />
+              </label>
+
+              {/* Price / Child */}
+              <div className={cn("flex flex-col gap-2", safeChildren === 0 ? "opacity-40" : "")}>
+                <span className={cn(getTypographyClassName("label"), "flex justify-between text-[var(--color-muted)]")}>
+                  <span>Price / Child</span>
+                  <span className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>
+                    {safeChildren > 0 ? "Optional" : "No kids"}
+                  </span>
+                </span>
+                <input
+                  type="number"
+                  min={0}
+                  disabled={readOnly || safeChildren === 0}
+                  className={inputClass}
+                  value={safeChildren > 0 ? minorAmountToInput(perChildVal, curr) : ""}
+                  placeholder={safeChildren > 0 ? "e.g. 2500" : "N/A"}
+                  onChange={(e) => handleChildChange(e.target.value)}
+                />
+                {safeChildren > 0 && !readOnly ? (
+                  <div className="flex flex-wrap gap-1 mt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => handleChildPreset(0.5)}
+                      className={cn(
+                        getTypographyClassName("caption"),
+                        "rounded px-1.5 py-0.5 border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-muted)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)] transition-colors cursor-pointer"
+                      )}
+                    >
+                      50%
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleChildPreset(0.75)}
+                      className={cn(
+                        getTypographyClassName("caption"),
+                        "rounded px-1.5 py-0.5 border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-muted)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)] transition-colors cursor-pointer"
+                      )}
+                    >
+                      75%
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleChildPreset(1.0)}
+                      className={cn(
+                        getTypographyClassName("caption"),
+                        "rounded px-1.5 py-0.5 border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-muted)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)] transition-colors cursor-pointer"
+                      )}
+                    >
+                      100%
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleChildPreset(0)}
+                      className={cn(
+                        getTypographyClassName("caption"),
+                        "rounded px-1.5 py-0.5 border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-muted)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)] transition-colors cursor-pointer"
+                      )}
+                    >
+                      Free
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+
+              {/* Group Total */}
+              <label className="flex flex-col gap-2 sm:col-span-2">
+                <span className={cn(getTypographyClassName("label"), "flex justify-between text-[var(--color-muted)]")}>
+                  <span className="text-[var(--color-on-surface)]">Group Total Price</span>
+                  <span className={cn(getTypographyClassName("caption"), "text-[var(--color-accent)]")}>
+                    Auto-Calculated
+                  </span>
+                </span>
+                <input
+                  type="number"
+                  min={0}
+                  disabled={readOnly}
+                  className={cn(inputClass, "border-[var(--color-accent)]")}
+                  value={minorAmountToInput(option.group_total_amount_minor, curr)}
+                  placeholder="e.g. 10500"
+                  onChange={(e) => handleTotalChange(e.target.value)}
+                />
+              </label>
+
+              {/* Breakdown Badge */}
+              <div className="sm:col-span-2 flex items-center gap-2 rounded-[var(--radius-button)] bg-[var(--color-surface-muted)] p-2.5 text-[var(--color-muted)] border border-[var(--color-border)]">
+                <p className={cn(getTypographyClassName("caption"), "text-[var(--color-on-surface)]")}>
+                  {safeChildren > 0 ? (
+                    <>
+                      Breakdown:{" "}
+                      <strong>
+                        {safeAdults} Adults x {formatMinorAmount(perAdultVal, curr, lang)}
+                      </strong>{" "}
+                      +{" "}
+                      <strong>
+                        {safeChildren} Children x {formatMinorAmount(perChildVal, curr, lang)}
+                      </strong>{" "}
+                      ={" "}
+                      <strong className="text-emerald-700">
+                        {formatMinorAmount(option.group_total_amount_minor, curr, lang)} Total
+                      </strong>
+                    </>
+                  ) : (
+                    <>
+                      Breakdown:{" "}
+                      <strong>
+                        {safeAdults} Adults x {formatMinorAmount(perAdultVal, curr, lang)}
+                      </strong>{" "}
+                      ={" "}
+                      <strong className="text-emerald-700">
+                        {formatMinorAmount(option.group_total_amount_minor, curr, lang)} Total
+                      </strong>
+                    </>
+                  )}
+                </p>
+              </div>
+            </div>
 
             {inconsistent ? (
-              <div className="sm:col-span-2 flex flex-col gap-2 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface-muted)] p-3 text-[var(--color-muted)]">
+              <div className="flex flex-col gap-2 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface-muted)] p-3 text-[var(--color-muted)]">
                 <p className={cn(getTypographyClassName("caption"))}>
-                  {`For ${partyLabel(safeAdults, safeChildren)}, the per traveler price equals ${formatMinorAmount(
+                  {`For ${partyLabel(safeAdults, safeChildren)}, the calculated total equals ${formatMinorAmount(
                     expectedTotal,
-                    option.currency || defaultCurr,
+                    curr,
                     lang
                   )}; the entered group total is ${formatMinorAmount(
                     option.group_total_amount_minor,
-                    option.currency || defaultCurr,
+                    curr,
                     lang
                   )}.`}
                 </p>
@@ -283,59 +467,34 @@ export function FactCommercialSection({
                       )}
                     >
                       Apply calculated total (
-                      {formatMinorAmount(
-                        expectedTotal,
-                        option.currency || defaultCurr,
-                        lang
-                      )}
+                      {formatMinorAmount(expectedTotal, curr, lang)}
                       )
                     </button>
-                    {expectedPerTraveler !== null ? (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          onPatchPricingOption(index, {
-                            per_traveler_amount_minor: expectedPerTraveler,
-                            per_adult_amount_minor: expectedPerTraveler,
-                          })
-                        }
-                        className={cn(
-                          getTypographyClassName("caption"),
-                          "px-2 py-1 rounded-[var(--radius-button)] border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-on-surface)] hover:bg-[var(--color-accent-wash)] cursor-pointer"
-                        )}
-                      >
-                        Apply calculated per traveler (
-                        {formatMinorAmount(
-                          expectedPerTraveler,
-                          option.currency || defaultCurr,
-                          lang
-                        )}
-                        )
-                      </button>
-                    ) : null}
                   </div>
                 ) : null}
               </div>
             ) : null}
 
-            <p className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>
-              {isRenderablePricingOption(option)
-                ? "Will appear in the brochure."
-                : "Complete the option before it can be saved."}
-            </p>
+            <div className="flex items-center justify-between pt-1">
+              <p className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>
+                {isRenderablePricingOption(option)
+                  ? "Will appear in the brochure."
+                  : "Complete the option before it can be saved."}
+              </p>
 
-            {!readOnly ? (
-              <button
-                type="button"
-                onClick={() => onRemovePricingOption(index)}
-                className={cn(
-                  getTypographyClassName("buttonSecondary"),
-                  "min-h-10 w-fit rounded-[var(--radius-button)] bg-rose-700 !text-white hover:bg-rose-800 px-3.5 shadow-2xs border border-transparent transition-all cursor-pointer"
-                )}
-              >
-                Remove option
-              </button>
-            ) : null}
+              {!readOnly ? (
+                <button
+                  type="button"
+                  onClick={() => onRemovePricingOption(index)}
+                  className={cn(
+                    getTypographyClassName("buttonSecondary"),
+                    "min-h-9 w-fit rounded-[var(--radius-button)] bg-rose-700 !text-white hover:bg-rose-800 px-3 shadow-2xs border border-transparent transition-all cursor-pointer"
+                  )}
+                >
+                  Remove option
+                </button>
+              ) : null}
+            </div>
           </div>
         );
       })}

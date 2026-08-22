@@ -247,8 +247,39 @@ export function getLanguageLabels(lang: LanguageCode) {
   return I18N_LABELS[lang] ?? I18N_LABELS.en;
 }
 
-export const PRICING_AMOUNT_LABELS: Record<LanguageCode, { perTraveler: string; total: string }> = {
-  en: { perTraveler: 'per traveler', total: 'group total' },
-  vi: { perTraveler: 'mỗi khách', total: 'tổng đoàn' },
-  ar: { perTraveler: 'لكل مسافر', total: 'إجمالي المجموعة' },
+export const PRICING_AMOUNT_LABELS: Record<
+  LanguageCode,
+  {
+    perTraveler: string;
+    perAdult: string;
+    perChild: string;
+    adultsLabel: string;
+    childrenLabel: string;
+    total: string;
+  }
+> = {
+  en: {
+    perTraveler: 'per traveler',
+    perAdult: 'per adult',
+    perChild: 'per child',
+    adultsLabel: 'Adults',
+    childrenLabel: 'Children',
+    total: 'group total',
+  },
+  vi: {
+    perTraveler: 'mỗi khách',
+    perAdult: 'mỗi người lớn',
+    perChild: 'mỗi trẻ em',
+    adultsLabel: 'Người lớn',
+    childrenLabel: 'Trẻ em',
+    total: 'tổng đoàn',
+  },
+  ar: {
+    perTraveler: 'لكل مسافر',
+    perAdult: 'لكل بالغ',
+    perChild: 'لكل طفل',
+    adultsLabel: 'بالغين',
+    childrenLabel: 'أطفال',
+    total: 'إجمالي المجموعة',
+  },
 };

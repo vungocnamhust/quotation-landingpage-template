@@ -282,6 +282,10 @@ export function InvestmentHero({
   option: PriceOptionViewModel;
   typography: TypographySlotMap;
 }) {
+  const perAdultPrice = option.perAdultPrice;
+  const perChildPrice = option.perChildPrice;
+  const hasSeparateRates = Boolean(perAdultPrice && perChildPrice);
+
   return (
     <article className="display-investment-hero">
       {option.label ? (
@@ -313,7 +317,35 @@ export function InvestmentHero({
         ) : null}
       </div>
       <div className="display-investment-hero__meta">
-        {option.perTravelerPrice ? (
+        {hasSeparateRates && perAdultPrice && perChildPrice ? (
+          <div className="flex flex-col gap-1 sm:items-center">
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+              <PriceText
+                variant={requireTypographySlot(typography, 'body')}
+                tone="muted"
+                className="display-investment-hero__pax"
+              >
+                {perAdultPrice}
+              </PriceText>
+              <PriceText
+                variant={requireTypographySlot(typography, 'body')}
+                tone="muted"
+                className="display-investment-hero__pax"
+              >
+                {perChildPrice}
+              </PriceText>
+            </div>
+            {option.pricingBreakdown ? (
+              <MetaText
+                variant={requireTypographySlot(typography, 'metaSecondary')}
+                tone="accent"
+                className="display-investment-hero__breakdown"
+              >
+                {option.pricingBreakdown}
+              </MetaText>
+            ) : null}
+          </div>
+        ) : option.perTravelerPrice ? (
           <PriceText
             variant={requireTypographySlot(typography, 'body')}
             tone="muted"
@@ -345,6 +377,10 @@ export function InvestmentComparisonCard({
   typography: TypographySlotMap;
   isLast?: boolean;
 }) {
+  const perAdultPrice = option.perAdultPrice;
+  const perChildPrice = option.perChildPrice;
+  const hasSeparateRates = Boolean(perAdultPrice && perChildPrice);
+
   return (
     <article className={cn('display-investment-comparison', !isLast && 'display-investment-comparison--bordered')}>
       <div className="display-investment-comparison__header">
@@ -393,7 +429,33 @@ export function InvestmentComparisonCard({
             {option.groupTotalLabel}
           </MetaText>
         ) : null}
-        {option.perTravelerPrice ? (
+        {hasSeparateRates && perAdultPrice && perChildPrice ? (
+          <div className="flex flex-col gap-0.5">
+            <PriceText
+              variant={requireTypographySlot(typography, 'body')}
+              tone="muted"
+              className="display-investment-comparison__pax"
+            >
+              {perAdultPrice}
+            </PriceText>
+            <PriceText
+              variant={requireTypographySlot(typography, 'body')}
+              tone="muted"
+              className="display-investment-comparison__pax"
+            >
+              {perChildPrice}
+            </PriceText>
+            {option.pricingBreakdown ? (
+              <MetaText
+                variant={requireTypographySlot(typography, 'metaSecondary')}
+                tone="accent"
+                className="display-investment-comparison__breakdown"
+              >
+                {option.pricingBreakdown}
+              </MetaText>
+            ) : null}
+          </div>
+        ) : option.perTravelerPrice ? (
           <PriceText
             variant={requireTypographySlot(typography, 'body')}
             tone="muted"
@@ -416,6 +478,10 @@ export function InvestmentRow({
   typography: TypographySlotMap;
   hideIndex?: boolean;
 }) {
+  const perAdultPrice = option.perAdultPrice;
+  const perChildPrice = option.perChildPrice;
+  const hasSeparateRates = Boolean(perAdultPrice && perChildPrice);
+
   return (
     <article className="display-investment-row">
       <div className="display-investment-row__content">
@@ -474,7 +540,33 @@ export function InvestmentRow({
             {option.groupTotalLabel}
           </MetaText>
         ) : null}
-        {option.perTravelerPrice ? (
+        {hasSeparateRates && perAdultPrice && perChildPrice ? (
+          <div className="flex flex-col gap-0.5 sm:items-end">
+            <PriceText
+              variant={requireTypographySlot(typography, 'body')}
+              tone="muted"
+              className="display-investment-row__pax"
+            >
+              {perAdultPrice}
+            </PriceText>
+            <PriceText
+              variant={requireTypographySlot(typography, 'body')}
+              tone="muted"
+              className="display-investment-row__pax"
+            >
+              {perChildPrice}
+            </PriceText>
+            {option.pricingBreakdown ? (
+              <MetaText
+                variant={requireTypographySlot(typography, 'metaSecondary')}
+                tone="accent"
+                className="display-investment-row__breakdown"
+              >
+                {option.pricingBreakdown}
+              </MetaText>
+            ) : null}
+          </div>
+        ) : option.perTravelerPrice ? (
           <PriceText
             variant={requireTypographySlot(typography, 'body')}
             tone="muted"

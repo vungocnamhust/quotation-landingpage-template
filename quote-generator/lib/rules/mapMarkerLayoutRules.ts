@@ -5,6 +5,7 @@
  * anchor slot allocation (top-center, top-left, top-right, left, right, top-elevated, bottom-*)
  * with leader lines to prevent overlapping labels in dense geographic regions.
  *
+ * Compact 1/2 size geometry optimized for both PDF A4 print and responsive web.
  * Zero React dependencies. 100% deterministic and unit-testable.
  */
 
@@ -29,15 +30,15 @@ export interface MarkerPointInput {
 }
 
 export interface CollisionLayoutOptions {
-  /** Width threshold for collision detection in pixels. Default: 140 */
+  /** Width threshold for collision detection in pixels. Default: 80 */
   collisionRadiusX?: number;
-  /** Height threshold for collision detection in pixels. Default: 52 */
+  /** Height threshold for collision detection in pixels. Default: 30 */
   collisionRadiusY?: number;
   /** Container viewport width for boundary clamping. Default: 794 */
   containerWidth?: number;
   /** Container viewport height for boundary clamping. Default: 1123 */
   containerHeight?: number;
-  /** Padding from edge to avoid cut-off. Default: 35 */
+  /** Padding from edge to avoid cut-off. Default: 25 */
   edgePadding?: number;
 }
 
@@ -55,38 +56,38 @@ export interface ResolvedMarkerPlacement {
 }
 
 const DEFAULT_OPTIONS: Required<CollisionLayoutOptions> = {
-  collisionRadiusX: 140,
-  collisionRadiusY: 52,
+  collisionRadiusX: 80,
+  collisionRadiusY: 30,
   containerWidth: 794,
   containerHeight: 1123,
-  edgePadding: 35,
+  edgePadding: 25,
 };
 
 /**
- * Calculates leader line stem offsets for each anchor direction.
+ * Calculates leader line stem offsets for each anchor direction (compact 1/2 scale).
  */
 export function getStemOffsetForAnchor(anchor: MarkerAnchorDirection): { x: number; y: number; needleLength: number } {
   switch (anchor) {
     case 'top-center':
-      return { x: 0, y: -10, needleLength: 10 };
+      return { x: 0, y: -6, needleLength: 6 };
     case 'top-elevated':
-      return { x: 0, y: -34, needleLength: 34 };
+      return { x: 0, y: -22, needleLength: 22 };
     case 'top-left':
-      return { x: -16, y: -14, needleLength: 21 };
+      return { x: -10, y: -8, needleLength: 13 };
     case 'top-right':
-      return { x: 16, y: -14, needleLength: 21 };
+      return { x: 10, y: -8, needleLength: 13 };
     case 'left':
-      return { x: -18, y: 0, needleLength: 18 };
+      return { x: -10, y: 0, needleLength: 10 };
     case 'right':
-      return { x: 18, y: 0, needleLength: 18 };
+      return { x: 10, y: 0, needleLength: 10 };
     case 'bottom-left':
-      return { x: -16, y: 14, needleLength: 21 };
+      return { x: -10, y: 8, needleLength: 13 };
     case 'bottom-right':
-      return { x: 16, y: 14, needleLength: 21 };
+      return { x: 10, y: 8, needleLength: 13 };
     case 'bottom-center':
-      return { x: 0, y: 10, needleLength: 10 };
+      return { x: 0, y: 6, needleLength: 6 };
     default:
-      return { x: 0, y: -10, needleLength: 10 };
+      return { x: 0, y: -6, needleLength: 6 };
   }
 }
 
@@ -99,10 +100,10 @@ export function adjustAnchorForBounds(
   options: Required<CollisionLayoutOptions>
 ): MarkerAnchorDirection {
   const { containerWidth, containerHeight, edgePadding } = options;
-  const isNearTop = point.y < edgePadding + 50;
-  const isNearBottom = point.y > containerHeight - edgePadding - 50;
-  const isNearLeft = point.x < edgePadding + 80;
-  const isNearRight = point.x > containerWidth - edgePadding - 80;
+  const isNearTop = point.y < edgePadding + 35;
+  const isNearBottom = point.y > containerHeight - edgePadding - 35;
+  const isNearLeft = point.x < edgePadding + 50;
+  const isNearRight = point.x > containerWidth - edgePadding - 50;
 
   if (isNearTop) {
     if (anchor === 'top-center' || anchor === 'top-elevated') {
@@ -223,7 +224,7 @@ export function resolveMarkerCollisions(
       let anchorA: MarkerAnchorDirection;
       let anchorB: MarkerAnchorDirection;
 
-      if (Math.abs(pA.x - pB.x) >= 20) {
+      if (Math.abs(pA.x - pB.x) >= 15) {
         // Horizontal separation: leftmost gets top-left, rightmost gets top-right
         if (pA.x <= pB.x) {
           anchorA = 'top-left';

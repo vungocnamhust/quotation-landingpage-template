@@ -551,6 +551,9 @@ export interface PriceOptionViewModel {
   badge?: TextValue;
   groupTotalPrice: TextValue;
   perTravelerPrice: TextValue;
+  perAdultPrice?: TextValue;
+  perChildPrice?: TextValue;
+  pricingBreakdown?: TextValue;
   groupTotalLabel?: TextValue;
   isSelection?: boolean;
 }

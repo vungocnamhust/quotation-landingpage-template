@@ -182,6 +182,8 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
   const designerFacts = record(document.designerFacts);
   const customerGreeting = stringValue(customer.greetingName) || stringValue(customer.greeting_name) || stringValue(customer_facts.greeting_name) || stringValue(customer_facts.greetingName) || stringValue(customerFacts.greeting_name) || stringValue(customerFacts.greetingName);
   const customerParty = stringValue(customer.partyLabel) || stringValue(customer.party_label) || stringValue(customer_facts.party_label) || stringValue(customer_facts.partyLabel) || stringValue(customerFacts.party_label) || stringValue(customerFacts.partyLabel);
+  const adultsCount = positiveInteger(customer.adults) || positiveInteger(customer_facts.adults) || positiveInteger(customerFacts.adults) || 2;
+  const childrenCount = positiveInteger(customer.children) || positiveInteger(customer_facts.children) || positiveInteger(customerFacts.children) || 0;
   const bookingTitleText = stringValue(booking.title) || stringValue(booking_facts.title) || stringValue(bookingFacts.title);
   const contentSections = record(record(document.content).sections);
   const inclusionsBlock = contentBlock(contentBlocks(contentSections, 'inclusions_exclusions'), 'twoColumnList');
@@ -542,11 +544,20 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
         )
           .map((option, index) => {
             const currency = stringValue(option.currency).toUpperCase();
-            const perTravelerAmountMinor =
+            const perAdultAmountMinor =
+              positiveInteger(option.perAdultAmountMinor) ||
+              positiveInteger(option.per_adult_amount_minor) ||
               positiveInteger(option.perTravelerAmountMinor) ||
               positiveInteger(option.per_traveler_amount_minor) ||
               positiveInteger(option.perPersonAmountMinor) ||
               positiveInteger(option.per_person_amount_minor);
+            const perChildAmountMinor =
+              positiveInteger(option.perChildAmountMinor) ||
+              positiveInteger(option.per_child_amount_minor);
+            const perTravelerAmountMinor =
+              positiveInteger(option.perTravelerAmountMinor) ||
+              positiveInteger(option.per_traveler_amount_minor) ||
+              perAdultAmountMinor;
             const groupTotalAmountMinor =
               positiveInteger(option.groupTotalAmountMinor) ||
               positiveInteger(option.group_total_amount_minor) ||
@@ -554,9 +565,26 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
               positiveInteger(option.total_amount_minor);
             const legacyPerTraveler = stringValue(option.legacyPerPersonText) || stringValue(option.perPersonText) || stringValue(option.per_person_text);
             const legacyGroupTotal = stringValue(option.legacyTotalText) || stringValue(option.totalText) || stringValue(option.total_text);
-            const typed = Boolean(stringValue(option.label).trim() && currency && perTravelerAmountMinor && groupTotalAmountMinor);
+            const typed = Boolean(stringValue(option.label).trim() && currency && (perTravelerAmountMinor || perAdultAmountMinor) && groupTotalAmountMinor);
             const legacy = Boolean((stringValue(option.label) || stringValue(option.name) || stringValue(option.category)).trim() && legacyPerTraveler && legacyGroupTotal);
             if (!typed && !legacy) return null;
+
+            const hasKidsPricing = Boolean(childrenCount > 0 && perChildAmountMinor !== null && perChildAmountMinor !== undefined);
+
+            const perAdultFormatted = perAdultAmountMinor
+              ? formatPriceMinor(perAdultAmountMinor, currency, lang, PRICING_AMOUNT_LABELS[lang].perAdult)
+              : '';
+            const perChildFormatted = perChildAmountMinor !== null && perChildAmountMinor !== undefined
+              ? formatPriceMinor(perChildAmountMinor, currency, lang, PRICING_AMOUNT_LABELS[lang].perChild)
+              : '';
+            const perTravelerFormatted = perTravelerAmountMinor
+              ? formatPriceMinor(perTravelerAmountMinor, currency, lang, PRICING_AMOUNT_LABELS[lang].perTraveler)
+              : '';
+
+            const breakdownText = hasKidsPricing
+              ? `${adultsCount} ${PRICING_AMOUNT_LABELS[lang].adultsLabel} × ${formatPriceMinor(perAdultAmountMinor || 0, currency, lang, '').trim()} + ${childrenCount} ${PRICING_AMOUNT_LABELS[lang].childrenLabel} × ${formatPriceMinor(perChildAmountMinor || 0, currency, lang, '').trim()}`
+              : '';
+
             return {
               index: index + 1,
               displayIndex: editable(String(index + 1).padStart(2, '0'), `/pricing/options/${index}`, 'fact'),
@@ -571,10 +599,19 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
                 'fact'
               ),
               perTravelerPrice: editable(
-                typed ? formatPriceMinor(perTravelerAmountMinor, currency, lang, PRICING_AMOUNT_LABELS[lang].perTraveler) : legacyPerTraveler,
+                typed ? (hasKidsPricing ? perAdultFormatted : perTravelerFormatted) : legacyPerTraveler,
                 `/pricing/options/${index}/perTravelerAmountMinor`,
                 'fact'
               ),
+              perAdultPrice: perAdultFormatted
+                ? editable(perAdultFormatted, `/pricing/options/${index}/perAdultAmountMinor`, 'fact')
+                : undefined,
+              perChildPrice: hasKidsPricing && perChildFormatted
+                ? editable(perChildFormatted, `/pricing/options/${index}/perChildAmountMinor`, 'fact')
+                : undefined,
+              pricingBreakdown: breakdownText
+                ? editable(breakdownText, `/pricing/options/${index}/breakdown`, 'system')
+                : undefined,
               description: editable(
                 stringValue(option.description) || stringValue(option.positioning) || stringValue(option.subtitle) || stringValue(option.optionName) || stringValue(option.notes) || '',
                 `/pricing/options/${index}/description`,

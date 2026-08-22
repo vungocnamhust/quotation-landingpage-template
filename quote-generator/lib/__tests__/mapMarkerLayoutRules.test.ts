@@ -48,14 +48,14 @@ test('resolveMarkerCollisions splits 2 colliding points into top-left and top-ri
   // Leftmost point gets top-left, rightmost gets top-right
   assert.equal(nb?.anchorDirection, 'top-left');
   assert.equal(hl?.anchorDirection, 'top-right');
-  assert.deepEqual(nb?.stemOffset, { x: -16, y: -14 });
-  assert.deepEqual(hl?.stemOffset, { x: 16, y: -14 });
+  assert.deepEqual(nb?.stemOffset, { x: -10, y: -8 });
+  assert.deepEqual(hl?.stemOffset, { x: 10, y: -8 });
 });
 
 test('resolveMarkerCollisions handles vertically stacked 2-point clusters', () => {
   const points: MarkerPointInput[] = [
     { sequence: 'top', x: 400, y: 300, city: 'City A' },
-    { sequence: 'bot', x: 405, y: 330, city: 'City B' },
+    { sequence: 'bot', x: 405, y: 320, city: 'City B' },
   ];
 
   const layout = resolveMarkerCollisions(points);
@@ -67,8 +67,8 @@ test('resolveMarkerCollisions distributes 3 colliding points across multi-direct
   // Hanoi, Ninh Binh, Ha Long Bay
   const points: MarkerPointInput[] = [
     { sequence: 'hn', x: 370, y: 190, city: 'Hanoi' },
-    { sequence: 'nb', x: 380, y: 220, city: 'Ninh Binh' },
-    { sequence: 'hl', x: 420, y: 200, city: 'Ha Long Bay' },
+    { sequence: 'nb', x: 380, y: 210, city: 'Ninh Binh' },
+    { sequence: 'hl', x: 410, y: 200, city: 'Ha Long Bay' },
   ];
 
   const layout = resolveMarkerCollisions(points);
@@ -89,26 +89,26 @@ test('resolveMarkerCollisions distributes 3 colliding points across multi-direct
 
 test('adjustAnchorForBounds clamps anchor away from container boundaries', () => {
   const defaultOpts = {
-    collisionRadiusX: 140,
-    collisionRadiusY: 52,
+    collisionRadiusX: 80,
+    collisionRadiusY: 30,
     containerWidth: 794,
     containerHeight: 1123,
-    edgePadding: 35,
+    edgePadding: 25,
   };
 
   // Near top boundary
-  const topPoint: MarkerPointInput = { sequence: '1', x: 400, y: 40 };
+  const topPoint: MarkerPointInput = { sequence: '1', x: 400, y: 30 };
   assert.equal(adjustAnchorForBounds(topPoint, 'top-center', defaultOpts), 'bottom-center');
   assert.equal(adjustAnchorForBounds(topPoint, 'top-left', defaultOpts), 'bottom-left');
   assert.equal(adjustAnchorForBounds(topPoint, 'top-right', defaultOpts), 'bottom-right');
 
   // Near left boundary
-  const leftPoint: MarkerPointInput = { sequence: '2', x: 40, y: 500 };
+  const leftPoint: MarkerPointInput = { sequence: '2', x: 30, y: 500 };
   assert.equal(adjustAnchorForBounds(leftPoint, 'top-left', defaultOpts), 'top-right');
   assert.equal(adjustAnchorForBounds(leftPoint, 'left', defaultOpts), 'top-right');
 
   // Near right boundary
-  const rightPoint: MarkerPointInput = { sequence: '3', x: 760, y: 500 };
+  const rightPoint: MarkerPointInput = { sequence: '3', x: 770, y: 500 };
   assert.equal(adjustAnchorForBounds(rightPoint, 'top-right', defaultOpts), 'top-left');
   assert.equal(adjustAnchorForBounds(rightPoint, 'right', defaultOpts), 'top-left');
 });
@@ -116,19 +116,19 @@ test('adjustAnchorForBounds clamps anchor away from container boundaries', () =>
 test('getStemOffsetForAnchor returns valid stem geometry', () => {
   const topCenter = getStemOffsetForAnchor('top-center');
   assert.equal(topCenter.x, 0);
-  assert.equal(topCenter.y, -10);
-  assert.equal(topCenter.needleLength, 10);
+  assert.equal(topCenter.y, -6);
+  assert.equal(topCenter.needleLength, 6);
 
   const topElevated = getStemOffsetForAnchor('top-elevated');
   assert.equal(topElevated.x, 0);
-  assert.equal(topElevated.y, -34);
-  assert.equal(topElevated.needleLength, 34);
+  assert.equal(topElevated.y, -22);
+  assert.equal(topElevated.needleLength, 22);
 
   const topLeft = getStemOffsetForAnchor('top-left');
-  assert.equal(topLeft.x, -16);
-  assert.equal(topLeft.y, -14);
+  assert.equal(topLeft.x, -10);
+  assert.equal(topLeft.y, -8);
 
   const topRight = getStemOffsetForAnchor('top-right');
-  assert.equal(topRight.x, 16);
-  assert.equal(topRight.y, -14);
+  assert.equal(topRight.x, 10);
+  assert.equal(topRight.y, -8);
 });
