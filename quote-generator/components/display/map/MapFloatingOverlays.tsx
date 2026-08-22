@@ -46,7 +46,10 @@ export function MapFloatingOverlays({
       {/* ── TOP SECTION: Page Badge & Journey Header ── */}
       <div className="luxury-map-top-overlay flex items-start justify-between z-[510]">
         {/* Left Header Block (Floating on Map) */}
-        <div className="luxury-map-header-block max-w-sm sm:max-w-md pointer-events-auto">
+        <div className={cn(
+          'luxury-map-header-block max-w-sm sm:max-w-md pointer-events-auto',
+          isPdf && 'luxury-map-header-block--pdf'
+        )}>
           {/* Page Index Badge */}
           <div className="flex items-center gap-2.5 mb-2.5">
             <div
@@ -67,12 +70,13 @@ export function MapFloatingOverlays({
             </span>
           </div>
 
-          {/* Kicker */}
-          <div className="mb-1">
-            <Kicker variant={kickerSlot} tone="accent">
-              {viewModel.kicker || 'GEOGRAPHIC ROUTE'}
-            </Kicker>
-          </div>
+          {!isPdf ? (
+            <div className="mb-1">
+              <Kicker variant={kickerSlot} tone="accent">
+                {viewModel.kicker || 'GEOGRAPHIC ROUTE'}
+              </Kicker>
+            </div>
+          ) : null}
 
           {/* Title */}
           <div className="mb-1.5">
@@ -92,8 +96,7 @@ export function MapFloatingOverlays({
 
       {/* ── MID SECTION: Projected Geographic Elements & Markers ── */}
       <div className="luxury-map-mid-overlay pointer-events-auto absolute inset-0 z-[520]">
-        {/* Country & Sea Labels + Archipelago Sovereignty */}
-        <MapGeoLabels project={project} />
+        <MapGeoLabels project={project} visibility={isPdf ? 'islands' : 'all'} />
 
         {/* Projected Destination Pins / Pills */}
         {viewModel.segments.map((segment, index) => {
@@ -108,13 +111,17 @@ export function MapFloatingOverlays({
               typography={typography}
               onSelect={onSegmentSelect}
               isInteractive={!isPdf}
+              isPdf={isPdf}
             />
           );
         })}
       </div>
 
       {/* ── BOTTOM SECTION: Route Summary Flow (Clean without Quote Footer) ── */}
-      <div className="luxury-map-bottom-overlay pointer-events-auto z-[530] flex flex-col items-center text-center mt-auto pt-4">
+      <div className={cn(
+        'luxury-map-bottom-overlay pointer-events-auto z-[530] flex flex-col items-center text-center mt-auto pt-4',
+        isPdf && 'luxury-map-bottom-overlay--pdf'
+      )}>
         {/* Subtle Decorative Hairline */}
         <div className="w-full max-w-xl h-[1px] bg-gradient-to-r from-transparent via-[var(--color-accent)]/40 to-transparent mb-3" />
 

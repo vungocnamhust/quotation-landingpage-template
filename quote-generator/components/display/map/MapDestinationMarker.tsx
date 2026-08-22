@@ -16,6 +16,7 @@ interface MapDestinationMarkerProps {
   typography: TypographySlotMap;
   onSelect?: (sequence: string) => void;
   isInteractive?: boolean;
+  isPdf?: boolean;
 }
 
 export function MapDestinationMarker({
@@ -26,6 +27,7 @@ export function MapDestinationMarker({
   typography,
   onSelect,
   isInteractive = true,
+  isPdf = false,
 }: MapDestinationMarkerProps) {
   if (!projectedPoint.visible) {
     return null;
@@ -69,7 +71,10 @@ export function MapDestinationMarker({
         )}
       >
         {/* Floating Capsule Label */}
-        <div className="luxury-destination-marker__pill flex items-center gap-1.5 px-2.5 py-1 rounded-full backdrop-blur-xs transition-all duration-200">
+        <div className={cn(
+          'luxury-destination-marker__pill flex items-center gap-1.5 px-2.5 py-1 rounded-full backdrop-blur-xs transition-all duration-200',
+          isPdf && 'luxury-destination-marker__pill--pdf'
+        )}>
           {/* Numbered Circle Dot */}
           <span
             className={cn(

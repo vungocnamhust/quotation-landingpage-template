@@ -61,7 +61,7 @@ export function FullPageEditorialJourneyMap({
         mapColors={mapColors}
         activeSequence={activeSequence}
         isMapReady={isMapReady}
-        tileStyle={isPdf ? 'google-classic-pdf-v1' : 'google-classic-v1'}
+        tileStyle={isPdf ? 'carto-parchment-nolabels-pdf-v1' : 'google-classic-v1'}
         onRenderStateChange={onRenderStateChange}
       />
 
@@ -80,7 +80,7 @@ export function FullPageEditorialJourneyMap({
 
       {/* Luxury Parchment Paper Vignette Overlay */}
       <div
-        className="pointer-events-none absolute inset-0 z-5 bg-radial from-transparent via-transparent to-[var(--color-surface)]/15 mix-blend-multiply"
+        className="luxury-map-canvas-veil pointer-events-none absolute inset-0 z-5"
         aria-hidden="true"
       />
     </div>

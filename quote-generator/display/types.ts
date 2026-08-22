@@ -170,6 +170,16 @@ export interface ColorScopeRecipe {
     start: { color: PaletteColorKey; opacity: number };
     end: { color: PaletteColorKey; opacity: number };
   };
+  /** Map-only reading surfaces; declared by the theme rather than CSS. */
+  mapOverlay?: {
+    header: { surface: PaletteColorKey; opacity: number };
+    footer: { surface: PaletteColorKey; opacity: number };
+    marker: { surface: PaletteColorKey; opacity: number };
+  };
+  /** Map raster treatment belongs to the theme so provider changes cannot inherit a mismatched CSS filter. */
+  mapTileTreatment?: 'none' | 'google-prototype-v1';
+  /** Full-canvas map vignette, kept separate from the reading and marker veils. */
+  mapCanvasVeil?: { surface: PaletteColorKey; opacity: number };
   shadow: { color: PaletteColorKey; opacity: number };
   ornamentOpacity: number;
   viewModeAdjustments?: Partial<Record<ViewMode, Partial<ColorScopeRecipe>>>;

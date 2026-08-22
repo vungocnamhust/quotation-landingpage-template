@@ -41,7 +41,7 @@ def render_react_pdf_bytes(*, hostname: str, release_id: str) -> bytes:
             )
             map_state = page.locator('[data-map-render-state]').get_attribute('data-map-render-state')
             if map_state == 'failed':
-                raise RuntimeError('PDF map tiles failed to render from the required Google classic source.')
+                raise RuntimeError('PDF map tiles failed to render from the required no-label source.')
             return page.pdf(format="A4", print_background=True, prefer_css_page_size=True)
         finally:
             browser.close()

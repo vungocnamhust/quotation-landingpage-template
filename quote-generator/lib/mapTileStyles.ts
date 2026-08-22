@@ -1,7 +1,8 @@
-export type MapTileStyle = 'google-classic-v1' | 'google-classic-pdf-v1';
+export type MapTileStyle = 'google-classic-v1' | 'carto-parchment-nolabels-pdf-v1';
+export type MapTileRasterTreatment = 'passthrough' | 'parchment';
 
 export type MapTileProvider = {
-  id: 'google-classic' | 'carto-voyager' | 'openstreetmap';
+  id: 'google-classic' | 'carto-voyager' | 'carto-voyager-nolabels' | 'openstreetmap';
   url: (zoom: number, x: number, y: number) => string;
 };
 
@@ -22,19 +23,31 @@ const resilientClassicProviders: readonly MapTileProvider[] = [
   },
 ];
 
-const pdfPrototypeProviders: readonly MapTileProvider[] = [googleClassic];
+const pdfNoLabelProviders: readonly MapTileProvider[] = [
+  {
+    id: 'carto-voyager-nolabels',
+    url: (zoom, x, y) => `https://a.basemaps.cartocdn.com/rastertiles/voyager_nolabels/${zoom}/${x}/${y}.png`,
+  },
+];
 
 /**
- * Maps rendered for PDF must use the same Google classic raster as the
- * prototype. Screen maps retain independent-provider fallback for availability.
+ * PDF maps use a label-free raster so brochure-owned copy has a single visual
+ * hierarchy. Screen maps retain independent-provider fallback for availability.
  */
 export function resolveMapTileProviders(style: string | null): readonly MapTileProvider[] | null {
   switch (style) {
     case 'google-classic-v1':
       return resilientClassicProviders;
-    case 'google-classic-pdf-v1':
-      return pdfPrototypeProviders;
+    case 'carto-parchment-nolabels-pdf-v1':
+      return pdfNoLabelProviders;
     default:
       return null;
   }
+}
+
+export function resolveMapTileRasterTreatment(style: string | null): MapTileRasterTreatment | null {
+  if (!resolveMapTileProviders(style)) {
+    return null;
+  }
+  return style === 'carto-parchment-nolabels-pdf-v1' ? 'parchment' : 'passthrough';
 }

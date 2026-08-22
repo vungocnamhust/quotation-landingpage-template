@@ -115,8 +115,22 @@ const colorRecipe: ThemeColorRecipe = {
         secondary: { surface: 'transparent', text: 'ink', border: { color: 'accentAlt', opacity: 0.42 } },
       },
       timeline: { route: 'accentAlt', marker: 'accent', active: 'accentAlt' },
+      mapOverlay: {
+        header: { surface: 'paper', opacity: 0.92 },
+        footer: { surface: 'paper', opacity: 0.94 },
+        marker: { surface: 'paper', opacity: 0.98 },
+      },
+      mapTileTreatment: 'google-prototype-v1',
+      mapCanvasVeil: { surface: 'paper', opacity: 0.15 },
       shadow: { color: 'ink', opacity: 0.14 }, ornamentOpacity: 0.14,
-      viewModeAdjustments: { pdf: { shadow: { color: 'ink', opacity: 0 }, ornamentOpacity: 0.1 } },
+      viewModeAdjustments: {
+        pdf: {
+          shadow: { color: 'ink', opacity: 0 },
+          ornamentOpacity: 0.1,
+          mapTileTreatment: 'none',
+          mapCanvasVeil: { surface: 'paper', opacity: 0.06 },
+        },
+      },
     },
     chapterContrast: {
       surface: 'storyContrast', onSurface: 'onContrast', muted: 'onContrast', accent: 'accentAlt', accentAlt: 'accentAlt',

@@ -15,6 +15,14 @@ export function validateColorContracts() {
           if (!colors.sections[sectionId].style['--color-surface']) {
             throw new Error(`Missing section color scope for ${brandKey}/${theme.id}/${viewMode}/${sectionId}.`);
           }
+          if (
+            sectionId === 'routeMap' &&
+            (!colors.sections[sectionId].style['--color-map-header-veil'] ||
+              !colors.sections[sectionId].style['--color-map-canvas-veil'] ||
+              !colors.sections[sectionId].style['--filter-map-tiles'])
+          ) {
+            throw new Error(`Missing map raster and reading-surface tokens for ${brandKey}/${theme.id}/${viewMode}/${sectionId}.`);
+          }
         }
       }
     }

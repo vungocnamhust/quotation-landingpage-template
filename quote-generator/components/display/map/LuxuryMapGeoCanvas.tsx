@@ -60,8 +60,8 @@ export function LuxuryMapGeoCanvas({
   useEffect(() => {
     if (!mapInstance || !isMapReady) return;
 
-    // PDF uses the Google classic raster from the approved prototype. Screen
-    // maps retain their resilient provider chain behind the same-origin route.
+    // PDF uses a label-free raster so the brochure owns the only visible copy.
+    // Screen maps retain their resilient provider chain behind the same-origin route.
     const tileUrl = `/api/map-tiles/{z}/{x}/{y}?style=${tileStyle}`;
     let settled = false;
     const report = (state: Extract<MapRenderState, 'ready' | 'failed'>) => {
@@ -147,7 +147,7 @@ export function LuxuryMapGeoCanvas({
   }, [activeSequence, isMapReady, mapColors.route, mapInstance, segments]);
 
   return (
-    <div className="luxury-map-geo-canvas relative w-full h-full overflow-hidden select-none">
+    <div className={`luxury-map-geo-canvas${tileStyle === 'carto-parchment-nolabels-pdf-v1' ? ' luxury-map-geo-canvas--pdf' : ''} relative w-full h-full overflow-hidden select-none`}>
       <div
         ref={mapContainerRef}
         className="luxury-map-leaflet-container w-full h-full"

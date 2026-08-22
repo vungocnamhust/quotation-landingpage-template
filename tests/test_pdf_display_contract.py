@@ -54,18 +54,43 @@ class PdfDisplayContractTests(unittest.TestCase):
         self.assertIn("pdf-route-page--fullbleed", route_map_chunk)
         self.assertNotIn("pdf-route__mid-tier", route_map_chunk)
 
-    def test_pdf_map_is_pinned_to_google_classic_and_exposes_a_render_state(self):
+    def test_pdf_map_uses_no_label_raster_and_exposes_a_render_state(self):
         canvas = (ROOT / "quote-generator/components/display/map/LuxuryMapGeoCanvas.tsx").read_text(encoding="utf-8")
         island = (ROOT / "quote-generator/components/display/RouteMapClientIsland.tsx").read_text(encoding="utf-8")
         full_page = (ROOT / "quote-generator/components/display/map/FullPageEditorialJourneyMap.tsx").read_text(encoding="utf-8")
         route = (ROOT / "quote-generator/app/api/map-tiles/[z]/[x]/[y]/route.ts").read_text(encoding="utf-8")
 
-        self.assertIn("google-classic-pdf-v1", full_page)
+        self.assertIn("carto-parchment-nolabels-pdf-v1", full_page)
         self.assertIn("tileLayer.once('load'", canvas)
         self.assertIn("tileLayer.once('tileerror'", canvas)
         self.assertIn("data-map-render-state", island)
         self.assertIn("resolveMapTileProviders", route)
+        self.assertIn("prepareMapTileRaster", route)
+        self.assertIn("runtime = 'nodejs'", route)
         self.assertIn("Unsupported map tile style.", route)
+        overlays = (ROOT / "quote-generator/components/display/map/MapFloatingOverlays.tsx").read_text(encoding="utf-8")
+        self.assertIn("visibility={isPdf ? 'islands' : 'all'}", overlays)
+        labels = (ROOT / "quote-generator/components/display/map/MapGeoLabels.tsx").read_text(encoding="utf-8")
+        self.assertIn("geo-hoang-sa", labels)
+        self.assertIn("geo-truong-sa", labels)
+        self.assertIn("visibility === 'islands' && item.type !== 'island'", labels)
+        self.assertIn("luxury-map-header-block--pdf", overlays)
+        self.assertIn("luxury-map-bottom-overlay--pdf", overlays)
+
+    def test_map_raster_treatment_is_scoped_to_tile_panes(self):
+        css = (ROOT / "quote-generator/app/globals.css").read_text(encoding="utf-8")
+        theme_tokens = (ROOT / "quote-generator/config/themeTokens.ts").read_text(encoding="utf-8")
+        full_page = (ROOT / "quote-generator/components/display/map/FullPageEditorialJourneyMap.tsx").read_text(encoding="utf-8")
+
+        self.assertIn("--filter-map-tiles", theme_tokens)
+        self.assertIn("--color-map-canvas-veil", theme_tokens)
+        self.assertIn(".luxury-map-geo-canvas--pdf", css)
+        self.assertIn("img.leaflet-tile", css)
+        self.assertIn("mix-blend-mode: normal !important", css)
+        self.assertIn(".display-route-map__leaflet", css)
+        self.assertNotIn('html[data-view-mode="pdf"] .leaflet-tile', css)
+        self.assertNotIn('.leaflet-tile {\n  filter:', css)
+        self.assertIn("luxury-map-canvas-veil", full_page)
 
     def test_publisher_waits_for_map_terminal_state_and_rejects_tile_failure(self):
         source = (ROOT / "services/publication_runtime.py").read_text(encoding="utf-8")

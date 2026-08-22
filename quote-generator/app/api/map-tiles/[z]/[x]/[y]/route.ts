@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
-import { resolveMapTileProviders } from '../../../../../../lib/mapTileStyles.ts';
+import { prepareMapTileRaster } from '../../../../../../lib/mapTileRaster.ts';
+import { resolveMapTileProviders, resolveMapTileRasterTreatment } from '../../../../../../lib/mapTileStyles.ts';
+
+export const runtime = 'nodejs';
 
 function parseTileCoordinate(value: string, maximum: number) {
   if (!/^\d+$/.test(value)) {
@@ -15,7 +18,8 @@ export async function GET(
 ) {
   const style = new URL(request.url).searchParams.get('style');
   const providers = resolveMapTileProviders(style);
-  if (!providers) {
+  const rasterTreatment = resolveMapTileRasterTreatment(style);
+  if (!providers || !rasterTreatment) {
     return NextResponse.json({ message: 'Unsupported map tile style.' }, { status: 400 });
   }
 
@@ -42,16 +46,21 @@ export async function GET(
       if (!upstream.ok || !contentType.startsWith('image/')) {
         continue;
       }
-      return new NextResponse(upstream.body, {
+      const raster = await prepareMapTileRaster(
+        await upstream.arrayBuffer(),
+        contentType,
+        rasterTreatment,
+      );
+      return new NextResponse(raster.body, {
         headers: {
-          'Content-Type': contentType,
+          'Content-Type': raster.contentType,
           'X-Map-Tile-Provider': provider.id,
           'Cache-Control': 'public, max-age=86400, s-maxage=604800, stale-while-revalidate=2592000',
         },
       });
     } catch {
       // Screen styles can continue with an independent provider. PDF style has
-      // only Google classic, so this exits with a visible 502 rather than drift.
+      // only CARTO no-label, so this exits with a visible 502 rather than drift.
     }
   }
 

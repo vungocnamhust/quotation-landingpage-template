@@ -16,6 +16,18 @@ test('validateColorContracts resolves valid tokens for all brands and view modes
         assert.ok(colors.page.style['--color-accent-text'], `Missing accent-text for ${brandKey}/${theme.id}/${viewMode}`);
         assert.ok(colors.page.style['--color-on-accent'], `Missing on-accent for ${brandKey}/${theme.id}/${viewMode}`);
 
+        const routeMapColors = colors.sections.routeMap;
+        assert.ok(routeMapColors.style['--filter-map-tiles'], `Missing map raster filter for ${brandKey}/${theme.id}/${viewMode}`);
+        assert.ok(routeMapColors.style['--color-map-canvas-veil'], `Missing map canvas veil for ${brandKey}/${theme.id}/${viewMode}`);
+
+        if (viewMode === 'pdf') {
+          assert.equal(
+            routeMapColors.style['--filter-map-tiles'],
+            'none',
+            `${brandKey} PDF route map must not rely on CSS raster recoloring`,
+          );
+        }
+
         for (const sectionId of theme.sectionOrder) {
           const sectionColors = colors.sections[sectionId];
           assert.ok(sectionColors.style['--color-surface'], `Missing section color scope for ${brandKey}/${theme.id}/${viewMode}/${sectionId}`);

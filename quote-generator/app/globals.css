@@ -503,22 +503,35 @@ img {
   background: var(--color-surface) !important;
 }
 
-.luxury-map-tile-layer .leaflet-tile,
-.luxury-map-leaflet-container .leaflet-tile {
-  filter: sepia(0.7) hue-rotate(-10deg) saturate(0.4) contrast(1.05) brightness(0.98) !important;
+.luxury-map-geo-canvas {
+  filter: var(--filter-map-tiles) !important;
 }
 
-.luxury-map-leaflet-container .leaflet-tile-pane,
+.luxury-map-geo-canvas--pdf {
+  filter: none !important;
+}
+
+/* Leaflet's own image selector uses plus-lighter. PDF tiles arrive already
+   color-corrected from the proxy, so compositing must remain neutral. */
+.luxury-map-geo-canvas--pdf .luxury-map-leaflet-container img.leaflet-tile {
+  mix-blend-mode: normal !important;
+  filter: none !important;
+}
+
 .luxury-map-leaflet-container .leaflet-tile-container,
 .luxury-map-leaflet-container .leaflet-pane,
 .luxury-map-leaflet-container .leaflet-marker-pane,
 .luxury-map-leaflet-container .leaflet-marker-icon,
 .luxury-map-leaflet-container .leaflet-div-icon {
   mix-blend-mode: normal !important;
-  filter: none !important;
   box-shadow: none !important;
   background: transparent !important;
   border: none !important;
+}
+
+.luxury-map-canvas-veil {
+  background: radial-gradient(circle at 50% 50%, transparent 0%, transparent 55%, var(--color-map-canvas-veil) 100%);
+  mix-blend-mode: multiply;
 }
 
 .luxury-map-leaflet-container .leaflet-shadow-pane {
@@ -537,6 +550,13 @@ img {
   z-index: 510;
 }
 
+.luxury-map-header-block--pdf {
+  width: min(42vw, 21rem);
+  max-width: 21rem;
+  padding: 1.25rem 1.5rem 1.5rem;
+  background: linear-gradient(135deg, var(--color-map-header-veil) 0%, var(--color-map-header-veil) 58%, transparent 100%);
+}
+
 .luxury-map-mid-overlay {
   position: absolute;
   inset: 0;
@@ -547,6 +567,14 @@ img {
   position: relative;
   z-index: 530;
   pointer-events: auto;
+}
+
+.luxury-map-bottom-overlay--pdf {
+  align-self: stretch;
+  min-height: 6.5rem;
+  margin: 0 -2.5rem -2.5rem;
+  padding: 1.125rem 3rem 1.5rem;
+  background: linear-gradient(to bottom, transparent 0%, var(--color-map-footer-veil) 30%, var(--color-map-footer-veil) 100%);
 }
 
 .luxury-geo-label {
@@ -583,6 +611,10 @@ img {
   background: color-mix(in srgb, var(--color-surface) 96%, transparent);
   border-color: var(--color-accent);
   box-shadow: 0 4px 14px color-mix(in srgb, var(--color-accent) 25%, transparent);
+}
+
+.luxury-destination-marker__pill--pdf {
+  background: var(--color-map-marker-veil);
 }
 
 .luxury-map-title,
@@ -2859,21 +2891,9 @@ img {
   font-family: inherit;
 }
 
-.display-route-map__leaflet .leaflet-tile-pane,
-.leaflet-tile-pane {
-  /* No filter here — any filter/mix-blend-mode inside leaflet-map-pane is isolated
-     by will-change:transform on the pane. The warm overlay is applied via ::after below. */
-}
-
-.display-route-map__leaflet .leaflet-tile-container,
-.leaflet-tile-container {
-  /* No filter here — avoid creating intermediate compositing layers */
-}
-
-.display-route-map__leaflet .leaflet-tile,
-.leaflet-tile {
-  /* Prototype-matching tile toning: warm sepia/amber shift on raw Google Maps tiles */
-  filter: sepia(0.7) hue-rotate(-10deg) saturate(0.4) contrast(1.05) brightness(0.98);
+.display-route-map__leaflet {
+  /* Scope the theme-resolved treatment to the legacy interactive map only. */
+  filter: var(--filter-map-tiles);
 }
 
 /* Warm multiply overlay — placed as ::after on .leaflet-container so it is a
@@ -4182,10 +4202,6 @@ img {
     page-break-inside: avoid;
   }
 
-  .leaflet-tile {
-    filter: sepia(0.7) hue-rotate(-10deg) saturate(0.4) contrast(1.05) brightness(0.98) !important;
-  }
-
   .display-route-map-marker__capsule,
   .display-route-map-marker__pointer {
     box-shadow: none !important;
@@ -4202,10 +4218,6 @@ html[data-view-mode="pdf"] .pdf-brochure *::after {
 html[data-view-mode="pdf"] .display-route-map-marker__capsule,
 html[data-view-mode="pdf"] .display-route-map-marker__pointer {
   box-shadow: none !important;
-}
-
-html[data-view-mode="pdf"] .leaflet-tile {
-  filter: sepia(0.7) hue-rotate(-10deg) saturate(0.4) contrast(1.05) brightness(0.98) !important;
 }
 
 .display-route-map.is-pdf,

@@ -55,13 +55,15 @@ export const CANONICAL_GEO_LABELS: GeoLocationLabel[] = [
 
 interface MapGeoLabelsProps {
   project: (lat: number, lng: number) => ProjectedPoint;
+  visibility?: 'all' | 'islands';
 }
 
-export function MapGeoLabels({ project }: MapGeoLabelsProps) {
+export function MapGeoLabels({ project, visibility = 'all' }: MapGeoLabelsProps) {
   return (
     <div className="luxury-map-geo-labels pointer-events-none absolute inset-0 select-none overflow-hidden" aria-hidden="true">
       {/* Projected Geographic Labels */}
       {CANONICAL_GEO_LABELS.map((item) => {
+        if (visibility === 'islands' && item.type !== 'island') return null;
         const pt = project(item.coordinates[0], item.coordinates[1]);
         if (!pt.visible) return null;
 
