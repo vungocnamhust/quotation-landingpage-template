@@ -283,7 +283,7 @@ const typographyMap: ThemeDefinition['typographyMap'] = {
     label: 'label',
     index: 'caption',
     action: 'buttonSecondary',
-    badge: 'timelineTitle',
+    badge: 'investmentSelectionText',
   }),
 
   inclusionsExclusions: slots({
@@ -362,6 +362,9 @@ export const brochureTheme: ThemeDefinition = {
     'itinerary-day-multi',
     'stays-editorial-split',
     'pricing-investment-ledger',
+    'pricing-hero-investment',
+    'pricing-editorial-comparison',
+    'pricing-editorial-rows',
     'inclusions-panels',
     'designer-editorial-profile',
   ],

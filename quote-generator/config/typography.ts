@@ -47,6 +47,10 @@ export type TypographyVariant =
   | 'investmentTitle'
   | 'investmentValue'
   | 'investmentMeta'
+  | 'investmentHeroValue'
+  | 'investmentHeroMeta'
+  | 'investmentComparisonTitle'
+  | 'investmentSelectionText'
   | 'termTitle'
   | 'termLabel'
   | 'termBody'
@@ -441,6 +445,35 @@ const BASE_VARIANTS: Record<TypographyVariant, TypographyRule> = {
     fontWeight: 400,
     letterSpacing: '0em',
   },
+  investmentHeroValue: {
+    fontFamilyRole: 'heading',
+    fontSize: 'clamp(2.75rem, 5.5vw, 4.25rem)',
+    lineHeight: '1.05',
+    fontWeight: 600,
+    letterSpacing: '-0.02em',
+  },
+  investmentHeroMeta: {
+    fontFamilyRole: 'body',
+    fontSize: '1rem',
+    lineHeight: '1.6',
+    fontWeight: 400,
+    letterSpacing: '0.01em',
+  },
+  investmentComparisonTitle: {
+    fontFamilyRole: 'heading',
+    fontSize: 'clamp(1.35rem, 2.5vw, 1.85rem)',
+    lineHeight: '1.2',
+    fontWeight: 600,
+    letterSpacing: '-0.015em',
+  },
+  investmentSelectionText: {
+    fontFamilyRole: 'body',
+    fontSize: '0.75rem',
+    lineHeight: '1.2',
+    fontWeight: 700,
+    letterSpacing: '0.18em',
+    textTransform: 'uppercase',
+  },
   termTitle: {
     fontFamilyRole: 'heading',
     fontSize: 'clamp(1.8rem, 3vw, 2.55rem)',
@@ -788,6 +821,10 @@ const VARIANT_TO_CLASSNAME: Record<TypographyVariant, string> = {
   investmentTitle: 'typo-investment-title',
   investmentValue: 'typo-investment-value',
   investmentMeta: 'typo-investment-meta',
+  investmentHeroValue: 'typo-investment-hero-value',
+  investmentHeroMeta: 'typo-investment-hero-meta',
+  investmentComparisonTitle: 'typo-investment-comparison-title',
+  investmentSelectionText: 'typo-investment-selection-text',
   termTitle: 'typo-term-title',
   termLabel: 'typo-term-label',
   termBody: 'typo-term-body',

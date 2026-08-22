@@ -585,6 +585,15 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
                 `/pricing/options/${index}/badge`,
                 'fact'
               ),
+              isSelection: Boolean(
+                stringValue(option.badge) ||
+                option.isConfirmedMainOption ||
+                option.is_confirmed_main_option ||
+                option.confirmedMainOption ||
+                option.isRecommended ||
+                option.recommended ||
+                option.isSelection
+              ),
               groupTotalLabel: editable(
                 PRICING_AMOUNT_LABELS[lang]?.total ? PRICING_AMOUNT_LABELS[lang].total.toUpperCase() : 'GROUP TOTAL',
                 '/labels/groupTotal',

@@ -61,6 +61,9 @@ export type LayoutVariantId =
   | 'itinerary-day-multi'
   | 'stays-editorial-split'
   | 'pricing-investment-ledger'
+  | 'pricing-hero-investment'
+  | 'pricing-editorial-comparison'
+  | 'pricing-editorial-rows'
   | 'inclusions-panels'
   | 'designer-editorial-profile';
 
@@ -539,6 +542,7 @@ export interface PriceOptionViewModel {
   groupTotalPrice: TextValue;
   perTravelerPrice: TextValue;
   groupTotalLabel?: TextValue;
+  isSelection?: boolean;
 }
 
 export interface PricingViewModel {

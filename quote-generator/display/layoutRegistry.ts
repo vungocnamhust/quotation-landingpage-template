@@ -421,6 +421,63 @@ export const layoutRegistry: Record<LayoutVariantId, LayoutVariantDefinition> = 
       },
     },
   },
+  'pricing-hero-investment': {
+    id: 'pricing-hero-investment',
+    slots: {
+      section: 'relative',
+      container: 'mx-auto flex w-full max-w-[1180px] flex-col items-center justify-center text-center gap-10 px-5 py-20 sm:px-8 lg:px-12',
+      header: 'flex flex-col items-center text-center gap-3 max-w-[700px]',
+      content: 'flex flex-col items-center justify-center w-full max-w-[800px] gap-6',
+      footer: 'mt-12 w-full max-w-[720px]',
+    },
+    responsive: {
+      mobile: {
+        container: 'mx-auto flex w-full flex-col items-center gap-8 px-5 py-14',
+      },
+      pdf: {
+        container: 'mx-auto flex w-full flex-col items-center justify-center text-center gap-8 px-8 py-12',
+      },
+    },
+  },
+  'pricing-editorial-comparison': {
+    id: 'pricing-editorial-comparison',
+    slots: {
+      section: 'relative',
+      container: 'mx-auto flex w-full max-w-[1180px] flex-col gap-12 px-5 py-16 sm:px-8 lg:px-12',
+      header: 'grid gap-6 lg:grid-cols-[0.95fr_1.05fr] lg:items-end',
+      content: 'grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12',
+      footer: 'mt-8',
+    },
+    responsive: {
+      mobile: {
+        container: 'mx-auto flex w-full gap-8 px-5 py-14',
+        content: 'grid grid-cols-1 gap-8',
+      },
+      pdf: {
+        container: 'mx-auto flex w-full gap-8 px-8 py-8',
+        content: 'grid grid-cols-2 gap-8',
+      },
+    },
+  },
+  'pricing-editorial-rows': {
+    id: 'pricing-editorial-rows',
+    slots: {
+      section: 'relative',
+      container: 'mx-auto flex w-full max-w-[1180px] flex-col gap-10 px-5 py-16 sm:px-8 lg:px-12',
+      header: 'grid gap-6 lg:grid-cols-[0.95fr_1.05fr] lg:items-end',
+      content: 'grid gap-0',
+      footer: 'mt-8',
+    },
+    responsive: {
+      mobile: {
+        container: 'mx-auto flex w-full gap-8 px-5 py-14',
+        header: 'grid gap-4',
+      },
+      pdf: {
+        container: 'mx-auto flex w-full gap-8 px-8 py-8',
+      },
+    },
+  },
   'inclusions-panels': {
     id: 'inclusions-panels',
     slots: {
