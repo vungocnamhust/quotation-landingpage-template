@@ -58,13 +58,27 @@ img {
 }
 
 @keyframes facts-accordion-in {
-  from { opacity: 0; transform: translateY(-0.35rem); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-0.35rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes media-drawer-in {
-  from { opacity: 0; transform: translateX(1.5rem); }
-  to { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(1.5rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @media (max-width: 1023px) {
@@ -84,6 +98,7 @@ img {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .facts-accordion-body,
   .media-drawer {
     animation: none;
@@ -122,7 +137,7 @@ img {
   --pdf-content-inset-y-bottom: var(--pdf-content-inset-y);
 }
 
-.pdf-brochure-page > * {
+.pdf-brochure-page>* {
   position: relative;
   z-index: 2;
 }
@@ -414,6 +429,32 @@ img {
   padding-bottom: 12px;
   height: 100%;
   min-height: 280px;
+}
+
+.pdf-letter__highlight-block {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+}
+
+.pdf-letter__divider-wrapper {
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.pdf-letter__divider {
+  width: 100%;
+  max-width: 160px;
+  height: auto;
+  display: block;
+  opacity: 0.9;
+}
+
+.pdf-letter__decor-art {
+  display: block;
+  margin-top: auto;
 }
 
 .pdf-letter__body-col {
@@ -944,8 +985,8 @@ img {
   position: relative !important;
 }
 
-.day-card .day-media-main > div,
-.day-card .day-media-thumb > div {
+.day-card .day-media-main>div,
+.day-card .day-media-thumb>div {
   width: 100% !important;
   height: 100% !important;
   position: relative !important;
@@ -1082,7 +1123,7 @@ img {
   border-radius: 2px;
 }
 
-.hotel-image-wrapper > div {
+.hotel-image-wrapper>div {
   width: 100% !important;
   height: 100% !important;
   position: relative !important;
@@ -1519,7 +1560,7 @@ img {
   margin: 0 auto 16px;
 }
 
-.pdf-designer__avatar-frame > div {
+.pdf-designer__avatar-frame>div {
   width: 100% !important;
   height: 100% !important;
   position: relative !important;
@@ -1630,6 +1671,7 @@ img {
     background: transparent;
     gap: 0;
   }
+
   .pdf-brochure-page {
     width: 210mm;
     height: 297mm;
@@ -1640,6 +1682,7 @@ img {
     page-break-after: always;
     break-after: page;
   }
+
   .pdf-brochure-page:last-child {
     break-after: auto;
     page-break-after: auto;
@@ -2553,7 +2596,7 @@ img {
   .display-nav__action-text {
     display: none;
   }
-  
+
   .display-nav__primary-action {
     width: 32px !important;
     height: 32px !important;
@@ -3766,11 +3809,11 @@ img {
   gap: 0.35rem;
 }
 
-.display-term-row__body > :first-child {
+.display-term-row__body> :first-child {
   margin-top: 0;
 }
 
-.display-term-row__body > :last-child {
+.display-term-row__body> :last-child {
   margin-bottom: 0;
 }
 
@@ -3966,7 +4009,7 @@ img {
     justify-content: stretch;
   }
 
-  .app-topbar__actions > * {
+  .app-topbar__actions>* {
     flex: 1;
   }
 
@@ -4136,6 +4179,7 @@ img {
 
 /* On small screens (mobile & tablet <= 980px), position the photo carousel at the bottom of each Day. */
 @media (max-width: 980px) {
+
   .display-itinerary-day__single,
   .display-itinerary-day__single.is-alternate,
   .display-itinerary-day__multi,
@@ -4164,7 +4208,10 @@ img {
 }
 
 @media print {
-  *, *::before, *::after {
+
+  *,
+  *::before,
+  *::after {
     box-shadow: none !important;
     text-shadow: none !important;
   }
@@ -4333,6 +4380,7 @@ html[data-view-mode="pdf"] .display-route-map__leaflet {
     opacity: 0;
     transform: translateY(0.5rem);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -4516,12 +4564,10 @@ html[data-view-mode="pdf"] .display-route-map__leaflet {
 .workspace-skeleton__line {
   height: 1rem;
   border-radius: var(--radius-button);
-  background: linear-gradient(
-    90deg,
-    var(--color-surface-muted) 25%,
-    var(--color-border) 50%,
-    var(--color-surface-muted) 75%
-  );
+  background: linear-gradient(90deg,
+      var(--color-surface-muted) 25%,
+      var(--color-border) 50%,
+      var(--color-surface-muted) 75%);
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.5s infinite;
 }
@@ -4542,12 +4588,14 @@ html[data-view-mode="pdf"] .display-route-map__leaflet {
   0% {
     background-position: 200% 0;
   }
+
   100% {
     background-position: -200% 0;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .toast-item,
   .workspace-skeleton__line,
   .workspace-overview-progress__bar {

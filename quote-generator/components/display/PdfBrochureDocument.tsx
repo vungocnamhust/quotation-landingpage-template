@@ -230,7 +230,19 @@ function PdfLetter({ documentModel }: { documentModel: DisplayDocument }) {
         <div className="pdf-letter__grid">
           <aside className="pdf-letter__decor-col">
             {textValue(letter.highlight) ? (
-              <QuoteText variant="letterHighlight" tone="accent">{letter.highlight}</QuoteText>
+              <div className="pdf-letter__highlight-block">
+                <div className="pdf-letter__divider-wrapper">
+                  <Image
+                    src="/assets/brands/indochine_icon/line_divider.svg"
+                    alt=""
+                    width={180}
+                    height={10}
+                    unoptimized
+                    className="pdf-letter__divider"
+                  />
+                </div>
+                <QuoteText variant="letterHighlight" tone="accent">{letter.highlight}</QuoteText>
+              </div>
             ) : (
               <div />
             )}
@@ -240,6 +252,7 @@ function PdfLetter({ documentModel }: { documentModel: DisplayDocument }) {
               width={160}
               height={120}
               unoptimized
+              className="pdf-letter__decor-art"
               style={{ width: '100%', maxWidth: '160px', opacity: 0.85, height: 'auto' }}
             />
           </aside>

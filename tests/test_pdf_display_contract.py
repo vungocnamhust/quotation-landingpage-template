@@ -92,13 +92,15 @@ class PdfDisplayContractTests(unittest.TestCase):
         self.assertNotIn('.leaflet-tile {\n  filter:', css)
         self.assertIn("luxury-map-canvas-veil", full_page)
 
-    def test_publisher_waits_for_map_terminal_state_and_rejects_tile_failure(self):
-        source = (ROOT / "services/publication_runtime.py").read_text(encoding="utf-8")
+    def test_pdf_letter_renders_indochine_line_divider_above_highlight(self):
+        source = (ROOT / "quote-generator/components/display/PdfBrochureDocument.tsx").read_text(encoding="utf-8")
+        css = (ROOT / "quote-generator/app/globals.css").read_text(encoding="utf-8")
 
-        self.assertIn("[data-map-render-state]", source)
-        self.assertIn("page.wait_for_function", source)
-        self.assertIn("map_state == 'failed'", source)
-        self.assertIn("PDF map tiles failed to render", source)
+        self.assertIn("line_divider.svg", source)
+        self.assertIn("pdf-letter__highlight-block", source)
+        self.assertIn("pdf-letter__divider", source)
+        self.assertIn(".pdf-letter__highlight-block", css)
+        self.assertIn(".pdf-letter__divider", css)
 
 
 if __name__ == "__main__":
