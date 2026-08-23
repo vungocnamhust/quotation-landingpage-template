@@ -544,17 +544,16 @@ img {
   background: var(--color-surface) !important;
 }
 
-.luxury-map-geo-canvas {
+/* Leaflet defaults tiles to filter: inherit and mix-blend-mode: plus-lighter.
+   Treatments must live on the tile layer itself: filtering a map root also
+   recolors route geometry, markers, controls, and PDF reading surfaces. */
+.map-tile-raster--google-prototype-v1 img.leaflet-tile {
   filter: var(--filter-map-tiles) !important;
+  mix-blend-mode: normal !important;
 }
 
-.luxury-map-geo-canvas--pdf {
-  filter: none !important;
-}
-
-/* Leaflet's own image selector uses plus-lighter. PDF tiles arrive already
-   color-corrected from the proxy, so compositing must remain neutral. */
-.luxury-map-geo-canvas--pdf .luxury-map-leaflet-container img.leaflet-tile {
+/* PDF parchment tiles are fully color-corrected by the server proxy. */
+.map-tile-raster--parchment-pdf-v1 img.leaflet-tile {
   mix-blend-mode: normal !important;
   filter: none !important;
 }
@@ -2966,11 +2965,6 @@ img {
   height: 100%;
   background: var(--color-map-surface) !important;
   font-family: inherit;
-}
-
-.display-route-map__leaflet {
-  /* Scope the theme-resolved treatment to the legacy interactive map only. */
-  filter: var(--filter-map-tiles);
 }
 
 /* Warm multiply overlay — placed as ::after on .leaflet-container so it is a

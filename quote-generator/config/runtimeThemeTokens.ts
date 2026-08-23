@@ -10,6 +10,11 @@ import type {
 } from '../display/types';
 import type { ViewMode } from '../display/contracts';
 
+const MAP_TILE_FILTERS = {
+  none: 'none',
+  'google-prototype-v1': 'sepia(0.7) hue-rotate(-10deg) saturate(0.4) contrast(1.05) brightness(0.98)',
+} as const;
+
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
 }
@@ -111,6 +116,11 @@ function resolveScope({ id, palette, recipe, viewMode, tokens }: {
       '--color-map-route': palette[resolved.timeline.route],
       '--color-map-marker': palette[(resolved.timeline.marker === 'contrast' || resolved.timeline.marker === 'storyContrast' || resolved.timeline.marker === 'ink' || resolved.timeline.marker === 'investmentSurface') ? 'accent' : resolved.timeline.marker],
       '--color-map-marker-active': palette[(resolved.timeline.active === 'contrast' || resolved.timeline.active === 'storyContrast' || resolved.timeline.active === 'ink' || resolved.timeline.active === 'investmentSurface') ? 'accentAlt' : resolved.timeline.active],
+      '--color-map-header-veil': resolved.mapOverlay ? withOpacity(palette[resolved.mapOverlay.header.surface], resolved.mapOverlay.header.opacity) : 'transparent',
+      '--color-map-footer-veil': resolved.mapOverlay ? withOpacity(palette[resolved.mapOverlay.footer.surface], resolved.mapOverlay.footer.opacity) : 'transparent',
+      '--color-map-marker-veil': resolved.mapOverlay ? withOpacity(palette[resolved.mapOverlay.marker.surface], resolved.mapOverlay.marker.opacity) : 'transparent',
+      '--color-map-canvas-veil': resolved.mapCanvasVeil ? withOpacity(palette[resolved.mapCanvasVeil.surface], resolved.mapCanvasVeil.opacity) : 'transparent',
+      '--filter-map-tiles': resolved.mapTileTreatment ? MAP_TILE_FILTERS[resolved.mapTileTreatment] : 'none',
       '--color-overlay-start': resolved.overlay ? withOpacity(palette[resolved.overlay.start.color], resolved.overlay.start.opacity) : 'transparent',
       '--color-overlay-end': resolved.overlay ? withOpacity(palette[resolved.overlay.end.color], resolved.overlay.end.opacity) : 'transparent',
       '--color-shadow': withOpacity(palette[resolved.shadow.color], resolved.shadow.opacity),

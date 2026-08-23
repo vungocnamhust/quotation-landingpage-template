@@ -17,8 +17,7 @@ import {
 } from "lucide-react";
 import type { DisplayDocument } from "../../display/runtimePageBuilder.ts";
 import type { ViewMode } from "../../display/contracts.ts";
-import { textValue } from "../../display/types.ts";
-import { resolveColorSlotsFromProfile } from "../../config/runtimeThemeTokens.ts";
+import { resolvePreviewDocumentForViewMode } from "../../lib/previewDocumentColors.ts";
 import DisplayPage from "../DisplayPage.tsx";
 import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
@@ -496,27 +495,7 @@ export default function IsolatedPreviewCanvas({
     device === "pdf" ? "pdf" : device === "mobile" ? "mobile" : "desktop";
 
   const activeDocumentModel = useMemo(() => {
-    if (documentModel.viewMode === resolvedViewMode) {
-      return documentModel;
-    }
-    const colors = resolveColorSlotsFromProfile({
-      profile: {
-        id: documentModel.tokens.brandKey,
-        displayName: textValue(documentModel.page.nav.brandName) || documentModel.tokens.brandKey,
-        hostname: "",
-        logoUrl: documentModel.page.nav.brandLogoSrc || "",
-        themeId: documentModel.theme.id,
-        palette: documentModel.tokens.palette,
-        radii: documentModel.tokens.radii,
-      },
-      theme: documentModel.theme,
-      viewMode: resolvedViewMode,
-    });
-    return {
-      ...documentModel,
-      viewMode: resolvedViewMode,
-      colors,
-    };
+    return resolvePreviewDocumentForViewMode(documentModel, resolvedViewMode);
   }, [documentModel, resolvedViewMode]);
 
   const isFullscreen = device === "desktop" && desktopMode === "fullscreen";

@@ -14,6 +14,18 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async rewrites() {
+    const backendUrl =
+      process.env.QUOTATION_INTERNAL_API_URL ??
+      process.env.NEXT_PUBLIC_QUOTATION_API_URL ??
+      'http://localhost:8111';
+    return [
+      {
+        source: '/api/v1/:path*',
+        destination: `${backendUrl}/api/v1/:path*`,
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {

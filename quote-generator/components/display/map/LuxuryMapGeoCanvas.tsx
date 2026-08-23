@@ -4,6 +4,7 @@ import type { Map as LeafletMap, Polyline, TileLayer } from 'leaflet';
 import L from 'leaflet';
 import React, { useEffect, useRef } from 'react';
 import type { RouteSegmentViewModel } from '../../../display/types.ts';
+import { resolveMapTilePresentationClass } from '../../../lib/mapTileStyles.ts';
 import type { MapColors, MapRenderState, MapTileStyle } from './types.ts';
 import { generateContinuousSmoothSpline } from '../../../lib/rules/mapMarkerLayoutRules.ts';
 
@@ -54,7 +55,7 @@ export function LuxuryMapGeoCanvas({
     const tileLayer = L.tileLayer(tileUrl, {
       maxZoom: 18,
       attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-      className: 'luxury-map-tile-layer',
+      className: resolveMapTilePresentationClass(tileStyle) ?? '',
     });
 
     tileLayer.once('load', () => report('ready'));

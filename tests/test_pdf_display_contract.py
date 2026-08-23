@@ -77,19 +77,22 @@ class PdfDisplayContractTests(unittest.TestCase):
         self.assertIn("luxury-map-header-block--pdf", overlays)
         self.assertIn("luxury-map-bottom-overlay--pdf", overlays)
 
-    def test_map_raster_treatment_is_scoped_to_tile_panes(self):
+    def test_map_raster_treatment_is_scoped_to_style_specific_tile_layers(self):
         css = (ROOT / "quote-generator/app/globals.css").read_text(encoding="utf-8")
         theme_tokens = (ROOT / "quote-generator/config/themeTokens.ts").read_text(encoding="utf-8")
         full_page = (ROOT / "quote-generator/components/display/map/FullPageEditorialJourneyMap.tsx").read_text(encoding="utf-8")
 
         self.assertIn("--filter-map-tiles", theme_tokens)
         self.assertIn("--color-map-canvas-veil", theme_tokens)
-        self.assertIn(".luxury-map-geo-canvas--pdf", css)
+        self.assertIn(".map-tile-raster--google-prototype-v1 img.leaflet-tile", css)
+        self.assertIn(".map-tile-raster--parchment-pdf-v1 img.leaflet-tile", css)
         self.assertIn("img.leaflet-tile", css)
         self.assertIn("mix-blend-mode: normal !important", css)
         self.assertIn(".display-route-map__leaflet", css)
+        self.assertNotIn(".luxury-map-geo-canvas {\n  filter:", css)
+        self.assertNotIn(".display-route-map__leaflet {\n  /* Scope the theme-resolved treatment", css)
         self.assertNotIn('html[data-view-mode="pdf"] .leaflet-tile', css)
-        self.assertNotIn('.leaflet-tile {\n  filter:', css)
+        self.assertNotRegex(css, r"(?m)^\\.leaflet-tile\\s*\\{\\s*\\n\\s*filter:")
         self.assertIn("luxury-map-canvas-veil", full_page)
 
     def test_pdf_letter_renders_indochine_line_divider_above_highlight(self):

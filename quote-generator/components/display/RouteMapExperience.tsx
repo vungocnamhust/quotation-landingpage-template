@@ -9,6 +9,7 @@ import { textValue } from '../../display/types.ts';
 import { cn } from '../../utils/cn.ts';
 import { requireTypographySlot } from '../../display/typographySlots.ts';
 import { getTypographyClassName } from '../../config/typography.ts';
+import { resolveMapTilePresentationClass } from '../../lib/mapTileStyles.ts';
 import { DisplayTitle, MetaText } from './atoms.tsx';
 
 interface RouteMapExperienceProps {
@@ -24,13 +25,15 @@ type TileProvider = {
   options: TileLayerOptions;
 };
 
+const SCREEN_TILE_STYLE = 'google-classic-v1';
+
 // Tiles are loaded from the application origin. The server route performs the
 // provider fallback, so browser extensions and corporate policies cannot block
 // the map merely because a tile image comes from a third-party hostname.
 const TILE_PROVIDERS: readonly TileProvider[] = [
   {
     id: 'same-origin-proxy',
-    url: '/api/map-tiles/{z}/{x}/{y}?style=google-classic-v1',
+    url: `/api/map-tiles/{z}/{x}/{y}?style=${SCREEN_TILE_STYLE}`,
     options: {
       attribution: '&copy; Google &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
       maxZoom: 20,
@@ -163,7 +166,10 @@ export default function RouteMapExperience({
       }
 
       tileLayerRef.current?.remove();
-      const tileLayer = L.tileLayer(provider.url, provider.options).addTo(map);
+      const tileLayer = L.tileLayer(provider.url, {
+        ...provider.options,
+        className: resolveMapTilePresentationClass(SCREEN_TILE_STYLE) ?? '',
+      }).addTo(map);
       tileLayer.on('tileerror', () => {
         // A failed tile means this provider cannot render the viewport. Switch
         // the whole layer so every tile comes from a separate provider rather

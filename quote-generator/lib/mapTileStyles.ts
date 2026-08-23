@@ -1,5 +1,8 @@
 export type MapTileStyle = 'google-classic-v1' | 'carto-parchment-nolabels-pdf-v1';
 export type MapTileRasterTreatment = 'passthrough' | 'parchment';
+export type MapTilePresentationClass =
+  | 'map-tile-raster--google-prototype-v1'
+  | 'map-tile-raster--parchment-pdf-v1';
 
 export type MapTileProvider = {
   id: 'google-classic' | 'carto-voyager' | 'carto-voyager-nolabels' | 'openstreetmap';
@@ -50,4 +53,20 @@ export function resolveMapTileRasterTreatment(style: string | null): MapTileRast
     return null;
   }
   return style === 'carto-parchment-nolabels-pdf-v1' ? 'parchment' : 'passthrough';
+}
+
+/**
+ * Leaflet attaches this class to the tile-layer container. Keeping the class
+ * beside provider/style routing prevents a screen treatment from matching the
+ * PDF raster (or vice versa).
+ */
+export function resolveMapTilePresentationClass(style: string | null): MapTilePresentationClass | null {
+  switch (style) {
+    case 'google-classic-v1':
+      return 'map-tile-raster--google-prototype-v1';
+    case 'carto-parchment-nolabels-pdf-v1':
+      return 'map-tile-raster--parchment-pdf-v1';
+    default:
+      return null;
+  }
 }
