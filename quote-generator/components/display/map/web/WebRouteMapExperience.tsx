@@ -13,6 +13,7 @@ import { cn } from '../../../../utils/cn.ts';
 import { DisplayTitle, MetaText } from '../../atoms.tsx';
 import { WebRouteMapMarkerLayer } from './WebRouteMapMarkerLayer.ts';
 import { WebRouteMapRouteLayer } from './WebRouteMapRouteLayer.ts';
+import { addWebRouteMapControls } from './WebRouteMapControls.ts';
 import { useWebRouteMapLayout } from './useWebRouteMapLayout.ts';
 import { useWebRouteMapInteraction } from './useWebRouteMapInteraction.ts';
 
@@ -30,7 +31,6 @@ const TILE_PROVIDERS: readonly TileProvider[] = [{
   id: 'same-origin-proxy',
   url: `/api/map-tiles/{z}/{x}/{y}?style=${SCREEN_TILE_STYLE}`,
   options: {
-    attribution: '&copy; Google &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
     maxZoom: 20,
   },
 }];
@@ -65,7 +65,7 @@ export function WebRouteMapExperience({ viewModel, typography, mapColors, viewMo
     if (!container || points.length === 0) return;
     const instance = L.map(container, {
       zoomControl: false,
-      attributionControl: true,
+      attributionControl: false,
       scrollWheelZoom: false,
       dragging: true,
       touchZoom: true,
@@ -73,8 +73,9 @@ export function WebRouteMapExperience({ viewModel, typography, mapColors, viewMo
       boxZoom: true,
       keyboard: true,
     });
-    L.control.zoom({ position: 'bottomleft' }).addTo(instance);
-    instance.fitBounds(L.latLngBounds(points as LatLngExpression[]).pad(viewMode === 'mobile' ? 0.22 : 0.28), {
+    const defaultBounds = L.latLngBounds(points as LatLngExpression[]).pad(viewMode === 'mobile' ? 0.22 : 0.28);
+    addWebRouteMapControls(instance, defaultBounds);
+    instance.fitBounds(defaultBounds, {
       maxZoom: 12,
       animate: false,
     });
@@ -117,6 +118,7 @@ export function WebRouteMapExperience({ viewModel, typography, mapColors, viewMo
               ref={mapContainerRef}
               className="display-route-map__leaflet"
               aria-label={textValue(viewModel.overviewAriaLabel)}
+              data-workspace-interactive="true"
               data-editable={typeof viewModel.overviewAriaLabel === 'string' ? undefined : viewModel.overviewAriaLabel.path}
               data-edit-owner={typeof viewModel.overviewAriaLabel === 'string' ? undefined : viewModel.overviewAriaLabel.owner}
               data-edit-mode={typeof viewModel.overviewAriaLabel === 'string' ? undefined : viewModel.overviewAriaLabel.mode}

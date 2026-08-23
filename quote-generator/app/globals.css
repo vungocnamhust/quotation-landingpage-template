@@ -2969,13 +2969,14 @@ img {
 
 /* Warm multiply overlay — placed as ::after on .leaflet-container so it is a
    SIBLING of .leaflet-map-pane (not a child), bypassing will-change:transform
-   compositing isolation. z-index 450 sits above tile-pane (200) but below
-   controls (.leaflet-control-container z-index 800). */
+   compositing isolation. It sits above tile-pane (200), below Leaflet's SVG
+   overlay pane (400), and below controls (800), so it never obscures routes
+   or marker leaders. */
 .display-route-map__leaflet::after {
   content: '';
   position: absolute;
   inset: 0;
-  z-index: 450;
+  z-index: 300;
   background: var(--color-map-surface);
   mix-blend-mode: multiply;
   pointer-events: none;
@@ -2993,6 +2994,43 @@ img {
 .display-route-map__leaflet .leaflet-control-zoom a {
   border-radius: 0;
   color: var(--color-on-surface);
+}
+
+.display-route-map__leaflet .leaflet-control-web-route-map-reset {
+  margin-top: 0;
+}
+
+.display-route-map__leaflet .leaflet-control-web-route-map-reset__button {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+  cursor: pointer;
+}
+
+.display-route-map__leaflet .leaflet-control-web-route-map-reset__button:hover {
+  background: var(--color-surface-muted);
+}
+
+.display-route-map__leaflet .leaflet-control-web-route-map-reset__button:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 2px solid var(--color-focus);
+  outline-offset: -2px;
+}
+
+.display-route-map__leaflet .leaflet-control-web-route-map-reset__button svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.75;
 }
 
 /* Web-map interaction is owned by Leaflet. Keep its grab affordance and

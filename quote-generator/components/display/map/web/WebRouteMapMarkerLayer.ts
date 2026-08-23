@@ -6,6 +6,7 @@ import { useEffect, useRef } from 'react';
 import type { RouteSegmentViewModel } from '../../../../display/types.ts';
 import { textValue } from '../../../../display/types.ts';
 import type { WebRouteMapLayoutPlan } from './layout/contracts.ts';
+import { pointToRectEdge, quadraticBezier } from './layout/geometry.ts';
 
 function escapeHtml(value: string): string {
   return value.replace(/[&<>'"]/g, (character) => ({
@@ -47,6 +48,39 @@ function getMarkerButton(marker: Marker): HTMLButtonElement | null {
   const element = marker.getElement();
   if (element instanceof HTMLButtonElement) return element;
   return element?.querySelector<HTMLButtonElement>('button') ?? null;
+}
+
+/**
+ * Leaflet applies an icon anchor after the browser has laid out the capsule.
+ * Use that final DOM rectangle for the last, short leader segment so a font
+ * metric or div-icon offset can never leave a label visually disconnected.
+ */
+function resolveRenderedLeader(map: LeafletMap, marker: Marker, plannedPoint: { x: number; y: number }) {
+  const capsule = getMarkerButton(marker);
+  if (!capsule) return null;
+  const mapRect = map.getContainer().getBoundingClientRect();
+  const capsuleRect = capsule.getBoundingClientRect();
+  const source = map.latLngToContainerPoint(marker.getLatLng());
+  const rect = {
+    x: capsuleRect.left - mapRect.left,
+    y: capsuleRect.top - mapRect.top,
+    width: capsuleRect.width,
+    height: capsuleRect.height,
+  };
+  const from = { x: source.x, y: source.y };
+  const to = pointToRectEdge(from, rect);
+  if (Math.hypot(to.x - from.x, to.y - from.y) < 0.01) return null;
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const length = Math.hypot(dx, dy);
+  const normal = { x: -dy / length, y: dx / length };
+  const bend = Math.min(4, length * 0.12) * (plannedPoint.x <= to.x ? 1 : -1);
+  return quadraticBezier(
+    from,
+    { x: (from.x + to.x) / 2 + normal.x * bend, y: (from.y + to.y) / 2 + normal.y * bend },
+    to,
+    6
+  );
 }
 
 export function WebRouteMapMarkerLayer({
@@ -123,17 +157,21 @@ export function WebRouteMapMarkerLayer({
         });
       });
       const isDirectlyActive = placement.sequence === activeSequence;
-      const leader = L.polyline(
-        placement.leader.map((point) => map.containerPointToLatLng([point.x, point.y])),
-        {
-          color: isActive ? routeColor : leaderColor,
-          weight: isActive ? 1.75 : 1.25,
-          opacity: 1,
-          lineCap: 'round',
-          lineJoin: 'round',
-          interactive: false,
-        }
-      ).addTo(map);
+      marker.addTo(map);
+      const renderedLeader = resolveRenderedLeader(map, marker, placement.point);
+      const leader = renderedLeader
+        ? L.polyline(
+            renderedLeader.map((point) => map.containerPointToLatLng([point.x, point.y])),
+            {
+              color: isActive ? routeColor : leaderColor,
+              weight: isActive ? 2 : 1.5,
+              opacity: 1,
+              lineCap: 'round',
+              lineJoin: 'round',
+              interactive: false,
+            }
+          ).addTo(map)
+        : null;
       const pin = L.circleMarker(map.containerPointToLatLng([placement.point.x, placement.point.y]), {
         radius: isDirectlyActive ? 5 : 4,
         color: isDirectlyActive ? activeMarkerColor : markerColor,
@@ -142,7 +180,6 @@ export function WebRouteMapMarkerLayer({
         weight: 1.5,
         interactive: false,
       }).addTo(map);
-      marker.addTo(map);
       if (pendingKeyboardFocusRef.current === placement.sequence) {
         requestAnimationFrame(() => {
           getMarkerButton(marker)?.focus();
@@ -150,7 +187,7 @@ export function WebRouteMapMarkerLayer({
         });
       }
       markers.set(placement.sequence, marker);
-      leaders.push(leader);
+      if (leader) leaders.push(leader);
       pins.push(pin);
     }
     return () => {

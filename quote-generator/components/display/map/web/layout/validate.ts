@@ -1,5 +1,5 @@
 import type { WebRouteMapLayoutInput, WebRouteMapLayoutPlan } from './contracts.ts';
-import { polylineIntersectsRect, polylineLength, polylinesIntersect, rectsOverlap } from './geometry.ts';
+import { distance, pointToRectEdge, polylineIntersectsRect, polylineLength, polylinesIntersect, rectsOverlap } from './geometry.ts';
 
 export function validateWebRouteMapLayout(
   input: WebRouteMapLayoutInput,
@@ -9,6 +9,12 @@ export function validateWebRouteMapLayout(
   const clearance = input.minimumClearance ?? 12;
   const maximumLeaderLength = input.maxLeaderLength ?? 28;
   for (const marker of plan.markers) {
+    const leaderEnd = marker.leader.at(-1);
+    if (!leaderEnd || distance(marker.leader[0], marker.point) > 0.01) {
+      errors.push(`marker ${marker.sequence} leader is not wired to its geographic pin`);
+    } else if (distance(leaderEnd, pointToRectEdge(marker.point, marker.rect)) > 0.01) {
+      errors.push(`marker ${marker.sequence} leader is not wired to its capsule`);
+    }
     if (
       marker.rect.x < clearance ||
       marker.rect.y < clearance ||
