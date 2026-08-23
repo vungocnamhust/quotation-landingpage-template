@@ -1,0 +1,14 @@
+{
+  "name": "Celina Of The Sea Cruise",
+  "location": "Ha Long",
+  "images": {
+    "interior": [
+      "assets/hotels/halong/celina-of-the-sea-cruise/interior/interior_1.jpg"
+    ],
+    "exterior": [
+      "assets/hotels/halong/celina-of-the-sea-cruise/exterior/exterior_1.jpg"
+    ]
+  },
+  "website": "https://celinacruises.com/",
+  "introduction": "Celina Of The Sea Cruise provides a luxurious and unforgettable journey through the majestic limestone karsts and emerald waters of Ha Long Bay."
+}

@@ -1,0 +1,18 @@
+{
+  "name": "Hyatt Regency Danang Resort and Spa",
+  "location": "Da Nang",
+  "images": {
+    "interior": [
+      "assets/hotels/danang/hyatt-regency-danang-resort-and-spa/interior/image_1.jpg",
+      "assets/hotels/danang/hyatt-regency-danang-resort-and-spa/interior/image_2.jpg",
+      "assets/hotels/danang/hyatt-regency-danang-resort-and-spa/interior/image_3.jpg"
+    ],
+    "exterior": [
+      "assets/hotels/danang/hyatt-regency-danang-resort-and-spa/exterior/image_1.jpg",
+      "assets/hotels/danang/hyatt-regency-danang-resort-and-spa/exterior/image_2.jpg",
+      "assets/hotels/danang/hyatt-regency-danang-resort-and-spa/exterior/image_3.jpg"
+    ]
+  },
+  "website": "https://www.hyatt.com/en-US/hotel/vietnam/hyatt-regency-danang-resort-and-spa/danhr",
+  "introduction": "Hyatt Regency Danang Resort and Spa is a luxury beachfront resort offering stunning ocean views, expansive pools, and world-class dining on the pristine Non Nuoc Beach."
+}

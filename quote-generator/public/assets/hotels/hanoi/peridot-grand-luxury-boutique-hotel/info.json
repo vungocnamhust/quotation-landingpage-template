@@ -1,0 +1,18 @@
+{
+  "name": "Peridot Grand Luxury Boutique Hotel",
+  "location": "Hanoi",
+  "images": {
+    "interior": [
+      "assets/hotels/hanoi/peridot-grand-luxury-boutique-hotel/interior/image_1.jpg",
+      "assets/hotels/hanoi/peridot-grand-luxury-boutique-hotel/interior/image_2.jpg",
+      "assets/hotels/hanoi/peridot-grand-luxury-boutique-hotel/interior/image_3.jpg"
+    ],
+    "exterior": [
+      "assets/hotels/hanoi/peridot-grand-luxury-boutique-hotel/exterior/image_1.jpg",
+      "assets/hotels/hanoi/peridot-grand-luxury-boutique-hotel/exterior/image_2.jpg",
+      "assets/hotels/hanoi/peridot-grand-luxury-boutique-hotel/exterior/image_3.jpg"
+    ]
+  },
+  "website": "https://peridotgrandhotel.com/",
+  "introduction": "Peridot Grand Luxury Boutique Hotel offers an oasis of tranquility in the heart of Hanoi's Old Quarter, blending chic design with Vietnamese hospitality."
+}

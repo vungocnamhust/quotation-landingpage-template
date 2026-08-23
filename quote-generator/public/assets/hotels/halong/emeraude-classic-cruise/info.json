@@ -1,0 +1,14 @@
+{
+  "name": "Emeraude Classic Cruise",
+  "location": "Ha Long",
+  "images": {
+    "interior": [
+      "assets/hotels/halong/emeraude-classic-cruise/interior/interior_1.jpg"
+    ],
+    "exterior": [
+      "assets/hotels/halong/emeraude-classic-cruise/exterior/exterior_1.jpg"
+    ]
+  },
+  "website": "https://emeraude-cruises.com/",
+  "introduction": "Emeraude Cruises is a premier luxury cruise line operating in Ha Long Bay, managed by Thien Minh Group (TMG). Inspired by the legendary 1906 French paddle steamer, Emeraude offers a refined journey blending Indochine vintage charm with modern elegance and top-tier safety standards."
+}

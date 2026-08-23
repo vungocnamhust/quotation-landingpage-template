@@ -1,0 +1,311 @@
+{
+  "quotationNarrative": "A premium and slow-paced journey designed for luxury family travelers, showcasing the cultural depth of Hanoi, the cinematic landscapes of Ha Long Bay, the heritage of Hoi An, the beach relaxation in Da Nang, and the dynamic vibe of Ho Chi Minh City.",
+  "programOverview": {
+    "heading": "PROGRAM OVERVIEW",
+    "paragraphs": [
+      "This 14-day grand luxury journey is tailored perfectly to capture the essence of Vietnam from North to South.",
+      "The itinerary is designed to provide a perfect balance of guided exploration and leisure time, staying in the country's most iconic luxury properties such as The Reverie Saigon and Hyatt Regency Danang."
+    ]
+  },
+  "landingpageContent": {
+    "heroSection": {
+      "headline": "Vietnam Grand Luxury & Birthday Celebration",
+      "subtitle": "16 Days 15 Nights - Tailor-made for VIP Guests"
+    },
+    "visualDescription": "A luxury travel landing page with premium mountain and beach imagery."
+  },
+  "journeyGlance": {
+    "market": "Global Luxury",
+    "guestProfile": "VIP Family",
+    "hotelStandard": "5★ Ultra-Luxury",
+    "mealPreference": "Fine dining & Local specialties",
+    "priceType": "Indicative",
+    "tourCode": "VN-2027-LUX",
+    "domesticFlights": "Included as per itinerary",
+    "priceBasis": "Double / Villa sharing",
+    "partnerNote": "Birthday celebration on Day 4 & Day 11",
+    "validity": "30 days"
+  },
+  "whyWorks": {
+    "privateFlexible": "Private vehicle and English-speaking guide allow guests to travel at a comfortable pace.",
+    "comfort": "Premium vehicles and carefully curated luxury accommodations including Beach Front Pool Villa.",
+    "muslimFriendly": "Dietary requirements and special occasions (Birthday) meticulously handled.",
+    "balancedHighlights": "A balanced mix of cultural immersion, heritage sites, and modern luxury."
+  },
+  "itinerary": [
+    {
+      "dayNumber": 1,
+      "destination": "Hanoi",
+      "summary": "Welcome to Vietnam! Upon arriving at Noi Bai International Airport, your private driver meets you for a smooth and comfortable transfer into the heart of historic Hanoi. Check into your hotel, unpack, and take time to settle in and recharge after your flight.\nSpend your evening completely at leisure to rest, adjust to the local time zone, and soak in the vibrant atmosphere of the capital. Enjoy a relaxing dinner or a gentle stroll through the bustling streets of the Old Quarter before turning in for a restful night.",
+      "mainInclusions": "Fast-track Arrival Service, Hanoi, Old Quarter",
+      "senseOfPace": "Relaxed",
+      "dining": "Breakfast",
+      "date": "2026-09-15",
+      "overnight": "Hanoi"
+    },
+    {
+      "dayNumber": 2,
+      "destination": "Hanoi",
+      "summary": "Begin your morning with a private transfer to the impressive Vietnam Military History Museum, spending two dedicated hours exploring its vast collection of artifacts, aircraft, and historical exhibits. Next, head back into the city center to visit the historic Hoa Lo Prison, gaining deep insights into Vietnam's complex wartime past.\nEnjoy a quick local lunch before taking a brief walk past the historic B-52 Wreck at Huu Tiep Lake and passing by the solemn Ho Chi Minh Complex. Next, gear up for an energetic three-hour bicycle ride along the picturesque Red River Dykes and through the lush agricultural landscapes of Banana Island, riding past local farms before returning to your hotel.",
+      "mainInclusions": "Vietnam Military History Museum, Hoa Lo Prison, B-52 Wreck at Huu Tiep Lake, Cycling Tour",
+      "senseOfPace": "Starts at 8:00 AM for about 10 hours",
+      "dining": "Breakfast",
+      "date": "2026-09-16",
+      "overnight": "Hanoi"
+    },
+    {
+      "dayNumber": 3,
+      "destination": "Ninh Binh",
+      "summary": "Depart Hanoi early for a scenic drive south toward the dramatic karst landscapes of Ninh Binh. Upon arrival, board a traditional hand-rowed sampan boat at the UNESCO-listed Trang An Scenic Landscape Complex, gliding along emerald riverways, passing beneath soaring limestone cliffs, and drifting through quiet hidden water caves.\nAfter enjoying a delicious local countryside lunch, hop on a bicycle for an active ride along quiet rural village paths fringed by terraced rice fields. In the late afternoon, tackle the energetic climb up the stone steps of Hang Mua Peak to reach the iconic dragon shrine and take in breathtaking golden hour views across the valley below.",
+      "mainInclusions": "Trang An Scenic Landscape Complex, Hang Mua Peak",
+      "senseOfPace": "Starts at 7:30 AM for about 10 hours",
+      "dining": "Breakfast",
+      "date": "2026-09-17",
+      "overnight": "Ninh Binh"
+    },
+    {
+      "dayNumber": 4,
+      "destination": "Ha Long",
+      "summary": "Depart Ninh Binh on a comfortable transfer toward Tuan Chau Marina to board your luxurious Heritage Line Cruise for an unforgettable voyage across Lan Ha Bay. Gather at the Heritage Line Lounge at Tuan Chau Marina before taking a swift speedboat to your luxury vessel in Lan Ha Bay.\nEnjoy an elegant lunch while sailing past Cat Ba Island. Step ashore to ride bicycles through the jungle-encircled Viet Hai Village, discovering isolated community life in a serene mountain valley. Return on board to join a hands-on Vietnamese cooking class, then spend your evening unwinding at the bar or trying your luck with night squid fishing.",
+      "mainInclusions": "Heritage Line Cruise",
+      "senseOfPace": "Starts at 8:00 AM for overnight cruise",
+      "dining": "Breakfast",
+      "date": "2026-09-18",
+      "overnight": "Ha Long"
+    },
+    {
+      "dayNumber": 5,
+      "destination": "Sapa",
+      "summary": "Greet the morning with sundeck Tai Chi and fresh Vietnamese coffee. Set off on two energizing kayaking sessions around Frog Lake, paddling through a quiet labyrinth of towering limestone cliffs, hidden water caves, and vivid emerald waters. Return on board for a hearty brunch while sailing gracefully back through Lan Ha Bay. Finally, board a speedboat for your disembarkation at Tuan Chau Marina, and meet your driver for a comfortable transfer back to Hanoi.\nSpend a relaxing afternoon in the Chapa VIP Lounge and enjoy a evening food tour before boarding your authentic overnight sleeper train, the Chapa Express Train, embarking on an exciting journey toward the northern highlands of Sapa.",
+      "mainInclusions": "Lan Ha Bay, Hanoi, Chapa Express Train",
+      "senseOfPace": "Overnight train transit",
+      "dining": "Breakfast",
+      "date": "2026-09-19",
+      "overnight": "Chapa Express Train"
+    },
+    {
+      "dayNumber": 6,
+      "destination": "Sapa",
+      "summary": "Arrive early in Sapa and transfer to your mountain hotel to rest, unpack, and enjoy a hearty breakfast while taking in panoramic views over the misty valleys. Spend your morning relaxing and recharging after your overnight train journey.\nIn the afternoon, start an active cycling excursion following the mountain road toward Lech Village, home to the Red Dao ethnic minority. Visit a traditional local family to learn about their ancestral customs, then ride further to Ban Moi Village to discover the intricate traditional embroidery craftsmanship of Red Dao women before riding back to your lodge.",
+      "mainInclusions": "Sapa, Lech Village, Ban Moi Village",
+      "senseOfPace": "As Topas Ecolodge hosts the Vietnam Mountain Marathon 2026 finish line, early check-in may be limited, but we’ve secured the Waiting Lounge so you can immediately relax and enjoy the resort facilities.",
+      "dining": "Breakfast",
+      "date": "2026-09-20",
+      "overnight": "Sapa"
+    },
+    {
+      "dayNumber": 7,
+      "destination": "Sapa",
+      "summary": "Transfer deep into Hoang Lien National Park near Sin Chai Village to begin an off-the-beaten-track trek through dramatic high mountain landscapes and sweeping valleys. Follow scenic mountain trails to the Red Dao hamlet of Nam Nhiu Village, visiting local farming families in their traditional wooden homes. Continue along quiet dirt paths past terraced rice fields, river streams, and rustic seasonal bamboo huts before arriving at charming Nam Cang Village for a local lunch.\nIn the afternoon, explore Nam Cang Village, nestled at the far end of the valley and renowned for its vibrant Red Dao ethnic culture. Accompanied by your guide, walk through the village to observe local artisans practicing traditional paper making, silver jewelry crafting, and intricate colorful embroidery. Learn about iconic local herbal medicine and traditional mountain lifestyles before meeting your private vehicle for a comfortable return transfer.",
+      "mainInclusions": "Hoang Lien National Park, Sin Chai Village, Nam Cang Village",
+      "senseOfPace": "Starts at 9:00 AM for about 8 hours",
+      "dining": "Breakfast",
+      "date": "2026-09-21",
+      "overnight": "Sapa"
+    },
+    {
+      "dayNumber": 8,
+      "destination": "Hoi An",
+      "summary": "Bid farewell to Sapa as your private transfer driver conveys you back down the scenic highway to Noi Bai International Airport in Hanoi. Board your short domestic flight south to central Vietnam, landing at Da Nang International Airport before transferring directly to your hotel in Hoi An.\nExplore UNESCO-listed Hoi An Ancient Town, admiring the historic Tan Ky Ancient House, the colorful Cantonese Assembly Hall, and the iconic Japanese Covered Bridge. In the evening, wander the vibrant Hoi An Night Market, savor local specialties for dinner, and embark on a scenic boat ride along the Hoai River to release glowing flower lanterns.",
+      "mainInclusions": "Hoi An Ancient Town, Private Airport Transfer",
+      "senseOfPace": "Starts time depends on departure time",
+      "dining": "Breakfast",
+      "date": "2026-09-22",
+      "overnight": "Hoi An"
+    },
+    {
+      "dayNumber": 9,
+      "destination": "Hoi An",
+      "summary": "Begin your day exploring the tranquil waterways of Cam Thanh Coconut Village aboard a traditional round bamboo basket boat. Glide through the lush Bay Mau Coconut Forest, watch local boatmen perform impressive spinning techniques, try your hand at crab fishing, and savor an authentic regional lunch by the river.\nIn the afternoon, venture into the peaceful mountain valley of My Son Sanctuary, a sacred UNESCO World Heritage site. Wander among historic red-brick Hindu temple towers built by the Champa Kingdom between the 4th and 14th centuries, discovering fascinating ancient history, culture, and spiritual heritage before returning smoothly to your hotel.",
+      "mainInclusions": "Cam Thanh Coconut Village, Bay Mau Coconut Forest, My Son Sanctuary",
+      "senseOfPace": "Starts at 9:00 AM for about 8-9 hours",
+      "dining": "Breakfast",
+      "date": "2026-09-23",
+      "overnight": "Hoi An"
+    },
+    {
+      "dayNumber": 10,
+      "destination": "Hoi An",
+      "summary": "Gear up for an exhilarating morning pillion motorbike ride along the famous winding coastal roads of the Hai Van Pass, taking in dramatic ocean views. Stop to explore the mystical limestone peaks of Marble Mountains, climbing stone steps into sacred cave sanctuaries including Huyen Khong Cave.\nContinue your coastal ride along scenic shorelines, taking in panoramic sea views and enjoying a fresh seafood lunch by the water. Weather permitting, enjoy coastal water activities before making your way along picturesque roads back to Hoi An for a relaxing evening.",
+      "mainInclusions": "Hai Van Pass, Marble Mountains, Huyen Khong Cave",
+      "senseOfPace": "Starts at 8:30 AM for about 8.5 hours",
+      "dining": "Breakfast",
+      "date": "2026-09-24",
+      "overnight": "Hoi An"
+    },
+    {
+      "dayNumber": 11,
+      "destination": "Ho Chi Minh City",
+      "summary": "Transfer to Da Nang Airport for your short morning flight to Ho Chi Minh City. Upon arrival at Tan Son Nhat International Airport, transfer to your luxury hotel and enjoy a relaxed afternoon at leisure to explore nearby cafes or unwind by the pool.\nIn the evening, hop on the back of a vintage motorbike for an unforgettable Saigon Street Eats Vespa Tour. Zip through bustling city districts, sample authentic street food delicacies at vibrant local eateries, listen to live music at hidden acoustic bars, and experience Saigon's energetic nightlife firsthand.",
+      "mainInclusions": "Ho Chi Minh City, Saigon Street Eats Vespa Tour",
+      "senseOfPace": "6:00 PM (Vespa Tour) for about 4 hours",
+      "dining": "Breakfast",
+      "date": "2026-09-25",
+      "overnight": "Ho Chi Minh City"
+    },
+    {
+      "dayNumber": 12,
+      "destination": "Ho Chi Minh City",
+      "summary": "Depart early for a morning excursion to the authentic Ben Duoc Tunnels at Cu Chi, exploring less-visited underground passages and enjoying a private meeting with a local war veteran to gain rare personal insights into Vietnam's wartime history.\nReturn to the city for lunch before spending your afternoon visiting key historical landmarks, including the poignant exhibits at the War Remnants Museum and the iconic mid-century architecture of the Reunification Palace, gaining a deep understanding of Saigon's modern legacy.",
+      "mainInclusions": "War Remnants Museum, Reunification Palace, Cu Chi Tunnels",
+      "senseOfPace": "Starts at 8:00 AM for about 9 hours",
+      "dining": "Breakfast",
+      "date": "2026-09-26",
+      "overnight": "Ho Chi Minh City"
+    },
+    {
+      "dayNumber": 13,
+      "destination": "Ho Chi Minh City",
+      "summary": "Enjoy a complete day at leisure tailored to your personal preferences in Ho Chi Minh City. Head out early for a golf session at one of Saigon's premier golf courses, enjoying lush fairways, pristine greens, and world-class clubhouse facilities.\nSpend your afternoon relaxing at leisure, pampering yourself with a spa treatment, browsing boutique shops along Dong Khoi Street, or enjoying specialty coffee at trendy cafes in District 1 before your final evening in Vietnam.",
+      "mainInclusions": "Free day",
+      "senseOfPace": "Relaxed",
+      "dining": "Breakfast",
+      "date": "2026-09-27",
+      "overnight": "Ho Chi Minh City"
+    },
+    {
+      "dayNumber": 14,
+      "destination": "Siem Reap",
+      "summary": "Transfer from Ho Chi Minh City, fly to Siem Reap, and settle in. Overnight in Siem Reap.",
+      "mainInclusions": "Flight to Siem Reap and arrival transfer",
+      "senseOfPace": "Moderate",
+      "dining": "Breakfast",
+      "date": "2026-09-28",
+      "overnight": "Siem Reap"
+    },
+    {
+      "dayNumber": 15,
+      "destination": "Siem Reap",
+      "summary": "Discover Angkor Wat and the surrounding Khmer heritage sites. Overnight in Siem Reap.",
+      "mainInclusions": "Angkor Wat and Angkor temples tour",
+      "senseOfPace": "Active",
+      "dining": "Breakfast",
+      "date": "2026-09-29",
+      "overnight": "Siem Reap"
+    },
+    {
+      "dayNumber": 16,
+      "destination": "Departure",
+      "summary": "Transfer to Siem Reap International Airport and fly home.",
+      "mainInclusions": "Airport transfer and international flight",
+      "senseOfPace": "Relaxed",
+      "dining": "Breakfast",
+      "date": "2026-09-30",
+      "overnight": "Departure"
+    }
+  ],
+  "hotelPlan": {
+    "hotels": [
+      {
+        "destination": "Hanoi",
+        "checkInDate": "2026-09-15",
+        "checkOutDate": "2026-09-17",
+        "hotelArrangement": "Peridot Grand Luxury Boutique Hotel (Grand Deluxe)"
+      },
+      {
+        "destination": "Ninh Binh",
+        "checkInDate": "2026-09-17",
+        "checkOutDate": "2026-09-18",
+        "hotelArrangement": "Emeralda Resort Ninh Binh (Deluxe Room)"
+      },
+      {
+        "destination": "Ha Long",
+        "checkInDate": "2026-09-18",
+        "checkOutDate": "2026-09-19",
+        "hotelArrangement": "Heritage Line Ginger Cruise (Junior Suite)"
+      },
+      {
+        "destination": "Sapa",
+        "checkInDate": "2026-09-19",
+        "checkOutDate": "2026-09-20",
+        "hotelArrangement": "Chapa Express (Suite Twin Cabin)"
+      },
+      {
+        "destination": "Sapa",
+        "checkInDate": "2026-09-20",
+        "checkOutDate": "2026-09-22",
+        "hotelArrangement": "Topas Ecolodge (Deluxe Room)"
+      },
+      {
+        "destination": "Hoi An",
+        "checkInDate": "2026-09-22",
+        "checkOutDate": "2026-09-25",
+        "hotelArrangement": "Anantara Hoi An Resort (Deluxe Balcony)"
+      },
+      {
+        "destination": "Ho Chi Minh City",
+        "checkInDate": "2026-09-25",
+        "checkOutDate": "2026-09-28",
+        "hotelArrangement": "The Myst Dong Khoi (Deluxe Room)"
+      },
+      {
+        "destination": "Siem Reap",
+        "checkInDate": "2026-09-28",
+        "checkOutDate": "2026-09-30",
+        "hotelArrangement": "Raffles Grand Hotel d'Angkor (State Room)"
+      }
+    ],
+    "roomNotes": "Premium rooms, VIP setup for Birthday on Day 4 and Day 11."
+  },
+  "optionalEnhancements": [
+    {
+      "title": "Upgrade to Seaplane flight over Halong Bay",
+      "status": "Recommended"
+    }
+  ],
+  "bookingTerms": {
+    "deposit": "<ul style=\"margin: 0; padding-left: 16px; display: grid; gap: 4px;\"><li>A deposit of 30% of the total tour cost is required upon confirmation of the booking. This deposit is non-refundable.</li><li>For bookings confirmed within 60 days of arrival, full payment of 100% of the total tour cost is required at the time of confirmation.</li></ul>",
+    "balance": "<ul style=\"margin: 0; padding-left: 16px; display: grid; gap: 4px;\"><li>The remaining 70% balance must be paid no later than 60 days prior to the scheduled arrival date.</li></ul>",
+    "cancellation": "<div style=\"margin-bottom: 4px;\">Written notice required. Cancellation fees apply based on arrival date:</div><ul style=\"margin: 0; padding-left: 16px; display: grid; gap: 4px;\"><li>> 45 days prior: Deposit forfeited (30%)</li><li>45 – 31 days prior: 50% of total tour cost</li><li>30 – 20 days prior: 75% of total tour cost</li><li>< 20 days prior: 100% of total tour cost</li></ul><div style=\"margin-top: 12px;\">Any non-refundable payments, cancellation charges or penalties imposed by hotels, airlines, cruise operators and other service providers may also apply in addition to the cancellation fees stated above.</div>",
+    "confirmation": ""
+  },
+  "finalization": {
+    "finalDetailsRequired": "Copy of passport valid for 6 months.",
+    "afterConfirmation": "24/7 dedicated local concierge support."
+  },
+  "pricing": {
+    "currency": "USD",
+    "pricingTitle": "INVESTMENT DETAILS",
+    "basis": "Quotation based on 16D15N Package",
+    "priceOptions": [
+      {
+        "label": "Package 16D15N (16 Days 15 Nights)",
+        "notes": "Single occupancy supplement: $1,570",
+        "amount": 4450.0
+      },
+      {
+        "label": "Package 8D7N (8 Days 7 Nights)",
+        "notes": "Single occupancy supplement: $1,300",
+        "amount": 2350.0
+      }
+    ],
+    "subtotal": 4450.0,
+    "discountTotal": 0.0,
+    "taxTotal": 0.0,
+    "grandTotal": 4450.0
+  },
+  "retrievalStatus": {
+    "hotel": "pending",
+    "activity": "pending",
+    "guide": "pending",
+    "transfer": "pending",
+    "flight": "pending"
+  },
+  "candidateBlocks": [],
+  "inclusions": [
+    "Private airport transfer, International arrival fast-track assistance and Vietnam visa services",
+    "All private transfer with english-speaking guides mentioned in the itinerary",
+    "Experiences, admission fee, and exclusive arrangements throughout the journey of Hanoi, Ninh Binh, Ha Long, Hoi An, Da Nang, Hue, Ho Chi Minh City",
+    "All meals mentioned in the itinerary",
+    "Domestic flights"
+  ],
+  "exclusions": [
+    "International flights",
+    "Travel insurance",
+    "Personal expenses",
+    "Optional experiences not specified in the itinerary",
+    "Tips and gratuities",
+    "Any services not expressly listed as included"
+  ],
+  "quotationNumber": "VN-2027-LUX"
+}
