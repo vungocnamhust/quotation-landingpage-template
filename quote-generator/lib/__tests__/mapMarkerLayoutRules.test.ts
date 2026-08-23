@@ -7,7 +7,7 @@ import {
   segmentIntersectsBox,
   generateContinuousSmoothSpline,
   type MarkerPointInput,
-} from '../rules/mapMarkerLayoutRules.ts';
+} from '../../components/display/map/pdf/layout/markerPlacement.ts';
 
 test('Liang-Barsky segmentIntersectsBox accurately detects line-box intersections', () => {
   const box = { minX: 100, maxX: 150, minY: 100, maxY: 120 };

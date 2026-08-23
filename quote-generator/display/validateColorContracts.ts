@@ -19,6 +19,7 @@ export function validateColorContracts() {
             sectionId === 'routeMap' &&
             (!colors.sections[sectionId].style['--color-map-header-veil'] ||
               !colors.sections[sectionId].style['--color-map-canvas-veil'] ||
+              !colors.sections[sectionId].style['--color-map-leader'] ||
               !colors.sections[sectionId].style['--filter-map-tiles'])
           ) {
             throw new Error(`Missing map raster and reading-surface tokens for ${brandKey}/${theme.id}/${viewMode}/${sectionId}.`);

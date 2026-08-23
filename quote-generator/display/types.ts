@@ -163,6 +163,8 @@ export interface ColorScopeRecipe {
   }>;
   timeline: {
     route: PaletteColorKey;
+    /** A quieter, theme-resolved companion for short marker leaders. */
+    leader: { color: PaletteColorKey; opacity: number };
     marker: PaletteColorKey;
     active: PaletteColorKey;
   };

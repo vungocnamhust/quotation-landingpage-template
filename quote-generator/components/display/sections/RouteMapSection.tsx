@@ -37,6 +37,7 @@ export function RouteMapSection({
               typography={displayConfig.typographySlots}
               mapColors={{
                 route: colorScope.style['--color-map-route'],
+                leader: colorScope.style['--color-map-leader'],
                 marker: colorScope.style['--color-map-marker'],
                 activeMarker: colorScope.style['--color-map-marker-active'],
               }}

@@ -3,10 +3,10 @@
 import type { Map as LeafletMap, Polyline, TileLayer } from 'leaflet';
 import L from 'leaflet';
 import React, { useEffect, useRef } from 'react';
-import type { RouteSegmentViewModel } from '../../../display/types.ts';
-import { resolveMapTilePresentationClass } from '../../../lib/mapTileStyles.ts';
+import type { RouteSegmentViewModel } from '@/display/types.ts';
+import { resolveMapTilePresentationClass } from '@/lib/mapTileStyles.ts';
 import type { MapColors, MapRenderState, MapTileStyle } from './types.ts';
-import { generateContinuousSmoothSpline } from '../../../lib/rules/mapMarkerLayoutRules.ts';
+import { generateContinuousSmoothSpline } from './layout/routeGeometry.ts';
 
 export const MAP_TILE_RENDER_TIMEOUT_MS = 30_000;
 

@@ -22,6 +22,7 @@
     "@tiptap/react": "^3.30.0",
     "@tiptap/starter-kit": "^3.30.0",
     "@types/leaflet": "^1.9.21",
+    "glpk.js": "^5.0.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.29.0",
     "next": "16.2.12",

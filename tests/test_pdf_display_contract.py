@@ -55,9 +55,9 @@ class PdfDisplayContractTests(unittest.TestCase):
         self.assertNotIn("pdf-route__mid-tier", route_map_chunk)
 
     def test_pdf_map_uses_no_label_raster_and_exposes_a_render_state(self):
-        canvas = (ROOT / "quote-generator/components/display/map/LuxuryMapGeoCanvas.tsx").read_text(encoding="utf-8")
+        canvas = (ROOT / "quote-generator/components/display/map/pdf/LuxuryMapGeoCanvas.tsx").read_text(encoding="utf-8")
         island = (ROOT / "quote-generator/components/display/RouteMapClientIsland.tsx").read_text(encoding="utf-8")
-        full_page = (ROOT / "quote-generator/components/display/map/FullPageEditorialJourneyMap.tsx").read_text(encoding="utf-8")
+        full_page = (ROOT / "quote-generator/components/display/map/pdf/FullPageEditorialJourneyMap.tsx").read_text(encoding="utf-8")
         route = (ROOT / "quote-generator/app/api/map-tiles/[z]/[x]/[y]/route.ts").read_text(encoding="utf-8")
 
         self.assertIn("carto-parchment-nolabels-pdf-v1", full_page)
@@ -68,9 +68,9 @@ class PdfDisplayContractTests(unittest.TestCase):
         self.assertIn("prepareMapTileRaster", route)
         self.assertIn("runtime = 'nodejs'", route)
         self.assertIn("Unsupported map tile style.", route)
-        overlays = (ROOT / "quote-generator/components/display/map/MapFloatingOverlays.tsx").read_text(encoding="utf-8")
+        overlays = (ROOT / "quote-generator/components/display/map/pdf/MapFloatingOverlays.tsx").read_text(encoding="utf-8")
         self.assertIn("visibility={isPdf ? 'islands' : 'all'}", overlays)
-        labels = (ROOT / "quote-generator/components/display/map/MapGeoLabels.tsx").read_text(encoding="utf-8")
+        labels = (ROOT / "quote-generator/components/display/map/pdf/MapGeoLabels.tsx").read_text(encoding="utf-8")
         self.assertIn("geo-hoang-sa", labels)
         self.assertIn("geo-truong-sa", labels)
         self.assertIn("visibility === 'islands' && item.type !== 'island'", labels)
@@ -80,7 +80,7 @@ class PdfDisplayContractTests(unittest.TestCase):
     def test_map_raster_treatment_is_scoped_to_style_specific_tile_layers(self):
         css = (ROOT / "quote-generator/app/globals.css").read_text(encoding="utf-8")
         theme_tokens = (ROOT / "quote-generator/config/themeTokens.ts").read_text(encoding="utf-8")
-        full_page = (ROOT / "quote-generator/components/display/map/FullPageEditorialJourneyMap.tsx").read_text(encoding="utf-8")
+        full_page = (ROOT / "quote-generator/components/display/map/pdf/FullPageEditorialJourneyMap.tsx").read_text(encoding="utf-8")
 
         self.assertIn("--filter-map-tiles", theme_tokens)
         self.assertIn("--color-map-canvas-veil", theme_tokens)
@@ -94,6 +94,21 @@ class PdfDisplayContractTests(unittest.TestCase):
         self.assertNotIn('html[data-view-mode="pdf"] .leaflet-tile', css)
         self.assertNotRegex(css, r"(?m)^\\.leaflet-tile\\s*\\{\\s*\\n\\s*filter:")
         self.assertIn("luxury-map-canvas-veil", full_page)
+
+    def test_web_and_pdf_map_layout_engines_are_isolated_from_domain_rules(self):
+        web_root = ROOT / "quote-generator/components/display/map/web"
+        pdf_root = ROOT / "quote-generator/components/display/map/pdf"
+        for source_path in web_root.rglob("*.ts*"):
+            source = source_path.read_text(encoding="utf-8")
+            self.assertNotIn("/map/pdf/", source)
+            self.assertNotIn("../pdf/", source)
+        for source_path in pdf_root.rglob("*.ts*"):
+            source = source_path.read_text(encoding="utf-8")
+            self.assertNotIn("/map/web/", source)
+            self.assertNotIn("../web/", source)
+        self.assertFalse((ROOT / "quote-generator/lib/rules/mapMarkerLayoutRules.ts").exists())
+        self.assertFalse((ROOT / "quote-generator/lib/rules/routeDrawingRules.ts").exists())
+        self.assertFalse((ROOT / "quote-generator/lib/rules/jointRouteMarkerOptimizer.ts").exists())
 
     def test_pdf_letter_renders_indochine_line_divider_above_highlight(self):
         source = (ROOT / "quote-generator/components/display/PdfBrochureDocument.tsx").read_text(encoding="utf-8")

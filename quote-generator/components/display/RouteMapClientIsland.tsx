@@ -5,10 +5,10 @@ import { useState } from 'react';
 import type { RouteMapViewModel, TypographySlotMap } from '../../display/types.ts';
 import { textValue } from '../../display/types.ts';
 import type { ViewMode } from '../../display/contracts.ts';
-import type { MapRenderState } from './map/types.ts';
+import type { MapRenderState } from './map/pdf/types.ts';
 
 const FullPageEditorialJourneyMap = dynamic(
-  () => import('./map/FullPageEditorialJourneyMap').then((mod) => mod.FullPageEditorialJourneyMap),
+  () => import('./map/pdf/FullPageEditorialJourneyMap').then((mod) => mod.FullPageEditorialJourneyMap),
   {
     ssr: false,
     loading: () => (
@@ -17,8 +17,8 @@ const FullPageEditorialJourneyMap = dynamic(
   }
 );
 
-const RouteMapExperience = dynamic(
-  () => import('./RouteMapExperience'),
+const WebRouteMapExperience = dynamic(
+  () => import('./map/web/WebRouteMapExperience'),
   {
     ssr: false,
     loading: () => (
@@ -38,7 +38,7 @@ export default function RouteMapClientIsland({
 }: {
   viewModel: RouteMapViewModel;
   typography: TypographySlotMap;
-  mapColors: { route: string; marker?: string; activeMarker?: string; land?: string; ocean?: string };
+  mapColors: { route: string; leader?: string; marker?: string; activeMarker?: string; land?: string; ocean?: string };
   viewMode: ViewMode;
   quotationNumber?: string;
   pageNumber?: string;
@@ -84,7 +84,7 @@ function InteractiveRouteMapIsland({
   islandKey: string;
   viewModel: RouteMapViewModel;
   typography: TypographySlotMap;
-  mapColors: { route: string; marker?: string; activeMarker?: string; land?: string; ocean?: string };
+  mapColors: { route: string; leader?: string; marker?: string; activeMarker?: string; land?: string; ocean?: string };
   viewMode: ViewMode;
   quotationNumber?: string;
   pageNumber?: string;
@@ -111,7 +111,7 @@ function InteractiveRouteMapIsland({
 
   return (
     <div data-map-render-state="ready" data-map-render-key={islandKey}>
-      <RouteMapExperience
+      <WebRouteMapExperience
         viewModel={viewModel}
         typography={typography}
         mapColors={mapColors}

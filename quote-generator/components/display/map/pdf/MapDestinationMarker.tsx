@@ -1,12 +1,11 @@
 'use client';
 
-import React from 'react';
-import type { RouteSegmentViewModel, TypographySlotMap } from '../../../display/types.ts';
-import { textValue } from '../../../display/types.ts';
+import type { RouteSegmentViewModel, TypographySlotMap } from '@/display/types.ts';
+import { textValue } from '@/display/types.ts';
 import type { ProjectedPoint, ResolvedMarkerPlacement, MarkerAnchorDirection } from './types.ts';
-import { getTypographyClassName } from '../../../config/typography.ts';
-import { requireTypographySlot } from '../../../display/typographySlots.ts';
-import { cn } from '../../../utils/cn.ts';
+import { getTypographyClassName } from '@/config/typography.ts';
+import { requireTypographySlot } from '@/display/typographySlots.ts';
+import { cn } from '@/utils/cn.ts';
 
 interface MapDestinationMarkerProps {
   segment: RouteSegmentViewModel;

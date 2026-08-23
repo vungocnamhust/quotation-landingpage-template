@@ -168,6 +168,7 @@ function resolveScope({
       '--color-focus': resolveReference(palette, focus),
       '--color-map-surface': resolveReference(palette, resolved.surface),
       '--color-map-route': palette[resolved.timeline.route],
+      '--color-map-leader': withOpacity(palette[resolved.timeline.leader.color], resolved.timeline.leader.opacity),
       '--color-map-marker': palette[(resolved.timeline.marker === 'contrast' || resolved.timeline.marker === 'storyContrast' || resolved.timeline.marker === 'ink' || resolved.timeline.marker === 'investmentSurface') ? 'accent' : resolved.timeline.marker],
       '--color-map-marker-active': palette[(resolved.timeline.active === 'contrast' || resolved.timeline.active === 'storyContrast' || resolved.timeline.active === 'ink' || resolved.timeline.active === 'investmentSurface') ? 'accentAlt' : resolved.timeline.active],
       '--color-map-header-veil': resolved.mapOverlay

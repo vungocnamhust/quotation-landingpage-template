@@ -19,6 +19,7 @@ test('validateColorContracts resolves valid tokens for all brands and view modes
         const routeMapColors = colors.sections.routeMap;
         assert.ok(routeMapColors.style['--filter-map-tiles'], `Missing map raster filter for ${brandKey}/${theme.id}/${viewMode}`);
         assert.ok(routeMapColors.style['--color-map-canvas-veil'], `Missing map canvas veil for ${brandKey}/${theme.id}/${viewMode}`);
+        assert.ok(routeMapColors.style['--color-map-leader'], `Missing map leader token for ${brandKey}/${theme.id}/${viewMode}`);
 
         if (viewMode === 'pdf') {
           assert.equal(

@@ -536,7 +536,7 @@ export function resolveMarkerCollisions(
   return results;
 }
 
-export type { SplineOptions, CurvatureDecision, CurvatureDirection } from './routeDrawingRules.ts';
+export type { SplineOptions, CurvatureDecision, CurvatureDirection } from './routeGeometry.ts';
 export {
   calculateSegmentNormal,
   calculatePointToSegmentDistance,
@@ -544,4 +544,4 @@ export {
   calculateHermiteTangents,
   sampleCubicBezierSegment,
   generateContinuousSmoothSpline,
-} from './routeDrawingRules.ts';
+} from './routeGeometry.ts';

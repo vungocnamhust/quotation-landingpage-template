@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { resolveBrand, transformPdfHtmlWithBrand } from '@/lib/brandTransformer';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,6 +24,18 @@ function findPdfHtmlFile(publishedDir: string, lang: string): string | null {
   return null;
 }
 
+function loadCtxData(publishedDir: string): Record<string, unknown> | null {
+  const ctxPath = path.join(publishedDir, 'ctx.json');
+  if (fs.existsSync(ctxPath)) {
+    try {
+      return JSON.parse(fs.readFileSync(ctxPath, 'utf-8')) as Record<string, unknown>;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ quotationId: string }> }
@@ -32,13 +45,21 @@ export async function GET(
     request.nextUrl.searchParams.get('lang') ||
     request.nextUrl.searchParams.get('language') ||
     'en';
+  const brandParam = request.nextUrl.searchParams.get('brand');
+  const hostHeader = request.headers.get('host') || request.headers.get('x-forwarded-host');
 
   const publishedDir = getPublishedDir(quotationId);
   const pdfFilePath = findPdfHtmlFile(publishedDir, lang);
 
   if (pdfFilePath && fs.existsSync(pdfFilePath)) {
     try {
-      const htmlContent = fs.readFileSync(pdfFilePath, 'utf-8');
+      let htmlContent = fs.readFileSync(pdfFilePath, 'utf-8');
+      const ctxData = loadCtxData(publishedDir);
+
+      // Resolve effective brand and transform HTML tokens dynamically
+      const targetBrand = resolveBrand(brandParam, hostHeader, ctxData);
+      htmlContent = transformPdfHtmlWithBrand(htmlContent, targetBrand);
+
       return new Response(htmlContent, {
         status: 200,
         headers: {
@@ -49,7 +70,7 @@ export async function GET(
         },
       });
     } catch (err) {
-      console.error(`[GET /quotations/${quotationId}/pdf] Error reading published PDF:`, err);
+      console.error(`[GET /quotations/${quotationId}/pdf] Error reading/transforming published PDF:`, err);
     }
   }
 

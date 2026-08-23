@@ -8,7 +8,7 @@ import {
   calculateHermiteTangents,
   sampleCubicBezierSegment,
   generateContinuousSmoothSpline,
-} from '../rules/routeDrawingRules.ts';
+} from '../../components/display/map/pdf/layout/routeGeometry.ts';
 
 // ─── Group 1: Geometric Primitives ──────────────────────────────────────────
 

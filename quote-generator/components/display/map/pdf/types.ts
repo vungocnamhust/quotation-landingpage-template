@@ -1,6 +1,6 @@
-import type { ViewMode } from '../../../display/contracts.ts';
-import type { RouteMapViewModel, TypographySlotMap } from '../../../display/types.ts';
-import type { MapTileStyle } from '../../../lib/mapTileStyles.ts';
+import type { ViewMode } from '@/display/contracts.ts';
+import type { RouteMapViewModel, TypographySlotMap } from '@/display/types.ts';
+import type { MapTileStyle } from '@/lib/mapTileStyles.ts';
 
 export type MapRenderState = 'loading' | 'ready' | 'failed' | 'unavailable';
 
@@ -42,5 +42,4 @@ export interface FullPageMapProps {
 }
 
 export type { MapTileStyle };
-export type { MarkerAnchorDirection, ResolvedMarkerPlacement } from '../../../lib/rules/mapMarkerLayoutRules.ts';
-
+export type { MarkerAnchorDirection, ResolvedMarkerPlacement } from './layout/markerPlacement.ts';

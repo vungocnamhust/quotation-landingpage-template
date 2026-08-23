@@ -2995,6 +2995,23 @@ img {
   color: var(--color-on-surface);
 }
 
+/* Web-map interaction is owned by Leaflet. Keep its grab affordance and
+   controls above visual tile treatments; PDF disables this surface separately. */
+.display-route-map:not(.is-pdf) .display-route-map__leaflet.leaflet-grab {
+  cursor: grab;
+  touch-action: none;
+}
+
+.display-route-map:not(.is-pdf) .display-route-map__leaflet.leaflet-dragging.leaflet-grab {
+  cursor: grabbing;
+}
+
+.display-route-map:not(.is-pdf) .display-route-map__leaflet .leaflet-control {
+  position: relative;
+  z-index: 800;
+  pointer-events: auto;
+}
+
 .display-route-map__leaflet .leaflet-control-attribution {
   background: color-mix(in srgb, var(--color-surface) 86%, transparent);
   color: color-mix(in srgb, var(--color-muted) 84%, var(--color-on-contrast));
@@ -3130,6 +3147,17 @@ img {
   overflow: visible !important;
 }
 
+.display-route-map-marker-measure {
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  width: max-content;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .display-route-map-marker {
   position: relative;
   cursor: pointer;
@@ -3140,6 +3168,18 @@ img {
   flex-direction: column;
   align-items: flex-start;
   white-space: nowrap;
+}
+
+.display-route-map-marker--planned {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+
+.display-route-map-marker--planned:focus-visible .display-route-map-marker__capsule {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
 }
 
 .display-route-map-marker__capsule {

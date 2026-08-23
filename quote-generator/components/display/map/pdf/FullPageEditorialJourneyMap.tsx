@@ -5,7 +5,7 @@ import type { FullPageMapProps } from './types.ts';
 import { useMapProjection } from './useMapProjection.ts';
 import { LuxuryMapGeoCanvas } from './LuxuryMapGeoCanvas.tsx';
 import { MapFloatingOverlays } from './MapFloatingOverlays.tsx';
-import { cn } from '../../../utils/cn.ts';
+import { cn } from '@/utils/cn.ts';
 
 export function FullPageEditorialJourneyMap({
   viewModel,

@@ -1,15 +1,15 @@
 import React, { useMemo } from 'react';
-import type { RouteMapViewModel, TypographySlotMap } from '../../../display/types.ts';
-import { textValue } from '../../../display/types.ts';
-import type { ViewMode } from '../../../display/contracts.ts';
+import type { RouteMapViewModel, TypographySlotMap } from '@/display/types.ts';
+import { textValue } from '@/display/types.ts';
+import type { ViewMode } from '@/display/contracts.ts';
 import type { ProjectedPoint } from './types.ts';
 import { MapGeoLabels } from './MapGeoLabels.tsx';
 import { MapDestinationMarker } from './MapDestinationMarker.tsx';
-import { BodyCopy, DisplayTitle, Kicker } from '../atoms.tsx';
-import { getTypographyClassName } from '../../../config/typography.ts';
-import { requireTypographySlot } from '../../../display/typographySlots.ts';
-import { resolveMarkerCollisions } from '../../../lib/rules/mapMarkerLayoutRules.ts';
-import { cn } from '../../../utils/cn.ts';
+import { BodyCopy, DisplayTitle, Kicker } from '@/components/display/atoms.tsx';
+import { getTypographyClassName } from '@/config/typography.ts';
+import { requireTypographySlot } from '@/display/typographySlots.ts';
+import { resolveMarkerCollisions } from './layout/markerPlacement.ts';
+import { cn } from '@/utils/cn.ts';
 
 interface MapFloatingOverlaysProps {
   viewModel: RouteMapViewModel;

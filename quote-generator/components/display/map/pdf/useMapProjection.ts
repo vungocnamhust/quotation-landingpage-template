@@ -3,7 +3,7 @@
 import type { Map as LeafletMap } from 'leaflet';
 import L from 'leaflet';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { ViewMode } from '../../../display/contracts.ts';
+import type { ViewMode } from '@/display/contracts.ts';
 import type { ProjectedPoint } from './types.ts';
 
 export function useMapProjection({

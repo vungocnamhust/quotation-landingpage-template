@@ -1,7 +1,6 @@
-import React from 'react';
 import type { GeoLocationLabel, ProjectedPoint } from './types.ts';
-import { getTypographyClassName } from '../../../config/typography.ts';
-import { cn } from '../../../utils/cn.ts';
+import { getTypographyClassName } from '@/config/typography.ts';
+import { cn } from '@/utils/cn.ts';
 
 export const CANONICAL_GEO_LABELS: GeoLocationLabel[] = [
   // Countries
