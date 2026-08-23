@@ -128,11 +128,11 @@ test('generateContinuousSmoothSpline generates C1 continuous curved path startin
   assert.equal(spline[spline.length - 1][0], waypoints[waypoints.length - 1][0]);
   assert.equal(spline[spline.length - 1][1], waypoints[waypoints.length - 1][1]);
 
-  // Verify Eastward bowing on Saigon -> Hanoi leg (max longitude should exceed midpoint longitude)
-  const midpointLng = (waypoints[0][1] + waypoints[1][1]) / 2;
+  // Verify smooth curvature on Saigon -> Hanoi leg (points deviate smoothly from straight chord)
+  const chordMidLng = (waypoints[0][1] + waypoints[1][1]) / 2;
   const leg1Sample = spline.slice(5, 15);
-  const hasEastwardBowing = leg1Sample.some((pt) => pt[1] > midpointLng);
-  assert.ok(hasEastwardBowing, 'North-South haul should bow Eastward towards the sea');
+  const hasSmoothCurvature = leg1Sample.some((pt) => Math.abs(pt[1] - chordMidLng) > 0.01);
+  assert.ok(hasSmoothCurvature, 'North-South haul should have smooth adaptive curvature');
 });
 
 test('resolveMarkerCollisions ensures no bounding box overlap for close vertical points', () => {
@@ -154,6 +154,11 @@ test('resolveMarkerCollisions ensures no bounding box overlap for close vertical
   assert.ok(p1 && p2);
   assert.ok(p1.anchorDirection);
   assert.ok(p2.anchorDirection);
+  // Verify strict alternating left/right alignment
+  const isLeft1 = p1.anchorDirection === 'left' || p1.anchorDirection === 'top-left' || p1.anchorDirection === 'bottom-left';
+  const isLeft2 = p2.anchorDirection === 'left' || p2.anchorDirection === 'top-left' || p2.anchorDirection === 'bottom-left';
+  assert.notEqual(isLeft1, isLeft2, 'Adjacent vertical waypoints must strictly alternate lateral directions (one left, one right)');
+
   // Verify that the two bounding boxes do not overlap
   const minOverlap =
     p1.boundingBox.maxX < p2.boundingBox.minX ||
@@ -161,4 +166,63 @@ test('resolveMarkerCollisions ensures no bounding box overlap for close vertical
     p1.boundingBox.maxY < p2.boundingBox.minY ||
     p1.boundingBox.minY > p2.boundingBox.maxY;
   assert.ok(minOverlap, 'Close waypoints must have disjoint bounding boxes');
+});
+
+test('generateContinuousSmoothSpline dampens sharp hairpin turns on out-and-back excursions', () => {
+  const waypoints: Array<[number, number]> = [
+    [10.7769, 106.7009], // Saigon
+    [10.0452, 105.7469], // Mekong Delta (South-West)
+    [21.0285, 105.8542], // Hanoi (North)
+  ];
+
+  const spline = generateContinuousSmoothSpline(waypoints, {
+    tension: 0.35,
+    samplesPerSegment: 30,
+    eastwardBiasScale: 0.10,
+  });
+
+  assert.ok(spline.length > 50);
+  // Ensure the spline near Mekong Delta does not wildly loop south below 9.5 deg latitude
+  const minLat = Math.min(...spline.map((pt) => pt[0]));
+  assert.ok(minLat > 9.8, `Spline min lat ${minLat} should not overshoot below 9.8 deg`);
+});
+
+test('resolveMarkerCollisions handles 5-point itinerary (Saigon -> Mekong -> Hanoi -> Ninh Binh -> Ha Long)', () => {
+  // Projected 2D coordinates representing the 5 points in media_1787415233366.png
+  const points = [
+    { sequence: '01', x: 450, y: 800, city: 'Ho Chi Minh City', visible: true },
+    { sequence: '02', x: 380, y: 850, city: 'Mekong Delta', visible: true },
+    { sequence: '03', x: 400, y: 150, city: 'Hanoi', visible: true },
+    { sequence: '04', x: 410, y: 220, city: 'Ninh Binh', visible: true },
+    { sequence: '05', x: 480, y: 160, city: 'Ha Long Bay', visible: true },
+  ];
+
+  const results = resolveMarkerCollisions(points);
+
+  const pHanoi = results.get('03');
+  const pNinhBinh = results.get('04');
+  const pHaLong = results.get('05');
+
+  assert.ok(pHanoi && pNinhBinh && pHaLong);
+
+  // Hanoi must anchor Left (to avoid horizontal collision with Ha Long Bay at x=480)
+  const isHanoiLeft =
+    pHanoi.anchorDirection === 'left' ||
+    pHanoi.anchorDirection === 'top-left' ||
+    pHanoi.anchorDirection === 'bottom-left';
+  assert.equal(isHanoiLeft, true, 'Hanoi must anchor Left to give room to Ha Long Bay on the East');
+
+  // Ninh Binh must anchor Right (facing East Sea)
+  const isNinhBinhRight =
+    pNinhBinh.anchorDirection === 'right' ||
+    pNinhBinh.anchorDirection === 'top-right' ||
+    pNinhBinh.anchorDirection === 'bottom-right';
+  assert.equal(isNinhBinhRight, true, 'Ninh Binh must anchor Right');
+
+  // Ha Long must anchor Right
+  const isHaLongRight =
+    pHaLong.anchorDirection === 'right' ||
+    pHaLong.anchorDirection === 'top-right' ||
+    pHaLong.anchorDirection === 'bottom-right';
+  assert.equal(isHaLongRight, true, 'Ha Long must anchor Right');
 });

@@ -4,6 +4,7 @@ import type { AppChromeViewModel, BrandColorPalette, BrandRenderProfile, BrandTh
 import type { LanguageCode, ViewMode } from './contracts.ts';
 import { getLanguageLabels, PRICING_AMOUNT_LABELS } from './labels.ts';
 import { getThemeDefinition } from './themeRegistry.ts';
+import { resolveDestination } from '../lib/rules/destinationRules.ts';
 
 export interface DisplayDocument {
   theme: ThemeDefinition;
@@ -270,68 +271,12 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
       ? recordList(tripFacts.itinerary)
       : recordList(document.itinerary_days);
 
-  const CANONICAL_COORDS: Record<string, [number, number]> = {
-    'ho-chi-minh-city': [10.7769, 106.7009],
-    'ho chi minh city': [10.7769, 106.7009],
-    'ho chi minh': [10.7769, 106.7009],
-    'saigon': [10.7769, 106.7009],
-    'sai gon': [10.7769, 106.7009],
-    'tp. ho chi minh': [10.7769, 106.7009],
-    'mekong-delta': [10.0452, 105.7469],
-    'mekong delta': [10.0452, 105.7469],
-    'mekong': [10.0452, 105.7469],
-    'can tho': [10.0452, 105.7469],
-    'can-tho': [10.0452, 105.7469],
-    'hanoi': [21.0285, 105.8542],
-    'ha noi': [21.0285, 105.8542],
-    'ha-noi': [21.0285, 105.8542],
-    'ninh-binh': [20.2506, 105.9745],
-    'ninh binh': [20.2506, 105.9745],
-    'ha-long-bay': [20.9505, 107.0734],
-    'ha long bay': [20.9505, 107.0734],
-    'ha long': [20.9505, 107.0734],
-    'halong bay': [20.9505, 107.0734],
-    'quang-ninh': [20.9505, 107.0734],
-    'da-nang': [16.0544, 108.2022],
-    'da nang': [16.0544, 108.2022],
-    'hoi-an': [15.8801, 108.3380],
-    'hoi an': [15.8801, 108.3380],
-    'hue': [16.4637, 107.5909],
-    'sapa': [22.3364, 103.8438],
-    'lao-cai': [22.3364, 103.8438],
-    'nha-trang': [12.2388, 109.1967],
-    'nha trang': [12.2388, 109.1967],
-    'phu-quoc': [10.2899, 103.9840],
-    'phu quoc': [10.2899, 103.9840],
-    'ha-giang': [22.8233, 104.9839],
-    'ha giang': [22.8233, 104.9839],
-    'phong-nha': [17.5847, 106.2828],
-    'phong nha': [17.5847, 106.2828],
-    'siem-reap': [13.3671, 103.8448],
-    'siem reap': [13.3671, 103.8448],
-    'phnom-penh': [11.5564, 104.9282],
-    'phnom penh': [11.5564, 104.9282],
-    'luang-prabang': [19.8893, 102.1336],
-    'luang prabang': [19.8893, 102.1336],
-  };
-
-  const lookupCoords = (name: string, refCoords?: unknown): [number, number] | null => {
-    if (Array.isArray(refCoords) && refCoords.length === 2) {
-      const lat = Number(refCoords[0]);
-      const lng = Number(refCoords[1]);
-      if (Number.isFinite(lat) && Number.isFinite(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
-        return [lat, lng];
-      }
-    }
-    const cleanKey = name.toLowerCase().trim().replace(/_/g, '-');
-    return CANONICAL_COORDS[cleanKey] || null;
-  };
-
-  // 3-Step Destination Resolution Algorithm:
-  // Step 1: Extract unique ordered set of destinations from rawDaysList
-  // Step 2: Compute dayStart and dayEnd for each distinct destination
+  // 3-Step Destination Resolution Algorithm (backed by 3-Layer DestinationRules SSOT):
+  // Step 1: Extract unique ordered set of destinations from rawDaysList (with excursion resolution)
+  // Step 2: Compute dayStart and dayEnd for each distinct destination slug
   // Step 3: Build RouteSegmentViewModel with canonical GPS coordinates and badge labels
   interface DestinationInfo {
+    slug: string;
     name: string;
     dayNumbers: number[];
     dayStart: number;
@@ -354,8 +299,8 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
           ? day.day_number
           : index + 1;
 
-      // Primary destination name (prefer destination / segmentCity / destinationRef)
-      const rawDest =
+      // 1. Resolve from primary location fields
+      const primaryLoc =
         stringValue(day.segmentCity) ||
         stringValue(day.destination) ||
         stringValue(day.city) ||
@@ -363,14 +308,21 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
         stringValue(record(day.overnightRef).name) ||
         stringValue(day.overnight);
 
-      if (!rawDest) return;
+      let resolved = resolveDestination(primaryLoc);
 
-      const dayDestRef = record(day.destinationRef) || record(day.overnightRef);
-      const coords = lookupCoords(rawDest, dayDestRef.coordinates);
-      if (!coords) return;
+      // 2. Excursion Fallback: scan day.title and day.highlights if primary was unresolvable
+      if (!resolved) {
+        const combinedDayText = `${stringValue(day.title)} ${listText(day.highlights).join(' ')}`;
+        resolved = resolveDestination(combinedDayText);
+      }
 
-      const key = rawDest.toLowerCase().trim();
-      const existing = destinationMap.get(key);
+      if (!resolved) return;
+
+      const slugKey = resolved.slug;
+      const canonicalName = resolved.canonicalName;
+      const coords = resolved.coordinates;
+
+      const existing = destinationMap.get(slugKey);
 
       if (existing) {
         existing.dayNumbers.push(dayNum);
@@ -380,9 +332,10 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
           existing.hotelName = stringValue(day.overnight);
         }
       } else {
-        destinationOrder.push(key);
-        destinationMap.set(key, {
-          name: rawDest,
+        destinationOrder.push(slugKey);
+        destinationMap.set(slugKey, {
+          slug: slugKey,
+          name: canonicalName,
           dayNumbers: [dayNum],
           dayStart: dayNum,
           dayEnd: dayNum,

@@ -1,10 +1,11 @@
 'use client';
 
-import type { LatLngExpression, Map as LeafletMap, Polyline, TileLayer } from 'leaflet';
+import type { Map as LeafletMap, Polyline, TileLayer } from 'leaflet';
 import L from 'leaflet';
 import React, { useEffect, useRef } from 'react';
 import type { RouteSegmentViewModel } from '../../../display/types.ts';
 import type { MapColors, MapRenderState, MapTileStyle } from './types.ts';
+import { generateContinuousSmoothSpline } from '../../../lib/rules/mapMarkerLayoutRules.ts';
 
 export const MAP_TILE_RENDER_TIMEOUT_MS = 30_000;
 
@@ -17,30 +18,6 @@ interface LuxuryMapGeoCanvasProps {
   isMapReady: boolean;
   tileStyle: MapTileStyle;
   onRenderStateChange?: (state: MapRenderState) => void;
-}
-
-// Generates an elegant curved geodesic bezier path between two coordinates
-function getCurvedRoutePoints(p1: [number, number], p2: [number, number], segmentsCount = 36): LatLngExpression[] {
-  const midLat = (p1[0] + p2[0]) / 2;
-  const midLng = (p1[1] + p2[1]) / 2;
-  const dx = p2[1] - p1[1];
-  const dy = p2[0] - p1[0];
-  const distance = Math.sqrt(dx * dx + dy * dy);
-  if (distance === 0) return [p1, p2];
-
-  // Subtle curvature offset perpendicular to the line
-  const curvatureScale = Math.max(0.04, Math.min(0.22, distance * 0.12));
-  const ctrlLat = midLat - (dx / distance) * curvatureScale;
-  const ctrlLng = midLng + (dy / distance) * curvatureScale;
-
-  const points: LatLngExpression[] = [];
-  for (let i = 0; i <= segmentsCount; i++) {
-    const t = i / segmentsCount;
-    const lat = (1 - t) * (1 - t) * p1[0] + 2 * (1 - t) * t * ctrlLat + t * t * p2[0];
-    const lng = (1 - t) * (1 - t) * p1[1] + 2 * (1 - t) * t * ctrlLng + t * t * p2[1];
-    points.push([lat, lng]);
-  }
-  return points;
 }
 
 export function LuxuryMapGeoCanvas({
@@ -94,7 +71,7 @@ export function LuxuryMapGeoCanvas({
     };
   }, [isMapReady, mapInstance, onRenderStateChange, tileStyle]);
 
-  // Render Decorative Curved Route Lines
+  // Render Decorative Curved Route Lines with Continuous C1 Spline
   useEffect(() => {
     if (!mapInstance || !isMapReady) return;
 
@@ -102,45 +79,45 @@ export function LuxuryMapGeoCanvas({
     polylinesRef.current.forEach((p) => p.remove());
     polylinesRef.current = [];
 
-    const coordinates = segments.map((s) => s.coordinates);
+    const coordinates = segments
+      .map((s) => s.coordinates)
+      .filter((c): c is [number, number] => Array.isArray(c) && c.length === 2);
+
     if (coordinates.length < 2) return;
 
     const routeColor = mapColors.route || 'var(--color-accent)';
-
     const isPdf = tileStyle === 'carto-parchment-nolabels-pdf-v1';
 
-    for (let i = 0; i < coordinates.length - 1; i++) {
-      const p1 = coordinates[i];
-      const p2 = coordinates[i + 1];
-      if (!p1 || !p2) continue;
+    // Generate full continuous C1 spline path with Adaptive ACMCS Curvature
+    const fullSplinePoints = generateContinuousSmoothSpline(coordinates, {
+      tension: 0.38,
+      samplesPerSegment: 48,
+    });
 
-      const pathPoints = getCurvedRoutePoints(p1, p2);
-      const isSegmentActive =
-        isPdf || activeSequence === segments[i]?.sequence || activeSequence === segments[i + 1]?.sequence;
+    const isAnyActive = isPdf || Boolean(activeSequence);
 
-      // Soft glow ambient background line
-      const bgGlowLine = L.polyline(pathPoints, {
-        color: routeColor,
-        weight: isSegmentActive ? 6 : 4,
-        opacity: isSegmentActive ? 0.32 : 0.18,
-        lineCap: 'round',
-        lineJoin: 'round',
-        interactive: false,
-      }).addTo(mapInstance);
+    // Soft glow ambient background line across continuous route
+    const bgGlowLine = L.polyline(fullSplinePoints, {
+      color: routeColor,
+      weight: isAnyActive ? 5.5 : 4.0,
+      opacity: isAnyActive ? 0.35 : 0.2,
+      lineCap: 'round',
+      lineJoin: 'round',
+      interactive: false,
+    }).addTo(mapInstance);
 
-      // Foreground dashed trajectory line
-      const mainDashedLine = L.polyline(pathPoints, {
-        color: routeColor,
-        weight: isSegmentActive ? 3.2 : 2.5,
-        opacity: isSegmentActive ? 1.0 : 0.85,
-        dashArray: '6, 6',
-        lineCap: 'round',
-        lineJoin: 'round',
-        interactive: false,
-      }).addTo(mapInstance);
+    // Foreground dashed trajectory line
+    const mainDashedLine = L.polyline(fullSplinePoints, {
+      color: routeColor,
+      weight: isAnyActive ? 2.8 : 2.2,
+      opacity: isAnyActive ? 1.0 : 0.85,
+      dashArray: '6, 6',
+      lineCap: 'round',
+      lineJoin: 'round',
+      interactive: false,
+    }).addTo(mapInstance);
 
-      polylinesRef.current.push(bgGlowLine, mainDashedLine);
-    }
+    polylinesRef.current.push(bgGlowLine, mainDashedLine);
 
     return () => {
       polylinesRef.current.forEach((p) => p.remove());
@@ -149,7 +126,11 @@ export function LuxuryMapGeoCanvas({
   }, [activeSequence, isMapReady, mapColors.route, mapInstance, segments, tileStyle]);
 
   return (
-    <div className={`luxury-map-geo-canvas${tileStyle === 'carto-parchment-nolabels-pdf-v1' ? ' luxury-map-geo-canvas--pdf' : ''} relative w-full h-full overflow-hidden select-none`}>
+    <div
+      className={`luxury-map-geo-canvas${
+        tileStyle === 'carto-parchment-nolabels-pdf-v1' ? ' luxury-map-geo-canvas--pdf' : ''
+      } relative w-full h-full overflow-hidden select-none`}
+    >
       <div
         ref={mapContainerRef}
         className="luxury-map-leaflet-container w-full h-full"

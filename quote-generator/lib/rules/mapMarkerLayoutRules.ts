@@ -421,18 +421,45 @@ export function resolveMarkerCollisions(
       const diffToBisector = angleDifference(anchorAngle, bisectorAngle);
       const bisectorAlignment = Math.cos(diffToBisector);
 
-      // Alternating lateral parity check with previous placed marker if geographically close (<100px)
-      let alternatingBonus = 0;
+      // Regional Cluster & Lateral Peer Constraints:
+      let clusterLookaheadBonus = 0;
+      const currIsLeft = anchor === 'left' || anchor === 'top-left' || anchor === 'bottom-left';
+      const currIsRight = anchor === 'right' || anchor === 'top-right' || anchor === 'bottom-right';
+
+      for (let k = 0; k < n; k++) {
+        if (k === i) continue;
+        const otherPt = visiblePoints[k];
+        const dx = otherPt.x - pt.x;
+        const dy = Math.abs(otherPt.y - pt.y);
+
+        // 1. Horizontal Direct Peer: Another point to our East within dy < 45px
+        if (dx > 25 && dx < 160 && dy < 45) {
+          if (currIsLeft) clusterLookaheadBonus += 120;
+          if (currIsRight) clusterLookaheadBonus -= 200;
+        }
+
+        // 2. Regional Cluster Peer: Another point to our West within dy < 100px and dx < -5px
+        // If there is a Western waypoint (like Hanoi at x=400), points at x >= 405 (Ninh Binh, Ha Long) prefer RIGHT
+        if (dx < -5 && dx > -120 && dy < 100) {
+          if (currIsRight) clusterLookaheadBonus += 80;
+          if (currIsLeft) clusterLookaheadBonus -= 120;
+        }
+      }
+
+      // Close Vertical Alternating Balance (only for isolated pairs with dy < 70 and dx < 20)
+      let verticalAlternatingBonus = 0;
       if (placedBoxes.length > 0) {
         const prevPlaced = placedBoxes[placedBoxes.length - 1];
-        const prevAnchor = results.get(prevPlaced.sequence)?.anchorDirection;
+        const prevAnchor = results.get(prevPlaced.sequence)?.anchorDirection || 'right';
         const prevPt = visiblePoints.find((p) => p.sequence === prevPlaced.sequence);
-        if (prevPt && Math.hypot(pt.x - prevPt.x, pt.y - prevPt.y) < 100) {
-          // If previous marker chose 'right', current marker prefers 'left' (and vice versa)
-          if (prevAnchor === 'right' || prevAnchor === 'top-right' || prevAnchor === 'bottom-right') {
-            if (anchor === 'left' || anchor === 'top-left' || anchor === 'bottom-left') alternatingBonus += 18;
-          } else if (prevAnchor === 'left' || prevAnchor === 'top-left' || prevAnchor === 'bottom-left') {
-            if (anchor === 'right' || anchor === 'top-right' || anchor === 'bottom-right') alternatingBonus += 18;
+        if (prevPt && Math.abs(pt.y - prevPt.y) < 70 && Math.abs(pt.x - prevPt.x) < 20) {
+          const prevIsLeft = prevAnchor === 'left' || prevAnchor === 'top-left' || prevAnchor === 'bottom-left';
+          if (!prevIsLeft) {
+            if (currIsLeft) verticalAlternatingBonus += 30;
+            if (currIsRight) verticalAlternatingBonus -= 30;
+          } else {
+            if (currIsRight) verticalAlternatingBonus += 30;
+            if (currIsLeft) verticalAlternatingBonus -= 30;
           }
         }
       }
@@ -447,12 +474,25 @@ export function resolveMarkerCollisions(
         if (anchor === 'right' || anchor === 'top-right' || anchor === 'bottom-right') edgeGuardBonus -= 50;
       }
 
-      // Composite Score: Prioritize non-occlusion, boundary fit, bisector alignment, alternating parity, and non-overlap
+      // Composite Score: Prioritize non-occlusion, boundary fit, bisector alignment, cluster lookahead, alternating parity
       let score = bisectorAlignment * 10;
-      if (withinBounds) score += 5;
-      if (!occludesLine) score += 20;
-      if (!overlapsOtherMarker) score += 15;
-      score += alternatingBonus + edgeGuardBonus;
+      if (withinBounds) score += 10;
+      score += clusterLookaheadBonus;
+      score += verticalAlternatingBonus;
+      score += edgeGuardBonus;
+
+      // Hard Constraints
+      if (occludesLine) {
+        score -= 10000; // Strictly forbidden: cutting across route line!
+      } else {
+        score += 30;
+      }
+
+      if (overlapsOtherMarker) {
+        score -= 10000; // Strictly forbidden: overlapping existing marker!
+      } else {
+        score += 20;
+      }
 
       // Slight natural preference for lateral anchors (right / left)
       if (anchor === 'right' || anchor === 'left') {
@@ -496,125 +536,12 @@ export function resolveMarkerCollisions(
   return results;
 }
 
-export interface SplineOptions {
-  /** Tension parameter for Catmull-Rom tangents [0.2 .. 0.6]. Default: 0.4 */
-  tension?: number;
-  /** Number of interpolated sample points per route segment. Default: 36 */
-  samplesPerSegment?: number;
-  /** Eastward bowing scale for long North-South segments. Default: 0.12 */
-  eastwardBiasScale?: number;
-}
-
-/**
- * C3-Spline: Generates continuous C1 smooth cubic spline path across all journey waypoints.
- * Eliminates sharp kinks and applies aerodynamic Eastward bowing on long hauls.
- */
-export function generateContinuousSmoothSpline(
-  coordinates: Array<[number, number]>,
-  options?: SplineOptions
-): Array<[number, number]> {
-  const n = coordinates.length;
-  if (n < 2) return coordinates;
-
-  const tension = options?.tension ?? 0.4;
-  const samples = options?.samplesPerSegment ?? 36;
-  const eastScale = options?.eastwardBiasScale ?? 0.12;
-
-  if (n === 2) {
-    const p0 = coordinates[0];
-    const p1 = coordinates[1];
-    const dLat = p1[0] - p0[0];
-    const dLng = p1[1] - p0[1];
-    const dist = Math.hypot(dLat, dLng) || 1;
-
-    // Normal vector
-    let normLat = -dLng / dist;
-    let normLng = dLat / dist;
-    // Ensure normal points Eastward (positive lng)
-    if (normLng < 0) {
-      normLat = -normLat;
-      normLng = -normLng;
-    }
-
-    const amplitude = Math.max(0.12, Math.min(1.2, dist * eastScale));
-    const c1: [number, number] = [
-      p0[0] + (1 / 3) * dLat + normLat * amplitude * 0.8,
-      p0[1] + (1 / 3) * dLng + normLng * amplitude * 1.2,
-    ];
-    const c2: [number, number] = [
-      p0[0] + (2 / 3) * dLat + normLat * amplitude * 0.8,
-      p0[1] + (2 / 3) * dLng + normLng * amplitude * 1.2,
-    ];
-
-    const result: Array<[number, number]> = [];
-    for (let s = 0; s <= samples; s++) {
-      const t = s / samples;
-      const u = 1 - t;
-      const lat = u * u * u * p0[0] + 3 * u * u * t * c1[0] + 3 * u * t * t * c2[0] + t * t * t * p1[0];
-      const lng = u * u * u * p0[1] + 3 * u * u * t * c1[1] + 3 * u * t * t * c2[1] + t * t * t * p1[1];
-      result.push([lat, lng]);
-    }
-    return result;
-  }
-
-  // 1. Calculate Catmull-Rom Continuous Tangent Vectors
-  const tangents: Array<[number, number]> = [];
-
-  for (let i = 0; i < n; i++) {
-    if (i === 0) {
-      // First point: Forward difference with acceleration dampening
-      const dLat = coordinates[1][0] - coordinates[0][0];
-      const dLng = coordinates[1][1] - coordinates[0][1];
-      tangents.push([dLat * 0.8, dLng * 0.8]);
-    } else if (i === n - 1) {
-      // Last point: Backward difference
-      const dLat = coordinates[n - 1][0] - coordinates[n - 2][0];
-      const dLng = coordinates[n - 1][1] - coordinates[n - 2][1];
-      tangents.push([dLat * 0.8, dLng * 0.8]);
-    } else {
-      // Intermediate point: Centered difference (guarantees C1 continuity)
-      const dLat = (coordinates[i + 1][0] - coordinates[i - 1][0]) * tension;
-      const dLng = (coordinates[i + 1][1] - coordinates[i - 1][1]) * tension;
-      tangents.push([dLat, dLng]);
-    }
-  }
-
-  // 2. Interpolate Cubic Hermite Splines per Segment
-  const result: Array<[number, number]> = [];
-
-  for (let i = 0; i < n - 1; i++) {
-    const p0 = coordinates[i];
-    const p1 = coordinates[i + 1];
-    const t0 = tangents[i];
-    const t1 = tangents[i + 1];
-
-    const dLat = p1[0] - p0[0];
-    const dLng = p1[1] - p0[1];
-    const dist = Math.hypot(dLat, dLng);
-
-    // Initial Bezier control points from Hermite tangents
-    const c1Lat = p0[0] + (1 / 3) * t0[0];
-    let c1Lng = p0[1] + (1 / 3) * t0[1];
-    const c2Lat = p1[0] - (1 / 3) * t1[0];
-    let c2Lng = p1[1] - (1 / 3) * t1[1];
-
-    // On long North-South journeys (e.g. Saigon to Hanoi / Da Nang):
-    // add an elegant Eastward bowing offset towards the sea
-    if (Math.abs(dLat) > 3.0 || dist > 3.5) {
-      const eastOffset = Math.min(1.2, dist * eastScale);
-      c1Lng += eastOffset * 0.9;
-      c2Lng += eastOffset * 1.1;
-    }
-
-    const startSample = i === 0 ? 0 : 1;
-    for (let s = startSample; s <= samples; s++) {
-      const t = s / samples;
-      const u = 1 - t;
-      const lat = u * u * u * p0[0] + 3 * u * u * t * c1Lat + 3 * u * t * t * c2Lat + t * t * t * p1[0];
-      const lng = u * u * u * p0[1] + 3 * u * u * t * c1Lng + 3 * u * t * t * c2Lng + t * t * t * p1[1];
-      result.push([lat, lng]);
-    }
-  }
-
-  return result;
-}
+export type { SplineOptions, CurvatureDecision, CurvatureDirection } from './routeDrawingRules.ts';
+export {
+  calculateSegmentNormal,
+  calculatePointToSegmentDistance,
+  evaluateAdaptiveSegmentCurvature,
+  calculateHermiteTangents,
+  sampleCubicBezierSegment,
+  generateContinuousSmoothSpline,
+} from './routeDrawingRules.ts';

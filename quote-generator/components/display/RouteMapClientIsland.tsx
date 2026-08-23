@@ -17,6 +17,16 @@ const FullPageEditorialJourneyMap = dynamic(
   }
 );
 
+const RouteMapExperience = dynamic(
+  () => import('./RouteMapExperience'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="display-route-map__loading animate-pulse bg-[var(--color-surface)] rounded-lg w-full h-[640px]" />
+    ),
+  }
+);
+
 export default function RouteMapClientIsland({
   viewModel,
   typography,
@@ -82,17 +92,30 @@ function InteractiveRouteMapIsland({
 }) {
   const [mapRenderState, setMapRenderState] = useState<MapRenderState>('loading');
 
+  if (viewMode === 'pdf') {
+    return (
+      <div data-map-render-state={mapRenderState} data-map-render-key={islandKey}>
+        <FullPageEditorialJourneyMap
+          viewModel={viewModel}
+          typography={typography}
+          mapColors={mapColors}
+          viewMode={viewMode}
+          quotationNumber={quotationNumber}
+          pageNumber={pageNumber}
+          quoteText={quoteText}
+          onRenderStateChange={setMapRenderState}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div data-map-render-state={mapRenderState} data-map-render-key={islandKey}>
-      <FullPageEditorialJourneyMap
+    <div data-map-render-state="ready" data-map-render-key={islandKey}>
+      <RouteMapExperience
         viewModel={viewModel}
         typography={typography}
         mapColors={mapColors}
         viewMode={viewMode}
-        quotationNumber={quotationNumber}
-        pageNumber={pageNumber}
-        quoteText={quoteText}
-        onRenderStateChange={setMapRenderState}
       />
     </div>
   );

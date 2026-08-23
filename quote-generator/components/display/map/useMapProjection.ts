@@ -44,23 +44,24 @@ export function useMapProjection({
     const latLngs = coordinates.map(([lat, lng]) => L.latLng(lat, lng));
     const bounds = L.latLngBounds(latLngs);
 
-    // Ensure bounds has sufficient geographic context (spanning country region)
-    // If only 1 city or tight coordinates, expand bounds so Vietnam & Indochina context is visible
+    // Ensure bounds has sufficient geographic context
+    // Only expand if coordinates are clustered tightly in a single localized area (<2.5 deg)
     const southWest = bounds.getSouthWest();
     const northEast = bounds.getNorthEast();
     const latSpan = Math.abs(northEast.lat - southWest.lat);
     const lngSpan = Math.abs(northEast.lng - southWest.lng);
 
-    if (latSpan < 5 || lngSpan < 4) {
-      bounds.extend(L.latLng(8.6, 104.5));
-      bounds.extend(L.latLng(22.8, 108.0));
-      bounds.extend(L.latLng(16.5, 112.5));
+    if (latSpan < 2.5 && lngSpan < 2.5) {
+      // Localized trip: expand slightly by ~0.8 deg for breathing room
+      bounds.extend(L.latLng(southWest.lat - 0.8, southWest.lng - 0.8));
+      bounds.extend(L.latLng(northEast.lat + 0.8, northEast.lng + 0.8));
     }
 
-    // Padding customized for vertical A4 portrait / mobile / desktop
-    const padRatio = viewMode === 'pdf' ? 0.22 : viewMode === 'mobile' ? 0.20 : 0.22;
+    // Adaptive padding for vertical A4 portrait / mobile / desktop
+    // 8%-10% padding fits the Vietnam route tightly with maximum zoom clarity
+    const padRatio = viewMode === 'pdf' ? 0.08 : viewMode === 'mobile' ? 0.10 : 0.10;
     map.fitBounds(bounds.pad(padRatio), {
-      maxZoom: isPdf ? 6.2 : 6.8,
+      maxZoom: isPdf ? 7.2 : 7.5,
       animate: false,
     });
 

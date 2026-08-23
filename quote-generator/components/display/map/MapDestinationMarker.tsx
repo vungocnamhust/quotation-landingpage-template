@@ -20,30 +20,6 @@ interface MapDestinationMarkerProps {
   isPdf?: boolean;
 }
 
-function getCapsuleTransform(anchor: MarkerAnchorDirection): string {
-  switch (anchor) {
-    case 'top-center':
-    case 'top-elevated':
-      return 'translate(-50%, -100%)';
-    case 'top-left':
-      return 'translate(-100%, -100%)';
-    case 'top-right':
-      return 'translate(0%, -100%)';
-    case 'left':
-      return 'translate(-100%, -50%)';
-    case 'right':
-      return 'translate(0%, -50%)';
-    case 'bottom-left':
-      return 'translate(-100%, 0%)';
-    case 'bottom-right':
-      return 'translate(0%, 0%)';
-    case 'bottom-center':
-      return 'translate(-50%, 0%)';
-    default:
-      return 'translate(-50%, -100%)';
-  }
-}
-
 export function MapDestinationMarker({
   segment,
   index,
@@ -60,31 +36,28 @@ export function MapDestinationMarker({
   }
 
   const cityName = textValue(segment.city);
-  const dayLabel = textValue(segment.dayLabel) || `Day ${index + 1}`;
-
   const titleSlot = requireTypographySlot(typography, 'metaPrimary');
-  const captionSlot = requireTypographySlot(typography, 'metaSecondary');
 
-  // In PDF mode, ALL markers are displayed with the prominent accent highlight color
-  // without waiting for hover/active interaction.
+  // In PDF mode, ALL markers are displayed with prominent standout accent highlight
   const isStandout = isPdf || isActive;
 
-  const anchorDirection: MarkerAnchorDirection = placement?.anchorDirection || 'top-center';
-  const stemOffset = placement?.stemOffset || { x: 0, y: -5 };
+  // Direct badge text from explicit segment fields (dayStart/dayEnd or badgeLabel)
+  const badgeText =
+    segment.badgeLabel ||
+    (segment.dayStart && segment.dayEnd
+      ? segment.dayEnd > segment.dayStart
+        ? `${segment.dayStart}-${segment.dayEnd}`
+        : `${segment.dayStart}`
+      : String(index + 1));
 
-  const minX = Math.min(0, stemOffset.x) - 3;
-  const maxX = Math.max(0, stemOffset.x) + 3;
-  const minY = Math.min(0, stemOffset.y) - 3;
-  const maxY = Math.max(0, stemOffset.y) + 3;
-  const svgWidth = Math.max(6, maxX - minX);
-  const svgHeight = Math.max(6, maxY - minY);
-
-  const capsuleTransform = getCapsuleTransform(anchorDirection);
+  const isMultiChar = badgeText.length > 1;
+  const anchorDirection: MarkerAnchorDirection = placement?.anchorDirection || 'right';
+  const isLeftAligned = anchorDirection === 'left' || anchorDirection === 'top-left' || anchorDirection === 'bottom-left';
 
   return (
     <div
       className={cn(
-        'luxury-destination-marker absolute transition-transform duration-200',
+        'luxury-destination-marker absolute transition-transform duration-200 select-none',
         `luxury-destination-marker--${anchorDirection}`,
         isStandout ? 'is-active z-[525]' : 'z-[524] hover:scale-102'
       )}
@@ -108,102 +81,49 @@ export function MapDestinationMarker({
           }
         }}
         className={cn(
-          'luxury-destination-marker__content relative group select-none',
+          'luxury-destination-marker__content relative group',
           isInteractive ? 'cursor-pointer' : 'cursor-default'
         )}
       >
-        {/* Leader Line / Needle Stem (Slim 1.2px Accent Line) */}
-        <svg
-          className="luxury-destination-marker__stem pointer-events-none absolute overflow-visible"
-          style={{
-            left: `${minX}px`,
-            top: `${minY}px`,
-            width: `${svgWidth}px`,
-            height: `${svgHeight}px`,
-          }}
-          viewBox={`${minX} ${minY} ${svgWidth} ${svgHeight}`}
-          aria-hidden="true"
-        >
-          <line
-            x1={0}
-            y1={0}
-            x2={stemOffset.x}
-            y2={stemOffset.y}
-            stroke="var(--color-accent)"
-            strokeWidth={1.2}
-            strokeLinecap="round"
-            className={cn(
-              'transition-opacity duration-200',
-              isStandout ? 'opacity-100' : 'opacity-65 group-hover:opacity-100'
-            )}
-          />
-        </svg>
-
-        {/* Geographic Ground Dot (Exact GPS Coordinate Center, 4px) */}
+        {/* Direct Point Capsule: Badge is anchored directly at GPS coordinate (0, 0) */}
         <div
           className={cn(
-            'luxury-destination-marker__ground-dot absolute left-0 top-0 -translate-x-1/2 -translate-y-1/2 w-1 h-1 rounded-full border border-white shadow-xs transition-transform',
-            isStandout
-              ? 'bg-[var(--color-accent)] ring-2 ring-[var(--color-accent)]/40'
-              : 'bg-[var(--color-primary)] group-hover:bg-[var(--color-accent)]'
+            'luxury-destination-marker__pill flex items-center gap-1 px-1 py-0.5 rounded-full backdrop-blur-xs transition-all duration-200 whitespace-nowrap shadow-xs',
+            isLeftAligned && 'flex-row-reverse',
+            isPdf && 'luxury-destination-marker__pill--pdf',
+            isStandout && 'border-[var(--color-accent)]'
           )}
-          aria-hidden="true"
-        />
-
-        {/* Floating Micro Capsule Label (2/3 scale, elegant typography) */}
-        <div
-          className="luxury-destination-marker__capsule-wrapper absolute"
           style={{
-            left: `${stemOffset.x}px`,
-            top: `${stemOffset.y}px`,
-            transform: capsuleTransform,
+            // Anchors the badge center precisely at the geographic GPS coordinate (0, 0)
+            transform: isLeftAligned ? 'translate(calc(-100% + 8px), -50%)' : 'translate(-8px, -50%)',
           }}
         >
-          <div
+          {/* Numbered Badge Dot (Exact GPS Point Center) */}
+          <span
             className={cn(
-              'luxury-destination-marker__pill flex items-center gap-0.5 px-1 py-0.5 rounded-full backdrop-blur-xs transition-all duration-200 whitespace-nowrap',
-              isPdf && 'luxury-destination-marker__pill--pdf',
-              isStandout && 'border-[var(--color-accent)] shadow-xs'
+              'luxury-destination-marker__badge flex items-center justify-center rounded-full font-mono transition-colors shrink-0 ring-1 ring-white/80',
+              isMultiChar ? 'min-w-3.5 px-1 h-3' : 'w-3 h-3',
+              getTypographyClassName('caption'),
+              isStandout
+                ? 'bg-[var(--color-accent)] text-white shadow-xs'
+                : 'bg-[var(--color-primary)] text-white group-hover:bg-[var(--color-accent)]'
             )}
           >
-            {/* Numbered Circle Dot (Micro 10px) */}
-            <span
-              className={cn(
-                'luxury-destination-marker__badge flex items-center justify-center w-2.5 h-2.5 rounded-full font-mono transition-colors shrink-0',
-                getTypographyClassName('caption'),
-                isStandout
-                  ? 'bg-[var(--color-accent)] text-white shadow-xs'
-                  : 'bg-[var(--color-primary)] text-white group-hover:bg-[var(--color-accent)]'
-              )}
-            >
-              {index + 1}
-            </span>
+            {badgeText}
+          </span>
 
-            {/* City Name & Day Info */}
-            <div className="flex flex-col items-start text-left">
-              <span
-                className={cn(
-                  getTypographyClassName(titleSlot),
-                  'luxury-destination-marker__city font-serif transition-colors',
-                  isStandout
-                    ? 'text-[var(--color-accent)]'
-                    : 'text-[var(--color-primary)] group-hover:text-[var(--color-accent)]'
-                )}
-              >
-                {cityName}
-              </span>
-              {dayLabel ? (
-                <span
-                  className={cn(
-                    getTypographyClassName(captionSlot),
-                    'luxury-destination-marker__day text-[var(--color-on-surface-muted)] opacity-85'
-                  )}
-                >
-                  {dayLabel}
-                </span>
-              ) : null}
-            </div>
-          </div>
+          {/* City Name (Single Line) */}
+          <span
+            className={cn(
+              getTypographyClassName(titleSlot),
+              'luxury-destination-marker__city font-serif transition-colors px-0.5',
+              isStandout
+                ? 'text-[var(--color-accent)]'
+                : 'text-[var(--color-primary)] group-hover:text-[var(--color-accent)]'
+            )}
+          >
+            {cityName}
+          </span>
         </div>
       </div>
     </div>
