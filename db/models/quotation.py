@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import BigInteger, DateTime, ForeignKey, Index, Integer, String, UniqueConstraint, func
+from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Index, Integer, String, UniqueConstraint, false, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from db.base import Base
@@ -189,8 +189,46 @@ class QuotationVersionImpact(Base):
     source_path: Mapped[str] = mapped_column(String(255), nullable=False)
     target_path: Mapped[str | None] = mapped_column(String(255), nullable=True)
     explanation: Mapped[str] = mapped_column(String(1000), nullable=False)
+    entity_key: Mapped[str] = mapped_column(String(255), nullable=False, default="", server_default="")
+    operation: Mapped[str] = mapped_column(String(32), nullable=False, default="changed", server_default="changed")
+    old_value_json: Mapped[dict[str, Any] | None] = mapped_column(JSON_VARIANT, nullable=True)
+    new_value_json: Mapped[dict[str, Any] | None] = mapped_column(JSON_VARIANT, nullable=True)
+    generation_eligible: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default=false())
+    generation_selected: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default=false())
+    generation_status: Mapped[str] = mapped_column(String(24), nullable=False, default="not_requested", server_default="not_requested")
     status: Mapped[str] = mapped_column(String(16), nullable=False, default="pending", server_default="pending")
     resolution_note: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     resolved_by_profile_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+
+
+class QuotationVersionImpactTarget(Base):
+    """An executable/document-level target belonging to one Fact change.
+
+    The parent impact is the immutable audit of *what* changed; targets describe
+    the precise output that may be rebuilt, reviewed, or selectively generated.
+    """
+
+    __tablename__ = "quotation_version_impact_targets"
+    __table_args__ = (
+        Index("ix_quotation_version_impact_targets_quotation_status", "quotation_id", "execution_status"),
+        UniqueConstraint("impact_id", "stage", "scope", "target_path", name="uq_quotation_version_impact_target_path"),
+    )
+
+    id: Mapped[int] = mapped_column(BIGINT_PK_VARIANT, primary_key=True, autoincrement=True)
+    impact_id: Mapped[int] = mapped_column(ForeignKey("quotation_version_impacts.id", ondelete="CASCADE"), nullable=False)
+    quotation_id: Mapped[str] = mapped_column(ForeignKey("quotations.id", ondelete="CASCADE"), nullable=False)
+    stage: Mapped[str] = mapped_column(String(16), nullable=False)
+    scope: Mapped[str] = mapped_column(String(128), nullable=False)
+    target_path: Mapped[str] = mapped_column(String(255), nullable=False)
+    treatment: Mapped[str] = mapped_column(String(32), nullable=False)
+    affected_fields_json: Mapped[list[dict[str, Any]]] = mapped_column(JSON_VARIANT, nullable=False, default=list)
+    generation_eligible: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default=false())
+    generation_selected: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default=false())
+    execution_status: Mapped[str] = mapped_column(String(24), nullable=False, default="not_requested", server_default="not_requested")
+    draft_id: Mapped[str | None] = mapped_column(ForeignKey("quotation_content_drafts.id", ondelete="SET NULL"), nullable=True)
+    accepted_by_profile_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    correlation_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())

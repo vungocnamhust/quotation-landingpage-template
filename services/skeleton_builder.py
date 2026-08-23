@@ -95,7 +95,8 @@ class SkeletonBuilder:
         for index, day in enumerate(trip.itinerary, 1):
             number = day.day_number or index
             refs = resolved_itinerary[index - 1] if index - 1 < len(resolved_itinerary) else {}
-            days.append({"id": f"day-{number}", "dayNumber": number, "dayDate": day.display_date or "", "segmentCity": day.destination or "", "destinationRef": refs.get("destinationRef"), "overnightRef": refs.get("overnightRef"), "factSummary": day.summary or "", "factHighlights": list(day.highlights), "title": "", "description": [], "overnight": day.overnight or "", "meals": day.meals, "activities": [], "notes": day.notes, "labelHighlights": "", "labelNotes": ""})
+            fact_id = day.id or f"day-{number}"
+            days.append({"id": f"day-{number}", "sourceFactId": fact_id, "dayNumber": number, "dayDate": day.display_date or "", "segmentCity": day.destination or "", "destinationRef": refs.get("destinationRef"), "overnightRef": refs.get("overnightRef"), "factSummary": day.summary or "", "factHighlights": list(day.highlights), "title": "", "description": [], "overnight": day.overnight or "", "meals": day.meals, "activities": [], "notes": day.notes, "labelHighlights": "", "labelNotes": ""})
         resolved_hotels = resolved_facts.get("hotels") or []
         hotels = []
         for index, hotel in enumerate(services.hotels, 1):
@@ -107,8 +108,8 @@ class SkeletonBuilder:
             day.pop("factHighlights", None)
         document = {
             "meta": {"quotationId": quotation_id, "opportunityId": payload.opportunity_id or "", "lang": payload.lang or "en", "brandId": payload.brand_id or "", "template": "quote-generator", "revision": 1, "status": "draft", "contentSchemaVersion": 1},
-            "presentation": {"renderer": "quote-generator", "themeId": payload.presentation_options.theme_id, "layoutVersion": payload.presentation_options.layout_version},
-            "traveler": {"customerName": customer.customer_name or "", "guestProfile": customer.guest_profile or "", "nationality": customer.nationality or "", "adults": customer.adults or 0, "children": customer.children or 0},
+            "presentation": {"renderer": "quote-generator", "templateId": payload.presentation_options.template_id or "", "themeId": payload.presentation_options.theme_id, "layoutVersion": payload.presentation_options.layout_version},
+            "traveler": {"customerName": customer.customer_name or "", "guestProfile": customer.guest_profile or "", "nationality": customer.nationality or "", "adults": customer.adults or 0, "children": customer.children or 0, "kidAges": list(customer.kid_ages), "advisorName": customer.advisor_name or "", "advisorAgency": customer.advisor_agency or ""},
             "trip": {"title": "", "lede": "", "durationText": resolved_facts["duration"]["label"], "routeText": resolved_facts["routeLabel"], "travelDates": resolved_facts["travelDateLabel"], "quotationNumber": quotation_id, "priceBasis": ""},
             "narrative": {"coverKicker": "", "heroMeta1": "", "heroMeta2": "", "journeyOverviewTitle": "", "letterHighlight": "", "letterGreeting": "", "letterIntro": "", "letterBody2": "", "letterOutro": "", "letterSignOff": "", "letterSender": "", "footerText": ""},
             "route": {"title": "", "description": "", "staySegments": stay_segments},
@@ -122,6 +123,8 @@ class SkeletonBuilder:
                         "label": item.label,
                         "currency": item.currency,
                         "perTravelerAmountMinor": item.per_traveler_amount_minor,
+                        "perAdultAmountMinor": item.per_adult_amount_minor,
+                        "perChildAmountMinor": item.per_child_amount_minor,
                         "groupTotalAmountMinor": item.group_total_amount_minor,
                     }
                     for i, item in enumerate(pricing.options, 1)

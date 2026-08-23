@@ -10,6 +10,7 @@ import {
   type InspectorDescriptor,
   type ResolvedHandoff,
 } from './editableHandoff.ts';
+import { isWorkspaceNativeInteractionTarget } from './interactionBoundary.ts';
 
 export type { InspectorDescriptor } from './editableHandoff.ts';
 export type ResolvedInspectorSelection = {
@@ -83,7 +84,17 @@ export default function BoundaryCanvas({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fields, document]);
 
-  const targetFor = (target: EventTarget | null) => target instanceof HTMLElement ? target.closest<HTMLElement>('[data-editable]') : null;
+  /**
+   * A display element can still expose an editable descriptor while owning a
+   * native interaction surface. In that case the workspace must not turn the
+   * interaction's click/focus into an inspector selection: React capture
+   * handlers run before Leaflet's control handlers and would otherwise cancel
+   * a map drag or a control click.
+   */
+  const targetFor = (target: EventTarget | null) => {
+    if (!(target instanceof HTMLElement) || isWorkspaceNativeInteractionTarget(target)) return null;
+    return target.closest<HTMLElement>('[data-editable]');
+  };
   return (
     <div
       ref={root}

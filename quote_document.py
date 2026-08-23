@@ -109,6 +109,7 @@ class QuoteDocumentPresentation(QuoteBaseModel):
     renderer: Literal["quote-generator"] = "quote-generator"
     themeId: str = "brochure"
     layoutVersion: int = 1
+    templateId: str = ""
     # Presentation-owned text only. Fact and content paths are never stored here.
     copyOverrides: Dict[str, str] = Field(default_factory=dict)
     # Quote-level display media takes precedence over fact/source media without
@@ -142,6 +143,9 @@ class QuoteDocumentTraveler(QuoteBaseModel):
     nationality: str = ""
     adults: int = 0
     children: int = 0
+    kidAges: List[int] = Field(default_factory=list)
+    advisorName: str = ""
+    advisorAgency: str = ""
 
 
 class QuoteDocumentTrip(QuoteBaseModel):
@@ -209,6 +213,7 @@ class QuoteDocumentDestinationRef(QuoteBaseModel):
 
 class QuoteDocumentItineraryDay(QuoteBaseModel):
     id: str
+    sourceFactId: str = ""
     dayNumber: int
     dayDate: str = ""
     segmentCity: str = ""
@@ -523,12 +528,15 @@ class CreateQuoteCustomerFacts(QuoteBaseModel):
     customer_name: str | None = None
     adults: int | None = None
     children: int | None = None
+    kid_ages: List[int] = Field(default_factory=list)
     nationality: str | None = None
     guest_profile: str | None = None
     travel_style: str | None = None
     market: str | None = None
     party_label: str | None = None
     greeting_name: str | None = None
+    advisor_name: str | None = None
+    advisor_agency: str | None = None
 
 
 class CreateQuoteHotelFact(QuoteBaseModel):
@@ -637,6 +645,4 @@ class CreateQuoteRequestV1(QuoteBaseModel):
     @model_validator(mode="after")
     def normalize_language(self) -> "CreateQuoteRequestV1":
         return self
-
-
 

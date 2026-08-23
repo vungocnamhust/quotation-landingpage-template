@@ -14,6 +14,7 @@ from db.models.quotation import (
     QuotationRequest,
     QuotationVersionFacts,
     QuotationVersionImpact,
+    QuotationVersionImpactTarget,
 )
 from repositories.errors import DocumentRevisionConflictError
 
@@ -240,9 +241,24 @@ class QuotationVersionImpactRepository:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
-    async def create_many(self, quotation_id: str, impacts: list[dict[str, str]]) -> list[QuotationVersionImpact]:
+    async def create_many(self, quotation_id: str, impacts: list[dict[str, Any]]) -> list[QuotationVersionImpact]:
         rows = [QuotationVersionImpact(quotation_id=quotation_id, **impact) for impact in impacts]
         self.session.add_all(rows)
+        await self.session.flush()
+        targets = [
+            QuotationVersionImpactTarget(
+                impact_id=row.id,
+                quotation_id=quotation_id,
+                stage=row.stage,
+                scope=row.scope,
+                target_path=row.target_path or "/",
+                treatment="generation_candidate" if row.generation_eligible else "derived_rebuilt" if row.stage == "design" else "preserved_review",
+                affected_fields_json=[{"sourcePath": row.source_path, "targetPath": row.target_path, "explanation": row.explanation}],
+                generation_eligible=row.generation_eligible,
+            )
+            for row in rows
+        ]
+        self.session.add_all(targets)
         await self.session.flush()
         return rows
 
@@ -252,6 +268,14 @@ class QuotationVersionImpactRepository:
             statement = statement.where(QuotationVersionImpact.status == "pending")
         result = await self.session.scalars(
             statement.order_by(QuotationVersionImpact.stage, QuotationVersionImpact.scope, QuotationVersionImpact.id)
+        )
+        return list(result.all())
+
+    async def list_targets(self, quotation_id: str) -> list[QuotationVersionImpactTarget]:
+        result = await self.session.scalars(
+            select(QuotationVersionImpactTarget)
+            .where(QuotationVersionImpactTarget.quotation_id == quotation_id)
+            .order_by(QuotationVersionImpactTarget.stage, QuotationVersionImpactTarget.scope, QuotationVersionImpactTarget.id)
         )
         return list(result.all())
 
@@ -270,6 +294,62 @@ class QuotationVersionImpactRepository:
         row.resolved_at = datetime.now().astimezone()
         await self.session.flush()
         return row
+
+    async def accept_all(
+        self,
+        quotation_id: str,
+        *,
+        selected_impact_ids: set[int],
+        note: str,
+        profile_id: str | None,
+    ) -> list[QuotationVersionImpact]:
+        rows = await self.list(quotation_id, pending_only=True)
+        now = datetime.now().astimezone()
+        for row in rows:
+            row.status = "resolved"
+            row.resolution_note = note
+            row.resolved_by_profile_id = profile_id
+            row.resolved_at = now
+            row.generation_selected = row.generation_eligible and row.id in selected_impact_ids
+            row.generation_status = "selected" if row.generation_selected else "not_requested"
+        targets = await self.session.scalars(
+            select(QuotationVersionImpactTarget).where(QuotationVersionImpactTarget.quotation_id == quotation_id)
+        )
+        selected = set(selected_impact_ids)
+        for target in targets:
+            target.accepted_by_profile_id = profile_id
+            target.accepted_at = now
+            target.generation_selected = target.generation_eligible and target.impact_id in selected
+            target.execution_status = "selected" if target.generation_selected else "not_requested"
+        await self.session.flush()
+        return rows
+
+    async def selected_for_generation(self, quotation_id: str) -> list[QuotationVersionImpact]:
+        result = await self.session.scalars(
+            select(QuotationVersionImpact).where(
+                QuotationVersionImpact.quotation_id == quotation_id,
+                QuotationVersionImpact.generation_selected.is_(True),
+                QuotationVersionImpact.generation_status == "selected",
+            ).order_by(QuotationVersionImpact.id)
+        )
+        return list(result.all())
+
+    async def mark_generation_status(
+        self,
+        rows: list[QuotationVersionImpact],
+        *,
+        status: str,
+    ) -> None:
+        for row in rows:
+            row.generation_status = status
+        row_ids = [row.id for row in rows]
+        if row_ids:
+            await self.session.execute(
+                update(QuotationVersionImpactTarget)
+                .where(QuotationVersionImpactTarget.impact_id.in_(row_ids))
+                .values(execution_status=status)
+            )
+        await self.session.flush()
 
 
 class QuotationDocumentRepository:

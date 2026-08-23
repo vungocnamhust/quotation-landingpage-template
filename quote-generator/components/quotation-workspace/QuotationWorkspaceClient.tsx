@@ -46,6 +46,7 @@ import { ReviewBlockersPanel } from "./ReviewBlockersPanel.tsx";
 import DesignPreviewToolbar from "./DesignPreviewToolbar.tsx";
 import BrochurePreviewModal from "./BrochurePreviewModal.tsx";
 import RequestRecapModal from "./RequestRecapModal.tsx";
+import ImpactCenter from "./ImpactCenter.tsx";
 
 const ContentStudioClient = dynamic(
   () => import("../content-studio/ContentStudioClient"),
@@ -90,6 +91,7 @@ export default function QuotationWorkspaceClient({
   const search = useSearchParams();
   const pathname = usePathname();
   const initialStage = search.get("stage");
+  const isImpactCenter = initialStage === "impact";
   const [stage, setStage] = useState<Stage>(
     stages.includes(initialStage as Stage) ? (initialStage as Stage) : "facts"
   );
@@ -107,7 +109,7 @@ export default function QuotationWorkspaceClient({
   );
   const [isEditingQuotation, setIsEditingQuotation] = useState(false);
   const [pending, startTransition] = useTransition();
-  const workspace = useQuotationWorkspace(quotationId, lang);
+  const workspace = useQuotationWorkspace(quotationId, lang, isImpactCenter);
   const refreshWorkspace = workspace.refresh;
   const { data: factsData } = workspace.facts;
   const { data: documentData } = workspace.document;
@@ -235,7 +237,7 @@ export default function QuotationWorkspaceClient({
           { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ facts, baseRevision: documentData.currentRevision }) },
           "Unable to create the quotation version."
         );
-        toast("New quotation version created. Review the impacted content and design.", "success");
+        toast("New quotation version created. Review its exact change plan in Impact Center.", "success");
         router.push(result.redirectUrl);
       } catch (error) {
         notify({ message: apiErrorMessage(error), type: "error", persistent: true, scope: "quotation:version", action: { label: "Retry", onClick: () => createBusinessVersion(facts) } });
@@ -420,6 +422,41 @@ export default function QuotationWorkspaceClient({
     },
     [documentData?.document, guardedNavigateStage, pathname, router, search],
   );
+
+  const acceptImpactCenter = useCallback(async (selectedImpactIds: number[]) => {
+    try {
+      await workspace.request(
+        `/api/v2/quotations/${quotationId}/impacts/accept`,
+        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ selectedImpactIds }) },
+        "Impact Center could not be accepted."
+      );
+      await workspace.refresh();
+      clearScope("quotation:impact-center");
+      toast("Change plan accepted. Choose where to continue.", "success");
+    } catch (error) {
+      notify({ message: apiErrorMessage(error), type: "error", persistent: true, scope: "quotation:impact-center", action: { label: "Retry", onClick: () => undefined } });
+      throw error;
+    }
+  }, [clearScope, notify, quotationId, toast, workspace]);
+
+  const openImpactDesign = useCallback(async () => {
+    try {
+      await workspace.request(
+        `/api/v2/quotations/${quotationId}/impacts/generate-selected`,
+        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) },
+        "Selected Design targets could not be generated and applied."
+      );
+      await workspace.refresh();
+      router.replace(`${pathname}?stage=design&lang=${encodeURIComponent(lang)}`);
+    } catch (error) {
+      notify({ message: apiErrorMessage(error), type: "error", persistent: true, scope: "quotation:impact-generate", action: { label: "Reload", onClick: () => window.location.reload() } });
+      throw error;
+    }
+  }, [lang, notify, pathname, quotationId, router, workspace]);
+
+  if (isImpactCenter) {
+    return <ImpactCenter impacts={impactsData?.items ?? []} loading={!impactsData && !workspace.impacts.error} error={workspace.impacts.error ? apiErrorMessage(workspace.impacts.error) : null} pending={pending} onAccept={acceptImpactCenter} onRetry={() => void workspace.impacts.mutate()} onReviewFacts={() => router.replace(`${pathname}?stage=facts&lang=${encodeURIComponent(lang)}`)} onOpenDesign={openImpactDesign} />;
+  }
 
   return (
     <div
@@ -650,11 +687,6 @@ export default function QuotationWorkspaceClient({
 
         {stage === "content" ? (
           <>
-          {impactsData?.items.some((item) => item.status === "pending") ? (
-            <div className="rounded-[var(--radius-card)] border border-[var(--color-border-strong)] bg-[var(--color-accent-wash)] p-4">
-              <p className={cn(getTypographyClassName("bodyMd"), "text-[var(--color-on-surface)]")}>Review the pending impacts before publishing. Content scopes are shown below; resolve each item after applying or retaining reviewed work.</p>
-            </div>
-          ) : null}
           <ContentStudioClient
             quotationId={quotationId}
             lang={lang}
