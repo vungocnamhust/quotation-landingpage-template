@@ -16,6 +16,7 @@ import { WebRouteMapRouteLayer } from './WebRouteMapRouteLayer.ts';
 import { addWebRouteMapControls } from './WebRouteMapControls.ts';
 import { useWebRouteMapLayout } from './useWebRouteMapLayout.ts';
 import { useWebRouteMapInteraction } from './useWebRouteMapInteraction.ts';
+import { ensureLeafletPatched } from './leafletPatch.ts';
 
 interface WebRouteMapExperienceProps {
   viewModel: RouteMapViewModel;
@@ -63,6 +64,7 @@ export function WebRouteMapExperience({ viewModel, typography, mapColors, viewMo
   useEffect(() => {
     const container = mapContainerRef.current;
     if (!container || points.length === 0) return;
+    ensureLeafletPatched();
     const instance = L.map(container, {
       zoomControl: false,
       attributionControl: false,
