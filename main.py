@@ -104,6 +104,7 @@ from routers.v2.workspace import router as workspace_router
 from routers.v2.quotation_facts import router as quotation_facts_router
 from routers.v2.quotation_document import router as quotation_document_router
 from routers.v2.quotation_versions import router as quotation_versions_router
+from routers.v2.content_actions import router as content_actions_router
 from routers.v2.destinations import router as destinations_router
 from routers.v2.accommodations import router as accommodations_router
 from routers.v2.travel_designers import router as travel_designers_router
@@ -208,6 +209,7 @@ app.include_router(workspace_router)
 app.include_router(quotation_facts_router)
 app.include_router(quotation_document_router)
 app.include_router(quotation_versions_router)
+app.include_router(content_actions_router)
 app.include_router(destinations_router)
 app.include_router(accommodations_router)
 app.include_router(travel_designers_router)

@@ -349,9 +349,10 @@ class SectionContentGenerator:
         input_days = facts_snapshot.get("itinerary_days") or facts_snapshot.get("itinerary") or []
         candidates = []
         for idx, day_model in enumerate(output.days):
-            day_num = input_days[idx].get("day_number") if idx < len(input_days) and isinstance(input_days[idx], dict) else idx + 1
+            input_day = input_days[idx] if idx < len(input_days) and isinstance(input_days[idx], dict) else {}
+            day_num = input_day.get("day_number") or input_day.get("dayNumber") or idx + 1
             day_data = day_model.model_dump(mode="json")
-            source_fact_id = day.get("source_fact_id") or day.get("sourceFactId") or str(day_num)
+            source_fact_id = input_day.get("source_fact_id") or input_day.get("sourceFactId") or str(day_num)
             candidates.append({"sourceFactId": source_fact_id, "dayNumber": day_num, **day_data})
 
         metadata = {

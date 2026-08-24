@@ -55,6 +55,9 @@ class QuotationVersionFactory:
     ) -> SuccessorPreparation:
         facts = self._with_permanent_fact_ids(command.facts, command.predecessor_id)
         resolved = await self._resolve_facts(facts)
+        canonical_snapshot = resolved.pop("canonicalFacts", None)
+        if isinstance(canonical_snapshot, dict):
+            facts = CreateQuoteRequestV1.model_validate(canonical_snapshot)
         if resolved.get("missingInputs"):
             raise ValueError("Required quotation facts are missing.")
         rebuilt = self._build_skeleton(facts, resolved)

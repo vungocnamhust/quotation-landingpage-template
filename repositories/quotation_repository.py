@@ -293,6 +293,34 @@ class ContentActionPlanRepository:
             )
         )
 
+    async def get_actions(self, *, plan_id: str, quotation_id: str, action_ids: list[str]) -> list[QuotationContentAction]:
+        result = await self.session.scalars(
+            select(QuotationContentAction).where(
+                QuotationContentAction.plan_id == plan_id,
+                QuotationContentAction.quotation_id == quotation_id,
+                QuotationContentAction.id.in_(action_ids),
+            )
+        )
+        return list(result.all())
+
+    async def accept_plan(
+        self,
+        *,
+        plan: QuotationContentActionPlan,
+        profile_id: str | None,
+        note: str,
+        correlation_id: str,
+    ) -> QuotationContentActionPlan:
+        if plan.status == "accepted":
+            return plan
+        plan.status = "accepted"
+        plan.accepted_by_profile_id = profile_id
+        plan.accepted_at = datetime.now().astimezone()
+        plan.acceptance_note = note
+        plan.correlation_id = correlation_id
+        await self.session.flush()
+        return plan
+
     async def mark_actions(
         self,
         *,
