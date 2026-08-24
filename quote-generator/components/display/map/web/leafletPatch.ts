@@ -22,10 +22,16 @@ interface PatchedDraggable {
     clickTolerance: number;
   };
   fire: (type: string, data?: Record<string, unknown>) => void;
-  _onMove: (e: MouseEvent | TouchEvent) => void;
+  _onMove: (e: Event) => void;
   _onUp: () => void;
   _updatePosition: () => void;
   finishDrag: (noInertia?: boolean) => void;
+}
+
+interface DraggablePrototype {
+  _onDown: (this: PatchedDraggable, e: Event) => void;
+  _onMove: (this: PatchedDraggable, e: Event) => void;
+  finishDrag: (this: PatchedDraggable, noInertia?: boolean) => void;
 }
 
 /**
@@ -54,8 +60,10 @@ export function ensureLeafletPatched(): void {
     return current || rootBody || element;
   };
 
+  const proto = L.Draggable.prototype as unknown as DraggablePrototype;
+
   // 2. Patch L.Draggable.prototype._onDown
-  L.Draggable.prototype._onDown = function (this: PatchedDraggable, e: MouseEvent | TouchEvent) {
+  proto._onDown = function (this: PatchedDraggable, e: Event) {
     if (!this._enabled) return;
 
     this._moved = false;
@@ -104,17 +112,17 @@ export function ensureLeafletPatched(): void {
     this._ownerDoc = ownerDoc;
 
     if (ownerDoc) {
-      L.DomEvent.on(ownerDoc, isMouseEvent ? 'mousemove' : 'touchmove', this._onMove, this);
-      L.DomEvent.on(ownerDoc, isMouseEvent ? 'mouseup' : 'touchend touchcancel', this._onUp, this);
+      L.DomEvent.on(ownerDoc as unknown as HTMLElement, isMouseEvent ? 'mousemove' : 'touchmove', this._onMove as L.DomEvent.EventHandlerFn, this);
+      L.DomEvent.on(ownerDoc as unknown as HTMLElement, isMouseEvent ? 'mouseup' : 'touchend touchcancel', this._onUp as L.DomEvent.EventHandlerFn, this);
     }
 
     if (typeof document !== 'undefined' && ownerDoc !== document) {
-      L.DomEvent.on(document, isMouseEvent ? 'mouseup' : 'touchend touchcancel', this._onUp, this);
+      L.DomEvent.on(document as unknown as HTMLElement, isMouseEvent ? 'mouseup' : 'touchend touchcancel', this._onUp as L.DomEvent.EventHandlerFn, this);
     }
   };
 
   // 3. Patch L.Draggable.prototype._onMove
-  L.Draggable.prototype._onMove = function (this: PatchedDraggable, e: MouseEvent | TouchEvent) {
+  proto._onMove = function (this: PatchedDraggable, e: Event) {
     if (!this._enabled) return;
 
     const touchEvent = e as TouchEvent;
@@ -124,7 +132,7 @@ export function ensureLeafletPatched(): void {
     }
 
     const first = touchEvent.touches && touchEvent.touches.length === 1 ? touchEvent.touches[0] : (e as MouseEvent);
-    const offset = new L.Point(first.clientX, first.clientY)._subtract(this._startPoint);
+    const offset = new L.Point(first.clientX, first.clientY).subtract(this._startPoint);
 
     if (!offset.x && !offset.y) return;
     if (Math.abs(offset.x) + Math.abs(offset.y) < this.options.clickTolerance) return;
@@ -149,11 +157,11 @@ export function ensureLeafletPatched(): void {
 
       this._lastTarget = (e.target || (e as unknown as { srcElement: EventTarget }).srcElement) as EventTarget | null;
       if (
-        typeof window !== 'undefined' &&
-        (window as unknown as { SVGElementInstance?: unknown }).SVGElementInstance &&
-        this._lastTarget instanceof (window as unknown as { SVGElementInstance: unknown }).SVGElementInstance
+        this._lastTarget &&
+        typeof this._lastTarget === 'object' &&
+        'correspondingUseElement' in this._lastTarget
       ) {
-        this._lastTarget = (this._lastTarget as unknown as { correspondingUseElement: EventTarget }).correspondingUseElement;
+        this._lastTarget = (this._lastTarget as { correspondingUseElement: EventTarget }).correspondingUseElement;
       }
       if (typeof HTMLElement !== 'undefined' && this._lastTarget instanceof HTMLElement) {
         L.DomUtil.addClass(this._lastTarget, 'leaflet-drag-target');
@@ -167,7 +175,7 @@ export function ensureLeafletPatched(): void {
   };
 
   // 4. Patch L.Draggable.prototype.finishDrag
-  L.Draggable.prototype.finishDrag = function (this: PatchedDraggable, noInertia?: boolean) {
+  proto.finishDrag = function (this: PatchedDraggable, noInertia?: boolean) {
     const ownerDoc = this._ownerDoc || this._element?.ownerDocument || (typeof document !== 'undefined' ? document : null);
 
     if (ownerDoc?.body) {
@@ -183,12 +191,12 @@ export function ensureLeafletPatched(): void {
     }
 
     if (ownerDoc) {
-      L.DomEvent.off(ownerDoc, 'mousemove touchmove', this._onMove, this);
-      L.DomEvent.off(ownerDoc, 'mouseup touchend touchcancel', this._onUp, this);
+      L.DomEvent.off(ownerDoc as unknown as HTMLElement, 'mousemove touchmove', this._onMove as L.DomEvent.EventHandlerFn, this);
+      L.DomEvent.off(ownerDoc as unknown as HTMLElement, 'mouseup touchend touchcancel', this._onUp as L.DomEvent.EventHandlerFn, this);
     }
     if (typeof document !== 'undefined' && ownerDoc !== document) {
-      L.DomEvent.off(document, 'mousemove touchmove', this._onMove, this);
-      L.DomEvent.off(document, 'mouseup touchend touchcancel', this._onUp, this);
+      L.DomEvent.off(document as unknown as HTMLElement, 'mousemove touchmove', this._onMove as L.DomEvent.EventHandlerFn, this);
+      L.DomEvent.off(document as unknown as HTMLElement, 'mouseup touchend touchcancel', this._onUp as L.DomEvent.EventHandlerFn, this);
     }
 
     L.DomUtil.enableImageDrag();
