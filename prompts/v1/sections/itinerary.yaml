@@ -3,8 +3,8 @@
 scope: "itinerary"
 title: "Itinerary High-Level Introduction"
 rules:
-  - "Provide a high-level narrative overview of the full day-by-day itinerary."
-  - "Set expectations for curated experiences and pace across the journey."
+  - "Provide a high-level narrative overview of the full day-by-day itinerary (~40–60 words)."
+  - "Provide a refined itinerary title (max 160 characters) that sets expectations for curated experiences and pace across the journey."
 output_fields:
   - "title"
   - "description"

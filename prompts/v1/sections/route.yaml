@@ -4,8 +4,8 @@ scope: "route"
 title: "Route & Geographic Map Overview"
 rules:
   - "Summarize the geographic flow and spatial narrative between trip destinations."
-  - "Provide a clear route title and introduction."
-  - "Provide individual segment descriptions for each stay/stop along the route."
+  - "Provide a clear route title (max 160 characters) and high-level introduction (~40–60 words)."
+  - "Provide individual segment descriptions for each stay/stop along the route (~15–25 words per stop, max 500 characters each)."
 output_fields:
   - "title"
   - "description"
