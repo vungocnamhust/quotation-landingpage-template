@@ -47,6 +47,8 @@ import DesignPreviewToolbar from "./DesignPreviewToolbar.tsx";
 import BrochurePreviewModal from "./BrochurePreviewModal.tsx";
 import RequestRecapModal from "./RequestRecapModal.tsx";
 import ImpactCenter from "./ImpactCenter.tsx";
+import { useContentActionPlan, type ContentAction } from "./useContentActionPlan.ts";
+import { useContentActionExecution } from "./useContentActionExecution.ts";
 
 const ContentStudioClient = dynamic(
   () => import("../content-studio/ContentStudioClient"),
@@ -90,11 +92,16 @@ export default function QuotationWorkspaceClient({
   const router = useRouter();
   const search = useSearchParams();
   const pathname = usePathname();
-  const initialStage = search.get("stage");
-  const isImpactCenter = initialStage === "impact";
-  const [stage, setStage] = useState<Stage>(
-    stages.includes(initialStage as Stage) ? (initialStage as Stage) : "facts"
-  );
+  const requestedStage = search.get("stage");
+  const isImpactCenter = requestedStage === "impact";
+  const stage: Stage = stages.includes(requestedStage as Stage)
+    ? (requestedStage as Stage)
+    : "facts";
+  const setStage = useCallback((next: Stage) => {
+    const params = new URLSearchParams(search.toString());
+    params.set("stage", next);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [pathname, router, search]);
   const { toast, notify, clearScope } = useToast();
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
   const [fallbackUrl, setFallbackUrl] = useState<string | null>(null);
@@ -109,7 +116,7 @@ export default function QuotationWorkspaceClient({
   );
   const [isEditingQuotation, setIsEditingQuotation] = useState(false);
   const [pending, startTransition] = useTransition();
-  const workspace = useQuotationWorkspace(quotationId, lang, isImpactCenter);
+  const workspace = useQuotationWorkspace(quotationId, lang);
   const refreshWorkspace = workspace.refresh;
   const { data: factsData } = workspace.facts;
   const { data: documentData } = workspace.document;
@@ -117,7 +124,8 @@ export default function QuotationWorkspaceClient({
   const { data: workflowData } = workspace.workflow;
   const { data: options } = workspace.options;
   const { data: brandsResponse } = workspace.brands;
-  const { data: impactsData } = workspace.impacts;
+  const contentActionPlan = useContentActionPlan(quotationId, isImpactCenter);
+  const contentActionExecution = useContentActionExecution(quotationId);
 
   const opportunityId =
     factsData?.source?.opportunityId ||
@@ -201,7 +209,7 @@ export default function QuotationWorkspaceClient({
     window.setTimeout(() => {
       blockersRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 50);
-  }, []);
+  }, [setStage]);
 
   const goTo = useCallback(
     async (next: Stage) => {
@@ -340,7 +348,7 @@ export default function QuotationWorkspaceClient({
       }
     }, 1500);
     return () => window.clearTimeout(timer);
-  }, [clearScope, notify, publicationJob, refreshWorkspace, toast]);
+  }, [clearScope, notify, publicationJob, refreshWorkspace, setStage, toast]);
 
   const labels: Record<Stage, string> = {
     facts: "Facts",
@@ -424,24 +432,55 @@ export default function QuotationWorkspaceClient({
     [documentData?.document, guardedNavigateStage, pathname, router, search],
   );
 
-  const acceptImpactCenter = useCallback(async (selectedTargetIds: number[]) => {
+  const acceptImpactCenter = useCallback(async () => {
     try {
-      await workspace.request(
-        `/api/v2/quotations/${quotationId}/impacts/accept`,
-        { method: "POST", headers: { "Content-Type": "application/json", "Idempotency-Key": crypto.randomUUID() }, body: JSON.stringify({ selectedTargetIds }) },
-        "Impact Center could not be accepted."
-      );
-      await workspace.refresh();
+      await contentActionExecution.accept();
+      await contentActionPlan.mutate();
       clearScope("quotation:impact-center");
       toast("Change plan accepted. Choose where to continue.", "success");
     } catch (error) {
-      notify({ message: apiErrorMessage(error), type: "error", persistent: true, scope: "quotation:impact-center", action: { label: "Retry", onClick: () => void workspace.impacts.mutate() } });
+      notify({ message: apiErrorMessage(error), type: "error", persistent: true, scope: "quotation:impact-center", action: { label: "Retry", onClick: () => void contentActionPlan.mutate() } });
       throw error;
     }
-  }, [clearScope, notify, quotationId, toast, workspace]);
+  }, [clearScope, contentActionExecution, contentActionPlan, notify, toast]);
+
+  const openContentAction = useCallback((action?: ContentAction) => {
+    const params = new URLSearchParams(search.toString());
+    params.set("stage", "content");
+    if (action) {
+      params.set("section", action.scope);
+      params.set("impactAction", action.id);
+      const focus = action.scope.startsWith("itinerary:day:") ? action.scope.split(":").at(-1) : "";
+      if (focus) params.set("focus", focus); else params.delete("focus");
+    } else {
+      params.delete("impactAction");
+    }
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [pathname, router, search]);
+
+  const executeContentActions = useCallback(async (mode: "auto" | "bypass", actions: ContentAction[]) => {
+    const plan = contentActionPlan.data;
+    if (!plan || !actions.length) return;
+    try {
+      const result = await contentActionExecution.execute(
+        mode,
+        plan.id,
+        actions.map((action) => action.id),
+        "storytelling",
+        mode === "bypass" ? documentData?.currentRevision : undefined,
+      );
+      await Promise.all([workspace.refresh(), contentActionPlan.mutate()]);
+      toast(mode === "auto" ? "Review drafts are ready in Content Studio." : "Selected generated content has been applied.", "success");
+      openContentAction(actions[0]);
+      return result;
+    } catch (error) {
+      notify({ message: apiErrorMessage(error), type: "error", persistent: true, scope: `quotation:content-action:${mode}`, action: { label: "Retry", onClick: () => void executeContentActions(mode, actions) } });
+      throw error;
+    }
+  }, [contentActionExecution, contentActionPlan, documentData?.currentRevision, notify, openContentAction, toast, workspace]);
 
   if (isImpactCenter) {
-    return <ImpactCenter impacts={impactsData?.items ?? []} loading={!impactsData && !workspace.impacts.error} error={workspace.impacts.error ? apiErrorMessage(workspace.impacts.error) : null} pending={pending} onAccept={acceptImpactCenter} onRetry={() => void workspace.impacts.mutate()} onReviewFacts={() => router.replace(`${pathname}?stage=facts&lang=${encodeURIComponent(lang)}`)} onOpenContent={(target) => router.replace(`${pathname}?stage=content&section=${encodeURIComponent(target.scope)}&focus=${encodeURIComponent(target.deepLink.focus ?? "")}&impactTarget=${target.id}&lang=${encodeURIComponent(lang)}`)} />;
+    return <ImpactCenter plan={contentActionPlan.data} loading={!contentActionPlan.data && !contentActionPlan.error} error={contentActionPlan.error ? apiErrorMessage(contentActionPlan.error) : null} pendingMode={contentActionExecution.pendingMode} onAccept={acceptImpactCenter} onGenerateDrafts={async (actions) => { await executeContentActions("auto", actions); }} onGenerateAndApply={async (actions) => { await executeContentActions("bypass", actions); }} onRetry={() => void contentActionPlan.mutate()} onReviewFacts={() => setStage("facts")} onOpenContent={openContentAction} />;
   }
 
   return (
@@ -677,6 +716,7 @@ export default function QuotationWorkspaceClient({
           <ContentStudioClient
             quotationId={quotationId}
             lang={lang}
+            impactActionId={search.get("impactAction") ?? undefined}
             onEditFacts={(section) => {
               const params = new URLSearchParams(search.toString());
               params.set("stage", "facts");

@@ -26,6 +26,7 @@ import { useContentGeneration } from './useContentGeneration.ts';
 type Props = {
   quotationId: string;
   lang: string;
+  impactActionId?: string;
   onEditFacts?: (section?: string) => void;
   onProceedToDesign?: () => void;
   resources: {
@@ -124,6 +125,7 @@ function DeterministicFactsPanel({
 export default function ContentStudioClient({
   quotationId,
   lang,
+  impactActionId,
   onEditFacts,
   onProceedToDesign,
   resources,
@@ -235,7 +237,7 @@ export default function ContentStudioClient({
     ]
   );
 
-  const batchHeaderAction = (
+  const batchHeaderAction = !impactActionId ? (
     <div className="flex flex-col gap-2 w-full">
       <button
         type="button"
@@ -274,7 +276,7 @@ export default function ContentStudioClient({
         </button>
       ) : null}
     </div>
-  );
+  ) : undefined;
 
   const outlineFooter = onProceedToDesign ? (
     <button

@@ -14,9 +14,6 @@ export type ContentEditor = { owner: 'fact' | 'fact-derived' | 'content' | 'desi
 export type PromptPreview = { version: string; scope: string; mode: string; systemPrompt: string; userPrompt: string; modeContract: string; effectiveInstruction: string; factsSnapshot: Record<string, unknown> };
 export type ContentDraft = { id: string; scope: string; generationMode: 'storytelling' | 'detailed' | 'manual'; status: 'draft' | 'applied' | 'discarded' | 'stale'; candidate: ContentCandidate; missingInputs: Array<{ path: string; reason: string }>; generation: { cached?: boolean; latencyMs?: number; warnings?: string[]; llmCalled?: boolean; generationStatus?: string; instructionSource?: 'default' | 'custom' | 'manual'; systemPrompt?: string; userPrompt?: string; promptVersion?: string }; sourceDocumentRevision: number; factsSnapshot: { trip?: { title?: string; destinations?: string[] }; itineraryDay?: { destination?: string; summary?: string } }; editor?: ContentEditor };
 export type FactsResponse = { facts: QuotationFacts; resolvedFacts: ResolvedFacts; source: { kind?: string; opportunityId?: string | null; snapshotAt?: string | null }; baselineLang: 'en' | 'vi' | 'ar'; requestBrief?: Record<string, unknown>; businessVersion?: { familyId: string; number: number; parentQuotationId?: string | null; sourceRequestId?: string | null; sourceRequestRevision?: number | null; immutable: boolean } };
-export type ImpactTarget = { id: number; scope: string; targetPath: string; treatment: 'derived_rebuilt' | 'preserved_review' | 'generation_candidate' | 'retired' | 'preserved_unchanged'; affectedFields: Array<{ path?: string; label?: string }>; generationEligible: boolean; generationSelected: boolean; executionStatus: string; deepLink: { stage: 'content'; section: string; focus?: string | null } };
-export type QuotationImpact = { id: number; sourcePath: string; explanation: string; status: 'pending' | 'resolved'; entityKey: string; operation: 'added' | 'removed' | 'changed'; oldValue?: Record<string, unknown> | null; newValue?: Record<string, unknown> | null; targets: ImpactTarget[] };
-export type ImpactsResponse = { items: QuotationImpact[] };
 export type EditableHandoff = {
   stage: 'facts' | 'content' | 'design';
   section: string;
@@ -56,7 +53,7 @@ export type PublicationResponse = { publications: Array<{ targetId: string; bran
 
 const getJson = <T,>(url: string) => quotationFetch<T>(url, undefined, 'The quotation could not be loaded.');
 
-export function useQuotationWorkspace(quotationId: string, lang: string, includeImpacts = false) {
+export function useQuotationWorkspace(quotationId: string, lang: string) {
   const urls = useMemo(() => ({
     facts: `${API_BASE}/api/v2/quotations/${quotationId}/facts`,
     document: `${API_BASE}/api/v2/quotations/${quotationId}/document?lang=${encodeURIComponent(lang)}`,
@@ -66,7 +63,6 @@ export function useQuotationWorkspace(quotationId: string, lang: string, include
     options: `${API_BASE}/api/v2/quotation-options`,
     brands: `${API_BASE}/api/v2/brands`,
     publications: `${API_BASE}/api/v2/quotations/${quotationId}/publications?lang=${encodeURIComponent(lang)}`,
-    impacts: `${API_BASE}/api/v2/quotations/${quotationId}/impacts`,
   }), [lang, quotationId]);
 
   const swrConfig = useMemo(
@@ -90,12 +86,9 @@ export function useQuotationWorkspace(quotationId: string, lang: string, include
   const options = useSWR<QuotationOptions>(urls.options, getJson, swrConfig);
   const brands = useSWR<BrandResponse>(urls.brands, getJson, swrConfig);
   const publications = useSWR<PublicationResponse>(urls.publications, getJson, swrConfig);
-  // Impact Center is a one-time handoff.  Do not keep polling it after
-  // acceptance, otherwise Studio would recreate a warning signal.
-  const impacts = useSWR<ImpactsResponse>(includeImpacts ? urls.impacts : null, getJson, swrConfig);
   const refresh = useCallback(async () => {
-    await Promise.all([facts.mutate(), document.mutate(), drafts.mutate(), review.mutate(), workflow.mutate(), brands.mutate(), publications.mutate(), ...(includeImpacts ? [impacts.mutate()] : [])]);
-  }, [brands, document, drafts, facts, impacts, includeImpacts, publications, review, workflow]);
+    await Promise.all([facts.mutate(), document.mutate(), drafts.mutate(), review.mutate(), workflow.mutate(), brands.mutate(), publications.mutate()]);
+  }, [brands, document, drafts, facts, publications, review, workflow]);
   const saveFacts = useCallback(async (value: QuotationFacts) => {
     if (!document.data) throw new Error('The current document revision is not loaded.');
     await quotationFetch(`${urls.facts}?baseRevision=${document.data.currentRevision}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(serializeFactsForApi(value)) }, 'Facts could not be saved.');
@@ -107,5 +100,5 @@ export function useQuotationWorkspace(quotationId: string, lang: string, include
     await refresh();
   }, [document.data, lang, quotationId, refresh]);
   const request = useCallback(<T,>(path: string, init?: RequestInit, fallback?: string) => quotationFetch<T>(`${API_BASE}${path}`, init, fallback), []);
-  return { urls, facts, document, drafts, review, workflow, options, brands, publications, impacts, refresh, saveFacts, savePresentation, request };
+  return { urls, facts, document, drafts, review, workflow, options, brands, publications, refresh, saveFacts, savePresentation, request };
 }
