@@ -1,5 +1,6 @@
 import unittest
 
+from quote_document import QuoteAssetRef
 from services.brochure_media_resolver import BrochureMediaResolver, Candidate, GALLERY_LIMIT
 
 
@@ -125,4 +126,11 @@ class BrochureMediaResolverTests(unittest.TestCase):
             self.assertEqual(day["images"]["carousel"][0]["source"], "fallback")
         self.assertTrue(all(item["fallback"] for item in result["rationale"]))
 
+    def test_brand_fallback_asset_is_a_canonical_document_asset(self):
+        asset = QuoteAssetRef.model_validate({
+            "r2Key": "shared/media/brand-fallbacks/selvara/selvara.png",
+            "source": "fallback",
+            "status": "review_required",
+        })
+        self.assertEqual(asset.source, "fallback")
 

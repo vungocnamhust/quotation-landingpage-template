@@ -277,11 +277,12 @@ _CONTENT_FACT_USED: dict[str, tuple[FactDependency, ...]] = {
 }
 
 for _scope, _spec in tuple(CONTENT_SECTION_REGISTRY.items()):
+    _bypass_allowed = _scope in {"hero", "overview_letter", "route", "itinerary"}
     CONTENT_SECTION_REGISTRY[_scope] = replace(
         _spec,
         fact_used=_CONTENT_FACT_USED.get(_scope, ()),
-        automation_policy=_spec.automation_policy if _spec.automation_policy != "manual" else ("auto" if _spec.owner == "content" and _spec.generation else "manual"),
-        bypass_allowed=_scope in {"hero", "overview_letter", "route", "itinerary"},
+        automation_policy=_spec.automation_policy if _spec.automation_policy != "manual" else ("bypass" if _bypass_allowed else ("auto" if _spec.owner == "content" and _spec.generation else "manual")),
+        bypass_allowed=_bypass_allowed,
     )
 
 

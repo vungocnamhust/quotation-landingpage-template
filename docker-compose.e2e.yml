@@ -88,7 +88,15 @@ services:
       interval: 2s
       timeout: 3s
       retries: 20
-    networks: [e2e]
+    networks:
+      e2e:
+        # Nginx declares the notification upstream unconditionally, while
+        # this disposable quotation acceptance stack intentionally does not
+        # run the separate notification service. The alias only allows nginx
+        # to resolve its configuration; no notification endpoint is exercised
+        # by this quotation/browser suite.
+        aliases:
+          - notification-service
 
   quote-generator:
     image: quotation-e2e-quote-generator:dev

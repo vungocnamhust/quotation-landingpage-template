@@ -242,6 +242,7 @@ class CurlApi:
         *,
         body: dict[str, Any] | None = None,
         query: dict[str, str | int] | None = None,
+        headers: dict[str, str] | None = None,
         service: bool = False,
     ) -> dict[str, Any]:
         url = self.base_url + path
@@ -253,6 +254,8 @@ class CurlApi:
             command += ["--header", f"X-Quote-Service-Token: {self.service_token}"]
         else:
             command += ["--header", f"X-DMC-Email: {self.editor_email}"]
+        for name, value in (headers or {}).items():
+            command += ["--header", f"{name}: {value}"]
         if body is not None:
             command += ["--header", "Content-Type: application/json", "--data", json.dumps(body)]
         completed = subprocess.run(command, capture_output=True, text=True, check=False)
@@ -274,6 +277,7 @@ class CurlApi:
         *,
         body: dict[str, Any] | None = None,
         query: dict[str, str | int] | None = None,
+        headers: dict[str, str] | None = None,
         expected_status: int,
         service: bool = False,
     ) -> dict[str, Any]:
@@ -287,6 +291,8 @@ class CurlApi:
             command += ["--header", f"X-Quote-Service-Token: {self.service_token}"]
         else:
             command += ["--header", f"X-DMC-Email: {self.editor_email}"]
+        for name, value in (headers or {}).items():
+            command += ["--header", f"{name}: {value}"]
         if body is not None:
             command += ["--header", "Content-Type: application/json", "--data", json.dumps(body)]
         completed = subprocess.run(command, capture_output=True, text=True, check=False)

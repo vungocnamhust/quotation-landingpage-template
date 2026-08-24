@@ -9,6 +9,8 @@ set -eu
 # Usage:
 #   scripts/run_compose_e2e.sh smoke
 #   scripts/run_compose_e2e.sh workflow
+#   scripts/run_compose_e2e.sh actionable-content
+#   scripts/run_compose_e2e.sh actionable-browser artifacts/e2e/actionable-content-plan-report.json
 #   scripts/run_compose_e2e.sh full
 #   scripts/run_compose_e2e.sh browser-pdf artifacts/e2e/full-report.json
 #   scripts/run_compose_e2e.sh down
@@ -21,7 +23,7 @@ shift || true
 artifact_dir="${E2E_ARTIFACT_DIR:-artifacts/e2e}"
 
 usage() {
-  echo "usage: $0 {smoke|workflow|full|browser-pdf|down} [report-file] [--build service ...]" >&2
+  echo "usage: $0 {smoke|workflow|actionable-content|actionable-browser|full|browser-pdf|down} [report-file] [--build service ...]" >&2
   exit 64
 }
 
@@ -43,7 +45,7 @@ while [ "$#" -gt 0 ]; do
 done
 
 case "$tier" in
-  smoke|workflow|full|browser-pdf|down) ;;
+  smoke|workflow|actionable-content|actionable-browser|full|browser-pdf|down) ;;
   *) usage ;;
 esac
 
@@ -77,6 +79,23 @@ case "$tier" in
     docker compose -f "$compose_file" run --rm --no-deps e2e \
       python scripts/test_v2_brochure_workflow.py --tier workflow \
       --report-file /artifacts/workflow-report.json
+    ;;
+  actionable-content)
+    docker compose -f "$compose_file" run --rm --no-deps e2e \
+      python scripts/test_actionable_content_plan_e2e.py \
+      --report-file /artifacts/actionable-content-plan-report.json
+    ;;
+  actionable-browser)
+    [ -n "$report_file" ] || report_file="$artifact_dir/actionable-content-plan-report.json"
+    [ -f "$report_file" ] || {
+      echo "actionable-browser requires a completed actionable-content report: $report_file" >&2
+      exit 66
+    }
+    report_name=$(basename "$report_file")
+    cp "$report_file" "$artifact_dir/$report_name"
+    docker compose -f "$compose_file" run --rm --no-deps e2e \
+      python -m e2e.actionable_content_plan_browser --report "/artifacts/$report_name" \
+      --report-file /artifacts/actionable-browser-report.json
     ;;
   full)
     docker compose -f "$compose_file" run --rm --no-deps e2e \

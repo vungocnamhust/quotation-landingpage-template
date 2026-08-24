@@ -166,9 +166,18 @@ class ContentDraftService:
             "itinerary": {"itinerary"}, "finalization": {"content"},
         }
         if scope.startswith("itinerary:day:"):
-            legacy_keys = {"dayNumber", "title", "description", "activities"}
-            identity_keys = {"sourceFactId", *legacy_keys}
-            if set(candidate) != legacy_keys and set(candidate) != identity_keys:
+            content_keys = {"title", "description", "activities"}
+            # Generated new-model day candidates bind by sourceFactId; historic
+            # manual drafts bind by dayNumber. Neither identity field is
+            # editorial ownership, so accept either (or both) while keeping the
+            # content payload exact.
+            allowed_key_sets = (
+                content_keys,
+                {"dayNumber", *content_keys},
+                {"sourceFactId", *content_keys},
+                {"sourceFactId", "dayNumber", *content_keys},
+            )
+            if set(candidate) not in allowed_key_sets:
                 raise ValueError("Candidate contains fields not owned by this content scope.")
         elif set(candidate) != allowed.get(scope, set()):
             raise ValueError("Candidate contains fields not owned by this content scope.")

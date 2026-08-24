@@ -201,6 +201,16 @@ class ContentGenerationInstructionTests(unittest.TestCase):
         }
 
         self.assertEqual(ContentDraftService.validate_candidate("itinerary:day:2", candidate), candidate)
+        generated_candidate = {
+            "sourceFactId": "itinerary_day_2",
+            "title": "Day 2 · Mekong Delta",
+            "description": ["Chèo thuyền thúng"],
+            "activities": [],
+        }
+        self.assertEqual(
+            ContentDraftService.validate_candidate("itinerary:day:itinerary_day_2", generated_candidate),
+            generated_candidate,
+        )
         import asyncio
         asyncio.run(service.create_manual(
             quotation_id="quo_6801f7395254",

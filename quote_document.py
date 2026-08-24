@@ -35,7 +35,11 @@ class QuoteAssetRef(QuoteBaseModel):
     url: str = ""
     status: str = "ready"
     altText: str = ""
-    source: Literal["manual", "auto", "theme", ""] = ""
+    # `fallback` is a verified, brand-owned R2 asset chosen by
+    # MediaDefaultService when catalogue imagery is unavailable.  It remains
+    # review-required for publication, but it is still a canonical document
+    # asset and must survive Content draft Apply validation.
+    source: Literal["manual", "auto", "theme", "fallback", ""] = ""
     resolverVersion: str = ""
 
 

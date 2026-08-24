@@ -4897,6 +4897,23 @@ async def create_canonical_quotation_v2(payload: CreateQuoteRequestV1, principal
     if resolved["missingInputs"]:
         raise HTTPException(status_code=422, detail={"message": "Required quotation facts are missing.", "missingInputs": resolved["missingInputs"]})
     quotation_id, lang = f"quo_{uuid.uuid4().hex[:12]}", canonical.lang or "en"
+    # New-model Facts own stable semantic identities from their first
+    # persistence.  A successor can only carry itinerary Content safely when
+    # it receives these exact IDs back through the immutable Facts snapshot.
+    from core.rules.semantic_identity import assign_missing_source_fact_ids
+
+    canonical_payload = canonical.model_dump(mode="json")
+    canonical_payload["trip_facts"]["itinerary"] = assign_missing_source_fact_ids(
+        list(canonical_payload["trip_facts"].get("itinerary") or []),
+        creation_namespace=quotation_id,
+        kind="itinerary_day",
+    )
+    canonical_payload["service_facts"]["hotels"] = assign_missing_source_fact_ids(
+        list(canonical_payload["service_facts"].get("hotels") or []),
+        creation_namespace=quotation_id,
+        kind="hotel",
+    )
+    canonical, resolved = await _resolve_v2_facts(CreateQuoteRequestV1.model_validate(canonical_payload))
     document = SkeletonBuilder().build(quotation_id=quotation_id, payload=canonical, resolved_facts=resolved, template=V2_RENDERER_NAME)
     # The creation screen has no persisted document yet, so its Facts picker
     # sends selections as generic contract slots. Validate and materialize them
