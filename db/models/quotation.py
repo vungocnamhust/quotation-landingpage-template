@@ -224,6 +224,7 @@ class QuotationVersionImpactTarget(Base):
     target_path: Mapped[str] = mapped_column(String(255), nullable=False)
     treatment: Mapped[str] = mapped_column(String(32), nullable=False)
     affected_fields_json: Mapped[list[dict[str, Any]]] = mapped_column(JSON_VARIANT, nullable=False, default=list)
+    deep_link_json: Mapped[dict[str, Any]] = mapped_column(JSON_VARIANT, nullable=False, default=dict)
     generation_eligible: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default=false())
     generation_selected: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default=false())
     execution_status: Mapped[str] = mapped_column(String(24), nullable=False, default="not_requested", server_default="not_requested")
@@ -232,3 +233,80 @@ class QuotationVersionImpactTarget(Base):
     accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     correlation_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+
+
+
+
+class QuotationVersionImpactAcceptance(Base):
+    __tablename__ = "quotation_version_impact_acceptances"
+    __table_args__ = (UniqueConstraint("quotation_id", "idempotency_key", name="uq_quotation_impact_acceptance_idempotency"),)
+
+    id: Mapped[int] = mapped_column(BIGINT_PK_VARIANT, primary_key=True, autoincrement=True)
+    quotation_id: Mapped[str] = mapped_column(ForeignKey("quotations.id", ondelete="CASCADE"), nullable=False)
+    idempotency_key: Mapped[str] = mapped_column(String(128), nullable=False)
+    correlation_id: Mapped[str] = mapped_column(String(128), nullable=False)
+    selected_target_ids_json: Mapped[list[int]] = mapped_column(JSON_VARIANT, nullable=False, default=list)
+    resolution_note: Mapped[str] = mapped_column(String(1000), nullable=False)
+    accepted_by_profile_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+
+
+class QuotationContentActionPlan(Base):
+    """Execution plan for Content-only successor remediation.
+
+    This intentionally does not replace historical impact rows.  It is the
+    clean persistence boundary for newly created actionable plans from the
+    migration-34 baseline onward.
+    """
+
+    __tablename__ = "quotation_content_action_plans"
+    __table_args__ = (
+        UniqueConstraint("quotation_id", "plan_hash", name="uq_quotation_content_action_plan_hash"),
+        Index("ix_quotation_content_action_plans_quotation_status", "quotation_id", "status"),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    quotation_id: Mapped[str] = mapped_column(ForeignKey("quotations.id", ondelete="CASCADE"), nullable=False)
+    predecessor_quotation_id: Mapped[str | None] = mapped_column(ForeignKey("quotations.id", ondelete="SET NULL"), nullable=True)
+    facts_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    plan_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    status: Mapped[str] = mapped_column(String(24), nullable=False, default="pending", server_default="pending")
+    accepted_by_profile_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    acceptance_note: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    correlation_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
+
+
+class QuotationContentAction(Base):
+    """One auditable Content execution unit belonging to an action plan."""
+
+    __tablename__ = "quotation_content_actions"
+    __table_args__ = (
+        UniqueConstraint("plan_id", "action_key", name="uq_quotation_content_action_plan_key"),
+        Index("ix_quotation_content_actions_quotation_state", "quotation_id", "state"),
+        Index("ix_quotation_content_actions_plan_policy", "plan_id", "automation_policy"),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    plan_id: Mapped[str] = mapped_column(ForeignKey("quotation_content_action_plans.id", ondelete="CASCADE"), nullable=False)
+    quotation_id: Mapped[str] = mapped_column(ForeignKey("quotations.id", ondelete="CASCADE"), nullable=False)
+    action_key: Mapped[str] = mapped_column(String(255), nullable=False)
+    scope: Mapped[str] = mapped_column(String(128), nullable=False)
+    entity_key: Mapped[str] = mapped_column(String(255), nullable=False)
+    reason_code: Mapped[str] = mapped_column(String(64), nullable=False)
+    automation_policy: Mapped[str] = mapped_column(String(16), nullable=False)
+    state: Mapped[str] = mapped_column(String(24), nullable=False, default="pending", server_default="pending")
+    input_facts_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    predecessor_quotation_id: Mapped[str | None] = mapped_column(ForeignKey("quotations.id", ondelete="SET NULL"), nullable=True)
+    inherited_reference_status: Mapped[str] = mapped_column(String(24), nullable=False, default="unavailable", server_default="unavailable")
+    action_metadata_json: Mapped[dict[str, Any]] = mapped_column(JSON_VARIANT, nullable=False, default=dict)
+    draft_id: Mapped[str | None] = mapped_column(ForeignKey("quotation_content_drafts.id", ondelete="SET NULL"), nullable=True)
+    applied_document_revision: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    idempotency_key: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    correlation_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    executed_by_profile_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    executed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())

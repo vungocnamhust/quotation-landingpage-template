@@ -16,6 +16,8 @@ from db.models.quotation import (
     QuotationVersionImpact,
     QuotationVersionImpactTarget,
     QuotationVersionImpactAcceptance,
+    QuotationContentAction,
+    QuotationContentActionPlan,
 )
 from repositories.errors import DocumentRevisionConflictError
 
@@ -236,6 +238,83 @@ class QuotationRepository:
             quotation.current_version = current_version
         await self.session.flush()
         return quotation
+
+
+class ContentActionPlanRepository:
+    """Persistence only for Actionable Content Plans and their action rows."""
+
+    def __init__(self, session: AsyncSession) -> None:
+        self.session = session
+
+    async def create_plan(
+        self,
+        *,
+        plan_id: str,
+        quotation_id: str,
+        predecessor_quotation_id: str | None,
+        facts_hash: str,
+        plan_hash: str,
+        correlation_id: str | None,
+    ) -> QuotationContentActionPlan:
+        plan = QuotationContentActionPlan(
+            id=plan_id,
+            quotation_id=quotation_id,
+            predecessor_quotation_id=predecessor_quotation_id,
+            facts_hash=facts_hash,
+            plan_hash=plan_hash,
+            correlation_id=correlation_id,
+        )
+        self.session.add(plan)
+        await self.session.flush()
+        return plan
+
+    async def create_actions(self, *, plan_id: str, quotation_id: str, values: list[dict[str, Any]]) -> list[QuotationContentAction]:
+        rows: list[QuotationContentAction] = []
+        for value in values:
+            payload = dict(value)
+            rows.append(QuotationContentAction(id=str(payload.pop("id")), plan_id=plan_id, quotation_id=quotation_id, **payload))
+        self.session.add_all(rows)
+        await self.session.flush()
+        return rows
+
+    async def list_actions(self, plan_id: str) -> list[QuotationContentAction]:
+        result = await self.session.scalars(
+            select(QuotationContentAction)
+            .where(QuotationContentAction.plan_id == plan_id)
+            .order_by(QuotationContentAction.scope, QuotationContentAction.action_key)
+        )
+        return list(result.all())
+
+    async def get_plan(self, plan_id: str, quotation_id: str) -> QuotationContentActionPlan | None:
+        return await self.session.scalar(
+            select(QuotationContentActionPlan).where(
+                QuotationContentActionPlan.id == plan_id,
+                QuotationContentActionPlan.quotation_id == quotation_id,
+            )
+        )
+
+    async def mark_actions(
+        self,
+        *,
+        action_ids: list[str],
+        state: str,
+        draft_ids: dict[str, str] | None = None,
+        applied_document_revision: int | None = None,
+        idempotency_key: str | None = None,
+        correlation_id: str | None = None,
+        profile_id: str | None = None,
+    ) -> None:
+        rows = await self.session.scalars(select(QuotationContentAction).where(QuotationContentAction.id.in_(action_ids)))
+        now = datetime.now().astimezone()
+        for row in rows:
+            row.state = state
+            row.draft_id = (draft_ids or {}).get(row.id, row.draft_id)
+            row.applied_document_revision = applied_document_revision
+            row.idempotency_key = idempotency_key
+            row.correlation_id = correlation_id
+            row.executed_by_profile_id = profile_id
+            row.executed_at = now
+        await self.session.flush()
 
 
 class QuotationVersionImpactRepository:

@@ -201,7 +201,6 @@ class ContentGenerationInstructionTests(unittest.TestCase):
         }
 
         self.assertEqual(ContentDraftService.validate_candidate("itinerary:day:2", candidate), candidate)
-
         import asyncio
         asyncio.run(service.create_manual(
             quotation_id="quo_6801f7395254",
@@ -215,3 +214,13 @@ class ContentGenerationInstructionTests(unittest.TestCase):
         self.assertEqual(repository.rows[0]["candidate_json"]["activities"], [])
         self.assertEqual(repository.rows[0]["generation_mode"], "manual")
 
+    def test_facts_snapshot_records_bounded_inherited_reference(self):
+        payload = CreateQuoteRequestV1.model_validate({
+            "trip_facts": {"itinerary": [{"id": "day_1", "day_number": 1, "destination": "Hanoi", "summary": "Arrival"}]}
+        })
+        snapshot = ContentDraftService.facts_snapshot(
+            payload,
+            "itinerary:day:day_1",
+            inherited_reference={"status": "eligible", "hash": "abc", "content": {"title": "Old title"}},
+        )
+        self.assertEqual(snapshot["inherited_reference"]["status"], "eligible")

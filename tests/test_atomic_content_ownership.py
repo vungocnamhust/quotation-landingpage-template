@@ -141,12 +141,19 @@ def test_hero_meta_and_route_stop_descriptions_have_content_controls_and_preserv
     (
         ("hotel_plan", "service_facts.hotels"),
         ("pricing", "pricing_facts.options"),
-        ("designer", "designer_facts"),
         ("inclusions_exclusions", "service_facts.inclusions"),
-        ("booking_terms", "booking_facts"),
     ),
 )
-def test_facts_owned_sections_have_registry_handoffs(scope: str, required_fact: str):
+def test_manual_editorial_sections_keep_authoritative_fact_handoffs(scope: str, required_fact: str):
+    spec = scope_spec(scope)
+    assert spec.owner == "content"
+    assert spec.generation is False
+    assert spec.automation_policy == "manual"
+    assert required_fact in spec.required_facts
+
+
+@pytest.mark.parametrize(("scope", "required_fact"), (("designer", "designer_facts"), ("booking_terms", "booking_facts")))
+def test_fact_owned_sections_remain_read_only(scope: str, required_fact: str):
     spec = scope_spec(scope)
     assert spec.owner == "fact"
     assert spec.generation is False

@@ -3,11 +3,12 @@ from __future__ import annotations
 
 import copy
 from dataclasses import dataclass, replace
-from typing import Any, Literal
+from typing import Any, Callable, Literal
 
 
 Owner = Literal["fact", "fact-derived", "content", "design"]
 EditorControl = Literal["input", "textarea", "string-list"]
+ContentAutomationPolicy = Literal["manual", "auto", "bypass"]
 FactDependencyRole = Literal["semantic_identity", "content_input", "derived_context"]
 ImpactPolicy = Literal["invalidate_content", "review_or_generate", "preserve_content_rebuild_labels"]
 
@@ -77,6 +78,12 @@ class ContentSectionSpec:
     fact_inputs: tuple[FactInput, ...] = ()
     default_instructions: DefaultInstructions | None = None
     fact_used: tuple[FactDependency, ...] = ()
+    # New Actionable Content Plan contract. `fact_used` remains a temporary
+    # compatibility adapter until the old Impact API is removed in Sprint 3.
+    automation_policy: ContentAutomationPolicy = "manual"
+    entity_binding: Literal["quotation", "itinerary_day", "hotel"] = "quotation"
+    bypass_allowed: bool = False
+    prompt_context_builder: Callable[[Any, str, dict[str, Any] | None], dict[str, Any]] | None = None
 
 
 from core.rules.content_budgets import get_content_budget_registry
@@ -114,11 +121,52 @@ def _brief(scope: str) -> DefaultInstructions:
     )
 
 
+def _read_fact_path(payload: Any, path: str) -> Any:
+    value: Any = payload
+    for part in path.split("."):
+        value = getattr(value, part, None)
+        if value is None:
+            return None
+    if hasattr(value, "model_dump"):
+        return value.model_dump(mode="json", exclude_none=True)
+    if isinstance(value, list):
+        return [item.model_dump(mode="json", exclude_none=True) if hasattr(item, "model_dump") else item for item in value]
+    return value
+
+
+def _default_prompt_context(payload: Any, scope: str, request_brief: dict[str, Any] | None) -> dict[str, Any]:
+    spec = scope_spec(scope)
+    if scope.startswith("itinerary:day:"):
+        token = scope.rsplit(":", 1)[-1]
+        day = next((item for item in payload.trip_facts.itinerary if str(item.id or item.day_number) == token), None)
+        context = {"itineraryDay": {
+            "sourceFactId": day.id if day else token,
+            "dayNumber": day.day_number if day else None,
+            "destination": day.destination if day else "",
+            "summary": day.summary if day else "",
+            "highlights": list(day.highlights) if day else [],
+            "meals": list(day.meals) if day else [],
+            "overnight": day.overnight if day else "",
+        }}
+    else:
+        context = {"facts": {path: _read_fact_path(payload, path) for path in spec.fact_allowlist}}
+    if request_brief:
+        context["request_brief"] = copy.deepcopy(request_brief)
+    return context
+
+
+def build_prompt_context(payload: Any, scope: str, request_brief: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Return the sole Facts snapshot contract used by Content generation."""
+    spec = scope_spec(scope)
+    builder = spec.prompt_context_builder or _default_prompt_context
+    return builder(payload, scope, request_brief)
+
+
 
 CONTENT_SECTION_REGISTRY: dict[str, ContentSectionSpec] = {
     "hero": ContentSectionSpec(
         "hero", "content", ("trip.title", "trip.lede", "narrative.coverKicker", "narrative.heroMeta1", "narrative.heroMeta2", "narrative.footerText"),
-        ("trip_facts.destinations", "trip_facts.start_date", "trip_facts.end_date", "trip_facts.duration_days", "trip_facts.duration_nights", "customer_facts.customer_name"),
+        ("trip_facts.destinations", "trip_facts.start_date", "trip_facts.end_date", "trip_facts.duration_days", "trip_facts.duration_nights", "customer_facts.customer_name", "customer_facts.adults", "customer_facts.children", "customer_facts.kid_ages", "brand_id", "lang"),
         ("trip_facts.destinations",), "narrative", generation=True, recipe_version="v4", schema_version="v1",
         editor_fields=(
             _budget_field("hero", "trip_title"),
@@ -139,7 +187,7 @@ CONTENT_SECTION_REGISTRY: dict[str, ContentSectionSpec] = {
     ),
     "overview_letter": ContentSectionSpec(
         "overview_letter", "content", ("narrative.journeyOverviewTitle", "narrative.letterHighlight", "narrative.letterGreeting", "narrative.letterIntro", "narrative.letterBody2", "narrative.letterOutro", "narrative.letterSignOff", "narrative.letterSender"),
-        ("trip_facts.destinations", "trip_facts.start_date", "trip_facts.end_date", "trip_facts.duration_days", "trip_facts.duration_nights", "customer_facts.customer_name"),
+        ("trip_facts.destinations", "trip_facts.start_date", "trip_facts.end_date", "trip_facts.duration_days", "trip_facts.duration_nights", "customer_facts.customer_name", "customer_facts.adults", "customer_facts.children", "customer_facts.kid_ages", "customer_facts.advisor_name", "customer_facts.advisor_agency", "brand_id", "lang"),
         ("trip_facts.destinations",), "narrative", generation=True, recipe_version="v4", schema_version="v1",
         editor_fields=(
             _budget_field("overview_letter", "overview_title"),
@@ -186,9 +234,11 @@ CONTENT_SECTION_REGISTRY: dict[str, ContentSectionSpec] = {
         fact_inputs=(_fact("itinerary", "Itinerary days", "trip_facts", "itinerary", required=True),),
         default_instructions=_brief("itinerary"),
     ),
-    "hotel_plan": ContentSectionSpec("hotel_plan", "fact", ("stays.hotels", "stays.roomNotes"), ("service_facts.hotels",), ("service_facts.hotels",), "fact-preview"),
-    "pricing": ContentSectionSpec("pricing", "fact", ("pricing.options", "pricing.conditions"), ("pricing_facts.options",), ("pricing_facts.options",), "fact-preview"),
-    "inclusions_exclusions": ContentSectionSpec("inclusions_exclusions", "fact", ("content.sections.inclusions_exclusions",), ("service_facts.inclusions", "service_facts.exclusions"), ("service_facts.inclusions", "service_facts.exclusions"), "fact-preview", ("twoColumnList",)),
+    # The authoritative values remain Facts. These scopes become manual
+    # editorial hand-offs in Sprint 4; they are not LLM-writable yet.
+    "hotel_plan": ContentSectionSpec("hotel_plan", "content", ("stays.hotels.*.editorialIntroduction", "stays.roomNotes"), ("service_facts.hotels",), ("service_facts.hotels",), "narrative", automation_policy="manual"),
+    "pricing": ContentSectionSpec("pricing", "content", ("pricing.kicker", "pricing.title", "pricing.description", "pricing.ctaLabel", "trip.priceBasis"), ("pricing_facts.options", "pricing_facts.conditions"), ("pricing_facts.options",), "narrative", automation_policy="manual"),
+    "inclusions_exclusions": ContentSectionSpec("inclusions_exclusions", "content", ("content.sections.inclusions_exclusions",), ("service_facts.inclusions", "service_facts.exclusions"), ("service_facts.inclusions", "service_facts.exclusions"), "narrative", ("twoColumnList",), automation_policy="manual"),
     "booking_terms": ContentSectionSpec("booking_terms", "fact", ("content.sections.booking_terms",), ("booking_facts",), ("booking_facts",), "fact-preview", ("paragraph", "termList", "paymentSchedule")),
     "designer": ContentSectionSpec("designer", "fact", ("designer",), ("designer_facts",), ("designer_facts",), "fact-preview"),
     "finalization": ContentSectionSpec("finalization", "content", ("content.sections.finalization",), ("finalization_facts.required_items", "finalization_facts.after_confirmation_items"), ("finalization_facts.required_items", "finalization_facts.after_confirmation_items"), "checklist", ("checklistGroups",), generation=False, recipe_version="v4", schema_version="v1", fact_inputs=(_fact("required-items", "Final details required", "finalization_facts", "required_items", required=True), _fact("after-confirmation", "After confirmation", "finalization_facts", "after_confirmation_items", required=True))),
@@ -227,7 +277,12 @@ _CONTENT_FACT_USED: dict[str, tuple[FactDependency, ...]] = {
 }
 
 for _scope, _spec in tuple(CONTENT_SECTION_REGISTRY.items()):
-    CONTENT_SECTION_REGISTRY[_scope] = replace(_spec, fact_used=_CONTENT_FACT_USED.get(_scope, ()))
+    CONTENT_SECTION_REGISTRY[_scope] = replace(
+        _spec,
+        fact_used=_CONTENT_FACT_USED.get(_scope, ()),
+        automation_policy=_spec.automation_policy if _spec.automation_policy != "manual" else ("auto" if _spec.owner == "content" and _spec.generation else "manual"),
+        bypass_allowed=_scope in {"hero", "overview_letter", "route", "itinerary"},
+    )
 
 
 ITINERARY_DAY_CANONICAL_TARGETS: tuple[str, ...] = (
@@ -268,6 +323,9 @@ def scope_spec(scope: str) -> ContentSectionSpec:
                 FactDependency("trip_facts.itinerary[].highlights", "content_input", "review_or_generate", ("itinerary.days.*.activities",), f"content:{scope}", "itinerary_day"),
                 FactDependency("trip_facts.itinerary[].display_date", "derived_context", "preserve_content_rebuild_labels", (), f"content:{scope}", "itinerary_day"),
             ),
+            automation_policy="auto",
+            entity_binding="itinerary_day",
+            bypass_allowed=True,
         )
 
     try:

@@ -8,7 +8,7 @@ from typing import Any
 
 from quote_document import BrandProfile, CreateQuoteRequestV1, QuoteDocumentV1, validate_quote_content_block
 from repositories.quotation_repository import ContentDraftRepository
-from services.content_registry import CONTENT_SECTION_REGISTRY, scope_spec
+from services.content_registry import CONTENT_SECTION_REGISTRY, build_prompt_context, scope_spec
 from services.section_content_generator import BRAND_POLICY_VERSION, ContentGenerationError, SectionContentGenerator, default_instruction, normalize_instruction
 
 
@@ -134,17 +134,15 @@ class ContentDraftService:
         return [{"path": path, "reason": "Required Facts are missing for this section."} for path in spec.required_facts if not _fact_value(payload, path)]
 
     @staticmethod
-    def facts_snapshot(payload: CreateQuoteRequestV1, scope: str, request_brief: dict[str, Any] | None = None) -> dict[str, Any]:
-        if scope.startswith("itinerary:day:"):
-            day, _ = ContentDraftService._itinerary_day_for_scope(payload, scope)
-            snapshot = {"itineraryDay": {"sourceFactId": day.id if day else scope.rsplit(":", 1)[-1], "dayNumber": day.day_number if day else None, "destination": day.destination if day else "", "summary": day.summary if day else "", "highlights": day.highlights if day else [], "meals": day.meals if day else [], "overnight": day.overnight if day else ""}}
-            if request_brief:
-                snapshot["request_brief"] = request_brief
-            return snapshot
-        spec = scope_spec(scope)
-        snapshot = {"facts": {dependency.path: _fact_value(payload, dependency.path) for dependency in spec.fact_used}}
-        if request_brief:
-            snapshot["request_brief"] = request_brief
+    def facts_snapshot(
+        payload: CreateQuoteRequestV1,
+        scope: str,
+        request_brief: dict[str, Any] | None = None,
+        inherited_reference: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        snapshot = build_prompt_context(payload, scope, request_brief)
+        if inherited_reference:
+            snapshot["inherited_reference"] = inherited_reference
         return snapshot
 
     @staticmethod
@@ -168,8 +166,11 @@ class ContentDraftService:
             "itinerary": {"itinerary"}, "finalization": {"content"},
         }
         if scope.startswith("itinerary:day:"):
-            allowed[scope] = {"sourceFactId", "dayNumber", "title", "description", "activities"}
-        if set(candidate) != allowed.get(scope, set()):
+            legacy_keys = {"dayNumber", "title", "description", "activities"}
+            identity_keys = {"sourceFactId", *legacy_keys}
+            if set(candidate) != legacy_keys and set(candidate) != identity_keys:
+                raise ValueError("Candidate contains fields not owned by this content scope.")
+        elif set(candidate) != allowed.get(scope, set()):
             raise ValueError("Candidate contains fields not owned by this content scope.")
         if scope == "finalization":
             sections = ((candidate.get("content") or {}).get("sections") or {})
@@ -236,10 +237,13 @@ class ContentDraftService:
         mode: str,
         instruction: str = "",
         request_payload: dict[str, Any] | None = None,
+        inherited_reference: dict[str, Any] | None = None,
     ) -> list[Any]:
         spec = scope_spec(scope)
         if spec.owner != "content":
             raise ValueError(f"{scope} is Fact-owned and cannot be generated or edited in Content Studio.")
+        if scope != "finalization" and not spec.generation:
+            raise ValueError(f"{scope} is manual-only and cannot be AI-generated.")
         normalized_instruction = normalize_instruction(instruction)
         effective_instruction = normalized_instruction or default_instruction(scope, mode)
         prompt_version = _fingerprint(spec=spec, lang=lang, mode=mode, facts_hash=facts_hash, instruction=effective_instruction)
@@ -248,9 +252,9 @@ class ContentDraftService:
             cached.generation_metadata = {**cached.generation_metadata, "cached": True}
             return [cached]
         request_brief = extract_request_brief(request_payload)
-        snapshot = self.facts_snapshot(payload, scope, request_brief=request_brief)
+        snapshot = self.facts_snapshot(payload, scope, request_brief=request_brief, inherited_reference=inherited_reference)
         missing = self.missing_for_scope(payload, scope)
-        metadata = {"mode": mode, "recipeVersion": spec.recipe_version, "schemaVersion": spec.schema_version, "brandPolicyVersion": BRAND_POLICY_VERSION, "instructionSource": "custom" if normalized_instruction else "default", "instructionHash": sha256(effective_instruction.encode("utf-8")).hexdigest()[:16]}
+        metadata = {"mode": mode, "recipeVersion": spec.recipe_version, "schemaVersion": spec.schema_version, "brandPolicyVersion": BRAND_POLICY_VERSION, "instructionSource": "custom" if normalized_instruction else "default", "instructionHash": sha256(effective_instruction.encode("utf-8")).hexdigest()[:16], "inheritedReferenceStatus": (inherited_reference or {}).get("status", "unavailable"), "inheritedReferenceHash": (inherited_reference or {}).get("hash")}
         if missing:
             return [await self.repository.create(id=f"cd_{uuid.uuid4().hex[:20]}", quotation_id=quotation_id, lang=lang, scope=scope, generation_mode=mode, status="draft", facts_hash=facts_hash, source_document_revision=document_revision, prompt_version=prompt_version, facts_snapshot=snapshot, candidate_json={}, missing_inputs=missing, generation_metadata={**metadata, "llmCalled": False, "generationStatus": "missing_inputs", "warnings": []})]
         if scope == "finalization":
