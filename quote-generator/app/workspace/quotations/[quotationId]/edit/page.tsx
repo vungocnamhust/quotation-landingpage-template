@@ -23,7 +23,9 @@ export default async function WorkspaceQuotationEditPage({
   const requestedLocale = typeof query.lang === "string" ? query.lang : null;
   if (requestedLocale !== workflow.locale) {
     const canonicalQuery = new URLSearchParams({ stage, lang: workflow.locale });
-    if (typeof query.section === "string") canonicalQuery.set("section", query.section);
+    for (const key of ["section", "focus", "factsSection", "impactTarget"]) {
+      if (typeof query[key] === "string") canonicalQuery.set(key, query[key]);
+    }
     redirect(`/workspace/quotations/${encodeURIComponent(quotationId)}/edit?${canonicalQuery}`);
   }
   return <QuotationWorkspaceClient quotationId={quotationId} lang={workflow.locale} />;

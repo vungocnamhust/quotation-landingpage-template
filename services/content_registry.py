@@ -2,12 +2,26 @@
 from __future__ import annotations
 
 import copy
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any, Literal
 
 
 Owner = Literal["fact", "fact-derived", "content", "design"]
 EditorControl = Literal["input", "textarea", "string-list"]
+FactDependencyRole = Literal["semantic_identity", "content_input", "derived_context"]
+ImpactPolicy = Literal["invalidate_content", "review_or_generate", "preserve_content_rebuild_labels"]
+
+
+@dataclass(frozen=True)
+class FactDependency:
+    """Executable fact_used contract shared by generation and Impact Analysis."""
+
+    path: str
+    role: FactDependencyRole
+    impact_policy: ImpactPolicy
+    target_paths: tuple[str, ...]
+    deep_link: str
+    entity_binding: Literal["quotation", "itinerary_day"] = "quotation"
 
 
 @dataclass(frozen=True)
@@ -62,6 +76,7 @@ class ContentSectionSpec:
     editor_fields: tuple[EditorField, ...] = ()
     fact_inputs: tuple[FactInput, ...] = ()
     default_instructions: DefaultInstructions | None = None
+    fact_used: tuple[FactDependency, ...] = ()
 
 
 from core.rules.content_budgets import get_content_budget_registry
@@ -180,6 +195,41 @@ CONTENT_SECTION_REGISTRY: dict[str, ContentSectionSpec] = {
 }
 
 
+_CONTENT_FACT_USED: dict[str, tuple[FactDependency, ...]] = {
+    "hero": (
+        FactDependency("trip_facts.destinations", "content_input", "review_or_generate", ("trip.title", "trip.lede", "narrative.coverKicker"), "content:hero"),
+        FactDependency("trip_facts.start_date", "derived_context", "preserve_content_rebuild_labels", ("narrative.heroMeta1",), "content:hero"),
+        FactDependency("trip_facts.end_date", "derived_context", "preserve_content_rebuild_labels", ("narrative.heroMeta1",), "content:hero"),
+        FactDependency("customer_facts.adults", "content_input", "review_or_generate", ("narrative.heroMeta2",), "content:hero"),
+        FactDependency("customer_facts.children", "content_input", "review_or_generate", ("narrative.heroMeta2",), "content:hero"),
+        FactDependency("customer_facts.kid_ages", "content_input", "review_or_generate", ("narrative.heroMeta2",), "content:hero"),
+        FactDependency("brand_id", "content_input", "review_or_generate", ("trip.title", "trip.lede"), "content:hero"),
+        FactDependency("lang", "content_input", "review_or_generate", ("trip.title", "trip.lede"), "content:hero"),
+    ),
+    "overview_letter": (
+        FactDependency("trip_facts.destinations", "content_input", "review_or_generate", ("narrative.journeyOverviewTitle", "narrative.letterIntro"), "content:overview_letter"),
+        FactDependency("customer_facts.adults", "content_input", "review_or_generate", ("narrative.letterGreeting",), "content:overview_letter"),
+        FactDependency("customer_facts.children", "content_input", "review_or_generate", ("narrative.letterGreeting",), "content:overview_letter"),
+        FactDependency("customer_facts.kid_ages", "content_input", "review_or_generate", ("narrative.letterIntro",), "content:overview_letter"),
+        FactDependency("customer_facts.advisor_name", "content_input", "review_or_generate", ("narrative.letterSender", "narrative.letterSignOff"), "content:overview_letter"),
+        FactDependency("customer_facts.advisor_agency", "content_input", "review_or_generate", ("narrative.letterSender",), "content:overview_letter"),
+        FactDependency("brand_id", "content_input", "review_or_generate", ("narrative.journeyOverviewTitle",), "content:overview_letter"),
+        FactDependency("lang", "content_input", "review_or_generate", ("narrative.journeyOverviewTitle", "narrative.letterIntro"), "content:overview_letter"),
+    ),
+    "route": (
+        FactDependency("trip_facts.itinerary", "content_input", "review_or_generate", ("route.title", "route.description", "route.staySegments.*.mapSegmentDesc"), "content:route"),
+        FactDependency("lang", "content_input", "review_or_generate", ("route.title", "route.description"), "content:route"),
+    ),
+    "itinerary": (
+        FactDependency("trip_facts.itinerary", "content_input", "review_or_generate", ("itinerary.title", "itinerary.description"), "content:itinerary"),
+        FactDependency("lang", "content_input", "review_or_generate", ("itinerary.title", "itinerary.description"), "content:itinerary"),
+    ),
+}
+
+for _scope, _spec in tuple(CONTENT_SECTION_REGISTRY.items()):
+    CONTENT_SECTION_REGISTRY[_scope] = replace(_spec, fact_used=_CONTENT_FACT_USED.get(_scope, ()))
+
+
 ITINERARY_DAY_CANONICAL_TARGETS: tuple[str, ...] = (
     "itinerary.days.*.title",
     "itinerary.days.*.description",
@@ -195,7 +245,8 @@ def content_owned_targets() -> tuple[str, ...]:
 
 
 def scope_spec(scope: str) -> ContentSectionSpec:
-    if scope.startswith("itinerary:day:") and scope.rsplit(":", 1)[-1].isdigit():
+    if scope.startswith("itinerary:day:"):
+        entity_key = scope.rsplit(":", 1)[-1]
         return ContentSectionSpec(
             scope, "content", ("itinerary.days.*.title", "itinerary.days.*.description", "itinerary.days.*.activities"),
             ("trip_facts.itinerary",), ("trip_facts.itinerary",), "narrative", generation=True, recipe_version="v4", schema_version="v1",
@@ -210,6 +261,13 @@ def scope_spec(scope: str) -> ContentSectionSpec:
                 _fact("day-highlights", "Highlights", "itineraryDay", "highlights"),
             ),
             default_instructions=_brief("itinerary_day"),
+            fact_used=(
+                FactDependency("trip_facts.itinerary[].destination", "semantic_identity", "invalidate_content", ("itinerary.days.*.title", "itinerary.days.*.description", "itinerary.days.*.activities"), f"content:{scope}", "itinerary_day"),
+                FactDependency("trip_facts.itinerary[].overnight", "semantic_identity", "invalidate_content", ("itinerary.days.*.title", "itinerary.days.*.description", "itinerary.days.*.activities"), f"content:{scope}", "itinerary_day"),
+                FactDependency("trip_facts.itinerary[].summary", "content_input", "review_or_generate", ("itinerary.days.*.description",), f"content:{scope}", "itinerary_day"),
+                FactDependency("trip_facts.itinerary[].highlights", "content_input", "review_or_generate", ("itinerary.days.*.activities",), f"content:{scope}", "itinerary_day"),
+                FactDependency("trip_facts.itinerary[].display_date", "derived_context", "preserve_content_rebuild_labels", (), f"content:{scope}", "itinerary_day"),
+            ),
         )
 
     try:
@@ -254,11 +312,12 @@ def project_candidate_from_document(document: dict[str, Any], scope: str) -> dic
         return {"content": {"sections": {"finalization": copy.deepcopy(section)}}}
     candidate: dict[str, Any] = {}
     if scope.startswith("itinerary:day:"):
-        number = int(scope.rsplit(":", 1)[-1])
-        day = next((item for item in ((document.get("itinerary") or {}).get("days") or []) if item.get("dayNumber") == number), None)
+        source_fact_id = scope.rsplit(":", 1)[-1]
+        day = next((item for item in ((document.get("itinerary") or {}).get("days") or []) if str(item.get("sourceFactId") or item.get("dayNumber")) == source_fact_id), None)
         if day is None:
             raise ValueError("Itinerary day no longer exists.")
-        candidate["dayNumber"] = number
+        candidate["dayNumber"] = day.get("dayNumber")
+        candidate["sourceFactId"] = source_fact_id
         for field in spec.editor_fields:
             candidate[field.path[0]] = copy.deepcopy(day.get(field.path[0], [] if field.control == "string-list" else ""))
         return candidate
@@ -277,14 +336,14 @@ def project_candidate_from_document(document: dict[str, Any], scope: str) -> dic
 
 def content_editor_state_payload(document: dict[str, Any]) -> dict[str, dict[str, Any]]:
     scopes = [scope for scope, spec in CONTENT_SECTION_REGISTRY.items() if spec.owner == "content"]
-    scopes.extend(f"itinerary:day:{day.get('dayNumber')}" for day in ((document.get("itinerary") or {}).get("days") or []) if day.get("dayNumber"))
+    scopes.extend(f"itinerary:day:{day.get('sourceFactId') or day.get('dayNumber')}" for day in ((document.get("itinerary") or {}).get("days") or []) if day.get("sourceFactId") or day.get("dayNumber"))
     return {scope: project_candidate_from_document(document, scope) for scope in scopes}
 
 
 def content_registry_for_document_payload(document: dict[str, Any]) -> dict[str, dict[str, object]]:
     payload = content_registry_payload()
     for day in ((document.get("itinerary") or {}).get("days") or []):
-        if day.get("dayNumber"):
-            scope = f"itinerary:day:{day['dayNumber']}"
+        if day.get("sourceFactId") or day.get("dayNumber"):
+            scope = f"itinerary:day:{day.get('sourceFactId') or day.get('dayNumber')}"
             payload.update(content_registry_payload(scope))
     return payload

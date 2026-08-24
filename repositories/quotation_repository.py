@@ -15,6 +15,7 @@ from db.models.quotation import (
     QuotationVersionFacts,
     QuotationVersionImpact,
     QuotationVersionImpactTarget,
+    QuotationVersionImpactAcceptance,
 )
 from repositories.errors import DocumentRevisionConflictError
 
@@ -242,22 +243,12 @@ class QuotationVersionImpactRepository:
         self.session = session
 
     async def create_many(self, quotation_id: str, impacts: list[dict[str, Any]]) -> list[QuotationVersionImpact]:
+        target_specs = [impact.pop("targets", []) for impact in impacts]
         rows = [QuotationVersionImpact(quotation_id=quotation_id, **impact) for impact in impacts]
         self.session.add_all(rows)
         await self.session.flush()
-        targets = [
-            QuotationVersionImpactTarget(
-                impact_id=row.id,
-                quotation_id=quotation_id,
-                stage=row.stage,
-                scope=row.scope,
-                target_path=row.target_path or "/",
-                treatment="generation_candidate" if row.generation_eligible else "derived_rebuilt" if row.stage == "design" else "preserved_review",
-                affected_fields_json=[{"sourcePath": row.source_path, "targetPath": row.target_path, "explanation": row.explanation}],
-                generation_eligible=row.generation_eligible,
-            )
-            for row in rows
-        ]
+        targets = [QuotationVersionImpactTarget(impact_id=row.id, quotation_id=quotation_id, **target)
+                   for row, specs in zip(rows, target_specs) for target in specs]
         self.session.add_all(targets)
         await self.session.flush()
         return rows
@@ -279,6 +270,14 @@ class QuotationVersionImpactRepository:
         )
         return list(result.all())
 
+    async def get_acceptance(self, quotation_id: str, idempotency_key: str) -> QuotationVersionImpactAcceptance | None:
+        return await self.session.scalar(
+            select(QuotationVersionImpactAcceptance).where(
+                QuotationVersionImpactAcceptance.quotation_id == quotation_id,
+                QuotationVersionImpactAcceptance.idempotency_key == idempotency_key,
+            )
+        )
+
     async def resolve(self, quotation_id: str, impact_id: int, *, note: str, profile_id: str | None) -> QuotationVersionImpact | None:
         row = await self.session.scalar(
             select(QuotationVersionImpact).where(
@@ -299,10 +298,17 @@ class QuotationVersionImpactRepository:
         self,
         quotation_id: str,
         *,
-        selected_impact_ids: set[int],
+        selected_target_ids: set[int],
         note: str,
         profile_id: str | None,
+        idempotency_key: str,
+        correlation_id: str,
     ) -> list[QuotationVersionImpact]:
+        existing = await self.get_acceptance(quotation_id, idempotency_key)
+        if existing is not None:
+            if set(existing.selected_target_ids_json) != set(selected_target_ids) or existing.resolution_note != note:
+                raise ValueError("Idempotency key was already used with a different Impact Center acceptance.")
+            return await self.list(quotation_id)
         rows = await self.list(quotation_id, pending_only=True)
         now = datetime.now().astimezone()
         for row in rows:
@@ -310,17 +316,19 @@ class QuotationVersionImpactRepository:
             row.resolution_note = note
             row.resolved_by_profile_id = profile_id
             row.resolved_at = now
-            row.generation_selected = row.generation_eligible and row.id in selected_impact_ids
-            row.generation_status = "selected" if row.generation_selected else "not_requested"
+            row.generation_selected = False
+            row.generation_status = "not_requested"
         targets = await self.session.scalars(
             select(QuotationVersionImpactTarget).where(QuotationVersionImpactTarget.quotation_id == quotation_id)
         )
-        selected = set(selected_impact_ids)
+        selected = set(selected_target_ids)
         for target in targets:
             target.accepted_by_profile_id = profile_id
             target.accepted_at = now
-            target.generation_selected = target.generation_eligible and target.impact_id in selected
+            target.generation_selected = target.generation_eligible and target.id in selected
             target.execution_status = "selected" if target.generation_selected else "not_requested"
+            target.correlation_id = correlation_id
+        self.session.add(QuotationVersionImpactAcceptance(quotation_id=quotation_id, idempotency_key=idempotency_key, correlation_id=correlation_id, selected_target_ids_json=sorted(selected), resolution_note=note, accepted_by_profile_id=profile_id))
         await self.session.flush()
         return rows
 

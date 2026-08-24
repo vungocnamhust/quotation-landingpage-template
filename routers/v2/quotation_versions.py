@@ -5,7 +5,7 @@ import copy
 import uuid
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel, Field
 
 from api.dependencies import V2_RENDERER_NAME
@@ -32,13 +32,42 @@ class ResolveImpactRequest(BaseModel):
 
 
 class AcceptImpactCenterRequest(BaseModel):
-    selectedImpactIds: list[int] = Field(default_factory=list)
+    selectedTargetIds: list[int] = Field(default_factory=list)
     resolutionNote: str = Field(default="Accepted in Impact Center.", min_length=1, max_length=1000)
 
 
-class GenerateSelectedImpactsRequest(BaseModel):
-    generationMode: str = Field(default="storytelling", pattern="^(storytelling|detailed)$")
-    instruction: str = Field(default="", max_length=2000)
+class ImpactTargetResponse(BaseModel):
+    id: int
+    scope: str
+    targetPath: str
+    treatment: str
+    affectedFields: list[dict[str, Any]]
+    generationEligible: bool
+    generationSelected: bool
+    executionStatus: str
+    deepLink: dict[str, Any]
+
+
+class ContentImpactResponse(BaseModel):
+    id: int
+    entityKey: str
+    operation: str
+    sourcePath: str
+    explanation: str
+    status: str
+    oldValue: dict[str, Any] | None = None
+    newValue: dict[str, Any] | None = None
+    targets: list[ImpactTargetResponse] = Field(default_factory=list)
+
+
+class ContentImpactPlanResponse(BaseModel):
+    items: list[ContentImpactResponse]
+
+
+class AcceptImpactCenterResponse(BaseModel):
+    items: list[ContentImpactResponse]
+    factsUrl: str
+    contentUrl: str
 
 
 def _copy_successor_owned_values(previous: dict[str, Any], rebuilt: dict[str, Any]) -> None:
@@ -92,7 +121,7 @@ def _ensure_itinerary_fact_ids(facts: CreateQuoteRequestV1) -> None:
 
 
 def _serialize_impact(item: Any, targets: list[Any] | None = None) -> dict[str, Any]:
-    return {"id": item.id, "stage": item.stage, "scope": item.scope, "action": item.action, "sourcePath": item.source_path, "targetPath": item.target_path, "explanation": item.explanation, "status": item.status, "entityKey": item.entity_key, "operation": item.operation, "oldValue": item.old_value_json, "newValue": item.new_value_json, "generationEligible": item.generation_eligible, "generationSelected": item.generation_selected, "generationStatus": item.generation_status, "resolutionNote": item.resolution_note, "resolvedAt": item.resolved_at.isoformat() if item.resolved_at else None, "targets": [{"id": target.id, "stage": target.stage, "scope": target.scope, "targetPath": target.target_path, "treatment": target.treatment, "affectedFields": target.affected_fields_json, "generationEligible": target.generation_eligible, "generationSelected": target.generation_selected, "executionStatus": target.execution_status} for target in (targets or [])]}
+    return {"id": item.id, "entityKey": item.entity_key, "operation": item.operation, "sourcePath": item.source_path, "explanation": item.explanation, "status": item.status, "oldValue": item.old_value_json, "newValue": item.new_value_json, "targets": [{"id": target.id, "scope": target.scope, "targetPath": target.target_path, "treatment": target.treatment, "affectedFields": target.affected_fields_json, "generationEligible": target.generation_eligible, "generationSelected": target.generation_selected, "executionStatus": target.execution_status, "deepLink": target.deep_link_json} for target in (targets or [])]}
 
 
 def _clear_incompatible_day_carry_forward(
@@ -181,8 +210,8 @@ async def create_quotation_business_version(quotation_id: str, payload: CreateQu
     return {"quotationId": next_id, "businessVersion": next_business_version, "redirectUrl": f"/workspace/quotations/{next_id}/edit?stage=impact&lang={successor.baseline_lang}", "impacts": [_serialize_impact(row) for row in impact_rows]}
 
 
-@router.get("/{quotation_id}/impacts")
-async def list_quotation_impacts(quotation_id: str, principal: EditorPrincipalDep) -> dict[str, Any]:
+@router.get("/{quotation_id}/impacts", response_model=ContentImpactPlanResponse)
+async def list_quotation_impacts(quotation_id: str, principal: EditorPrincipalDep) -> ContentImpactPlanResponse:
     h = _helpers()
     await h.require_owned_quotation(quotation_id, principal)
     async with h._get_db_session_factory()() as session:
@@ -191,7 +220,7 @@ async def list_quotation_impacts(quotation_id: str, principal: EditorPrincipalDe
         targets_by_impact: dict[int, list[Any]] = {}
         for target in await impacts.list_targets(quotation_id):
             targets_by_impact.setdefault(target.impact_id, []).append(target)
-    return {"items": [_serialize_impact(item, targets_by_impact.get(item.id)) for item in items]}
+    return ContentImpactPlanResponse(items=[ContentImpactResponse.model_validate(_serialize_impact(item, targets_by_impact.get(item.id))) for item in items])
 
 
 @router.post("/{quotation_id}/impacts/{impact_id}/resolve")
@@ -206,8 +235,8 @@ async def resolve_quotation_impact(quotation_id: str, impact_id: int, payload: R
     return {"item": _serialize_impact(item)}
 
 
-@router.post("/{quotation_id}/impacts/accept")
-async def accept_quotation_impact_center(quotation_id: str, payload: AcceptImpactCenterRequest, principal: EditorPrincipalDep) -> dict[str, Any]:
+@router.post("/{quotation_id}/impacts/accept", response_model=AcceptImpactCenterResponse)
+async def accept_quotation_impact_center(quotation_id: str, payload: AcceptImpactCenterRequest, principal: EditorPrincipalDep, idempotency_key: Annotated[str | None, Header(alias="Idempotency-Key")] = None, correlation_id: Annotated[str | None, Header(alias="X-Correlation-ID")] = None) -> AcceptImpactCenterResponse:
     h = _helpers()
     await h.require_owned_quotation(quotation_id, principal)
     async with h._get_db_session_factory()() as session:
@@ -216,99 +245,44 @@ async def accept_quotation_impact_center(quotation_id: str, payload: AcceptImpac
             raise HTTPException(status_code=409, detail={"message": "Impact Center is available only for new-model quotation versions."})
         impacts = QuotationVersionImpactRepository(session)
         pending = await impacts.list(quotation_id, pending_only=True)
-        valid_ids = {item.id for item in pending if item.generation_eligible}
-        selected_ids = set(payload.selectedImpactIds)
+        targets = await impacts.list_targets(quotation_id)
+        valid_ids = {item.id for item in targets if item.generation_eligible and item.impact_id in {row.id for row in pending}}
+        selected_ids = set(payload.selectedTargetIds)
         if not selected_ids.issubset(valid_ids):
             raise HTTPException(status_code=422, detail={"message": "Only pending generation candidates can be selected."})
         profile_id = getattr(principal, "profile_id", None)
-        accepted = await impacts.accept_all(quotation_id, selected_impact_ids=selected_ids, note=payload.resolutionNote, profile_id=profile_id)
-        correlation_id = f"impact-center:{quotation_id}:v{quotation.business_version or 0}"
-        await OutboxService(session).emit_event(
-            event_type="quotation.impact.accepted",
-            aggregate_type="quotation",
-            aggregate_id=quotation_id,
-            brand_id=quotation.brand_id,
-            correlation_id=correlation_id,
-            payload={"quotation_family_id": quotation.quotation_family_id, "business_version": quotation.business_version, "selected_impact_ids": sorted(selected_ids), "actor_profile_id": profile_id},
-        )
-        await session.commit()
-    base = f"/workspace/quotations/{quotation_id}/edit?lang={quotation.baseline_lang}"
-    return {"items": [_serialize_impact(item) for item in accepted], "factsUrl": f"{base}&stage=facts", "designUrl": f"{base}&stage=design"}
-
-
-@router.post("/{quotation_id}/impacts/generate-selected")
-async def generate_selected_quotation_impacts(quotation_id: str, payload: GenerateSelectedImpactsRequest, principal: EditorPrincipalDep) -> dict[str, Any]:
-    h = _helpers()
-    await h.require_owned_quotation(quotation_id, principal)
-    async with h._get_db_session_factory()() as session:
-        quotes, documents, impacts_repo = QuotationRepository(session), QuotationDocumentRepository(session), QuotationVersionImpactRepository(session)
-        quotation = await quotes.get_quotation_by_id(quotation_id)
-        facts_snapshot = await quotes.get_version_facts(quotation_id)
-        document = await documents.get_current_document(quotation_id, quotation.baseline_lang) if quotation else None
-        if quotation is None or quotation.quotation_family_id is None or facts_snapshot is None or document is None:
-            raise HTTPException(status_code=409, detail={"message": "The immutable version context is unavailable."})
-        selected = await impacts_repo.selected_for_generation(quotation_id)
-        content_impacts = [item for item in selected if item.stage == "content"]
-        design_impacts = [item for item in selected if item.stage == "design"]
-        if not selected:
-            return {"drafts": [], "count": 0, "revision": document.revision, "appliedScopes": []}
-        facts = CreateQuoteRequestV1.model_validate(facts_snapshot.canonical_facts_json)
-        brand = await BrandRepository(session).get_active(quotation.brand_id)
-        if brand is None:
-            raise HTTPException(status_code=422, detail={"message": "Brand is unavailable for selected generation."})
-        drafts = ContentDraftRepository(session)
-        service = ContentDraftService(drafts, h._brand_generation_profile(brand))
-        created: list[Any] = []
+        idempotency_key = idempotency_key or f"impact-accept:{quotation_id}:{uuid.uuid4().hex}"
+        correlation_id = correlation_id or f"impact-center:{quotation_id}:v{quotation.business_version or 0}"
+        previous_acceptance = await impacts.get_acceptance(quotation_id, idempotency_key)
+        if previous_acceptance is not None and (
+            set(previous_acceptance.selected_target_ids_json) != selected_ids
+            or previous_acceptance.resolution_note != payload.resolutionNote
+        ):
+            raise HTTPException(status_code=409, detail={"message": "Idempotency key was already used with a different Impact Center acceptance.", "code": "impact_acceptance_idempotency_conflict"})
         try:
-            generated_scopes: set[str] = set()
-            for impact in content_impacts:
-                if impact.scope in generated_scopes:
-                    continue
-                generated_scopes.add(impact.scope)
-                created.extend(await service.create(quotation_id=quotation_id, payload=facts, facts_hash=facts_snapshot.facts_hash, document_revision=document.revision, lang=quotation.baseline_lang, scope=impact.scope, mode=payload.generationMode, instruction=payload.instruction))
-            merged = copy.deepcopy(document.document_json)
-            applied_scopes: list[str] = []
-            # This endpoint is intentionally Design-only.  Facts never call it:
-            # their Content drafts are user-triggered from Content Studio.
-            for draft in created:
-                if draft.missing_inputs:
-                    raise ValueError(f"Selected scope {draft.scope} is missing required Facts.")
-                merged = ContentDraftService.apply_candidate(merged, draft.scope, draft.candidate_json)
-                draft.status = "applied"
-                applied_scopes.append(draft.scope)
-            if applied_scopes:
-                validated = h._normalize_quote_document_structure_or_422(
-                    h._hydrate_canonical_quote_document(merged, quotation, lang=quotation.baseline_lang, revision=document.revision + 1)
-                )
-                saved = await documents.save_current_document(
-                    quotation_id=quotation_id,
-                    lang=quotation.baseline_lang,
-                    document_json=validated,
-                    expected_revision=document.revision,
-                )
-                await documents.append_document_revision(
-                    quotation_id=quotation_id,
-                    lang=quotation.baseline_lang,
-                    revision=saved.revision,
-                    document_json=saved.document_json,
-                    change_source="impact_center_design_apply",
-                )
-            else:
-                saved = document
-            await impacts_repo.mark_generation_status(content_impacts + design_impacts, status="auto_applied")
+            accepted = await impacts.accept_all(quotation_id, selected_target_ids=selected_ids, note=payload.resolutionNote, profile_id=profile_id, idempotency_key=idempotency_key, correlation_id=correlation_id)
+        except ValueError as exc:
+            raise HTTPException(status_code=409, detail={"message": str(exc), "code": "impact_acceptance_idempotency_conflict"}) from exc
+        if previous_acceptance is None:
             await OutboxService(session).emit_event(
-                event_type="quotation.impact.auto_applied",
+                event_type="quotation.impact.accepted",
                 aggregate_type="quotation",
                 aggregate_id=quotation_id,
                 brand_id=quotation.brand_id,
-                correlation_id=f"impact-center:{quotation_id}:design",
-                payload={"quotation_family_id": quotation.quotation_family_id, "business_version": quotation.business_version, "selected_impact_ids": [item.id for item in selected], "applied_scopes": applied_scopes, "document_revision": saved.revision},
+                correlation_id=correlation_id,
+                payload={"quotation_family_id": quotation.quotation_family_id, "business_version": quotation.business_version, "selected_target_ids": sorted(selected_ids), "actor_profile_id": profile_id, "idempotency_key": idempotency_key},
             )
-            await session.commit()
-        except ContentGenerationError as exc:
-            await session.rollback()
-            raise HTTPException(status_code=503, detail={"message": str(exc), "retryable": True}) from exc
-        except ValueError as exc:
-            await session.rollback()
-            raise HTTPException(status_code=422, detail={"message": str(exc)}) from exc
-    return {"drafts": [h._serialize_content_draft(item) for item in created], "count": len(created), "revision": saved.revision, "appliedScopes": applied_scopes}
+        await session.commit()
+        targets_by_impact = {}
+        for target in await impacts.list_targets(quotation_id):
+            targets_by_impact.setdefault(target.impact_id, []).append(target)
+    base = f"/workspace/quotations/{quotation_id}/edit?lang={quotation.baseline_lang}"
+    return AcceptImpactCenterResponse(items=[ContentImpactResponse.model_validate(_serialize_impact(item, targets_by_impact.get(item.id))) for item in accepted], factsUrl=f"{base}&stage=facts", contentUrl=f"{base}&stage=content")
+
+
+@router.post("/{quotation_id}/impacts/generate-selected")
+async def generate_selected_quotation_impacts(quotation_id: str, principal: EditorPrincipalDep) -> None:
+    """Compatibility endpoint: Impact Center never executes content automatically."""
+    h = _helpers()
+    await h.require_owned_quotation(quotation_id, principal)
+    raise HTTPException(status_code=409, detail={"message": "Impact execution was retired. Generate reviewed drafts in Content Studio.", "code": "impact_execution_retired"})

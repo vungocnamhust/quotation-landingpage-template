@@ -232,7 +232,7 @@ class SectionContentGenerator:
             return {"route": data}
         if scope == "itinerary":
             return {"itinerary": data}
-        return {"dayNumber": int(scope.rsplit(":", 1)[-1]), **data}
+        return {"sourceFactId": scope.rsplit(":", 1)[-1], **data}
 
     async def generate(
         self,
@@ -351,7 +351,8 @@ class SectionContentGenerator:
         for idx, day_model in enumerate(output.days):
             day_num = input_days[idx].get("day_number") if idx < len(input_days) and isinstance(input_days[idx], dict) else idx + 1
             day_data = day_model.model_dump(mode="json")
-            candidates.append({"dayNumber": day_num, **day_data})
+            source_fact_id = day.get("source_fact_id") or day.get("sourceFactId") or str(day_num)
+            candidates.append({"sourceFactId": source_fact_id, "dayNumber": day_num, **day_data})
 
         metadata = {
             "instructionSource": source,
@@ -362,4 +363,3 @@ class SectionContentGenerator:
             "promptVersion": bundle.version,
         }
         return candidates, metadata
-

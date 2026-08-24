@@ -103,34 +103,46 @@ class ContentDraftService:
             return False
 
     @staticmethod
+    def _itinerary_day_for_scope(payload: CreateQuoteRequestV1, scope: str) -> tuple[Any | None, int | None]:
+        """Find a day by immutable Fact identity, with numeric fallback for legacy drafts."""
+        token = scope.rsplit(":", 1)[-1]
+        for index, day in enumerate(payload.trip_facts.itinerary):
+            if day.id and str(day.id) == token:
+                return day, index
+        if token.isdigit():
+            number = int(token)
+            for index, day in enumerate(payload.trip_facts.itinerary):
+                if day.day_number == number:
+                    return day, index
+        return None, None
+
+    @staticmethod
     def missing_for_scope(payload: CreateQuoteRequestV1, scope: str) -> list[dict[str, str]]:
         spec = scope_spec(scope)
         if scope in {"hero", "overview_letter"}:
             return [{"path": "trip_facts.destinations", "reason": "Select at least one destination before generating this section."}] if not payload.trip_facts.destinations else []
         if scope.startswith("itinerary:day:"):
-            number = int(scope.rsplit(":", 1)[-1])
-            day = next((item for item in payload.trip_facts.itinerary if item.day_number == number), None)
+            day, index = ContentDraftService._itinerary_day_for_scope(payload, scope)
             if day is None:
-                return [{"path": "trip_facts.itinerary", "reason": f"Day {number} no longer exists."}]
+                return [{"path": "trip_facts.itinerary", "reason": "This itinerary day no longer exists."}]
             missing = []
             if not day.destination:
-                missing.append({"path": f"trip_facts.itinerary[{number - 1}].destination", "reason": "Select a destination."})
+                missing.append({"path": f"trip_facts.itinerary[{index}].destination", "reason": "Select a destination."})
             if not (day.summary or day.highlights):
-                missing.append({"path": f"trip_facts.itinerary[{number - 1}].summary", "reason": "Add a summary or highlights before generating the day narrative."})
+                missing.append({"path": f"trip_facts.itinerary[{index}].summary", "reason": "Add a summary or highlights before generating the day narrative."})
             return missing
         return [{"path": path, "reason": "Required Facts are missing for this section."} for path in spec.required_facts if not _fact_value(payload, path)]
 
     @staticmethod
     def facts_snapshot(payload: CreateQuoteRequestV1, scope: str, request_brief: dict[str, Any] | None = None) -> dict[str, Any]:
         if scope.startswith("itinerary:day:"):
-            number = int(scope.rsplit(":", 1)[-1])
-            day = next((item for item in payload.trip_facts.itinerary if item.day_number == number), None)
-            snapshot = {"itineraryDay": {"dayNumber": number, "destination": day.destination if day else "", "summary": day.summary if day else "", "highlights": day.highlights if day else [], "meals": day.meals if day else [], "overnight": day.overnight if day else ""}}
+            day, _ = ContentDraftService._itinerary_day_for_scope(payload, scope)
+            snapshot = {"itineraryDay": {"sourceFactId": day.id if day else scope.rsplit(":", 1)[-1], "dayNumber": day.day_number if day else None, "destination": day.destination if day else "", "summary": day.summary if day else "", "highlights": day.highlights if day else [], "meals": day.meals if day else [], "overnight": day.overnight if day else ""}}
             if request_brief:
                 snapshot["request_brief"] = request_brief
             return snapshot
         spec = scope_spec(scope)
-        snapshot = {"facts": {path: _fact_value(payload, path) for path in spec.fact_allowlist}}
+        snapshot = {"facts": {dependency.path: _fact_value(payload, dependency.path) for dependency in spec.fact_used}}
         if request_brief:
             snapshot["request_brief"] = request_brief
         return snapshot
@@ -156,7 +168,7 @@ class ContentDraftService:
             "itinerary": {"itinerary"}, "finalization": {"content"},
         }
         if scope.startswith("itinerary:day:"):
-            allowed[scope] = {"dayNumber", "title", "description", "activities"}
+            allowed[scope] = {"sourceFactId", "dayNumber", "title", "description", "activities"}
         if set(candidate) != allowed.get(scope, set()):
             raise ValueError("Candidate contains fields not owned by this content scope.")
         if scope == "finalization":
@@ -178,7 +190,7 @@ class ContentDraftService:
                 raw = candidate if scope.startswith("itinerary:day:") else next(iter(candidate.values()))
             model = DayOutput if scope.startswith("itinerary:day:") else {"hero": HeroOutput, "overview_letter": OverviewOutput, "route": RouteOutput, "itinerary": ItineraryOutput}[scope]
             if scope.startswith("itinerary:day:"):
-                raw = {key: value for key, value in raw.items() if key != "dayNumber"}
+                raw = {key: value for key, value in raw.items() if key not in {"dayNumber", "sourceFactId"}}
             model.model_validate(raw)
         return candidate
 
@@ -187,9 +199,11 @@ class ContentDraftService:
         ContentDraftService.validate_candidate(scope, candidate)
         merged = dict(document)
         if scope.startswith("itinerary:day:"):
-            number = int(scope.rsplit(":", 1)[-1])
             days = ((merged.get("itinerary") or {}).get("days") or [])
-            day = next((item for item in days if item.get("dayNumber") == number), None)
+            token = scope.rsplit(":", 1)[-1]
+            day = next((item for item in days if str(item.get("sourceFactId") or "") == token), None)
+            if day is None and token.isdigit():
+                day = next((item for item in days if item.get("dayNumber") == int(token)), None)
             if day is None:
                 raise ValueError("Itinerary day no longer exists.")
             day.update({key: candidate[key] for key in ("title", "description", "activities")})
@@ -279,6 +293,7 @@ class ContentDraftService:
             },
             "itinerary_overview": [
                 {
+                    "source_fact_id": day.id,
                     "day_number": day.day_number,
                     "destination": day.destination,
                     "summary": day.summary,
@@ -378,10 +393,14 @@ class ContentDraftService:
             )
             created_drafts.append(draft)
 
-        # 5. Save Itinerary Days scopes: itinerary:day:1 .. itinerary:day:N
+        # 5. Persist days by Fact identity. Numeric scopes remain only for
+        # historic payloads which predate immutable business versions.
         for day_candidate in days_candidates:
             day_num = day_candidate.get("dayNumber", 1)
-            scope_key = f"itinerary:day:{day_num}"
+            matching_day = next((day for day in payload.trip_facts.itinerary if day.day_number == day_num), None)
+            source_fact_id = matching_day.id if matching_day and matching_day.id else str(day_num)
+            scope_key = f"itinerary:day:{source_fact_id}"
+            day_candidate = {"sourceFactId": source_fact_id, **day_candidate}
             spec = scope_spec(scope_key)
             self.validate_candidate(scope_key, day_candidate)
             prompt_version = _fingerprint(

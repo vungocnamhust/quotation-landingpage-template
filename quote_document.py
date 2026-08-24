@@ -239,9 +239,16 @@ class QuoteDocumentItinerary(QuoteBaseModel):
 
 class QuoteDocumentHotel(QuoteBaseModel):
     id: str
+    # Stable Fact identity is independent from the document/card position.  It
+    # allows a successor to preserve editorial hotel copy without assuming a
+    # hotel remains at the same array index.
+    sourceFactId: str = ""
     city: str = ""
     name: str = ""
+    # `introduction` is the immutable/default factual description.  Editorial
+    # copy is deliberately separate so Content actions cannot alter Facts.
     introduction: str = ""
+    editorialIntroduction: str = ""
     hotelDate: str = ""
     tel: str = ""
     roomType: str = ""
@@ -540,6 +547,7 @@ class CreateQuoteCustomerFacts(QuoteBaseModel):
 
 
 class CreateQuoteHotelFact(QuoteBaseModel):
+    id: str | None = None
     accommodation_id: str | None = None
     destination: str | None = None
     name: str | None = None
@@ -645,4 +653,3 @@ class CreateQuoteRequestV1(QuoteBaseModel):
     @model_validator(mode="after")
     def normalize_language(self) -> "CreateQuoteRequestV1":
         return self
-

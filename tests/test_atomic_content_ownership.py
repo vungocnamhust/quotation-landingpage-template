@@ -5,7 +5,7 @@ import copy
 import pytest
 from pydantic import ValidationError
 
-from quote_document import CreateQuoteRequestV1, QuoteDocumentV1, validate_quote_content_block
+from quote_document import CreateQuoteHotelFact, CreateQuoteRequestV1, QuoteDocumentV1, validate_quote_content_block
 from services.content_draft_service import ContentDraftService
 from services.content_registry import content_registry_payload, scope_spec
 from services.skeleton_builder import SkeletonBuilder
@@ -67,6 +67,23 @@ def test_skeleton_materializes_facts_but_never_editorial_copy():
     assert document["itinerary"]["days"][0]["title"] == ""
     assert document["content"]["sections"]["inclusions_exclusions"]["blocks"][0]["type"] == "twoColumnList"
     assert document["content"]["sections"]["booking_terms"]["blocks"][0]["type"] == "paragraph"
+
+
+def test_hotel_facts_and_editorial_copy_are_separate_in_the_skeleton() -> None:
+    facts = _facts()
+    facts.service_facts.hotels = [
+        CreateQuoteHotelFact(id="hotel_fact_1", destination="Hanoi", name="Hotel One", intro="Factual hotel description.")
+    ]
+    document = SkeletonBuilder().build(
+        quotation_id="quo_hotel_identity",
+        payload=facts,
+        resolved_facts={"duration": {"label": "2 days / 1 night"}, "routeLabel": "Hanoi – Ninh Binh", "travelDateLabel": "01–02 Oct 2026"},
+        template="quote-generator",
+    )
+    hotel = document["stays"]["hotels"][0]
+    assert hotel["sourceFactId"] == "hotel_fact_1"
+    assert hotel["introduction"] == "Factual hotel description."
+    assert hotel["editorialIntroduction"] == ""
 
 
 def test_candidate_apply_cannot_write_fact_or_design_paths():
@@ -178,4 +195,3 @@ def test_preserve_content_owned_values_keeps_itinerary_day_content_and_price_bas
     assert rebuilt["itinerary"]["days"][0]["labelHighlights"] == "Key Highlights"
     assert rebuilt["itinerary"]["days"][0]["labelNotes"] == "Day Notes"
     assert rebuilt["trip"]["priceBasis"] == "Based on twin share accommodation."
-

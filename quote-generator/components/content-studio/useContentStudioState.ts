@@ -72,9 +72,10 @@ export function useContentStudioState({
           item,
           ...days.map((day, index) => {
             const dayNumber = day.day_number ?? index + 1;
+            const sourceFactId = day.id ?? String(dayNumber);
             return {
               ...item,
-              sectionId: `itinerary:day:${dayNumber}`,
+              sectionId: `itinerary:day:${sourceFactId}`,
               label: `Day ${dayNumber}${
                 day.destination ? ` · ${day.destination}` : ''
               }`,
@@ -200,11 +201,12 @@ export function useContentStudioState({
       },
     };
     if (!scope?.startsWith('itinerary:day:')) return normalizedFacts;
-    const number = Number(scope.split(':').at(-1));
+    const sourceFactId = scope.split(':').at(-1) ?? '';
     const days =
       (
         tripFacts as {
           itinerary?: Array<{
+            id?: string;
             day_number?: number;
             destination?: string;
             summary?: string;
@@ -214,12 +216,13 @@ export function useContentStudioState({
           }>;
         }
       ).itinerary ?? [];
-    const day = days.find((item) => item.day_number === number);
+    const day = days.find((item) => item.id === sourceFactId || String(item.day_number) === sourceFactId);
     return {
       ...normalizedFacts,
       itineraryDay: day
         ? {
-            dayNumber: number,
+            dayNumber: day.day_number ?? 0,
+            sourceFactId,
             destination: day.destination ?? '',
             summary: day.summary ?? '',
             highlights: day.highlights ?? [],

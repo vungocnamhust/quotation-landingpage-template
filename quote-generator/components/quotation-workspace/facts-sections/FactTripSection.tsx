@@ -98,6 +98,7 @@ type Props = {
   resolvedFacts?: ResolvedFacts;
   readOnly?: boolean;
   allowPresentationEdits?: boolean;
+  templateLocked?: boolean;
   selectedDesigner: TravelDesignerProfile | null;
   onDesignerChange: (designerId: string | null, profile?: TravelDesignerProfile | null) => void;
   onTripStartDateChange: (value: string) => void;
@@ -111,6 +112,7 @@ export function FactTripSection({
   resolvedFacts,
   readOnly = false,
   allowPresentationEdits = true,
+  templateLocked = false,
   selectedDesigner,
   onDesignerChange,
   onTripStartDateChange,
@@ -180,7 +182,7 @@ export function FactTripSection({
                 (item.brandIds ?? []).includes(facts.brand_id)
             )}
             value={facts.presentation_options.template_id}
-            disabled={readOnly}
+            disabled={readOnly || templateLocked}
             onChange={(value) =>
               onUpdate("presentation_options", {
                 ...facts.presentation_options,
@@ -189,6 +191,7 @@ export function FactTripSection({
             }
             placeholder="Select template"
           />
+          {templateLocked ? <span className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>Template changes are unavailable until the V2 template migration is supported.</span> : null}
         </label>
       ) : null}
 

@@ -33,6 +33,7 @@ type Props = {
   resolvedFacts?: ResolvedFacts;
   readOnly?: boolean;
   allowPresentationEdits?: boolean;
+  templateLocked?: boolean;
   allowSubmitWhenReadOnly?: boolean;
   sourceNote?: string;
   isDirty?: boolean;
@@ -110,6 +111,7 @@ export default function FactsForm({
   resolvedFacts,
   readOnly = false,
   allowPresentationEdits = true,
+  templateLocked = false,
   allowSubmitWhenReadOnly = false,
   sourceNote,
   isDirty = false,
@@ -268,6 +270,7 @@ export default function FactsForm({
             resolvedFacts={resolvedFacts}
             readOnly={readOnly}
             allowPresentationEdits={allowPresentationEdits}
+            templateLocked={templateLocked}
             selectedDesigner={selectedDesigner}
             onDesignerChange={(value, profile) => {
               setSelectedDesigner(profile ?? null);

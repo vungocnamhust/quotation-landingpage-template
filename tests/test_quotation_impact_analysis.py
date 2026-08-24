@@ -15,8 +15,6 @@ def test_impact_analysis_is_deterministic_and_scoped() -> None:
     assert [(item["stage"], item["scope"]) for item in impacts] == [
         ("content", "hero"),
         ("content", "overview_letter"),
-        ("content", "route"),
-        ("design", "route-map"),
     ]
     assert facts_hash(before) == facts_hash(before)
     assert facts_hash(before) != facts_hash(after)
@@ -36,7 +34,7 @@ def test_day_destination_change_and_added_day_have_concrete_targets() -> None:
     by_scope = {(item["scope"], item["entity_key"]): item for item in impacts}
     assert by_scope[("itinerary:day:5", "day:5")]["generation_eligible"] is True
     assert by_scope[("itinerary:day:6", "day:6")]["operation"] == "added"
-    assert by_scope[("itinerary:day:6", "day:6")]["target_path"] == "/itinerary/days/5"
+    assert by_scope[("itinerary:day:6", "day:6")]["targets"][0]["treatment"] == "generation_candidate"
 
 
 def test_party_advisor_and_pricing_leaf_changes_are_mapped() -> None:
@@ -47,7 +45,7 @@ def test_party_advisor_and_pricing_leaf_changes_are_mapped() -> None:
 
     assert any(item["source_path"] == "customer_facts.adults" and item["scope"] == "hero" for item in impacts)
     assert any(item["source_path"] == "customer_facts.advisor_name" and item["scope"] == "overview_letter" for item in impacts)
-    assert any(item["source_path"] == "pricing_facts.options.private.currency" for item in impacts)
+    assert not any(item["source_path"].startswith("pricing_facts") for item in impacts)
 
 
 def test_reordered_stable_fact_days_do_not_invalidate_narrative() -> None:

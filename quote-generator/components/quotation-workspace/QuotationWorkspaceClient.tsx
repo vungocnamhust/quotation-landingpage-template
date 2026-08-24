@@ -412,9 +412,10 @@ export default function QuotationWorkspaceClient({
         params.delete("focus");
         let section = target.section;
         if (target.focus?.kind === "day") {
-          const days = ((documentData?.document.itinerary as { days?: Array<{ dayNumber?: number }> } | undefined)?.days ?? []);
-          const dayNumber = days[target.focus.index]?.dayNumber;
-          if (typeof dayNumber === "number") section = `itinerary:day:${dayNumber}`;
+          const days = ((documentData?.document.itinerary as { days?: Array<{ dayNumber?: number; sourceFactId?: string }> } | undefined)?.days ?? []);
+          const day = days[target.focus.index];
+          const factId = day?.sourceFactId ?? day?.dayNumber;
+          if (factId != null) section = `itinerary:day:${factId}`;
         }
         params.set("section", section);
       }
@@ -423,39 +424,24 @@ export default function QuotationWorkspaceClient({
     [documentData?.document, guardedNavigateStage, pathname, router, search],
   );
 
-  const acceptImpactCenter = useCallback(async (selectedImpactIds: number[]) => {
+  const acceptImpactCenter = useCallback(async (selectedTargetIds: number[]) => {
     try {
       await workspace.request(
         `/api/v2/quotations/${quotationId}/impacts/accept`,
-        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ selectedImpactIds }) },
+        { method: "POST", headers: { "Content-Type": "application/json", "Idempotency-Key": crypto.randomUUID() }, body: JSON.stringify({ selectedTargetIds }) },
         "Impact Center could not be accepted."
       );
       await workspace.refresh();
       clearScope("quotation:impact-center");
       toast("Change plan accepted. Choose where to continue.", "success");
     } catch (error) {
-      notify({ message: apiErrorMessage(error), type: "error", persistent: true, scope: "quotation:impact-center", action: { label: "Retry", onClick: () => undefined } });
+      notify({ message: apiErrorMessage(error), type: "error", persistent: true, scope: "quotation:impact-center", action: { label: "Retry", onClick: () => void workspace.impacts.mutate() } });
       throw error;
     }
   }, [clearScope, notify, quotationId, toast, workspace]);
 
-  const openImpactDesign = useCallback(async () => {
-    try {
-      await workspace.request(
-        `/api/v2/quotations/${quotationId}/impacts/generate-selected`,
-        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) },
-        "Selected Design targets could not be generated and applied."
-      );
-      await workspace.refresh();
-      router.replace(`${pathname}?stage=design&lang=${encodeURIComponent(lang)}`);
-    } catch (error) {
-      notify({ message: apiErrorMessage(error), type: "error", persistent: true, scope: "quotation:impact-generate", action: { label: "Reload", onClick: () => window.location.reload() } });
-      throw error;
-    }
-  }, [lang, notify, pathname, quotationId, router, workspace]);
-
   if (isImpactCenter) {
-    return <ImpactCenter impacts={impactsData?.items ?? []} loading={!impactsData && !workspace.impacts.error} error={workspace.impacts.error ? apiErrorMessage(workspace.impacts.error) : null} pending={pending} onAccept={acceptImpactCenter} onRetry={() => void workspace.impacts.mutate()} onReviewFacts={() => router.replace(`${pathname}?stage=facts&lang=${encodeURIComponent(lang)}`)} onOpenDesign={openImpactDesign} />;
+    return <ImpactCenter impacts={impactsData?.items ?? []} loading={!impactsData && !workspace.impacts.error} error={workspace.impacts.error ? apiErrorMessage(workspace.impacts.error) : null} pending={pending} onAccept={acceptImpactCenter} onRetry={() => void workspace.impacts.mutate()} onReviewFacts={() => router.replace(`${pathname}?stage=facts&lang=${encodeURIComponent(lang)}`)} onOpenContent={(target) => router.replace(`${pathname}?stage=content&section=${encodeURIComponent(target.scope)}&focus=${encodeURIComponent(target.deepLink.focus ?? "")}&impactTarget=${target.id}&lang=${encodeURIComponent(lang)}`)} />;
   }
 
   return (
@@ -609,6 +595,7 @@ export default function QuotationWorkspaceClient({
             resolvedFacts={factsData.resolvedFacts}
             readOnly={!editable}
             allowSubmitWhenReadOnly={!editable && !immutableFacts}
+            templateLocked={isEditingQuotation}
             isDirty={isFactsDirty}
             sourceNote={
               isEditingQuotation
