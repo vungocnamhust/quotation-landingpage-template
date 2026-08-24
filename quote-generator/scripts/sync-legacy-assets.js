@@ -1,5 +1,5 @@
 /**
- * Synchronize static legacy files (published/ and assets/) from monorepo root
+ * Synchronize static legacy assets (assets/) from monorepo root
  * to quote-generator/public/ directory so Next.js serves them directly.
  */
 
@@ -8,9 +8,6 @@ const path = require('path');
 
 const PROJECT_ROOT = path.resolve(__dirname, '..', '..');
 const PUBLIC_DIR = path.resolve(__dirname, '..', 'public');
-
-const SOURCE_PUBLISHED = path.join(PROJECT_ROOT, 'published');
-const TARGET_PUBLISHED = path.join(PUBLIC_DIR, 'published');
 
 const SOURCE_ASSETS = path.join(PROJECT_ROOT, 'assets');
 const TARGET_ASSETS = path.join(PUBLIC_DIR, 'assets');
@@ -51,13 +48,6 @@ function copyRecursiveSync(src, dest) {
 
 function main() {
   console.log('[sync-legacy-assets] Synchronizing static assets to quote-generator/public...');
-
-  if (fs.existsSync(SOURCE_PUBLISHED)) {
-    console.log(`[sync-legacy-assets] Copying ${SOURCE_PUBLISHED} -> ${TARGET_PUBLISHED}`);
-    copyRecursiveSync(SOURCE_PUBLISHED, TARGET_PUBLISHED);
-  } else {
-    console.warn(`[sync-legacy-assets] Source published directory not found at ${SOURCE_PUBLISHED}`);
-  }
 
   if (fs.existsSync(SOURCE_ASSETS)) {
     console.log(`[sync-legacy-assets] Copying ${SOURCE_ASSETS} -> ${TARGET_ASSETS}`);
