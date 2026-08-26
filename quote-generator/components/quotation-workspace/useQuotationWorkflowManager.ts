@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState, useTransition } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import type { QuotationFacts } from "./factsTypes.ts";
 import { ensureFactsDefaults } from "./factsTypes.ts";
@@ -49,7 +49,6 @@ export function useQuotationWorkflowManager({
   notify,
 }: UseQuotationWorkflowManagerOptions) {
   const [isSaving, setIsSaving] = useState(false);
-  const [, startTransition] = useTransition();
 
   const baselineFacts = workspace.facts.data?.facts;
   const currentRevision = workspace.document.data?.currentRevision ?? 0;
@@ -152,9 +151,7 @@ export function useQuotationWorkflowManager({
       }
 
       // Safe navigation
-      startTransition(() => {
-        setStage(targetStage);
-      });
+      setStage(targetStage);
       return true;
     },
     [stage, isFactsDirty, editableFacts, toast, saveFactsWithRefresh, setStage]

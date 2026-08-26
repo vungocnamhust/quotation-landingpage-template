@@ -19,6 +19,7 @@ import {
   Rocket,
   Lock,
   CheckCircle2,
+  Loader2,
   RefreshCw,
 } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography.ts";
@@ -50,6 +51,7 @@ import RequestRecapModal from "./RequestRecapModal.tsx";
 import ImpactCenter from "./ImpactCenter.tsx";
 import { useContentActionPlan, type ContentAction } from "./useContentActionPlan.ts";
 import { useContentActionExecution } from "./useContentActionExecution.ts";
+import { isQuotationStageLoading } from "../../lib/stageLoading.ts";
 
 const ContentStudioClient = dynamic(
   () => import("../content-studio/ContentStudioClient"),
@@ -83,6 +85,16 @@ const stageIcons: Record<Stage, React.ComponentType<{ size?: number; className?:
   review: Rocket,
 };
 
+function StagePanelSkeleton({ stage }: { stage: Stage }) {
+  return (
+    <div className="workspace-skeleton" role="status" aria-live="polite" aria-label={`Loading ${stage} workspace`}>
+      <div className="workspace-skeleton__line workspace-skeleton__line--wide" />
+      <div className="workspace-skeleton__line workspace-skeleton__line--mid" />
+      <div className="workspace-skeleton__line" />
+    </div>
+  );
+}
+
 export default function QuotationWorkspaceClient({
   quotationId,
   lang,
@@ -99,11 +111,16 @@ export default function QuotationWorkspaceClient({
   const stage: Stage = stages.includes(requestedStage as Stage)
     ? (requestedStage as Stage)
     : "facts";
+  const [requestedStageIntent, setRequestedStageIntent] = useState<Stage | null>(null);
+  const [isStageRoutePending, startStageTransition] = useTransition();
+  const [isStageGuarding, setIsStageGuarding] = useState(false);
   const setStage = useCallback((next: Stage) => {
     const params = new URLSearchParams(search.toString());
     params.set("stage", next);
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  }, [pathname, router, search]);
+    startStageTransition(() => {
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    });
+  }, [pathname, router, search, startStageTransition]);
   const { toast, notify, clearScope } = useToast();
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
   const [fallbackUrl, setFallbackUrl] = useState<string | null>(null);
@@ -215,8 +232,14 @@ export default function QuotationWorkspaceClient({
 
   const goTo = useCallback(
     async (next: Stage) => {
+      setRequestedStageIntent(next);
+      setIsStageGuarding(true);
       const allowed = await guardedNavigateStage(next);
-      if (!allowed) return;
+      setIsStageGuarding(false);
+      if (!allowed) {
+        setRequestedStageIntent(null);
+        return;
+      }
 
       if (next === "review" && !reviewReady) {
         notify({
@@ -377,6 +400,23 @@ export default function QuotationWorkspaceClient({
     (factsData?.facts
       ? hydrateDestinationRefs(factsData.facts, factsData.resolvedFacts)
       : undefined);
+  const stageResourcesReady =
+    stage === "facts"
+      ? Boolean(factsData?.facts && activeFacts && options)
+      : stage === "content"
+      ? Boolean(documentData && factsData)
+      : stage === "design"
+      ? Boolean(documentData && factsData && liveDocumentModel)
+      : Boolean(reviewData && workflowData);
+  const isStageLoading =
+    isStageGuarding ||
+    isStageRoutePending ||
+    isQuotationStageLoading({
+      committedStage: stage,
+      requestedStage: requestedStageIntent,
+      resourcesReady: stageResourcesReady,
+      hasLoadError: Boolean(loadError),
+    });
 
   const updateEditableFacts = useCallback(
     (next: SetStateAction<QuotationFacts>) => {
@@ -395,8 +435,14 @@ export default function QuotationWorkspaceClient({
 
   const navigateHandoff = useCallback(
     async (target: ResolvedHandoff) => {
+      setRequestedStageIntent(target.stage as Stage);
+      setIsStageGuarding(true);
       const allowed = await guardedNavigateStage(target.stage as Stage);
-      if (!allowed) return;
+      setIsStageGuarding(false);
+      if (!allowed) {
+        setRequestedStageIntent(null);
+        return;
+      }
 
       const params = new URLSearchParams(search.toString());
       params.set("stage", target.stage);
@@ -429,9 +475,11 @@ export default function QuotationWorkspaceClient({
         }
         params.set("section", section);
       }
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      startStageTransition(() => {
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      });
     },
-    [documentData?.document, guardedNavigateStage, pathname, router, search],
+    [documentData?.document, guardedNavigateStage, pathname, router, search, startStageTransition],
   );
 
   const acceptImpactCenter = useCallback(async () => {
@@ -447,6 +495,7 @@ export default function QuotationWorkspaceClient({
   }, [clearScope, contentActionExecution, contentActionPlan, notify, toast]);
 
   const openContentAction = useCallback((action?: ContentAction) => {
+    setRequestedStageIntent("content");
     const params = new URLSearchParams(search.toString());
     params.set("stage", "content");
     if (action) {
@@ -457,8 +506,10 @@ export default function QuotationWorkspaceClient({
     } else {
       params.delete("impactAction");
     }
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  }, [pathname, router, search]);
+    startStageTransition(() => {
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    });
+  }, [pathname, router, search, startStageTransition]);
 
   const executeContentActions = useCallback(async (mode: "auto" | "bypass", actions: ContentAction[]) => {
     const plan = contentActionPlan.data;
@@ -482,7 +533,7 @@ export default function QuotationWorkspaceClient({
   }, [contentActionExecution, contentActionPlan, documentData?.currentRevision, notify, openContentAction, toast, workspace]);
 
   if (isImpactCenter) {
-    return <ImpactCenter plan={contentActionPlan.data} loading={!contentActionPlan.data && !contentActionPlan.error} error={contentActionPlan.error ? apiErrorMessage(contentActionPlan.error) : null} pendingMode={contentActionExecution.pendingMode} onAccept={acceptImpactCenter} onGenerateDrafts={async (actions) => { await executeContentActions("auto", actions); }} onGenerateAndApply={async (actions) => { await executeContentActions("bypass", actions); }} onRetry={() => void contentActionPlan.mutate()} onReviewFacts={() => setStage("facts")} onOpenContent={openContentAction} />;
+    return <ImpactCenter plan={contentActionPlan.data} loading={!contentActionPlan.data && !contentActionPlan.error} error={contentActionPlan.error ? apiErrorMessage(contentActionPlan.error) : null} pendingMode={contentActionExecution.pendingMode} onAccept={acceptImpactCenter} onGenerateDrafts={async (actions) => { await executeContentActions("auto", actions); }} onGenerateAndApply={async (actions) => { await executeContentActions("bypass", actions); }} onRetry={() => void contentActionPlan.mutate()} onReviewFacts={() => void goTo("facts")} onOpenContent={openContentAction} />;
   }
 
   return (
@@ -578,6 +629,7 @@ export default function QuotationWorkspaceClient({
             const locked = isLocked(item);
             const complete = isComplete(item);
             const current = stage === item;
+            const pendingTarget = isStageLoading && requestedStageIntent === item;
 
             return (
               <div
@@ -597,7 +649,9 @@ export default function QuotationWorkspaceClient({
                   type="button"
                   onClick={() => goTo(item)}
                   aria-current={current ? "step" : undefined}
-                  aria-disabled={locked}
+                  aria-busy={pendingTarget || undefined}
+                  aria-disabled={locked || pendingTarget || undefined}
+                  disabled={pendingTarget}
                   className={cn(
                     "workspace-stepper__step",
                     current && "workspace-stepper__step--current",
@@ -607,7 +661,9 @@ export default function QuotationWorkspaceClient({
                   title={locked ? "Resolve previous stages first" : undefined}
                 >
                   <span className="workspace-stepper__circle">
-                    {complete ? (
+                    {pendingTarget ? (
+                      <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+                    ) : complete ? (
                       <CheckCircle2 size={16} aria-hidden="true" />
                     ) : locked ? (
                       <Lock size={14} aria-hidden="true" />
@@ -628,7 +684,7 @@ export default function QuotationWorkspaceClient({
       </header>
 
       <section className="flex flex-col gap-6 min-w-0 w-full">
-        {stage === "facts" && factsData?.facts && activeFacts && options ? (
+        {stage === "facts" && !isStageLoading && factsData?.facts && activeFacts && options ? (
           <>
           <FactsForm
             facts={activeFacts}
@@ -678,11 +734,8 @@ export default function QuotationWorkspaceClient({
             }
           />
           </>
-        ) : stage === "facts" ? (
-          <div className="workspace-skeleton">
-            <div className="workspace-skeleton__line workspace-skeleton__line--wide" />
-            <div className="workspace-skeleton__line workspace-skeleton__line--mid" />
-          </div>
+        ) : stage === "facts" && !loadError ? (
+          <StagePanelSkeleton stage="facts" />
         ) : null}
 
         {loadError ? (
@@ -713,22 +766,24 @@ export default function QuotationWorkspaceClient({
           </div>
         ) : null}
 
-        {stage === "content" ? (
+        {stage === "content" && !isStageLoading && documentData && factsData ? (
           <>
           <ContentStudioClient
             quotationId={quotationId}
             lang={lang}
             impactActionId={search.get("impactAction") ?? undefined}
             onEditFacts={(section) => {
+              setRequestedStageIntent("facts");
               const params = new URLSearchParams(search.toString());
               params.set("stage", "facts");
               params.delete("section");
               params.delete("focus");
               params.set("factsSection", section === "booking_terms" ? "seller" : section === "inclusions_exclusions" ? "services" : "trip");
-              router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-              setStage("facts");
+              startStageTransition(() => {
+                router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+              });
             }}
-            onProceedToDesign={() => setStage("design")}
+            onProceedToDesign={() => void goTo("design")}
             resources={{
               documentData,
               draftsData: workspace.drafts.data,
@@ -739,9 +794,9 @@ export default function QuotationWorkspaceClient({
             }}
           />
           </>
-        ) : null}
+        ) : stage === "content" && !loadError ? <StagePanelSkeleton stage="content" /> : null}
 
-        {stage === "design" && documentData ? (
+        {stage === "design" && !isStageLoading && documentData && factsData && liveDocumentModel ? (
           <div className="flex flex-col gap-5">
             <DesignPreviewToolbar
               viewMode={previewMode}
@@ -760,8 +815,7 @@ export default function QuotationWorkspaceClient({
                 This preview reads the canonical brochure document. Only applied
                 content is visible. Click elements on the canvas to edit presentation copy.
               </p>
-              {liveDocumentModel && factsData ? (
-                <DesignCanvas
+              <DesignCanvas
                   quotationId={quotationId}
                   lang={lang}
                   model={liveDocumentModel}
@@ -788,7 +842,6 @@ export default function QuotationWorkspaceClient({
                   onHandoff={navigateHandoff}
                   focus={search.get("focus") ?? undefined}
                 />
-              ) : null}
             </div>
 
             {liveDocumentModel ? (
@@ -801,7 +854,7 @@ export default function QuotationWorkspaceClient({
               />
             ) : null}
           </div>
-        ) : null}
+        ) : stage === "design" && !loadError ? <StagePanelSkeleton stage="design" /> : null}
 
         {stage === "review" && !reviewReady ? (
           <div ref={blockersRef}>
