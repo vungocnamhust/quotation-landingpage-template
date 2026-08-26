@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import dynamic from "next/dynamic";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Sparkles,
@@ -29,6 +27,7 @@ import SpecialRequirementsCard from "./detail/SpecialRequirementsCard.tsx";
 import CommercialPricingCard from "./detail/CommercialPricingCard.tsx";
 import ReadinessStrategyCard from "./detail/ReadinessStrategyCard.tsx";
 import DailyItineraryTimeline from "./detail/DailyItineraryTimeline.tsx";
+import { useWorkspaceNavigation, WorkspaceNavigationLink } from "./WorkspaceNavigation.tsx";
 
 // Dynamic import modals to optimize initial bundle size (Vercel Best Practice: bundle-dynamic-imports)
 const EditRequestDrawer = dynamic(() => import("./EditRequestDrawer"), { ssr: false });
@@ -39,7 +38,7 @@ type Props = {
 };
 
 export default function DetailRequestView({ request: initialRequest }: Props) {
-  const router = useRouter();
+  const { push } = useWorkspaceNavigation();
   const { toast } = useToast();
   const [currentLatestRequest, setCurrentLatestRequest] = useState<QuoteRequestItem>(initialRequest);
   const [activeRequest, setActiveRequest] = useState<QuoteRequestItem>(initialRequest);
@@ -74,7 +73,7 @@ export default function DetailRequestView({ request: initialRequest }: Props) {
 
   const handleGenerateQuotation = () => {
     toast(`Initializing quotation draft from request #${activeRequest.id}...`, "info");
-    router.push(`/workspace/quotations/new?requestId=${activeRequest.id}`);
+    push(`/workspace/quotations/new?requestId=${activeRequest.id}`);
   };
 
   const handleEditSuccess = (updated: QuoteRequestItem) => {
@@ -128,7 +127,7 @@ export default function DetailRequestView({ request: initialRequest }: Props) {
       {/* Top Header Bar */}
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[var(--elevation-card)]">
         <div className="flex flex-col gap-2 min-w-0 flex-1">
-          <Link
+          <WorkspaceNavigationLink
             href="/workspace/requests"
             className={cn(
               getTypographyClassName("caption"),
@@ -137,7 +136,7 @@ export default function DetailRequestView({ request: initialRequest }: Props) {
           >
             <ArrowLeft size={14} aria-hidden="true" />
             <span>Back to Requests</span>
-          </Link>
+          </WorkspaceNavigationLink>
 
           <div className="flex flex-wrap items-center gap-3">
             <h1 className={cn(getTypographyClassName("pageTitle"), "text-[var(--color-on-surface)] truncate")}>
@@ -276,7 +275,7 @@ export default function DetailRequestView({ request: initialRequest }: Props) {
             </div>
           </div>
 
-          <Link
+            <WorkspaceNavigationLink
             href={`/workspace/quotations/${activeRequest.linked_quotation_id}/edit?stage=facts`}
             className={cn(
               getTypographyClassName("buttonPrimary"),
@@ -285,7 +284,7 @@ export default function DetailRequestView({ request: initialRequest }: Props) {
           >
             <span>Mở Quotation Studio</span>
             <ExternalLink size={15} aria-hidden="true" />
-          </Link>
+            </WorkspaceNavigationLink>
         </section>
       ) : null}
 

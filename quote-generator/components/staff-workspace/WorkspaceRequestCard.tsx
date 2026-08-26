@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { User, Briefcase, Calendar, MapPin, Users, ArrowRight } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
 import type { QuoteRequestItem } from "../quotation-workspace/factsTypes.ts";
+import { WorkspaceNavigationLink } from "./WorkspaceNavigation.tsx";
 
 type Props = {
   item: QuoteRequestItem;
@@ -59,7 +59,7 @@ export function WorkspaceRequestCard({ item }: Props) {
 
       {/* Main Info Block */}
       <div className="flex flex-col gap-2">
-        <Link
+        <WorkspaceNavigationLink
           href={`/workspace/requests/${item.id}`}
           className={cn(
             getTypographyClassName("cardTitle"),
@@ -67,7 +67,7 @@ export function WorkspaceRequestCard({ item }: Props) {
           )}
         >
           {title}
-        </Link>
+        </WorkspaceNavigationLink>
 
         {item.company_name ? (
           <p className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>
@@ -101,7 +101,7 @@ export function WorkspaceRequestCard({ item }: Props) {
           ID: {item.id}
         </span>
 
-        <Link
+        <WorkspaceNavigationLink
           href={`/workspace/requests/${item.id}`}
           className={cn(
             getTypographyClassName("caption"),
@@ -110,7 +110,7 @@ export function WorkspaceRequestCard({ item }: Props) {
         >
           <span>View Request</span>
           <ArrowRight size={14} aria-hidden="true" />
-        </Link>
+        </WorkspaceNavigationLink>
       </div>
 
     </div>

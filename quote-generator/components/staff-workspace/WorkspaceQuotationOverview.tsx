@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import useSWR from "swr";
 import { CheckCircle2, AlertCircle, Eye, ArrowRight } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography.ts";
 import { quotationFetch } from "../../lib/apiError.ts";
 import { cn } from "../../utils/cn.ts";
+import { WorkspaceNavigationLink } from "./WorkspaceNavigation.tsx";
 
 const API_BASE = process.env.NEXT_PUBLIC_QUOTATION_API_URL ?? "";
 
@@ -69,7 +69,7 @@ export default function WorkspaceQuotationOverview({
         >
           It may no longer be assigned to your Travel Designer profile.
         </p>
-        <Link
+        <WorkspaceNavigationLink
           href="/workspace/quotations"
           className={cn(
             getTypographyClassName("buttonSecondary"),
@@ -77,7 +77,7 @@ export default function WorkspaceQuotationOverview({
           )}
         >
           Back to my quotations
-        </Link>
+        </WorkspaceNavigationLink>
       </div>
     );
   }
@@ -178,7 +178,7 @@ export default function WorkspaceQuotationOverview({
 
           <div className="flex flex-wrap items-center gap-3">
             {workflow.design.ready ? (
-              <Link
+              <WorkspaceNavigationLink
                 href={`/workspace/quotations/${encodeURIComponent(quotationId)}/edit?stage=design`}
                 className={cn(
                   getTypographyClassName("buttonSecondary"),
@@ -187,10 +187,10 @@ export default function WorkspaceQuotationOverview({
               >
                 <Eye size={16} aria-hidden="true" />
                 <span>Open preview</span>
-              </Link>
+              </WorkspaceNavigationLink>
             ) : null}
 
-            <Link
+            <WorkspaceNavigationLink
               href={`/workspace/quotations/${encodeURIComponent(quotationId)}/edit?stage=${targetStage}`}
               className={cn(
                 getTypographyClassName("buttonPrimary"),
@@ -199,7 +199,7 @@ export default function WorkspaceQuotationOverview({
             >
               <span>Continue quotation</span>
               <ArrowRight size={16} aria-hidden="true" />
-            </Link>
+            </WorkspaceNavigationLink>
           </div>
         </div>
 
@@ -297,7 +297,7 @@ export default function WorkspaceQuotationOverview({
       {/* Stage Cards */}
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stages.map(({ label, ready, stageKey, detailText }, index) => (
-          <Link
+          <WorkspaceNavigationLink
             key={label}
             href={`/workspace/quotations/${encodeURIComponent(quotationId)}/edit?stage=${stageKey}`}
             className="workspace-stage-card group"
@@ -343,7 +343,7 @@ export default function WorkspaceQuotationOverview({
             >
               {detailText}
             </p>
-          </Link>
+          </WorkspaceNavigationLink>
         ))}
       </section>
     </main>

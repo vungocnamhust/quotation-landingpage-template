@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { User, Briefcase, ArrowRight } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
 import type { QuoteRequestItem } from "../quotation-workspace/factsTypes.ts";
+import { WorkspaceNavigationLink } from "./WorkspaceNavigation.tsx";
 
 type Props = {
   items: QuoteRequestItem[];
@@ -85,7 +85,7 @@ export function WorkspaceRequestTable({ items }: Props) {
                     >
                       {isTraveller ? <User size={12} aria-hidden="true" /> : <Briefcase size={12} aria-hidden="true" />}
                     </span>
-                    <Link
+                    <WorkspaceNavigationLink
                       href={`/workspace/requests/${item.id}`}
                       className={cn(
                         getTypographyClassName("bodySm"),
@@ -93,7 +93,7 @@ export function WorkspaceRequestTable({ items }: Props) {
                       )}
                     >
                       {title}
-                    </Link>
+                    </WorkspaceNavigationLink>
                   </div>
                 </td>
 
@@ -125,7 +125,7 @@ export function WorkspaceRequestTable({ items }: Props) {
                 </td>
 
                 <td className="px-4 py-3 whitespace-nowrap text-right">
-                  <Link
+                  <WorkspaceNavigationLink
                     href={`/workspace/requests/${item.id}`}
                     className={cn(
                       getTypographyClassName("caption"),
@@ -134,7 +134,7 @@ export function WorkspaceRequestTable({ items }: Props) {
                   >
                     <span>View Detail</span>
                     <ArrowRight size={14} aria-hidden="true" />
-                  </Link>
+                  </WorkspaceNavigationLink>
                 </td>
               </tr>
             );
@@ -144,4 +144,3 @@ export function WorkspaceRequestTable({ items }: Props) {
     </div>
   );
 }
-

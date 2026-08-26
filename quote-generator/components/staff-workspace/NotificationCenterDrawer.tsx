@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   X,
@@ -18,6 +17,7 @@ import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
 import type { NotificationItem } from "./useNotifications.ts";
 import { useToast } from "./ToastProvider.tsx";
+import { useWorkspaceNavigation } from "./WorkspaceNavigation.tsx";
 
 interface NotificationCenterDrawerProps {
   isOpen: boolean;
@@ -74,7 +74,7 @@ export function NotificationCenterDrawer({
   onMarkAsRead,
   onMarkAllAsRead,
 }: NotificationCenterDrawerProps) {
-  const router = useRouter();
+  const { push } = useWorkspaceNavigation();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"all" | "unread">("all");
   const [markingAll, setMarkingAll] = useState(false);
@@ -113,7 +113,7 @@ export function NotificationCenterDrawer({
     }
     if (item.action_url) {
       onClose();
-      router.push(item.action_url);
+      push(item.action_url);
     }
   };
 

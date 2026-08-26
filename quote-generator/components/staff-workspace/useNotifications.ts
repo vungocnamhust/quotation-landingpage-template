@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import useSWR from "swr";
 import { quotationFetch } from "../../lib/apiError.ts";
 import { useToast } from "./ToastProvider.tsx";
+import { useWorkspaceNavigation } from "./WorkspaceNavigation.tsx";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_NOTIFICATION_API_URL ||
@@ -53,7 +53,7 @@ export function useNotifications(options?: {
   limit?: number;
   severity?: string;
 }) {
-  const router = useRouter();
+  const { push } = useWorkspaceNavigation();
   const { toast, notify } = useToast();
 
   const queryParams = new URLSearchParams();
@@ -135,7 +135,7 @@ export function useNotifications(options?: {
               action: {
                 label: "View",
                 onClick: () => {
-                  router.push(targetUrl);
+                  push(targetUrl);
                 },
               },
             });
@@ -178,7 +178,7 @@ export function useNotifications(options?: {
         clearTimeout(reconnectTimeout);
       }
     };
-  }, [mutateList, mutateCount, notify, toast, router]);
+  }, [mutateList, mutateCount, notify, push, toast]);
 
   const markAsRead = useCallback(
     async (notificationId: string) => {

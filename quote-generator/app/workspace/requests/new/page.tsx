@@ -1,16 +1,15 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { ArrowLeft, Sparkles } from "lucide-react";
-import Link from "next/link";
 import QuoteRequestForm from "../../../../components/quotation-workspace/QuoteRequestForm";
 import { useQuoteRequestForm } from "../../../../components/quotation-workspace/useQuoteRequestForm";
 import { useToast } from "../../../../components/staff-workspace/ToastProvider";
 import { getTypographyClassName } from "../../../../config/typography";
 import { cn } from "../../../../utils/cn";
+import { useWorkspaceNavigation, WorkspaceNavigationLink } from "../../../../components/staff-workspace/WorkspaceNavigation";
 
 export default function NewQuoteRequestPage() {
-  const router = useRouter();
+  const { push } = useWorkspaceNavigation();
   const { toast } = useToast();
 
   const {
@@ -29,7 +28,7 @@ export default function NewQuoteRequestPage() {
     initialRole: "traveller",
     onSuccess: (created) => {
       toast(`Journey request #${created.id} created successfully. Redirecting to detail view...`, "success");
-      router.push(`/workspace/requests/${encodeURIComponent(created.id)}`);
+      push(`/workspace/requests/${encodeURIComponent(created.id)}`);
     },
   });
 
@@ -38,7 +37,7 @@ export default function NewQuoteRequestPage() {
       {/* Top Header Bar */}
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[var(--elevation-card)]">
         <div className="flex flex-col gap-1.5">
-          <Link
+          <WorkspaceNavigationLink
             href="/workspace/requests"
             className={cn(
               getTypographyClassName("caption"),
@@ -47,7 +46,7 @@ export default function NewQuoteRequestPage() {
           >
             <ArrowLeft size={14} aria-hidden="true" />
             <span>Back to Requests</span>
-          </Link>
+          </WorkspaceNavigationLink>
           <h1 className={cn(getTypographyClassName("pageTitle"), "text-[var(--color-on-surface)]")}>
             Create New Journey Request
           </h1>
@@ -88,7 +87,7 @@ export default function NewQuoteRequestPage() {
 
       {/* Submit Button Bar */}
       <div className="flex items-center justify-end gap-3 border-t border-[var(--color-border)] pt-5">
-        <Link
+        <WorkspaceNavigationLink
           href="/workspace/requests"
           className={cn(
             getTypographyClassName("buttonSecondary"),
@@ -96,7 +95,7 @@ export default function NewQuoteRequestPage() {
           )}
         >
           Cancel
-        </Link>
+        </WorkspaceNavigationLink>
 
         <button
           type="submit"

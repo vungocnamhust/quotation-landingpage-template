@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import useSWR from "swr";
 import { AlertCircle } from "lucide-react";
@@ -8,6 +8,7 @@ import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
 import { apiErrorFieldErrors, apiErrorMessage, quotationFetch } from "../../lib/apiError.ts";
 import { useToast } from "../staff-workspace/ToastProvider.tsx";
+import { useWorkspaceNavigation } from "../staff-workspace/WorkspaceNavigation.tsx";
 import MinimalQuotationIntakeForm from "./MinimalQuotationIntakeForm.tsx";
 import RequestRecapPanel from "./RequestRecapPanel.tsx";
 import {
@@ -43,7 +44,7 @@ function QuotationIntakeInner({
   personalWorkspace: boolean;
   defaultDesignerId?: string | null;
 }) {
-  const router = useRouter();
+  const { push } = useWorkspaceNavigation();
   const [facts, setFacts] = useState<QuotationFacts>(() => {
     const initial = buildInitialFactsFromRequest(quoteRequest, createBrochureFacts(), undefined, defaultDesignerId);
     if (defaultDesignerId && !initial.presentation_options.travel_designer_id) {
@@ -79,7 +80,7 @@ function QuotationIntakeInner({
 
           clearScope("create-quotation");
           toast("Brochure assembled successfully! Opening Design Studio...", "success");
-          router.push(result.redirectUrl);
+          push(result.redirectUrl);
         } catch (error) {
           setIsFastTrackOpen(false);
           const msg = apiErrorMessage(error);
@@ -171,7 +172,7 @@ function QuotationIntakeInner({
             `Quotation created successfully from request #${requestId}! Redirecting to workspace...`,
             "success"
           );
-          router.push(
+          push(
             `/workspace/quotations/${res.quotation_id}/edit?stage=facts&lang=${encodeURIComponent(
               facts.lang || "en"
             )}`
@@ -189,7 +190,7 @@ function QuotationIntakeInner({
           );
           clearScope("create-quotation");
           toast("Quotation created successfully! Redirecting to workspace...", "success");
-          router.push(
+          push(
             `${personalWorkspace ? "/workspace/quotations" : "/quotations"}/${res.quotationId}${
               personalWorkspace ? "/edit" : "/workspace"
             }?stage=facts&lang=${encodeURIComponent(res.baselineLang)}`

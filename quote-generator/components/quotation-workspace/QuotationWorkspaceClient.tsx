@@ -37,6 +37,7 @@ import { updateDesignerPresentationFacts } from "../../lib/prefillEngine.ts";
 import { useQuotationWorkspace } from "./useQuotationWorkspace.ts";
 import { useQuotationWorkflowManager } from "./useQuotationWorkflowManager.ts";
 import { useToast } from "../staff-workspace/ToastProvider.tsx";
+import { useWorkspaceNavigation } from "../staff-workspace/WorkspaceNavigation.tsx";
 import {
   parseFactsDeepLink,
   serializeFactsFocus,
@@ -90,6 +91,7 @@ export default function QuotationWorkspaceClient({
   lang: string;
 }) {
   const router = useRouter();
+  const { push } = useWorkspaceNavigation();
   const search = useSearchParams();
   const pathname = usePathname();
   const requestedStage = search.get("stage");
@@ -246,7 +248,7 @@ export default function QuotationWorkspaceClient({
           "Unable to create the quotation version."
         );
         toast("New quotation version created. Review its exact change plan in Impact Center.", "success");
-        router.push(result.redirectUrl);
+        push(result.redirectUrl);
       } catch (error) {
         notify({ message: apiErrorMessage(error), type: "error", persistent: true, scope: "quotation:version", action: { label: "Retry", onClick: () => createBusinessVersion(facts) } });
       }

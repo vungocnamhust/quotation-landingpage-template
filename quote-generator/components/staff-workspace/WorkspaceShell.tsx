@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import useSWR from "swr";
 import { LayoutDashboard, FileText, Inbox, PlusCircle, Boxes } from "lucide-react";
@@ -12,6 +11,7 @@ import { ToastProvider } from "./ToastProvider.tsx";
 import { NotificationBellButton } from "./NotificationBellButton.tsx";
 import { NotificationCenterDrawer } from "./NotificationCenterDrawer.tsx";
 import { useNotifications } from "./useNotifications.ts";
+import { WorkspaceNavigationLink, WorkspaceNavigationProvider } from "./WorkspaceNavigation.tsx";
 
 const API_BASE = process.env.NEXT_PUBLIC_QUOTATION_API_URL ?? "";
 const fetcher = <T,>(url: string) =>
@@ -65,7 +65,7 @@ function WorkspaceShellInner({ children }: { children: React.ReactNode }) {
       <header className="border-b border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-4 sm:px-8">
         <div className="mx-auto flex w-full max-w-[100rem] items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <Link
+            <WorkspaceNavigationLink
               href="/workspace"
               className={cn(
                 getTypographyClassName("navTitle"),
@@ -73,7 +73,7 @@ function WorkspaceShellInner({ children }: { children: React.ReactNode }) {
               )}
             >
               DIASgroup Desk
-            </Link>
+            </WorkspaceNavigationLink>
           </div>
 
           <div className="flex items-center gap-4">
@@ -125,7 +125,7 @@ function WorkspaceShellInner({ children }: { children: React.ReactNode }) {
                 pathname === href ||
                 (href !== "/workspace" && pathname.startsWith(href));
               return (
-                <Link
+                <WorkspaceNavigationLink
                   key={href}
                   href={href}
                   className={cn(
@@ -138,7 +138,7 @@ function WorkspaceShellInner({ children }: { children: React.ReactNode }) {
                 >
                   <Icon size={16} aria-hidden="true" />
                   <span>{label}</span>
-                </Link>
+                </WorkspaceNavigationLink>
               );
             })}
           </nav>
@@ -179,8 +179,10 @@ export default function WorkspaceShell({
   children: React.ReactNode;
 }) {
   return (
-    <ToastProvider>
-      <WorkspaceShellInner>{children}</WorkspaceShellInner>
-    </ToastProvider>
+    <WorkspaceNavigationProvider>
+      <ToastProvider>
+        <WorkspaceShellInner>{children}</WorkspaceShellInner>
+      </ToastProvider>
+    </WorkspaceNavigationProvider>
   );
 }

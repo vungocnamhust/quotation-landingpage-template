@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 import { User, MapPin, Calendar, Clock, ChevronRight, CheckCircle2, Globe, Users } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
+import { WorkspaceNavigationLink } from "./WorkspaceNavigation.tsx";
 
 export type TripFacts = {
   destinations?: string[];
@@ -204,7 +204,7 @@ export const WorkspaceQuotationCard = React.memo(function WorkspaceQuotationCard
 
   return (
     <article className="h-full">
-      <Link
+      <WorkspaceNavigationLink
         href={`/workspace/quotations/${encodeURIComponent(item.id)}`}
         className="group flex flex-col justify-between h-full rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[var(--elevation-card)] transition-all hover:-translate-y-0.5 hover:border-[var(--color-border-strong)] hover:shadow-md"
       >
@@ -352,7 +352,7 @@ export const WorkspaceQuotationCard = React.memo(function WorkspaceQuotationCard
             <ChevronRight size={14} aria-hidden="true" />
           </span>
         </div>
-      </Link>
+      </WorkspaceNavigationLink>
     </article>
   );
 });

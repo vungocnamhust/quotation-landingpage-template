@@ -4682,6 +4682,57 @@ html[data-view-mode="pdf"] .display-route-map__leaflet {
   width: 75%;
 }
 
+.workspace-route-loading {
+  min-height: 20rem;
+  padding: 1.5rem;
+}
+
+.workspace-navigation-progress {
+  position: fixed;
+  z-index: 100;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 3px;
+  overflow: hidden;
+  background: var(--color-border);
+}
+
+.workspace-navigation-progress__bar {
+  width: 45%;
+  height: 100%;
+  background: var(--color-accent);
+  animation: workspace-navigation-progress 1s ease-in-out infinite;
+}
+
+.workspace-navigation-link__indicator {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  flex: 0 0 auto;
+  margin-left: 0.4rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 999px;
+  animation: workspace-navigation-spinner 0.7s linear infinite;
+}
+
+@keyframes workspace-navigation-progress {
+  from { transform: translateX(-120%); }
+  to { transform: translateX(260%); }
+}
+
+@keyframes workspace-navigation-spinner {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workspace-navigation-progress__bar,
+  .workspace-navigation-link__indicator {
+    animation: none;
+  }
+}
+
 .workspace-skeleton__line--mid {
   width: 50%;
 }

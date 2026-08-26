@@ -1,11 +1,11 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 import { User, MapPin, Calendar, Clock, ChevronRight, CheckCircle2, Globe } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
 import { QuotationItem, formatNationality, formatTravelDates, formatDuration } from "./WorkspaceQuotationCard.tsx";
+import { WorkspaceNavigationLink } from "./WorkspaceNavigation.tsx";
 
 function StatusBadge({ status }: { status: string }) {
   const isPublished = status === "published";
@@ -144,7 +144,7 @@ export const WorkspaceQuotationTable = React.memo(function WorkspaceQuotationTab
                 {/* Journey Title & Route */}
                 <td className="px-4 py-3.5 align-middle max-w-xs">
                   <div className="flex flex-col gap-1">
-                    <Link
+                    <WorkspaceNavigationLink
                       href={`/workspace/quotations/${encodeURIComponent(item.id)}`}
                       className={cn(
                         getTypographyClassName("cardTitle"),
@@ -152,7 +152,7 @@ export const WorkspaceQuotationTable = React.memo(function WorkspaceQuotationTab
                       )}
                     >
                       {item.title || "Untitled journey"}
-                    </Link>
+                    </WorkspaceNavigationLink>
                     {destinationsText != null ? (
                       <p
                         className={cn(
@@ -208,7 +208,7 @@ export const WorkspaceQuotationTable = React.memo(function WorkspaceQuotationTab
 
                 {/* Action */}
                 <td className="px-4 py-3.5 align-middle text-right">
-                  <Link
+                  <WorkspaceNavigationLink
                     href={`/workspace/quotations/${encodeURIComponent(item.id)}`}
                     className={cn(
                       getTypographyClassName("buttonSecondary"),
@@ -217,7 +217,7 @@ export const WorkspaceQuotationTable = React.memo(function WorkspaceQuotationTab
                   >
                     <span>Open</span>
                     <ChevronRight size={14} aria-hidden="true" />
-                  </Link>
+                  </WorkspaceNavigationLink>
                 </td>
               </tr>
             );

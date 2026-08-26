@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { Plus } from "lucide-react";
 import WorkspaceQuotationList from "../../../components/staff-workspace/WorkspaceQuotationList";
+import { WorkspaceNavigationLink } from "../../../components/staff-workspace/WorkspaceNavigation";
 import { getTypographyClassName } from "../../../config/typography";
 import { cn } from "../../../utils/cn";
 
@@ -26,7 +26,7 @@ export default function QuotationsPage() {
             My quotations
           </h1>
         </div>
-        <Link
+        <WorkspaceNavigationLink
           href="/workspace/quotations/new"
           className={cn(
             getTypographyClassName("buttonPrimary"),
@@ -35,7 +35,7 @@ export default function QuotationsPage() {
         >
           <Plus size={16} aria-hidden="true" />
           <span>New quotation</span>
-        </Link>
+        </WorkspaceNavigationLink>
       </header>
       <WorkspaceQuotationList />
     </main>
