@@ -464,15 +464,13 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
       assetUrl(hotel.hotel_asset) ||
       assetUrl(hotel.hotel_img) ||
       assetUrl(hotel.image) ||
-      assetUrl(hotel.asset) ||
-      '/assets/brands/vietnam_safar.png';
+      assetUrl(hotel.asset);
     const roomImg =
       assetUrl(record(mediaOverrides[`stays.hotels.${index}.roomImage`])) ||
       assetUrl(hotel.roomImage) ||
       assetUrl(hotel.room_asset) ||
       assetUrl(hotel.room_img) ||
-      hotelImg ||
-      '/assets/brands/vietnam_safar.png';
+      hotelImg;
 
     return {
       city: editable(city, `${base}/city`, 'fact'),

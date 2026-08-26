@@ -211,9 +211,14 @@ def _ref(candidate: Candidate) -> dict[str, str]:
 
 class BrochureMediaResolver:
     def __init__(self, candidates: Iterable[Candidate]) -> None:
-        self.candidates = tuple(candidate for candidate in candidates if candidate.r2_key)
-        self.catalogue_candidates = tuple(candidate for candidate in self.candidates if not candidate.review_required)
-        self.fallback_candidates = tuple(candidate for candidate in self.candidates if candidate.review_required)
+        # The resolver is catalogue-only: review-required placeholders and
+        # brand-local files are not eligible photography candidates.
+        self.candidates = tuple(
+            candidate
+            for candidate in candidates
+            if candidate.r2_key and not candidate.review_required
+        )
+        self.catalogue_candidates = self.candidates
         self.valid_keys = {c.r2_key for c in self.candidates}
 
     def _is_valid_r2(self, value: Any) -> bool:
@@ -257,13 +262,13 @@ class BrochureMediaResolver:
         tier1 = [item for item in self.catalogue_candidates if _matches_destination(item, primary_aliases)]
         if tier1:
             return tier1
-        # Tier 2: Match fallback trip destination aliases
+        # Tier 2: Match another destination already present in the trip.
         if fallback_aliases:
             tier2 = [item for item in self.catalogue_candidates if _matches_destination(item, fallback_aliases)]
             if tier2:
                 return tier2
         # Tier 3: All scenic / generic candidates
-        return list(self.catalogue_candidates or self.fallback_candidates)
+        return list(self.catalogue_candidates)
 
     def _accommodation_pool(self, hotel_tokens: set[str], dest_aliases: set[str], fallback_aliases: set[str] | None = None) -> list[Candidate]:
         # Tier 1: Exact hotel brand/name token match under accommodations/
@@ -278,13 +283,13 @@ class BrochureMediaResolver:
         tier3 = [item for item in self.catalogue_candidates if _matches_accommodation(item, hotel_tokens, dest_aliases)[1] == 3]
         if tier3:
             return tier3
-        # Tier 4: Fallback trip destinations
+        # Tier 4: Another destination already present in the trip.
         if fallback_aliases:
             tier4 = [item for item in self.catalogue_candidates if _matches_destination(item, fallback_aliases)]
             if tier4:
                 return tier4
         # Tier 5: All candidates
-        return list(self.catalogue_candidates or self.fallback_candidates)
+        return list(self.catalogue_candidates)
 
     def resolve_missing(self, *, document: dict[str, Any], quotation_id: str, lang: str) -> dict[str, Any]:
         """Build a non-mutating patch. Existing values are never overwritten unless invalid."""
@@ -295,14 +300,14 @@ class BrochureMediaResolver:
         used_covers: set[str] = set()
 
         assets = _record(document.get("assets"))
-        for name in ("hero", "itineraryDivider", "hotelDivider"):
+        for name in ("hero", "itineraryDivider", "staysDivider", "hotelDivider"):
             if self._has_assigned_r2(assets.get(name)):
                 used_covers.add(_r2(assets.get(name)))
 
         days = _assets(_record(document.get("itinerary")).get("days"))
         hotels = _assets(_record(document.get("stays")).get("hotels"))
 
-        # Pre-collect all trip destinations for fallback
+        # Pre-collect trip destinations as secondary catalogue-match aliases.
         trip_dest_aliases: set[str] = set()
         for day in days:
             trip_dest_aliases.update(destination_aliases(_record(day).get("destinationRef"), fallback_ref=day))
@@ -341,8 +346,11 @@ class BrochureMediaResolver:
                 rationale.append({
                     "fieldId": field_id,
                     "candidateCount": len(pool),
-                    "reason": "destination catalogue" if any(_matches_destination(p, day_aliases) for p in picks) else "trip fallback catalogue",
-                    "fallback": any(item.review_required for item in picks),
+                    "reason": (
+                        "insufficient_catalogue_media"
+                        if len(picks) < GALLERY_LIMIT
+                        else "destination catalogue" if any(_matches_destination(p, day_aliases) for p in picks) else "trip catalogue"
+                    ),
                 })
 
         if patched_days:
@@ -371,7 +379,6 @@ class BrochureMediaResolver:
                     "fieldId": "assets.hero",
                     "candidateCount": len(hero_pool),
                     "reason": "itinerary gallery pool" if picks[0] in gallery_candidates else "destination hero candidate",
-                    "fallback": picks[0].review_required,
                 })
 
         # 3. Resolve assets.itineraryDivider
@@ -398,12 +405,40 @@ class BrochureMediaResolver:
                     "fieldId": "assets.itineraryDivider",
                     "candidateCount": len(divider_pool),
                     "reason": "mid-itinerary scenic asset",
-                    "fallback": picks[0].review_required,
                 })
 
-        # 4. Resolve assets.hotelDivider
+        first_hotel_aliases = (
+            destination_aliases(_record(hotels[0]).get("destinationRef"), fallback_ref=hotels[0])
+            if hotels
+            else trip_dest_aliases
+        )
+
+        # 4. Resolve assets.staysDivider
+        if not self._has_assigned_r2(assets.get("staysDivider")):
+            stays_pool = (
+                self._destination_pool(first_hotel_aliases, fallback_aliases=trip_dest_aliases)
+                or gallery_candidates
+                or list(self.candidates)
+            )
+            picks = self._pick(
+                quotation_id=quotation_id,
+                lang=lang,
+                field_id="assets.staysDivider",
+                pool=stays_pool,
+                preferred=("interior", "exterior", "generic"),
+                excluded=used_covers,
+            )
+            if picks:
+                assets_patch["staysDivider"] = _ref(picks[0])
+                used_covers.add(picks[0].r2_key)
+                rationale.append({
+                    "fieldId": "assets.staysDivider",
+                    "candidateCount": len(stays_pool),
+                    "reason": "stay scenic asset",
+                })
+
+        # 5. Resolve assets.hotelDivider
         if not self._has_assigned_r2(assets.get("hotelDivider")):
-            first_hotel_aliases = destination_aliases(_record(hotels[0]).get("destinationRef"), fallback_ref=hotels[0]) if hotels else trip_dest_aliases
             hotel_divider_pool = (
                 self._destination_pool(first_hotel_aliases, fallback_aliases=trip_dest_aliases)
                 or gallery_candidates
@@ -424,10 +459,9 @@ class BrochureMediaResolver:
                     "fieldId": "assets.hotelDivider",
                     "candidateCount": len(hotel_divider_pool),
                     "reason": "hotel scenic asset",
-                    "fallback": picks[0].review_required,
                 })
 
-        # 5. Resolve Stays Hotels
+        # 6. Resolve Stays Hotels
         patched_hotels: dict[int, dict[str, Any]] = {}
         for index, hotel in enumerate(hotels):
             hotel_rec = _record(hotel)
@@ -468,8 +502,7 @@ class BrochureMediaResolver:
                     rationale.append({
                         "fieldId": f"stays.hotels.{index}.{field}",
                         "candidateCount": len(hotel_pool),
-                        "reason": "accommodation catalogue" if any("accommodations" in p.parent_prefix for p in hotel_pool) else "destination stay fallback",
-                        "fallback": bool(_record(hotel_changes[field]).get("source") == "fallback"),
+                        "reason": "accommodation catalogue" if any("accommodations" in p.parent_prefix for p in hotel_pool) else "trip catalogue",
                     })
 
         if patched_hotels:

@@ -4963,7 +4963,7 @@ async def create_canonical_quotation_v2(payload: CreateQuoteRequestV1, principal
             await quotes.create_quotation_request(quotation_id=quotation_id, request_json=canonical.model_dump(mode="json"))
             await quotes.create_version_facts(quotation_id=quotation_id, canonical_facts_json=canonical.model_dump(mode="json"), resolved_facts_json=resolved, facts_hash=resolved["factsHash"], source_request_id=internal_request.id, source_request_revision=1)
             await QuoteRequestRepository(session).update_status(request_id=internal_request.id, status="quotation_created", linked_quotation_id=quotation_id)
-            await _apply_missing_media_defaults(session, document, quotation_id, lang, canonical.brand_id)
+            await _apply_missing_media_defaults(session, document, quotation_id, lang)
             saved = await documents.save_current_document(quotation_id=quotation_id, lang=lang, document_json=document, expected_revision=0)
             document["meta"]["revision"] = saved.revision
             await documents.append_document_revision(quotation_id=quotation_id, lang=lang, revision=saved.revision, document_json=document, change_source="create_facts")
@@ -7405,10 +7405,13 @@ def _set_fact_media_field(document: dict[str, Any], field_id: str, value: Any) -
         if index >= len(hotels): raise HTTPException(status_code=422, detail={"message": "Stay image no longer matches a hotel.", "invalidKeys": [field_id]})
         hotels[index][key] = value or {"status": "empty"}
         if key == "hotelImage":
-            hotel_name = hotels[index].get("name")
-            hotel_city = hotels[index].get("city")
+            hotel_source_fact_id = str(
+                hotels[index].get("sourceFactId") or hotels[index].get("id") or ""
+            ).strip()
+            if not hotel_source_fact_id:
+                return
             for seg in (document.get("route") or {}).get("staySegments") or []:
-                if (hotel_name and seg.get("hotelName") == hotel_name) or (hotel_city and seg.get("displayName") == hotel_city):
+                if str(seg.get("hotelSourceFactId") or "").strip() == hotel_source_fact_id:
                     seg["hotelImage"] = value or {"status": "empty"}
     elif field_id == "designer.image":
         document.setdefault("designer", {})["image"] = value or {"status": "empty"}
@@ -7564,13 +7567,11 @@ async def _apply_missing_media_defaults(
     document: dict[str, Any],
     quotation_id: str,
     lang: str,
-    brand_id: str | None = None,
 ) -> dict[str, Any]:
     return await MediaDefaultService(session).apply_missing(
         document=document,
         quotation_id=quotation_id,
         lang=lang,
-        brand_id=brand_id,
     )
 
 
@@ -8649,27 +8650,17 @@ async def _validate_release_asset_manifest(document: Any) -> dict[str, dict[str,
 async def _inspect_asset_readiness(document: Any) -> dict[str, Any]:
     """Inspect persisted media references for workflow/review readiness."""
     required_missing = _missing_required_fact_media(document) if isinstance(document, dict) else []
-    presentation = (document.get("presentation") or {}) if isinstance(document, dict) else {}
-    defaults = presentation.get("mediaDefaults") or {} if isinstance(presentation, dict) else {}
-    media_overrides = presentation.get("mediaOverrides") or {} if isinstance(presentation, dict) else {}
-    fallback_slots = defaults.get("fallbackSlots") or [] if isinstance(defaults, dict) else []
-    unresolved_fallbacks = [
-        str(field_id)
-        for field_id in fallback_slots
-        if isinstance(field_id, str)
-        and not (isinstance(media_overrides, dict) and isinstance(media_overrides.get(field_id), dict) and media_overrides[field_id].get("r2Key"))
-    ]
     try:
         manifest = _build_release_asset_manifest(document)
     except HTTPException as exc:
         detail = exc.detail if isinstance(exc.detail, dict) else {"message": str(exc.detail)}
-        return {"ready": False, "missing": [*required_missing, *(f"fallback_review:{field_id}" for field_id in unresolved_fallbacks)], "invalid": [detail], "checkedAt": datetime.now(timezone.utc).isoformat()}
+        return {"ready": False, "missing": required_missing, "invalid": [detail], "checkedAt": datetime.now(timezone.utc).isoformat()}
     if not manifest:
-        return {"ready": not required_missing and not unresolved_fallbacks, "missing": [*required_missing, *(f"fallback_review:{field_id}" for field_id in unresolved_fallbacks)], "invalid": [], "checkedAt": datetime.now(timezone.utc).isoformat()}
+        return {"ready": not required_missing, "missing": required_missing, "invalid": [], "checkedAt": datetime.now(timezone.utc).isoformat()}
     try:
         storage = R2Storage()
     except R2StorageConfigurationError as exc:
-        return {"ready": False, "missing": [*required_missing, *(f"fallback_review:{field_id}" for field_id in unresolved_fallbacks)], "invalid": [{"message": str(exc)}], "checkedAt": datetime.now(timezone.utc).isoformat()}
+        return {"ready": False, "missing": required_missing, "invalid": [{"message": str(exc)}], "checkedAt": datetime.now(timezone.utc).isoformat()}
     semaphore = asyncio.Semaphore(8)
     missing: list[str] = []
 
@@ -8682,8 +8673,8 @@ async def _inspect_asset_readiness(document: Any) -> dict[str, Any]:
 
     await asyncio.gather(*(check(key) for key in manifest.values()))
     return {
-        "ready": not missing and not required_missing and not unresolved_fallbacks,
-        "missing": sorted({*missing, *required_missing, *(f"fallback_review:{field_id}" for field_id in unresolved_fallbacks)}),
+        "ready": not missing and not required_missing,
+        "missing": sorted({*missing, *required_missing}),
         "invalid": [],
         "checkedAt": datetime.now(timezone.utc).isoformat(),
     }

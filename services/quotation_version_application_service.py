@@ -102,7 +102,6 @@ class QuotationVersionApplicationService:
                 document=document,
                 quotation_id=successor_id,
                 lang=successor_lang,
-                brand_id=successor_brand_id,
             )
             return document
 

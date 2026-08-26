@@ -1,7 +1,7 @@
 import unittest
 
-from quote_document import QuoteAssetRef
 from services.brochure_media_resolver import BrochureMediaResolver, Candidate, GALLERY_LIMIT
+from services.media_default_service import MediaDefaultService
 
 
 class BrochureMediaResolverTests(unittest.TestCase):
@@ -21,6 +21,7 @@ class BrochureMediaResolverTests(unittest.TestCase):
         self.assertEqual(first["patch"], second["patch"])
         self.assertLessEqual(len(first["patch"]["itinerary"]["days"][0]["images"]["carousel"]), GALLERY_LIMIT)
         self.assertTrue(first["patch"]["assets"]["hero"]["r2Key"])
+        self.assertTrue(first["patch"]["assets"]["staysDivider"]["r2Key"])
         self.assertIn("roomImage", first["patch"]["stays"]["hotels"][0])
 
     def test_existing_slots_are_not_replaced(self):
@@ -85,11 +86,12 @@ class BrochureMediaResolverTests(unittest.TestCase):
             "assets": {
                 "hero": {"r2Key": "hero.jpg"},
                 "itineraryDivider": {"r2Key": "divider1.jpg"},
+                "staysDivider": {"r2Key": "divider-stays.jpg"},
                 "hotelDivider": {"r2Key": "divider2.jpg"},
             },
             "itinerary": {
                 "days": [
-                    {"images": {"carousel": [{"r2Key": "day1.jpg"}]}}
+                    {"images": {"carousel": [{"r2Key": "day1.jpg"}, {"r2Key": "day2.jpg"}, {"r2Key": "day3.jpg"}]}}
                 ]
             },
             "stays": {
@@ -105,32 +107,60 @@ class BrochureMediaResolverTests(unittest.TestCase):
         self.assertEqual(result["patch"]["itinerary"], {})
         self.assertEqual(result["patch"]["stays"], {})
 
-    def test_brand_fallback_fills_every_required_trip_slot(self):
-        fallback = Candidate(
-            "shared/media/brand-fallbacks/selvara/selvara.png",
-            "shared/media/brand-fallbacks/selvara",
-            source="fallback",
-            review_required=True,
-        )
+    def test_catalogue_shortfall_keeps_distinct_partial_gallery(self):
+        catalogue = [
+            Candidate("library/media/vietnam/north/hanoi/only.jpg", "library/media/vietnam/north/hanoi", 1600, 900, True),
+        ]
         document = {
             "assets": {},
-            "itinerary": {"days": [{"destination": "Unknown", "images": {}}, {"destination": "Elsewhere", "images": {}}]},
+            "itinerary": {"days": [{"destination": "Hanoi", "images": {}}]},
             "stays": {"hotels": []},
         }
-        result = BrochureMediaResolver([fallback]).resolve_missing(document=document, quotation_id="quo_fallback", lang="en")
-        self.assertEqual(result["patch"]["assets"]["hero"]["source"], "fallback")
-        self.assertEqual(result["patch"]["assets"]["itineraryDivider"]["status"], "review_required")
-        self.assertEqual(result["patch"]["assets"]["hotelDivider"]["source"], "fallback")
-        for day in result["patch"]["itinerary"]["days"].values():
-            self.assertTrue(day["images"]["carousel"])
-            self.assertEqual(day["images"]["carousel"][0]["source"], "fallback")
-        self.assertTrue(all(item["fallback"] for item in result["rationale"]))
+        result = BrochureMediaResolver(catalogue).resolve_missing(document=document, quotation_id="quo_short", lang="en")
+        carousel = result["patch"]["itinerary"]["days"][0]["images"]["carousel"]
+        self.assertEqual([asset["r2Key"] for asset in carousel], [catalogue[0].r2_key])
+        self.assertEqual(
+            next(item for item in result["rationale"] if item["fieldId"] == "itinerary.days.0.gallery")["reason"],
+            "insufficient_catalogue_media",
+        )
 
-    def test_brand_fallback_asset_is_a_canonical_document_asset(self):
-        asset = QuoteAssetRef.model_validate({
-            "r2Key": "shared/media/brand-fallbacks/selvara/selvara.png",
-            "source": "fallback",
-            "status": "review_required",
-        })
-        self.assertEqual(asset.source, "fallback")
+    def test_manual_carousel_is_not_overwritten(self):
+        document = {
+            "assets": {},
+            "itinerary": {"days": [{"destination": "Hanoi", "images": {"carousel": [{"r2Key": "manual.jpg", "source": "manual"}]}}]},
+            "stays": {"hotels": []},
+        }
+        result = BrochureMediaResolver(self.catalogue).resolve_missing(document=document, quotation_id="quo_manual", lang="en")
+        self.assertNotIn("days", result["patch"]["itinerary"])
 
+    def test_required_missing_slots_enforces_exact_gallery_cardinality_and_hotel_media(self):
+        document = {
+            "assets": {"hero": {"r2Key": "hero.jpg"}},
+            "itinerary": {"days": [{"images": {"carousel": [{"r2Key": "one.jpg"}, {"r2Key": "two.jpg"}]}}]},
+            "stays": {"hotels": [{"hotelImage": {"r2Key": "hotel.jpg"}, "roomImage": {}}]},
+        }
+        self.assertEqual(
+            MediaDefaultService.required_missing_slots(document),
+            ["itinerary.days.0.gallery", "stays.hotels.0.roomImage"],
+        )
+
+    def test_route_hotel_image_sync_uses_source_fact_identity(self):
+        first_image = {"r2Key": "hotel-a.jpg"}
+        second_image = {"r2Key": "hotel-b.jpg"}
+        document = {
+            "stays": {
+                "hotels": [
+                    {"sourceFactId": "fact-a", "name": "Same Name", "city": "Hanoi"},
+                    {"sourceFactId": "fact-b", "name": "Same Name", "city": "Hanoi"},
+                ]
+            },
+            "route": {
+                "staySegments": [
+                    {"hotelSourceFactId": "fact-a", "hotelImage": first_image},
+                    {"hotelSourceFactId": "fact-b", "hotelImage": {"r2Key": "old-b.jpg"}},
+                ]
+            },
+        }
+        MediaDefaultService.apply_patch(document, {"stays": {"hotels": {"1": {"hotelImage": second_image}}}})
+        self.assertEqual(document["route"]["staySegments"][0]["hotelImage"], first_image)
+        self.assertEqual(document["route"]["staySegments"][1]["hotelImage"], second_image)

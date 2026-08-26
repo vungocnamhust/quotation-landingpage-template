@@ -179,6 +179,7 @@ class QuoteDocumentNarrative(QuoteBaseModel):
 
 class QuoteDocumentRouteSegment(QuoteBaseModel):
     id: str
+    hotelSourceFactId: str = ""
     destinationId: str = ""
     dayStart: int | None = None
     dayEnd: int | None = None

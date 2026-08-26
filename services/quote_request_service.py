@@ -689,15 +689,13 @@ class QuoteRequestService:
             source_request_revision=source_revision,
         )
 
-        # Missing catalogue imagery is represented by a brand fallback and a
-        # publish-time review gate. Infrastructure failures are intentionally
-        # not swallowed: a partially initialized quotation is unsafe.
+        # Media enrichment is best effort. Missing catalogue photos remain
+        # explicit Design/publication blockers instead of aborting creation.
         await main._apply_missing_media_defaults(
             self.session,
             document,
             quotation_id,
             effective_lang,
-            effective_brand,
         )
 
         # Save initial document revision

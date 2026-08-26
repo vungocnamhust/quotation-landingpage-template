@@ -361,6 +361,7 @@ async def apply_quotation_media_defaults_v2(
                 "document": canonical,
                 "currentRevision": current.revision,
                 "rationale": result["rationale"],
+                "missingSlots": result.get("missingSlots", []),
                 "message": (
                     "No matching media found or all slots already assigned."
                     if not has_changes
@@ -395,5 +396,6 @@ async def apply_quotation_media_defaults_v2(
         "document": canonical,
         "currentRevision": saved.revision,
         "rationale": result["rationale"],
+        "missingSlots": result.get("missingSlots", []),
         "message": f"Successfully applied {applied_count} matching media defaults.",
     }

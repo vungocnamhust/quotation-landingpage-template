@@ -73,6 +73,7 @@ class SkeletonBuilder:
             hotel_name = (hotel or {}).get("name") or ""
             segments.append({
                 "id": f"stay-{index}",
+                "hotelSourceFactId": (hotel or {}).get("sourceFactId") or (hotel or {}).get("id") or "",
                 "destinationId": point.get("id") or "",
                 "dayStart": start,
                 "dayEnd": end,

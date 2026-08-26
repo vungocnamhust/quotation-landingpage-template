@@ -85,7 +85,7 @@ async def test_apply_missing_media_defaults_uses_db_destination_prefix(async_ses
     }
 
     # 4. Run _apply_missing_media_defaults
-    await _apply_missing_media_defaults(
+    result = await _apply_missing_media_defaults(
         session=async_session,
         document=document,
         quotation_id="quo_test_prefix",
@@ -104,6 +104,7 @@ async def test_apply_missing_media_defaults_uses_db_destination_prefix(async_ses
     assert len(carousel) >= 1
     for img in carousel:
         assert img["r2Key"].startswith("destination/custom-dak-lak-folder/")
+    assert result["missingSlots"] == ["itinerary.days.0.gallery"]
 
     # 7. Verify document is JSON serializable
     import json
