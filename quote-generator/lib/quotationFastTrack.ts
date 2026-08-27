@@ -1,4 +1,4 @@
-import { quotationFetch } from "./apiError.ts";
+import { QuotationApiError, quotationFetch } from "./apiError.ts";
 import type { PricingOptionFact, QuotationFacts } from "../components/quotation-workspace/factsTypes.ts";
 import { staysAdapter } from "./rules/staysAdapter.ts";
 import { staysReconciler } from "./rules/staysReconciler.ts";
@@ -21,6 +21,8 @@ export type FastTrackProgress = {
 export type RunFastTrackOptions = {
   requestId: string | null;
   facts: QuotationFacts;
+  existingQuotation?: { quotationId: string; baseRevision: number } | null;
+  idempotencyKey?: string;
   onProgress?: (progress: FastTrackProgress) => void;
 };
 
@@ -29,6 +31,22 @@ export type FastTrackResult = {
   lang: string;
   redirectUrl: string;
 };
+
+export class FastTrackFailure extends Error {
+  readonly quotationId: string;
+  readonly currentRevision?: number;
+  readonly review?: unknown;
+  readonly retryable: boolean;
+
+  constructor(message: string, quotationId: string, error: unknown) {
+    super(message);
+    this.name = "FastTrackFailure";
+    this.quotationId = quotationId;
+    this.currentRevision = error instanceof QuotationApiError ? error.metadata.currentRevision : undefined;
+    this.review = error instanceof QuotationApiError ? error.metadata.review : undefined;
+    this.retryable = error instanceof QuotationApiError ? error.metadata.retryable !== false && error.status !== 409 : true;
+  }
+}
 
 /**
  * Executes the full automated workflow pipeline:
@@ -40,6 +58,8 @@ export type FastTrackResult = {
 export async function runQuotationFastTrackPipeline({
   requestId,
   facts,
+  existingQuotation = null,
+  idempotencyKey,
   onProgress,
 }: RunFastTrackOptions): Promise<FastTrackResult> {
   const lang = facts.lang || "en";
@@ -52,10 +72,10 @@ export async function runQuotationFastTrackPipeline({
     message: "Initializing quotation record and blueprint facts...",
   });
 
-  let quotationId = "";
-  let baseRevision = 1;
+  let quotationId = existingQuotation?.quotationId ?? "";
+  let baseRevision = existingQuotation?.baseRevision ?? 1;
 
-  if (requestId) {
+  if (!existingQuotation && requestId) {
     const pricingOpt: PricingOptionFact = facts.pricing_facts.options[0] || {
       id: "opt-standard",
       label: "Standard Luxury Option",
@@ -132,7 +152,7 @@ export async function runQuotationFastTrackPipeline({
 
     quotationId = res.quotation_id;
     baseRevision = res.current_revision || 1;
-  } else {
+  } else if (!existingQuotation) {
     const res = await quotationFetch<{
       quotationId: string;
       baselineLang: string;
@@ -150,41 +170,13 @@ export async function runQuotationFastTrackPipeline({
     baseRevision = 1;
   }
 
-  // ---------------------------------------------------------------------------
-  // Step 2: Auto-resolve media defaults from catalog/library
-  // ---------------------------------------------------------------------------
+  // The server owns media mutation, bypass generation, atomic apply, and the
+  // canonical readiness decision. The client never infers completion.
   onProgress?.({
     stage: "facts_media",
     message: "Auto-resolving destination and accommodation photography from library...",
   });
 
-  try {
-    const mediaRes = await quotationFetch<{
-      ok: boolean;
-      currentRevision?: number;
-    }>(
-      `${API_BASE}/api/v2/quotations/${quotationId}/facts/media-defaults?lang=${encodeURIComponent(lang)}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          baseRevision,
-          dryRun: false,
-        }),
-      },
-      "Failed to apply media defaults."
-    );
-    if (mediaRes.currentRevision) {
-      baseRevision = mediaRes.currentRevision;
-    }
-  } catch (mediaErr) {
-    // Non-fatal: if media default resolution fails, proceed with content generation
-    console.warn("Media defaults auto-assignment skipped or encountered error:", mediaErr);
-  }
-
-  // ---------------------------------------------------------------------------
-  // Step 3: Auto-generate and apply AI content sections via Fast Batching
-  // ---------------------------------------------------------------------------
   onProgress?.({
     stage: "content_generation",
     message: "Generating luxury storytelling narratives and daily itinerary in parallel...",
@@ -193,61 +185,45 @@ export async function runQuotationFastTrackPipeline({
   });
 
   try {
-    // 1. Batch generate all drafts in parallel on backend
-    const batchRes = await quotationFetch<{
-      ok: boolean;
-      drafts: Array<{ id: string; scope: string }>;
-      count: number;
+    const result = await quotationFetch<{
+      status: "complete";
+      quotationId: string;
+      currentRevision: number;
+      review: { ready: boolean };
     }>(
-      `${API_BASE}/api/v2/quotations/${quotationId}/content-drafts/batch-generate?lang=${encodeURIComponent(lang)}`,
+      `${API_BASE}/api/v2/quotations/${quotationId}/fast-track/assemble?lang=${encodeURIComponent(lang)}`,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          generationMode: "storytelling",
-          instruction: "",
-        }),
+        headers: {
+          "Content-Type": "application/json",
+          "Idempotency-Key": idempotencyKey ?? crypto.randomUUID(),
+          "X-Correlation-ID": `fast-track-${crypto.randomUUID()}`,
+        },
+        body: JSON.stringify({ baseRevision, writingStyle: "storytelling" }),
       },
-      "Failed to batch generate content drafts."
+      "Fast Track assembly could not complete."
     );
-
-    onProgress?.({
-      stage: "content_generation",
-      message: `Applying all generated narratives (${batchRes.count ?? batchRes.drafts?.length ?? "all"}) to brochure...`,
-      current: 2,
-      total: 2,
-    });
-
-    // 2. Fetch current revision
-    const docRes = await quotationFetch<{
-      document: Record<string, unknown>;
-      currentRevision: number;
-    }>(
-      `${API_BASE}/api/v2/quotations/${quotationId}/document?lang=${encodeURIComponent(lang)}`,
-      undefined,
-      "Failed to load canonical document."
-    );
-
-    if (docRes.currentRevision) {
-      baseRevision = docRes.currentRevision;
+    if (!result.review.ready) {
+      throw new Error("Server returned an incomplete Fast Track assembly.");
     }
-
-    // 3. Apply all drafts in 1 atomic database transaction
-    await quotationFetch<{
-      ok: boolean;
-      currentRevision: number;
-      appliedCount: number;
-    }>(
-      `${API_BASE}/api/v2/quotations/${quotationId}/content-drafts/apply-all?lang=${encodeURIComponent(lang)}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ baseRevision }),
-      },
-      "Failed to apply content drafts to brochure."
-    );
-  } catch (contentErr) {
-    console.warn("Content batch generation encountered warning:", contentErr);
+  } catch (error) {
+    // A network failure can occur after a durable server commit. Confirm the
+    // canonical state before claiming failure, but never redirect on unknown state.
+    if (error instanceof QuotationApiError && error.kind === "network") {
+      try {
+        const review = await quotationFetch<{ ready: boolean; currentRevision: number }>(
+          `${API_BASE}/api/v2/quotations/${quotationId}/review-status?lang=${encodeURIComponent(lang)}`,
+          undefined,
+          "Failed to verify Fast Track readiness."
+        );
+        if (review.ready) baseRevision = review.currentRevision;
+        else throw error;
+      } catch {
+        throw new FastTrackFailure("Fast Track state could not be verified. The quotation was kept as incomplete.", quotationId, error);
+      }
+    } else {
+      throw new FastTrackFailure(error instanceof Error ? error.message : "Fast Track assembly could not complete.", quotationId, error);
+    }
   }
 
   // ---------------------------------------------------------------------------

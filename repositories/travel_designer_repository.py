@@ -136,3 +136,57 @@ class TravelDesignerRepository:
             existing.designer_profile_id = profile_id
         await self.session.flush()
         return existing
+
+
+def serialize_travel_designer(profile: TravelDesignerProfile | dict[str, Any] | None) -> dict[str, Any]:
+    if profile is None:
+        return {}
+    if isinstance(profile, dict):
+        return {
+            "id": profile.get("id") or "",
+            "name": profile.get("name") or "",
+            "email": profile.get("email") or "",
+            "phone": profile.get("phone") or "",
+            "signatureInitial": profile.get("signatureInitial") or profile.get("signature_initial") or None,
+            "imageAssetId": profile.get("imageAssetId") or profile.get("image_asset_id") or "",
+            "imageR2Key": profile.get("imageR2Key") or profile.get("image_r2_key") or "",
+            "imageUrl": profile.get("imageUrl") or profile.get("image_url") or "",
+            "isActive": profile.get("isActive", profile.get("is_active", True)),
+        }
+    return {
+        "id": profile.id,
+        "name": profile.name,
+        "email": profile.email,
+        "phone": profile.phone or "",
+        "signatureInitial": profile.signature_initial or None,
+        "imageAssetId": profile.image_asset_id or "",
+        "imageR2Key": profile.image_r2_key or "",
+        "imageUrl": profile.image_url or "",
+        "isActive": profile.is_active,
+    }
+
+
+def apply_travel_designer_snapshot(document: dict[str, Any], profile: dict[str, Any] | None) -> None:
+    """Apply only profile-owned designer fields, preserving editorial copy."""
+    designer = document.setdefault("designer", {})
+    profile_fields = ("profileId", "name", "email", "phone", "image", "signatureInitial")
+    if profile is None:
+        for field in profile_fields:
+            designer.pop(field, None)
+        return
+    designer.update(
+        {
+            "profileId": profile["id"],
+            "name": profile.get("name") or "",
+            "email": profile.get("email") or "",
+            "phone": profile.get("phone") or "",
+            "signatureInitial": profile.get("signatureInitial") or None,
+            "image": {
+                "assetId": profile.get("imageAssetId") or "",
+                "r2Key": profile.get("imageR2Key") or "",
+                "url": profile.get("imageUrl") or "",
+                "status": "ready" if (profile.get("imageAssetId") or profile.get("imageR2Key") or profile.get("imageUrl")) else "empty",
+            },
+        }
+    )
+

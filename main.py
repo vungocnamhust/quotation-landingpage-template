@@ -105,6 +105,7 @@ from routers.v2.quotation_facts import router as quotation_facts_router
 from routers.v2.quotation_document import router as quotation_document_router
 from routers.v2.quotation_versions import router as quotation_versions_router
 from routers.v2.content_actions import router as content_actions_router
+from routers.v2.fast_track import router as fast_track_router
 from routers.v2.destinations import router as destinations_router
 from routers.v2.accommodations import router as accommodations_router
 from routers.v2.travel_designers import router as travel_designers_router
@@ -210,6 +211,7 @@ app.include_router(quotation_facts_router)
 app.include_router(quotation_document_router)
 app.include_router(quotation_versions_router)
 app.include_router(content_actions_router)
+app.include_router(fast_track_router)
 app.include_router(destinations_router)
 app.include_router(accommodations_router)
 app.include_router(travel_designers_router)
@@ -4945,6 +4947,16 @@ async def create_canonical_quotation_v2(payload: CreateQuoteRequestV1, principal
             saved = await documents.save_current_document(quotation_id=quotation_id, lang=lang, document_json=document, expected_revision=0)
             document["meta"]["revision"] = saved.revision
             await documents.append_document_revision(quotation_id=quotation_id, lang=lang, revision=saved.revision, document_json=document, change_source="create_facts")
+            from services.quotation_change_plan_service import QuotationChangePlanService
+            from repositories import ContentActionPlanRepository
+            await QuotationChangePlanService.persist(
+                repository=ContentActionPlanRepository(session),
+                quotation_id=quotation_id,
+                predecessor_quotation_id=None,
+                facts_hash=resolved["factsHash"],
+                correlation_id=f"create-{quotation_id}",
+                actions=QuotationChangePlanService.build_initial(canonical.model_dump(mode="json")),
+            )
             await session.commit()
     except Exception as exc:
         log.exception("[/api/v2/quotations] canonical draft persistence failed")

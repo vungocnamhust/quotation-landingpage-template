@@ -22,13 +22,13 @@ export type ToastItem = {
   message: string;
   type: ToastType;
   persistent?: boolean;
-  action?: NotificationAction;
+  action?: NotificationAction | NotificationAction[];
   scope?: string;
 };
 
 export type ToastOptions = {
   persistent?: boolean;
-  action?: NotificationAction;
+  action?: NotificationAction | NotificationAction[];
   scope?: string;
 };
 
@@ -207,18 +207,19 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                   >
                     {t.message}
                   </p>
-                  {t.action ? (
+                  {(Array.isArray(t.action) ? t.action : t.action ? [t.action] : []).map((action) => (
                     <button
+                      key={action.label}
                       type="button"
                       onClick={() => {
-                        t.action?.onClick();
+                        action.onClick();
                         dismiss(t.id);
                       }}
                       className={cn(getTypographyClassName("buttonSecondary"), "toast-item__action")}
                     >
-                      {t.action.label}
+                      {action.label}
                     </button>
-                  ) : null}
+                  ))}
                   <button
                     type="button"
                     onClick={() => dismiss(t.id)}

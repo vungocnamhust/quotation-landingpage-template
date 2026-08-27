@@ -9,6 +9,26 @@ from services.skeleton_builder import SkeletonBuilder
 
 
 class BrochureFactDefaultsTests(unittest.TestCase):
+    def test_empty_skeleton_stays_content_blocked_with_deduplicated_readiness_paths(self):
+        payload = CreateQuoteRequestV1.model_validate({
+            "brand_id": "vietnam_safar",
+            "trip_facts": {"destinations": ["Hanoi"], "itinerary": [{"id": "day_1", "day_number": 1, "destination": "Hanoi", "overnight": "Hanoi"}]},
+            "customer_facts": {"customer_name": "Guest", "adults": 2},
+            "pricing_facts": {"options": [{"id": "opt_1", "label": "Private", "currency": "USD", "per_traveler_amount_minor": 100, "group_total_amount_minor": 200}]},
+            "service_facts": {"hotels": []},
+        })
+        document = SkeletonBuilder().build(
+            quotation_id="quo_readiness",
+            payload=payload,
+            resolved_facts={"duration": {"label": "1 day / 0 nights"}, "routeLabel": "Hanoi", "travelDateLabel": ""},
+            template="quote-generator",
+        )
+        readiness = resolve_content_readiness(document, fact_missing_inputs=[])
+        hero = next(item for item in readiness if item["sectionType"] == "hero")
+        self.assertEqual(hero["status"], "chua_du_noi_dung")
+        self.assertEqual(hero["automationPolicy"], "bypass")
+        self.assertEqual(len({item["path"] for item in hero["missing"]}), len(hero["missing"]))
+
     def test_api_rejects_more_than_four_commercial_options(self):
         with self.assertRaises(ValidationError):
             CreateQuoteRequestV1.model_validate({

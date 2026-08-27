@@ -82,7 +82,6 @@ class ContentSectionSpec:
     # compatibility adapter until the old Impact API is removed in Sprint 3.
     automation_policy: ContentAutomationPolicy = "manual"
     entity_binding: Literal["quotation", "itinerary_day", "hotel"] = "quotation"
-    bypass_allowed: bool = False
     prompt_context_builder: Callable[[Any, str, dict[str, Any] | None], dict[str, Any]] | None = None
 
 
@@ -183,7 +182,7 @@ CONTENT_SECTION_REGISTRY: dict[str, ContentSectionSpec] = {
             _fact("end-date", "End date", "trip_facts", "end_date"),
             _fact("duration", "Duration", "trip_facts", "duration_days"),
         ),
-        default_instructions=_brief("hero"),
+        default_instructions=_brief("hero"), automation_policy="bypass",
     ),
     "overview_letter": ContentSectionSpec(
         "overview_letter", "content", ("narrative.journeyOverviewTitle", "narrative.letterHighlight", "narrative.letterGreeting", "narrative.letterIntro", "narrative.letterBody2", "narrative.letterOutro", "narrative.letterSignOff", "narrative.letterSender"),
@@ -206,7 +205,7 @@ CONTENT_SECTION_REGISTRY: dict[str, ContentSectionSpec] = {
             _fact("end-date", "End date", "trip_facts", "end_date"),
             _fact("duration", "Duration", "trip_facts", "duration_days"),
         ),
-        default_instructions=_brief("overview_letter"),
+        default_instructions=_brief("overview_letter"), automation_policy="bypass",
     ),
     "route": ContentSectionSpec(
         "route", "content", ("route.title", "route.description", "route.staySegments.*.mapSegmentDesc"),
@@ -221,7 +220,7 @@ CONTENT_SECTION_REGISTRY: dict[str, ContentSectionSpec] = {
             _fact("destinations", "Destinations", "trip_facts", "destinations", required=True),
             _fact("itinerary", "Itinerary days", "trip_facts", "itinerary"),
         ),
-        default_instructions=_brief("route"),
+        default_instructions=_brief("route"), automation_policy="bypass",
     ),
     "itinerary": ContentSectionSpec(
         "itinerary", "content", ("itinerary.title", "itinerary.description"),
@@ -232,7 +231,7 @@ CONTENT_SECTION_REGISTRY: dict[str, ContentSectionSpec] = {
             _budget_field("itinerary", "itinerary_description"),
         ),
         fact_inputs=(_fact("itinerary", "Itinerary days", "trip_facts", "itinerary", required=True),),
-        default_instructions=_brief("itinerary"),
+        default_instructions=_brief("itinerary"), automation_policy="bypass",
     ),
     # The authoritative values remain Facts. These scopes become manual
     # editorial hand-offs in Sprint 4; they are not LLM-writable yet.
@@ -276,12 +275,9 @@ _CONTENT_FACT_USED: dict[str, tuple[FactDependency, ...]] = {
 }
 
 for _scope, _spec in tuple(CONTENT_SECTION_REGISTRY.items()):
-    _bypass_allowed = _scope in {"hero", "overview_letter", "route", "itinerary"}
     CONTENT_SECTION_REGISTRY[_scope] = replace(
         _spec,
         fact_used=_CONTENT_FACT_USED.get(_scope, ()),
-        automation_policy=_spec.automation_policy if _spec.automation_policy != "manual" else ("bypass" if _bypass_allowed else ("auto" if _spec.owner == "content" and _spec.generation else "manual")),
-        bypass_allowed=_bypass_allowed,
     )
 
 
@@ -322,9 +318,8 @@ def scope_spec(scope: str) -> ContentSectionSpec:
                 FactDependency("trip_facts.itinerary[].highlights", "content_input", "review_or_generate", ("itinerary.days.*.activities",), f"content:{scope}", "itinerary_day"),
                 FactDependency("trip_facts.itinerary[].display_date", "derived_context", "preserve_content_rebuild_labels", (), f"content:{scope}", "itinerary_day"),
             ),
-            automation_policy="auto",
+            automation_policy="bypass",
             entity_binding="itinerary_day",
-            bypass_allowed=True,
         )
 
     try:
@@ -335,7 +330,7 @@ def scope_spec(scope: str) -> ContentSectionSpec:
 
 def content_registry_payload(scope: str | None = None) -> dict[str, dict[str, object]]:
     specs = {scope: scope_spec(scope)} if scope else CONTENT_SECTION_REGISTRY
-    return {key: {"owner": spec.owner, "generation": spec.generation, "editor": spec.editor, "recipeVersion": spec.recipe_version, "schemaVersion": spec.schema_version, "fields": [field.public_payload() for field in spec.editor_fields], "factInputs": [field.public_payload() for field in spec.fact_inputs], "defaultInstructions": spec.default_instructions.public_payload() if spec.default_instructions else None} for key, spec in specs.items()}
+    return {key: {"owner": spec.owner, "generation": spec.generation, "automationPolicy": spec.automation_policy, "editor": spec.editor, "recipeVersion": spec.recipe_version, "schemaVersion": spec.schema_version, "fields": [field.public_payload() for field in spec.editor_fields], "factInputs": [field.public_payload() for field in spec.fact_inputs], "defaultInstructions": spec.default_instructions.public_payload() if spec.default_instructions else None} for key, spec in specs.items()}
 
 
 def _read_path(value: dict[str, Any], path: tuple[str | int, ...]) -> Any:

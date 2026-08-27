@@ -19,8 +19,20 @@ class DestinationRepository:
     async def upsert(self, *, destination_id: str, canonical_name: str, slug: str, aliases: list[str], country_slug: str | None = None, region_slug: str | None = None, province_slug: str | None = None, latitude: float | None = None, longitude: float | None = None, media_prefix: str | None = None) -> DestinationCatalog:
         item = await self.session.get(DestinationCatalog, destination_id)
         if item is None:
-            item = DestinationCatalog(id=destination_id, canonical_name=canonical_name, slug=slug, country_slug=country_slug, region_slug=region_slug, province_slug=province_slug, latitude=latitude, longitude=longitude, media_prefix=media_prefix)
+            item = DestinationCatalog(
+                id=destination_id,
+                canonical_name=canonical_name,
+                slug=slug,
+                country_slug=country_slug,
+                region_slug=region_slug,
+                province_slug=province_slug,
+                latitude=latitude,
+                longitude=longitude,
+                media_prefix=media_prefix,
+                is_active=True,
+            )
             self.session.add(item)
+
         else:
             # Seed calls are intentionally non-destructive: once an administrator
             # manages a destination, its identity and map anchor remain DB-owned.
@@ -213,3 +225,22 @@ class DestinationRepository:
             return best_item
 
         return None
+
+
+async def seed_destination_catalog(session: AsyncSession) -> None:
+    from destination_catalog_seed import get_seed_destination_profiles
+
+    repository = DestinationRepository(session)
+    for profile in get_seed_destination_profiles():
+        await repository.upsert(
+            destination_id=f"dst_{profile['slug']}",
+            canonical_name=profile["canonical_name"],
+            slug=profile["slug"],
+            aliases=profile["aliases"],
+            country_slug=profile["country_slug"],
+            region_slug=profile["region_slug"],
+            province_slug=profile["province_slug"],
+            latitude=profile["latitude"],
+            longitude=profile["longitude"],
+        )
+

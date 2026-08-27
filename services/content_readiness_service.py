@@ -21,7 +21,9 @@ SECTION_SCOPE = {
 
 
 def _add(store: dict[str, list[dict[str, str]]], section_id: str, path: str, message: str, owner: str) -> None:
-    store.setdefault(section_id, []).append({"path": path, "message": message, "owner": owner})
+    items = store.setdefault(section_id, [])
+    if not any(item["path"] == path for item in items):
+        items.append({"path": path, "message": message, "owner": owner})
 
 
 def _content_missing(document: QuoteDocumentV1, section_type: str, section_id: str, store: dict[str, list[dict[str, str]]]) -> None:
@@ -87,5 +89,7 @@ def resolve_content_readiness(document_json: dict[str, Any], fact_missing_inputs
             "missing": [{"path": item["path"], "message": item["message"]} for item in missing],
             "targetStage": "facts" if status == "can_thong_tin" else "content" if status == "chua_du_noi_dung" else None,
             "generator": bool(spec and spec.generation),
+            "scope": scope_name,
+            "automationPolicy": spec.automation_policy if spec else None,
         })
     return result

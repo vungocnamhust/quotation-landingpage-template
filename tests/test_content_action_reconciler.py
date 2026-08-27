@@ -2,6 +2,7 @@ from core.rules.content_action_reconciler import content_input_fingerprint, reco
 from core.rules.semantic_identity import assign_missing_source_fact_ids
 from services.inherited_content_context_service import InheritedContentContextService
 from services.quotation_change_plan_service import QuotationChangePlanService
+from services.content_registry import scope_spec
 
 
 def _day(identifier: str, number: int, destination: str, overnight: str | None = None) -> dict[str, object]:
@@ -92,3 +93,7 @@ def test_commercial_and_legal_fact_changes_create_manual_content_handoffs() -> N
     current = {"trip_facts": {"itinerary": []}, "customer_facts": {}, "service_facts": {"hotels": [{"id": "hotel_1", "name": "Hotel", "destination": "Hanoi"}], "inclusions": ["Guide", "Transfers"], "exclusions": ["Flights"]}, "pricing_facts": {"options": [{"id": "one", "label": "Private", "currency": "USD", "per_traveler_amount_minor": 120, "group_total_amount_minor": 240}], "conditions": []}}
     manual_scopes = {action.scope for action in QuotationChangePlanService.build(previous, current) if action.automation_policy == "manual"}
     assert {"hotel_plan", "pricing", "inclusions_exclusions"} <= manual_scopes
+
+
+def test_fast_track_narrative_scopes_use_bypass_not_empty_content_exemption() -> None:
+    assert {scope_spec(scope).automation_policy for scope in ("hero", "overview_letter", "route", "itinerary", "itinerary:day:day_1")} == {"bypass"}

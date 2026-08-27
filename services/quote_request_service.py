@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.models.quote_request import QuoteRequest, QuoteRequestRevision
 from repositories.quote_request_repository import QuoteRequestRepository
-from repositories.quotation_repository import QuotationDocumentRepository, QuotationRepository
+from repositories.quotation_repository import ContentActionPlanRepository, QuotationDocumentRepository, QuotationRepository
 from schemas.v2.quote_request import (
     QuotationMinimalOverridesSchema,
     QuoteRequestCreateSchema,
@@ -604,15 +604,45 @@ class QuoteRequestService:
         quo_repo = QuotationRepository(self.session)
         doc_repo = QuotationDocumentRepository(self.session)
 
-        import main
         from api.dependencies import V2_RENDERER_NAME
+        from core.rules.semantic_identity import assign_missing_source_fact_ids
         from quote_document import CreateQuoteRequestV1
-        from repositories.travel_designer_repository import TravelDesignerRepository
+        from repositories.destination_repository import DestinationRepository, seed_destination_catalog
+        from repositories.travel_designer_repository import (
+            TravelDesignerRepository,
+            apply_travel_designer_snapshot,
+            serialize_travel_designer,
+        )
+        from services.facts_contract import normalize_legacy_facts_snapshot
+        from services.facts_resolver import FactsResolver
+        from services.media_default_service import MediaDefaultService
         from services.skeleton_builder import SkeletonBuilder
 
-        normalized_facts = main.normalize_legacy_facts_snapshot(facts)
+        normalized_facts = normalize_legacy_facts_snapshot(facts)
         payload = CreateQuoteRequestV1.model_validate(normalized_facts)
-        canonical, resolved = await main._resolve_v2_facts(payload)
+        await seed_destination_catalog(self.session)
+        dest_repo = DestinationRepository(self.session)
+        facts_resolver = FactsResolver()
+        canonical, resolved = await facts_resolver.resolve(payload, dest_repo.resolve)
+        # Match direct V2 intake: every first-version Fact gets a durable
+        # identity before the skeleton and initial bypass plan are derived.
+        # Otherwise an id-less day could be addressed as both ``1`` and
+        # ``day-1``, making an atomic itinerary candidate impossible to apply.
+        canonical_payload = canonical.model_dump(mode="json")
+        canonical_payload["trip_facts"]["itinerary"] = assign_missing_source_fact_ids(
+            list(canonical_payload["trip_facts"].get("itinerary") or []),
+            creation_namespace=quotation_id,
+            kind="itinerary_day",
+        )
+        canonical_payload["service_facts"]["hotels"] = assign_missing_source_fact_ids(
+            list(canonical_payload["service_facts"].get("hotels") or []),
+            creation_namespace=quotation_id,
+            kind="hotel",
+        )
+        canonical, resolved = await facts_resolver.resolve(
+            CreateQuoteRequestV1.model_validate(canonical_payload),
+            dest_repo.resolve,
+        )
 
         # Resolve Travel Designer
         designers = TravelDesignerRepository(self.session)
@@ -642,7 +672,7 @@ class QuoteRequestService:
             template=V2_RENDERER_NAME,
         )
         if designer_profile:
-            main._apply_travel_designer_snapshot(document, main._serialize_travel_designer(designer_profile))
+            apply_travel_designer_snapshot(document, serialize_travel_designer(designer_profile))
             canonical.presentation_options.travel_designer_id = designer_profile.id
 
         document["meta"]["resolvedDestinationRefs"] = {
@@ -685,12 +715,12 @@ class QuoteRequestService:
 
         # Media enrichment is best effort. Missing catalogue photos remain
         # explicit Design/publication blockers instead of aborting creation.
-        await main._apply_missing_media_defaults(
-            self.session,
-            document,
-            quotation_id,
-            effective_lang,
+        await MediaDefaultService(self.session).apply_missing(
+            document=document,
+            quotation_id=quotation_id,
+            lang=effective_lang,
         )
+
 
         # Save initial document revision
         saved = await doc_repo.save_current_document(
@@ -706,6 +736,15 @@ class QuoteRequestService:
             revision=saved.revision,
             document_json=document,
             change_source="create_from_request",
+        )
+        from services.quotation_change_plan_service import QuotationChangePlanService
+        await QuotationChangePlanService.persist(
+            repository=ContentActionPlanRepository(self.session),
+            quotation_id=quotation.id,
+            predecessor_quotation_id=None,
+            facts_hash=resolved.get("factsHash", ""),
+            correlation_id=f"create-{quotation.id}",
+            actions=QuotationChangePlanService.build_initial(canonical.model_dump(mode="json")),
         )
 
         # Update QuoteRequest status to quotation_created and link quotation_id

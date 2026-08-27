@@ -60,6 +60,7 @@ EXPECTED_V2_OPERATIONS = {
     ("/api/v2/quotations/{quotation_id}/facts/designer", "PUT"),
     ("/api/v2/quotations/{quotation_id}/facts/media", "PUT"),
     ("/api/v2/quotations/{quotation_id}/facts/media-defaults", "POST"),
+    ("/api/v2/quotations/{quotation_id}/fast-track/assemble", "POST"),
     ("/api/v2/quotations/{quotation_id}/impacts", "GET"),
     ("/api/v2/quotations/{quotation_id}/impacts/accept", "POST"),
     ("/api/v2/quotations/{quotation_id}/impacts/generate-selected", "POST"),

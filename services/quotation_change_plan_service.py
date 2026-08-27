@@ -53,12 +53,26 @@ class QuotationChangePlanService:
                 actions.append(cls._action(scope, change.entity_key, "retired", "manual", {}, "retired", old=change.old_value, new=None))
         return actions
 
+    @classmethod
+    def build_initial(cls, current_facts: dict[str, Any]) -> list[ContentActionBlueprint]:
+        """Create the first lifecycle plan for an intentionally empty skeleton."""
+        current_model = cls._model(current_facts)
+        actions: list[ContentActionBlueprint] = []
+        for scope, spec in CONTENT_SECTION_REGISTRY.items():
+            if spec.owner == "content" and spec.generation:
+                actions.append(cls._action(scope, scope, "initial_skeleton", spec.automation_policy, build_prompt_context(current_model, scope), "unavailable"))
+        for day in (current_facts.get("trip_facts") or {}).get("itinerary") or []:
+            fact_id = str(day.get("id") or day.get("day_number"))
+            scope = f"itinerary:day:{fact_id}"
+            actions.append(cls._action(scope, f"day:{fact_id}", "initial_skeleton", scope_spec(scope).automation_policy, build_prompt_context(current_model, scope), "unavailable"))
+        return actions
+
     @staticmethod
     async def persist(
         *,
         repository: Any,
         quotation_id: str,
-        predecessor_quotation_id: str,
+        predecessor_quotation_id: str | None,
         facts_hash: str,
         correlation_id: str,
         actions: list[ContentActionBlueprint],

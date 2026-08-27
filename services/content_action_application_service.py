@@ -86,7 +86,7 @@ class ContentActionApplicationService:
         return draft_rows, source_revision
 
     async def generate_and_apply(
-        self, *, quotation_id: str, plan_id: str, action_ids: list[str], expected_revision: int, writing_style: Literal["storytelling", "detailed"], profile_id: str | None, correlation_id: str, idempotency_key: str,
+        self, *, quotation_id: str, plan_id: str, action_ids: list[str], expected_revision: int, writing_style: Literal["storytelling", "detailed"], profile_id: str | None, correlation_id: str, idempotency_key: str, document_overlay: dict[str, Any] | None = None,
     ) -> tuple[list[Any], int]:
         replay = await self._replay_bypass_if_idempotent(
             quotation_id=quotation_id,
@@ -111,7 +111,10 @@ class ContentActionApplicationService:
             current = await self.documents.get_current_document(quotation_id, lang)
             if current is None:
                 raise ContentActionNotFoundError("Current quotation document was not found.")
-            merged = copy.deepcopy(current.document_json)
+            # Fast Track may supply an in-memory, Facts-owned media patch. It
+            # is persisted only in this same transaction after every remote
+            # content candidate has been generated and validated.
+            merged = copy.deepcopy(document_overlay if document_overlay is not None else current.document_json)
             for item in generated:
                 merged = ContentDraftService.apply_candidate(merged, item["scope"], item["candidate"])
             saved = await self.documents.save_current_document(quotation_id=quotation_id, lang=lang, document_json=merged, expected_revision=expected_revision)

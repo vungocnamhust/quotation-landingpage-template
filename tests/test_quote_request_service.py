@@ -440,9 +440,10 @@ class TestQuoteRequestService(unittest.IsolatedAsyncioTestCase):
             "itinerary": [],
         }
 
-        with patch("main._resolve_v2_facts", new_callable=AsyncMock, return_value=(mock_canonical, mock_resolved)), \
-             patch("main._apply_missing_media_defaults", new_callable=AsyncMock), \
-             patch("main._serialize_travel_designer", return_value={"id": "td_assigned", "name": "Assigned Designer"}), \
+        with patch("services.facts_resolver.FactsResolver.resolve", new_callable=AsyncMock, return_value=(mock_canonical, mock_resolved)), \
+             patch("services.media_default_service.MediaDefaultService.apply_missing", new_callable=AsyncMock), \
+             patch("repositories.travel_designer_repository.serialize_travel_designer", return_value={"id": "td_assigned", "name": "Assigned Designer"}), \
+             patch("repositories.destination_repository.seed_destination_catalog", new_callable=AsyncMock), \
              patch("repositories.quotation_repository.QuotationRepository.create_quotation", new_callable=AsyncMock) as mock_create_quote, \
              patch("repositories.quotation_repository.QuotationRepository.create_quotation_request", new_callable=AsyncMock), \
              patch("repositories.quotation_repository.QuotationDocumentRepository.save_current_document", new_callable=AsyncMock, return_value=mock_saved_doc), \

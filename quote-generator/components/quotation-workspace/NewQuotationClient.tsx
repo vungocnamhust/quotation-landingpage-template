@@ -29,7 +29,7 @@ const fetchJson = async <T,>(url: string): Promise<T> =>
   quotationFetch<T>(url, undefined, "Data could not be loaded.");
 
 import FastTrackProgressModal from "./FastTrackProgressModal.tsx";
-import { runQuotationFastTrackPipeline, type FastTrackProgress } from "../../lib/quotationFastTrack.ts";
+import { FastTrackFailure, runQuotationFastTrackPipeline, type FastTrackProgress } from "../../lib/quotationFastTrack.ts";
 
 function QuotationIntakeInner({
   quoteRequest,
@@ -56,13 +56,14 @@ function QuotationIntakeInner({
   const [isPending, startTransition] = useTransition();
   const [fastTrackProgress, setFastTrackProgress] = useState<FastTrackProgress | null>(null);
   const [isFastTrackOpen, setIsFastTrackOpen] = useState(false);
+  const [fastTrackResume, setFastTrackResume] = useState<{ quotationId: string; baseRevision: number; idempotencyKey: string } | null>(null);
   const { toast, notify, clearScope } = useToast();
 
   useEffect(() => {
     if (fieldErrors.length) document.getElementById("quotation-intake-errors")?.focus();
   }, [fieldErrors]);
 
-  const handleCreateQuotation = (targetStage: "facts" | "design") => {
+  const handleCreateQuotation = (targetStage: "facts" | "design", resume = fastTrackResume) => {
     if (targetStage === "design") {
       setIsFastTrackOpen(true);
       setFastTrackProgress({
@@ -75,9 +76,12 @@ function QuotationIntakeInner({
           const result = await runQuotationFastTrackPipeline({
             requestId,
             facts,
+            existingQuotation: resume ? { quotationId: resume.quotationId, baseRevision: resume.baseRevision } : null,
+            idempotencyKey: resume?.idempotencyKey,
             onProgress: (prog) => setFastTrackProgress(prog),
           });
 
+          setFastTrackResume(null);
           clearScope("create-quotation");
           toast("Brochure assembled successfully! Opening Design Studio...", "success");
           push(result.redirectUrl);
@@ -85,12 +89,26 @@ function QuotationIntakeInner({
           setIsFastTrackOpen(false);
           const msg = apiErrorMessage(error);
           setFieldErrors(apiErrorFieldErrors(error));
+          const failure = error instanceof FastTrackFailure ? error : null;
+          const retry = failure && failure.retryable
+            ? {
+                quotationId: failure.quotationId,
+                baseRevision: failure.currentRevision ?? resume?.baseRevision ?? 1,
+                idempotencyKey: resume?.idempotencyKey ?? crypto.randomUUID(),
+              }
+            : null;
+          setFastTrackResume(retry);
           notify({
             message: msg,
             type: "error",
             persistent: true,
             scope: "create-quotation",
-            action: { label: "Retry", onClick: () => handleCreateQuotation("design") },
+            action: failure
+              ? [
+                  ...(retry ? [{ label: "Retry assembly", onClick: () => handleCreateQuotation("design", retry) }] : []),
+                  { label: "Open incomplete quotation", onClick: () => push(`/workspace/quotations/${failure.quotationId}/edit?stage=content&lang=${encodeURIComponent(facts.lang || "en")}`) },
+                ]
+              : { label: "Retry", onClick: () => handleCreateQuotation("design") },
           });
         }
       });

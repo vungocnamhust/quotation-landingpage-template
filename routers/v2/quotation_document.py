@@ -692,19 +692,22 @@ async def apply_all_content_drafts_v2(
             )
 
         pending_drafts = await drafts.list(quotation_id, lang)
-        active_drafts = [d for d in pending_drafts if d.status in ("draft", "stale") and d.candidate_json]
+        active_drafts = [d for d in pending_drafts if d.status == "draft" and d.candidate_json]
 
         if not active_drafts:
             return {"ok": True, "document": current.document_json, "currentRevision": current.revision, "appliedCount": 0}
 
+        # Validate and merge every candidate before any write. A caller must
+        # receive an actionable failure, never a misleading partial success.
         merged = copy.deepcopy(current.document_json)
-        applied_ids = []
-        for draft in active_drafts:
-            try:
+        try:
+            for draft in active_drafts:
                 merged = ContentDraftService.apply_candidate(merged, draft.scope, draft.candidate_json)
-                applied_ids.append(draft.id)
-            except Exception:
-                pass
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=422,
+                detail={"message": str(exc), "scope": draft.scope, "draftId": draft.id},
+            ) from exc
 
         try:
             saved = await documents.save_current_document(
@@ -729,14 +732,13 @@ async def apply_all_content_drafts_v2(
         )
 
         for draft in active_drafts:
-            if draft.id in applied_ids:
-                draft.status = "applied"
-                draft.source_document_revision = saved.revision
+            draft.status = "applied"
+            draft.source_document_revision = saved.revision
 
         await session.commit()
         return {
             "ok": True,
             "document": merged,
             "currentRevision": saved.revision,
-            "appliedCount": len(applied_ids),
+            "appliedCount": len(active_drafts),
         }
