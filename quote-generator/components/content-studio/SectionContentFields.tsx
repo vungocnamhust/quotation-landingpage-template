@@ -76,6 +76,36 @@ function FieldEditor({
 }) {
   const budgetType = contentReconciler.deriveBudgetType(scope, field.id, field.path);
 
+  if (field.control === 'hotel-editorial-list') {
+    const hotels = Array.isArray(readValue(candidate, field.path))
+      ? readValue(candidate, field.path) as Array<Record<string, unknown>>
+      : [];
+    const documentHotels = ((document?.stays as Record<string, unknown> | undefined)?.hotels as Array<Record<string, unknown>> | undefined) ?? [];
+
+    return (
+      <fieldset className="grid gap-3">
+        <legend className={cn(getTypographyClassName('label'), 'text-[var(--color-muted)]')}>{field.label}</legend>
+        {hotels.map((hotel, index) => {
+          const sourceFactId = String(hotel.sourceFactId ?? '');
+          const documentHotel = documentHotels.find((item) => String(item.sourceFactId ?? item.id ?? '') === sourceFactId);
+          const label = String(documentHotel?.name ?? `Hotel ${index + 1}`);
+          const value = String(hotel.editorialIntroduction ?? '');
+          return (
+            <div key={sourceFactId || `hotel-${index}`} className="grid gap-1.5">
+              <label className={cn(getTypographyClassName('label'), 'text-[var(--color-muted)]')}>{label}</label>
+              <RichTextEditor
+                value={value}
+                minHeight="6rem"
+                onChange={(nextValue) => onChange(writeValue(candidate, field.path, hotels.map((item, itemIndex) => itemIndex === index ? { ...item, editorialIntroduction: nextValue } : item)))}
+              />
+              <CharacterBudgetMeter budgetType="hotel_intro" text={value} />
+            </div>
+          );
+        })}
+      </fieldset>
+    );
+  }
+
   if (field.control === 'string-list') {
     const items = Array.isArray(readValue(candidate, field.path)) ? (readValue(candidate, field.path) as unknown[]).map(String) : [];
     const segmentBound = field.id === 'route-stop-descriptions';

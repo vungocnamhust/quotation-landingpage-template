@@ -322,21 +322,16 @@ export function deriveDefaultCandidate(
 
   if (scope === 'hotel_plan') {
     return {
-      stays: {
-        hotels: [],
-        roomNotes: '',
-      },
+      hotels: [],
     };
   }
 
-  if (scope === 'finalization') {
+  if (scope === 'pricing') {
     return {
-      content: {
-        sections: {
-          finalization: {
-            blocks: [],
-          },
-        },
+      pricing: {
+        kicker: labels.quotationNav || 'INVESTMENT SUMMARY',
+        title: labels.pricingTitle,
+        description: labels.pricingDescription,
       },
     };
   }
@@ -361,6 +356,21 @@ export function reconcileCandidateWithFacts(
 
   if (!candidate || Object.keys(candidate).length === 0) {
     return defaultCandidate;
+  }
+
+  if (scope === 'pricing') {
+    const defaultPricing = (defaultCandidate.pricing as Record<string, unknown>) || {};
+    const suppliedPricing = candidate.pricing && typeof candidate.pricing === 'object'
+      ? candidate.pricing as Record<string, unknown>
+      : {};
+
+    return {
+      ...candidate,
+      pricing: {
+        ...defaultPricing,
+        ...suppliedPricing,
+      },
+    };
   }
 
   if (scope === 'route') {

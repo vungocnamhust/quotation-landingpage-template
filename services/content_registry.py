@@ -7,8 +7,9 @@ from typing import Any, Callable, Literal
 
 
 Owner = Literal["fact", "fact-derived", "content", "design"]
-EditorControl = Literal["input", "textarea", "string-list"]
+EditorControl = Literal["input", "textarea", "string-list", "hotel-editorial-list"]
 ContentAutomationPolicy = Literal["manual", "auto", "bypass"]
+CandidateContract = Literal["generated", "hotel-editorial", "pricing-framing"]
 FactDependencyRole = Literal["semantic_identity", "content_input", "derived_context"]
 ImpactPolicy = Literal["invalidate_content", "review_or_generate", "preserve_content_rebuild_labels"]
 
@@ -82,6 +83,7 @@ class ContentSectionSpec:
     # compatibility adapter until the old Impact API is removed in Sprint 3.
     automation_policy: ContentAutomationPolicy = "manual"
     entity_binding: Literal["quotation", "itinerary_day", "hotel"] = "quotation"
+    candidate_contract: CandidateContract = "generated"
     prompt_context_builder: Callable[[Any, str, dict[str, Any] | None], dict[str, Any]] | None = None
 
 
@@ -233,11 +235,29 @@ CONTENT_SECTION_REGISTRY: dict[str, ContentSectionSpec] = {
         fact_inputs=(_fact("itinerary", "Itinerary days", "trip_facts", "itinerary", required=True),),
         default_instructions=_brief("itinerary"), automation_policy="bypass",
     ),
-    # The authoritative values remain Facts. These scopes become manual
-    # editorial hand-offs in Sprint 4; they are not LLM-writable yet.
-    "hotel_plan": ContentSectionSpec("hotel_plan", "content", ("stays.hotels.*.editorialIntroduction", "stays.roomNotes"), ("service_facts.hotels",), ("service_facts.hotels",), "narrative", automation_policy="manual"),
-    "pricing": ContentSectionSpec("pricing", "content", ("pricing.kicker", "pricing.title", "pricing.description", "pricing.ctaLabel"), ("pricing_facts.options", "pricing_facts.conditions"), ("pricing_facts.options",), "narrative", automation_policy="manual"),
-    "inclusions_exclusions": ContentSectionSpec("inclusions_exclusions", "content", ("content.sections.inclusions_exclusions",), ("service_facts.inclusions", "service_facts.exclusions"), ("service_facts.inclusions", "service_facts.exclusions"), "narrative", ("twoColumnList",), automation_policy="manual"),
+    # These scopes are manual editorial hand-offs.  Facts still own the hotel
+    # identity, room notes and commercial values; Content owns prose only.
+    "hotel_plan": ContentSectionSpec(
+        "hotel_plan", "content", ("stays.hotels.*.editorialIntroduction",),
+        ("service_facts.hotels",), ("service_facts.hotels",), "narrative",
+        editor_fields=(
+            _field("hotel-editorial-copy", "Hotel editorial copy", "hotels", control="hotel-editorial-list", required=False, min_length=0, max_length=300),
+        ),
+        fact_inputs=(_fact("hotels", "Selected hotels", "service_facts", "hotels", required=True),),
+        automation_policy="manual", entity_binding="hotel", candidate_contract="hotel-editorial",
+    ),
+    "pricing": ContentSectionSpec(
+        "pricing", "content", ("pricing.kicker", "pricing.title", "pricing.description"),
+        ("pricing_facts.options", "pricing_facts.conditions"), ("pricing_facts.options",), "narrative",
+        editor_fields=(
+            _field("pricing-kicker", "Pricing kicker", "pricing", "kicker", max_length=160),
+            _field("pricing-title", "Pricing title", "pricing", "title", max_length=160),
+            _field("pricing-description", "Pricing introduction", "pricing", "description", control="textarea", max_length=1600),
+        ),
+        fact_inputs=(_fact("pricing-options", "Pricing options", "pricing_facts", "options", required=True),),
+        automation_policy="manual", candidate_contract="pricing-framing",
+    ),
+    "inclusions_exclusions": ContentSectionSpec("inclusions_exclusions", "fact-derived", ("content.sections.inclusions_exclusions",), ("service_facts.inclusions", "service_facts.exclusions"), ("service_facts.inclusions", "service_facts.exclusions"), "fact-preview", ("twoColumnList",), automation_policy="manual"),
     "booking_terms": ContentSectionSpec("booking_terms", "fact", ("content.sections.booking_terms",), ("booking_facts",), ("booking_facts",), "fact-preview", ("paragraph", "termList", "paymentSchedule")),
     "designer": ContentSectionSpec("designer", "fact", ("designer",), ("designer_facts",), ("designer_facts",), "fact-preview"),
 }
@@ -330,7 +350,7 @@ def scope_spec(scope: str) -> ContentSectionSpec:
 
 def content_registry_payload(scope: str | None = None) -> dict[str, dict[str, object]]:
     specs = {scope: scope_spec(scope)} if scope else CONTENT_SECTION_REGISTRY
-    return {key: {"owner": spec.owner, "generation": spec.generation, "automationPolicy": spec.automation_policy, "editor": spec.editor, "recipeVersion": spec.recipe_version, "schemaVersion": spec.schema_version, "fields": [field.public_payload() for field in spec.editor_fields], "factInputs": [field.public_payload() for field in spec.fact_inputs], "defaultInstructions": spec.default_instructions.public_payload() if spec.default_instructions else None} for key, spec in specs.items()}
+    return {key: {"owner": spec.owner, "generation": spec.generation, "automationPolicy": spec.automation_policy, "candidateContract": spec.candidate_contract, "editor": spec.editor, "recipeVersion": spec.recipe_version, "schemaVersion": spec.schema_version, "fields": [field.public_payload() for field in spec.editor_fields], "factInputs": [field.public_payload() for field in spec.fact_inputs], "defaultInstructions": spec.default_instructions.public_payload() if spec.default_instructions else None} for key, spec in specs.items()}
 
 
 def _read_path(value: dict[str, Any], path: tuple[str | int, ...]) -> Any:
@@ -377,6 +397,15 @@ def project_candidate_from_document(document: dict[str, Any], scope: str) -> dic
             "description": route.get("description") or "",
             "mapSegmentDescriptions": [str(segment.get("mapSegmentDesc") or "") for segment in route.get("staySegments") or []],
         }}
+    if spec.candidate_contract == "hotel-editorial":
+        return {"hotels": [
+            {
+                "sourceFactId": str(hotel.get("sourceFactId") or hotel.get("id") or ""),
+                "editorialIntroduction": str(hotel.get("editorialIntroduction") or ""),
+            }
+            for hotel in ((document.get("stays") or {}).get("hotels") or [])
+            if hotel.get("sourceFactId") or hotel.get("id")
+        ]}
     for field in spec.editor_fields:
         item = _read_path(document, field.path)
         _write_path(candidate, field.path, item if item is not None else ([] if field.control == "string-list" else ""))

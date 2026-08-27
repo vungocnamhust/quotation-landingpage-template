@@ -4822,27 +4822,60 @@ def _preserve_content_owned_values(current: dict[str, Any], rebuilt: dict[str, A
         if path == "route.staySegments.*.mapSegmentDesc":
             previous_segments = ((current.get("route") or {}).get("staySegments") or [])
             rebuilt_segments = ((rebuilt.get("route") or {}).get("staySegments") or [])
-            previous_by_identity = {
-                (item.get("destinationId"), item.get("dayStart"), item.get("dayEnd")): item
+            previous_by_hotel_id = {
+                str(item.get("hotelSourceFactId")): item
                 for item in previous_segments
+                if item.get("hotelSourceFactId")
             }
+            previous_by_fallback: dict[tuple[Any, Any, Any], list[dict[str, Any]]] = {}
+            for item in previous_segments:
+                key = (item.get("destinationId"), item.get("dayStart"), item.get("dayEnd"))
+                previous_by_fallback.setdefault(key, []).append(item)
             for next_segment in rebuilt_segments:
-                previous = previous_by_identity.get((
-                    next_segment.get("destinationId"),
-                    next_segment.get("dayStart"),
-                    next_segment.get("dayEnd"),
-                ))
+                previous = previous_by_hotel_id.get(str(next_segment.get("hotelSourceFactId") or ""))
+                if previous is None:
+                    matches = previous_by_fallback.get((
+                        next_segment.get("destinationId"),
+                        next_segment.get("dayStart"),
+                        next_segment.get("dayEnd"),
+                    ), [])
+                    previous = matches[0] if len(matches) == 1 else None
                 if previous is not None and "mapSegmentDesc" in previous:
                     next_segment["mapSegmentDesc"] = copy.deepcopy(previous["mapSegmentDesc"])
             continue
+        if path == "stays.hotels.*.editorialIntroduction":
+            previous_hotels = ((current.get("stays") or {}).get("hotels") or [])
+            rebuilt_hotels = ((rebuilt.get("stays") or {}).get("hotels") or [])
+            previous_by_id = {
+                str(hotel.get("sourceFactId") or hotel.get("id")): hotel
+                for hotel in previous_hotels
+                if hotel.get("sourceFactId") or hotel.get("id")
+            }
+            for next_hotel in rebuilt_hotels:
+                previous = previous_by_id.get(str(next_hotel.get("sourceFactId") or next_hotel.get("id") or ""))
+                if previous is None:
+                    continue
+                same_hotel = (
+                    previous.get("name") == next_hotel.get("name")
+                    and previous.get("city") == next_hotel.get("city")
+                    and previous.get("destinationRef") == next_hotel.get("destinationRef")
+                )
+                if same_hotel and "editorialIntroduction" in previous:
+                    next_hotel["editorialIntroduction"] = copy.deepcopy(previous["editorialIntroduction"])
+            continue
         if path in {"itinerary.days.*.title", "itinerary.days.*.description", "itinerary.days.*.activities"}:
-            # Itinerary content is keyed by day number, so a route change does
-            # not accidentally attach an old narrative to a new day position.
             current_days = ((current.get("itinerary") or {}).get("days") or [])
             rebuilt_days = ((rebuilt.get("itinerary") or {}).get("days") or [])
+            current_by_id = {
+                str(day.get("sourceFactId")): day
+                for day in current_days
+                if day.get("sourceFactId")
+            }
             for next_day in rebuilt_days:
-                previous = next((item for item in current_days if item.get("dayNumber") == next_day.get("dayNumber")), None)
+                previous = current_by_id.get(str(next_day.get("sourceFactId") or ""))
                 if previous is None:
+                    continue
+                if any(previous.get(key) != next_day.get(key) for key in ("segmentCity", "overnight")):
                     continue
                 for key in ("title", "description", "activities", "labelHighlights", "labelNotes"):
                     if key in previous:
@@ -7495,7 +7528,8 @@ def _pdf_layout_preflight(document: dict[str, Any]) -> list[str]:
         if not isinstance(hotel, dict):
             errors.append(f"/stays/hotels/{index}")
             continue
-        copy_length = sum(len(str(hotel.get(key) or "")) for key in ("name", "city", "hotelDate", "tel", "roomType", "intro"))
+        copy_length = sum(len(str(hotel.get(key) or "")) for key in ("name", "city", "hotelDate", "tel", "roomType"))
+        copy_length += len(str(hotel.get("editorialIntroduction") or hotel.get("introduction") or ""))
         if copy_length > ceilings.get("hotel_total_copy", 2100):
             errors.append(f"/stays/hotels/{index}")
 

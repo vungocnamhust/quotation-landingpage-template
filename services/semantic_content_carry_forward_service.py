@@ -10,6 +10,7 @@ class SemanticContentCarryForwardService:
 
     _DAY_CONTENT_KEYS = ("title", "description", "activities", "labelHighlights", "labelNotes")
     _SEMANTIC_KEYS = ("destinationRef", "segmentCity", "overnight")
+    _HOTEL_SEMANTIC_KEYS = ("name", "city", "destinationRef")
 
     @classmethod
     def carry_forward(cls, predecessor: dict[str, Any], successor: dict[str, Any]) -> dict[str, Any]:
@@ -24,6 +25,21 @@ class SemanticContentCarryForwardService:
                 continue
             for key in cls._DAY_CONTENT_KEYS:
                 day[key] = copy.deepcopy(previous_day.get(key, day.get(key)))
+
+        previous_hotels = ((predecessor.get("stays") or {}).get("hotels") or [])
+        next_hotels = ((result.get("stays") or {}).get("hotels") or [])
+        previous_hotels_by_id = {
+            str(hotel.get("sourceFactId") or hotel.get("id")): hotel
+            for hotel in previous_hotels
+            if hotel.get("sourceFactId") or hotel.get("id")
+        }
+        for hotel in next_hotels:
+            previous_hotel = previous_hotels_by_id.get(str(hotel.get("sourceFactId") or hotel.get("id") or ""))
+            if previous_hotel is None or any(previous_hotel.get(key) != hotel.get(key) for key in cls._HOTEL_SEMANTIC_KEYS):
+                continue
+            hotel["editorialIntroduction"] = copy.deepcopy(
+                previous_hotel.get("editorialIntroduction", hotel.get("editorialIntroduction", ""))
+            )
 
         cls._carry_safe_media_overrides(predecessor, result)
         return result

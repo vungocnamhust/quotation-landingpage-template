@@ -7,7 +7,7 @@ from pydantic import ValidationError
 
 from quote_document import CreateQuoteHotelFact, CreateQuoteRequestV1, QuoteDocumentV1, validate_quote_content_block
 from services.content_draft_service import ContentDraftService
-from services.content_registry import content_registry_payload, scope_spec
+from services.content_registry import content_registry_payload, project_candidate_from_document, scope_spec
 from services.skeleton_builder import SkeletonBuilder
 from scripts.migrate_v2_rich_content import migrate
 
@@ -136,12 +136,62 @@ def test_hero_meta_and_route_stop_descriptions_have_content_controls_and_preserv
     assert [item["displayName"] for item in result["route"]["staySegments"]] == [item["displayName"] for item in original_segments]
 
 
+def test_manual_hotel_and_pricing_candidates_round_trip_through_validation_and_apply() -> None:
+    facts = _facts()
+    facts.service_facts.hotels = [
+        CreateQuoteHotelFact(id="hotel_fact_1", destination="Hanoi", name="Hotel One", intro="Factual hotel description."),
+    ]
+    document = SkeletonBuilder().build(
+        quotation_id="quo_content_round_trip",
+        payload=facts,
+        resolved_facts={"duration": {"label": "2 days / 1 night"}, "routeLabel": "Hanoi – Ninh Binh", "travelDateLabel": "01–02 Oct 2026"},
+        template="quote-generator",
+    )
+    hotel_candidate = ContentDraftService.validate_candidate(
+        "hotel_plan",
+        {"hotels": [{"sourceFactId": "hotel_fact_1", "editorialIntroduction": "A quieter, editorial hotel introduction."}]},
+    )
+    pricing_candidate = ContentDraftService.validate_candidate(
+        "pricing",
+        {"pricing": {"kicker": "Private investment", "title": "Your journey", "description": "Tailored for your party."}},
+    )
+    applied = ContentDraftService.apply_candidate(document, "hotel_plan", hotel_candidate)
+    applied = ContentDraftService.apply_candidate(applied, "pricing", pricing_candidate)
+    assert applied["stays"]["hotels"][0]["editorialIntroduction"] == "A quieter, editorial hotel introduction."
+    assert applied["pricing"] == {**document["pricing"], **pricing_candidate["pricing"]}
+    assert project_candidate_from_document(applied, "hotel_plan") == hotel_candidate
+    assert project_candidate_from_document(applied, "pricing") == pricing_candidate
+    QuoteDocumentV1.model_validate(applied)
+
+
+def test_hotel_candidate_rejects_unknown_or_duplicate_source_fact_ids() -> None:
+    with pytest.raises(ValueError, match="duplicate"):
+        ContentDraftService.validate_candidate(
+            "hotel_plan",
+            {"hotels": [{"sourceFactId": "hotel_1", "editorialIntroduction": ""}, {"sourceFactId": "hotel_1", "editorialIntroduction": ""}]},
+        )
+    document = _document()
+    with pytest.raises(ValueError, match="no longer exists"):
+        ContentDraftService.apply_candidate(
+            document,
+            "hotel_plan",
+            {"hotels": [{"sourceFactId": "missing", "editorialIntroduction": "No target."}]},
+        )
+
+
+def test_pricing_candidate_requires_its_complete_canonical_shape() -> None:
+    with pytest.raises(ValueError, match="description"):
+        ContentDraftService.validate_candidate(
+            "pricing",
+            {"pricing": {"kicker": "Private investment", "title": "Your journey"}},
+        )
+
+
 @pytest.mark.parametrize(
     ("scope", "required_fact"),
     (
         ("hotel_plan", "service_facts.hotels"),
         ("pricing", "pricing_facts.options"),
-        ("inclusions_exclusions", "service_facts.inclusions"),
     ),
 )
 def test_manual_editorial_sections_keep_authoritative_fact_handoffs(scope: str, required_fact: str):
@@ -150,6 +200,13 @@ def test_manual_editorial_sections_keep_authoritative_fact_handoffs(scope: str, 
     assert spec.generation is False
     assert spec.automation_policy == "manual"
     assert required_fact in spec.required_facts
+
+
+def test_inclusions_exclusions_is_fact_derived_and_has_no_content_candidate() -> None:
+    spec = scope_spec("inclusions_exclusions")
+    assert spec.owner == "fact-derived"
+    assert spec.generation is False
+    assert "service_facts.inclusions" in spec.required_facts
 
 
 @pytest.mark.parametrize(("scope", "required_fact"), (("designer", "designer_facts"), ("booking_terms", "booking_facts")))
@@ -199,3 +256,48 @@ def test_preserve_content_owned_values_keeps_itinerary_day_content():
     assert rebuilt["itinerary"]["days"][0]["activities"] == ["Airport pickup", "Old Quarter tour"]
     assert rebuilt["itinerary"]["days"][0]["labelHighlights"] == "Key Highlights"
     assert rebuilt["itinerary"]["days"][0]["labelNotes"] == "Day Notes"
+
+
+def test_preserve_content_owned_values_matches_hotels_and_days_by_stable_identity() -> None:
+    from main import _preserve_content_owned_values
+
+    current = _document()
+    current["stays"]["hotels"] = [
+        {"sourceFactId": "hotel_hanoi", "name": "Hotel Hanoi", "city": "Hanoi", "editorialIntroduction": "Hanoi editorial."},
+        {"sourceFactId": "hotel_ninh_binh", "name": "Hotel Ninh Binh", "city": "Ninh Binh", "editorialIntroduction": "Ninh Binh editorial."},
+    ]
+    current["itinerary"]["days"][0].update({"sourceFactId": "day_hanoi", "title": "Hanoi editorial"})
+    current["itinerary"]["days"][1].update({"sourceFactId": "day_ninh_binh", "title": "Ninh Binh editorial"})
+
+    rebuilt = _document()
+    rebuilt["stays"]["hotels"] = [
+        {"sourceFactId": "hotel_ninh_binh", "name": "Hotel Ninh Binh", "city": "Ninh Binh", "editorialIntroduction": ""},
+        {"sourceFactId": "hotel_hanoi", "name": "Hotel Hanoi", "city": "Hanoi", "editorialIntroduction": ""},
+    ]
+    rebuilt["itinerary"]["days"] = [
+        {**copy.deepcopy(current["itinerary"]["days"][1]), "title": ""},
+        {**copy.deepcopy(current["itinerary"]["days"][0]), "title": ""},
+    ]
+
+    _preserve_content_owned_values(current, rebuilt)
+
+    assert [hotel["editorialIntroduction"] for hotel in rebuilt["stays"]["hotels"]] == ["Ninh Binh editorial.", "Hanoi editorial."]
+    assert [day["title"] for day in rebuilt["itinerary"]["days"]] == ["Ninh Binh editorial", "Hanoi editorial"]
+
+
+def test_successor_carry_forward_preserves_hotel_editorial_only_for_same_identity() -> None:
+    from services.semantic_content_carry_forward_service import SemanticContentCarryForwardService
+
+    predecessor = {"stays": {"hotels": [{
+        "sourceFactId": "hotel_1", "name": "Hotel One", "city": "Hanoi", "destinationRef": {"id": "hanoi"},
+        "editorialIntroduction": "A considered stay.",
+    }]}}
+    successor = {"stays": {"hotels": [{
+        "sourceFactId": "hotel_1", "name": "Hotel One", "city": "Hanoi", "destinationRef": {"id": "hanoi"},
+        "editorialIntroduction": "",
+    }]}}
+    assert SemanticContentCarryForwardService.carry_forward(predecessor, successor)["stays"]["hotels"][0]["editorialIntroduction"] == "A considered stay."
+
+    replaced = copy.deepcopy(successor)
+    replaced["stays"]["hotels"][0]["city"] = "Sapa"
+    assert SemanticContentCarryForwardService.carry_forward(predecessor, replaced)["stays"]["hotels"][0]["editorialIntroduction"] == ""

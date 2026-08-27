@@ -100,7 +100,9 @@ export function useContentStudioState({
   const editor = scope
     ? resources.documentData?.contentRegistry?.[scope]
     : undefined;
-  const factOwned = editor?.owner === 'fact';
+  // `fact-derived` sections are deterministic projections of Facts as well.
+  // They must not expose a Content Studio save/apply path.
+  const factOwned = Boolean(editor && editor.owner !== 'content');
 
   const persistedDraft = useMemo(
     () =>

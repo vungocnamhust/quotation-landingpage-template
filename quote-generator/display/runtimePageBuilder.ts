@@ -173,6 +173,7 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
   const serviceFacts = record(document.serviceFacts);
   const narrative = record(document.narrative);
   const route = record(document.route);
+  const canonicalRouteSegments = recordList(route.staySegments);
   const itinerary = record(document.itinerary);
   const stays = record(document.stays);
   const pricing = record(document.pricing);
@@ -351,6 +352,11 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
   const routeSegments: RouteSegmentViewModel[] = destinationOrder.map((key, index) => {
     const info = destinationMap.get(key)!;
     const base = `/route/destinations/${index}`;
+    const canonicalIndex = canonicalRouteSegments.findIndex(
+      (segment) => Number(segment.dayStart) === info.dayStart && Number(segment.dayEnd) === info.dayEnd
+    );
+    const canonicalSegment = canonicalIndex >= 0 ? canonicalRouteSegments[canonicalIndex] : undefined;
+    const canonicalDescription = canonicalSegment ? stringValue(canonicalSegment.mapSegmentDesc) : '';
     const hasRange = info.dayEnd > info.dayStart;
     const badgeLabel = hasRange ? `${info.dayStart}-${info.dayEnd}` : `${info.dayStart}`;
     const dayLabel = hasRange
@@ -360,7 +366,9 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
     return {
       sequence: String(index + 1).padStart(2, '0'),
       title: derivedCopy(info.name, `${base}/displayName`),
-      description: contentCopy(info.desc || '', `${base}/mapSegmentDesc`, ''),
+      description: canonicalDescription
+        ? contentCopy(canonicalDescription, `/route/staySegments/${canonicalIndex}/mapSegmentDesc`, '')
+        : derivedCopy(info.desc || '', `${base}/mapSegmentDesc`),
       sidebarLabel: derivedCopy(dayLabel, `${base}/daysLabel`),
       duration: derivedCopy(
         `${info.dayNumbers.length} ${info.dayNumbers.length === 1 ? 'Day' : 'Days'}`,
@@ -431,12 +439,12 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
     };
   });
   const rawHotelsList =
-    recordList(service_facts.hotels).length > 0
+    recordList(stays.hotels).length > 0
+      ? recordList(stays.hotels)
+      : recordList(service_facts.hotels).length > 0
       ? recordList(service_facts.hotels)
       : recordList(serviceFacts.hotels).length > 0
       ? recordList(serviceFacts.hotels)
-      : recordList(stays.hotels).length > 0
-      ? recordList(stays.hotels)
       : recordList(document.hotels).length > 0
       ? recordList(document.hotels)
       : Array.isArray(document.stays)
@@ -447,7 +455,8 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
     const base = `/stays/hotels/${index}`;
     const city = stringValue(hotel.city) || stringValue(hotel.display_city) || stringValue(hotel.destination) || stringValue(hotel.location);
     const name = stringValue(hotel.name) || stringValue(hotel.accommodation_name) || stringValue(hotel.hotelName);
-    const intro = stringValue(hotel.introduction) || stringValue(hotel.intro) || stringValue(hotel.description) || stringValue(hotel.summary);
+    const editorialIntroduction = stringValue(hotel.editorialIntroduction);
+    const factualIntroduction = stringValue(hotel.introduction) || stringValue(hotel.intro) || stringValue(hotel.description) || stringValue(hotel.summary);
     const phone = stringValue(hotel.tel) || stringValue(hotel.phone) || stringValue(hotel.telephone);
     const roomType = stringValue(hotel.roomType) || stringValue(hotel.room_type);
 
@@ -475,7 +484,9 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
     return {
       city: editable(city, `${base}/city`, 'fact'),
       name: editable(name, `${base}/name`, 'fact'),
-      intro: factCopy(intro, `${base}/introduction`),
+      intro: editorialIntroduction
+        ? contentCopy(editorialIntroduction, `${base}/editorialIntroduction`, '')
+        : factCopy(factualIntroduction, `${base}/introduction`),
       dateRanges: [editable(datesText, `${base}/hotelDate`, 'fact')].filter((item) => item.value),
       telephone: editable(phone, `${base}/tel`, 'fact'),
       telephonePrefix: designCopy(overrides, 'hotels.telephonePrefix', labels.hotelTelephonePrefix),
@@ -529,9 +540,13 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
       letter: {
         chapterKicker: designCopy(overrides, 'letter.kicker', labels.journeyOverviewKicker),
         title: contentCopy(stringValue(narrative.journeyOverviewTitle), '/narrative/journeyOverviewTitle', labels.journeyOverviewTitle),
-        highlight: editable(customerParty || stringValue(narrative.letterHighlight), '/customer/partyLabel', 'fact'),
+        highlight: stringValue(narrative.letterHighlight)
+          ? contentCopy(stringValue(narrative.letterHighlight), '/narrative/letterHighlight', '')
+          : factCopy(customerParty, '/customer/partyLabel'),
         decorAsset: assetUrl(assets.letterDecor) || assetUrl(record(mediaOverrides['assets.letterDecor'])) || '/assets/brands/indochine_icon/ruong_bac_thang.svg',
-        greeting: editable(customerGreeting || stringValue(narrative.letterGreeting), '/customer/greetingName', 'fact'),
+        greeting: stringValue(narrative.letterGreeting)
+          ? contentCopy(stringValue(narrative.letterGreeting), '/narrative/letterGreeting', '')
+          : factCopy(customerGreeting, '/customer/greetingName'),
         intro: contentCopy(stringValue(narrative.letterIntro), '/narrative/letterIntro', ''),
         body: [stringValue(narrative.letterBody2)].filter(Boolean).map((item) => contentCopy(item, '/narrative/letterBody2', '')),
         outro: contentCopy(stringValue(narrative.letterOutro), '/narrative/letterOutro', ''),
@@ -596,9 +611,9 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
       },
       journeyTogetherDivider: { image: assetUrl(record(mediaOverrides['assets.hotelDivider'])) || assetUrl(assets.hotelDivider) || assetUrl(assets.hero), imageAlt: assetAlt(assets.hotelDivider, '/assets/hotelDivider/altText', labels.journeyTogetherTitle), kicker: designCopy(overrides, 'journeyTogether.kicker', stringValue(overrides['stays.kicker']).trim() || labels.journeyTogetherKicker), title: designCopy(overrides, 'journeyTogether.title', stringValue(overrides['stays.pdfTitle']).trim() || labels.journeyTogetherTitle), tagline: designCopy(overrides, 'journeyTogether.tagline', stringValue(overrides['stays.tagline']).trim() || labels.journeyTogetherTagline), closing: designCopy(overrides, 'journeyTogether.closing', stringValue(overrides['stays.closing']).trim() || labels.journeyTogetherClosing) },
       pricing: {
-        kicker: designCopy(overrides, 'pricing.kicker', labels.quotationNav || 'INVESTMENT SUMMARY'),
-        title: designCopy(overrides, 'pricing.title', labels.pricingTitle),
-        description: designCopy(overrides, 'pricing.description', labels.pricingDescription),
+        kicker: contentCopy(stringValue(pricing.kicker), '/pricing/kicker', labels.quotationNav || 'INVESTMENT SUMMARY'),
+        title: contentCopy(stringValue(pricing.title), '/pricing/title', labels.pricingTitle),
+        description: contentCopy(stringValue(pricing.description), '/pricing/description', labels.pricingDescription),
         importantNote: editable(
           (listText(pricing.conditions).length > 0 ? listText(pricing.conditions) : listText(pricing_facts.conditions).length > 0 ? listText(pricing_facts.conditions) : listText(pricingFacts.conditions)).join(' · '),
           '/pricing/conditions',

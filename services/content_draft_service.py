@@ -6,6 +6,8 @@ import uuid
 from hashlib import sha256
 from typing import Any
 
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
 from quote_document import BrandProfile, CreateQuoteRequestV1, QuoteDocumentV1
 from repositories.quotation_repository import ContentDraftRepository
 from services.content_registry import CONTENT_SECTION_REGISTRY, build_prompt_context, scope_spec
@@ -13,6 +15,57 @@ from services.section_content_generator import BRAND_POLICY_VERSION, ContentGene
 
 
 PROMPT_VERSION = "content-studio-v3"
+
+
+class _HotelEditorialItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    sourceFactId: str = Field(min_length=1, max_length=200)
+    editorialIntroduction: str = Field(min_length=0, max_length=300)
+
+    @field_validator("sourceFactId", "editorialIntroduction")
+    @classmethod
+    def _normalize_plain_text(cls, value: str) -> str:
+        normalized = " ".join(value.split())
+        if "<" in normalized or ">" in normalized:
+            raise ValueError("Editorial copy must be plain text.")
+        return normalized
+
+
+class _HotelEditorialCandidate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    hotels: list[_HotelEditorialItem] = Field(default_factory=list)
+
+    @field_validator("hotels")
+    @classmethod
+    def _unique_ids(cls, value: list[_HotelEditorialItem]) -> list[_HotelEditorialItem]:
+        ids = [item.sourceFactId for item in value]
+        if len(ids) != len(set(ids)):
+            raise ValueError("Hotel editorial candidate contains duplicate sourceFactId values.")
+        return value
+
+
+class _PricingFraming(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    kicker: str = Field(min_length=0, max_length=160)
+    title: str = Field(min_length=0, max_length=160)
+    description: str = Field(min_length=0, max_length=1600)
+
+    @field_validator("kicker", "title", "description")
+    @classmethod
+    def _normalize_copy(cls, value: str) -> str:
+        normalized = " ".join(value.split())
+        if "<" in normalized or ">" in normalized:
+            raise ValueError("Pricing copy must be plain text.")
+        return normalized
+
+
+class _PricingCandidate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    pricing: _PricingFraming
 
 
 def _fact_value(payload: CreateQuoteRequestV1, path: str) -> Any:
@@ -150,6 +203,12 @@ class ContentDraftService:
         spec = scope_spec(scope)
         if spec.owner != "content":
             raise ValueError(f"{scope} is Fact-owned and has no editable Content candidate.")
+        if not isinstance(candidate, dict):
+            raise ValueError(f"{scope} candidate must be an object.")
+        if spec.candidate_contract == "hotel-editorial":
+            return _HotelEditorialCandidate.model_validate(candidate).model_dump(mode="json")
+        if spec.candidate_contract == "pricing-framing":
+            return _PricingCandidate.model_validate(candidate).model_dump(mode="json")
         allowed = {
             "hero": {"trip", "narrative"}, "overview_letter": {"narrative"}, "route": {"route"},
             "itinerary": {"itinerary"},
@@ -178,7 +237,14 @@ class ContentDraftService:
                 raise ValueError("Hero candidate must contain plain-text trip and narrative fields.")
             raw = {"title": trip.get("title"), "lede": trip.get("lede"), **narrative}
         else:
-            raw = candidate if scope.startswith("itinerary:day:") else next(iter(candidate.values()))
+            container_key = {
+                "overview_letter": "narrative",
+                "route": "route",
+                "itinerary": "itinerary",
+            }.get(scope)
+            raw = candidate if scope.startswith("itinerary:day:") else candidate.get(container_key or "")
+            if not isinstance(raw, dict):
+                raise ValueError(f"{scope} candidate is missing its canonical content object.")
         model = DayOutput if scope.startswith("itinerary:day:") else {"hero": HeroOutput, "overview_letter": OverviewOutput, "route": RouteOutput, "itinerary": ItineraryOutput}[scope]
         if scope.startswith("itinerary:day:"):
             raw = {key: value for key, value in raw.items() if key not in {"dayNumber", "sourceFactId"}}
@@ -188,8 +254,22 @@ class ContentDraftService:
     @staticmethod
     def apply_candidate(document: dict[str, Any], scope: str, candidate: dict[str, Any]) -> dict[str, Any]:
         ContentDraftService.validate_candidate(scope, candidate)
-        merged = dict(document)
-        if scope.startswith("itinerary:day:"):
+        merged = json.loads(json.dumps(document))
+        if scope == "hotel_plan":
+            hotels = ((merged.get("stays") or {}).get("hotels") or [])
+            hotels_by_id = {
+                str(hotel.get("sourceFactId") or hotel.get("id") or ""): hotel
+                for hotel in hotels
+                if hotel.get("sourceFactId") or hotel.get("id")
+            }
+            for item in candidate["hotels"]:
+                hotel = hotels_by_id.get(item["sourceFactId"])
+                if hotel is None:
+                    raise ValueError(f"hotel_plan candidate references a hotel that no longer exists: {item['sourceFactId']}")
+                hotel["editorialIntroduction"] = item["editorialIntroduction"]
+        elif scope == "pricing":
+            merged.setdefault("pricing", {}).update(candidate["pricing"])
+        elif scope.startswith("itinerary:day:"):
             days = ((merged.get("itinerary") or {}).get("days") or [])
             token = scope.rsplit(":", 1)[-1]
             day = next((item for item in days if str(item.get("sourceFactId") or "") == token), None)

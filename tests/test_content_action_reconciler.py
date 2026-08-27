@@ -92,7 +92,8 @@ def test_commercial_and_legal_fact_changes_create_manual_content_handoffs() -> N
     previous = {"trip_facts": {"itinerary": []}, "customer_facts": {}, "service_facts": {"hotels": [], "inclusions": ["Guide"], "exclusions": ["Flights"]}, "pricing_facts": {"options": [{"id": "one", "label": "Private", "currency": "USD", "per_traveler_amount_minor": 100, "group_total_amount_minor": 200}], "conditions": []}}
     current = {"trip_facts": {"itinerary": []}, "customer_facts": {}, "service_facts": {"hotels": [{"id": "hotel_1", "name": "Hotel", "destination": "Hanoi"}], "inclusions": ["Guide", "Transfers"], "exclusions": ["Flights"]}, "pricing_facts": {"options": [{"id": "one", "label": "Private", "currency": "USD", "per_traveler_amount_minor": 120, "group_total_amount_minor": 240}], "conditions": []}}
     manual_scopes = {action.scope for action in QuotationChangePlanService.build(previous, current) if action.automation_policy == "manual"}
-    assert {"hotel_plan", "pricing", "inclusions_exclusions"} <= manual_scopes
+    assert {"hotel_plan", "pricing"} <= manual_scopes
+    assert "inclusions_exclusions" not in manual_scopes
 
 
 def test_fast_track_narrative_scopes_use_bypass_not_empty_content_exemption() -> None:

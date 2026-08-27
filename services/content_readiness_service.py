@@ -75,7 +75,7 @@ def resolve_content_readiness(document_json: dict[str, Any], fact_missing_inputs
             fact_blockers = list(fact_missing_inputs)
         if fact_blockers:
             missing = [{"path": path, "message": "Required quotation fact is missing.", "owner": "fact"} for path in fact_blockers]
-        elif spec and spec.owner == "fact" and missing:
+        elif spec and spec.owner in {"fact", "fact-derived"} and missing:
             # Structured blocks are a deterministic view of commercial/legal
             # sources. Empty blocks therefore hand off to Facts, not an editor.
             missing = [{**item, "owner": "fact"} for item in missing]
