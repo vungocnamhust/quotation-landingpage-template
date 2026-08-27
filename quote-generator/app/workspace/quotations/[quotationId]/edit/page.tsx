@@ -23,7 +23,7 @@ export default async function WorkspaceQuotationEditPage({
   const requestedLocale = typeof query.lang === "string" ? query.lang : null;
   if (requestedLocale !== workflow.locale) {
     const canonicalQuery = new URLSearchParams({ stage, lang: workflow.locale });
-    for (const key of ["section", "focus", "factsSection", "impactTarget"]) {
+    for (const key of ["section", "focus", "factsSection", "impactTarget", "attachSheet", "attachKey"]) {
       if (typeof query[key] === "string") canonicalQuery.set(key, query[key]);
     }
     redirect(`/workspace/quotations/${encodeURIComponent(quotationId)}/edit?${canonicalQuery}`);

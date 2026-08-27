@@ -54,6 +54,8 @@ import { useContentActionPlan, type ContentAction } from "./useContentActionPlan
 import { useContentActionExecution } from "./useContentActionExecution.ts";
 import { isQuotationStageLoading } from "../../lib/stageLoading.ts";
 import { CostingWorkbench } from "../quotation-costing/CostingWorkbench.tsx";
+import { AttachRecoveryBanner } from "../quotation-costing/AttachRecoveryBanner.tsx";
+import { clearAttachRecovery, readAttachRecovery } from "../../lib/attachRecovery.ts";
 
 const ContentStudioClient = dynamic(
   () => import("../content-studio/ContentStudioClient"),
@@ -114,6 +116,7 @@ export default function QuotationWorkspaceClient({
   const stage: Stage = stages.includes(requestedStage as Stage)
     ? (requestedStage as Stage)
     : "facts";
+  const attachRecovery = readAttachRecovery(new URLSearchParams(search.toString()));
   const [requestedStageIntent, setRequestedStageIntent] = useState<Stage | null>(null);
   const [isStageRoutePending, startStageTransition] = useTransition();
   const [isStageGuarding, setIsStageGuarding] = useState(false);
@@ -124,6 +127,12 @@ export default function QuotationWorkspaceClient({
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     });
   }, [pathname, router, search, startStageTransition]);
+  const handleAttachRecovered = useCallback(() => {
+    const params = clearAttachRecovery(new URLSearchParams(search.toString()));
+    params.set("stage", "costing");
+    params.set("lang", lang);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [lang, pathname, router, search]);
   const { toast, notify, clearScope } = useToast();
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
   const [fallbackUrl, setFallbackUrl] = useState<string | null>(null);
@@ -747,7 +756,16 @@ export default function QuotationWorkspaceClient({
         ) : null}
 
         {stage === "costing" && !isStageLoading ? (
-          <CostingWorkbench anchor={{ quotationId }} />
+          <>
+            {attachRecovery ? (
+              <AttachRecoveryBanner
+                quotationId={quotationId}
+                recovery={attachRecovery}
+                onRecovered={handleAttachRecovered}
+              />
+            ) : null}
+            <CostingWorkbench anchor={{ quotationId }} />
+          </>
         ) : stage === "costing" && !loadError ? (
           <StagePanelSkeleton stage="costing" />
         ) : null}

@@ -6,8 +6,9 @@ import { Plus } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
 import { listProductRates, type RateProfile } from "../../lib/quotationApi.ts";
-import { CATEGORY_OPTIONS, DEFAULT_CHARGE_UNIT_BY_CATEGORY, SUBCATEGORY_BY_CATEGORY, type ProductCategory } from "../product/types.ts";
+import { CATEGORY_OPTIONS, DEFAULT_CHARGE_UNIT_BY_CATEGORY, SUBCATEGORY_BY_CATEGORY, type ProductCategory, type ProductProfile } from "../product/types.ts";
 import { ProductSelect } from "../product/ProductSelect.tsx";
+import { RateEditorDrawer } from "../product/rates/RateEditorDrawer.tsx";
 import { emptyServiceLineDraft, draftToWriteInput, type ServiceLineDraftForm } from "../../lib/rules/costingAdapter.ts";
 import type { ServiceLineWriteInput } from "./types.ts";
 
@@ -36,9 +37,11 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 export function AddServiceLineFlow({ sheetCurrency, disabled, onAdd }: AddServiceLineFlowProps) {
   const [mode, setMode] = useState<Mode>("catalog");
   const [draft, setDraft] = useState<ServiceLineDraftForm>(() => emptyServiceLineDraft({ qtyUnit: 1, qtyTime: 1 }));
+  const [selectedProduct, setSelectedProduct] = useState<ProductProfile | null>(null);
+  const [rateDrawerOpen, setRateDrawerOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data: rateList } = useSWR(
+  const { data: rateList, mutate: mutateRates } = useSWR(
     draft.productId ? ["product-rates", draft.productId, draft.serviceDate] : null,
     ([, productId, onDate]) => listProductRates(productId, { lifecycle: "active", onDate: onDate || undefined }),
     { revalidateOnFocus: false },
@@ -60,7 +63,10 @@ export function AddServiceLineFlow({ sheetCurrency, disabled, onAdd }: AddServic
       : Boolean(draft.category && draft.title && draft.unit && draft.timeBasis && draft.unitCostMinor !== null && draft.costCurrency) &&
         (!needsFx || Boolean(draft.fxRatePpm));
 
-  const resetDraft = () => setDraft(emptyServiceLineDraft({ qtyUnit: 1, qtyTime: 1 }));
+  const resetDraft = () => {
+    setDraft(emptyServiceLineDraft({ qtyUnit: 1, qtyTime: 1 }));
+    setSelectedProduct(null);
+  };
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
@@ -140,27 +146,49 @@ export function AddServiceLineFlow({ sheetCurrency, disabled, onAdd }: AddServic
           <div className="md:col-span-3">
             <ProductSelect
               value={draft.productId}
-              onChange={(productId) => setDraft((d) => ({ ...d, productId, rateId: null, priceLineId: null }))}
+              onChange={(productId, product) => {
+                setSelectedProduct(product ?? null);
+                setDraft((d) => ({ ...d, productId, rateId: null, priceLineId: null }));
+              }}
               size="sm"
               allowManage={false}
               placeholder="Select a product..."
             />
           </div>
           {draft.productId ? (
-            <Field label="Rate">
-              <select
-                value={draft.rateId ?? ""}
-                onChange={(e) => setDraft((d) => ({ ...d, rateId: e.target.value || null, priceLineId: null }))}
-                className={inputClass}
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={() => setRateDrawerOpen(true)}
+                className={cn(
+                  getTypographyClassName("buttonSecondary"),
+                  "flex w-fit items-center gap-1.5 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3 py-2 text-[var(--color-accent)] transition-colors hover:bg-[var(--color-accent-wash)] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer",
+                )}
               >
-                <option value="">Select rate...</option>
-                {(rateList?.items ?? []).map((rate) => (
-                  <option key={rate.id} value={rate.id}>
-                    {rate.season_name || rate.valid_from} — {rate.valid_from}..{rate.valid_to} ({rate.currency})
-                  </option>
-                ))}
-              </select>
-            </Field>
+                <Plus size={14} aria-hidden="true" />
+                <span>Tạo bảng giá mới cho sản phẩm này</span>
+              </button>
+              {rateList?.items.length === 0 ? (
+                <p className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>
+                  No active rate covers this service date.
+                </p>
+              ) : null}
+              <Field label="Rate">
+                <select
+                  value={draft.rateId ?? ""}
+                  onChange={(e) => setDraft((d) => ({ ...d, rateId: e.target.value || null, priceLineId: null }))}
+                  className={inputClass}
+                >
+                  <option value="">Select rate...</option>
+                  {(rateList?.items ?? []).map((rate) => (
+                    <option key={rate.id} value={rate.id}>
+                      {rate.season_name || rate.valid_from} — {rate.valid_from}..{rate.valid_to} ({rate.currency})
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </div>
           ) : null}
           {selectedRate ? (
             <Field label="Price line">
@@ -324,6 +352,35 @@ export function AddServiceLineFlow({ sheetCurrency, disabled, onAdd }: AddServic
         <Plus size={14} aria-hidden="true" />
         <span>Add line</span>
       </button>
+
+      <RateEditorDrawer
+        mode={rateDrawerOpen ? "create" : null}
+        productId={draft.productId ?? ""}
+        productCategory={selectedProduct?.category}
+        defaultCurrency={sheetCurrency}
+        defaultValidityDate={draft.serviceDate}
+        activateOnSave
+        editingRate={null}
+        onClose={() => setRateDrawerOpen(false)}
+        onSaved={(activeRate) => {
+          // The activation response is authoritative. Seed it immediately so a
+          // momentary list revalidation failure cannot strand an active rate in
+          // the drawer or make the service-line draft lose its selection.
+          void mutateRates(
+            (current) => ({
+              items: [activeRate, ...(current?.items ?? []).filter((rate) => rate.id !== activeRate.id)],
+              total: Math.max(current?.total ?? 0, 1),
+            }),
+            { revalidate: false },
+          );
+          setDraft((current) => ({
+            ...current,
+            rateId: activeRate.id,
+            priceLineId: activeRate.lines.length === 1 ? activeRate.lines[0].id ?? null : null,
+          }));
+          void mutateRates();
+        }}
+      />
     </div>
   );
 }

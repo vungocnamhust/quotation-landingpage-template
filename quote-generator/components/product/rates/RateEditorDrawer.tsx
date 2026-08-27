@@ -23,20 +23,30 @@ type Props = {
   productId: string;
   productCategory?: string;
   defaultCurrency?: string | null;
+  /** When supplied by Costing, initialise a one-day rate covering the service date. */
+  defaultValidityDate?: string | null;
+  /** Costing creates a draft and immediately passes it through the existing activation gate. */
+  activateOnSave?: boolean;
   editingRate?: RateProfile | null;
   onClose: () => void;
-  onSaved: () => void;
+  onSaved: (rate: RateProfile) => void | Promise<void>;
 };
 
-function toInput(rate: RateProfile | null | undefined, productId: string, defaultCurrency?: string | null): RateAggregateInput {
+function toInput(
+  rate: RateProfile | null | undefined,
+  productId: string,
+  defaultCurrency?: string | null,
+  defaultValidityDate?: string | null,
+): RateAggregateInput {
   if (!rate) {
+    const validityDate = defaultValidityDate || new Date().toISOString().slice(0, 10);
     return {
       product_id: productId,
       currency: defaultCurrency ?? null,
       rate_basis: "net",
       commission_pct: null,
-      valid_from: new Date().toISOString().slice(0, 10),
-      valid_to: new Date().toISOString().slice(0, 10),
+      valid_from: validityDate,
+      valid_to: validityDate,
       season_name: null,
       blackout_json: [],
       min_pax: null,
@@ -86,16 +96,37 @@ const inputClass = cn(
   "min-h-11 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3 text-[var(--color-on-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus)] disabled:opacity-60"
 );
 
-export function RateEditorDrawer({ mode, productId, productCategory, defaultCurrency, editingRate, onClose, onSaved }: Props) {
-  const { toast } = useToast();
-  const { createDraft, updateDraft, supersede } = useProductRates(productId);
-  const [draft, setDraft] = useState<RateAggregateInput>(
-    toInput(mode === "supersede" || mode === "edit" ? editingRate : null, productId, defaultCurrency)
+export function RateEditorDrawer(props: Props) {
+  if (!props.mode) return null;
+
+  return (
+    <RateEditorDrawerContent
+      key={`${props.mode}:${props.productId}:${props.editingRate?.id ?? "new"}:${props.defaultValidityDate ?? "today"}`}
+      {...props}
+      mode={props.mode}
+    />
   );
+}
+
+function RateEditorDrawerContent({
+  mode,
+  productId,
+  productCategory,
+  defaultCurrency,
+  defaultValidityDate,
+  activateOnSave = false,
+  editingRate,
+  onClose,
+  onSaved,
+}: Omit<Props, "mode"> & { mode: Exclude<RateDrawerMode, null> }) {
+  const { toast } = useToast();
+  const { createDraft, updateDraft, activate, supersede } = useProductRates(productId);
+  const [draft, setDraft] = useState<RateAggregateInput>(
+    toInput(mode === "supersede" || mode === "edit" ? editingRate : null, productId, defaultCurrency, defaultValidityDate)
+  );
+  const [createdDraftId, setCreatedDraftId] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
-
-  if (!mode) return null;
 
   const setField = <K extends keyof RateAggregateInput>(key: K, value: RateAggregateInput[K]) =>
     setDraft((current) => ({ ...current, [key]: value }));
@@ -111,17 +142,28 @@ export function RateEditorDrawer({ mode, productId, productCategory, defaultCurr
     }
     setPending(true);
     try {
+      let savedRate: RateProfile;
       if (mode === "edit" && editingRate) {
-        await updateDraft(editingRate.id, draft);
+        savedRate = await updateDraft(editingRate.id, draft);
         toast("Rate draft saved.", "success");
       } else if (mode === "supersede" && editingRate) {
-        await supersede(editingRate.id, draft);
+        savedRate = await supersede(editingRate.id, draft);
         toast("New rate version is now active — the old one is frozen.", "success");
+      } else if (createdDraftId) {
+        savedRate = await updateDraft(createdDraftId, draft);
       } else {
-        await createDraft(draft);
+        savedRate = await createDraft(draft);
+        setCreatedDraftId(savedRate.id);
+      }
+
+      if (activateOnSave && mode === "create") {
+        savedRate = await activate(savedRate.id);
+        toast("Rate created and activated.", "success");
+      } else if (mode === "create") {
         toast("Rate draft created.", "success");
       }
-      onSaved();
+
+      await onSaved(savedRate);
       onClose();
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : "Rate could not be saved.";

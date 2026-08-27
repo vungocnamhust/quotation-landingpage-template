@@ -230,6 +230,11 @@ class CostingServiceTests(unittest.TestCase):
                 await session.commit()
                 self.assertEqual(first.sheet.costing_revision, second.sheet.costing_revision)
 
+                with self.assertRaises(CostingConflictError):
+                    await service.attach_quotation(
+                        sheet.id, AttachQuotationSchema(quotation_id="qtn_from_req2"), actor=ACTOR, idempotency_key="k2"
+                    )
+
         asyncio.run(scenario())
 
     def test_attach_validates_source_request_id_matches(self):
