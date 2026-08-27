@@ -35,8 +35,11 @@ type Props = {
 const UNIT_OPTIONS = ["room", "person", "vehicle", "group", "ticket", "flight_seat", "visa_case", "set"];
 const TIME_BASIS_OPTIONS = ["night", "day", "trip"];
 
+const ORIGIN_ELIGIBLE_CATEGORIES: ProductCategory[] = ["transportation", "flights"];
+
 const blankDraft = (category: ProductCategory, destinationId: string): ProductInput => ({
   destination_id: destinationId,
+  origin_destination_id: null,
   category,
   title: "",
   supplier_id: null,
@@ -54,6 +57,7 @@ const blankDraft = (category: ProductCategory, destinationId: string): ProductIn
 function toDraft(product: ProductProfile): ProductInput {
   return {
     destination_id: product.destination_id,
+    origin_destination_id: product.origin_destination_id ?? null,
     category: product.category,
     title: product.title,
     supplier_id: product.supplier_id ?? null,
@@ -155,6 +159,7 @@ export function ProductManageDrawer({
     editingProduct ? toDraft(editingProduct) : blankDraft(presetCategory, presetDestinationId)
   );
   const [destinationRef, setDestinationRef] = useState<DestinationRef | null>(null);
+  const [originDestinationRef, setOriginDestinationRef] = useState<DestinationRef | null>(null);
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
   const [newAttributeKey, setNewAttributeKey] = useState("");
@@ -183,6 +188,21 @@ export function ProductManageDrawer({
     };
   }, [editingProduct?.destination_id]);
 
+  useEffect(() => {
+    if (!editingProduct?.origin_destination_id) return;
+    let cancelled = false;
+    getDestination(editingProduct.origin_destination_id)
+      .then((destination) => {
+        if (!cancelled) setOriginDestinationRef({ id: destination.id, name: destination.name, slug: destination.slug });
+      })
+      .catch(() => {
+        // Destination lookup is a display convenience only; draft.origin_destination_id already holds the id.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [editingProduct?.origin_destination_id]);
+
   if (!mode) return null;
 
   const setDraftField = <K extends keyof ProductInput>(key: K, next: ProductInput[K]) =>
@@ -190,6 +210,8 @@ export function ProductManageDrawer({
 
   const handleCategoryChange = (nextCategory: ProductCategory) => {
     const [defaultUnit, defaultTimeBasis] = DEFAULT_CHARGE_UNIT_BY_CATEGORY[nextCategory];
+    const originEligible = ORIGIN_ELIGIBLE_CATEGORIES.includes(nextCategory);
+    if (!originEligible) setOriginDestinationRef(null);
     setDraft((current) => ({
       ...current,
       category: nextCategory,
@@ -198,6 +220,7 @@ export function ProductManageDrawer({
       unit: defaultUnit,
       time_basis: defaultTimeBasis,
       property_id: nextCategory === "accommodation" ? current.property_id : null,
+      origin_destination_id: originEligible ? current.origin_destination_id : null,
     }));
   };
 
@@ -277,19 +300,48 @@ export function ProductManageDrawer({
 
           <FormField label="Title" value={draft.title} onChange={(v) => setDraftField("title", v)} disabled={pending} required />
 
-          <label className="flex flex-col gap-2">
-            <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>
-              Destination<span className="text-[var(--color-accent)] ml-0.5">*</span>
-            </span>
-            <DestinationSelect
-              value={destinationRef?.name ?? null}
-              onChange={(_name, ref) => {
-                setDestinationRef(ref ?? null);
-                setDraftField("destination_id", ref?.id ?? "");
-              }}
-              disabled={pending}
-            />
-          </label>
+          {ORIGIN_ELIGIBLE_CATEGORIES.includes(draft.category) ? (
+            <div className="grid grid-cols-2 gap-3">
+              <label className="flex flex-col gap-2">
+                <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>Origin (optional)</span>
+                <DestinationSelect
+                  value={originDestinationRef?.name ?? null}
+                  onChange={(_name, ref) => {
+                    setOriginDestinationRef(ref ?? null);
+                    setDraftField("origin_destination_id", ref?.id ?? null);
+                  }}
+                  disabled={pending}
+                />
+              </label>
+              <label className="flex flex-col gap-2">
+                <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>
+                  Destination<span className="text-[var(--color-accent)] ml-0.5">*</span>
+                </span>
+                <DestinationSelect
+                  value={destinationRef?.name ?? null}
+                  onChange={(_name, ref) => {
+                    setDestinationRef(ref ?? null);
+                    setDraftField("destination_id", ref?.id ?? "");
+                  }}
+                  disabled={pending}
+                />
+              </label>
+            </div>
+          ) : (
+            <label className="flex flex-col gap-2">
+              <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>
+                Destination<span className="text-[var(--color-accent)] ml-0.5">*</span>
+              </span>
+              <DestinationSelect
+                value={destinationRef?.name ?? null}
+                onChange={(_name, ref) => {
+                  setDestinationRef(ref ?? null);
+                  setDraftField("destination_id", ref?.id ?? "");
+                }}
+                disabled={pending}
+              />
+            </label>
+          )}
 
           <div className="grid grid-cols-2 gap-3">
             <SelectField

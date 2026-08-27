@@ -44,6 +44,7 @@ class ProductBaseSchema(BaseModel):
     supplier_id: str | None = Field(default=None, max_length=64)
     property_id: str | None = Field(default=None, max_length=64)
     destination_id: str = Field(min_length=1, max_length=64)
+    origin_destination_id: str | None = Field(default=None, max_length=64)
     category: Category
     subcategory: str | None = Field(default=None, max_length=48)
     subcategory_note: str | None = Field(default=None, max_length=120)
@@ -62,6 +63,8 @@ class ProductBaseSchema(BaseModel):
                 raise ValueError("default_min_pax must be <= default_max_pax")
         if self.property_id is not None and self.category != "accommodation":
             raise ValueError("property_id may only be set when category == 'accommodation'")
+        if self.origin_destination_id is not None and self.category not in ("transportation", "flights"):
+            raise ValueError("origin_destination_id may only be set when category is 'transportation' or 'flights'")
         if self.subcategory_note is not None and not (self.subcategory or "").startswith("other_"):
             raise ValueError("subcategory_note is only meaningful when subcategory is an other_* value")
         _validate_category_attributes(self.category_attributes)
@@ -78,6 +81,7 @@ class ProductUpdateSchema(BaseModel):
     supplier_id: str | None = Field(default=None, max_length=64)
     property_id: str | None = Field(default=None, max_length=64)
     destination_id: str | None = Field(default=None, min_length=1, max_length=64)
+    origin_destination_id: str | None = Field(default=None, max_length=64)
     category: Category | None = None
     subcategory: str | None = Field(default=None, max_length=48)
     subcategory_note: str | None = Field(default=None, max_length=120)
@@ -109,6 +113,7 @@ class ProductResponseSchema(BaseModel):
     supplier_id: str | None
     property_id: str | None
     destination_id: str
+    origin_destination_id: str | None
     category: str
     subcategory: str | None
     subcategory_note: str | None

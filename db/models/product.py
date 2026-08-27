@@ -27,11 +27,13 @@ class Product(Base):
             "category",
             "title_normalized",
             text("coalesce(supplier_id, '')"),
+            text("coalesce(origin_destination_id, '')"),
             unique=True,
         ),
         Index("ix_products_tenant_destination_category_active", "tenant_id", "destination_id", "category", "is_active"),
         Index("ix_products_supplier_id", "supplier_id"),
         Index("ix_products_property_id", "property_id"),
+        Index("ix_products_origin_destination_id", "origin_destination_id"),
     )
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
@@ -39,7 +41,10 @@ class Product(Base):
 
     supplier_id: Mapped[str | None] = mapped_column(ForeignKey("suppliers.id", ondelete="RESTRICT"), nullable=True)
     property_id: Mapped[str | None] = mapped_column(ForeignKey("accommodation_profiles.id", ondelete="RESTRICT"), nullable=True)
+    # destination_id is the arrival/service point (unchanged meaning); origin_destination_id
+    # is the departure point, only set for category in {transportation, flights} (15.2b §3.4).
     destination_id: Mapped[str] = mapped_column(ForeignKey("destination_catalog.id", ondelete="RESTRICT"), nullable=False)
+    origin_destination_id: Mapped[str | None] = mapped_column(ForeignKey("destination_catalog.id", ondelete="RESTRICT"), nullable=True)
 
     category: Mapped[str] = mapped_column(String(24), nullable=False)
     subcategory: Mapped[str | None] = mapped_column(String(48), nullable=True)

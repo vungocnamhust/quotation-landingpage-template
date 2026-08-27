@@ -2,6 +2,10 @@ import type { DestinationRef } from "../quotation-workspace/factsTypes.ts";
 
 export type { DestinationRef };
 
+// destination_type vocab mirrors core/rules/catalog_vocab.py DESTINATION_TYPE (15.2b) — keep
+// both files' comments pointing at each other when either changes.
+export type DestinationType = "country" | "region" | "province" | "city" | "sub_zone";
+
 export interface DestinationCatalogItem {
   id: string;
   name: string;
@@ -16,6 +20,19 @@ export interface DestinationCatalogItem {
   mediaPrefix?: string | null;
   defaultMediaPrefix?: string;
   matchedFrom?: string;
+  parentId?: string | null;
+  destinationType?: DestinationType;
+  countryCode?: string | null;
+  iataCode?: string | null;
+  timezone?: string;
+  mergedIntoId?: string | null;
+}
+
+/** DestinationRef plus display-only badge fields (15.2b §5.2) — never written into facts. */
+export interface DestinationSearchResult extends DestinationRef {
+  destinationType?: DestinationType;
+  iataCode?: string | null;
+  mergedIntoId?: string | null;
 }
 
 export type DestinationSelectMode = "single" | "multiple";

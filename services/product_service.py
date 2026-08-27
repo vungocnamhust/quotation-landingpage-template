@@ -72,6 +72,7 @@ class ProductService:
     async def create_product(self, payload: ProductCreateSchema, *, actor: ActorRef) -> ProductResponseSchema:
         await self._validate_subcategory(payload.category, payload.subcategory)
         await self._validate_property(payload.category, payload.property_id, payload.destination_id)
+        await self._validate_origin(payload.category, payload.origin_destination_id)
 
         title_normalized = normalize_product_title(payload.title)
         conflict = await self.repository.find_dedupe_conflict(
@@ -79,6 +80,7 @@ class ProductService:
             category=payload.category,
             title_normalized=title_normalized,
             supplier_id=payload.supplier_id,
+            origin_destination_id=payload.origin_destination_id,
         )
         if conflict:
             raise ProductConflictError(
@@ -121,11 +123,18 @@ class ProductService:
         if "property_id" in updates or "category" in updates or "destination_id" in updates:
             await self._validate_property(category, property_id, destination_id)
 
+        origin_destination_id = updates.get("origin_destination_id", product.origin_destination_id)
+        if "origin_destination_id" in updates or "category" in updates:
+            await self._validate_origin(category, origin_destination_id)
+
         if "title" in updates and updates["title"] is not None:
             updates["title"] = updates["title"].strip()
             updates["title_normalized"] = normalize_product_title(updates["title"])
 
-        needs_dedupe_check = any(field in updates for field in ("title", "category", "destination_id", "supplier_id"))
+        needs_dedupe_check = any(
+            field in updates
+            for field in ("title", "category", "destination_id", "supplier_id", "origin_destination_id")
+        )
         if needs_dedupe_check:
             title_normalized = updates.get("title_normalized", product.title_normalized)
             supplier_id = updates.get("supplier_id", product.supplier_id)
@@ -134,6 +143,7 @@ class ProductService:
                 category=category,
                 title_normalized=title_normalized,
                 supplier_id=supplier_id,
+                origin_destination_id=origin_destination_id,
                 exclude_id=product_id,
             )
             if conflict:
@@ -164,6 +174,13 @@ class ProductService:
             raise ProductValidationError(
                 f"'{subcategory}' is not a valid subcategory for category '{category}'. "
                 f"Valid options: {sorted(allowed)}"
+            )
+
+    @staticmethod
+    async def _validate_origin(category: str, origin_destination_id: str | None) -> None:
+        if origin_destination_id is not None and category not in ("transportation", "flights"):
+            raise ProductValidationError(
+                "origin_destination_id may only be set when category is 'transportation' or 'flights'."
             )
 
     async def _validate_property(self, category: str, property_id: str | None, destination_id: str) -> None:

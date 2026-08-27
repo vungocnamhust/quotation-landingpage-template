@@ -62,6 +62,7 @@ class ProductRepository:
         category: str,
         title_normalized: str,
         supplier_id: str | None,
+        origin_destination_id: str | None = None,
         exclude_id: str | None = None,
     ) -> Product | None:
         stmt = select(Product).where(
@@ -70,6 +71,9 @@ class ProductRepository:
             Product.category == category,
             Product.title_normalized == title_normalized,
             Product.supplier_id.is_(None) if supplier_id is None else Product.supplier_id == supplier_id,
+            Product.origin_destination_id.is_(None)
+            if origin_destination_id is None
+            else Product.origin_destination_id == origin_destination_id,
         )
         if exclude_id:
             stmt = stmt.where(Product.id != exclude_id)

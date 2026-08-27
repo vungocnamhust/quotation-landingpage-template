@@ -24,6 +24,7 @@ EXPECTED_V2_OPERATIONS = {
     ("/api/v2/destinations", "GET"), ("/api/v2/destinations", "POST"),
     ("/api/v2/destinations/{destination_id}", "GET"), ("/api/v2/destinations/{destination_id}", "PUT"),
     ("/api/v2/destinations/{destination_id}/status", "PATCH"),
+    ("/api/v2/destinations/{destination_id}/merge", "POST"),
     ("/api/v2/events", "POST"),
     ("/api/v2/legacy-create-quotations", "POST"),
     ("/api/v2/legacy-quotations/{quotation_id}/publish", "POST"),

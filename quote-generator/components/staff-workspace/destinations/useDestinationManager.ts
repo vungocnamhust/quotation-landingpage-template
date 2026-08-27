@@ -21,6 +21,11 @@ export const blankDestinationInput = (): DestinationCatalogInput => ({
   longitude: 0,
   aliases: [],
   mediaPrefix: null,
+  parentId: null,
+  destinationType: "city",
+  countryCode: null,
+  iataCode: null,
+  timezone: "Asia/Ho_Chi_Minh",
 });
 
 export function profileToInput(profile: DestinationProfile): DestinationCatalogInput {
@@ -34,6 +39,11 @@ export function profileToInput(profile: DestinationProfile): DestinationCatalogI
     longitude: profile.longitude ?? 0,
     aliases: profile.aliases ?? [],
     mediaPrefix: profile.mediaPrefix ?? null,
+    parentId: profile.parentId ?? null,
+    destinationType: profile.destinationType ?? "city",
+    countryCode: profile.countryCode ?? null,
+    iataCode: profile.iataCode ?? null,
+    timezone: profile.timezone ?? "Asia/Ho_Chi_Minh",
   };
 }
 

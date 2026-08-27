@@ -179,3 +179,20 @@ SUBCATEGORY_BY_CATEGORY: dict[str, frozenset[str]] = {
         }
     ),
 }
+
+# SSOT vocab for destination Tourism Hub hierarchy (15.2b). Pure data, no I/O.
+#
+# Mirrored manually in ``quote-generator/components/destination/types.ts`` — keep
+# both files' comments pointing at each other when either changes.
+DESTINATION_TYPE: frozenset[str] = frozenset({"country", "region", "province", "city", "sub_zone"})
+
+# Ordering used by the parent/child hierarchy validator — higher rank = higher in the tree.
+# A parent must have a strictly higher rank than its child; jumping ranks is allowed
+# (e.g. a city may hang directly off a country for island nations).
+DESTINATION_TYPE_RANK: dict[str, int] = {
+    "country": 4,
+    "region": 3,
+    "province": 2,
+    "city": 1,
+    "sub_zone": 0,
+}

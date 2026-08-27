@@ -30,6 +30,15 @@ class MediaLibraryRepository:
         )
         return result.first()
 
+    async def has_media_for_destination(self, destination_id: str) -> bool:
+        """True if any active object is anchored to this destination (15.2b §4 storage freeze)."""
+        result = await self.session.scalar(
+            select(MediaLibraryObject.id)
+            .where(MediaLibraryObject.destination_id == destination_id, MediaLibraryObject.is_active.is_(True))
+            .limit(1)
+        )
+        return result is not None
+
     async def get_active_media_keys(self, keys: set[str]) -> set[str]:
         if not keys:
             return set()

@@ -400,6 +400,140 @@ function DestinationDrawerModalContent({
               </span>
             </div>
 
+            {/* Tourism Hub hierarchy (15.2b) */}
+            <div className="rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-4">
+              <div className="flex items-center gap-1.5 text-[var(--color-accent)] mb-3">
+                <Compass size={15} />
+                <span className={cn(getTypographyClassName("label"), "text-[var(--color-on-surface)]")}>
+                  Tourism Hub
+                </span>
+              </div>
+
+              {editing?.mergedIntoId ? (
+                <div
+                  className={cn(
+                    getTypographyClassName("bodyMd"),
+                    "mb-3 rounded-[var(--radius-button)] border border-[color-mix(in_srgb,var(--color-accent)_35%,transparent)] bg-[var(--color-accent-wash)] px-3.5 py-2.5 text-[var(--color-accent)]"
+                  )}
+                >
+                  This destination has been merged into{" "}
+                  <span className="font-mono">{editing.mergedIntoId}</span>. It stays read-only history — old
+                  quotations and media keep pointing here.
+                </div>
+              ) : null}
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="flex flex-col gap-1">
+                  <label
+                    htmlFor="destination-type-input"
+                    className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}
+                  >
+                    Destination type
+                  </label>
+                  <select
+                    id="destination-type-input"
+                    value={draft.destinationType ?? "city"}
+                    onChange={(e) =>
+                      onDraftChange({
+                        ...draft,
+                        destinationType: e.target.value as DestinationCatalogInput["destinationType"],
+                      })
+                    }
+                    className={cn(
+                      getTypographyClassName("bodyMd"),
+                      "min-h-10 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3 text-[var(--color-on-surface)] focus:border-[var(--color-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-wash)]"
+                    )}
+                  >
+                    <option value="country">Country</option>
+                    <option value="region">Region</option>
+                    <option value="province">Province</option>
+                    <option value="city">City</option>
+                    <option value="sub_zone">Sub-zone</option>
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label
+                    htmlFor="parent-id-input"
+                    className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}
+                  >
+                    Parent destination id (optional)
+                  </label>
+                  <input
+                    id="parent-id-input"
+                    type="text"
+                    value={draft.parentId ?? ""}
+                    onChange={(e) => onDraftChange({ ...draft, parentId: e.target.value.trim() || null })}
+                    placeholder="e.g. dst_quang-ninh"
+                    className={cn(
+                      getTypographyClassName("bodyMd"),
+                      "min-h-10 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3 font-mono text-[var(--color-on-surface)] placeholder:text-[var(--color-muted)] focus:border-[var(--color-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-wash)]"
+                    )}
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label
+                    htmlFor="country-code-input"
+                    className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}
+                  >
+                    ISO country code
+                  </label>
+                  <input
+                    id="country-code-input"
+                    type="text"
+                    maxLength={2}
+                    value={draft.countryCode ?? ""}
+                    onChange={(e) =>
+                      onDraftChange({ ...draft, countryCode: e.target.value.trim().toUpperCase() || null })
+                    }
+                    placeholder="VN"
+                    className={cn(
+                      getTypographyClassName("bodyMd"),
+                      "min-h-10 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3 font-mono text-[var(--color-on-surface)] placeholder:text-[var(--color-muted)] focus:border-[var(--color-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-wash)]"
+                    )}
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label
+                    htmlFor="iata-code-input"
+                    className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}
+                  >
+                    IATA code (optional, not unique)
+                  </label>
+                  <input
+                    id="iata-code-input"
+                    type="text"
+                    maxLength={3}
+                    value={draft.iataCode ?? ""}
+                    onChange={(e) => onDraftChange({ ...draft, iataCode: e.target.value.trim().toUpperCase() || null })}
+                    placeholder="HAN"
+                    className={cn(
+                      getTypographyClassName("bodyMd"),
+                      "min-h-10 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3 font-mono text-[var(--color-on-surface)] placeholder:text-[var(--color-muted)] focus:border-[var(--color-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-wash)]"
+                    )}
+                  />
+                </div>
+                <div className="flex flex-col gap-1 sm:col-span-2">
+                  <label
+                    htmlFor="timezone-input"
+                    className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}
+                  >
+                    IANA timezone
+                  </label>
+                  <input
+                    id="timezone-input"
+                    type="text"
+                    value={draft.timezone ?? ""}
+                    onChange={(e) => onDraftChange({ ...draft, timezone: e.target.value.trim() })}
+                    placeholder="Asia/Ho_Chi_Minh"
+                    className={cn(
+                      getTypographyClassName("bodyMd"),
+                      "min-h-10 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3 font-mono text-[var(--color-on-surface)] placeholder:text-[var(--color-muted)] focus:border-[var(--color-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-wash)]"
+                    )}
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* R2 Media Folder Prefix */}
             <div className="flex flex-col gap-2 rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-4">
               <div className="flex items-center justify-between gap-2">

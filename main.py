@@ -7060,9 +7060,22 @@ def _apply_travel_designer_snapshot(document: dict[str, Any], profile: dict[str,
 
 
 async def _seed_destination_catalog(session) -> None:
-    from destination_catalog_seed import get_seed_destination_profiles
+    from destination_catalog_seed import COUNTRY_PARENT_PROFILES, get_seed_destination_profiles
 
     repository = DestinationRepository(session)
+    for parent in COUNTRY_PARENT_PROFILES:
+        await repository.upsert(
+            destination_id=parent["id"],
+            canonical_name=parent["canonical_name"],
+            slug=parent["slug"],
+            aliases=[],
+            country_slug=parent["country_slug"],
+            latitude=parent["latitude"],
+            longitude=parent["longitude"],
+            destination_type=parent["destination_type"],
+            country_code=parent["country_code"],
+            timezone=parent["timezone"],
+        )
     for profile in get_seed_destination_profiles():
         await repository.upsert(
             destination_id=f"dst_{profile['slug']}",
@@ -7074,6 +7087,8 @@ async def _seed_destination_catalog(session) -> None:
             province_slug=profile["province_slug"],
             latitude=profile["latitude"],
             longitude=profile["longitude"],
+            parent_id=profile.get("parent_id"),
+            timezone=profile.get("timezone"),
         )
 
 
@@ -7893,6 +7908,12 @@ async def _serialize_destination(repository: DestinationRepository, item, *, mat
         "mediaPrefix": item.media_prefix,
         "defaultMediaPrefix": default_media_prefix,
         "aliases": await repository.aliases_for(item.id),
+        "parentId": item.parent_id,
+        "destinationType": item.destination_type,
+        "countryCode": item.country_code,
+        "iataCode": item.iata_code,
+        "timezone": item.timezone,
+        "mergedIntoId": item.merged_into_id,
     }
     if matched_from is not None:
         payload["matchedFrom"] = matched_from
@@ -7900,6 +7921,9 @@ async def _serialize_destination(repository: DestinationRepository, item, *, mat
 
 
 async def _save_destination(session, payload: DestinationCatalogRequest, item=None):
+    from core.kernel import generate_id
+    from repositories.destination_repository import DestinationHierarchyError
+
     repository = DestinationRepository(session)
     alias_conflict = await repository.conflicting_alias(
         [payload.canonicalName, payload.slug, *payload.aliases],
@@ -7907,9 +7931,20 @@ async def _save_destination(session, payload: DestinationCatalogRequest, item=No
     )
     if alias_conflict is not None:
         raise HTTPException(status_code=409, detail={"message": "Destination slug or alias already exists.", "alias": alias_conflict})
+
+    destination_type = payload.destinationType or (item.destination_type if item is not None else "city")
+    try:
+        await repository.validate_parent(
+            parent_id=payload.parentId,
+            destination_type=destination_type,
+            child_id=item.id if item is not None else None,
+        )
+    except DestinationHierarchyError as exc:
+        raise HTTPException(status_code=422, detail={"message": str(exc), "missingInputs": ["parentId"]}) from exc
+
     if item is None:
         return await repository.create(
-            destination_id=f"dst_{uuid.uuid4().hex[:12]}",
+            destination_id=generate_id("dst"),
             canonical_name=payload.canonicalName,
             slug=payload.slug,
             aliases=payload.aliases,
@@ -7919,9 +7954,27 @@ async def _save_destination(session, payload: DestinationCatalogRequest, item=No
             latitude=payload.latitude,
             longitude=payload.longitude,
             media_prefix=payload.mediaPrefix,
+            parent_id=payload.parentId,
+            destination_type=destination_type,
+            country_code=payload.countryCode,
+            iata_code=payload.iataCode,
+            timezone=payload.timezone or "Asia/Ho_Chi_Minh",
         )
     if payload.slug != item.slug:
         raise HTTPException(status_code=422, detail={"message": "Destination slug is immutable.", "missingInputs": ["slug"]})
+    slug_chain_changed = (
+        payload.countrySlug != item.country_slug
+        or payload.regionSlug != item.region_slug
+        or payload.provinceSlug != item.province_slug
+    )
+    if slug_chain_changed and await MediaLibraryRepository(session).has_media_for_destination(item.id):
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "message": "This destination already has media; its storage slug chain is frozen. Use mediaPrefix to relocate instead.",
+                "missingInputs": ["countrySlug", "regionSlug", "provinceSlug"],
+            },
+        )
     return await repository.update(
         item,
         canonical_name=payload.canonicalName,
@@ -7932,7 +7985,31 @@ async def _save_destination(session, payload: DestinationCatalogRequest, item=No
         latitude=payload.latitude,
         longitude=payload.longitude,
         media_prefix=payload.mediaPrefix,
+        parent_id=payload.parentId,
+        destination_type=destination_type,
+        country_code=payload.countryCode,
+        iata_code=payload.iataCode,
+        timezone=payload.timezone,
     )
+
+
+async def _merge_destination(session, source_id: str, target_id: str, *, actor_email: str | None):
+    from repositories.destination_repository import DestinationMergeError
+    from services.outbox_service import OutboxService
+
+    repository = DestinationRepository(session)
+    try:
+        source = await repository.merge(source_id=source_id, target_id=target_id)
+    except DestinationMergeError as exc:
+        raise HTTPException(status_code=409, detail={"message": str(exc)}) from exc
+    await OutboxService(session).emit_event(
+        event_type="catalog.destination.merged",
+        aggregate_type="destination",
+        aggregate_id=source_id,
+        payload={"sourceId": source_id, "targetId": target_id},
+        actor_email=actor_email,
+    )
+    return source
 
 
 from routers.v2.destinations import (

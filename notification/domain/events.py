@@ -37,6 +37,9 @@ class EventType(str, Enum):
     AGENTIC_COST_OPTIMIZATION_ALERT = "agentic.cost_optimization.alert"
     AGENTIC_SUPPLIER_QUOTE_RECEIVED = "agentic.supplier_quote.received"
 
+    # Catalog events (15.2b)
+    CATALOG_DESTINATION_MERGED = "catalog.destination.merged"
+
     # System & Generic
     SYSTEM_ANNOUNCEMENT = "system.announcement"
 

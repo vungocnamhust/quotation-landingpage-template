@@ -5,13 +5,13 @@ for bootstrapping destination anchors, geographic taxonomy, and rich keyword ali
 """
 from __future__ import annotations
 
-from typing import Any, TypedDict
+from typing import TypedDict
 from core.rules.destination_rules import (
     COUNTRY_GATEWAY_MAP,
     DESTINATION_KEYWORD_MAP,
 )
 
-class DestinationSeedProfile(TypedDict):
+class DestinationSeedProfile(TypedDict, total=False):
     canonical_name: str
     slug: str
     country_slug: str
@@ -20,6 +20,83 @@ class DestinationSeedProfile(TypedDict):
     latitude: float | None
     longitude: float | None
     aliases: list[str]
+    parent_id: str | None
+    timezone: str | None
+
+
+# Known offset-preserving-but-distinct-identity timezone overrides (15.2b §6 step 3).
+_TIMEZONE_OVERRIDES: dict[str, str] = {
+    "bangkok": "Asia/Bangkok",
+    "chiang-mai": "Asia/Bangkok",
+    "phuket": "Asia/Bangkok",
+}
+
+
+class DestinationParentSeedProfile(TypedDict):
+    """A Tourism Hub root (country-level) row (15.2b). Additive — city rows below hang off it
+    via ``parent_id``; jumping straight from country to city is allowed by the hierarchy rules.
+    """
+
+    id: str
+    canonical_name: str
+    slug: str
+    country_slug: str
+    country_code: str
+    destination_type: str
+    latitude: float
+    longitude: float
+    timezone: str
+
+
+# Country-level Tourism Hub roots. Centroids are the country's geographic/administrative
+# centroid — deliberately coarse, since these rows only anchor the commercial tree and never
+# gate an activation flow the way city-level coordinates do (15.2b §0 chốt 5).
+COUNTRY_PARENT_PROFILES: list[DestinationParentSeedProfile] = [
+    {
+        "id": "dst_country_vietnam",
+        "canonical_name": "Vietnam",
+        "slug": "country-vietnam",
+        "country_slug": "vietnam",
+        "country_code": "VN",
+        "destination_type": "country",
+        "latitude": 14.0583,
+        "longitude": 108.2772,
+        "timezone": "Asia/Ho_Chi_Minh",
+    },
+    {
+        "id": "dst_country_cambodia",
+        "canonical_name": "Cambodia",
+        "slug": "country-cambodia",
+        "country_slug": "cambodia",
+        "country_code": "KH",
+        "destination_type": "country",
+        "latitude": 12.5657,
+        "longitude": 104.9910,
+        "timezone": "Asia/Phnom_Penh",
+    },
+    {
+        "id": "dst_country_laos",
+        "canonical_name": "Laos",
+        "slug": "country-laos",
+        "country_slug": "laos",
+        "country_code": "LA",
+        "destination_type": "country",
+        "latitude": 19.8563,
+        "longitude": 102.4955,
+        "timezone": "Asia/Vientiane",
+    },
+    {
+        "id": "dst_country_thailand",
+        "canonical_name": "Thailand",
+        "slug": "country-thailand",
+        "country_slug": "thailand",
+        "country_code": "TH",
+        "destination_type": "country",
+        "latitude": 15.8700,
+        "longitude": 100.9925,
+        "timezone": "Asia/Bangkok",
+    },
+]
 
 
 BASELINE_DESTINATION_COORDINATES: dict[str, tuple[float, float]] = {
@@ -157,7 +234,17 @@ def get_seed_destination_profiles() -> list[DestinationSeedProfile]:
                 latitude=coords[0] if coords else None,
                 longitude=coords[1] if coords else None,
                 aliases=sorted(list(aliases_set)),
+                parent_id=get_country_parent_id(country),
+                timezone=_TIMEZONE_OVERRIDES.get(slug),
             )
         )
 
     return profiles
+
+
+def get_country_parent_id(country_slug: str) -> str | None:
+    """Tourism Hub root id for a given ``country_slug``, or None if there is no seeded root."""
+    return next(
+        (profile["id"] for profile in COUNTRY_PARENT_PROFILES if profile["country_slug"] == country_slug),
+        None,
+    )

@@ -326,6 +326,95 @@ class ProductServiceTests(unittest.TestCase):
 
         asyncio.run(scenario())
 
+    def test_origin_destination_id_rejected_outside_transportation_and_flights(self):
+        with self.assertRaises(Exception):
+            ProductCreateSchema(
+                destination_id="dst_hue",
+                origin_destination_id="dst_hanoi",
+                category="accommodation",
+                title="La Siesta with an origin leg",
+            )
+
+    def test_origin_destination_id_accepted_for_transportation(self):
+        async def scenario():
+            async with self.session_factory() as session:
+                service = ProductService(session)
+                product = await service.create_product(
+                    ProductCreateSchema(
+                        destination_id="dst_hue",
+                        origin_destination_id="dst_hanoi",
+                        category="transportation",
+                        title="Hanoi to Hue Overnight Bus",
+                    ),
+                    actor=ACTOR,
+                )
+                await session.commit()
+                self.assertEqual(product.origin_destination_id, "dst_hanoi")
+
+        asyncio.run(scenario())
+
+    def test_same_title_and_destination_with_different_origin_is_allowed(self):
+        async def scenario():
+            async with self.session_factory() as session:
+                service = ProductService(session)
+                await service.create_product(
+                    ProductCreateSchema(
+                        destination_id="dst_hue",
+                        origin_destination_id="dst_hanoi",
+                        category="transportation",
+                        title="16-Seat Van Transfer",
+                    ),
+                    actor=ACTOR,
+                )
+                await session.commit()
+
+                other_leg = await service.create_product(
+                    ProductCreateSchema(
+                        destination_id="dst_hue",
+                        category="transportation",
+                        title="16-Seat Van Transfer",
+                    ),
+                    actor=ACTOR,
+                )
+                await session.commit()
+                self.assertIsNone(other_leg.origin_destination_id)
+
+                with self.assertRaises(ProductConflictError):
+                    await service.create_product(
+                        ProductCreateSchema(
+                            destination_id="dst_hue",
+                            origin_destination_id="dst_hanoi",
+                            category="transportation",
+                            title="16-Seat Van Transfer",
+                        ),
+                        actor=ACTOR,
+                    )
+
+        asyncio.run(scenario())
+
+    def test_update_to_add_origin_outside_allowed_category_is_rejected(self):
+        async def scenario():
+            async with self.session_factory() as session:
+                service = ProductService(session)
+                product = await service.create_product(
+                    ProductCreateSchema(
+                        destination_id="dst_hanoi",
+                        category="accommodation",
+                        title="La Siesta Old Quarter Update Target",
+                    ),
+                    actor=ACTOR,
+                )
+                await session.commit()
+
+                with self.assertRaises(ProductValidationError):
+                    await service.update_product(
+                        product.id,
+                        ProductUpdateSchema(origin_destination_id="dst_hue"),
+                        actor=ACTOR,
+                    )
+
+        asyncio.run(scenario())
+
 
 if __name__ == "__main__":
     unittest.main()

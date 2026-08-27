@@ -435,6 +435,7 @@ export type ProductProfile = {
   supplier_id?: string | null;
   property_id?: string | null;
   destination_id: string;
+  origin_destination_id?: string | null;
   category: ProductCategory;
   subcategory?: string | null;
   subcategory_note?: string | null;
@@ -454,6 +455,7 @@ export type ProductInput = {
   supplier_id?: string | null;
   property_id?: string | null;
   destination_id: string;
+  origin_destination_id?: string | null;
   category: ProductCategory;
   subcategory?: string | null;
   subcategory_note?: string | null;
@@ -554,6 +556,9 @@ export async function listRoomingHeuristics(): Promise<RoomingHeuristicsListResp
   return request<RoomingHeuristicsListResponse>('/api/v2/rooming-heuristics');
 }
 
+// destination_type vocab mirrors core/rules/catalog_vocab.py DESTINATION_TYPE (15.2b).
+export type DestinationType = "country" | "region" | "province" | "city" | "sub_zone";
+
 export type DestinationProfile = {
   id: string;
   name: string;
@@ -568,6 +573,12 @@ export type DestinationProfile = {
   mediaPrefix?: string | null;
   defaultMediaPrefix?: string;
   matchedFrom?: string;
+  parentId?: string | null;
+  destinationType?: DestinationType;
+  countryCode?: string | null;
+  iataCode?: string | null;
+  timezone?: string;
+  mergedIntoId?: string | null;
 };
 
 export type DestinationCatalogInput = {
@@ -580,6 +591,11 @@ export type DestinationCatalogInput = {
   longitude: number;
   aliases: string[];
   mediaPrefix?: string | null;
+  parentId?: string | null;
+  destinationType?: DestinationType;
+  countryCode?: string | null;
+  iataCode?: string | null;
+  timezone?: string;
 };
 
 export type DestinationListResponse = {
@@ -590,18 +606,32 @@ export async function listDestinationsCatalog({
   active = "true",
   query = "",
   countrySlug,
+  types,
+  parentId,
   limit = 100,
 }: {
   active?: "true" | "false" | "all";
   query?: string;
   countrySlug?: string;
+  types?: DestinationType[];
+  parentId?: string;
   limit?: number;
 } = {}): Promise<DestinationListResponse> {
   const params = new URLSearchParams({ active });
   if (query.trim()) params.set("query", query.trim());
   if (countrySlug) params.set("countrySlug", countrySlug);
+  if (types?.length) params.set("types", types.join(","));
+  if (parentId) params.set("parentId", parentId);
   if (limit) params.set("limit", String(limit));
   return request<DestinationListResponse>(`/api/v2/destinations?${params.toString()}`);
+}
+
+export async function mergeDestination(sourceId: string, targetId: string): Promise<DestinationProfile> {
+  return request<DestinationProfile>(`/api/v2/destinations/${encodeURIComponent(sourceId)}/merge`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ targetId }),
+  });
 }
 
 export async function getDestination(id: string): Promise<DestinationProfile> {
