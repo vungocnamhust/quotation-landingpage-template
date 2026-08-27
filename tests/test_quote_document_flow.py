@@ -8,7 +8,6 @@ def _content() -> dict:
     return {
         "sections": {
             "booking_terms": {"blocks": [{"type": "termList", "items": [{"label": "Deposit", "body": "30% deposit"}, {"label": "Visa", "body": "Visa support on request"}]}]},
-            "finalization": {"blocks": [{"type": "checklistGroups", "groups": [{"title": "Final Details Required", "items": ["Passport copies"]}, {"title": "After Confirmation", "items": ["Vouchers issued"]}]}]},
         },
     }
 

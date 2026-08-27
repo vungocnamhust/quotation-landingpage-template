@@ -4,6 +4,7 @@ from pydantic import ValidationError
 
 import main
 from quote_document import CreateQuoteRequestV1
+from services.content_readiness_service import resolve_content_readiness
 from services.skeleton_builder import SkeletonBuilder
 
 
@@ -34,6 +35,33 @@ class BrochureFactDefaultsTests(unittest.TestCase):
         )
         self.assertEqual(document["itinerary"]["days"][0]["dayDate"], "2027-03-30")
         self.assertEqual(document["stays"]["hotels"][0]["hotelDate"], "2027-03-30 – 2027-04-02")
+
+    def test_skeleton_uses_brand_boilerplate_for_empty_inclusions_and_booking_terms(self):
+        payload = CreateQuoteRequestV1.model_validate({
+            "brand_id": "capella_travel",
+            "lang": "en",
+        })
+        document = SkeletonBuilder().build(
+            quotation_id="quo_boilerplate",
+            payload=payload,
+            resolved_facts={"duration": {"label": ""}, "routeLabel": "", "travelDateLabel": ""},
+            template="quote-generator",
+        )
+
+        inclusions_section = document["content"]["sections"]["inclusions_exclusions"]
+        booking_section = document["content"]["sections"]["booking_terms"]
+        self.assertTrue(inclusions_section["blocks"])
+        self.assertTrue(booking_section["blocks"])
+        self.assertIn("premium airport transfers", " ".join(inclusions_section["blocks"][0]["leftItems"]))
+
+        readiness = resolve_content_readiness(document, fact_missing_inputs=[])
+        blocker_sections = {
+            item["sectionType"]: item
+            for item in readiness
+            if item["sectionType"] in {"inclusions_exclusions", "booking_terms"}
+        }
+        self.assertIsNone(blocker_sections["inclusions_exclusions"]["status"])
+        self.assertIsNone(blocker_sections["booking_terms"]["status"])
 
     def test_designer_profile_snapshot_keeps_the_canonical_r2_portrait(self):
         document = {"designer": {"quote": "Quotation-owned editorial copy"}}

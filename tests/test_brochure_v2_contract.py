@@ -81,7 +81,6 @@ def _sample_document() -> dict:
                 "sections": {
                     "inclusions_exclusions": {"blocks": [{"type": "twoColumnList", "leftTitle": "Inclusions", "leftItems": ["Private transfers"], "rightTitle": "Exclusions", "rightItems": ["International flights"]}]},
                     "booking_terms": {"blocks": [{"type": "termList", "items": [{"label": "Deposit", "body": "30% deposit"}, {"label": "Balance", "body": "Balance before travel"}, {"label": "Cancellation", "body": "Supplier terms apply"}, {"label": "Confirmation", "body": "Subject to availability"}]}]},
-                    "finalization": {"blocks": [{"type": "checklistGroups", "groups": [{"title": "Final Details Required", "items": ["Passport copy"]}, {"title": "After Confirmation", "items": ["Final vouchers issued"]}]}]},
                 },
             },
         },
@@ -404,7 +403,6 @@ class QuoteDocumentValidationTests(unittest.TestCase):
 
         main._apply_segment_duration_override(segment, "DAYS 14-15 • 2 NIGHT")
 
-        self.assertEqual(segment["mapSegmentDuration"], "DAYS 14-15 • 2 NIGHT")
         self.assertEqual(segment["nightsLabel"], "2 NIGHT")
         self.assertEqual(segment["nights"], 2)
 
@@ -584,12 +582,6 @@ class NarrativeGeneratorTests(unittest.IsolatedAsyncioTestCase):
                     "description": "Commercial conditions, deposits, and cancellation policy for this booking.",
                     "items": [{"key": "deposit", "label": "Deposit", "body": "A 30% deposit is required."}],
                 },
-                "finalization_facts": {
-                    "required_title": "Final Details Required",
-                    "after_confirmation_title": "After Confirmation",
-                    "required_items": ["Copy of passport valid for 6 months."],
-                    "after_confirmation_items": ["24/7 dedicated local concierge support."],
-                },
                 "designer_facts": {
                     "seller_subtitle": "(Trung Hieu Pham)",
                     "designer_signature": "Travel Designer",
@@ -643,8 +635,7 @@ class NarrativeGeneratorTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(document.designer.kicker, "Your Journey Designer")
         self.assertEqual(document.designer.ctaBody, "I will remain your personal point of contact as we refine your journey.")
         self.assertEqual(document.designer.subtitle, "(Trung Hieu Pham)")
-        finalization = document.content.sections["finalization"].blocks[0]
-        self.assertEqual(finalization.groups[1].items[0], "24/7 dedicated local concierge support.")
+        self.assertIn("booking_terms", document.content.sections)
 
 
 class CreateQuotationApiV2PayloadTests(unittest.TestCase):

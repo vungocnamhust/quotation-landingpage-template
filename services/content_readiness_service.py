@@ -17,7 +17,6 @@ SECTION_SCOPE = {
     "inclusions_exclusions": "inclusions_exclusions",
     "booking_terms": "booking_terms",
     "designer": "designer",
-    "finalization": "finalization",
 }
 
 

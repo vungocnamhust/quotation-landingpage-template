@@ -25,7 +25,7 @@ class BrochureTestPyramidContractTests(unittest.TestCase):
             self.assertIsNotNone(locale_body, locale)
             for key in (
                 "journeyOverviewTitle", "routeMapDescription", "itineraryTitle", "pricingTitle",
-                "bookingTermsTitle", "finalizationTitle", "footerText", "routeMapOverview",
+                "bookingTermsTitle", "footerText", "routeMapOverview",
                 "loading", "errorTitle", "notFoundTitle", "previousImage", "nextImage",
             ):
                 self.assertRegex(locale_body.group("body"), rf"\b{key}:\s*['\"]")

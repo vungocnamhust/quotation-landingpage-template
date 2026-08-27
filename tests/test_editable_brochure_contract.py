@@ -186,7 +186,6 @@ class EditableBrochureContractTests(unittest.TestCase):
             "/assets/hero/altText": ("fact", "facts", "trip"),
             "/itinerary/days/*/images/carousel/*/altText": ("fact", "facts", "programme"),
             "/stays/hotels/*/hotelImage/altText": ("fact", "facts", "services"),
-            "/content/sections/finalization/blocks/0/groups/0/title": ("content", "content", "finalization"),
             "/designer/name": ("fact-derived", "facts", "trip"),
             "/stays/hotels/*/roomType": ("fact", "facts", "services"),
             "/pricing/options/*/groupTotalAmountMinor": ("fact", "facts", "commercial"),

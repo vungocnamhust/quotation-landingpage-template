@@ -9,6 +9,7 @@ from quote_document import (
     QuoteListItem,
     QuoteSection,
     QuoteTermItem,
+    SECTION_TYPES,
     build_default_sections,
     build_rich_content_from_legacy,
     rich_content_values,
@@ -79,10 +80,13 @@ def _normalize_layout(layout: dict | None) -> list[QuoteSection]:
             continue
         if not isinstance(section, dict):
             continue
+        section_type = section.get("type") or "hero"
+        if section_type not in SECTION_TYPES:
+            continue
         normalized.append(
             QuoteSection(
-                id=section.get("id") or section.get("type") or f"section-{index}",
-                type=section.get("type") or "hero",
+                id=section.get("id") or section_type or f"section-{index}",
+                type=section_type,
                 enabled=bool(section.get("enabled", True)),
                 order=int(section.get("order") or index),
                 props=copy.deepcopy(section.get("props") or {}),
@@ -154,7 +158,6 @@ def build_quote_document_from_lang_ctx(lang_ctx: dict, quotation_id: str, lang: 
                 "routeText": lang_ctx.get("route_txt") or "",
                 "travelDates": lang_ctx.get("travel_dates") or "",
                 "quotationNumber": lang_ctx.get("quotation_number") or quotation_id,
-                "priceBasis": lang_ctx.get("glance_basis") or "",
             },
             "narrative": {
                 "coverKicker": lang_ctx.get("cover_kicker") or "A Privately Arranged Journey",
@@ -183,7 +186,6 @@ def build_quote_document_from_lang_ctx(lang_ctx: dict, quotation_id: str, lang: 
                         "hotelDateRange": segment.get("hotelDateRange") or "",
                         "hotelImage": _asset_ref(segment.get("hotelImage")),
                         "mapSegmentDesc": segment.get("mapSegmentDesc") or "",
-                        "mapSegmentDuration": segment.get("mapSegmentDuration") or "",
                         "coords": copy.deepcopy(segment.get("coords") or []),
                     }
                     for idx, segment in enumerate(stay_segments, 1)
@@ -274,12 +276,6 @@ def build_quote_document_from_lang_ctx(lang_ctx: dict, quotation_id: str, lang: 
                 "email": lang_ctx.get("seller_email") or "",
                 "image": _asset_ref(lang_ctx.get("designer_img") or "/assets/dias_team/hieu.jpg"),
             },
-            "finalization": {
-                "requiredTitle": lang_ctx.get("final_req_title") or "Final Details Required",
-                "afterConfirmationTitle": lang_ctx.get("final_after_title") or "After Confirmation",
-                "requiredItems": _list_items(lang_ctx.get("final_req") or [], "final-req"),
-                "afterConfirmation": _list_items(lang_ctx.get("final_after") or [], "final-after"),
-            },
             "layout": {
                 "sections": [
                     section.model_dump()
@@ -355,7 +351,6 @@ def apply_quote_document_to_lang_ctx(lang_ctx: dict, document: dict) -> None:
     lang_ctx["route_txt"] = quote_document.trip.routeText or lang_ctx.get("route_txt")
     lang_ctx["travel_dates"] = quote_document.trip.travelDates or lang_ctx.get("travel_dates")
     lang_ctx["quotation_number"] = quote_document.trip.quotationNumber or lang_ctx.get("quotation_number")
-    lang_ctx["glance_basis"] = quote_document.trip.priceBasis or lang_ctx.get("glance_basis")
 
     lang_ctx["cover_kicker"] = quote_document.narrative.coverKicker or lang_ctx.get("cover_kicker")
     lang_ctx["hero_meta_1"] = quote_document.narrative.heroMeta1 or lang_ctx.get("hero_meta_1")
@@ -382,7 +377,6 @@ def apply_quote_document_to_lang_ctx(lang_ctx: dict, document: dict) -> None:
             "hotelDateRange": segment.hotelDateRange,
             "hotelImage": segment.hotelImage.url,
             "mapSegmentDesc": segment.mapSegmentDesc,
-            "mapSegmentDuration": segment.mapSegmentDuration,
             "coords": copy.deepcopy(segment.coords),
         }
         for segment in quote_document.route.staySegments
@@ -506,12 +500,6 @@ def apply_quote_document_to_lang_ctx(lang_ctx: dict, document: dict) -> None:
     lang_ctx["contact"] = quote_document.designer.phone or lang_ctx.get("contact")
     lang_ctx["seller_email"] = quote_document.designer.email or lang_ctx.get("seller_email")
 
-    groups = rich_content["finalizationGroups"]
-    lang_ctx["final_req_title"] = (groups[0]["title"] if groups else "") or lang_ctx.get("final_req_title")
-    lang_ctx["final_after_title"] = (groups[1]["title"] if len(groups) > 1 else "") or lang_ctx.get("final_after_title")
-    lang_ctx["final_req"] = list(groups[0]["items"]) if groups else []
-    lang_ctx["final_after"] = list(groups[1]["items"]) if len(groups) > 1 else []
-
     section_enabled = {}
     section_order = {}
     for section in quote_document.layout.sections:
@@ -520,7 +508,6 @@ def apply_quote_document_to_lang_ctx(lang_ctx: dict, document: dict) -> None:
     lang_ctx["section_enabled"] = section_enabled
     lang_ctx["section_order"] = section_order
     lang_ctx["show_designer_section"] = section_enabled.get("designer", True)
-    lang_ctx["show_finalization_section"] = section_enabled.get("finalization", True)
     lang_ctx["quote_document"] = quote_document.model_dump(mode="json")
     lang_ctx["brochure_draft"] = quote_document.model_dump(mode="json")
 
@@ -593,7 +580,6 @@ def _build_compatibility_payload_from_quote_request(request_payload: Any, docume
             "priceType": "Indicative",
             "tourCode": request_payload.opportunity_id or quote_document.trip.quotationNumber or quote_document.meta.quotationId,
             "domesticFlights": "On request",
-            "priceBasis": quote_document.trip.priceBasis,
             "partnerNote": BRAND_PROFILES.get(quote_document.meta.brandId, BRAND_PROFILES["vietnam_safar"]).content_policy.tone,
             "validity": "Subject to final confirmation and availability.",
         },
@@ -615,14 +601,9 @@ def _build_compatibility_payload_from_quote_request(request_payload: Any, docume
             "cancellation": booking_item_map.get("cancellation") or "Subject to cancellation charges as per terms.",
             "confirmation": booking_item_map.get("confirmation") or "Subject to availability upon payment.",
         },
-        "finalization": {
-            "finalDetailsRequired": "\n".join(rich_content["finalizationGroups"][0]["items"]) if rich_content["finalizationGroups"] else "",
-            "afterConfirmation": "\n".join(rich_content["finalizationGroups"][1]["items"]) if len(rich_content["finalizationGroups"]) > 1 else "",
-        },
         "pricing": {
             "currency": currency,
             "pricingTitle": "PRICE QUOTATION – INDICATIVE",
-            "basis": quote_document.trip.priceBasis,
             "priceOptions": [
                 {
                     "label": option.label or f"Option {index:02d}",
@@ -632,7 +613,7 @@ def _build_compatibility_payload_from_quote_request(request_payload: Any, docume
                 for index, option in enumerate(quote_document.pricing.options, 1)
             ] or [{
                 "label": "Option 01",
-                "notes": quote_document.trip.priceBasis or "",
+                "notes": "",
                 "amount": None,
             }],
             "subtotal": total_budget or None,
@@ -652,4 +633,3 @@ def _build_compatibility_payload_from_quote_request(request_payload: Any, docume
         "exclusions": rich_content["exclusions"],
         "quotationNumber": request_payload.opportunity_id or quote_document.trip.quotationNumber or quote_document.meta.quotationId,
     }
-

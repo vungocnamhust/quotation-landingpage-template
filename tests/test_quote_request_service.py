@@ -431,7 +431,6 @@ class TestQuoteRequestService(unittest.IsolatedAsyncioTestCase):
             "pricing_facts": {"conditions": [], "options": []},
             "service_facts": {"hotels": [], "inclusions": [], "exclusions": []},
             "booking_facts": {"title": "Terms", "description": "Standard terms apply", "items": []},
-            "finalization_facts": {"required_title": "Required", "after_confirmation_title": "After", "required_items": [], "after_confirmation_items": []},
             "designer_facts": {},
         })
         mock_resolved = {
@@ -520,4 +519,3 @@ class TestQuoteRequestService(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(options[1]["label"], "Premium Option")
         self.assertEqual(options[1]["per_traveler_amount_minor"], 450000)
         self.assertEqual(options[1]["group_total_amount_minor"], 1125000)
-

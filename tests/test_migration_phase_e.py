@@ -47,7 +47,6 @@ def _sample_document(quotation_id: str) -> dict:
         "exclusions": [],
         "bookingTerms": {"items": []},
         "designer": {"name": "Vietnam Safar"},
-        "finalization": {"requiredItems": [], "afterConfirmation": []},
         "layout": {"sections": [section.model_dump(mode="json") for section in build_default_sections()]},
     }
 

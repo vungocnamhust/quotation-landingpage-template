@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from core.brands import get_brand_boilerplate
 from quote_document import CreateQuoteRequestV1, QuoteDocumentV1, build_rich_content_from_fact_sources
 
 
@@ -84,7 +85,6 @@ class SkeletonBuilder:
                 "hotelDateRange": (hotel or {}).get("hotelDate") or "",
                 "hotelImage": (hotel or {}).get("hotelImage") or {},
                 "mapSegmentDesc": cls._route_stop_default(group=group, city=city, hotel_name=hotel_name, lang=lang),
-                "mapSegmentDuration": "",
                 "coords": list(point.get("coordinates") or []),
             })
         return segments
@@ -97,7 +97,7 @@ class SkeletonBuilder:
             number = day.day_number or index
             refs = resolved_itinerary[index - 1] if index - 1 < len(resolved_itinerary) else {}
             fact_id = day.id or f"day-{number}"
-            days.append({"id": f"day-{number}", "sourceFactId": fact_id, "dayNumber": number, "dayDate": day.display_date or "", "segmentCity": day.destination or "", "destinationRef": refs.get("destinationRef"), "overnightRef": refs.get("overnightRef"), "factSummary": day.summary or "", "factHighlights": list(day.highlights), "title": "", "description": [], "overnight": day.overnight or "", "meals": day.meals, "activities": [], "notes": day.notes, "labelHighlights": "", "labelNotes": ""})
+            days.append({"id": f"day-{number}", "sourceFactId": fact_id, "dayNumber": number, "dayDate": day.display_date or "", "segmentCity": day.destination or "", "destinationRef": refs.get("destinationRef"), "overnightRef": refs.get("overnightRef"), "factSummary": day.summary or "", "factHighlights": list(day.highlights), "title": "", "description": [], "overnight": day.overnight or "", "meals": day.meals, "activities": [], "notes": day.notes})
         resolved_hotels = resolved_facts.get("hotels") or []
         hotels = []
         for index, hotel in enumerate(services.hotels, 1):
@@ -112,7 +112,7 @@ class SkeletonBuilder:
             "meta": {"quotationId": quotation_id, "opportunityId": payload.opportunity_id or "", "lang": payload.lang or "en", "brandId": payload.brand_id or "", "template": "quote-generator", "revision": 1, "status": "draft", "contentSchemaVersion": 1},
             "presentation": {"renderer": "quote-generator", "templateId": payload.presentation_options.template_id or "", "themeId": payload.presentation_options.theme_id, "layoutVersion": payload.presentation_options.layout_version},
             "traveler": {"customerName": customer.customer_name or "", "guestProfile": customer.guest_profile or "", "nationality": customer.nationality or "", "adults": customer.adults or 0, "children": customer.children or 0, "kidAges": list(customer.kid_ages), "advisorName": customer.advisor_name or "", "advisorAgency": customer.advisor_agency or ""},
-            "trip": {"title": "", "lede": "", "durationText": resolved_facts["duration"]["label"], "routeText": resolved_facts["routeLabel"], "travelDates": resolved_facts["travelDateLabel"], "quotationNumber": quotation_id, "priceBasis": ""},
+            "trip": {"title": "", "lede": "", "durationText": resolved_facts["duration"]["label"], "routeText": resolved_facts["routeLabel"], "travelDates": resolved_facts["travelDateLabel"], "quotationNumber": quotation_id},
             "narrative": {"coverKicker": "", "heroMeta1": "", "heroMeta2": "", "journeyOverviewTitle": "", "letterHighlight": "", "letterGreeting": "", "letterIntro": "", "letterBody2": "", "letterOutro": "", "letterSignOff": "", "letterSender": "", "footerText": ""},
             "route": {"title": "", "description": "", "staySegments": stay_segments},
             "itinerary": {"title": "", "description": "", "days": days},
@@ -149,12 +149,7 @@ class SkeletonBuilder:
                 "description": payload.booking_facts.description or "",
                 "items": [{"key": item.key or "", "label": item.label or "", "body": item.body or ""} for item in payload.booking_facts.items],
             },
-            "finalization": {
-                "requiredTitle": payload.finalization_facts.required_title or "Final Details Required",
-                "afterConfirmationTitle": payload.finalization_facts.after_confirmation_title or "After Confirmation",
-                "requiredItems": list(payload.finalization_facts.required_items),
-                "afterConfirmation": list(payload.finalization_facts.after_confirmation_items),
-            },
+            "boilerplate": get_brand_boilerplate(payload.brand_id),
         })
         # Fact media is materialized by the API's contract-aware media-slot
         # boundary. Keeping this builder media-free prevents a second partial

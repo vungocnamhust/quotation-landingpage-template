@@ -166,10 +166,9 @@ def test_migration_moves_and_removes_legacy_rich_fields():
         "inclusions": [{"id": "inc", "text": "Private guide"}],
         "exclusions": [{"id": "exc", "text": "Flights"}],
         "bookingTerms": {"description": "Approved terms", "items": [{"id": "deposit", "label": "Deposit", "body": "30 percent"}]},
-        "finalization": {"requiredItems": [{"id": "passport", "text": "Passport copy"}]},
     })
     migrated, request = migrate(document, _facts().model_dump(mode="json"))
-    assert not {"inclusions", "exclusions", "bookingTerms", "finalization"}.intersection(migrated)
+    assert not {"inclusions", "exclusions", "bookingTerms"}.intersection(migrated)
     assert migrated["content"]["sections"]["booking_terms"]["blocks"][0]["type"] == "paragraph"
     assert request["trip_facts"] == _facts().model_dump(mode="json")["trip_facts"]
 
@@ -182,7 +181,7 @@ def test_content_owned_targets_includes_itinerary_day_targets():
     assert "itinerary.days.*.activities" in targets
 
 
-def test_preserve_content_owned_values_keeps_itinerary_day_content_and_price_basis():
+def test_preserve_content_owned_values_keeps_itinerary_day_content():
     from main import _preserve_content_owned_values
     current = _document()
     current["itinerary"]["days"][0]["title"] = "Day 1: Arrival in Hanoi"
@@ -190,7 +189,6 @@ def test_preserve_content_owned_values_keeps_itinerary_day_content_and_price_bas
     current["itinerary"]["days"][0]["activities"] = ["Airport pickup", "Old Quarter tour"]
     current["itinerary"]["days"][0]["labelHighlights"] = "Key Highlights"
     current["itinerary"]["days"][0]["labelNotes"] = "Day Notes"
-    current["trip"]["priceBasis"] = "Based on twin share accommodation."
     current["viewOverrides"] = {"web": {"itinerary": {"variant": "compact"}}, "pdf": {}}
 
     rebuilt = _document()
@@ -201,4 +199,3 @@ def test_preserve_content_owned_values_keeps_itinerary_day_content_and_price_bas
     assert rebuilt["itinerary"]["days"][0]["activities"] == ["Airport pickup", "Old Quarter tour"]
     assert rebuilt["itinerary"]["days"][0]["labelHighlights"] == "Key Highlights"
     assert rebuilt["itinerary"]["days"][0]["labelNotes"] == "Day Notes"
-    assert rebuilt["trip"]["priceBasis"] == "Based on twin share accommodation."

@@ -25,7 +25,6 @@ SECTION_TYPES = (
     "inclusions_exclusions",
     "booking_terms",
     "designer",
-    "finalization",
 )
 
 
@@ -159,7 +158,6 @@ class QuoteDocumentTrip(QuoteBaseModel):
     routeText: str = ""
     travelDates: str = ""
     quotationNumber: str = ""
-    priceBasis: str = ""
 
 
 class QuoteDocumentNarrative(QuoteBaseModel):
@@ -190,7 +188,6 @@ class QuoteDocumentRouteSegment(QuoteBaseModel):
     hotelDateRange: str = ""
     hotelImage: QuoteAssetRef = Field(default_factory=QuoteAssetRef)
     mapSegmentDesc: str = ""
-    mapSegmentDuration: str = ""
     coords: List[Any] = Field(default_factory=list)
 
 
@@ -373,7 +370,7 @@ class QuoteDocumentV1(QuoteBaseModel):
         if not isinstance(value, dict):
             return value
         normalized = dict(value)
-        legacy_rich_keys = {"inclusions", "exclusions", "bookingTerms", "finalization"}
+        legacy_rich_keys = {"inclusions", "exclusions", "bookingTerms"}
         present_legacy_keys = sorted(legacy_rich_keys.intersection(normalized))
         if present_legacy_keys:
             raise ValueError(
@@ -432,17 +429,11 @@ def rich_content_values(document: QuoteDocumentV1) -> Dict[str, Any]:
         elif block.type in {"termList", "paymentSchedule"}:
             booking_items.extend({"label": item.label, "body": item.body} for item in block.items)
 
-    groups: list[dict[str, Any]] = []
-    for block in sections.get("finalization", QuoteDocumentContentSection()).blocks:
-        if block.type == "checklistGroups":
-            groups.extend({"title": group.title, "items": list(group.items)} for group in block.groups)
-
     return {
         "inclusions": inclusions,
         "exclusions": exclusions,
         "bookingDescription": booking_description,
         "bookingItems": booking_items,
-        "finalizationGroups": groups,
     }
 
 
@@ -605,13 +596,6 @@ class CreateQuoteBookingFacts(QuoteBaseModel):
     items: List[CreateQuoteBookingTermFact] = Field(default_factory=list)
 
 
-class CreateQuoteFinalizationFacts(QuoteBaseModel):
-    required_title: str | None = None
-    after_confirmation_title: str | None = None
-    required_items: List[str] = Field(default_factory=list)
-    after_confirmation_items: List[str] = Field(default_factory=list)
-
-
 class CreateQuoteDesignerFacts(QuoteBaseModel):
     seller_subtitle: str | None = None
     designer_signature: str | None = "TRAVEL DESIGNER"
@@ -646,7 +630,6 @@ class CreateQuoteRequestV1(QuoteBaseModel):
     customer_facts: CreateQuoteCustomerFacts = Field(default_factory=CreateQuoteCustomerFacts)
     service_facts: CreateQuoteServiceFacts = Field(default_factory=CreateQuoteServiceFacts)
     booking_facts: CreateQuoteBookingFacts = Field(default_factory=CreateQuoteBookingFacts)
-    finalization_facts: CreateQuoteFinalizationFacts = Field(default_factory=CreateQuoteFinalizationFacts)
     designer_facts: CreateQuoteDesignerFacts = Field(default_factory=CreateQuoteDesignerFacts)
     factMediaSlots: List[CreateQuoteFactMediaSlot] = Field(default_factory=list)
     presentation_options: CreateQuotePresentationOptions = Field(default_factory=CreateQuotePresentationOptions)

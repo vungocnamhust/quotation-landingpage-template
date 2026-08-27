@@ -387,12 +387,6 @@ def convert_request_to_quotation_facts(
             "description": booking_description,
             "items": [],
         },
-        "finalization_facts": {
-            "required_title": "To Confirm Your Journey",
-            "after_confirmation_title": "After Confirmation",
-            "required_items": ["30% deposit upon acceptance"],
-            "after_confirmation_items": ["Final payment due 45 days prior to arrival"],
-        },
         "designer_facts": {
             "seller_subtitle": "Luxury Journey Designer",
             "designer_signature": None,

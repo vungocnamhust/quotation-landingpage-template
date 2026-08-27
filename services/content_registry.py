@@ -237,11 +237,10 @@ CONTENT_SECTION_REGISTRY: dict[str, ContentSectionSpec] = {
     # The authoritative values remain Facts. These scopes become manual
     # editorial hand-offs in Sprint 4; they are not LLM-writable yet.
     "hotel_plan": ContentSectionSpec("hotel_plan", "content", ("stays.hotels.*.editorialIntroduction", "stays.roomNotes"), ("service_facts.hotels",), ("service_facts.hotels",), "narrative", automation_policy="manual"),
-    "pricing": ContentSectionSpec("pricing", "content", ("pricing.kicker", "pricing.title", "pricing.description", "pricing.ctaLabel", "trip.priceBasis"), ("pricing_facts.options", "pricing_facts.conditions"), ("pricing_facts.options",), "narrative", automation_policy="manual"),
+    "pricing": ContentSectionSpec("pricing", "content", ("pricing.kicker", "pricing.title", "pricing.description", "pricing.ctaLabel"), ("pricing_facts.options", "pricing_facts.conditions"), ("pricing_facts.options",), "narrative", automation_policy="manual"),
     "inclusions_exclusions": ContentSectionSpec("inclusions_exclusions", "content", ("content.sections.inclusions_exclusions",), ("service_facts.inclusions", "service_facts.exclusions"), ("service_facts.inclusions", "service_facts.exclusions"), "narrative", ("twoColumnList",), automation_policy="manual"),
     "booking_terms": ContentSectionSpec("booking_terms", "fact", ("content.sections.booking_terms",), ("booking_facts",), ("booking_facts",), "fact-preview", ("paragraph", "termList", "paymentSchedule")),
     "designer": ContentSectionSpec("designer", "fact", ("designer",), ("designer_facts",), ("designer_facts",), "fact-preview"),
-    "finalization": ContentSectionSpec("finalization", "content", ("content.sections.finalization",), ("finalization_facts.required_items", "finalization_facts.after_confirmation_items"), ("finalization_facts.required_items", "finalization_facts.after_confirmation_items"), "checklist", ("checklistGroups",), generation=False, recipe_version="v4", schema_version="v1", fact_inputs=(_fact("required-items", "Final details required", "finalization_facts", "required_items", required=True), _fact("after-confirmation", "After confirmation", "finalization_facts", "after_confirmation_items", required=True))),
 }
 
 
@@ -290,7 +289,6 @@ ITINERARY_DAY_CANONICAL_TARGETS: tuple[str, ...] = (
     "itinerary.days.*.title",
     "itinerary.days.*.description",
     "itinerary.days.*.activities",
-    "trip.priceBasis",
 )
 
 
@@ -366,9 +364,6 @@ def project_candidate_from_document(document: dict[str, Any], scope: str) -> dic
     spec = scope_spec(scope)
     if spec.owner != "content":
         raise ValueError(f"{scope} is Fact-owned and has no Content candidate.")
-    if scope == "finalization":
-        section = _read_path(document, ("content", "sections", "finalization")) or {"blocks": []}
-        return {"content": {"sections": {"finalization": copy.deepcopy(section)}}}
     candidate: dict[str, Any] = {}
     if scope.startswith("itinerary:day:"):
         source_fact_id = scope.rsplit(":", 1)[-1]

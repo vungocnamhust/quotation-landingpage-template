@@ -6,7 +6,7 @@ import uuid
 from hashlib import sha256
 from typing import Any
 
-from quote_document import BrandProfile, CreateQuoteRequestV1, QuoteDocumentV1, validate_quote_content_block
+from quote_document import BrandProfile, CreateQuoteRequestV1, QuoteDocumentV1
 from repositories.quotation_repository import ContentDraftRepository
 from services.content_registry import CONTENT_SECTION_REGISTRY, build_prompt_context, scope_spec
 from services.section_content_generator import BRAND_POLICY_VERSION, ContentGenerationError, SectionContentGenerator, default_instruction, normalize_instruction
@@ -146,24 +146,13 @@ class ContentDraftService:
         return snapshot
 
     @staticmethod
-    def deterministic_rich_candidate(payload: CreateQuoteRequestV1, scope: str) -> dict[str, Any]:
-        if scope != "finalization":
-            raise ValueError(f"{scope} is Fact-owned and cannot create a Content candidate.")
-        groups = []
-        if payload.finalization_facts.required_items:
-            groups.append({"title": payload.finalization_facts.required_title or "Final Details Required", "items": list(payload.finalization_facts.required_items)})
-        if payload.finalization_facts.after_confirmation_items:
-            groups.append({"title": payload.finalization_facts.after_confirmation_title or "After Confirmation", "items": list(payload.finalization_facts.after_confirmation_items)})
-        return {"content": {"sections": {scope: {"blocks": [{"type": "checklistGroups", "groups": groups}]}}}}
-
-    @staticmethod
     def validate_candidate(scope: str, candidate: dict[str, Any]) -> dict[str, Any]:
         spec = scope_spec(scope)
         if spec.owner != "content":
             raise ValueError(f"{scope} is Fact-owned and has no editable Content candidate.")
         allowed = {
             "hero": {"trip", "narrative"}, "overview_letter": {"narrative"}, "route": {"route"},
-            "itinerary": {"itinerary"}, "finalization": {"content"},
+            "itinerary": {"itinerary"},
         }
         if scope.startswith("itinerary:day:"):
             content_keys = {"title", "description", "activities"}
@@ -181,27 +170,19 @@ class ContentDraftService:
                 raise ValueError("Candidate contains fields not owned by this content scope.")
         elif set(candidate) != allowed.get(scope, set()):
             raise ValueError("Candidate contains fields not owned by this content scope.")
-        if scope == "finalization":
-            sections = ((candidate.get("content") or {}).get("sections") or {})
-            blocks = ((sections.get(scope) or {}).get("blocks") or [])
-            if set(sections) != {scope}:
-                raise ValueError("Candidate may only update its own rich-content section.")
-            for block in blocks:
-                validate_quote_content_block(block)
+        # Validate manual edits against the exact typed contract used for generation.
+        from services.section_content_generator import DayOutput, HeroOutput, ItineraryOutput, OverviewOutput, RouteOutput
+        if scope == "hero":
+            trip, narrative = candidate.get("trip"), candidate.get("narrative")
+            if not isinstance(trip, dict) or not isinstance(narrative, dict):
+                raise ValueError("Hero candidate must contain plain-text trip and narrative fields.")
+            raw = {"title": trip.get("title"), "lede": trip.get("lede"), **narrative}
         else:
-            # Validate manual edits against the exact typed contract used for generation.
-            from services.section_content_generator import DayOutput, HeroOutput, ItineraryOutput, OverviewOutput, RouteOutput
-            if scope == "hero":
-                trip, narrative = candidate.get("trip"), candidate.get("narrative")
-                if not isinstance(trip, dict) or not isinstance(narrative, dict):
-                    raise ValueError("Hero candidate must contain plain-text trip and narrative fields.")
-                raw = {"title": trip.get("title"), "lede": trip.get("lede"), **narrative}
-            else:
-                raw = candidate if scope.startswith("itinerary:day:") else next(iter(candidate.values()))
-            model = DayOutput if scope.startswith("itinerary:day:") else {"hero": HeroOutput, "overview_letter": OverviewOutput, "route": RouteOutput, "itinerary": ItineraryOutput}[scope]
-            if scope.startswith("itinerary:day:"):
-                raw = {key: value for key, value in raw.items() if key not in {"dayNumber", "sourceFactId"}}
-            model.model_validate(raw)
+            raw = candidate if scope.startswith("itinerary:day:") else next(iter(candidate.values()))
+        model = DayOutput if scope.startswith("itinerary:day:") else {"hero": HeroOutput, "overview_letter": OverviewOutput, "route": RouteOutput, "itinerary": ItineraryOutput}[scope]
+        if scope.startswith("itinerary:day:"):
+            raw = {key: value for key, value in raw.items() if key not in {"dayNumber", "sourceFactId"}}
+        model.model_validate(raw)
         return candidate
 
     @staticmethod
@@ -217,8 +198,6 @@ class ContentDraftService:
             if day is None:
                 raise ValueError("Itinerary day no longer exists.")
             day.update({key: candidate[key] for key in ("title", "description", "activities")})
-        elif scope == "finalization":
-            merged.setdefault("content", {}).setdefault("sections", {})[scope] = candidate["content"]["sections"][scope]
         else:
             for key in ("trip", "narrative", "route", "itinerary"):
                 if key in candidate:
@@ -251,7 +230,7 @@ class ContentDraftService:
         spec = scope_spec(scope)
         if spec.owner != "content":
             raise ValueError(f"{scope} is Fact-owned and cannot be generated or edited in Content Studio.")
-        if scope != "finalization" and not spec.generation:
+        if not spec.generation:
             raise ValueError(f"{scope} is manual-only and cannot be AI-generated.")
         normalized_instruction = normalize_instruction(instruction)
         effective_instruction = normalized_instruction or default_instruction(scope, mode)
@@ -266,10 +245,6 @@ class ContentDraftService:
         metadata = {"mode": mode, "recipeVersion": spec.recipe_version, "schemaVersion": spec.schema_version, "brandPolicyVersion": BRAND_POLICY_VERSION, "instructionSource": "custom" if normalized_instruction else "default", "instructionHash": sha256(effective_instruction.encode("utf-8")).hexdigest()[:16], "inheritedReferenceStatus": (inherited_reference or {}).get("status", "unavailable"), "inheritedReferenceHash": (inherited_reference or {}).get("hash")}
         if missing:
             return [await self.repository.create(id=f"cd_{uuid.uuid4().hex[:20]}", quotation_id=quotation_id, lang=lang, scope=scope, generation_mode=mode, status="draft", facts_hash=facts_hash, source_document_revision=document_revision, prompt_version=prompt_version, facts_snapshot=snapshot, candidate_json={}, missing_inputs=missing, generation_metadata={**metadata, "llmCalled": False, "generationStatus": "missing_inputs", "warnings": []})]
-        if scope == "finalization":
-            candidate = self.deterministic_rich_candidate(payload, scope)
-            self.validate_candidate(scope, candidate)
-            return [await self.repository.create(id=f"cd_{uuid.uuid4().hex[:20]}", quotation_id=quotation_id, lang=lang, scope=scope, generation_mode=mode, status="draft", facts_hash=facts_hash, source_document_revision=document_revision, prompt_version=prompt_version, facts_snapshot=snapshot, candidate_json=candidate, missing_inputs=[], generation_metadata={**metadata, "llmCalled": False, "generationStatus": "deterministic", "warnings": []})]
         started = time.perf_counter()
         candidate, generation = await self.generator.generate(spec=spec, brand=self.brand_profile, facts_snapshot=snapshot, mode=mode, instruction=normalized_instruction)
         self.validate_candidate(scope, candidate)

@@ -14,7 +14,6 @@ SECTION_TYPES = (
     "inclusions_exclusions",
     "booking_terms",
     "designer",
-    "finalization",
 )
 
 
@@ -30,7 +29,6 @@ class QuoteSection(QuoteBaseModel):
         "inclusions_exclusions",
         "booking_terms",
         "designer",
-        "finalization",
     ]
     enabled: bool = True
     order: int = 0

@@ -126,7 +126,7 @@ class ContentGenerationInstructionTests(unittest.TestCase):
             "trip": {"title": "Private Vietnam", "lede": "Quiet luxury."},
             "narrative": {"coverKicker": "A private journey", "footerText": "Prepared for review."},
             "itinerary": {"days": [{"dayNumber": 1, "title": "Arrival", "description": ["Arrive in Hanoi."], "activities": ["Private transfer"]}]},
-            "content": {"sections": {"finalization": {"blocks": []}}},
+            "content": {"sections": {}},
         }
         state = content_editor_state_payload(document)
         self.assertEqual(state["hero"]["trip"]["title"], "Private Vietnam")

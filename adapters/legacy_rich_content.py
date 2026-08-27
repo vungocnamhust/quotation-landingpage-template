@@ -7,7 +7,7 @@ from schemas.v2.content_blocks import HTML_TAG_RE, _content_text
 
 _LEGACY_HTML_TAG_RE = HTML_TAG_RE
 _LEGACY_HTML_ALLOWED_TAGS = {"p", "ul", "ol", "li", "strong", "em", "br", "a"}
-LEGACY_RICH_DOCUMENT_FIELDS = ("inclusions", "exclusions", "bookingTerms", "finalization")
+LEGACY_RICH_DOCUMENT_FIELDS = ("inclusions", "exclusions", "bookingTerms")
 
 
 class _LegacyHtmlText(HTMLParser):
@@ -46,14 +46,11 @@ def build_rich_content_from_legacy(value: Dict[str, Any]) -> Dict[str, Any]:
     inclusions = [legacy_plain(item) for item in value.get("inclusions") or []]
     exclusions = [legacy_plain(item) for item in value.get("exclusions") or []]
     terms = value.get("bookingTerms") if isinstance(value.get("bookingTerms"), dict) else {}
-    finalization = value.get("finalization") if isinstance(value.get("finalization"), dict) else {}
     term_items = [
         {"label": str(item.get("label") or item.get("key") or "").strip(), "body": legacy_html_to_plain_text(str(item.get("body") or ""))}
         for item in terms.get("items") or [] if isinstance(item, dict)
     ]
     term_items = [item for item in term_items if item["label"] and item["body"]]
-    required = [legacy_plain(item) for item in finalization.get("requiredItems") or []]
-    after = [legacy_plain(item) for item in finalization.get("afterConfirmation") or []]
     sections: Dict[str, Any] = {}
     if inclusions or exclusions:
         sections["inclusions_exclusions"] = {"blocks": [{"type": "twoColumnList", "leftTitle": "Inclusions", "leftItems": [item for item in inclusions if item], "rightTitle": "Exclusions", "rightItems": [item for item in exclusions if item]}]}
@@ -64,13 +61,6 @@ def build_rich_content_from_legacy(value: Dict[str, Any]) -> Dict[str, Any]:
         booking_blocks.append({"type": "termList", "items": term_items})
     if booking_blocks:
         sections["booking_terms"] = {"blocks": booking_blocks}
-    groups = []
-    if required:
-        groups.append({"title": legacy_plain(finalization.get("requiredTitle") or "Final Details Required"), "items": required})
-    if after:
-        groups.append({"title": legacy_plain(finalization.get("afterConfirmationTitle") or "After Confirmation"), "items": after})
-    if groups:
-        sections["finalization"] = {"blocks": [{"type": "checklistGroups", "groups": groups}]}
     return {"sections": sections}
 
 
@@ -87,7 +77,13 @@ def build_rich_content_from_fact_sources(value: Dict[str, Any]) -> Dict[str, Any
     inclusions = [str(item.get("text") if isinstance(item, dict) else item or "").strip() for item in value.get("inclusions") or []]
     exclusions = [str(item.get("text") if isinstance(item, dict) else item or "").strip() for item in value.get("exclusions") or []]
     terms = value.get("bookingTerms") if isinstance(value.get("bookingTerms"), dict) else {}
-    finalization = value.get("finalization") if isinstance(value.get("finalization"), dict) else {}
+    boilerplate = value.get("boilerplate") if isinstance(value.get("boilerplate"), dict) else {}
+    if not inclusions:
+        inclusions = [str(item or "").strip() for item in boilerplate.get("inclusions") or []]
+    if not exclusions:
+        exclusions = [str(item or "").strip() for item in boilerplate.get("exclusions") or []]
+    if not (str(terms.get("description") or "").strip() or terms.get("items")):
+        terms = boilerplate.get("booking_terms") if isinstance(boilerplate.get("booking_terms"), dict) else terms
 
     def plain(value: Any) -> str:
         return _content_text(str(value or ""))
@@ -115,15 +111,6 @@ def build_rich_content_from_fact_sources(value: Dict[str, Any]) -> Dict[str, Any
     if booking_blocks:
         sections["booking_terms"] = {"blocks": booking_blocks}
 
-    required = [str(item.get("text") if isinstance(item, dict) else item or "").strip() for item in finalization.get("requiredItems") or []]
-    after = [str(item.get("text") if isinstance(item, dict) else item or "").strip() for item in finalization.get("afterConfirmation") or []]
-    groups = []
-    if required:
-        groups.append({"title": plain(finalization.get("requiredTitle") or "Final Details Required"), "items": [plain(item) for item in required if item]})
-    if after:
-        groups.append({"title": plain(finalization.get("afterConfirmationTitle") or "After Confirmation"), "items": [plain(item) for item in after if item]})
-    if groups:
-        sections["finalization"] = {"blocks": [{"type": "checklistGroups", "groups": groups}]}
     return {"sections": sections}
 
 
@@ -146,15 +133,9 @@ def rich_content_values(document: Any) -> Dict[str, Any]:
         elif block.type in {"termList", "paymentSchedule"}:
             booking_items.extend({"label": item.label, "body": item.body} for item in block.items)
 
-    groups: list[dict[str, Any]] = []
-    for block in sections.get("finalization", QuoteDocumentContentSection()).blocks:
-        if block.type == "checklistGroups":
-            groups.extend({"title": group.title, "items": list(group.items)} for group in block.groups)
-
     return {
         "inclusions": inclusions,
         "exclusions": exclusions,
         "bookingDescription": booking_description,
         "bookingItems": booking_items,
-        "finalizationGroups": groups,
     }

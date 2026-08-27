@@ -2320,7 +2320,7 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
     glance_price_type = truncate_text(glance.priceType, 60)
     glance_tour_code = truncate_text(glance.tourCode, 40)
     glance_flights = truncate_text(glance.domesticFlights, 100)
-    glance_basis = truncate_text(glance.priceBasis, 80)
+    glance_basis = ""
     glance_partner_note = truncate_text(glance.partnerNote, 100)
     glance_validity = truncate_text(glance.validity, 60)
 
@@ -2364,11 +2364,6 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
     term_balance = b_terms.balance or ""
     term_cancellation = b_terms.cancellation or ""
     term_confirmation = b_terms.confirmation or ""
-
-    # Finalization defaults/fallbacks
-    final = payload.finalization
-    final_req = [truncate_text(final.finalDetailsRequired, 300)] if (final and final.finalDetailsRequired) else ["Copy of passport valid for 6 months."]
-    final_after = [truncate_text(final.afterConfirmation, 300)] if (final and final.afterConfirmation) else ["24/7 dedicated local concierge support."]
 
     mapped_itinerary = timeline_days
 
@@ -2595,8 +2590,6 @@ def _build_ctx(quotation_id, payload: "TourQuotationPayload", hero_image_url, de
         "term_balance": term_balance,
         "term_cancellation": term_cancellation,
         "term_confirmation": term_confirmation,
-        "final_req": final_req,
-        "final_after": final_after,
         "show_hotel_intro": not lang_override.get("hide_hotel_intro", False),
         "show_designer_section": not lang_override.get("hide_designer_section", False),
         "lang": lang,
@@ -2733,7 +2726,6 @@ def _build_brochure_render_context(
         "contact_web": brand_config.get("domain") or "",
         "show_hotel_intro": True,
         "show_designer_section": True,
-        "show_finalization_section": True,
         "inclusions_title": translate_filter("What Your Journey Includes", lang),
         "exclusions_title": translate_filter("Exclusions", lang),
         "inclusions_lede": "",
@@ -3044,7 +3036,6 @@ def _legacy_build_brochure_draft_from_lang_ctx(lang_ctx: dict, quotation_id: str
             "hotelDateRange": segment.get("hotelDateRange") or "",
             "hotelImage": _safe_asset_ref(segment.get("hotelImage")),
             "mapSegmentDesc": segment.get("mapSegmentDesc") or "",
-            "mapSegmentDuration": segment.get("mapSegmentDuration") or "",
             "activityPreviews": copy.deepcopy(segment.get("activityPreviews") or []),
             "coords": copy.deepcopy(segment.get("coords") or []),
         })
@@ -3149,10 +3140,6 @@ def _legacy_build_brochure_draft_from_lang_ctx(lang_ctx: dict, quotation_id: str
             "phone": lang_ctx.get("contact_phone") or lang_ctx.get("contact") or "",
             "email": lang_ctx.get("seller_email") or "",
             "image": _safe_asset_ref(lang_ctx.get("designer_img")),
-        },
-        "finalization": {
-            "requiredItems": _simple_list_to_draft(lang_ctx.get("final_req") or [], "final-req"),
-            "afterConfirmation": _simple_list_to_draft(lang_ctx.get("final_after") or [], "final-after"),
         },
         "viewOverrides": {
             "web": {},
@@ -3380,7 +3367,6 @@ def _legacy_apply_brochure_draft_to_lang_ctx(lang_ctx: dict, draft: dict):
         hotel_date_range = segment_draft.get("hotelDateRange") if "hotelDateRange" in segment_draft else segment.get("hotelDateRange")
         hotel_image = _asset_url(segment_draft.get("hotelImage")) if "hotelImage" in segment_draft else segment.get("hotelImage")
         map_segment_desc = segment_draft.get("mapSegmentDesc") if "mapSegmentDesc" in segment_draft else segment.get("mapSegmentDesc")
-        map_segment_duration = segment_draft.get("mapSegmentDuration") if "mapSegmentDuration" in segment_draft else segment.get("mapSegmentDuration")
         coords = copy.deepcopy(segment_draft.get("coords")) if "coords" in segment_draft else copy.deepcopy(segment.get("coords") or [])
         segment.update({
             "segmentId": segment_id or f"stay-{idx}",
@@ -3391,7 +3377,6 @@ def _legacy_apply_brochure_draft_to_lang_ctx(lang_ctx: dict, draft: dict):
             "hotelDateRange": hotel_date_range or "",
             "hotelImage": hotel_image or "",
             "mapSegmentDesc": map_segment_desc if map_segment_desc is not None else "",
-            "mapSegmentDuration": map_segment_duration if map_segment_duration is not None else "",
             "coords": coords or [],
         })
         new_segments.append(segment)
@@ -3452,9 +3437,6 @@ def _legacy_apply_brochure_draft_to_lang_ctx(lang_ctx: dict, draft: dict):
     if draft_exclusions:
         lang_ctx["exclusions"] = draft_exclusions
 
-    finalization = draft.get("finalization") or {}
-    lang_ctx["final_req"] = _draft_items_to_simple_list(finalization.get("requiredItems") or []) or lang_ctx.get("final_req")
-    lang_ctx["final_after"] = _draft_items_to_simple_list(finalization.get("afterConfirmation") or []) or lang_ctx.get("final_after")
     lang_ctx["brochure_draft"] = copy.deepcopy(draft)
 
 
@@ -4864,10 +4846,6 @@ def _preserve_content_owned_values(current: dict[str, Any], rebuilt: dict[str, A
                     if key in previous:
                         next_day[key] = copy.deepcopy(previous[key])
             continue
-        if path == "trip.priceBasis":
-            if isinstance(current.get("trip"), dict) and "priceBasis" in current["trip"]:
-                rebuilt.setdefault("trip", {})["priceBasis"] = copy.deepcopy(current["trip"]["priceBasis"])
-            continue
         source: Any = current
         target: Any = rebuilt
         parts = path.split(".")
@@ -5501,7 +5479,6 @@ def _extract_hotel_image_refs(html_content: str, hotel_indexes: list[int]) -> di
 
 def _apply_segment_duration_override(segment: dict, raw_duration: str):
     clean_duration = (raw_duration or "").strip()
-    segment["mapSegmentDuration"] = clean_duration
     if not clean_duration:
         segment["daysLabel"] = ""
         segment["nightsLabel"] = ""
