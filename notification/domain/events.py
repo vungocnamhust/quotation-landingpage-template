@@ -40,6 +40,10 @@ class EventType(str, Enum):
     # Catalog events (15.2b)
     CATALOG_DESTINATION_MERGED = "catalog.destination.merged"
 
+    # Catalog events (15.3 — rates)
+    CATALOG_RATE_ACTIVATED = "catalog.rate.activated"
+    CATALOG_RATE_SUPERSEDED = "catalog.rate.superseded"
+
     # System & Generic
     SYSTEM_ANNOUNCEMENT = "system.announcement"
 

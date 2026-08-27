@@ -10,6 +10,7 @@ import { AccommodationSelect } from "../accommodation/AccommodationSelect.tsx";
 import { DestinationSelect } from "../destination/DestinationSelect.tsx";
 import type { DestinationRef } from "../destination/types.ts";
 import { SupplierSelect } from "../supplier/SupplierSelect.tsx";
+import { RatePanel } from "./rates/RatePanel.tsx";
 import {
   CATEGORY_OPTIONS,
   DEFAULT_CHARGE_UNIT_BY_CATEGORY,
@@ -538,6 +539,16 @@ export function ProductManageDrawer({
             </button>
           </div>
         </div>
+
+        {editingProduct ? (
+          <div className="mt-6 border-t border-[var(--color-border)] pt-6">
+            <RatePanel
+              productId={editingProduct.id}
+              productCategory={editingProduct.category}
+              defaultCurrency={null}
+            />
+          </div>
+        ) : null}
 
         {message ? (
           <p aria-live="polite" className={cn(getTypographyClassName("bodySm"), "mt-4 text-[var(--color-muted)]")}>

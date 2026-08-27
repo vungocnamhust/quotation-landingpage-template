@@ -196,3 +196,17 @@ DESTINATION_TYPE_RANK: dict[str, int] = {
     "city": 1,
     "sub_zone": 0,
 }
+
+# SSOT vocab for supplier rates (15.3). Pure data, no I/O.
+#
+# Mirrored manually in ``quote-generator/components/product/rates/types.ts`` — keep both
+# files' comments pointing at each other when either changes.
+# OCCUPANCY_BASIS is the official promotion of the room_type note from 15.2 Appendix A —
+# ``category_attributes.room_type`` on a product uses this same list.
+OCCUPANCY_BASIS: frozenset[str] = frozenset({"sgl", "dbl", "twn", "trpl", "quad", "na"})
+
+PRICE_FOR: frozenset[str] = frozenset(
+    {"adult", "child", "infant", "room", "vehicle", "guide", "group", "unit"}
+)
+
+RATE_BASIS: frozenset[str] = frozenset({"net", "gross_commissionable"})

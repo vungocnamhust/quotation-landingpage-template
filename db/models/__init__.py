@@ -4,6 +4,7 @@ from db.models.destination import DestinationAlias, DestinationCatalog
 from db.models.media import MediaAsset, MediaSelection
 from db.models.outbox import OutboxEvent
 from db.models.publication import PublicationJob, PublicationRelease, PublicationTarget, QuotationPublication
+from db.models.rate import Rate, RatePriceLine, RateSource
 from db.models.quotation import (
     Quotation,
     QuotationDocument,
@@ -42,6 +43,9 @@ __all__ = [
     "PublicationJob",
     "PublicationTarget",
     "Product",
+    "Rate",
+    "RatePriceLine",
+    "RateSource",
     "RoomingHeuristicRule",
     "Supplier",
     "TravelDesignerBrandDefault",

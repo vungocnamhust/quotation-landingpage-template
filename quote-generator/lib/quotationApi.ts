@@ -525,6 +525,176 @@ export async function updateProductStatus(id: string, isActive: boolean): Promis
   });
 }
 
+// ---------------------------------------------------------------------------
+// Rates (15.3) — mirrors core/rules/catalog_vocab.py + schemas/v2/rate.py
+// ---------------------------------------------------------------------------
+
+export type RateOccupancyBasis = 'sgl' | 'dbl' | 'twn' | 'trpl' | 'quad' | 'na';
+export type RatePriceFor = 'adult' | 'child' | 'infant' | 'room' | 'vehicle' | 'guide' | 'group' | 'unit';
+export type RateBasis = 'net' | 'gross_commissionable';
+export type RateLifecycleStatus = 'draft' | 'active' | 'superseded' | 'expired';
+export type RateReviewStatus = 'needs_review' | 'verified';
+export type RateDocumentType = 'rate_sheet' | 'contract' | 'amendment' | 'quotation' | 'promotion' | 'manual_note';
+export type RateChannel = 'email' | 'zalo' | 'whatsapp' | 'portal' | 'in_person' | 'internal';
+
+export type RateBlackoutWindow = {
+  from: string;
+  to: string;
+  reason?: string;
+};
+
+export type RateSupplement = {
+  label: string;
+  applies_from: string;
+  applies_to: string;
+  amount_minor: number;
+  price_for: RatePriceFor;
+  mandatory: boolean;
+  note?: string | null;
+};
+
+export type RatePriceLine = {
+  id?: number;
+  price_for: RatePriceFor;
+  occupancy_basis: RateOccupancyBasis;
+  unit: ProductChargeUnit;
+  tier_min_pax?: number | null;
+  tier_max_pax?: number | null;
+  amount_minor: number;
+  note?: string | null;
+  sort_order?: number;
+};
+
+export type RateSourceInput = {
+  supplier_id: string;
+  document_type?: RateDocumentType;
+  channel?: RateChannel;
+  file_ref?: string | null;
+  effective_from?: string | null;
+  effective_to?: string | null;
+  received_at?: string | null;
+  notes?: string | null;
+};
+
+export type RateSource = RateSourceInput & { id: string };
+
+export type RateAggregateInput = {
+  product_id?: string;
+  currency?: string | null;
+  rate_basis: RateBasis;
+  commission_pct?: number | null;
+  valid_from: string;
+  valid_to: string;
+  season_name?: string | null;
+  blackout_json?: RateBlackoutWindow[];
+  min_pax?: number | null;
+  max_pax?: number | null;
+  tax_included?: boolean;
+  tax_pct?: number | null;
+  supplements_json?: RateSupplement[];
+  inclusions_json?: string[];
+  exclusions_json?: string[];
+  payment_terms_json?: SupplierPaymentTerms | null;
+  cancellation_policy_json?: SupplierCancellationPolicy | null;
+  child_policy_json?: SupplierChildPolicy | null;
+  source_reference?: string | null;
+  source_id?: string | null;
+  source?: RateSourceInput | null;
+  lines: RatePriceLine[];
+};
+
+export type RateProfile = {
+  id: string;
+  product_id: string;
+  currency: string;
+  rate_basis: RateBasis;
+  commission_pct?: number | null;
+  valid_from: string;
+  valid_to: string;
+  season_name?: string | null;
+  blackout_json: RateBlackoutWindow[];
+  min_pax?: number | null;
+  max_pax?: number | null;
+  tax_included: boolean;
+  tax_pct?: number | null;
+  supplements_json: RateSupplement[];
+  inclusions_json: string[];
+  exclusions_json: string[];
+  payment_terms_json?: SupplierPaymentTerms | null;
+  cancellation_policy_json?: SupplierCancellationPolicy | null;
+  child_policy_json?: SupplierChildPolicy | null;
+  version: number;
+  supersedes_rate_id?: string | null;
+  lifecycle_status: RateLifecycleStatus;
+  review_status: RateReviewStatus;
+  validation_flags_json: string[];
+  source_id?: string | null;
+  source_reference?: string | null;
+  created_at: string;
+  updated_at: string;
+  lines: RatePriceLine[];
+  source?: RateSource | null;
+  resolved_payment_terms_json?: SupplierPaymentTerms | null;
+  resolved_cancellation_policy_json?: SupplierCancellationPolicy | null;
+  resolved_child_policy_json?: SupplierChildPolicy | null;
+  inherited_from_supplier: Record<string, boolean>;
+};
+
+export type RateListResponse = {
+  items: RateProfile[];
+  total: number;
+};
+
+export async function listProductRates(
+  productId: string,
+  {
+    lifecycle = 'active',
+    onDate,
+    limit,
+  }: { lifecycle?: RateLifecycleStatus | 'all'; onDate?: string; limit?: number } = {},
+): Promise<RateListResponse> {
+  const params = new URLSearchParams({ lifecycle });
+  if (onDate) params.set('on_date', onDate);
+  if (limit) params.set('limit', String(limit));
+  return request<RateListResponse>(`/api/v2/products/${encodeURIComponent(productId)}/rates?${params.toString()}`);
+}
+
+export async function createRate(productId: string, input: RateAggregateInput): Promise<RateProfile> {
+  return request<RateProfile>(`/api/v2/products/${encodeURIComponent(productId)}/rates`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+}
+
+export async function getRate(rateId: string): Promise<RateProfile> {
+  return request<RateProfile>(`/api/v2/rates/${encodeURIComponent(rateId)}`);
+}
+
+export async function updateRate(rateId: string, input: RateAggregateInput): Promise<RateProfile> {
+  return request<RateProfile>(`/api/v2/rates/${encodeURIComponent(rateId)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+}
+
+export async function activateRate(rateId: string): Promise<RateProfile> {
+  return request<RateProfile>(`/api/v2/rates/${encodeURIComponent(rateId)}/activate`, { method: 'POST' });
+}
+
+export async function supersedeRate(rateId: string, input: RateAggregateInput): Promise<RateProfile> {
+  return request<RateProfile>(`/api/v2/rates/${encodeURIComponent(rateId)}/supersede`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+}
+
+export async function deleteDraftRate(rateId: string): Promise<void> {
+  await request<void>(`/api/v2/rates/${encodeURIComponent(rateId)}`, { method: 'DELETE' });
+}
+
 export type RoomingHeuristicRuleItem = {
   id: string;
   name: string;

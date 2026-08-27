@@ -112,6 +112,7 @@ from routers.v2.travel_designers import router as travel_designers_router
 from routers.v2.partners import router as partners_router
 from routers.v2.suppliers import router as suppliers_router
 from routers.v2.products import router as products_router
+from routers.v2.rates import router as rates_router
 from routers.v2.quote_requests import router as quote_requests_router
 from routers.v2.rooming_heuristics import router as rooming_heuristics_router
 from routers.v1.translations import router as translations_router
@@ -220,6 +221,7 @@ app.include_router(travel_designers_router)
 app.include_router(partners_router)
 app.include_router(suppliers_router)
 app.include_router(products_router)
+app.include_router(rates_router)
 app.include_router(quote_requests_router)
 app.include_router(rooming_heuristics_router)
 app.include_router(translations_router)
