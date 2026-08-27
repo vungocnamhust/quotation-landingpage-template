@@ -5,12 +5,15 @@ import { Building2, Palette, Plus, MapPin, Truck } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
 import { DataViewContainer } from "../ui/data-view/DataViewContainer.tsx";
-import { updateSupplierStatus, type AccommodationProfile, type DestinationProfile, type SupplierProfile } from "../../lib/quotationApi.ts";
 import {
-  CATEGORIES,
-  type FlatTravelStyleTag,
-  type GenericComponentItem,
-} from "./tourComponentsCatalog.ts";
+  updateProductStatus,
+  updateSupplierStatus,
+  type AccommodationProfile,
+  type DestinationProfile,
+  type ProductProfile,
+  type SupplierProfile,
+} from "../../lib/quotationApi.ts";
+import { CATEGORIES, isProductComponentSlot, PRODUCT_CATEGORY_BY_SLOT, type FlatTravelStyleTag } from "./tourComponentsCatalog.ts";
 import { useTourComponentsState } from "./useTourComponentsState.ts";
 import { useAccommodationManager } from "./accommodations/useAccommodationManager.ts";
 import { useTravelStyleCatalog } from "./travel-styles/useTravelStyleCatalog.ts";
@@ -23,11 +26,12 @@ import { createDestinationColumns } from "./destinations/DestinationColumns.tsx"
 import { DestinationDrawerModal } from "./destinations/DestinationDrawerModal.tsx";
 import { TravelStyleCard } from "./travel-styles/TravelStyleCard.tsx";
 import { createTravelStyleColumns } from "./travel-styles/TravelStyleColumns.tsx";
-import { GenericCatalogCard } from "./catalog/GenericCatalogCard.tsx";
-import { createGenericCatalogColumns } from "./catalog/GenericCatalogColumns.tsx";
 import { SupplierCard } from "./suppliers/SupplierCard.tsx";
 import { createSupplierColumns } from "./suppliers/SupplierColumns.tsx";
+import { ProductCard } from "./products/ProductCard.tsx";
+import { createProductColumns } from "./products/ProductColumns.tsx";
 import { SupplierManageDrawer, useSupplierSearch, type SupplierDrawerMode } from "../supplier/index.ts";
+import { ProductManageDrawer, useProductSearch, type ProductDrawerMode } from "../product/index.ts";
 
 export default function TourComponentsWorkspace() {
   const {
@@ -37,7 +41,6 @@ export default function TourComponentsWorkspace() {
     deferredSearch,
     activeFilter,
     travelStyleGroupFilter,
-    genericItems,
     setSearch,
     setActiveFilter,
     setTravelStyleGroupFilter,
@@ -48,6 +51,7 @@ export default function TourComponentsWorkspace() {
   const isTravelStyleActive = activeCategory === "travel_styles";
   const isDestinationActive = activeCategory === "destinations";
   const isSupplierActive = activeCategory === "suppliers";
+  const isProductSlotActive = isProductComponentSlot(activeCategory);
 
   const {
     items: accommodationItems,
@@ -130,6 +134,46 @@ export default function TourComponentsWorkspace() {
     [mutateSuppliers]
   );
 
+  const productCategories = isProductSlotActive ? PRODUCT_CATEGORY_BY_SLOT[activeCategory] : undefined;
+  const {
+    items: productItems,
+    isLoading: isProductLoading,
+    error: productError,
+    mutate: mutateProducts,
+  } = useProductSearch(deferredSearch, {
+    active: activeFilter,
+    category: productCategories,
+    enabled: isProductSlotActive,
+  });
+  const [productDrawerMode, setProductDrawerMode] = useState<ProductDrawerMode>(null);
+  const [editingProduct, setEditingProduct] = useState<ProductProfile | null>(null);
+  const [productPending, setProductPending] = useState(false);
+
+  const openCreateProduct = () => {
+    setEditingProduct(null);
+    setProductDrawerMode("create");
+  };
+  const openEditProduct = (product: ProductProfile) => {
+    setEditingProduct(product);
+    setProductDrawerMode("edit");
+  };
+  const closeProductDrawer = () => {
+    setProductDrawerMode(null);
+    setEditingProduct(null);
+  };
+  const toggleProductStatus = useCallback(
+    async (product: ProductProfile) => {
+      setProductPending(true);
+      try {
+        await updateProductStatus(product.id, !product.is_active);
+        await mutateProducts();
+      } finally {
+        setProductPending(false);
+      }
+    },
+    [mutateProducts]
+  );
+
   const accommodationColumns = useMemo(
     () => createAccommodationColumns(openEditAccommodation, toggleAccommodationStatus),
     [openEditAccommodation, toggleAccommodationStatus]
@@ -141,10 +185,13 @@ export default function TourComponentsWorkspace() {
   );
 
   const travelStyleColumns = useMemo(() => createTravelStyleColumns(), []);
-  const genericColumns = useMemo(() => createGenericCatalogColumns(), []);
   const supplierColumns = useMemo(
     () => createSupplierColumns(openEditSupplier, toggleSupplierStatus),
     [toggleSupplierStatus]
+  );
+  const productColumns = useMemo(
+    () => createProductColumns(openEditProduct, (product) => void toggleProductStatus(product)),
+    [toggleProductStatus]
   );
 
   return (
@@ -368,25 +415,33 @@ export default function TourComponentsWorkspace() {
           tableColumns={supplierColumns}
         />
       ) : (
-        /* Category 4..6: Cars, Experiences, Tickets (Clean Empty State) */
-        <DataViewContainer<GenericComponentItem>
-          items={genericItems}
+        /* Category 4..6: Cars, Experiences, Tickets — product catalog (15.2 §2.2) */
+        <DataViewContainer<ProductProfile>
+          items={productItems}
           keyExtractor={(item) => item.id}
           search={search}
           onSearchChange={setSearch}
           searchPlaceholder={`Search ${currentCategoryMeta.label.toLowerCase()}…`}
+          filters={[
+            { label: "All", value: "all" },
+            { label: "Active", value: "true" },
+            { label: "Inactive", value: "false" },
+          ]}
+          activeFilter={activeFilter}
+          onFilterChange={(val) => setActiveFilter(val as "all" | "true" | "false")}
+          isLoading={isProductLoading || productPending}
+          error={productError}
           emptyTitle={currentCategoryMeta.emptyTitle}
           emptyDescription={
             search
               ? `No ${currentCategoryMeta.label.toLowerCase()} match your search query.`
               : currentCategoryMeta.emptyDescription
           }
-          emptyIcon={
-            <currentCategoryMeta.icon size={40} className="mb-3 text-[var(--color-muted)]" />
-          }
+          emptyIcon={<currentCategoryMeta.icon size={40} className="mb-3 text-[var(--color-muted)]" />}
           actionButton={
             <button
               type="button"
+              onClick={openCreateProduct}
               className={cn(
                 getTypographyClassName("buttonPrimary"),
                 "flex items-center justify-center gap-2 rounded-[var(--radius-button)] bg-[var(--color-accent)] px-4 py-2.5 text-white shadow-xs transition-all hover:bg-[color-mix(in_srgb,var(--color-accent)_85%,black)] cursor-pointer"
@@ -396,8 +451,15 @@ export default function TourComponentsWorkspace() {
               <span>{currentCategoryMeta.actionLabel}</span>
             </button>
           }
-          gridItemRenderer={(item) => <GenericCatalogCard key={item.id} item={item} />}
-          tableColumns={genericColumns}
+          gridItemRenderer={(profile) => (
+            <ProductCard
+              key={profile.id}
+              profile={profile}
+              onEdit={openEditProduct}
+              onToggleStatus={(product) => void toggleProductStatus(product)}
+            />
+          )}
+          tableColumns={productColumns}
         />
       )}
 
@@ -435,6 +497,16 @@ export default function TourComponentsWorkspace() {
         onClose={closeSupplierDrawer}
         onSaved={() => void mutateSuppliers()}
         onMutate={mutateSuppliers}
+      />
+
+      {/* Product Manage Drawer (Cars/Experiences/Tickets) */}
+      <ProductManageDrawer
+        mode={productDrawerMode}
+        editingProduct={editingProduct}
+        presetCategory={productCategories?.[0]}
+        onClose={closeProductDrawer}
+        onSaved={() => void mutateProducts()}
+        onMutate={mutateProducts}
       />
     </main>
   );

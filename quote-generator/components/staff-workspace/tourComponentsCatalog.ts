@@ -51,29 +51,29 @@ export const CATEGORIES: CategoryMeta[] = [
   {
     key: "cars",
     label: "Cars & Transport",
-    description: "Manage vehicle inventory, capacity, private transfers, luxury vans, speedboats, and trains.",
+    description: "Product catalog entries in category transportation — vehicles, luxury vans, speedboats, and trains, each a sellable variant of a supplier at a destination (no pricing here — see 15.3).",
     icon: Car,
-    emptyTitle: "No transport inventory yet",
-    emptyDescription: "Start by cataloging your first vehicle, luxury van, transfer, or boat service.",
-    actionLabel: "Add transport",
+    emptyTitle: "No transportation products yet",
+    emptyDescription: "Start by adding your first transportation product — vehicle, transfer, or boat service.",
+    actionLabel: "Add transportation product",
   },
   {
     key: "experiences",
     label: "Experiences",
-    description: "Curate signature activities, local workshops, guided tours, and dining experiences.",
+    description: "Product catalog entries in categories experience and meal — signature activities, workshops, guided tours, and dining, each a sellable variant of a supplier at a destination.",
     icon: Sparkles,
-    emptyTitle: "No curated experiences yet",
-    emptyDescription: "Start by adding signature experiences, guided tours, and workshops.",
-    actionLabel: "Add experience",
+    emptyTitle: "No experience or meal products yet",
+    emptyDescription: "Start by adding your first experience or meal product.",
+    actionLabel: "Add experience/meal product",
   },
   {
     key: "tickets",
     label: "Tickets & Passes",
-    description: "Catalog entry tickets, cable car passes, museum fees, and special event permits.",
+    description: "Product catalog entries in categories ticket, flights, and visa — entrance tickets, passes, flights, and visa services, each a sellable variant of a supplier at a destination.",
     icon: Ticket,
-    emptyTitle: "No tickets or passes cataloged",
-    emptyDescription: "Add entrance tickets, attraction passes, or permit entries to the catalog.",
-    actionLabel: "Add ticket",
+    emptyTitle: "No ticket, flight, or visa products yet",
+    emptyDescription: "Start by adding your first ticket, flight, or visa product.",
+    actionLabel: "Add ticket/flight/visa product",
   },
   {
     key: "destinations",
@@ -110,4 +110,18 @@ export interface GenericComponentItem {
   tags: string[];
   status: "Active" | "Draft";
   updatedAt: string;
+}
+
+// 15.2 §2.2 — the 3 previously-stub slots map to product catalog categories.
+// Mirrors core/rules/catalog_vocab.py CATEGORY. No new ComponentCategoryKey added.
+export type ProductComponentSlotKey = "cars" | "experiences" | "tickets";
+
+export const PRODUCT_CATEGORY_BY_SLOT: Record<ProductComponentSlotKey, ("accommodation" | "transportation" | "ticket" | "flights" | "guide" | "guide_expense" | "experience" | "meal" | "visa" | "others")[]> = {
+  cars: ["transportation"],
+  experiences: ["experience", "meal"],
+  tickets: ["ticket", "flights", "visa"],
+};
+
+export function isProductComponentSlot(key: ComponentCategoryKey): key is ProductComponentSlotKey {
+  return key === "cars" || key === "experiences" || key === "tickets";
 }

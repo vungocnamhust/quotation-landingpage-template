@@ -276,6 +276,253 @@ export async function updatePartnerStatus(id: string, isActive: boolean): Promis
   });
 }
 
+export type SupplierType = 'direct' | 'dmc' | 'wholesaler' | 'bedbank' | 'ota' | 'freelancer' | 'gov' | 'other';
+export type SupplierPreferredStatus = 'preferred' | 'recommended' | 'standard' | 'backup' | 'do_not_use';
+export type SupplierQualityTier = 'ultra_luxury' | 'luxury' | 'premium' | 'standard' | 'value';
+export type SupplierPaymentMethod = 'bank_transfer' | 'cash' | 'card' | 'other';
+
+export type SupplierContact = {
+  person?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  whatsapp?: string | null;
+  zalo?: string | null;
+  website?: string | null;
+};
+
+export type SupplierPaymentTerms = {
+  deposit_percent?: number | null;
+  deposit_due_days_after_confirm?: number | null;
+  balance_due_days_before_service?: number | null;
+  method?: SupplierPaymentMethod | null;
+  note?: string | null;
+};
+
+export type SupplierCancellationTier = {
+  days_before_service_min: number;
+  penalty_percent: number;
+};
+
+export type SupplierCancellationPolicy = {
+  tiers: SupplierCancellationTier[];
+  no_show_penalty_percent: number;
+  note?: string | null;
+};
+
+export type SupplierChildAgeBand = {
+  age_min: number;
+  age_max: number;
+  charge_percent: number;
+};
+
+export type SupplierChildPolicy = {
+  bands: SupplierChildAgeBand[];
+  infant_age_max?: number | null;
+  note?: string | null;
+};
+
+export type SupplierProfile = {
+  id: string;
+  name: string;
+  legal_name?: string | null;
+  supplier_type: SupplierType;
+  country?: string | null;
+  city?: string | null;
+  destination_id?: string | null;
+  default_currency: string;
+  preferred_status: SupplierPreferredStatus;
+  quality_tier?: SupplierQualityTier | null;
+  contact_json: SupplierContact;
+  payment_terms_json?: SupplierPaymentTerms | null;
+  cancellation_policy_json?: SupplierCancellationPolicy | null;
+  child_policy_json?: SupplierChildPolicy | null;
+  bank_details_ref?: string | null;
+  tax_code?: string | null;
+  credit_terms_days: number;
+  internal_notes?: string | null;
+  is_active: boolean;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+export type SupplierInput = {
+  name: string;
+  legal_name?: string | null;
+  supplier_type: SupplierType;
+  country?: string | null;
+  city?: string | null;
+  destination_id?: string | null;
+  default_currency: string;
+  preferred_status?: SupplierPreferredStatus;
+  quality_tier?: SupplierQualityTier | null;
+  contact_json?: SupplierContact;
+  payment_terms_json?: SupplierPaymentTerms | null;
+  cancellation_policy_json?: SupplierCancellationPolicy | null;
+  child_policy_json?: SupplierChildPolicy | null;
+  bank_details_ref?: string | null;
+  tax_code?: string | null;
+  credit_terms_days?: number;
+  internal_notes?: string | null;
+  is_active?: boolean;
+};
+
+export type SupplierListResponse = {
+  items: SupplierProfile[];
+  total: number;
+};
+
+export async function listSuppliers({
+  active = 'true',
+  search = '',
+  supplierType,
+  destinationId,
+}: {
+  active?: 'true' | 'false' | 'all';
+  search?: string;
+  supplierType?: string;
+  destinationId?: string;
+} = {}): Promise<SupplierListResponse> {
+  const params = new URLSearchParams({ active });
+  if (search.trim()) params.set('search', search.trim());
+  if (supplierType) params.set('supplier_type', supplierType);
+  if (destinationId) params.set('destination_id', destinationId);
+  return request<SupplierListResponse>(`/api/v2/suppliers?${params.toString()}`);
+}
+
+export async function createSupplier(input: SupplierInput): Promise<SupplierProfile> {
+  return request<SupplierProfile>('/api/v2/suppliers', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+}
+
+export async function updateSupplier(id: string, input: Partial<SupplierInput>): Promise<SupplierProfile> {
+  return request<SupplierProfile>(`/api/v2/suppliers/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+}
+
+export async function updateSupplierStatus(id: string, isActive: boolean): Promise<SupplierProfile> {
+  return request<SupplierProfile>(`/api/v2/suppliers/${encodeURIComponent(id)}/status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ isActive }),
+  });
+}
+
+// Mirrors core/rules/catalog_vocab.py — keep both in sync (15.2).
+export type ProductCategory =
+  | 'accommodation'
+  | 'transportation'
+  | 'ticket'
+  | 'flights'
+  | 'guide'
+  | 'guide_expense'
+  | 'experience'
+  | 'meal'
+  | 'visa'
+  | 'others';
+
+export type ProductChargeUnit = 'room' | 'person' | 'vehicle' | 'group' | 'ticket' | 'flight_seat' | 'visa_case' | 'set';
+export type ProductTimeBasis = 'night' | 'day' | 'trip';
+export type ProductCategoryAttributeValue = string | number | boolean;
+
+export type ProductProfile = {
+  id: string;
+  supplier_id?: string | null;
+  property_id?: string | null;
+  destination_id: string;
+  category: ProductCategory;
+  subcategory?: string | null;
+  subcategory_note?: string | null;
+  supplier_product_name?: string | null;
+  title: string;
+  unit: ProductChargeUnit;
+  time_basis: ProductTimeBasis;
+  default_min_pax?: number | null;
+  default_max_pax?: number | null;
+  category_attributes: Record<string, ProductCategoryAttributeValue>;
+  is_active: boolean;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+export type ProductInput = {
+  supplier_id?: string | null;
+  property_id?: string | null;
+  destination_id: string;
+  category: ProductCategory;
+  subcategory?: string | null;
+  subcategory_note?: string | null;
+  supplier_product_name?: string | null;
+  title: string;
+  unit?: ProductChargeUnit | null;
+  time_basis?: ProductTimeBasis | null;
+  default_min_pax?: number | null;
+  default_max_pax?: number | null;
+  category_attributes?: Record<string, ProductCategoryAttributeValue>;
+  is_active?: boolean;
+};
+
+export type ProductListResponse = {
+  items: ProductProfile[];
+  total: number;
+};
+
+export async function listProducts({
+  active = 'true',
+  category,
+  destinationId,
+  supplierId,
+  propertyId,
+  search = '',
+  limit,
+}: {
+  active?: 'true' | 'false' | 'all';
+  category?: string;
+  destinationId?: string;
+  supplierId?: string;
+  propertyId?: string;
+  search?: string;
+  limit?: number;
+} = {}): Promise<ProductListResponse> {
+  const params = new URLSearchParams({ active });
+  if (category) params.set('category', category);
+  if (destinationId) params.set('destination_id', destinationId);
+  if (supplierId) params.set('supplier_id', supplierId);
+  if (propertyId) params.set('property_id', propertyId);
+  if (search.trim()) params.set('search', search.trim());
+  if (limit) params.set('limit', String(limit));
+  return request<ProductListResponse>(`/api/v2/products?${params.toString()}`);
+}
+
+export async function createProduct(input: ProductInput): Promise<ProductProfile> {
+  return request<ProductProfile>('/api/v2/products', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+}
+
+export async function updateProduct(id: string, input: Partial<ProductInput>): Promise<ProductProfile> {
+  return request<ProductProfile>(`/api/v2/products/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+}
+
+export async function updateProductStatus(id: string, isActive: boolean): Promise<ProductProfile> {
+  return request<ProductProfile>(`/api/v2/products/${encodeURIComponent(id)}/status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ isActive }),
+  });
+}
+
 export type RoomingHeuristicRuleItem = {
   id: string;
   name: string;
