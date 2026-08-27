@@ -4,7 +4,13 @@ import { useEffect, useState } from "react";
 import { Package, Plus, Trash2 } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
-import { createProduct, getDestination, updateProduct, type ProductInput, type ProductProfile } from "../../lib/quotationApi.ts";
+import {
+  createProduct,
+  getDestination,
+  updateProduct,
+  type ProductInput,
+  type ProductProfile,
+} from "../../lib/quotationApi.ts";
 import { useToast } from "../staff-workspace/ToastProvider.tsx";
 import { AccommodationSelect } from "../accommodation/AccommodationSelect.tsx";
 import { DestinationSelect } from "../destination/DestinationSelect.tsx";
@@ -20,6 +26,7 @@ import {
   type ProductCategory,
   type ProductCategoryAttributeValue,
 } from "./types.ts";
+import { createProductDraft, productToDraft } from "./productDraft.ts";
 
 export type ProductDrawerMode = "create" | "edit" | null;
 
@@ -33,46 +40,22 @@ type Props = {
   onMutate: () => Promise<unknown>;
 };
 
-const UNIT_OPTIONS = ["room", "person", "vehicle", "group", "ticket", "flight_seat", "visa_case", "set"];
+const UNIT_OPTIONS = [
+  "room",
+  "person",
+  "vehicle",
+  "group",
+  "ticket",
+  "flight_seat",
+  "visa_case",
+  "set",
+];
 const TIME_BASIS_OPTIONS = ["night", "day", "trip"];
 
-const ORIGIN_ELIGIBLE_CATEGORIES: ProductCategory[] = ["transportation", "flights"];
-
-const blankDraft = (category: ProductCategory, destinationId: string): ProductInput => ({
-  destination_id: destinationId,
-  origin_destination_id: null,
-  category,
-  title: "",
-  supplier_id: null,
-  property_id: null,
-  subcategory: null,
-  subcategory_note: null,
-  supplier_product_name: null,
-  unit: null,
-  time_basis: null,
-  default_min_pax: null,
-  default_max_pax: null,
-  category_attributes: {},
-});
-
-function toDraft(product: ProductProfile): ProductInput {
-  return {
-    destination_id: product.destination_id,
-    origin_destination_id: product.origin_destination_id ?? null,
-    category: product.category,
-    title: product.title,
-    supplier_id: product.supplier_id ?? null,
-    property_id: product.property_id ?? null,
-    subcategory: product.subcategory ?? null,
-    subcategory_note: product.subcategory_note ?? null,
-    supplier_product_name: product.supplier_product_name ?? null,
-    unit: product.unit,
-    time_basis: product.time_basis,
-    default_min_pax: product.default_min_pax ?? null,
-    default_max_pax: product.default_max_pax ?? null,
-    category_attributes: product.category_attributes ?? {},
-  };
-}
+const ORIGIN_ELIGIBLE_CATEGORIES: ProductCategory[] = [
+  "transportation",
+  "flights",
+];
 
 function FormField({
   label,
@@ -91,9 +74,16 @@ function FormField({
 }) {
   return (
     <label className="flex flex-col gap-2">
-      <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>
+      <span
+        className={cn(
+          getTypographyClassName("label"),
+          "text-[var(--color-muted)]",
+        )}
+      >
         {label}
-        {required ? <span className="text-[var(--color-accent)] ml-0.5">*</span> : null}
+        {required ? (
+          <span className="text-[var(--color-accent)] ml-0.5">*</span>
+        ) : null}
       </span>
       <input
         type={type}
@@ -102,7 +92,7 @@ function FormField({
         onChange={(event) => onChange(event.target.value)}
         className={cn(
           getTypographyClassName("bodyMd"),
-          "min-h-11 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3 text-[var(--color-on-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus)] disabled:opacity-60"
+          "min-h-11 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3 text-[var(--color-on-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus)] disabled:opacity-60",
         )}
       />
     </label>
@@ -126,14 +116,21 @@ function SelectField({
 }) {
   return (
     <label className="flex flex-col gap-2">
-      <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>{label}</span>
+      <span
+        className={cn(
+          getTypographyClassName("label"),
+          "text-[var(--color-muted)]",
+        )}
+      >
+        {label}
+      </span>
       <select
         value={value}
         disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
         className={cn(
           getTypographyClassName("bodyMd"),
-          "min-h-11 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3 text-[var(--color-on-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus)]"
+          "min-h-11 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-3 text-[var(--color-on-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus)]",
         )}
       >
         {options.map((opt) => (
@@ -157,10 +154,15 @@ export function ProductManageDrawer({
 }: Props) {
   const { toast } = useToast();
   const [draft, setDraft] = useState<ProductInput>(
-    editingProduct ? toDraft(editingProduct) : blankDraft(presetCategory, presetDestinationId)
+    editingProduct
+      ? productToDraft(editingProduct)
+      : createProductDraft(presetCategory, presetDestinationId),
   );
-  const [destinationRef, setDestinationRef] = useState<DestinationRef | null>(null);
-  const [originDestinationRef, setOriginDestinationRef] = useState<DestinationRef | null>(null);
+  const [destinationRef, setDestinationRef] = useState<DestinationRef | null>(
+    null,
+  );
+  const [originDestinationRef, setOriginDestinationRef] =
+    useState<DestinationRef | null>(null);
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
   const [newAttributeKey, setNewAttributeKey] = useState("");
@@ -179,7 +181,12 @@ export function ProductManageDrawer({
     let cancelled = false;
     getDestination(editingProduct.destination_id)
       .then((destination) => {
-        if (!cancelled) setDestinationRef({ id: destination.id, name: destination.name, slug: destination.slug });
+        if (!cancelled)
+          setDestinationRef({
+            id: destination.id,
+            name: destination.name,
+            slug: destination.slug,
+          });
       })
       .catch(() => {
         // Destination lookup is a display convenience only; draft.destination_id already holds the id.
@@ -194,7 +201,12 @@ export function ProductManageDrawer({
     let cancelled = false;
     getDestination(editingProduct.origin_destination_id)
       .then((destination) => {
-        if (!cancelled) setOriginDestinationRef({ id: destination.id, name: destination.name, slug: destination.slug });
+        if (!cancelled)
+          setOriginDestinationRef({
+            id: destination.id,
+            name: destination.name,
+            slug: destination.slug,
+          });
       })
       .catch(() => {
         // Destination lookup is a display convenience only; draft.origin_destination_id already holds the id.
@@ -206,11 +218,14 @@ export function ProductManageDrawer({
 
   if (!mode) return null;
 
-  const setDraftField = <K extends keyof ProductInput>(key: K, next: ProductInput[K]) =>
-    setDraft((current) => ({ ...current, [key]: next }));
+  const setDraftField = <K extends keyof ProductInput>(
+    key: K,
+    next: ProductInput[K],
+  ) => setDraft((current) => ({ ...current, [key]: next }));
 
   const handleCategoryChange = (nextCategory: ProductCategory) => {
-    const [defaultUnit, defaultTimeBasis] = DEFAULT_CHARGE_UNIT_BY_CATEGORY[nextCategory];
+    const [defaultUnit, defaultTimeBasis] =
+      DEFAULT_CHARGE_UNIT_BY_CATEGORY[nextCategory];
     const originEligible = ORIGIN_ELIGIBLE_CATEGORIES.includes(nextCategory);
     if (!originEligible) setOriginDestinationRef(null);
     setDraft((current) => ({
@@ -220,17 +235,24 @@ export function ProductManageDrawer({
       subcategory_note: null,
       unit: defaultUnit,
       time_basis: defaultTimeBasis,
-      property_id: nextCategory === "accommodation" ? current.property_id : null,
-      origin_destination_id: originEligible ? current.origin_destination_id : null,
+      property_id:
+        nextCategory === "accommodation" ? current.property_id : null,
+      origin_destination_id: originEligible
+        ? current.origin_destination_id
+        : null,
     }));
   };
 
   const subcategoryOptions = SUBCATEGORY_BY_CATEGORY[draft.category];
-  const suggestedAttributeKeys = SUGGESTED_ATTRIBUTE_KEYS_BY_CATEGORY[draft.category];
+  const suggestedAttributeKeys =
+    SUGGESTED_ATTRIBUTE_KEYS_BY_CATEGORY[draft.category];
   const attributeEntries = Object.entries(draft.category_attributes ?? {});
 
   const setAttribute = (key: string, value: ProductCategoryAttributeValue) =>
-    setDraftField("category_attributes", { ...(draft.category_attributes ?? {}), [key]: value });
+    setDraftField("category_attributes", {
+      ...(draft.category_attributes ?? {}),
+      [key]: value,
+    });
 
   const removeAttribute = (key: string) => {
     const next = { ...(draft.category_attributes ?? {}) };
@@ -247,13 +269,16 @@ export function ProductManageDrawer({
     }
     setPending(true);
     try {
-      const saved = editingProduct ? await updateProduct(editingProduct.id, draft) : await createProduct(draft);
+      const saved = editingProduct
+        ? await updateProduct(editingProduct.id, draft)
+        : await createProduct(draft);
       await onMutate();
       toast(`Product "${saved.title}" saved successfully.`, "success");
       onSaved(saved);
       onClose();
     } catch (error) {
-      const errMsg = error instanceof Error ? error.message : "Product could not be saved.";
+      const errMsg =
+        error instanceof Error ? error.message : "Product could not be saved.";
       setMessage(errMsg);
       toast(errMsg, "error");
     } finally {
@@ -271,11 +296,22 @@ export function ProductManageDrawer({
       <div className="h-full w-full max-w-xl overflow-y-auto border-l border-[var(--color-border-strong)] bg-[var(--color-surface)] p-5 shadow-[var(--elevation-card)] sm:p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className={cn(getTypographyClassName("cardTitle"), "text-[var(--color-on-surface)]")}>
+            <h2
+              className={cn(
+                getTypographyClassName("cardTitle"),
+                "text-[var(--color-on-surface)]",
+              )}
+            >
               {editingProduct ? "Edit Product" : "Add Product"}
             </h2>
-            <p className={cn(getTypographyClassName("bodySm"), "mt-1 text-[var(--color-muted)]")}>
-              A sellable service variant — location + category + supplier + variant. No pricing here (15.3).
+            <p
+              className={cn(
+                getTypographyClassName("bodySm"),
+                "mt-1 text-[var(--color-muted)]",
+              )}
+            >
+              A sellable service variant — location + category + supplier +
+              variant. No pricing here (15.3).
             </p>
           </div>
           <button
@@ -283,7 +319,7 @@ export function ProductManageDrawer({
             onClick={onClose}
             className={cn(
               getTypographyClassName("buttonSecondary"),
-              "min-h-11 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-on-surface)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)] px-3.5 transition-all cursor-pointer"
+              "min-h-11 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-on-surface)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)] px-3.5 transition-all cursor-pointer",
             )}
           >
             Close
@@ -294,17 +330,33 @@ export function ProductManageDrawer({
           <SelectField
             label="Category"
             value={draft.category}
-            options={CATEGORY_OPTIONS.map((c) => ({ value: c, label: c.replace(/_/g, " ") }))}
+            options={CATEGORY_OPTIONS.map((c) => ({
+              value: c,
+              label: c.replace(/_/g, " "),
+            }))}
             onChange={(v) => handleCategoryChange(v as ProductCategory)}
             disabled={pending}
           />
 
-          <FormField label="Title" value={draft.title} onChange={(v) => setDraftField("title", v)} disabled={pending} required />
+          <FormField
+            label="Title"
+            value={draft.title}
+            onChange={(v) => setDraftField("title", v)}
+            disabled={pending}
+            required
+          />
 
           {ORIGIN_ELIGIBLE_CATEGORIES.includes(draft.category) ? (
             <div className="grid grid-cols-2 gap-3">
               <label className="flex flex-col gap-2">
-                <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>Origin (optional)</span>
+                <span
+                  className={cn(
+                    getTypographyClassName("label"),
+                    "text-[var(--color-muted)]",
+                  )}
+                >
+                  Origin (optional)
+                </span>
                 <DestinationSelect
                   value={originDestinationRef?.name ?? null}
                   onChange={(_name, ref) => {
@@ -315,8 +367,14 @@ export function ProductManageDrawer({
                 />
               </label>
               <label className="flex flex-col gap-2">
-                <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>
-                  Destination<span className="text-[var(--color-accent)] ml-0.5">*</span>
+                <span
+                  className={cn(
+                    getTypographyClassName("label"),
+                    "text-[var(--color-muted)]",
+                  )}
+                >
+                  Destination
+                  <span className="text-[var(--color-accent)] ml-0.5">*</span>
                 </span>
                 <DestinationSelect
                   value={destinationRef?.name ?? null}
@@ -330,8 +388,14 @@ export function ProductManageDrawer({
             </div>
           ) : (
             <label className="flex flex-col gap-2">
-              <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>
-                Destination<span className="text-[var(--color-accent)] ml-0.5">*</span>
+              <span
+                className={cn(
+                  getTypographyClassName("label"),
+                  "text-[var(--color-muted)]",
+                )}
+              >
+                Destination
+                <span className="text-[var(--color-accent)] ml-0.5">*</span>
               </span>
               <DestinationSelect
                 value={destinationRef?.name ?? null}
@@ -363,7 +427,14 @@ export function ProductManageDrawer({
           </div>
 
           <label className="flex flex-col gap-2">
-            <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>Supplier (optional)</span>
+            <span
+              className={cn(
+                getTypographyClassName("label"),
+                "text-[var(--color-muted)]",
+              )}
+            >
+              Supplier (optional)
+            </span>
             <SupplierSelect
               value={draft.supplier_id ?? null}
               onChange={(id) => setDraftField("supplier_id", id)}
@@ -374,7 +445,12 @@ export function ProductManageDrawer({
 
           {draft.category === "accommodation" ? (
             <label className="flex flex-col gap-2">
-              <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>
+              <span
+                className={cn(
+                  getTypographyClassName("label"),
+                  "text-[var(--color-muted)]",
+                )}
+              >
                 Accommodation property (for content/photos)
               </span>
               <AccommodationSelect
@@ -397,16 +473,26 @@ export function ProductManageDrawer({
           <div className="grid grid-cols-2 gap-3">
             <SelectField
               label="Charge unit"
-              value={draft.unit ?? DEFAULT_CHARGE_UNIT_BY_CATEGORY[draft.category][0]}
-              options={UNIT_OPTIONS.map((u) => ({ value: u, label: u.replace(/_/g, " ") }))}
+              value={
+                draft.unit ?? DEFAULT_CHARGE_UNIT_BY_CATEGORY[draft.category][0]
+              }
+              options={UNIT_OPTIONS.map((u) => ({
+                value: u,
+                label: u.replace(/_/g, " "),
+              }))}
               onChange={(v) => setDraftField("unit", v as ProductInput["unit"])}
               disabled={pending}
             />
             <SelectField
               label="Time basis"
-              value={draft.time_basis ?? DEFAULT_CHARGE_UNIT_BY_CATEGORY[draft.category][1]}
+              value={
+                draft.time_basis ??
+                DEFAULT_CHARGE_UNIT_BY_CATEGORY[draft.category][1]
+              }
               options={TIME_BASIS_OPTIONS.map((t) => ({ value: t, label: t }))}
-              onChange={(v) => setDraftField("time_basis", v as ProductInput["time_basis"])}
+              onChange={(v) =>
+                setDraftField("time_basis", v as ProductInput["time_basis"])
+              }
               disabled={pending}
             />
           </div>
@@ -416,26 +502,42 @@ export function ProductManageDrawer({
               label="Default min pax"
               type="number"
               value={draft.default_min_pax ?? ""}
-              onChange={(v) => setDraftField("default_min_pax", v === "" ? null : Number(v))}
+              onChange={(v) =>
+                setDraftField("default_min_pax", v === "" ? null : Number(v))
+              }
               disabled={pending}
             />
             <FormField
               label="Default max pax"
               type="number"
               value={draft.default_max_pax ?? ""}
-              onChange={(v) => setDraftField("default_max_pax", v === "" ? null : Number(v))}
+              onChange={(v) =>
+                setDraftField("default_max_pax", v === "" ? null : Number(v))
+              }
               disabled={pending}
             />
           </div>
 
           <fieldset className="rounded-[var(--radius-card)] border border-[var(--color-border)] p-3">
-            <legend className={cn(getTypographyClassName("label"), "px-1 text-[var(--color-muted)]")}>
+            <legend
+              className={cn(
+                getTypographyClassName("label"),
+                "px-1 text-[var(--color-muted)]",
+              )}
+            >
               Category attributes
             </legend>
             <div className="flex flex-col gap-2">
               {attributeEntries.map(([key, value]) => (
                 <div key={key} className="flex items-center gap-2">
-                  <span className={cn(getTypographyClassName("bodySm"), "w-1/3 truncate text-[var(--color-muted)]")}>{key}</span>
+                  <span
+                    className={cn(
+                      getTypographyClassName("bodySm"),
+                      "w-1/3 truncate text-[var(--color-muted)]",
+                    )}
+                  >
+                    {key}
+                  </span>
                   <input
                     type="text"
                     value={String(value)}
@@ -443,7 +545,7 @@ export function ProductManageDrawer({
                     onChange={(e) => setAttribute(key, e.target.value)}
                     className={cn(
                       getTypographyClassName("bodySm"),
-                      "min-h-9 flex-1 rounded-[var(--radius-button)] border border-[var(--color-border)] bg-[var(--color-surface)] px-2"
+                      "min-h-9 flex-1 rounded-[var(--radius-button)] border border-[var(--color-border)] bg-[var(--color-surface)] px-2",
                     )}
                   />
                   <button
@@ -469,12 +571,14 @@ export function ProductManageDrawer({
                   }}
                   className={cn(
                     getTypographyClassName("bodySm"),
-                    "min-h-9 rounded-[var(--radius-button)] border border-[var(--color-border)] bg-[var(--color-surface)] px-2"
+                    "min-h-9 rounded-[var(--radius-button)] border border-[var(--color-border)] bg-[var(--color-surface)] px-2",
                   )}
                 >
                   <option value="">+ Suggested key…</option>
                   {suggestedAttributeKeys
-                    .filter((key) => !(key in (draft.category_attributes ?? {})))
+                    .filter(
+                      (key) => !(key in (draft.category_attributes ?? {})),
+                    )
                     .map((key) => (
                       <option key={key} value={key}>
                         {key}
@@ -489,7 +593,7 @@ export function ProductManageDrawer({
                   placeholder="custom_key"
                   className={cn(
                     getTypographyClassName("bodySm"),
-                    "min-h-9 flex-1 rounded-[var(--radius-button)] border border-[var(--color-border)] bg-[var(--color-surface)] px-2"
+                    "min-h-9 flex-1 rounded-[var(--radius-button)] border border-[var(--color-border)] bg-[var(--color-surface)] px-2",
                   )}
                 />
                 <button
@@ -501,7 +605,7 @@ export function ProductManageDrawer({
                   }}
                   className={cn(
                     getTypographyClassName("caption"),
-                    "flex items-center gap-1 text-[var(--color-accent)] hover:underline cursor-pointer disabled:opacity-50"
+                    "flex items-center gap-1 text-[var(--color-accent)] hover:underline cursor-pointer disabled:opacity-50",
                   )}
                 >
                   <Plus size={12} aria-hidden="true" />
@@ -518,7 +622,7 @@ export function ProductManageDrawer({
               onClick={() => void saveProduct()}
               className={cn(
                 getTypographyClassName("buttonPrimary"),
-                "min-h-11 rounded-[var(--radius-button)] bg-[var(--color-accent)] !text-white hover:bg-[color-mix(in_srgb,var(--color-accent)_85%,black)] px-5 shadow-md border border-transparent transition-all disabled:opacity-50 cursor-pointer"
+                "min-h-11 rounded-[var(--radius-button)] bg-[var(--color-accent)] !text-white hover:bg-[color-mix(in_srgb,var(--color-accent)_85%,black)] px-5 shadow-md border border-transparent transition-all disabled:opacity-50 cursor-pointer",
               )}
             >
               <span className="inline-flex items-center gap-2">
@@ -532,7 +636,7 @@ export function ProductManageDrawer({
               onClick={onClose}
               className={cn(
                 getTypographyClassName("buttonSecondary"),
-                "min-h-11 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-on-surface)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)] px-4 transition-all cursor-pointer"
+                "min-h-11 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-on-surface)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)] px-4 transition-all cursor-pointer",
               )}
             >
               Cancel
@@ -551,7 +655,13 @@ export function ProductManageDrawer({
         ) : null}
 
         {message ? (
-          <p aria-live="polite" className={cn(getTypographyClassName("bodySm"), "mt-4 text-[var(--color-muted)]")}>
+          <p
+            aria-live="polite"
+            className={cn(
+              getTypographyClassName("bodySm"),
+              "mt-4 text-[var(--color-muted)]",
+            )}
+          >
             {message}
           </p>
         ) : null}

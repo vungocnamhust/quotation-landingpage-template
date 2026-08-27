@@ -1,7 +1,6 @@
 import {
   Building2,
   Car,
-  Sparkles,
   Ticket,
   UtensilsCrossed,
   BadgeCheck,
@@ -10,7 +9,10 @@ import {
   Handshake,
 } from "lucide-react";
 import type { ComponentType } from "react";
-import type { ProductCategory } from "../../lib/quotationApi.ts";
+import type {
+  ProductCategory,
+  TravelStyleTagItem,
+} from "../../lib/quotationApi.ts";
 
 export type ComponentCategoryKey =
   | "hotels"
@@ -36,16 +38,19 @@ export const CATEGORIES: readonly CategoryMeta[] = [
   {
     key: "hotels",
     label: "Hotels & Stays",
-    description: "Sellable room and stay products. Property imagery and editorial profiles are managed in Content Studio.",
+    description:
+      "Sellable room and stay products. Property imagery and editorial profiles are managed in Content Studio.",
     icon: Building2,
     emptyTitle: "No hotel or stay products yet",
-    emptyDescription: "Start by adding a sellable room, resort, villa, or other stay product.",
+    emptyDescription:
+      "Start by adding a sellable room, resort, villa, or other stay product.",
     actionLabel: "Add hotel or stay product",
   },
   {
     key: "cars",
     label: "Cars & Transport",
-    description: "Sellable transportation and flight products, including vehicles, boats, trains, and air services.",
+    description:
+      "Sellable transportation and flight products, including vehicles, boats, trains, and air services.",
     icon: Car,
     emptyTitle: "No transport products yet",
     emptyDescription: "Start by adding a transportation or flight product.",
@@ -54,16 +59,19 @@ export const CATEGORIES: readonly CategoryMeta[] = [
   {
     key: "guides",
     label: "Tour Guides",
-    description: "Sellable guide services and guide-related operating expenses.",
+    description:
+      "Sellable guide services and guide-related operating expenses.",
     icon: UsersRound,
     emptyTitle: "No guide products yet",
-    emptyDescription: "Start by adding a guide service or guide expense product.",
+    emptyDescription:
+      "Start by adding a guide service or guide expense product.",
     actionLabel: "Add guide product",
   },
   {
     key: "activities",
     label: "Activities & Tickets",
-    description: "Sellable experiences, attractions, admission tickets, and passes.",
+    description:
+      "Sellable experiences, attractions, admission tickets, and passes.",
     icon: Ticket,
     emptyTitle: "No activity or ticket products yet",
     emptyDescription: "Start by adding an experience or ticket product.",
@@ -81,7 +89,8 @@ export const CATEGORIES: readonly CategoryMeta[] = [
   {
     key: "visa",
     label: "Visa & Ancillaries",
-    description: "Sellable visa, fast-track, SIM, gifting, and ancillary services.",
+    description:
+      "Sellable visa, fast-track, SIM, gifting, and ancillary services.",
     icon: BadgeCheck,
     emptyTitle: "No visa or ancillary products yet",
     emptyDescription: "Start by adding a visa or ancillary product.",
@@ -90,22 +99,43 @@ export const CATEGORIES: readonly CategoryMeta[] = [
   {
     key: "destinations",
     label: "Destinations",
-    description: "Maintain primary travel destinations, cities, highlight points, and regional cover imagery.",
+    description:
+      "Maintain primary travel destinations, cities, highlight points, and regional cover imagery.",
     icon: MapPin,
     emptyTitle: "No custom destinations configured",
-    emptyDescription: "Add regional destinations, arrival hubs, and points of interest.",
+    emptyDescription:
+      "Add regional destinations, arrival hubs, and points of interest.",
     actionLabel: "Add destination",
   },
   {
     key: "suppliers",
     label: "Suppliers",
-    description: "Manage the creditor-side registry — DMCs, hotels, wholesalers, and other vendors we pay for services.",
+    description:
+      "Manage the creditor-side registry — DMCs, hotels, wholesalers, and other vendors we pay for services.",
     icon: Handshake,
     emptyTitle: "No suppliers found",
-    emptyDescription: "Start by registering your first supplier — hotel, DMC, wholesaler, or freelance vendor.",
+    emptyDescription:
+      "Start by registering your first supplier — hotel, DMC, wholesaler, or freelance vendor.",
     actionLabel: "Add supplier",
   },
 ];
+
+// Kept as a compatibility contract for the generic catalog presentation
+// components while their consumers are migrated to concrete catalog records.
+export interface GenericComponentItem {
+  id: string;
+  name: string;
+  category: string;
+  subtitle: string;
+  tags: string[];
+  status: "Active" | "Draft";
+  updatedAt: string;
+}
+
+export interface FlatTravelStyleTag extends TravelStyleTagItem {
+  categoryTitleEn: string;
+  categoryTitleVi: string;
+}
 
 export type ProductComponentSlotKey = Extract<
   ComponentCategoryKey,
@@ -114,7 +144,10 @@ export type ProductComponentSlotKey = Extract<
 
 // Mirrors core/rules/catalog_vocab.py CATEGORY. Every backend product category
 // belongs to exactly one commercial catalog tab; the first category is its create preset.
-export const PRODUCT_CATEGORY_BY_SLOT: Record<ProductComponentSlotKey, readonly ProductCategory[]> = {
+export const PRODUCT_CATEGORY_BY_SLOT: Record<
+  ProductComponentSlotKey,
+  ProductCategory[]
+> = {
   hotels: ["accommodation"],
   cars: ["transportation", "flights"],
   guides: ["guide", "guide_expense"],
@@ -123,6 +156,8 @@ export const PRODUCT_CATEGORY_BY_SLOT: Record<ProductComponentSlotKey, readonly 
   visa: ["visa", "others"],
 };
 
-export function isProductComponentSlot(key: ComponentCategoryKey): key is ProductComponentSlotKey {
+export function isProductComponentSlot(
+  key: ComponentCategoryKey,
+): key is ProductComponentSlotKey {
   return key in PRODUCT_CATEGORY_BY_SLOT;
 }

@@ -3,7 +3,15 @@
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import useSWR from "swr";
-import { LayoutDashboard, FileText, Inbox, PlusCircle, Boxes, Palette } from "lucide-react";
+import {
+  LayoutDashboard,
+  FileText,
+  Inbox,
+  PlusCircle,
+  Boxes,
+  Palette,
+  ClipboardList,
+} from "lucide-react";
 import { getTypographyClassName } from "../../config/typography.ts";
 import { apiErrorMessage, quotationFetch } from "../../lib/apiError.ts";
 import { cn } from "../../utils/cn.ts";
@@ -11,7 +19,10 @@ import { ToastProvider } from "./ToastProvider.tsx";
 import { NotificationBellButton } from "./NotificationBellButton.tsx";
 import { NotificationCenterDrawer } from "./NotificationCenterDrawer.tsx";
 import { useNotifications } from "./useNotifications.ts";
-import { WorkspaceNavigationLink, WorkspaceNavigationProvider } from "./WorkspaceNavigation.tsx";
+import {
+  WorkspaceNavigationLink,
+  WorkspaceNavigationProvider,
+} from "./WorkspaceNavigation.tsx";
 
 const API_BASE = process.env.NEXT_PUBLIC_QUOTATION_API_URL ?? "";
 const fetcher = <T,>(url: string) =>
@@ -28,6 +39,7 @@ const nav = [
   { label: "My quotations", href: "/workspace/quotations", icon: FileText },
   { label: "Product Catalog", href: "/workspace/catalog", icon: Boxes },
   { label: "Content Studio", href: "/workspace/content-studio", icon: Palette },
+  { label: "Operations", href: "/workspace/operations", icon: ClipboardList },
 ] as const;
 
 function UserAvatar({ name }: { name: string }) {
@@ -50,7 +62,7 @@ function WorkspaceShellInner({ children }: { children: React.ReactNode }) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const { data, error } = useSWR<Me>(
     `${API_BASE}/api/v2/workspace/me`,
-    fetcher
+    fetcher,
   );
 
   const {
@@ -70,7 +82,7 @@ function WorkspaceShellInner({ children }: { children: React.ReactNode }) {
               href="/workspace"
               className={cn(
                 getTypographyClassName("navTitle"),
-                "text-[var(--color-on-surface)] transition-colors hover:text-[var(--color-accent)]"
+                "text-[var(--color-on-surface)] transition-colors hover:text-[var(--color-accent)]",
               )}
             >
               DIASgroup Desk
@@ -81,7 +93,7 @@ function WorkspaceShellInner({ children }: { children: React.ReactNode }) {
             <p
               className={cn(
                 getTypographyClassName("navMeta"),
-                "hidden text-[var(--color-muted)] sm:block"
+                "hidden text-[var(--color-muted)] sm:block",
               )}
             >
               {data?.profile.email ??
@@ -112,7 +124,7 @@ function WorkspaceShellInner({ children }: { children: React.ReactNode }) {
           <p
             className={cn(
               getTypographyClassName("overline"),
-              "px-3 pb-3 text-[var(--color-muted)]"
+              "px-3 pb-3 text-[var(--color-muted)]",
             )}
           >
             Personal workspace
@@ -134,7 +146,7 @@ function WorkspaceShellInner({ children }: { children: React.ReactNode }) {
                     "workspace-nav-item shrink-0 rounded-[var(--radius-button)] px-3 py-3 transition-all",
                     isActive
                       ? "border border-[var(--color-border-strong)] bg-[var(--color-accent-wash)] text-[var(--color-accent)] shadow-xs"
-                      : "border border-transparent text-[var(--color-on-surface)] hover:border-[var(--color-border)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)]"
+                      : "border border-transparent text-[var(--color-on-surface)] hover:border-[var(--color-border)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)]",
                   )}
                 >
                   <Icon size={16} aria-hidden="true" />
@@ -151,7 +163,7 @@ function WorkspaceShellInner({ children }: { children: React.ReactNode }) {
                 <p
                   className={cn(
                     getTypographyClassName("bodySm"),
-                    "truncate text-[var(--color-on-surface)]"
+                    "truncate text-[var(--color-on-surface)]",
                   )}
                 >
                   {data.profile.name}
@@ -159,7 +171,7 @@ function WorkspaceShellInner({ children }: { children: React.ReactNode }) {
                 <p
                   className={cn(
                     getTypographyClassName("caption"),
-                    "text-[var(--color-muted)]"
+                    "text-[var(--color-muted)]",
                   )}
                 >
                   Travel Designer

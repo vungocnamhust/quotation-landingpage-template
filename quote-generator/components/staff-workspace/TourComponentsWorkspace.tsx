@@ -1,37 +1,63 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { Building2, Palette, Plus, MapPin, Truck } from "lucide-react";
+import { MapPin, Plus, Truck } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
 import { DataViewContainer } from "../ui/data-view/DataViewContainer.tsx";
 import {
   updateProductStatus,
   updateSupplierStatus,
-  type AccommodationProfile,
   type DestinationProfile,
   type ProductProfile,
   type SupplierProfile,
 } from "../../lib/quotationApi.ts";
-import { CATEGORIES, isProductComponentSlot, PRODUCT_CATEGORY_BY_SLOT, type FlatTravelStyleTag } from "./tourComponentsCatalog.ts";
+import {
+  CATEGORIES,
+  isProductComponentSlot,
+  PRODUCT_CATEGORY_BY_SLOT,
+} from "./tourComponentsCatalog.ts";
 import { useTourComponentsState } from "./useTourComponentsState.ts";
-import { useAccommodationManager } from "./accommodations/useAccommodationManager.ts";
-import { useTravelStyleCatalog } from "./travel-styles/useTravelStyleCatalog.ts";
 import { useDestinationManager } from "./destinations/useDestinationManager.ts";
-import { AccommodationCard } from "./accommodations/AccommodationCard.tsx";
-import { createAccommodationColumns } from "./accommodations/AccommodationColumns.tsx";
-import { AccommodationDrawerModal } from "./accommodations/AccommodationDrawerModal.tsx";
 import { DestinationCard } from "./destinations/DestinationCard.tsx";
 import { createDestinationColumns } from "./destinations/DestinationColumns.tsx";
 import { DestinationDrawerModal } from "./destinations/DestinationDrawerModal.tsx";
-import { TravelStyleCard } from "./travel-styles/TravelStyleCard.tsx";
-import { createTravelStyleColumns } from "./travel-styles/TravelStyleColumns.tsx";
 import { SupplierCard } from "./suppliers/SupplierCard.tsx";
 import { createSupplierColumns } from "./suppliers/SupplierColumns.tsx";
 import { ProductCard } from "./products/ProductCard.tsx";
 import { createProductColumns } from "./products/ProductColumns.tsx";
-import { SupplierManageDrawer, useSupplierSearch, type SupplierDrawerMode } from "../supplier/index.ts";
-import { ProductManageDrawer, useProductSearch, type ProductDrawerMode } from "../product/index.ts";
+import {
+  SupplierManageDrawer,
+  useSupplierSearch,
+  type SupplierDrawerMode,
+} from "../supplier/index.ts";
+import {
+  ProductManageDrawer,
+  useProductSearch,
+  type ProductDrawerMode,
+} from "../product/index.ts";
+
+function CatalogActionButton({
+  label,
+  onClick,
+}: {
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        getTypographyClassName("buttonPrimary"),
+        "flex items-center justify-center gap-2 rounded-[var(--radius-button)] bg-[var(--color-accent)] px-4 py-2.5 text-white shadow-xs transition-all hover:bg-[color-mix(in_srgb,var(--color-accent)_85%,black)] cursor-pointer",
+      )}
+    >
+      <Plus size={18} aria-hidden="true" />
+      <span>{label}</span>
+    </button>
+  );
+}
 
 export default function TourComponentsWorkspace() {
   const {
@@ -40,44 +66,16 @@ export default function TourComponentsWorkspace() {
     search,
     deferredSearch,
     activeFilter,
-    travelStyleGroupFilter,
     setSearch,
     setActiveFilter,
-    setTravelStyleGroupFilter,
     handleCategoryChange,
   } = useTourComponentsState();
-
-  const isAccommodationActive = activeCategory === "accommodations";
-  const isTravelStyleActive = activeCategory === "travel_styles";
   const isDestinationActive = activeCategory === "destinations";
   const isSupplierActive = activeCategory === "suppliers";
   const isProductSlotActive = isProductComponentSlot(activeCategory);
-
-  const {
-    items: accommodationItems,
-    isLoading: isAccommodationLoading,
-    error: accommodationError,
-    isDrawerOpen: isAccommodationDrawerOpen,
-    editing: editingAccommodation,
-    draft: accommodationDraft,
-    destinationRef,
-    pending: isAccommodationPending,
-    message: accommodationMessage,
-    setDraft: setAccommodationDraft,
-    setDestinationRef,
-    openCreate: openCreateAccommodation,
-    openEdit: openEditAccommodation,
-    closeDrawer: closeAccommodationDrawer,
-    saveAccommodation,
-    uploadAsset,
-    toggleAccommodationStatus,
-  } = useAccommodationManager(isAccommodationActive, activeFilter, deferredSearch);
-
-  const {
-    items: travelStyleItems,
-    isLoading: isTravelStyleLoading,
-    error: travelStyleError,
-  } = useTravelStyleCatalog(isTravelStyleActive, travelStyleGroupFilter, deferredSearch);
+  const productCategories = isProductSlotActive
+    ? PRODUCT_CATEGORY_BY_SLOT[activeCategory]
+    : undefined;
 
   const {
     items: destinationItems,
@@ -95,7 +93,6 @@ export default function TourComponentsWorkspace() {
     saveDestination,
     toggleDestinationStatus,
   } = useDestinationManager(isDestinationActive, activeFilter, deferredSearch);
-
   const {
     items: supplierItems,
     isLoading: isSupplierLoading,
@@ -105,36 +102,11 @@ export default function TourComponentsWorkspace() {
     active: activeFilter,
     enabled: isSupplierActive,
   });
-  const [supplierDrawerMode, setSupplierDrawerMode] = useState<SupplierDrawerMode>(null);
-  const [editingSupplier, setEditingSupplier] = useState<SupplierProfile | null>(null);
+  const [supplierDrawerMode, setSupplierDrawerMode] =
+    useState<SupplierDrawerMode>(null);
+  const [editingSupplier, setEditingSupplier] =
+    useState<SupplierProfile | null>(null);
   const [supplierPending, setSupplierPending] = useState(false);
-
-  const openCreateSupplier = () => {
-    setEditingSupplier(null);
-    setSupplierDrawerMode("create");
-  };
-  const openEditSupplier = (supplier: SupplierProfile) => {
-    setEditingSupplier(supplier);
-    setSupplierDrawerMode("edit");
-  };
-  const closeSupplierDrawer = () => {
-    setSupplierDrawerMode(null);
-    setEditingSupplier(null);
-  };
-  const toggleSupplierStatus = useCallback(
-    async (supplier: SupplierProfile) => {
-      setSupplierPending(true);
-      try {
-        await updateSupplierStatus(supplier.id, !supplier.is_active);
-        await mutateSuppliers();
-      } finally {
-        setSupplierPending(false);
-      }
-    },
-    [mutateSuppliers]
-  );
-
-  const productCategories = isProductSlotActive ? PRODUCT_CATEGORY_BY_SLOT[activeCategory] : undefined;
   const {
     items: productItems,
     isLoading: isProductLoading,
@@ -145,22 +117,49 @@ export default function TourComponentsWorkspace() {
     category: productCategories,
     enabled: isProductSlotActive,
   });
-  const [productDrawerMode, setProductDrawerMode] = useState<ProductDrawerMode>(null);
-  const [editingProduct, setEditingProduct] = useState<ProductProfile | null>(null);
+  const [productDrawerMode, setProductDrawerMode] =
+    useState<ProductDrawerMode>(null);
+  const [editingProduct, setEditingProduct] = useState<ProductProfile | null>(
+    null,
+  );
   const [productPending, setProductPending] = useState(false);
 
-  const openCreateProduct = () => {
+  const openCreateSupplier = useCallback(() => {
+    setEditingSupplier(null);
+    setSupplierDrawerMode("create");
+  }, []);
+  const openEditSupplier = useCallback((supplier: SupplierProfile) => {
+    setEditingSupplier(supplier);
+    setSupplierDrawerMode("edit");
+  }, []);
+  const closeSupplierDrawer = useCallback(() => {
+    setSupplierDrawerMode(null);
+    setEditingSupplier(null);
+  }, []);
+  const toggleSupplierStatus = useCallback(
+    async (supplier: SupplierProfile) => {
+      setSupplierPending(true);
+      try {
+        await updateSupplierStatus(supplier.id, !supplier.is_active);
+        await mutateSuppliers();
+      } finally {
+        setSupplierPending(false);
+      }
+    },
+    [mutateSuppliers],
+  );
+  const openCreateProduct = useCallback(() => {
     setEditingProduct(null);
     setProductDrawerMode("create");
-  };
-  const openEditProduct = (product: ProductProfile) => {
+  }, []);
+  const openEditProduct = useCallback((product: ProductProfile) => {
     setEditingProduct(product);
     setProductDrawerMode("edit");
-  };
-  const closeProductDrawer = () => {
+  }, []);
+  const closeProductDrawer = useCallback(() => {
     setProductDrawerMode(null);
     setEditingProduct(null);
-  };
+  }, []);
   const toggleProductStatus = useCallback(
     async (product: ProductProfile) => {
       setProductPending(true);
@@ -171,177 +170,103 @@ export default function TourComponentsWorkspace() {
         setProductPending(false);
       }
     },
-    [mutateProducts]
-  );
-
-  const accommodationColumns = useMemo(
-    () => createAccommodationColumns(openEditAccommodation, toggleAccommodationStatus),
-    [openEditAccommodation, toggleAccommodationStatus]
+    [mutateProducts],
   );
 
   const destinationColumns = useMemo(
-    () => createDestinationColumns(openEditDestination, toggleDestinationStatus),
-    [openEditDestination, toggleDestinationStatus]
+    () =>
+      createDestinationColumns(openEditDestination, toggleDestinationStatus),
+    [openEditDestination, toggleDestinationStatus],
   );
-
-  const travelStyleColumns = useMemo(() => createTravelStyleColumns(), []);
   const supplierColumns = useMemo(
     () => createSupplierColumns(openEditSupplier, toggleSupplierStatus),
-    [toggleSupplierStatus]
+    [openEditSupplier, toggleSupplierStatus],
   );
   const productColumns = useMemo(
-    () => createProductColumns(openEditProduct, (product) => void toggleProductStatus(product)),
-    [toggleProductStatus]
+    () =>
+      createProductColumns(
+        openEditProduct,
+        (product) => void toggleProductStatus(product),
+      ),
+    [openEditProduct, toggleProductStatus],
   );
+  const standardFilters = [
+    { label: "All", value: "all" },
+    { label: "Active", value: "true" },
+    { label: "Inactive", value: "false" },
+  ];
+  const setStandardFilter = (value: string) =>
+    setActiveFilter(value as "all" | "true" | "false");
 
   return (
     <main className="flex flex-col gap-6">
-      {/* Header section */}
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p
-            className={cn(
-              getTypographyClassName("overline"),
-              "text-[var(--color-accent)]"
-            )}
-          >
-            Catalog management
-          </p>
-          <h1
-            className={cn(
-              getTypographyClassName("pageTitle"),
-              "mt-1 text-[var(--color-on-surface)]"
-            )}
-          >
-            Tour Components
-          </h1>
-          <p
-            className={cn(
-              getTypographyClassName("bodyLg"),
-              "mt-1 text-[var(--color-muted)]"
-            )}
-          >
-            {currentCategoryMeta.description}
-          </p>
-        </div>
+      <header>
+        <p
+          className={cn(
+            getTypographyClassName("overline"),
+            "text-[var(--color-accent)]",
+          )}
+        >
+          Commercial operations
+        </p>
+        <h1
+          className={cn(
+            getTypographyClassName("pageTitle"),
+            "mt-1 text-[var(--color-on-surface)]",
+          )}
+        >
+          Product Catalog
+        </h1>
+        <p
+          className={cn(
+            getTypographyClassName("bodyLg"),
+            "mt-1 text-[var(--color-muted)]",
+          )}
+        >
+          {currentCategoryMeta.description}
+        </p>
       </header>
 
-      {/* Sub-category Pills Navigation */}
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {CATEGORIES.map((cat) => {
-          const Icon = cat.icon;
-          const isActive = activeCategory === cat.key;
+      <div
+        className="flex gap-2 overflow-x-auto pb-1"
+        role="tablist"
+        aria-label="Product catalog categories"
+      >
+        {CATEGORIES.map((category) => {
+          const Icon = category.icon;
+          const isActive = activeCategory === category.key;
           return (
             <button
-              key={cat.key}
+              key={category.key}
               type="button"
-              onClick={() => handleCategoryChange(cat.key)}
+              role="tab"
+              aria-selected={isActive}
+              onClick={() => handleCategoryChange(category.key)}
               className={cn(
                 getTypographyClassName("buttonSecondary"),
                 "flex shrink-0 items-center gap-2 rounded-[var(--radius-button)] px-4 py-2.5 transition-all cursor-pointer",
                 isActive
                   ? "border border-[var(--color-border-strong)] bg-[var(--color-accent)] text-white shadow-xs"
-                  : "border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-on-surface)] hover:border-[var(--color-border-strong)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)]"
+                  : "border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-on-surface)] hover:border-[var(--color-border-strong)] hover:bg-[var(--color-accent-wash)] hover:text-[var(--color-accent)]",
               )}
             >
               <Icon size={16} aria-hidden="true" />
-              <span>{cat.label}</span>
+              <span>{category.label}</span>
             </button>
           );
         })}
       </div>
 
-      {/* Category 1: Accommodations */}
-      {isAccommodationActive ? (
-        <DataViewContainer<AccommodationProfile>
-          items={accommodationItems}
-          keyExtractor={(item) => item.id}
-          search={search}
-          onSearchChange={setSearch}
-          searchPlaceholder="Search accommodations…"
-          filters={[
-            { label: "All", value: "all" },
-            { label: "Active", value: "true" },
-            { label: "Inactive", value: "false" },
-          ]}
-          activeFilter={activeFilter}
-          onFilterChange={(val) => setActiveFilter(val as "all" | "true" | "false")}
-          isLoading={isAccommodationLoading}
-          error={accommodationError}
-          emptyTitle={currentCategoryMeta.emptyTitle}
-          emptyDescription={
-            search
-              ? "No accommodations match your search query."
-              : currentCategoryMeta.emptyDescription
-          }
-          emptyIcon={<Building2 size={40} className="mb-3 text-[var(--color-muted)]" />}
-          actionButton={
-            <button
-              type="button"
-              onClick={openCreateAccommodation}
-              className={cn(
-                getTypographyClassName("buttonPrimary"),
-                "flex items-center justify-center gap-2 rounded-[var(--radius-button)] bg-[var(--color-accent)] px-4 py-2.5 text-white shadow-xs transition-all hover:bg-[color-mix(in_srgb,var(--color-accent)_85%,black)] cursor-pointer"
-              )}
-            >
-              <Plus size={18} />
-              <span>{currentCategoryMeta.actionLabel}</span>
-            </button>
-          }
-          gridItemRenderer={(profile) => (
-            <AccommodationCard
-              key={profile.id}
-              profile={profile}
-              onEdit={openEditAccommodation}
-              onToggleStatus={toggleAccommodationStatus}
-            />
-          )}
-          tableColumns={accommodationColumns}
-        />
-      ) : isTravelStyleActive ? (
-        /* Category 2: Real Database Travel Styles */
-        <DataViewContainer<FlatTravelStyleTag>
-          items={travelStyleItems}
-          keyExtractor={(tag) => tag.id}
-          search={search}
-          onSearchChange={setSearch}
-          searchPlaceholder="Search travel styles by name, slug or group…"
-          filters={[
-            { label: "All Groups", value: "all" },
-            { label: "Group Composition", value: "group_composition" },
-            { label: "Tour Type", value: "tour_type" },
-            { label: "Purpose & Theme", value: "purpose" },
-            { label: "Interest & Experience", value: "interest_experience" },
-          ]}
-          activeFilter={travelStyleGroupFilter}
-          onFilterChange={setTravelStyleGroupFilter}
-          isLoading={isTravelStyleLoading}
-          error={travelStyleError}
-          emptyTitle={currentCategoryMeta.emptyTitle}
-          emptyDescription={
-            search
-              ? "No travel style tags match your search query."
-              : currentCategoryMeta.emptyDescription
-          }
-          emptyIcon={<Palette size={40} className="mb-3 text-[var(--color-muted)]" />}
-          gridItemRenderer={(tag) => <TravelStyleCard key={tag.id} tag={tag} />}
-          tableColumns={travelStyleColumns}
-        />
-      ) : isDestinationActive ? (
-        /* Category 3: Real Database Destinations */
+      {isDestinationActive ? (
         <DataViewContainer<DestinationProfile>
           items={destinationItems}
           keyExtractor={(item) => item.id}
           search={search}
           onSearchChange={setSearch}
           searchPlaceholder="Search destinations by name or alias…"
-          filters={[
-            { label: "All", value: "all" },
-            { label: "Active", value: "true" },
-            { label: "Inactive", value: "false" },
-          ]}
+          filters={standardFilters}
           activeFilter={activeFilter}
-          onFilterChange={(val) => setActiveFilter(val as "all" | "true" | "false")}
+          onFilterChange={setStandardFilter}
           isLoading={isDestinationLoading}
           error={destinationError}
           emptyTitle={currentCategoryMeta.emptyTitle}
@@ -350,19 +275,14 @@ export default function TourComponentsWorkspace() {
               ? "No destinations match your search query."
               : currentCategoryMeta.emptyDescription
           }
-          emptyIcon={<MapPin size={40} className="mb-3 text-[var(--color-muted)]" />}
+          emptyIcon={
+            <MapPin size={40} className="mb-3 text-[var(--color-muted)]" />
+          }
           actionButton={
-            <button
-              type="button"
+            <CatalogActionButton
+              label={currentCategoryMeta.actionLabel}
               onClick={openCreateDestination}
-              className={cn(
-                getTypographyClassName("buttonPrimary"),
-                "flex items-center justify-center gap-2 rounded-[var(--radius-button)] bg-[var(--color-accent)] px-4 py-2.5 text-white shadow-xs transition-all hover:bg-[color-mix(in_srgb,var(--color-accent)_85%,black)] cursor-pointer"
-              )}
-            >
-              <Plus size={18} />
-              <span>{currentCategoryMeta.actionLabel}</span>
-            </button>
+            />
           }
           gridItemRenderer={(profile) => (
             <DestinationCard
@@ -375,60 +295,52 @@ export default function TourComponentsWorkspace() {
           tableColumns={destinationColumns}
         />
       ) : isSupplierActive ? (
-        /* Category: Suppliers (creditor-side registry) */
         <DataViewContainer<SupplierProfile>
           items={supplierItems}
           keyExtractor={(item) => item.id}
           search={search}
           onSearchChange={setSearch}
           searchPlaceholder="Search suppliers by name or legal name…"
-          filters={[
-            { label: "All", value: "all" },
-            { label: "Active", value: "true" },
-            { label: "Inactive", value: "false" },
-          ]}
+          filters={standardFilters}
           activeFilter={activeFilter}
-          onFilterChange={(val) => setActiveFilter(val as "all" | "true" | "false")}
+          onFilterChange={setStandardFilter}
           isLoading={isSupplierLoading || supplierPending}
           error={supplierError}
           emptyTitle={currentCategoryMeta.emptyTitle}
           emptyDescription={
-            search ? "No suppliers match your search query." : currentCategoryMeta.emptyDescription
+            search
+              ? "No suppliers match your search query."
+              : currentCategoryMeta.emptyDescription
           }
-          emptyIcon={<Truck size={40} className="mb-3 text-[var(--color-muted)]" />}
+          emptyIcon={
+            <Truck size={40} className="mb-3 text-[var(--color-muted)]" />
+          }
           actionButton={
-            <button
-              type="button"
+            <CatalogActionButton
+              label={currentCategoryMeta.actionLabel}
               onClick={openCreateSupplier}
-              className={cn(
-                getTypographyClassName("buttonPrimary"),
-                "flex items-center justify-center gap-2 rounded-[var(--radius-button)] bg-[var(--color-accent)] px-4 py-2.5 text-white shadow-xs transition-all hover:bg-[color-mix(in_srgb,var(--color-accent)_85%,black)] cursor-pointer"
-              )}
-            >
-              <Plus size={18} />
-              <span>{currentCategoryMeta.actionLabel}</span>
-            </button>
+            />
           }
           gridItemRenderer={(profile) => (
-            <SupplierCard key={profile.id} profile={profile} onEdit={openEditSupplier} onToggleStatus={(supplier) => void toggleSupplierStatus(supplier)} />
+            <SupplierCard
+              key={profile.id}
+              profile={profile}
+              onEdit={openEditSupplier}
+              onToggleStatus={(supplier) => void toggleSupplierStatus(supplier)}
+            />
           )}
           tableColumns={supplierColumns}
         />
       ) : (
-        /* Category 4..6: Cars, Experiences, Tickets — product catalog (15.2 §2.2) */
         <DataViewContainer<ProductProfile>
           items={productItems}
           keyExtractor={(item) => item.id}
           search={search}
           onSearchChange={setSearch}
           searchPlaceholder={`Search ${currentCategoryMeta.label.toLowerCase()}…`}
-          filters={[
-            { label: "All", value: "all" },
-            { label: "Active", value: "true" },
-            { label: "Inactive", value: "false" },
-          ]}
+          filters={standardFilters}
           activeFilter={activeFilter}
-          onFilterChange={(val) => setActiveFilter(val as "all" | "true" | "false")}
+          onFilterChange={setStandardFilter}
           isLoading={isProductLoading || productPending}
           error={productError}
           emptyTitle={currentCategoryMeta.emptyTitle}
@@ -437,19 +349,17 @@ export default function TourComponentsWorkspace() {
               ? `No ${currentCategoryMeta.label.toLowerCase()} match your search query.`
               : currentCategoryMeta.emptyDescription
           }
-          emptyIcon={<currentCategoryMeta.icon size={40} className="mb-3 text-[var(--color-muted)]" />}
+          emptyIcon={
+            <currentCategoryMeta.icon
+              size={40}
+              className="mb-3 text-[var(--color-muted)]"
+            />
+          }
           actionButton={
-            <button
-              type="button"
+            <CatalogActionButton
+              label={currentCategoryMeta.actionLabel}
               onClick={openCreateProduct}
-              className={cn(
-                getTypographyClassName("buttonPrimary"),
-                "flex items-center justify-center gap-2 rounded-[var(--radius-button)] bg-[var(--color-accent)] px-4 py-2.5 text-white shadow-xs transition-all hover:bg-[color-mix(in_srgb,var(--color-accent)_85%,black)] cursor-pointer"
-              )}
-            >
-              <Plus size={18} />
-              <span>{currentCategoryMeta.actionLabel}</span>
-            </button>
+            />
           }
           gridItemRenderer={(profile) => (
             <ProductCard
@@ -463,22 +373,6 @@ export default function TourComponentsWorkspace() {
         />
       )}
 
-      {/* Accommodations Drawer Modal */}
-      <AccommodationDrawerModal
-        isOpen={isAccommodationDrawerOpen}
-        editing={editingAccommodation}
-        draft={accommodationDraft}
-        destinationRef={destinationRef}
-        pending={isAccommodationPending}
-        message={accommodationMessage}
-        onClose={closeAccommodationDrawer}
-        onDraftChange={setAccommodationDraft}
-        onDestinationChange={setDestinationRef}
-        onUploadAsset={(target, file) => void uploadAsset(target, file)}
-        onSave={() => void saveAccommodation()}
-      />
-
-      {/* Destinations Drawer Modal */}
       <DestinationDrawerModal
         isOpen={isDestinationDrawerOpen}
         editing={editingDestination}
@@ -489,8 +383,6 @@ export default function TourComponentsWorkspace() {
         onDraftChange={setDestinationDraft}
         onSave={() => void saveDestination()}
       />
-
-      {/* Supplier Manage Drawer */}
       <SupplierManageDrawer
         mode={supplierDrawerMode}
         editingSupplier={editingSupplier}
@@ -498,17 +390,21 @@ export default function TourComponentsWorkspace() {
         onSaved={() => void mutateSuppliers()}
         onMutate={mutateSuppliers}
       />
-
-      {/* Product Manage Drawer (Cars/Experiences/Tickets) */}
-      <ProductManageDrawer
-        mode={productDrawerMode}
-        editingProduct={editingProduct}
-        presetCategory={productCategories?.[0]}
-        onClose={closeProductDrawer}
-        onSaved={() => void mutateProducts()}
-        onMutate={mutateProducts}
-      />
+      {productDrawerMode && productCategories ? (
+        <ProductManageDrawer
+          key={
+            editingProduct
+              ? `edit:${editingProduct.id}`
+              : `create:${activeCategory}`
+          }
+          mode={productDrawerMode}
+          editingProduct={editingProduct}
+          presetCategory={productCategories[0]}
+          onClose={closeProductDrawer}
+          onSaved={() => void mutateProducts()}
+          onMutate={mutateProducts}
+        />
+      ) : null}
     </main>
   );
 }
-

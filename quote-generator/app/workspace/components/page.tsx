@@ -1,5 +1,5 @@
-import TourComponentsWorkspace from "../../../components/staff-workspace/TourComponentsWorkspace";
+import { redirect } from "next/navigation";
 
-export default function TourComponentsPage() {
-  return <TourComponentsWorkspace />;
+export default function LegacyWorkspaceComponentsPage() {
+  redirect("/workspace/catalog");
 }

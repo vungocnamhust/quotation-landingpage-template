@@ -2,7 +2,11 @@
 
 import { useDeferredValue, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CATEGORIES, type ComponentCategoryKey, type CategoryMeta } from "./tourComponentsCatalog.ts";
+import {
+  CATEGORIES,
+  type ComponentCategoryKey,
+  type CategoryMeta,
+} from "./tourComponentsCatalog.ts";
 
 export function useTourComponentsState() {
   const router = useRouter();
@@ -10,20 +14,26 @@ export function useTourComponentsState() {
 
   // Active Category selection
   const activeCategoryParam = searchParams.get("category");
-  const initialCategory = CATEGORIES.some((category) => category.key === activeCategoryParam)
+  const initialCategory = CATEGORIES.some(
+    (category) => category.key === activeCategoryParam,
+  )
     ? (activeCategoryParam as ComponentCategoryKey)
     : "hotels";
-  const [activeCategory, setActiveCategory] = useState<ComponentCategoryKey>(initialCategory);
+  const [activeCategory, setActiveCategory] =
+    useState<ComponentCategoryKey>(initialCategory);
 
   const currentCategoryMeta: CategoryMeta = useMemo(
     () => CATEGORIES.find((c) => c.key === activeCategory) ?? CATEGORIES[0],
-    [activeCategory]
+    [activeCategory],
   );
 
   // Search & Filter state
   const [search, setSearch] = useState("");
-  const [activeFilter, setActiveFilter] = useState<"all" | "true" | "false">("all");
-  const [travelStyleGroupFilter, setTravelStyleGroupFilter] = useState<string>("all");
+  const [activeFilter, setActiveFilter] = useState<"all" | "true" | "false">(
+    "all",
+  );
+  const [travelStyleGroupFilter, setTravelStyleGroupFilter] =
+    useState<string>("all");
 
   const deferredSearch = useDeferredValue(search);
 
