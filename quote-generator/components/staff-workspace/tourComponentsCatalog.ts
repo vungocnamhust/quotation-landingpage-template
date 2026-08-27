@@ -5,6 +5,7 @@ import {
   Sparkles,
   Ticket,
   MapPin,
+  Handshake,
 } from "lucide-react";
 import type { ComponentType } from "react";
 import type { TravelStyleTagItem } from "../../lib/quotationApi.ts";
@@ -15,7 +16,8 @@ export type ComponentCategoryKey =
   | "cars"
   | "experiences"
   | "tickets"
-  | "destinations";
+  | "destinations"
+  | "suppliers";
 
 export interface CategoryMeta {
   key: ComponentCategoryKey;
@@ -81,6 +83,15 @@ export const CATEGORIES: CategoryMeta[] = [
     emptyTitle: "No custom destinations configured",
     emptyDescription: "Add regional destinations, arrival hubs, and points of interest.",
     actionLabel: "Add destination",
+  },
+  {
+    key: "suppliers",
+    label: "Suppliers",
+    description: "Manage the creditor-side registry — DMCs, hotels, wholesalers, and other vendors we pay for services.",
+    icon: Handshake,
+    emptyTitle: "No suppliers found",
+    emptyDescription: "Start by registering your first supplier — hotel, DMC, wholesaler, or freelance vendor.",
+    actionLabel: "Add supplier",
   },
 ];
 

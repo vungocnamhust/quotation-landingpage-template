@@ -40,7 +40,7 @@ export function useTourComponentsState() {
   // Real empty storage for generic categories (Cars, Experiences, Tickets)
   // Ready to connect to backend endpoint when available
   const [genericCatalogStore] = useState<
-    Record<Exclude<ComponentCategoryKey, "accommodations" | "travel_styles" | "destinations">, GenericComponentItem[]>
+    Record<Exclude<ComponentCategoryKey, "accommodations" | "travel_styles" | "destinations" | "suppliers">, GenericComponentItem[]>
   >({
     cars: [],
     experiences: [],
@@ -51,7 +51,8 @@ export function useTourComponentsState() {
     if (
       activeCategory === "accommodations" ||
       activeCategory === "travel_styles" ||
-      activeCategory === "destinations"
+      activeCategory === "destinations" ||
+      activeCategory === "suppliers"
     ) {
       return [];
     }

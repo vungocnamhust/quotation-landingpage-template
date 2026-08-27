@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
-import { Building2, Palette, Plus, MapPin } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import { Building2, Palette, Plus, MapPin, Truck } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
 import { DataViewContainer } from "../ui/data-view/DataViewContainer.tsx";
-import type { AccommodationProfile, DestinationProfile } from "../../lib/quotationApi.ts";
+import { updateSupplierStatus, type AccommodationProfile, type DestinationProfile, type SupplierProfile } from "../../lib/quotationApi.ts";
 import {
   CATEGORIES,
   type FlatTravelStyleTag,
@@ -25,6 +25,9 @@ import { TravelStyleCard } from "./travel-styles/TravelStyleCard.tsx";
 import { createTravelStyleColumns } from "./travel-styles/TravelStyleColumns.tsx";
 import { GenericCatalogCard } from "./catalog/GenericCatalogCard.tsx";
 import { createGenericCatalogColumns } from "./catalog/GenericCatalogColumns.tsx";
+import { SupplierCard } from "./suppliers/SupplierCard.tsx";
+import { createSupplierColumns } from "./suppliers/SupplierColumns.tsx";
+import { SupplierManageDrawer, useSupplierSearch, type SupplierDrawerMode } from "../supplier/index.ts";
 
 export default function TourComponentsWorkspace() {
   const {
@@ -44,6 +47,7 @@ export default function TourComponentsWorkspace() {
   const isAccommodationActive = activeCategory === "accommodations";
   const isTravelStyleActive = activeCategory === "travel_styles";
   const isDestinationActive = activeCategory === "destinations";
+  const isSupplierActive = activeCategory === "suppliers";
 
   const {
     items: accommodationItems,
@@ -88,6 +92,44 @@ export default function TourComponentsWorkspace() {
     toggleDestinationStatus,
   } = useDestinationManager(isDestinationActive, activeFilter, deferredSearch);
 
+  const {
+    items: supplierItems,
+    isLoading: isSupplierLoading,
+    error: supplierError,
+    mutate: mutateSuppliers,
+  } = useSupplierSearch(deferredSearch, {
+    active: activeFilter,
+    enabled: isSupplierActive,
+  });
+  const [supplierDrawerMode, setSupplierDrawerMode] = useState<SupplierDrawerMode>(null);
+  const [editingSupplier, setEditingSupplier] = useState<SupplierProfile | null>(null);
+  const [supplierPending, setSupplierPending] = useState(false);
+
+  const openCreateSupplier = () => {
+    setEditingSupplier(null);
+    setSupplierDrawerMode("create");
+  };
+  const openEditSupplier = (supplier: SupplierProfile) => {
+    setEditingSupplier(supplier);
+    setSupplierDrawerMode("edit");
+  };
+  const closeSupplierDrawer = () => {
+    setSupplierDrawerMode(null);
+    setEditingSupplier(null);
+  };
+  const toggleSupplierStatus = useCallback(
+    async (supplier: SupplierProfile) => {
+      setSupplierPending(true);
+      try {
+        await updateSupplierStatus(supplier.id, !supplier.is_active);
+        await mutateSuppliers();
+      } finally {
+        setSupplierPending(false);
+      }
+    },
+    [mutateSuppliers]
+  );
+
   const accommodationColumns = useMemo(
     () => createAccommodationColumns(openEditAccommodation, toggleAccommodationStatus),
     [openEditAccommodation, toggleAccommodationStatus]
@@ -100,6 +142,10 @@ export default function TourComponentsWorkspace() {
 
   const travelStyleColumns = useMemo(() => createTravelStyleColumns(), []);
   const genericColumns = useMemo(() => createGenericCatalogColumns(), []);
+  const supplierColumns = useMemo(
+    () => createSupplierColumns(openEditSupplier, toggleSupplierStatus),
+    [toggleSupplierStatus]
+  );
 
   return (
     <main className="flex flex-col gap-6">
@@ -281,6 +327,46 @@ export default function TourComponentsWorkspace() {
           )}
           tableColumns={destinationColumns}
         />
+      ) : isSupplierActive ? (
+        /* Category: Suppliers (creditor-side registry) */
+        <DataViewContainer<SupplierProfile>
+          items={supplierItems}
+          keyExtractor={(item) => item.id}
+          search={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Search suppliers by name or legal name…"
+          filters={[
+            { label: "All", value: "all" },
+            { label: "Active", value: "true" },
+            { label: "Inactive", value: "false" },
+          ]}
+          activeFilter={activeFilter}
+          onFilterChange={(val) => setActiveFilter(val as "all" | "true" | "false")}
+          isLoading={isSupplierLoading || supplierPending}
+          error={supplierError}
+          emptyTitle={currentCategoryMeta.emptyTitle}
+          emptyDescription={
+            search ? "No suppliers match your search query." : currentCategoryMeta.emptyDescription
+          }
+          emptyIcon={<Truck size={40} className="mb-3 text-[var(--color-muted)]" />}
+          actionButton={
+            <button
+              type="button"
+              onClick={openCreateSupplier}
+              className={cn(
+                getTypographyClassName("buttonPrimary"),
+                "flex items-center justify-center gap-2 rounded-[var(--radius-button)] bg-[var(--color-accent)] px-4 py-2.5 text-white shadow-xs transition-all hover:bg-[color-mix(in_srgb,var(--color-accent)_85%,black)] cursor-pointer"
+              )}
+            >
+              <Plus size={18} />
+              <span>{currentCategoryMeta.actionLabel}</span>
+            </button>
+          }
+          gridItemRenderer={(profile) => (
+            <SupplierCard key={profile.id} profile={profile} onEdit={openEditSupplier} onToggleStatus={(supplier) => void toggleSupplierStatus(supplier)} />
+          )}
+          tableColumns={supplierColumns}
+        />
       ) : (
         /* Category 4..6: Cars, Experiences, Tickets (Clean Empty State) */
         <DataViewContainer<GenericComponentItem>
@@ -340,6 +426,15 @@ export default function TourComponentsWorkspace() {
         onClose={closeDestinationDrawer}
         onDraftChange={setDestinationDraft}
         onSave={() => void saveDestination()}
+      />
+
+      {/* Supplier Manage Drawer */}
+      <SupplierManageDrawer
+        mode={supplierDrawerMode}
+        editingSupplier={editingSupplier}
+        onClose={closeSupplierDrawer}
+        onSaved={() => void mutateSuppliers()}
+        onMutate={mutateSuppliers}
       />
     </main>
   );
