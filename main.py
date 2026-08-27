@@ -1147,6 +1147,12 @@ def _v2_error_payload(status_code: int, detail: Any, *, request_id: str) -> dict
         code, category, recovery, retryable = "REVIEW_BLOCKED", "review", "open-blockers", False
     elif status_code == 422 and "missingInputs" in record:
         code, category, recovery, retryable = "INTAKE_INCOMPLETE", "validation", "open-blockers", False
+    elif status_code == 422 and "structuralFields" in record:
+        code, category, recovery, retryable = "STRUCTURAL_FIELDS_LOCKED", "validation", "reload", False
+    elif status_code == 422 and "aclDenied" in record:
+        code, category, recovery, retryable = "CONTENT_ACL_DENIED", "validation", None, False
+    elif status_code == 422 and "targetEntityMissing" in record:
+        code, category, recovery, retryable = "TARGET_ENTITY_MISSING", "validation", "reload", False
     elif status_code == 422:
         code, category, recovery, retryable = "VALIDATION_FAILED", "validation", None, False
     else:
@@ -1160,7 +1166,7 @@ def _v2_error_payload(status_code: int, detail: Any, *, request_id: str) -> dict
         "recovery": recovery,
         "requestId": request_id,
     }
-    for key in ("missingInputs", "currentRevision", "review"):
+    for key in ("missingInputs", "currentRevision", "review", "structuralFields", "source"):
         if key in record:
             error[key] = record[key]
     return {"detail": detail, "error": error}

@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { DisplayDocument } from '../../display/runtimePageBuilder.ts';
-import { quotationFetch, apiErrorMessage } from '../../lib/apiError.ts';
+import { apiErrorMessage } from '../../lib/apiError.ts';
+import { buildContentMutation } from '../../lib/rules/designMutation.ts';
 import type { EditableBrochureContract } from './useQuotationWorkspace.ts';
 import BoundaryCanvas, { type InspectorDescriptor, type ResolvedInspectorSelection } from './BoundaryCanvas.tsx';
 import ContextualInspector from './ContextualInspector.tsx';
@@ -10,8 +11,7 @@ import MediaDrawer from './MediaDrawer.tsx';
 import { matchEditableSource, resolveInspectorDescriptor, resolveEditableHandoff, type ResolvedHandoff } from './editableHandoff.ts';
 import type { QuotationFacts } from './factsTypes.ts';
 import { useToast } from '../staff-workspace/ToastProvider.tsx';
-
-const API_BASE = process.env.NEXT_PUBLIC_QUOTATION_API_URL ?? '';
+import { useDesignCanvasSave } from './useDesignCanvasSave.ts';
 
 export type FactInspectorPatch = Partial<
   Pick<QuotationFacts['designer_facts'], 'seller_subtitle' | 'designer_kicker' | 'designer_title' | 'designer_quote' | 'designer_signature' | 'designer_experience' | 'cta_body'>
@@ -36,36 +36,6 @@ export const DESIGNER_FACT_FIELD_BY_DESCRIPTOR = {
   'customer.greetingName': 'customer_greeting_name',
   'customer.partyLabel': 'customer_party_label',
 } as const;
-
-function setDocumentPath(
-  document: Record<string, unknown>,
-  source: string,
-  value: unknown
-): Record<string, unknown> {
-  const parts = source.startsWith('/') ? source.slice(1).split('/') : source.split('.');
-  const clone = JSON.parse(JSON.stringify(document)) as Record<string, unknown>;
-  let cursor: Record<string, unknown> | unknown[] = clone;
-
-  for (let i = 0; i < parts.length; i++) {
-    const part = parts[i];
-    const isLast = i === parts.length - 1;
-    const nextPart = parts[i + 1];
-    const nextIsNumeric = nextPart !== undefined && /^\d+$/.test(nextPart);
-    const key = /^\d+$/.test(part) ? Number(part) : part;
-
-    if (isLast) {
-      (cursor as Record<string | number, unknown>)[key] = value;
-    } else {
-      const currentVal = (cursor as Record<string | number, unknown>)[key];
-      if (currentVal === undefined || currentVal === null || typeof currentVal !== 'object') {
-        (cursor as Record<string | number, unknown>)[key] = nextIsNumeric ? [] : {};
-      }
-      cursor = (cursor as Record<string | number, unknown>)[key] as Record<string, unknown> | unknown[];
-    }
-  }
-
-  return clone;
-}
 
 function readDocumentPath(document: Record<string, unknown>, source: string): unknown {
   const parts = source.startsWith('/') ? source.slice(1).split('/') : source.split('.');
@@ -125,11 +95,16 @@ export default function DesignCanvas({
   document,
   currentRevision,
   canEditDesignerFacts,
+  immutableFacts,
+  isEditingQuotation,
+  factsSourceKind,
+  businessVersionNumber,
   contract,
   facts,
   onSaved,
   onSaveDesignerFacts,
   onHandoff,
+  onRequestEditQuotation,
   focus,
 }: {
   quotationId: string;
@@ -138,11 +113,16 @@ export default function DesignCanvas({
   document: Record<string, unknown>;
   currentRevision: number;
   canEditDesignerFacts: boolean;
+  immutableFacts?: boolean;
+  isEditingQuotation?: boolean;
+  factsSourceKind?: string;
+  businessVersionNumber?: number;
   contract?: EditableBrochureContract;
   facts?: QuotationFacts;
   onSaved: () => Promise<unknown> | void;
   onSaveDesignerFacts: (next: FactInspectorPatch) => Promise<void>;
   onHandoff: (target: ResolvedHandoff) => void;
+  onRequestEditQuotation?: (target?: ResolvedHandoff) => void;
   focus?: string;
 }) {
   const { toast, notify, clearScope } = useToast();
@@ -153,6 +133,15 @@ export default function DesignCanvas({
   const [isMediaDrawerOpen, setIsMediaDrawerOpen] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
   const inspectorRef = useRef<HTMLDivElement>(null);
+  const { patchContentValues, savePresentationOverride, saveMediaSlot } = useDesignCanvasSave({
+    quotationId,
+    lang,
+    currentRevision,
+    onSaved,
+    toast,
+    notify,
+    clearScope,
+  });
 
   const mediaSlots = contract?.mediaSlotRegistry ?? [];
   const activeMediaMatch = findMediaMatch(mediaSlots, selected);
@@ -241,133 +230,20 @@ export default function DesignCanvas({
     return () => window.clearTimeout(timer);
   }, [focus, contract?.fields, document]);
 
-  const saveCanonicalDocument = async (nextDoc: Record<string, unknown>, retryCount = 0): Promise<void> => {
-    try {
-      await quotationFetch(
-        `${API_BASE}/api/v2/quotations/${quotationId}/document?lang=${encodeURIComponent(lang)}`,
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            document: nextDoc,
-            baseRevision: currentRevision,
-          }),
-        },
-        'Document content could not be saved.'
-      );
-      await onSaved();
-    } catch (error) {
-      if (retryCount < 1 && error instanceof Error && error.message.includes('conflict')) {
-        await onSaved();
-        return saveCanonicalDocument(nextDoc, retryCount + 1);
-      }
-      throw error;
-    }
-  };
-
-  const savePresentationOverride = async (
-    fieldId: string,
-    value: string,
-    identityKey?: string,
-    retryCount = 0
-  ): Promise<void> => {
-    try {
-      await quotationFetch(
-        `${API_BASE}/api/v2/quotations/${quotationId}/presentation/overrides?lang=${encodeURIComponent(lang)}`,
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            baseRevision: currentRevision,
-            copyOverrides: identityKey ? {} : { [fieldId]: value },
-            identityOverrides: identityKey ? { [identityKey]: value } : {},
-          }),
-        },
-        'Design override could not be saved.'
-      );
-      await onSaved();
-      clearScope('design:override');
-      toast('Design override saved.', 'success');
-    } catch (error) {
-      if (retryCount < 1 && error instanceof Error && error.message.includes('conflict')) {
-        await onSaved();
-        return savePresentationOverride(fieldId, value, identityKey, retryCount + 1);
-      }
-      const message = apiErrorMessage(error);
-      notify({
-        message,
-        type: 'error',
-        persistent: true,
-        scope: 'design:override',
-        action: { label: 'Reload', onClick: () => window.location.reload() },
-      });
-      throw new Error(message);
-    }
-  };
-
-  const saveMediaSlot = async (
-    fieldId: string,
-    mediaValue: unknown,
-    retryCount = 0
-  ): Promise<void> => {
-    try {
-      await quotationFetch(
-        `${API_BASE}/api/v2/quotations/${quotationId}/presentation/overrides?lang=${encodeURIComponent(lang)}`,
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            baseRevision: currentRevision,
-            mediaOverrides: { [fieldId]: mediaValue },
-          }),
-        },
-        'Media could not be saved.'
-      );
-      await onSaved();
-      clearScope('design:media');
-      toast('Media updated successfully.', 'success');
-      setIsMediaDrawerOpen(false);
-    } catch (error) {
-      if (retryCount < 1 && error instanceof Error && error.message.includes('conflict')) {
-        await onSaved();
-        return saveMediaSlot(fieldId, mediaValue, retryCount + 1);
-      }
-      const message = apiErrorMessage(error);
-      notify({
-        message,
-        type: 'error',
-        persistent: true,
-        scope: 'design:media',
-        action: { label: 'Retry', onClick: () => void saveMediaSlot(fieldId, mediaValue) },
-      });
-      throw new Error(message);
-    }
-  };
-
   /**
    * Write-Target Dispatcher:
-   * Dispatches updates to Canonical Document, Facts, Presentation Overrides or Media Facts safely.
+   * Dispatches updates to Content, Facts, or Presentation Overrides safely.
+   * A locked (owner === 'fact' | 'fact-derived') field with no direct-inspector
+   * surface never reaches here — the Locked Panel offers only a handoff, no
+   * save button — so there is deliberately no copyOverrides fallback for it
+   * (Plan 16 §B5: that fallback created a silent, unreconciled shadow value).
    */
   const save = async (descriptor: InspectorDescriptor, value: string) => {
-    // 1. Fact-owned fields (e.g. Designer, Greeting Name, Party Label, Booking Terms)
-    const factField = DESIGNER_FACT_FIELD_BY_DESCRIPTOR[descriptor.fieldId as keyof typeof DESIGNER_FACT_FIELD_BY_DESCRIPTOR];
-    if (descriptor.owner === 'fact' && (descriptor.editorSurface === 'design-inspector' || factField)) {
-      if (canEditDesignerFacts && factField) {
-        await onSaveDesignerFacts({ [factField]: value });
-        await onSaved();
-        toast('Facts updated.', 'success');
-        return;
-      }
-      // Smart Fallback for dmc_handoff or read-only facts: Save to copyOverrides to prevent HTTP 403
-      await savePresentationOverride(descriptor.fieldId, value);
-      return;
-    }
-
-    // 2. Content-owned fields (e.g. Itinerary day summary, Overview letter, Route map description, Hero lede)
+    // 1. Content-owned fields (e.g. Itinerary day summary, Overview letter, Route map description, Hero lede)
     if (descriptor.owner === 'content') {
       try {
-        const nextDoc = setDocumentPath(document, descriptor.source, value);
-        await saveCanonicalDocument(nextDoc);
+        const mutation = buildContentMutation(descriptor.source, resolvedHandoff?.source, value);
+        await patchContentValues([mutation]);
         clearScope('design:content');
         toast('Content saved to brochure.', 'success');
       } catch (error) {
@@ -384,15 +260,26 @@ export default function DesignCanvas({
       return;
     }
 
-    // 3. Design-owned fields (presentation copyOverrides / identityOverrides)
+    // 2. Design-owned fields (presentation copyOverrides / identityOverrides)
     if (descriptor.owner === 'design') {
       const identityKey = descriptor.source?.match(/^\/presentation\/identityOverrides\/([^/]+)$/)?.[1];
       await savePresentationOverride(descriptor.fieldId, value, identityKey);
       return;
     }
 
-    // Fallback: save as presentation copyOverride
-    await savePresentationOverride(descriptor.fieldId, value);
+    // 3. Designer-facts inspector surface (owner === 'fact', editorSurface === 'design-inspector')
+    const factField = DESIGNER_FACT_FIELD_BY_DESCRIPTOR[descriptor.fieldId as keyof typeof DESIGNER_FACT_FIELD_BY_DESCRIPTOR];
+    if (descriptor.owner === 'fact' && descriptor.editorSurface === 'design-inspector' && factField) {
+      if (!canEditDesignerFacts) {
+        throw new Error('Facts are immutable for this quotation version. Use Edit Quotation to make changes.');
+      }
+      await onSaveDesignerFacts({ [factField]: value });
+      await onSaved();
+      toast('Facts updated.', 'success');
+      return;
+    }
+
+    throw new Error(`${descriptor.fieldId} is not editable from the Design canvas.`);
   };
 
   const select = (selection: ResolvedInspectorSelection, value: string) => {
@@ -462,6 +349,11 @@ export default function DesignCanvas({
               onSave={save}
               onHandoff={onHandoff}
               canEditFactInspector={canEditDesignerFacts}
+              immutableFacts={immutableFacts}
+              isEditingQuotation={isEditingQuotation}
+              factsSourceKind={factsSourceKind}
+              businessVersionNumber={businessVersionNumber}
+              onRequestEditQuotation={onRequestEditQuotation}
               facts={facts}
               onSaveFactFields={onSaveDesignerFacts}
               onOpenMediaDrawer={() => setIsMediaDrawerOpen(true)}
@@ -476,12 +368,13 @@ export default function DesignCanvas({
           open={isMediaDrawerOpen}
           onClose={() => setIsMediaDrawerOpen(false)}
           onSelect={(r2Key) => {
-            void saveMediaSlot(activeMediaMatch.fieldId, { r2Key, source: 'manual' });
+            void saveMediaSlot(activeMediaMatch.fieldId, { r2Key, source: 'manual' }, () => setIsMediaDrawerOpen(false));
           }}
           onConfirm={(r2Keys) => {
             void saveMediaSlot(
               activeMediaMatch.fieldId,
-              r2Keys.map((k) => ({ r2Key: k, source: 'manual' }))
+              r2Keys.map((k) => ({ r2Key: k, source: 'manual' })),
+              () => setIsMediaDrawerOpen(false)
             );
           }}
           initialPrefix={activeInitialPrefix}

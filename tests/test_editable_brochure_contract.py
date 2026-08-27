@@ -3,7 +3,20 @@ from copy import deepcopy
 from pathlib import Path
 
 import main
-from editable_brochure_contract import EDITABLE_BROCHURE_CONTRACT, EDITABLE_BROCHURE_FIELDS, MEDIA_SLOT_REGISTRY, _normalized_fields, editable_contract_payload, expand_media_slot_field_ids, is_design_copy_field, is_fact_media_field
+from editable_brochure_contract import (
+    EDITABLE_BROCHURE_CONTRACT,
+    EDITABLE_BROCHURE_FIELDS,
+    MEDIA_SLOT_REGISTRY,
+    _normalized_fields,
+    _source_templates_intersect,
+    content_write_allowlist,
+    editable_contract_payload,
+    expand_media_slot_field_ids,
+    is_content_writable_source,
+    is_design_copy_field,
+    is_fact_media_field,
+    resolve_id_keyed_source,
+)
 from core.config import settings
 
 
@@ -283,6 +296,43 @@ class EditableBrochureContractTests(unittest.TestCase):
         missing_repeater_resolver["handoffs"]["itinerary.days.*.title"].pop("indexFromSource")
         with self.assertRaisesRegex(ValueError, "requires a wildcard index resolver"):
             _normalized_fields(missing_repeater_resolver)
+
+
+    def test_content_write_allowlist_matches_every_content_owned_source(self):
+        allowlist = content_write_allowlist()
+        expected = {field["source"] for field in EDITABLE_BROCHURE_FIELDS if field["owner"] == "content"}
+        self.assertEqual(set(allowlist), expected)
+        self.assertEqual(len(allowlist), len(expected))
+        self.assertTrue(is_content_writable_source("/trip/title"))
+        self.assertTrue(is_content_writable_source("/itinerary/days/3/title"))
+        self.assertFalse(is_content_writable_source("/pricing_facts/options"))
+        self.assertFalse(is_content_writable_source("/trip/startDate"))
+
+    def test_param_segment_is_treated_as_a_wildcard_for_overlap_detection(self):
+        self.assertTrue(_source_templates_intersect("/itinerary/days/*/title", "/itinerary/days/{dayId}/title"))
+        self.assertTrue(_source_templates_intersect("/itinerary/days/{dayId}/title", "/itinerary/days/3/title"))
+        self.assertFalse(_source_templates_intersect("/itinerary/days/{dayId}/title", "/itinerary/days/{dayId}/description"))
+
+    def test_resolve_id_keyed_source_matches_entity_by_id_or_index(self):
+        document = {
+            "itinerary": {"days": [
+                {"sourceFactId": "day-1", "dayNumber": 1},
+                {"sourceFactId": "day-2", "dayNumber": 2},
+            ]},
+            "stays": {"hotels": [{"sourceFactId": "hotel-1"}]},
+            "route": {"staySegments": [{"id": "seg-1"}]},
+        }
+        self.assertEqual(resolve_id_keyed_source("/itinerary/days/day-2/title", document), ("/itinerary/days/1/title", "itinerary:day:day-2"))
+        self.assertEqual(resolve_id_keyed_source("/itinerary/days/1/title", document), ("/itinerary/days/1/title", "itinerary:day:day-2"))
+        self.assertEqual(resolve_id_keyed_source("/stays/hotels/hotel-1/editorialIntroduction", document), ("/stays/hotels/0/editorialIntroduction", "hotel_plan"))
+        self.assertEqual(resolve_id_keyed_source("/route/staySegments/seg-1/mapSegmentDesc", document), ("/route/staySegments/0/mapSegmentDesc", "route"))
+        self.assertEqual(resolve_id_keyed_source("/trip/title", document), ("/trip/title", "hero"))
+
+    def test_resolve_id_keyed_source_returns_none_for_deleted_or_non_content_targets(self):
+        document = {"itinerary": {"days": [{"sourceFactId": "day-1", "dayNumber": 1}]}}
+        self.assertIsNone(resolve_id_keyed_source("/itinerary/days/day-9/title", document))
+        self.assertIsNone(resolve_id_keyed_source("/itinerary/days/9/title", document))
+        self.assertIsNone(resolve_id_keyed_source("/pricing_facts/options", document))
 
 
 if __name__ == "__main__":

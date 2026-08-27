@@ -14,11 +14,15 @@ MANIFEST = json.loads((ROOT / "editable-brochure-coverage-manifest.json").read_t
 RUNTIME = (ROOT / "quote-generator/display/runtimePageBuilder.ts").read_text(encoding="utf-8")
 
 
+def _is_wildcard_segment(segment: str) -> bool:
+    return segment == "*" or (segment.startswith("{") and segment.endswith("}") and len(segment) > 2)
+
+
 def _source_matches(template: str, source: str) -> bool:
     template_parts = template.strip("/").split("/")
     source_parts = source.strip("/").split("/")
     return len(template_parts) == len(source_parts) and all(
-        expected == "*" or expected == actual
+        _is_wildcard_segment(expected) or expected == actual
         for expected, actual in zip(template_parts, source_parts)
     )
 

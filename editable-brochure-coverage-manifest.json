@@ -193,7 +193,7 @@
     },
     {
       "fieldId": "routeMap.segmentDescription",
-      "source": "/route/staySegments/*/mapSegmentDesc",
+      "source": "/route/staySegments/{segmentId}/mapSegmentDesc",
       "owner": "content",
       "kind": "text",
       "behavior": "handoff",
@@ -238,7 +238,7 @@
     },
     {
       "fieldId": "itinerary.days.*.title",
-      "source": "/itinerary/days/*/title",
+      "source": "/itinerary/days/{dayId}/title",
       "owner": "content",
       "kind": "text",
       "behavior": "handoff",
@@ -247,7 +247,7 @@
     },
     {
       "fieldId": "itinerary.days.*.description",
-      "source": "/itinerary/days/*/description/0",
+      "source": "/itinerary/days/{dayId}/description/0",
       "owner": "content",
       "kind": "richText",
       "behavior": "handoff",
@@ -256,7 +256,7 @@
     },
     {
       "fieldId": "itinerary.days.*.activities",
-      "source": "/itinerary/days/*/activities",
+      "source": "/itinerary/days/{dayId}/activities",
       "owner": "content",
       "kind": "richText",
       "behavior": "handoff",
@@ -940,7 +940,7 @@
     },
     {
       "fieldId": "stays.hotels.*.editorialIntroduction",
-      "source": "/stays/hotels/*/editorialIntroduction",
+      "source": "/stays/hotels/{hotelId}/editorialIntroduction",
       "owner": "content",
       "kind": "richText",
       "behavior": "handoff",

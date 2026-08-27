@@ -72,6 +72,7 @@ EXPECTED_V2_OPERATIONS = {
     ("/api/v2/quotations/{quotation_id}/content-actions/accept", "POST"),
     ("/api/v2/quotations/{quotation_id}/content-actions/generate-drafts", "POST"),
     ("/api/v2/quotations/{quotation_id}/content-actions/generate-and-apply", "POST"),
+    ("/api/v2/quotations/{quotation_id}/content-values", "PATCH"),
     ("/api/v2/quotations/{quotation_id}/document", "GET"), ("/api/v2/quotations/{quotation_id}/document", "PUT"),
     ("/api/v2/quotations/{quotation_id}/facts", "GET"), ("/api/v2/quotations/{quotation_id}/facts", "PUT"),
     ("/api/v2/quotations/{quotation_id}/facts/designer", "PUT"),

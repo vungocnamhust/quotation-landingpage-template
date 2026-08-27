@@ -22,6 +22,7 @@ import {
 import { buildInitialFactsFromRequest } from "../../lib/requestToFactsHandoff.ts";
 import { buildFactsFromCostingWorkbench } from "../../lib/costingToFactsHandoff.ts";
 import { attachCostingSheetToQuotation, type CostingWorkbenchResponse } from "../../lib/quotationApi.ts";
+import { ATTACH_RECOVERY_PARAMS } from "../../lib/attachRecovery.ts";
 import { staysAdapter } from "../../lib/rules/staysAdapter.ts";
 import { staysReconciler } from "../../lib/rules/staysReconciler.ts";
 
@@ -193,17 +194,19 @@ function QuotationIntakeInner({
             "Failed to generate quotation from request."
           );
 
+          let attachRecoveryUrl = "";
           if (costingSheetId) {
+            // Keep this key if the response is lost: retrying with another key would
+            // turn an already-committed attach into an avoidable 409 conflict.
+            const attachIdempotencyKey = crypto.randomUUID();
             try {
-              await attachCostingSheetToQuotation(costingSheetId, res.quotation_id, crypto.randomUUID());
-            } catch (attachError) {
-              // Attach is best-effort here (idempotent, retry-safe) — the quotation is
-              // already valid without it; the sheet stays reachable from the request's
-              // costing screen for a manual re-attach (15.4 §3.3).
-              toast(
-                `Quotation created, but the costing sheet could not be attached automatically: ${apiErrorMessage(attachError)}`,
-                "error"
-              );
+              await attachCostingSheetToQuotation(costingSheetId, res.quotation_id, attachIdempotencyKey);
+            } catch {
+              const recoveryParams = new URLSearchParams({
+                [ATTACH_RECOVERY_PARAMS.sheetId]: costingSheetId,
+                [ATTACH_RECOVERY_PARAMS.idempotencyKey]: attachIdempotencyKey,
+              });
+              attachRecoveryUrl = `&${recoveryParams.toString()}`;
             }
           }
 
@@ -213,9 +216,9 @@ function QuotationIntakeInner({
             "success"
           );
           push(
-            `/workspace/quotations/${res.quotation_id}/edit?stage=facts&lang=${encodeURIComponent(
+            `/workspace/quotations/${res.quotation_id}/edit?stage=${attachRecoveryUrl ? "costing" : "facts"}&lang=${encodeURIComponent(
               facts.lang || "en"
-            )}`
+            )}${attachRecoveryUrl}`
           );
         } else {
           // Direct quotation creation without request

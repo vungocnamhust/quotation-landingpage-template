@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Iterable
 
 from sqlalchemy import Select, and_, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -714,12 +714,21 @@ class ContentDraftRepository:
         await self.session.flush()
         return draft
 
-    async def mark_stale(self, quotation_id: str) -> None:
-        """Invalidate all candidates after the authoritative Facts change."""
-        await self.session.execute(update(QuotationContentDraft).where(
+    async def mark_stale(self, quotation_id: str, *, scopes: Iterable[str] | None = None) -> None:
+        """Invalidate candidates after an authoritative Facts or content change.
+
+        `scopes` narrows invalidation to the given Content Studio scopes (e.g.
+        after a Design-canvas content write via `PATCH /content-values`,
+        Plan 16 §C.1); omit it to invalidate every candidate, as a Facts save
+        does today.
+        """
+        conditions = [
             QuotationContentDraft.quotation_id == quotation_id,
             QuotationContentDraft.status.in_(["draft", "applied"]),
-        ).values(status="stale"))
+        ]
+        if scopes is not None:
+            conditions.append(QuotationContentDraft.scope.in_(list(scopes)))
+        await self.session.execute(update(QuotationContentDraft).where(*conditions).values(status="stale"))
         await self.session.flush()
 
     async def mark_pending_drafts_stale(self, quotation_id: str) -> None:

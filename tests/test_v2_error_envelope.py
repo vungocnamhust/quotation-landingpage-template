@@ -24,6 +24,19 @@ class V2ErrorEnvelopeTests(unittest.TestCase):
         self.assertEqual(conflict["error"]["currentRevision"], 7)
         self.assertEqual(conflict["error"]["recovery"], "reload")
 
+    def test_content_value_envelopes_carry_dedicated_codes(self):
+        acl = main._v2_error_payload(422, {"message": "not writable", "aclDenied": True, "source": "/trip/startDate"}, request_id="request-4")
+        missing = main._v2_error_payload(422, {"message": "gone", "targetEntityMissing": True}, request_id="request-5")
+        structural = main._v2_error_payload(422, {"message": "locked", "structuralFields": ["/party/adults"]}, request_id="request-6")
+
+        self.assertEqual(acl["error"]["code"], "CONTENT_ACL_DENIED")
+        self.assertEqual(acl["error"]["source"], "/trip/startDate")
+        self.assertEqual(missing["error"]["code"], "TARGET_ENTITY_MISSING")
+        self.assertEqual(missing["error"]["recovery"], "reload")
+        self.assertEqual(structural["error"]["code"], "STRUCTURAL_FIELDS_LOCKED")
+        self.assertEqual(structural["error"]["recovery"], "reload")
+        self.assertEqual(structural["error"]["structuralFields"], ["/party/adults"])
+
 
 if __name__ == "__main__":
     unittest.main()

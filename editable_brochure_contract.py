@@ -25,11 +25,18 @@ def _source_segments(source: str) -> tuple[str, ...]:
     return segments
 
 
+def _is_wildcard_segment(segment: str) -> bool:
+    # `*` is today's index wildcard; `{param}` is the id-keyed wildcard the
+    # contract migrates to in v4 (Plan 16 C.2). Both mean "matches anything"
+    # when checking whether two source templates address the same slot.
+    return segment == "*" or (segment.startswith("{") and segment.endswith("}") and len(segment) > 2)
+
+
 def _source_templates_intersect(left: str, right: str) -> bool:
     left_segments, right_segments = _source_segments(left), _source_segments(right)
     return (
         len(left_segments) == len(right_segments)
-        and all(a == b or a == "*" or b == "*" for a, b in zip(left_segments, right_segments))
+        and all(a == b or _is_wildcard_segment(a) or _is_wildcard_segment(b) for a, b in zip(left_segments, right_segments))
     )
 
 
@@ -57,11 +64,11 @@ def _normalized_handoff(field_id: str, owner: str, source_segments: tuple[str, .
         raise ValueError(f"Editable contract field {field_id} has an invalid handoff item.")
     index_from_source = handoff.get("indexFromSource")
     if index_from_source is not None:
-        if isinstance(index_from_source, bool) or not isinstance(index_from_source, int) or index_from_source < 0 or index_from_source >= len(source_segments) or source_segments[index_from_source] != "*":
+        if isinstance(index_from_source, bool) or not isinstance(index_from_source, int) or index_from_source < 0 or index_from_source >= len(source_segments) or not _is_wildcard_segment(source_segments[index_from_source]):
             raise ValueError(f"Editable contract field {field_id} has an invalid wildcard index resolver.")
         if item is None:
             raise ValueError(f"Editable contract field {field_id} cannot resolve a wildcard without a handoff item.")
-    if item is not None and "*" in source_segments and index_from_source is None:
+    if item is not None and any(_is_wildcard_segment(segment) for segment in source_segments) and index_from_source is None:
         raise ValueError(f"Editable contract field {field_id} requires a wildcard index resolver for its handoff item.")
     return dict(handoff)
 
@@ -193,6 +200,143 @@ def media_slot_descriptor(field_id: str) -> dict[str, Any] | None:
         if field_id == template or ("*" in template and field_id.startswith(template.split("*", 1)[0]) and field_id.endswith(template.split("*", 1)[1])):
             return descriptor
     return None
+
+
+def content_write_allowlist() -> tuple[str, ...]:
+    """Source templates the Design canvas may PATCH (owner == 'content').
+
+    This is the server-side ACL for `PATCH /content-values` (Plan 16 §C.1):
+    any mutation whose `source` does not template-match one of these pointers
+    is rejected, regardless of what a client believes it is allowed to edit.
+    """
+    return tuple(field["source"] for field in EDITABLE_BROCHURE_FIELDS if field["owner"] == "content")
+
+
+# Entity-array content sources are addressed by the item's position today
+# (numeric index, contract v3) and will migrate to a stable id (contract v4,
+# Plan 16 §C.2). `resolve_id_keyed_source` accepts either shape already so
+# the migration is additive: it resolves the segment against `document` by
+# id first, falling back to treating it as a numeric index.
+_ID_KEYED_ENTITY_SOURCES: dict[tuple[str, str], dict[str, Any]] = {
+    ("itinerary", "days"): {
+        "id_keys": ("sourceFactId", "id"),
+        "index_key": "dayNumber",
+        "scope": lambda entity: f"itinerary:day:{entity.get('sourceFactId') or entity.get('dayNumber')}",
+    },
+    ("stays", "hotels"): {
+        "id_keys": ("sourceFactId", "id"),
+        "index_key": None,
+        "scope": lambda entity: "hotel_plan",
+    },
+    ("route", "staySegments"): {
+        "id_keys": ("id", "segmentId"),
+        "index_key": None,
+        "scope": lambda entity: "route",
+    },
+}
+
+# Content sources that address a single scalar/list slot (no entity array to
+# resolve). Maps the literal JSON pointer to its Content Studio scope.
+_STATIC_CONTENT_SCOPES: dict[str, str] = {
+    "/trip/title": "hero",
+    "/trip/lede": "hero",
+    "/narrative/coverKicker": "hero",
+    "/narrative/heroMeta1": "hero",
+    "/narrative/heroMeta2": "hero",
+    "/narrative/footerText": "hero",
+    "/narrative/journeyOverviewTitle": "overview_letter",
+    "/narrative/letterHighlight": "overview_letter",
+    "/narrative/letterGreeting": "overview_letter",
+    "/narrative/letterIntro": "overview_letter",
+    "/narrative/letterBody2": "overview_letter",
+    "/narrative/letterOutro": "overview_letter",
+    "/narrative/letterSignOff": "overview_letter",
+    "/narrative/letterSender": "overview_letter",
+    "/route/title": "route",
+    "/route/description": "route",
+    "/itinerary/title": "itinerary",
+    "/itinerary/description": "itinerary",
+    "/pricing/kicker": "pricing",
+    "/pricing/title": "pricing",
+    "/pricing/description": "pricing",
+    "/content/sections/finalization/blocks/0/groups/0/items/*": "finalization",
+    "/content/sections/finalization/blocks/0/groups/1/items/*": "finalization",
+    "/content/sections/finalization/blocks/0/groups/0/title": "finalization",
+    "/content/sections/finalization/blocks/0/groups/1/title": "finalization",
+}
+
+
+def _match_content_template(source: str) -> str | None:
+    """Return the `content_write_allowlist()` template matching `source`, or None.
+
+    A template segment matches literally, or as a wildcard (`*`, the v3
+    numeric-index contract, or `{param}`, the v4 id-keyed contract — Plan 16
+    §C.2). Both contract shapes are accepted during the migration.
+    """
+    try:
+        segments = _source_segments(source)
+    except ValueError:
+        return None
+    for template in content_write_allowlist():
+        template_segments = _source_segments(template)
+        if len(template_segments) != len(segments):
+            continue
+        if all(_is_wildcard_segment(t) or t == s for t, s in zip(template_segments, segments)):
+            return template
+    return None
+
+
+def is_content_writable_source(source: str) -> bool:
+    """True when `source` matches a content-owned source template."""
+    return _match_content_template(source) is not None
+
+
+def _resolve_entity_index(items: list[Any], token: str, *, id_keys: tuple[str, ...], index_key: str | None) -> int | None:
+    for index, item in enumerate(items):
+        if isinstance(item, dict) and any(str(item.get(key) or "") == token for key in id_keys):
+            return index
+    if token.isdigit():
+        numeric = int(token)
+        if 0 <= numeric < len(items):
+            return numeric
+        if index_key is not None:
+            for index, item in enumerate(items):
+                if isinstance(item, dict) and item.get(index_key) == numeric:
+                    return index
+    return None
+
+
+def resolve_id_keyed_source(source: str, document: dict[str, Any]) -> tuple[str, str] | None:
+    """Resolve a content-owned source pointer against `document`.
+
+    Returns `(normalized_source, scope)` where `normalized_source` rewrites
+    any entity-array segment to that entity's current numeric index in
+    `document`, and `scope` is the Content Studio scope owning the field.
+    Returns `None` when `source` is not content-owned, or when it addresses
+    an entity (day/hotel/route segment) that no longer exists.
+    """
+    template = _match_content_template(source)
+    if template is None:
+        return None
+    segments = list(_source_segments(source))
+    template_segments = _source_segments(template)
+
+    for (root, child), spec in _ID_KEYED_ENTITY_SOURCES.items():
+        if template_segments[:2] != (root, child):
+            continue
+        items = ((document.get(root) or {}).get(child) or [])
+        token = segments[2]
+        index = _resolve_entity_index(items, token, id_keys=spec["id_keys"], index_key=spec["index_key"])
+        if index is None:
+            return None
+        segments[2] = str(index)
+        scope = spec["scope"](items[index])
+        return "/" + "/".join(segments), scope
+
+    scope = _STATIC_CONTENT_SCOPES.get(template)
+    if scope is None:
+        return None
+    return source, scope
 
 
 def expand_media_slot_field_ids(document: dict[str, Any]) -> tuple[str, ...]:

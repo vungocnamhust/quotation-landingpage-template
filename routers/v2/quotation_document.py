@@ -21,6 +21,15 @@ from repositories import (
 from repositories.errors import DocumentRevisionConflictError
 from schemas.brand_contract import _require_active_v2_brand, _serialize_brand_render_profile
 from services.content_draft_service import ContentDraftService, ContentGenerationError
+from services.content_value_service import (
+    ContentAclDeniedError,
+    ContentTargetMissingError,
+    ContentValueBudgetError,
+    ContentValueMutationInput,
+    ContentValueService,
+    DocumentStructuralDiffError,
+    assert_no_structural_diff,
+)
 from services.section_registry import SECTION_REGISTRY
 
 
@@ -77,6 +86,18 @@ class ContentDraftManualCreateRequest(BaseModel):
 
 class ContentDraftApplyRequest(BaseModel):
     baseRevision: int
+
+
+class ContentValueMutation(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    source: str = Field(min_length=2, max_length=300)
+    value: str | list[str]
+
+
+class ContentValuesPatchRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    baseRevision: int = Field(ge=0)
+    mutations: Annotated[list[ContentValueMutation], Field(min_length=1, max_length=40)]
 
 
 def _get_helpers():
@@ -161,6 +182,13 @@ async def put_quotation_document(
                 lang=effective_lang,
                 revision=payload.baseRevision or int(((document.get("meta") or {}).get("revision")) or 1),
             )
+            if current_document is not None:
+                try:
+                    assert_no_structural_diff(current_document.document_json, document)
+                except DocumentStructuralDiffError as exc:
+                    raise HTTPException(status_code=422, detail={
+                        "message": str(exc), "structuralFields": list(exc.paths),
+                    }) from exc
             validated_document = h._validate_quote_document_or_422(document)
             saved_document = await document_repository.save_current_document(
                 quotation_id=quotation_id,
@@ -741,4 +769,59 @@ async def apply_all_content_drafts_v2(
             "document": merged,
             "currentRevision": saved.revision,
             "appliedCount": len(active_drafts),
+        }
+
+
+@router.patch("/{quotation_id}/content-values")
+async def patch_content_values_v2(
+    quotation_id: str,
+    payload: ContentValuesPatchRequest,
+    lang: str | None = None,
+    principal: Principal = Depends(require_editor),
+):
+    h = _get_helpers()
+    await h.require_owned_quotation(quotation_id, principal)
+    _quotation, effective_lang = await h._resolve_v2_locale(quotation_id, lang)
+    async with h._get_db_session_factory()() as session:
+        documents, drafts = QuotationDocumentRepository(session), ContentDraftRepository(session)
+        current = await documents.get_current_document(quotation_id, effective_lang)
+        if current is None:
+            raise HTTPException(status_code=404, detail="Current document not found.")
+        if payload.baseRevision != current.revision:
+            raise HTTPException(status_code=409, detail={"message": "Document revision conflict.", "currentRevision": current.revision})
+
+        mutations = [ContentValueMutationInput(source=m.source, value=m.value) for m in payload.mutations]
+        try:
+            result = ContentValueService.apply(current.document_json, mutations)
+        except ContentAclDeniedError as exc:
+            raise HTTPException(status_code=422, detail={"message": str(exc), "aclDenied": True, "source": exc.source}) from exc
+        except ContentTargetMissingError as exc:
+            raise HTTPException(status_code=422, detail={"message": str(exc), "targetEntityMissing": True, "source": exc.source}) from exc
+        except ContentValueBudgetError as exc:
+            raise HTTPException(status_code=422, detail={"message": str(exc), "source": exc.source}) from exc
+
+        try:
+            saved = await documents.save_current_document(
+                quotation_id=quotation_id,
+                lang=effective_lang,
+                document_json=result.document,
+                expected_revision=current.revision,
+            )
+        except DocumentRevisionConflictError as exc:
+            raise HTTPException(status_code=409, detail={"message": "Document revision conflict.", "currentRevision": exc.current_revision}) from exc
+
+        result.document.setdefault("meta", {})["revision"] = saved.revision
+        await documents.append_document_revision(
+            quotation_id=quotation_id,
+            lang=effective_lang,
+            revision=saved.revision,
+            document_json=result.document,
+            change_source="design_content_values",
+        )
+        await drafts.mark_stale(quotation_id, scopes=result.touched_scopes)
+        await session.commit()
+        return {
+            "revision": saved.revision,
+            "updatedSources": list(result.updated_sources),
+            "staleDraftScopes": list(result.touched_scopes),
         }

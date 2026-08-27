@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { AlertCircle, Camera } from 'lucide-react';
+import { AlertCircle, Camera, Lock } from 'lucide-react';
 import { getTypographyClassName } from '../../config/typography.ts';
 import { cn } from '../../utils/cn.ts';
 import type { InspectorDescriptor } from './BoundaryCanvas.tsx';
@@ -19,6 +19,11 @@ export default function ContextualInspector({
   onSave,
   onHandoff,
   canEditFactInspector = false,
+  immutableFacts = false,
+  isEditingQuotation = false,
+  factsSourceKind,
+  businessVersionNumber,
+  onRequestEditQuotation,
   facts,
   onSaveFactFields,
   onOpenMediaDrawer,
@@ -30,6 +35,11 @@ export default function ContextualInspector({
   onSave: (descriptor: InspectorDescriptor, value: string) => Promise<void>;
   onHandoff: (target: ResolvedHandoff) => void;
   canEditFactInspector?: boolean;
+  immutableFacts?: boolean;
+  isEditingQuotation?: boolean;
+  factsSourceKind?: string;
+  businessVersionNumber?: number;
+  onRequestEditQuotation?: (target?: ResolvedHandoff) => void;
   facts?: QuotationFacts;
   onSaveFactFields?: (patch: FactInspectorPatch) => Promise<void>;
   onOpenMediaDrawer?: (descriptor: InspectorDescriptor) => void;
@@ -159,27 +169,105 @@ export default function ContextualInspector({
                 </button>
               ) : null}
             </div>
+          ) : owner === 'fact' || owner === 'fact-derived' ? (
+            <LockedFactPanel
+              selected={selected}
+              resolvedHandoff={resolvedHandoff}
+              renderedValue={renderedValue}
+              factsSourceKind={factsSourceKind}
+              immutableFacts={immutableFacts}
+              isEditingQuotation={isEditingQuotation}
+              businessVersionNumber={businessVersionNumber}
+              onHandoff={onHandoff}
+              onRequestEditQuotation={onRequestEditQuotation}
+            />
           ) : (
-            <>
-              <p className={cn(getTypographyClassName('bodySm'), 'text-[var(--color-muted)]')}>
-                {owner === 'system'
-                  ? 'System copy has no quotation-level editor.'
-                  : `Canonical source: ${resolvedHandoff?.source ?? selected.source}.`}
-              </p>
-              {resolvedHandoff ? (
-                <button
-                  type="button"
-                  onClick={() => onHandoff(resolvedHandoff)}
-                  className={cn(getTypographyClassName('buttonSecondary'), 'w-fit rounded-[var(--radius-button)] border border-[var(--color-border)] px-4 py-2 cursor-pointer')}
-                >
-                  Open {resolvedHandoff.stage === 'facts' ? 'Facts' : 'Content Studio'}
-                </button>
-              ) : null}
-            </>
+            <p className={cn(getTypographyClassName('bodySm'), 'text-[var(--color-muted)]')}>
+              System copy has no quotation-level editor.
+            </p>
           )}
         </>
       ) : null}
     </aside>
+  );
+}
+
+/**
+ * Locked-fact panel (Plan 16 §B.3). A field with owner ∈ {fact, fact-derived}
+ * and no direct-inspector surface is never editable from Design — clicking
+ * it must never write a shadow value (the removed §B5 copyOverrides
+ * fallback). It only ever offers one of three CTAs, by quotation state:
+ *  1. editable        → deep link straight into Facts
+ *  2. immutable-manual → "Start Edit Quotation" (opens the create-version confirmation)
+ *  3. dmc-owned        → no CTA; explains the field is DMC-source-owned
+ */
+function LockedFactPanel({
+  selected,
+  resolvedHandoff,
+  renderedValue,
+  factsSourceKind,
+  immutableFacts,
+  isEditingQuotation,
+  businessVersionNumber,
+  onHandoff,
+  onRequestEditQuotation,
+}: {
+  selected: InspectorDescriptor;
+  resolvedHandoff?: ResolvedHandoff;
+  renderedValue: string;
+  factsSourceKind?: string;
+  immutableFacts: boolean;
+  isEditingQuotation: boolean;
+  businessVersionNumber?: number;
+  onHandoff: (target: ResolvedHandoff) => void;
+  onRequestEditQuotation?: (target?: ResolvedHandoff) => void;
+}) {
+  const lockState: 'editable' | 'immutable-manual' | 'dmc-owned' =
+    factsSourceKind && factsSourceKind !== 'manual'
+      ? 'dmc-owned'
+      : immutableFacts && !isEditingQuotation
+      ? 'immutable-manual'
+      : 'editable';
+
+  return (
+    <div className="grid gap-3 rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-3">
+      <div className="flex items-center gap-1.5 text-[var(--color-muted)]">
+        <Lock size={14} aria-hidden="true" />
+        <span className={cn(getTypographyClassName('label'))}>
+          Structural Fact{typeof businessVersionNumber === 'number' ? ` · Version ${businessVersionNumber}` : ''}
+        </span>
+      </div>
+
+      <p className={cn(getTypographyClassName('bodySm'), 'text-[var(--color-on-surface)]')}>
+        {renderedValue || '—'}
+      </p>
+      <p className={cn(getTypographyClassName('caption'), 'text-[var(--color-muted)]')}>
+        Canonical source: {resolvedHandoff?.source ?? selected.source}
+      </p>
+
+      {lockState === 'dmc-owned' ? (
+        <p className={cn(getTypographyClassName('caption'), 'text-[var(--color-muted)]')}>
+          This Fact is owned by the DMC source system and cannot be edited here.
+        </p>
+      ) : lockState === 'immutable-manual' ? (
+        <button
+          type="button"
+          onClick={() => onRequestEditQuotation?.(resolvedHandoff)}
+          disabled={!onRequestEditQuotation}
+          className={cn(getTypographyClassName('buttonSecondary'), 'w-fit rounded-[var(--radius-button)] border border-[var(--color-border)] px-4 py-2 disabled:opacity-50 cursor-pointer')}
+        >
+          Start Edit Quotation
+        </button>
+      ) : resolvedHandoff ? (
+        <button
+          type="button"
+          onClick={() => onHandoff(resolvedHandoff)}
+          className={cn(getTypographyClassName('buttonSecondary'), 'w-fit rounded-[var(--radius-button)] border border-[var(--color-border)] px-4 py-2 cursor-pointer')}
+        >
+          Edit in Facts
+        </button>
+      ) : null}
+    </div>
   );
 }
 

@@ -355,6 +355,8 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
     );
     const canonicalSegment = canonicalIndex >= 0 ? canonicalRouteSegments[canonicalIndex] : undefined;
     const canonicalDescription = canonicalSegment ? stringValue(canonicalSegment.mapSegmentDesc) : '';
+    // Content-owned copy is addressed by the segment's stable id (Plan 16 §C.2).
+    const canonicalSegmentId = canonicalSegment ? stringValue(canonicalSegment.id) || String(canonicalIndex) : undefined;
     const hasRange = info.dayEnd > info.dayStart;
     const badgeLabel = hasRange ? `${info.dayStart}-${info.dayEnd}` : `${info.dayStart}`;
     const dayLabel = hasRange
@@ -365,7 +367,7 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
       sequence: String(index + 1).padStart(2, '0'),
       title: derivedCopy(info.name, `${base}/displayName`),
       description: canonicalDescription
-        ? contentCopy(canonicalDescription, `/route/staySegments/${canonicalIndex}/mapSegmentDesc`, '')
+        ? contentCopy(canonicalDescription, `/route/staySegments/${canonicalSegmentId}/mapSegmentDesc`, '')
         : derivedCopy(info.desc || '', `${base}/mapSegmentDesc`),
       sidebarLabel: derivedCopy(dayLabel, `${base}/daysLabel`),
       duration: derivedCopy(
@@ -385,6 +387,11 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
 
   const days = rawDaysList.map((day, index) => {
     const base = `/itinerary/days/${index}`;
+    // Content-owned copy (title/description/activities) is addressed by the
+    // day's stable Fact identity, not its array position — reordering or
+    // inserting a day must never mis-target an edit (Plan 16 §C.2).
+    const dayId = stringValue(day.sourceFactId) || stringValue(day.id) || String(index);
+    const contentBase = `/itinerary/days/${dayId}`;
     const images = record(day.images);
     const secondaryImages = [assetUrl(images.small1), assetUrl(images.small2)].filter(Boolean);
     const heroImage = assetUrl(images.hero) || assetUrl(day.hero_image) || assetUrl(day.image);
@@ -404,17 +411,17 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
     const descList = listText(day.description).length ? listText(day.description) : day.summary ? [stringValue(day.summary)] : [];
 
     const detailRows = [
-      activities.length ? { label: designCopy(overrides, 'itinerary.highlightsLabel', labels.highlights), value: contentCopy(activities.join(' · '), `${base}/activities`, '') } : null,
+      activities.length ? { label: designCopy(overrides, 'itinerary.highlightsLabel', labels.highlights), value: contentCopy(activities.join(' · '), `${contentBase}/activities`, '') } : null,
       day.overnight ? { label: designCopy(overrides, 'itinerary.overnightLabel', labels.overnight), value: editable(stringValue(day.overnight), `${base}/overnight`, 'fact') } : null,
       meals.length ? { label: designCopy(overrides, 'itinerary.mealsLabel', labels.meals), value: editable(meals.join(' · '), `${base}/meals`, 'fact') } : null,
     ].filter(Boolean) as Array<{ label: EditableText; value: EditableText }>;
     return {
       dayLabel: derivedCopy([`${labels.daySingular} ${String(dayNumberVal).padStart(2, '0')}`, formatDisplayDate(dayDateVal, lang)].filter(Boolean).join(' · '), `${base}/dayNumber`),
-      title: contentCopy(stringValue(day.title), `${base}/title`, ''),
-      description: descList.map((item, itemIndex) => contentCopy(item, `${base}/description/${itemIndex}`, '')),
+      title: contentCopy(stringValue(day.title), `${contentBase}/title`, ''),
+      description: descList.map((item, itemIndex) => contentCopy(item, `${contentBase}/description/${itemIndex}`, '')),
       layoutType: day.layoutType === 'multi' ? 'multi' as const : 'single' as const,
       isAlternate: index % 2 === 1,
-      highlights: contentCopy(activities.join(' · '), `${base}/activities`, ''),
+      highlights: contentCopy(activities.join(' · '), `${contentBase}/activities`, ''),
       notes: notes.map((item, itemIndex) => editable(item, `${base}/notes/${itemIndex}`, 'fact')),
       overnight: editable(stringValue(day.overnight), `${base}/overnight`, 'fact'),
       meals: meals.map((item, itemIndex) => editable(item, `${base}/meals/${itemIndex}`, 'fact')),
@@ -451,6 +458,10 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
 
   const hotels = rawHotelsList.map((hotel, index) => {
     const base = `/stays/hotels/${index}`;
+    // Content-owned editorial copy is addressed by the hotel's stable Fact
+    // identity so it survives a hotel reorder (Plan 16 §C.2).
+    const hotelId = stringValue(hotel.sourceFactId) || stringValue(hotel.id) || String(index);
+    const contentBase = `/stays/hotels/${hotelId}`;
     const city = stringValue(hotel.city) || stringValue(hotel.display_city) || stringValue(hotel.destination) || stringValue(hotel.location);
     const name = stringValue(hotel.name) || stringValue(hotel.accommodation_name) || stringValue(hotel.hotelName);
     const editorialIntroduction = stringValue(hotel.editorialIntroduction);
@@ -483,7 +494,7 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
       city: editable(city, `${base}/city`, 'fact'),
       name: editable(name, `${base}/name`, 'fact'),
       intro: editorialIntroduction
-        ? contentCopy(editorialIntroduction, `${base}/editorialIntroduction`, '')
+        ? contentCopy(editorialIntroduction, `${contentBase}/editorialIntroduction`, '')
         : factCopy(factualIntroduction, `${base}/introduction`),
       dateRanges: [editable(datesText, `${base}/hotelDate`, 'fact')].filter((item) => item.value),
       telephone: editable(phone, `${base}/tel`, 'fact'),

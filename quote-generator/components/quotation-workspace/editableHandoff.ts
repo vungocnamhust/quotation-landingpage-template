@@ -32,9 +32,31 @@ function numericSegment(value: string | undefined) {
   return Number(value);
 }
 
+// `*` is the v3 numeric-index wildcard; `{param}` is the v4 id-keyed
+// wildcard (Plan 16 §C.2) — both mean "matches any segment value" here.
+function isWildcardSegment(segment: string) {
+  return segment === '*' || (segment.startsWith('{') && segment.endsWith('}') && segment.length > 2);
+}
+
+/** Resolve one path segment against an array: a numeric segment indexes
+ * directly; an id-keyed segment (`sourceFactId` or `id`) is matched by value
+ * so a reorder/insert elsewhere in the array never mis-targets an item. */
+function resolveArrayIndex(records: unknown[], segment: string): number {
+  const numeric = numericSegment(segment);
+  if (numeric !== null) return numeric;
+  return records.findIndex((record) => {
+    if (!record || typeof record !== 'object') return false;
+    const rec = record as JsonRecord;
+    return rec.sourceFactId === segment || rec.id === segment;
+  });
+}
+
 function readPath(document: Record<string, unknown>, segments: string[]) {
   return segments.reduce<unknown>((current, segment) => {
-    if (Array.isArray(current)) return current[numericSegment(segment) ?? -1];
+    if (Array.isArray(current)) {
+      const index = resolveArrayIndex(current, segment);
+      return index >= 0 ? current[index] : undefined;
+    }
     if (!current || typeof current !== 'object') return undefined;
     return (current as JsonRecord)[segment];
   }, document);
@@ -47,7 +69,7 @@ export function matchEditableSource(template: string | undefined, source: string
   if (!templateParts.length || templateParts.length !== sourceParts.length) return null;
   const wildcardIndices: number[] = [];
   for (let index = 0; index < templateParts.length; index += 1) {
-    if (templateParts[index] === '*') {
+    if (isWildcardSegment(templateParts[index])) {
       wildcardIndices.push(index);
       continue;
     }
@@ -83,9 +105,11 @@ export function resolveEditableHandoff(
     return { ...handoff, source, wildcardIndices };
   }
 
-  const index = numericSegment(sourceParts[handoff.indexFromSource]);
-  if (index === null) return undefined;
-  const record = readPath(document, sourceParts.slice(0, handoff.indexFromSource + 1));
+  const parentArray = readPath(document, sourceParts.slice(0, handoff.indexFromSource));
+  const records = Array.isArray(parentArray) ? parentArray : [];
+  const index = resolveArrayIndex(records, sourceParts[handoff.indexFromSource]);
+  if (index < 0) return undefined;
+  const record = records[index];
   const id = record && typeof record === 'object' && typeof (record as JsonRecord).id === 'string'
     ? (record as JsonRecord).id as string
     : undefined;

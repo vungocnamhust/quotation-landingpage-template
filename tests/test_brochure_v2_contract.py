@@ -24,7 +24,7 @@ from quote_generation import (
     NarrativeGenerator,
     apply_narrative_result_to_document,
 )
-from repositories import PublicationRepository, PublicationTargetRepository, QuotationDocumentRepository, QuotationRepository
+from repositories import ContentDraftRepository, PublicationRepository, PublicationTargetRepository, QuotationDocumentRepository, QuotationRepository
 from repositories.travel_designer_repository import TravelDesignerRepository
 from repositories.accommodation_repository import AccommodationRepository
 
@@ -1000,6 +1000,151 @@ class BrochureRouteContractTests(unittest.TestCase):
             stale_response.json()["detail"]["currentDocument"]["trip"]["title"],
             "Writer One",
         )
+
+    def test_patch_content_values_writes_a_content_owned_source(self):
+        document = _sample_document()
+        asyncio.run(self._seed_brochure_document("quo_test", copy.deepcopy(document)))
+
+        response = self.client.patch(
+            "/api/v2/quotations/quo_test/content-values",
+            json={"baseRevision": 1, "mutations": [{"source": "/trip/title", "value": "New Private Journey"}]},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["revision"], 2)
+        self.assertEqual(response.json()["updatedSources"], ["/trip/title"])
+        self.assertEqual(response.json()["staleDraftScopes"], ["hero"])
+
+        get_response = self.client.get("/api/v2/quotations/quo_test/document")
+        self.assertEqual(get_response.json()["document"]["trip"]["title"], "New Private Journey")
+        self.assertEqual(get_response.json()["currentRevision"], 2)
+
+    def test_patch_content_values_resolves_an_id_keyed_itinerary_day_source(self):
+        document = _sample_document()
+        asyncio.run(self._seed_brochure_document("quo_test", copy.deepcopy(document)))
+
+        response = self.client.patch(
+            "/api/v2/quotations/quo_test/content-values",
+            json={"baseRevision": 1, "mutations": [{"source": "/itinerary/days/day-1/title", "value": "Welcome to Hanoi"}]},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["staleDraftScopes"], ["itinerary:day:1"])
+        get_response = self.client.get("/api/v2/quotations/quo_test/document")
+        self.assertEqual(get_response.json()["document"]["itinerary"]["days"][0]["title"], "Welcome to Hanoi")
+
+    def test_patch_content_values_rejects_a_fact_owned_source(self):
+        document = _sample_document()
+        asyncio.run(self._seed_brochure_document("quo_test", copy.deepcopy(document)))
+
+        response = self.client.patch(
+            "/api/v2/quotations/quo_test/content-values",
+            json={"baseRevision": 1, "mutations": [{"source": "/itinerary/days/0/dayNumber", "value": "9"}]},
+        )
+
+        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.json()["error"]["code"], "CONTENT_ACL_DENIED")
+
+        get_response = self.client.get("/api/v2/quotations/quo_test/document")
+        self.assertEqual(get_response.json()["currentRevision"], 1)
+
+    def test_patch_content_values_rejects_a_deleted_entity(self):
+        document = _sample_document()
+        asyncio.run(self._seed_brochure_document("quo_test", copy.deepcopy(document)))
+
+        response = self.client.patch(
+            "/api/v2/quotations/quo_test/content-values",
+            json={"baseRevision": 1, "mutations": [{"source": "/itinerary/days/day-9/title", "value": "Ghost day"}]},
+        )
+
+        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.json()["error"]["code"], "TARGET_ENTITY_MISSING")
+
+    def test_patch_content_values_returns_409_on_stale_revision(self):
+        document = _sample_document()
+        asyncio.run(self._seed_brochure_document("quo_test", copy.deepcopy(document)))
+
+        response = self.client.patch(
+            "/api/v2/quotations/quo_test/content-values",
+            json={"baseRevision": 0, "mutations": [{"source": "/trip/title", "value": "New title"}]},
+        )
+
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(response.json()["error"]["code"], "REVISION_CONFLICT")
+
+    def test_patch_content_values_marks_only_touched_scope_drafts_stale(self):
+        document = _sample_document()
+        asyncio.run(self._seed_brochure_document("quo_test", copy.deepcopy(document)))
+
+        async def _seed_drafts():
+            async with self.session_factory() as session:
+                drafts = ContentDraftRepository(session)
+                await drafts.create(
+                    id="draft_hero", quotation_id="quo_test", lang="en", scope="hero", generation_mode="storytelling",
+                    status="draft", facts_hash="hash", source_document_revision=1, prompt_version="v1",
+                    facts_snapshot={}, candidate_json={"trip": {"title": "Draft title"}}, missing_inputs=[], generation_metadata={},
+                )
+                await drafts.create(
+                    id="draft_route", quotation_id="quo_test", lang="en", scope="route", generation_mode="storytelling",
+                    status="draft", facts_hash="hash", source_document_revision=1, prompt_version="v1",
+                    facts_snapshot={}, candidate_json={"route": {"title": "Draft route"}}, missing_inputs=[], generation_metadata={},
+                )
+                await session.commit()
+
+        asyncio.run(_seed_drafts())
+
+        response = self.client.patch(
+            "/api/v2/quotations/quo_test/content-values",
+            json={"baseRevision": 1, "mutations": [{"source": "/trip/title", "value": "New title"}]},
+        )
+        self.assertEqual(response.status_code, 200)
+
+        async def _assert_draft_statuses():
+            async with self.session_factory() as session:
+                drafts = ContentDraftRepository(session)
+                hero_draft = await drafts.get("quo_test", "draft_hero")
+                route_draft = await drafts.get("quo_test", "draft_route")
+                self.assertEqual(hero_draft.status, "stale")
+                self.assertEqual(route_draft.status, "draft")
+
+        asyncio.run(_assert_draft_statuses())
+
+    def test_put_document_rejects_a_structural_payload_change(self):
+        document = _sample_document()
+        asyncio.run(self._seed_brochure_document("quo_test", copy.deepcopy(document)))
+
+        structural_payload = copy.deepcopy(document)
+        structural_payload["itinerary"]["days"].append({
+            "id": "day-2", "dayNumber": 2, "segmentCity": "Hanoi", "title": "", "description": [],
+        })
+
+        response = self.client.put(
+            "/api/v2/quotations/quo_test/document",
+            json={"document": structural_payload, "baseRevision": 1},
+        )
+
+        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.json()["error"]["code"], "STRUCTURAL_FIELDS_LOCKED")
+        self.assertIn("/itinerary/days", response.json()["error"]["structuralFields"])
+
+        get_response = self.client.get("/api/v2/quotations/quo_test/document")
+        self.assertEqual(get_response.json()["currentRevision"], 1)
+        self.assertEqual(len(get_response.json()["document"]["itinerary"]["days"]), 1)
+
+    def test_put_document_still_saves_content_and_media_only_changes(self):
+        document = _sample_document()
+        asyncio.run(self._seed_brochure_document("quo_test", copy.deepcopy(document)))
+
+        content_only_payload = copy.deepcopy(document)
+        content_only_payload["trip"]["title"] = "Updated via whole-document save"
+
+        response = self.client.put(
+            "/api/v2/quotations/quo_test/document",
+            json={"document": content_only_payload, "baseRevision": 1},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["document"]["trip"]["title"], "Updated via whole-document save")
 
     def test_put_document_succeeds_when_legacy_ctx_sync_fails_after_db_commit(self):
         document = _sample_document()

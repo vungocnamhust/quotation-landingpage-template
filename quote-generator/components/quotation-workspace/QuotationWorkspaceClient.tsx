@@ -49,6 +49,7 @@ import { ReviewBlockersPanel } from "./ReviewBlockersPanel.tsx";
 import DesignPreviewToolbar from "./DesignPreviewToolbar.tsx";
 import BrochurePreviewModal from "./BrochurePreviewModal.tsx";
 import RequestRecapModal from "./RequestRecapModal.tsx";
+import EditQuotationConfirmModal from "./EditQuotationConfirmModal.tsx";
 import ImpactCenter from "./ImpactCenter.tsx";
 import { useContentActionPlan, type ContentAction } from "./useContentActionPlan.ts";
 import { useContentActionExecution } from "./useContentActionExecution.ts";
@@ -146,6 +147,8 @@ export default function QuotationWorkspaceClient({
     null
   );
   const [isEditingQuotation, setIsEditingQuotation] = useState(false);
+  const [isEditQuotationModalOpen, setIsEditQuotationModalOpen] = useState(false);
+  const [pendingEditQuotationTarget, setPendingEditQuotationTarget] = useState<ResolvedHandoff | undefined>();
   const [pending, startTransition] = useTransition();
   const workspace = useQuotationWorkspace(quotationId, lang);
   const refreshWorkspace = workspace.refresh;
@@ -498,6 +501,28 @@ export default function QuotationWorkspaceClient({
     },
     [documentData?.document, guardedNavigateStage, pathname, router, search, startStageTransition],
   );
+
+  // Plan 16 §B.3, Case 2: a locked field on the Design canvas never writes a
+  // shadow value while Facts are immutable — it opens this confirmation,
+  // which only flips edit mode + deep-links into Facts. The version itself
+  // is created only when the user submits that form (createBusinessVersion).
+  const requestEditQuotation = useCallback((target?: ResolvedHandoff) => {
+    setPendingEditQuotationTarget(target);
+    setIsEditQuotationModalOpen(true);
+  }, []);
+
+  const cancelEditQuotation = useCallback(() => {
+    setIsEditQuotationModalOpen(false);
+    setPendingEditQuotationTarget(undefined);
+  }, []);
+
+  const confirmEditQuotation = useCallback(() => {
+    const target = pendingEditQuotationTarget;
+    setIsEditQuotationModalOpen(false);
+    setPendingEditQuotationTarget(undefined);
+    setIsEditingQuotation(true);
+    void navigateHandoff(target ?? { stage: "facts", section: "trip", source: "", wildcardIndices: [] });
+  }, [pendingEditQuotationTarget, navigateHandoff]);
 
   const acceptImpactCenter = useCallback(async () => {
     try {
@@ -854,6 +879,11 @@ export default function QuotationWorkspaceClient({
                   document={documentData.document}
                   currentRevision={documentData.currentRevision}
                   canEditDesignerFacts={editable && !immutableFacts}
+                  immutableFacts={immutableFacts}
+                  isEditingQuotation={isEditingQuotation}
+                  factsSourceKind={factsData?.source?.kind}
+                  businessVersionNumber={factsData?.businessVersion?.number}
+                  onRequestEditQuotation={requestEditQuotation}
                   contract={documentData.editableContract}
                   facts={factsData?.facts}
                   onSaved={() => workspace.refresh()}
@@ -986,6 +1016,12 @@ export default function QuotationWorkspaceClient({
         isOpen={isRecapOpen}
         onClose={() => setIsRecapOpen(false)}
         request={quoteRequest ?? null}
+      />
+      <EditQuotationConfirmModal
+        isOpen={isEditQuotationModalOpen}
+        businessVersionNumber={factsData?.businessVersion?.number}
+        onConfirm={confirmEditQuotation}
+        onCancel={cancelEditQuotation}
       />
     </div>
   );
