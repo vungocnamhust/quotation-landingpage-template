@@ -266,6 +266,12 @@ function PdfLetter({ documentModel }: { documentModel: DisplayDocument }) {
                 </BodyCopy>
               ))}
               <BodyCopy variant="letterBody" tone="default">{letter.outro}</BodyCopy>
+              {textValue(letter.signOff) ? (
+                <BodyCopy variant="letterBody" tone="default">{letter.signOff}</BodyCopy>
+              ) : null}
+              {textValue(letter.sender) ? (
+                <MetaText variant="signatureMeta" tone="muted">{letter.sender}</MetaText>
+              ) : null}
             </div>
             <div className="pdf-letter__signature">
               {letter.signatureGlyph ? (

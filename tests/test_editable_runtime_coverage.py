@@ -85,11 +85,11 @@ class EditableRuntimeCoverageTests(unittest.TestCase):
         self.assertIn("alt={textValue(alt)} {...editableProps(alt)}", screen)
         self.assertIn("aria-label={textValue(viewModel.sectionAriaLabel)}", screen)
         self.assertIn("viewModel={route}", pdf)
-        self.assertIn("<ImageFrame src={hotel.hotelImage} alt={hotel.hotelImageAlt}", pdf)
-        self.assertIn("<ImageFrame src={images[0]?.src ?? ''} alt={images[0]?.alt ?? day.title}", pdf)
+        self.assertIn("alt={hotel.hotelImageAlt", pdf)
+        self.assertIn("alt={heroAlt}", pdf)
 
     def test_content_signature_and_design_a11y_overrides_have_real_screen_and_pdf_consumers(self):
-        screen = (ROOT / "quote-generator/components/display/sections.tsx").read_text(encoding="utf-8")
+        screen = "\n".join(path.read_text(encoding="utf-8") for path in (ROOT / "quote-generator/components/display").rglob("*.tsx"))
         nav = (ROOT / "quote-generator/components/display/BrochureNavBar.tsx").read_text(encoding="utf-8")
         pdf = (ROOT / "quote-generator/components/display/PdfBrochureDocument.tsx").read_text(encoding="utf-8")
         self.assertIn("signatureName", screen)
@@ -103,7 +103,7 @@ class EditableRuntimeCoverageTests(unittest.TestCase):
     def test_empty_designer_cta_has_a_canvas_only_editable_affordance(self):
         page = (ROOT / "quote-generator/components/DisplayPage.tsx").read_text(encoding="utf-8")
         canvas = (ROOT / "quote-generator/components/quotation-workspace/BoundaryCanvas.tsx").read_text(encoding="utf-8")
-        sections = (ROOT / "quote-generator/components/display/sections.tsx").read_text(encoding="utf-8")
+        sections = "\n".join(path.read_text(encoding="utf-8") for path in (ROOT / "quote-generator/components/display").rglob("*.tsx"))
         self.assertIn("workspaceCanvas={workspaceCanvas}", page)
         self.assertIn("<DisplayPage documentModel={model} workspaceCanvas />", canvas)
         self.assertIn('data-editable="/designer/ctaBody"', sections)

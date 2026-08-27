@@ -273,6 +273,15 @@
       "domAttribute": "data-editable"
     },
     {
+      "fieldId": "itinerary.showDivider",
+      "source": "/presentation/copyOverrides/itinerary.showDivider",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
       "fieldId": "itinerary.overnightLabel",
       "source": "/presentation/copyOverrides/itinerary.overnightLabel",
       "owner": "design",
@@ -365,6 +374,60 @@
     {
       "fieldId": "stays.closing",
       "source": "/presentation/copyOverrides/stays.closing",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "assets.staysDivider",
+      "source": "/assets/staysDivider",
+      "owner": "fact",
+      "kind": "image",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "assets.staysDivider.altText",
+      "source": "/assets/staysDivider/altText",
+      "owner": "fact",
+      "kind": "altText",
+      "behavior": "handoff",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "alt"
+    },
+    {
+      "fieldId": "journeyTogether.kicker",
+      "source": "/presentation/copyOverrides/journeyTogether.kicker",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "journeyTogether.title",
+      "source": "/presentation/copyOverrides/journeyTogether.title",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "journeyTogether.tagline",
+      "source": "/presentation/copyOverrides/journeyTogether.tagline",
+      "owner": "design",
+      "kind": "text",
+      "behavior": "inspector",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "journeyTogether.closing",
+      "source": "/presentation/copyOverrides/journeyTogether.closing",
       "owner": "design",
       "kind": "text",
       "behavior": "inspector",
@@ -543,19 +606,19 @@
       "domAttribute": "data-editable"
     },
     {
-      "fieldId": "bookingTerms.title",
-      "source": "/content/sections/booking_terms/title",
+      "fieldId": "bookingTerms.body",
+      "source": "/content/sections/booking_terms/blocks/*/text",
       "owner": "fact",
-      "kind": "text",
+      "kind": "richText",
       "behavior": "inspector",
       "renderer": "quote-generator/display/runtimePageBuilder.ts",
       "domAttribute": "data-editable"
     },
     {
-      "fieldId": "bookingTerms.body",
-      "source": "/content/sections/booking_terms/blocks/*/text",
+      "fieldId": "bookingTerms.title",
+      "source": "/content/sections/booking_terms/title",
       "owner": "fact",
-      "kind": "richText",
+      "kind": "text",
       "behavior": "inspector",
       "renderer": "quote-generator/display/runtimePageBuilder.ts",
       "domAttribute": "data-editable"
@@ -1251,6 +1314,60 @@
       "kind": "text",
       "behavior": "readonly",
       "renderer": "quote-generator/components/DisplayStateScreen.tsx",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "booking.deposit",
+      "source": "/booking/deposit",
+      "owner": "system",
+      "kind": "richText",
+      "behavior": "readonly",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "booking.deposit.label",
+      "source": "/booking/deposit/label",
+      "owner": "system",
+      "kind": "text",
+      "behavior": "readonly",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "booking.balance",
+      "source": "/booking/balance",
+      "owner": "system",
+      "kind": "richText",
+      "behavior": "readonly",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "booking.balance.label",
+      "source": "/booking/balance/label",
+      "owner": "system",
+      "kind": "text",
+      "behavior": "readonly",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "booking.cancellation",
+      "source": "/booking/cancellation",
+      "owner": "system",
+      "kind": "richText",
+      "behavior": "readonly",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
+      "domAttribute": "data-editable"
+    },
+    {
+      "fieldId": "booking.cancellation.label",
+      "source": "/booking/cancellation/label",
+      "owner": "system",
+      "kind": "text",
+      "behavior": "readonly",
+      "renderer": "quote-generator/display/runtimePageBuilder.ts",
       "domAttribute": "data-editable"
     }
   ]

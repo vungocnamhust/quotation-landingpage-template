@@ -143,6 +143,30 @@ describe('workflowReconciler pure domain rules', () => {
       assert.equal(blockers[0].isAdvisory, true);
       assert.equal(isWorkflowReady(blockers), true);
     });
+
+    it('uses content readiness as the canonical representation when the legacy flattening is also present', () => {
+      const review: ReviewResponse = {
+        ready: false,
+        missingInputs: [],
+        blockingDrafts: [],
+        contentBlockers: [
+          { sectionId: 'hero', sectionType: 'hero', path: 'trip.title', message: 'Trip title is required.' },
+        ],
+        contentReadiness: [{
+          sectionId: 'hero',
+          sectionType: 'hero',
+          label: 'Hero',
+          status: 'chua_du_noi_dung',
+          missing: [{ path: 'trip.title', message: 'Trip title is required.' }],
+          targetStage: 'content',
+          generator: true,
+        }],
+      };
+
+      const blockers = fromReviewResponse(review, null, null, 'en');
+      assert.equal(blockers.length, 1);
+      assert.equal(blockers[0].id, 'content-readiness-0');
+    });
   });
 });
 

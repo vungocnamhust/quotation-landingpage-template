@@ -240,9 +240,13 @@ export function fromReviewResponse(
   const isVi = lang === 'vi';
   const missingInputs = reviewData?.missingInputs ?? workflowData?.facts.missingInputs ?? [];
   const blockingDrafts = reviewData?.blockingDrafts ?? workflowData?.content.blockingDrafts ?? [];
-  const contentBlockers = reviewData?.contentBlockers ?? workflowData?.content.contentBlockers ?? [];
-  const presentationErrors = reviewData?.presentationErrors ?? workflowData?.design.presentationErrors ?? [];
   const contentReadiness = reviewData?.contentReadiness ?? [];
+  // `contentBlockers` is the compatibility flattening of `contentReadiness`.
+  // Never render both representations for one review response.
+  const contentBlockers = contentReadiness.length > 0
+    ? []
+    : reviewData?.contentBlockers ?? workflowData?.content.contentBlockers ?? [];
+  const presentationErrors = reviewData?.presentationErrors ?? workflowData?.design.presentationErrors ?? [];
 
   const list: CanonicalBlockerItem[] = [];
 

@@ -394,6 +394,8 @@ export interface LetterViewModel {
   intro: TextValue;
   body: TextValue[];
   outro: TextValue;
+  signOff: TextValue;
+  sender: TextValue;
   signatureName: TextValue;
   signatureRole: TextValue;
   contactLine?: string;

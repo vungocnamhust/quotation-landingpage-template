@@ -27,6 +27,8 @@ interface BrochureLetterSource {
   intro: string;
   body: string[];
   outro: string;
+  signOff?: string;
+  sender?: string;
   signatureName: string;
   signatureRole: string;
   contactLine: string;
@@ -264,6 +266,8 @@ export const BRANDS_DATA: Record<BrandKey, BrandInfo> = {
         ],
         outro:
           'Toàn bộ cụm public section được tổ chức để người xem vừa hiểu tuyến hành trình vừa cảm được tinh thần khám phá của thương hiệu.',
+        signOff: 'Warm regards,',
+        sender: 'Vietnam Safar Journey Team',
         signatureName: 'Nguyen Hoang Nam',
         signatureRole: 'Travel Designer',
         contactLine: 'concierge@vietnamsafar.com · +84 901 234 567',
@@ -613,6 +617,8 @@ export const BRANDS_DATA: Record<BrandKey, BrandInfo> = {
         ],
         outro:
           'Đó là lý do theme được định nghĩa như “một tập hợp layout được sắp xếp với nhau”, chứ không chỉ là bộ màu và font.',
+        signOff: 'With warm regards,',
+        sender: 'Capella Travel Journey Team',
         signatureName: 'Victoria Le',
         signatureRole: 'Private Journey Director',
         contactLine: 'concierge@capellatravel.com · +84 888 100 100',
@@ -969,6 +975,8 @@ export const BRANDS_DATA: Record<BrandKey, BrandInfo> = {
         ],
         outro:
           'Khi mọi thứ được tổ chức đúng lớp, mỗi brand có thể dịu hay mạnh tùy ý mà không mất tính hệ thống.',
+        signOff: 'With care,',
+        sender: 'Selvara Journeys Team',
         signatureName: 'Linh Dao',
         signatureRole: 'Wellness Journey Designer',
         contactLine: 'hello@selvarajourneys.com · +84 933 222 111',

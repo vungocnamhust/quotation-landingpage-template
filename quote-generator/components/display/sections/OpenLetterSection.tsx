@@ -58,6 +58,14 @@ export function OpenLetterSection({
                 </BodyCopy>
               ))}
               <BodyCopy variant={requireTypographySlot(displayConfig.typographySlots, 'body')}>{viewModel.outro}</BodyCopy>
+              {textValue(viewModel.signOff) ? (
+                <BodyCopy variant={requireTypographySlot(displayConfig.typographySlots, 'body')}>{viewModel.signOff}</BodyCopy>
+              ) : null}
+              {textValue(viewModel.sender) ? (
+                <MetaText variant={requireTypographySlot(displayConfig.typographySlots, 'metaSecondary')} tone="muted">
+                  {viewModel.sender}
+                </MetaText>
+              ) : null}
 
               <div className="display-letter__signature">
                 {viewModel.signatureGlyph && textValue(viewModel.signatureGlyph)?.trim() ? (

@@ -170,6 +170,12 @@
     {"fieldId":"labels.tryAgain","section":"error","owner":"system","kind":"text","source":"/labels/tryAgain","requiredForPublish":false,"visibleIn":["desktop","mobile","pdf"],"defaultStrategy":"locale-system","generator":"none"},
     {"fieldId":"labels.notFoundTitle","section":"notFound","owner":"system","kind":"text","source":"/labels/notFoundTitle","requiredForPublish":false,"visibleIn":["desktop","mobile","pdf"],"defaultStrategy":"locale-system","generator":"none"},
     {"fieldId":"labels.notFoundBody","section":"notFound","owner":"system","kind":"text","source":"/labels/notFoundBody","requiredForPublish":false,"visibleIn":["desktop","mobile","pdf"],"defaultStrategy":"locale-system","generator":"none"},
-    {"fieldId":"labels.returnHome","section":"notFound","owner":"system","kind":"text","source":"/labels/returnHome","requiredForPublish":false,"visibleIn":["desktop","mobile","pdf"],"defaultStrategy":"locale-system","generator":"none"}
+    {"fieldId":"labels.returnHome","section":"notFound","owner":"system","kind":"text","source":"/labels/returnHome","requiredForPublish":false,"visibleIn":["desktop","mobile","pdf"],"defaultStrategy":"locale-system","generator":"none"},
+    {"fieldId":"booking.deposit","section":"bookingTerms","owner":"system","kind":"richText","source":"/booking/deposit","requiredForPublish":false,"visibleIn":["desktop","mobile","pdf"],"defaultStrategy":"theme-default","generator":"none"},
+    {"fieldId":"booking.deposit.label","section":"bookingTerms","owner":"system","kind":"text","source":"/booking/deposit/label","requiredForPublish":false,"visibleIn":["desktop","mobile","pdf"],"defaultStrategy":"theme-default","generator":"none"},
+    {"fieldId":"booking.balance","section":"bookingTerms","owner":"system","kind":"richText","source":"/booking/balance","requiredForPublish":false,"visibleIn":["desktop","mobile","pdf"],"defaultStrategy":"theme-default","generator":"none"},
+    {"fieldId":"booking.balance.label","section":"bookingTerms","owner":"system","kind":"text","source":"/booking/balance/label","requiredForPublish":false,"visibleIn":["desktop","mobile","pdf"],"defaultStrategy":"theme-default","generator":"none"},
+    {"fieldId":"booking.cancellation","section":"bookingTerms","owner":"system","kind":"richText","source":"/booking/cancellation","requiredForPublish":false,"visibleIn":["desktop","mobile","pdf"],"defaultStrategy":"theme-default","generator":"none"},
+    {"fieldId":"booking.cancellation.label","section":"bookingTerms","owner":"system","kind":"text","source":"/booking/cancellation/label","requiredForPublish":false,"visibleIn":["desktop","mobile","pdf"],"defaultStrategy":"theme-default","generator":"none"}
   ]
 }

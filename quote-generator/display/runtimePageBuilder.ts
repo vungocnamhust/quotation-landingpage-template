@@ -182,8 +182,6 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
   const designer = record(document.designer);
   const designer_facts = record(document.designer_facts);
   const designerFacts = record(document.designerFacts);
-  const customerGreeting = stringValue(customer.greetingName) || stringValue(customer.greeting_name) || stringValue(customer_facts.greeting_name) || stringValue(customer_facts.greetingName) || stringValue(customerFacts.greeting_name) || stringValue(customerFacts.greetingName);
-  const customerParty = stringValue(customer.partyLabel) || stringValue(customer.party_label) || stringValue(customer_facts.party_label) || stringValue(customer_facts.partyLabel) || stringValue(customerFacts.party_label) || stringValue(customerFacts.partyLabel);
   const adultsCount = positiveInteger(customer.adults) || positiveInteger(customer_facts.adults) || positiveInteger(customerFacts.adults) || 2;
   const childrenCount = positiveInteger(customer.children) || positiveInteger(customer_facts.children) || positiveInteger(customerFacts.children) || 0;
   const bookingTitleText = stringValue(booking.title) || stringValue(booking_facts.title) || stringValue(bookingFacts.title);
@@ -406,7 +404,7 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
     const descList = listText(day.description).length ? listText(day.description) : day.summary ? [stringValue(day.summary)] : [];
 
     const detailRows = [
-      activities.length ? { label: editable(stringValue(day.labelHighlights) || labels.highlights, `${base}/labelHighlights`, 'fact'), value: contentCopy(activities.join(' · '), `${base}/activities`, '') } : null,
+      activities.length ? { label: designCopy(overrides, 'itinerary.highlightsLabel', labels.highlights), value: contentCopy(activities.join(' · '), `${base}/activities`, '') } : null,
       day.overnight ? { label: designCopy(overrides, 'itinerary.overnightLabel', labels.overnight), value: editable(stringValue(day.overnight), `${base}/overnight`, 'fact') } : null,
       meals.length ? { label: designCopy(overrides, 'itinerary.mealsLabel', labels.meals), value: editable(meals.join(' · '), `${base}/meals`, 'fact') } : null,
     ].filter(Boolean) as Array<{ label: EditableText; value: EditableText }>;
@@ -540,16 +538,14 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
       letter: {
         chapterKicker: designCopy(overrides, 'letter.kicker', labels.journeyOverviewKicker),
         title: contentCopy(stringValue(narrative.journeyOverviewTitle), '/narrative/journeyOverviewTitle', labels.journeyOverviewTitle),
-        highlight: stringValue(narrative.letterHighlight)
-          ? contentCopy(stringValue(narrative.letterHighlight), '/narrative/letterHighlight', '')
-          : factCopy(customerParty, '/customer/partyLabel'),
+        highlight: contentCopy(stringValue(narrative.letterHighlight), '/narrative/letterHighlight', ''),
         decorAsset: assetUrl(assets.letterDecor) || assetUrl(record(mediaOverrides['assets.letterDecor'])) || '/assets/brands/indochine_icon/ruong_bac_thang.svg',
-        greeting: stringValue(narrative.letterGreeting)
-          ? contentCopy(stringValue(narrative.letterGreeting), '/narrative/letterGreeting', '')
-          : factCopy(customerGreeting, '/customer/greetingName'),
+        greeting: contentCopy(stringValue(narrative.letterGreeting), '/narrative/letterGreeting', ''),
         intro: contentCopy(stringValue(narrative.letterIntro), '/narrative/letterIntro', ''),
         body: [stringValue(narrative.letterBody2)].filter(Boolean).map((item) => contentCopy(item, '/narrative/letterBody2', '')),
         outro: contentCopy(stringValue(narrative.letterOutro), '/narrative/letterOutro', ''),
+        signOff: contentCopy(stringValue(narrative.letterSignOff), '/narrative/letterSignOff', ''),
+        sender: contentCopy(stringValue(narrative.letterSender), '/narrative/letterSender', ''),
         signatureName: factCopy(
           stringValue(designer.name) ||
             stringValue(designer_facts.name) ||
@@ -567,7 +563,6 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
             stringValue(designerFacts.seller_subtitle) ||
             stringValue(designer_facts.designer_subtitle) ||
             stringValue(designer.signatureLabel) ||
-            stringValue(narrative.letterSender) ||
             'Travel Designer'
           ).toUpperCase(),
           '/designer/subtitle',
@@ -580,8 +575,8 @@ export function buildDisplayDocumentFromQuoteDocument({ document, brandProfile, 
             stringValue(designerFacts.signature_initial) ||
             stringValue(designer_facts.signatureInitial) ||
             stringValue(designerFacts.signatureInitial) ||
-            (designer_facts.name || designerFacts.name || designer.name || narrative.letterSignOff
-              ? String(designer_facts.name || designerFacts.name || designer.name || narrative.letterSignOff).charAt(0)
+            (designer_facts.name || designerFacts.name || designer.name
+              ? String(designer_facts.name || designerFacts.name || designer.name).charAt(0)
               : 'E'),
           '/designer/signatureInitial',
         ),
