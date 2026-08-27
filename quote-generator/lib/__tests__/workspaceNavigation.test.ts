@@ -29,3 +29,16 @@ test("workspace navigation rejects non-navigation clicks and routes", () => {
   assert.equal(shouldStartWorkspaceNavigation(plainClick, "https://example.com/workspace"), false);
   assert.equal(workspaceRouteKey("#details"), null);
 });
+
+test("workspace navigation resolves category and subroute keys properly", () => {
+  assert.equal(workspaceRouteKey("/workspace/catalog"), "/workspace/catalog");
+  assert.equal(
+    workspaceRouteKey("/workspace/catalog?category=guides"),
+    "/workspace/catalog?category=guides",
+  );
+  assert.equal(
+    workspaceRouteKey("/workspace/catalog?category=hotels"),
+    "/workspace/catalog?category=hotels",
+  );
+});
+

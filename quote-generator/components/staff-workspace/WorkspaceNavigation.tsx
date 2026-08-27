@@ -10,6 +10,7 @@ import {
   startTransition,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -30,6 +31,7 @@ const WorkspaceNavigationContext = createContext<WorkspaceNavigationContextValue
 
 type NavigationIntent = {
   href: string;
+  sourceRouteKey: string;
   targetRouteKey: string;
 };
 
@@ -44,16 +46,35 @@ export function WorkspaceNavigationProvider({ children }: { children: ReactNode 
   const [navigationIntent, setNavigationIntent] = useState<NavigationIntent | null>(null);
   const search = searchParams.toString();
   const currentRouteKey = getCurrentRouteKey(pathname, search);
+  const [prevRouteKey, setPrevRouteKey] = useState(currentRouteKey);
+
+  if (prevRouteKey !== currentRouteKey) {
+    setPrevRouteKey(currentRouteKey);
+    if (navigationIntent) {
+      setNavigationIntent(null);
+    }
+  }
+
   const pendingHref =
-    navigationIntent && navigationIntent.targetRouteKey !== currentRouteKey
+    navigationIntent &&
+    navigationIntent.sourceRouteKey === currentRouteKey &&
+    navigationIntent.targetRouteKey !== currentRouteKey
       ? navigationIntent.href
       : null;
+
+  useEffect(() => {
+    if (!navigationIntent) return;
+    const timer = setTimeout(() => {
+      setNavigationIntent(null);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [navigationIntent]);
 
   const beginNavigation = useCallback(
     (href: string): boolean => {
       const targetRouteKey = workspaceRouteKey(href, window.location.origin);
       if (!targetRouteKey || targetRouteKey === currentRouteKey) return false;
-      setNavigationIntent({ href, targetRouteKey });
+      setNavigationIntent({ href, sourceRouteKey: currentRouteKey, targetRouteKey });
       return true;
     },
     [currentRouteKey],
