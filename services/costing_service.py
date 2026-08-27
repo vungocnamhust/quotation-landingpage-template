@@ -220,6 +220,7 @@ class CostingService:
         line = await self.repository.get_line_by_id(line_id)
         if line is None or line.sheet_id != sheet_id:
             return None
+        self._guard_booked_line(line, sheet)
 
         values = await self._resolve_line_values(sheet, payload)
         values["updated_by"] = actor.serialize()
@@ -239,12 +240,28 @@ class CostingService:
         line = await self.repository.get_line_by_id(line_id)
         if line is None or line.sheet_id != sheet_id:
             return None
+        self._guard_booked_line(line, sheet)
 
         await self.repository.delete_line(sheet, line)
         sheet = await self.repository.get_sheet_by_id(sheet_id)
         return await self._to_workbench(sheet)
 
     # ------------------------------------------------------------- helpers
+
+    @staticmethod
+    def _guard_booked_line(line, sheet: CostingSheet) -> None:
+        """15.6 §1.2: a line already handed to Operations is frozen here (409, not 422).
+
+        ``booking_status`` is a read-model mirror of the ``booking_lines.status``
+        it was copied into; the source of truth for whether it's bookable lives
+        in ``services/booking_service.py``.
+        """
+        if line.booking_status != "quoted":
+            raise CostingConflictError(
+                f"Service line '{line.id}' has moved to Operations (booking_status='{line.booking_status}') "
+                "and can no longer be edited or deleted from the costing grid.",
+                current_revision=sheet.costing_revision,
+            )
 
     @staticmethod
     def _check_revision(sheet: CostingSheet, base_costing_revision: int) -> None:

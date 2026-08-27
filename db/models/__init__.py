@@ -1,5 +1,6 @@
 from db.models.brand import Brand
 from db.models.accommodation import AccommodationProfile
+from db.models.booking import Booking, BookingLine, BusinessCodeCounter
 from db.models.costing import CostingSheet, ServiceLine
 from db.models.destination import DestinationAlias, DestinationCatalog
 from db.models.media import MediaAsset, MediaSelection
@@ -25,6 +26,9 @@ from db.models.rooming_heuristic import RoomingHeuristicRule
 __all__ = [
     "Brand",
     "AccommodationProfile",
+    "Booking",
+    "BookingLine",
+    "BusinessCodeCounter",
     "CostingSheet",
     "ServiceLine",
     "DestinationAlias",

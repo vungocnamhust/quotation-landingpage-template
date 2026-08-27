@@ -44,6 +44,11 @@ class EventType(str, Enum):
     CATALOG_RATE_ACTIVATED = "catalog.rate.activated"
     CATALOG_RATE_SUPERSEDED = "catalog.rate.superseded"
 
+    # Booking events (15.6)
+    BOOKING_CREATED = "booking.created"
+    BOOKING_LINE_CONFIRMED = "booking.line.confirmed"
+    BOOKING_LINE_CANCELLED = "booking.line.cancelled"
+
     # System & Generic
     SYSTEM_ANNOUNCEMENT = "system.announcement"
 

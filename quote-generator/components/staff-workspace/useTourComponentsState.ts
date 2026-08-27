@@ -9,9 +9,11 @@ export function useTourComponentsState() {
   const searchParams = useSearchParams();
 
   // Active Category selection
-  const activeCategoryParam =
-    (searchParams.get("category") as ComponentCategoryKey) || "accommodations";
-  const [activeCategory, setActiveCategory] = useState<ComponentCategoryKey>(activeCategoryParam);
+  const activeCategoryParam = searchParams.get("category");
+  const initialCategory = CATEGORIES.some((category) => category.key === activeCategoryParam)
+    ? (activeCategoryParam as ComponentCategoryKey)
+    : "hotels";
+  const [activeCategory, setActiveCategory] = useState<ComponentCategoryKey>(initialCategory);
 
   const currentCategoryMeta: CategoryMeta = useMemo(
     () => CATEGORIES.find((c) => c.key === activeCategory) ?? CATEGORIES[0],
@@ -28,8 +30,9 @@ export function useTourComponentsState() {
   const handleCategoryChange = (key: ComponentCategoryKey) => {
     setActiveCategory(key);
     setSearch("");
+    setActiveFilter("all");
     setTravelStyleGroupFilter("all");
-    router.replace(`/workspace/components?category=${key}`, { scroll: false });
+    router.replace(`/workspace/catalog?category=${key}`, { scroll: false });
   };
 
   return {

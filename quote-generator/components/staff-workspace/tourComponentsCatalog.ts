@@ -1,21 +1,24 @@
 import {
   Building2,
-  Palette,
   Car,
   Sparkles,
   Ticket,
+  UtensilsCrossed,
+  BadgeCheck,
+  UsersRound,
   MapPin,
   Handshake,
 } from "lucide-react";
 import type { ComponentType } from "react";
-import type { TravelStyleTagItem } from "../../lib/quotationApi.ts";
+import type { ProductCategory } from "../../lib/quotationApi.ts";
 
 export type ComponentCategoryKey =
-  | "accommodations"
-  | "travel_styles"
+  | "hotels"
   | "cars"
-  | "experiences"
-  | "tickets"
+  | "guides"
+  | "activities"
+  | "dining"
+  | "visa"
   | "destinations"
   | "suppliers";
 
@@ -29,51 +32,60 @@ export interface CategoryMeta {
   actionLabel: string;
 }
 
-export const CATEGORIES: CategoryMeta[] = [
+export const CATEGORIES: readonly CategoryMeta[] = [
   {
-    key: "accommodations",
-    label: "Accommodations",
-    description: "Manage hotel & resort profiles, default check-in/out rules, and property media across destinations.",
+    key: "hotels",
+    label: "Hotels & Stays",
+    description: "Sellable room and stay products. Property imagery and editorial profiles are managed in Content Studio.",
     icon: Building2,
-    emptyTitle: "No accommodations found",
-    emptyDescription: "Start by adding your first accommodation profile to the catalog.",
-    actionLabel: "Add accommodation",
-  },
-  {
-    key: "travel_styles",
-    label: "Travel Styles",
-    description: "Manage travel style tags and taxonomy (Group Composition, Tour Type, Purpose & Theme, Interest & Experience).",
-    icon: Palette,
-    emptyTitle: "No travel styles found",
-    emptyDescription: "No travel styles found in the selected category.",
-    actionLabel: "Add travel style",
+    emptyTitle: "No hotel or stay products yet",
+    emptyDescription: "Start by adding a sellable room, resort, villa, or other stay product.",
+    actionLabel: "Add hotel or stay product",
   },
   {
     key: "cars",
     label: "Cars & Transport",
-    description: "Product catalog entries in category transportation — vehicles, luxury vans, speedboats, and trains, each a sellable variant of a supplier at a destination (no pricing here — see 15.3).",
+    description: "Sellable transportation and flight products, including vehicles, boats, trains, and air services.",
     icon: Car,
-    emptyTitle: "No transportation products yet",
-    emptyDescription: "Start by adding your first transportation product — vehicle, transfer, or boat service.",
-    actionLabel: "Add transportation product",
+    emptyTitle: "No transport products yet",
+    emptyDescription: "Start by adding a transportation or flight product.",
+    actionLabel: "Add transport product",
   },
   {
-    key: "experiences",
-    label: "Experiences",
-    description: "Product catalog entries in categories experience and meal — signature activities, workshops, guided tours, and dining, each a sellable variant of a supplier at a destination.",
-    icon: Sparkles,
-    emptyTitle: "No experience or meal products yet",
-    emptyDescription: "Start by adding your first experience or meal product.",
-    actionLabel: "Add experience/meal product",
+    key: "guides",
+    label: "Tour Guides",
+    description: "Sellable guide services and guide-related operating expenses.",
+    icon: UsersRound,
+    emptyTitle: "No guide products yet",
+    emptyDescription: "Start by adding a guide service or guide expense product.",
+    actionLabel: "Add guide product",
   },
   {
-    key: "tickets",
-    label: "Tickets & Passes",
-    description: "Product catalog entries in categories ticket, flights, and visa — entrance tickets, passes, flights, and visa services, each a sellable variant of a supplier at a destination.",
+    key: "activities",
+    label: "Activities & Tickets",
+    description: "Sellable experiences, attractions, admission tickets, and passes.",
     icon: Ticket,
-    emptyTitle: "No ticket, flight, or visa products yet",
-    emptyDescription: "Start by adding your first ticket, flight, or visa product.",
-    actionLabel: "Add ticket/flight/visa product",
+    emptyTitle: "No activity or ticket products yet",
+    emptyDescription: "Start by adding an experience or ticket product.",
+    actionLabel: "Add activity or ticket product",
+  },
+  {
+    key: "dining",
+    label: "Dining & Meals",
+    description: "Sellable dining, restaurant, and meal services.",
+    icon: UtensilsCrossed,
+    emptyTitle: "No dining products yet",
+    emptyDescription: "Start by adding a meal or dining product.",
+    actionLabel: "Add dining product",
+  },
+  {
+    key: "visa",
+    label: "Visa & Ancillaries",
+    description: "Sellable visa, fast-track, SIM, gifting, and ancillary services.",
+    icon: BadgeCheck,
+    emptyTitle: "No visa or ancillary products yet",
+    emptyDescription: "Start by adding a visa or ancillary product.",
+    actionLabel: "Add visa or ancillary product",
   },
   {
     key: "destinations",
@@ -95,33 +107,22 @@ export const CATEGORIES: CategoryMeta[] = [
   },
 ];
 
-// Flat travel style tag item with localized category titles
-export interface FlatTravelStyleTag extends TravelStyleTagItem {
-  categoryTitleEn: string;
-  categoryTitleVi: string;
-}
+export type ProductComponentSlotKey = Extract<
+  ComponentCategoryKey,
+  "hotels" | "cars" | "guides" | "activities" | "dining" | "visa"
+>;
 
-// Generic catalog item shape for non-DB categories
-export interface GenericComponentItem {
-  id: string;
-  name: string;
-  category: string;
-  subtitle: string;
-  tags: string[];
-  status: "Active" | "Draft";
-  updatedAt: string;
-}
-
-// 15.2 §2.2 — the 3 previously-stub slots map to product catalog categories.
-// Mirrors core/rules/catalog_vocab.py CATEGORY. No new ComponentCategoryKey added.
-export type ProductComponentSlotKey = "cars" | "experiences" | "tickets";
-
-export const PRODUCT_CATEGORY_BY_SLOT: Record<ProductComponentSlotKey, ("accommodation" | "transportation" | "ticket" | "flights" | "guide" | "guide_expense" | "experience" | "meal" | "visa" | "others")[]> = {
-  cars: ["transportation"],
-  experiences: ["experience", "meal"],
-  tickets: ["ticket", "flights", "visa"],
+// Mirrors core/rules/catalog_vocab.py CATEGORY. Every backend product category
+// belongs to exactly one commercial catalog tab; the first category is its create preset.
+export const PRODUCT_CATEGORY_BY_SLOT: Record<ProductComponentSlotKey, readonly ProductCategory[]> = {
+  hotels: ["accommodation"],
+  cars: ["transportation", "flights"],
+  guides: ["guide", "guide_expense"],
+  activities: ["experience", "ticket"],
+  dining: ["meal"],
+  visa: ["visa", "others"],
 };
 
 export function isProductComponentSlot(key: ComponentCategoryKey): key is ProductComponentSlotKey {
-  return key === "cars" || key === "experiences" || key === "tickets";
+  return key in PRODUCT_CATEGORY_BY_SLOT;
 }

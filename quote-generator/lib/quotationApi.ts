@@ -883,6 +883,207 @@ export async function deleteServiceLine(
   );
 }
 
+// ---------------------------------------------------------------------------
+// Booking & Operations (15.6) — deposit landed, each service_line copies into a
+// booking_line that FREEZES pricing/terms forever (T3) plus LIVE ops fields
+// (status, deadlines, supplier_ref, voucher). Every write carries
+// base_booking_revision (CAS); the server response is always the fresh state —
+// never recompute deadlines client-side (they come pre-computed from the
+// server's policy JSONB, see core/rules/booking_rules.py).
+// ---------------------------------------------------------------------------
+
+export type BookingLineStatus = 'to_request' | 'requested' | 'confirmed' | 'delivered' | 'cancelled';
+export type BookingHeaderStatus = 'active' | 'completed' | 'cancelled';
+export type BookingLineUrgency = 'overdue' | 'due_soon' | 'ok';
+
+export type SupplierContactProfile = {
+  person?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  whatsapp?: string | null;
+  zalo?: string | null;
+  website?: string | null;
+};
+
+export type CancellationTierProfile = { days_before_service_min: number; penalty_percent: number };
+export type CancellationPolicyProfile = {
+  tiers: CancellationTierProfile[];
+  no_show_penalty_percent: number;
+  note?: string | null;
+};
+export type PaymentTermsProfile = {
+  deposit_percent?: number | null;
+  deposit_due_days_after_confirm?: number | null;
+  balance_due_days_before_service?: number | null;
+  method?: string | null;
+  note?: string | null;
+};
+
+export type BookingLineProfile = {
+  id: string;
+  booking_id: string;
+  source_service_line_id: string;
+  supplier_id_snapshot: string | null;
+  supplier_name_snapshot: string | null;
+  supplier_contact_snapshot_json: SupplierContactProfile | null;
+  title_snapshot: string;
+  category: string;
+  service_date: string | null;
+  unit: string;
+  time_basis: string;
+  qty_unit: number;
+  qty_time: number;
+  unit_cost_minor_snapshot: number;
+  cost_currency_snapshot: string;
+  fx_rate_ppm_snapshot: number | null;
+  sell_minor_snapshot: number;
+  payment_terms_snapshot_json: PaymentTermsProfile | null;
+  cancellation_policy_snapshot_json: CancellationPolicyProfile | null;
+  status: BookingLineStatus;
+  request_by_date: string | null;
+  penalty_free_until: string | null;
+  deposit_due_date: string | null;
+  balance_due_date: string | null;
+  supplier_ref: string | null;
+  voucher_ref: string | null;
+  confirmed_at: string | null;
+  cancelled_at: string | null;
+  cancel_reason: string | null;
+  cancel_penalty_minor: number | null;
+  assignee_email: string | null;
+  notes: string | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+  urgency: BookingLineUrgency | null;
+};
+
+export type BookingProfile = {
+  id: string;
+  quotation_id: string;
+  sheet_id: string;
+  booking_code: string;
+  status: BookingHeaderStatus;
+  deposit_received_at: string;
+  customer_balance_due_date: string | null;
+  party_label_snapshot: string | null;
+  travel_start_date: string | null;
+  travel_end_date: string | null;
+  booking_revision: number;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type BookingDetailResponse = {
+  booking: BookingProfile;
+  lines: BookingLineProfile[];
+  cash_flow_warnings: string[];
+};
+
+export type BookingBoardItem = {
+  line: BookingLineProfile;
+  booking_id: string;
+  booking_code: string;
+  booking_revision: number;
+  quotation_id: string;
+  party_label_snapshot: string | null;
+  travel_start_date: string | null;
+  travel_end_date: string | null;
+  customer_balance_due_date: string | null;
+  cash_flow_warning: boolean;
+};
+
+export type BookingBoardResponse = { items: BookingBoardItem[] };
+
+export async function createBooking(
+  input: { quotation_id: string; deposit_received_at: string; customer_balance_due_date?: string | null },
+  idempotencyKey: string,
+): Promise<BookingDetailResponse> {
+  return request<BookingDetailResponse>('/api/v2/bookings', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey },
+    body: JSON.stringify(input),
+  });
+}
+
+export async function listBookingBoard(filters: {
+  status?: BookingLineStatus;
+  assignee?: string;
+  quotationId?: string;
+  dueWithinDays?: number;
+  overdueOnly?: boolean;
+} = {}): Promise<BookingBoardResponse> {
+  const params = new URLSearchParams();
+  if (filters.status) params.set('status', filters.status);
+  if (filters.assignee) params.set('assignee', filters.assignee);
+  if (filters.quotationId) params.set('quotationId', filters.quotationId);
+  if (filters.dueWithinDays != null) params.set('dueWithinDays', String(filters.dueWithinDays));
+  if (filters.overdueOnly) params.set('overdueOnly', 'true');
+  const query = params.toString();
+  return request<BookingBoardResponse>(`/api/v2/bookings${query ? `?${query}` : ''}`);
+}
+
+export async function getBooking(bookingId: string): Promise<BookingDetailResponse> {
+  return request<BookingDetailResponse>(`/api/v2/bookings/${encodeURIComponent(bookingId)}`);
+}
+
+export async function updateBookingHeader(
+  bookingId: string,
+  input: { base_booking_revision: number; customer_balance_due_date?: string | null; status?: BookingHeaderStatus; notes?: string | null },
+): Promise<BookingDetailResponse> {
+  return request<BookingDetailResponse>(`/api/v2/bookings/${encodeURIComponent(bookingId)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+}
+
+export async function transitionBookingLine(
+  bookingId: string,
+  lineId: string,
+  input: { base_booking_revision: number; to: BookingLineStatus; supplier_ref?: string | null; cancel_reason?: string | null },
+  idempotencyKey: string,
+): Promise<BookingDetailResponse> {
+  return request<BookingDetailResponse>(
+    `/api/v2/bookings/${encodeURIComponent(bookingId)}/lines/${encodeURIComponent(lineId)}/transition`,
+    { method: 'POST', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey }, body: JSON.stringify(input) },
+  );
+}
+
+export async function updateBookingLineOps(
+  bookingId: string,
+  lineId: string,
+  input: { base_booking_revision: number; request_by_date?: string | null; assignee_email?: string | null; notes?: string | null; supplier_ref?: string | null },
+): Promise<BookingDetailResponse> {
+  return request<BookingDetailResponse>(
+    `/api/v2/bookings/${encodeURIComponent(bookingId)}/lines/${encodeURIComponent(lineId)}`,
+    { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input) },
+  );
+}
+
+export async function addBookingLine(
+  bookingId: string,
+  input: { base_booking_revision: number; service_line_id: string },
+): Promise<BookingDetailResponse> {
+  return request<BookingDetailResponse>(`/api/v2/bookings/${encodeURIComponent(bookingId)}/lines`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+}
+
+export async function cancelBooking(
+  bookingId: string,
+  input: { base_booking_revision: number; reason: string },
+): Promise<BookingDetailResponse> {
+  return request<BookingDetailResponse>(`/api/v2/bookings/${encodeURIComponent(bookingId)}/cancel`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+}
+
 export type RoomingHeuristicRuleItem = {
   id: string;
   name: string;

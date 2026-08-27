@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import useSWR from "swr";
-import { LayoutDashboard, FileText, Inbox, PlusCircle, Boxes } from "lucide-react";
+import { LayoutDashboard, FileText, Inbox, PlusCircle, Boxes, Palette } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography.ts";
 import { apiErrorMessage, quotationFetch } from "../../lib/apiError.ts";
 import { cn } from "../../utils/cn.ts";
@@ -26,7 +26,8 @@ const nav = [
   { label: "Requests", href: "/workspace/requests", icon: Inbox },
   { label: "New Request", href: "/workspace/requests/new", icon: PlusCircle },
   { label: "My quotations", href: "/workspace/quotations", icon: FileText },
-  { label: "Components", href: "/workspace/components", icon: Boxes },
+  { label: "Product Catalog", href: "/workspace/catalog", icon: Boxes },
+  { label: "Content Studio", href: "/workspace/content-studio", icon: Palette },
 ] as const;
 
 function UserAvatar({ name }: { name: string }) {

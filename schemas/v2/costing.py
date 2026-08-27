@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from core.rules.catalog_vocab import CATEGORY, SUBCATEGORY_BY_CATEGORY, TIME_BASIS, UNIT
 
-BookingStatus = Literal["quoted", "on_hold", "confirmed", "cancelled"]
+BookingStatus = Literal["quoted", "on_hold", "to_request", "requested", "confirmed", "delivered", "cancelled"]
 LineSource = Literal["manual", "ai_draft"]
 
 _MAX_LINES_PER_SHEET = 500
