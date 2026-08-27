@@ -1,4 +1,4 @@
-export type QuotationWorkspaceStage = "facts" | "content" | "design" | "review";
+export type QuotationWorkspaceStage = "facts" | "costing" | "content" | "design" | "review";
 
 export function isQuotationStageLoading({
   committedStage,

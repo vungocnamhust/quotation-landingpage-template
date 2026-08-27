@@ -11,6 +11,7 @@ import {
   RotateCcw,
   AlertTriangle,
   CheckCircle2,
+  Calculator,
 } from "lucide-react";
 import { useToast } from "./ToastProvider.tsx";
 import { getTypographyClassName } from "../../config/typography.ts";
@@ -53,12 +54,12 @@ export default function DetailRequestView({ request: initialRequest }: Props) {
   const payload = (
     typeof activeRequest.payload_json === "string"
       ? (() => {
-          try {
-            return JSON.parse(activeRequest.payload_json) as Record<string, unknown>;
-          } catch {
-            return {};
-          }
-        })()
+        try {
+          return JSON.parse(activeRequest.payload_json) as Record<string, unknown>;
+        } catch {
+          return {};
+        }
+      })()
       : (activeRequest.payload_json || {})
   ) as Record<string, unknown>;
   const isTraveller = activeRequest.role === "traveller";
@@ -74,6 +75,10 @@ export default function DetailRequestView({ request: initialRequest }: Props) {
   const handleGenerateQuotation = () => {
     toast(`Initializing quotation draft from request #${activeRequest.id}...`, "info");
     push(`/workspace/quotations/new?requestId=${activeRequest.id}`);
+  };
+
+  const handleOpenCostingWorkbench = () => {
+    push(`/workspace/requests/${activeRequest.id}/costing`);
   };
 
   const handleEditSuccess = (updated: QuoteRequestItem) => {
@@ -227,17 +232,30 @@ export default function DetailRequestView({ request: initialRequest }: Props) {
             <span>Edit Request</span>
           </button>
 
-          {/* Primary Action Button */}
+          {/* Fast-Track: existing quick-quote flow, unchanged behavior (Flow 2) */}
           <button
             type="button"
             onClick={handleGenerateQuotation}
+            className={cn(
+              getTypographyClassName("buttonSecondary"),
+              "flex items-center gap-1.5 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-4 py-2.5 text-[var(--color-on-surface)] hover:bg-[var(--color-surface-muted)] transition-colors cursor-pointer"
+            )}
+          >
+            <Sparkles size={15} aria-hidden="true" />
+            <span>Create New Quotation</span>
+          </button>
+
+          {/* Costing-First: Primary Action Button (Flow 1) */}
+          <button
+            type="button"
+            onClick={handleOpenCostingWorkbench}
             className={cn(
               getTypographyClassName("buttonPrimary"),
               "flex items-center gap-2 rounded-[var(--radius-button)] bg-[var(--color-accent)] px-5 py-2.5 text-white shadow-md transition-all hover:opacity-90 cursor-pointer"
             )}
           >
-            <Sparkles size={16} aria-hidden="true" />
-            <span>+ Generate Quotation</span>
+            <Calculator size={16} aria-hidden="true" />
+            <span>Lên dự toán &amp; Báo giá</span>
           </button>
         </div>
       </div>
@@ -275,7 +293,7 @@ export default function DetailRequestView({ request: initialRequest }: Props) {
             </div>
           </div>
 
-            <WorkspaceNavigationLink
+          <WorkspaceNavigationLink
             href={`/workspace/quotations/${activeRequest.linked_quotation_id}/edit?stage=facts`}
             className={cn(
               getTypographyClassName("buttonPrimary"),
@@ -284,7 +302,7 @@ export default function DetailRequestView({ request: initialRequest }: Props) {
           >
             <span>Mở Quotation Studio</span>
             <ExternalLink size={15} aria-hidden="true" />
-            </WorkspaceNavigationLink>
+          </WorkspaceNavigationLink>
         </section>
       ) : null}
 

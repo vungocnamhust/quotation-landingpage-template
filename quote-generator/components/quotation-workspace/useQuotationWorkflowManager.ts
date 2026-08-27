@@ -9,7 +9,7 @@ import { apiErrorMessage } from "../../lib/apiError.ts";
 
 import type { ToastItem } from "../staff-workspace/ToastProvider.tsx";
 
-export type WorkspaceStage = "facts" | "content" | "design" | "review";
+export type WorkspaceStage = "facts" | "costing" | "content" | "design" | "review";
 
 export type UseQuotationWorkflowManagerOptions = {
   quotationId: string;

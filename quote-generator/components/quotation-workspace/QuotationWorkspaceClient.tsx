@@ -21,6 +21,7 @@ import {
   CheckCircle2,
   Loader2,
   RefreshCw,
+  Calculator,
 } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
@@ -52,6 +53,7 @@ import ImpactCenter from "./ImpactCenter.tsx";
 import { useContentActionPlan, type ContentAction } from "./useContentActionPlan.ts";
 import { useContentActionExecution } from "./useContentActionExecution.ts";
 import { isQuotationStageLoading } from "../../lib/stageLoading.ts";
+import { CostingWorkbench } from "../quotation-costing/CostingWorkbench.tsx";
 
 const ContentStudioClient = dynamic(
   () => import("../content-studio/ContentStudioClient"),
@@ -75,11 +77,12 @@ const PublicationTargetManager = dynamic(
   () => import("./PublicationTargetManager")
 );
 const API_BASE = process.env.NEXT_PUBLIC_QUOTATION_API_URL ?? "";
-const stages = ["facts", "content", "design", "review"] as const;
+const stages = ["facts", "costing", "content", "design", "review"] as const;
 type Stage = (typeof stages)[number];
 
 const stageIcons: Record<Stage, React.ComponentType<{ size?: number; className?: string }>> = {
   facts: ClipboardList,
+  costing: Calculator,
   content: PenLine,
   design: Palette,
   review: Rocket,
@@ -377,6 +380,7 @@ export default function QuotationWorkspaceClient({
 
   const labels: Record<Stage, string> = {
     facts: "Facts",
+    costing: "Costing",
     content: "Content",
     design: "Design",
     review: "Review & Publish",
@@ -386,6 +390,8 @@ export default function QuotationWorkspaceClient({
 
   const isComplete = (item: Stage) => {
     if (item === "facts") return workflowData?.facts.ready ?? false;
+    // Costing is a tool, not a gate (chốt #10) — it never blocks or shows as "complete".
+    if (item === "costing") return false;
     if (item === "content") return workflowData?.content.ready ?? false;
     if (item === "design") return workflowData?.design.ready ?? false;
     if (item === "review") return workflowData?.review.ready ?? false;
@@ -403,6 +409,8 @@ export default function QuotationWorkspaceClient({
   const stageResourcesReady =
     stage === "facts"
       ? Boolean(factsData?.facts && activeFacts && options)
+      : stage === "costing"
+      ? true
       : stage === "content"
       ? Boolean(documentData && factsData)
       : stage === "design"
@@ -736,6 +744,12 @@ export default function QuotationWorkspaceClient({
           </>
         ) : stage === "facts" && !loadError ? (
           <StagePanelSkeleton stage="facts" />
+        ) : null}
+
+        {stage === "costing" && !isStageLoading ? (
+          <CostingWorkbench anchor={{ quotationId }} />
+        ) : stage === "costing" && !loadError ? (
+          <StagePanelSkeleton stage="costing" />
         ) : null}
 
         {loadError ? (

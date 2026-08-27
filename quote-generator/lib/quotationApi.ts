@@ -695,6 +695,194 @@ export async function deleteDraftRate(rateId: string): Promise<void> {
   await request<void>(`/api/v2/rates/${encodeURIComponent(rateId)}`, { method: 'DELETE' });
 }
 
+// ---------------------------------------------------------------------------
+// Costing Sheets (15.4) — mirrors schemas/v2/costing.py + core/rules/costing_rules.py.
+// Dual-track workbench: a sheet anchors to a quote_request, a quotation, or both
+// after attach. Every write carries base_costing_revision (CAS); the server
+// response always includes the fresh costing_revision + summary — never
+// recompute totals client-side from raw lines (see costingReconciler.ts).
+// ---------------------------------------------------------------------------
+
+export type BookingStatus = 'quoted' | 'on_hold' | 'confirmed' | 'cancelled';
+export type ServiceLineSource = 'manual' | 'ai_draft';
+
+export type ProductRef = {
+  property_id?: string | null;
+  destination_id?: string | null;
+  destination_name?: string | null;
+  iata_code?: string | null;
+};
+
+export type ServiceLineProfile = {
+  id: string;
+  sheet_id: string;
+  day_number: number | null;
+  service_date: string | null;
+  category: string;
+  subcategory: string | null;
+  title: string;
+  supplier_id: string | null;
+  product_id: string | null;
+  tariff_id: string | null;
+  price_line_id: number | null;
+  unit: string;
+  time_basis: string;
+  qty_unit: number;
+  qty_time: number;
+  unit_cost_minor: number;
+  cost_currency: string;
+  fx_rate_ppm: number | null;
+  sell_override_minor: number | null;
+  booking_status: BookingStatus;
+  source: ServiceLineSource;
+  note: string | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+  cost_minor: number;
+  sell_minor: number;
+  product_ref: ProductRef | null;
+};
+
+export type ServiceLineWriteInput = {
+  base_costing_revision: number;
+  day_number?: number | null;
+  service_date?: string | null;
+  category?: string | null;
+  subcategory?: string | null;
+  title?: string | null;
+  supplier_id?: string | null;
+  product_id?: string | null;
+  rate_id?: string | null;
+  price_line_id?: number | null;
+  unit?: string | null;
+  time_basis?: string | null;
+  qty_unit?: number;
+  qty_time?: number;
+  unit_cost_minor?: number | null;
+  cost_currency?: string | null;
+  fx_rate_ppm?: number | null;
+  sell_override_minor?: number | null;
+  note?: string | null;
+  sort_order?: number;
+};
+
+export type CostingDayTotal = { day_number: number | null; cost_minor: number; sell_minor: number };
+export type CostingCategoryTotal = { category: string; cost_minor: number; sell_minor: number };
+
+export type CostingSummary = {
+  cost_total_minor: number;
+  sell_total_minor: number;
+  margin_minor: number;
+  margin_bps: number;
+  by_day: CostingDayTotal[];
+  by_category: CostingCategoryTotal[];
+};
+
+export type CostingSheetProfile = {
+  id: string;
+  quote_request_id: string | null;
+  quotation_id: string | null;
+  currency: string;
+  markup_rate_bps: number;
+  rounding_increment_minor: number;
+  costing_revision: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type CostingWorkbenchResponse = {
+  sheet: CostingSheetProfile;
+  items: ServiceLineProfile[];
+  summary: CostingSummary;
+};
+
+export async function createCostingSheet(input: {
+  request_id?: string;
+  quotation_id?: string;
+  currency?: string;
+}): Promise<CostingSheetProfile> {
+  return request<CostingSheetProfile>('/api/v2/costing-sheets', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+}
+
+export async function findCostingSheetByRequest(requestId: string): Promise<CostingSheetProfile | null> {
+  const params = new URLSearchParams({ requestId });
+  const result = await request<{ sheet: CostingSheetProfile | null }>(`/api/v2/costing-sheets?${params.toString()}`);
+  return result.sheet;
+}
+
+export async function findCostingSheetByQuotation(quotationId: string): Promise<CostingSheetProfile | null> {
+  const params = new URLSearchParams({ quotationId });
+  const result = await request<{ sheet: CostingSheetProfile | null }>(`/api/v2/costing-sheets?${params.toString()}`);
+  return result.sheet;
+}
+
+export async function getCostingWorkbench(sheetId: string): Promise<CostingWorkbenchResponse> {
+  return request<CostingWorkbenchResponse>(`/api/v2/costing-sheets/${encodeURIComponent(sheetId)}`);
+}
+
+export async function updateCostingSettings(
+  sheetId: string,
+  input: { base_costing_revision: number; currency?: string; markup_rate_bps?: number; rounding_increment_minor?: number },
+): Promise<CostingWorkbenchResponse> {
+  return request<CostingWorkbenchResponse>(`/api/v2/costing-sheets/${encodeURIComponent(sheetId)}/settings`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+}
+
+export async function attachCostingSheetToQuotation(
+  sheetId: string,
+  quotationId: string,
+  idempotencyKey: string,
+): Promise<CostingWorkbenchResponse> {
+  return request<CostingWorkbenchResponse>(`/api/v2/costing-sheets/${encodeURIComponent(sheetId)}/attach-quotation`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey },
+    body: JSON.stringify({ quotation_id: quotationId }),
+  });
+}
+
+export async function createServiceLine(
+  sheetId: string,
+  input: ServiceLineWriteInput,
+  idempotencyKey: string,
+): Promise<CostingWorkbenchResponse> {
+  return request<CostingWorkbenchResponse>(`/api/v2/costing-sheets/${encodeURIComponent(sheetId)}/lines`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey },
+    body: JSON.stringify(input),
+  });
+}
+
+export async function updateServiceLine(
+  sheetId: string,
+  lineId: string,
+  input: ServiceLineWriteInput,
+): Promise<CostingWorkbenchResponse> {
+  return request<CostingWorkbenchResponse>(
+    `/api/v2/costing-sheets/${encodeURIComponent(sheetId)}/lines/${encodeURIComponent(lineId)}`,
+    { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input) },
+  );
+}
+
+export async function deleteServiceLine(
+  sheetId: string,
+  lineId: string,
+  baseCostingRevision: number,
+): Promise<CostingWorkbenchResponse> {
+  const params = new URLSearchParams({ base_costing_revision: String(baseCostingRevision) });
+  return request<CostingWorkbenchResponse>(
+    `/api/v2/costing-sheets/${encodeURIComponent(sheetId)}/lines/${encodeURIComponent(lineId)}?${params.toString()}`,
+    { method: 'DELETE' },
+  );
+}
+
 export type RoomingHeuristicRuleItem = {
   id: string;
   name: string;

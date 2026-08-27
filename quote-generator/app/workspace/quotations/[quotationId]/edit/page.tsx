@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import QuotationWorkspaceClient from "../../../../../components/quotation-workspace/QuotationWorkspaceClient";
 import { resolveWorkspaceWorkflow } from "../../../../../lib/publicQuotationApi";
 
-const WORKSPACE_STAGES = new Set(["impact", "facts", "content", "design", "review"]);
+const WORKSPACE_STAGES = new Set(["impact", "facts", "costing", "content", "design", "review"]);
 
 export const dynamic = "force-dynamic";
 

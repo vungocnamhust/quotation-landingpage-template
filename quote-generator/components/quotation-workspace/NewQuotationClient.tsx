@@ -20,6 +20,8 @@ import {
 } from "./factsTypes.ts";
 
 import { buildInitialFactsFromRequest } from "../../lib/requestToFactsHandoff.ts";
+import { buildFactsFromCostingWorkbench } from "../../lib/costingToFactsHandoff.ts";
+import { attachCostingSheetToQuotation, type CostingWorkbenchResponse } from "../../lib/quotationApi.ts";
 import { staysAdapter } from "../../lib/rules/staysAdapter.ts";
 import { staysReconciler } from "../../lib/rules/staysReconciler.ts";
 
@@ -34,12 +36,16 @@ import { FastTrackFailure, runQuotationFastTrackPipeline, type FastTrackProgress
 function QuotationIntakeInner({
   quoteRequest,
   requestId,
+  costingSheetId,
+  costingWorkbench,
   options,
   personalWorkspace,
   defaultDesignerId,
 }: {
   quoteRequest: QuoteRequestItem | null;
   requestId: string | null;
+  costingSheetId: string | null;
+  costingWorkbench: CostingWorkbenchResponse | null;
   options: QuotationOptions;
   personalWorkspace: boolean;
   defaultDesignerId?: string | null;
@@ -50,7 +56,9 @@ function QuotationIntakeInner({
     if (defaultDesignerId && !initial.presentation_options.travel_designer_id) {
       initial.presentation_options.travel_designer_id = defaultDesignerId;
     }
-    return initial;
+    // Flow 1 (Costing-First): overlay the picked sheet's lines on top of the
+    // request-derived facts, once, at intake time (chốt #9 — a one-shot prefill).
+    return costingSheetId && costingWorkbench ? buildFactsFromCostingWorkbench(costingWorkbench, initial) : initial;
   });
   const [fieldErrors, setFieldErrors] = useState<Array<{ path: string; message: string }>>([]);
   const [isPending, startTransition] = useTransition();
@@ -185,6 +193,20 @@ function QuotationIntakeInner({
             "Failed to generate quotation from request."
           );
 
+          if (costingSheetId) {
+            try {
+              await attachCostingSheetToQuotation(costingSheetId, res.quotation_id, crypto.randomUUID());
+            } catch (attachError) {
+              // Attach is best-effort here (idempotent, retry-safe) — the quotation is
+              // already valid without it; the sheet stays reachable from the request's
+              // costing screen for a manual re-attach (15.4 §3.3).
+              toast(
+                `Quotation created, but the costing sheet could not be attached automatically: ${apiErrorMessage(attachError)}`,
+                "error"
+              );
+            }
+          }
+
           clearScope("create-quotation");
           toast(
             `Quotation created successfully from request #${requestId}! Redirecting to workspace...`,
@@ -277,6 +299,7 @@ function QuotationIntakeInner({
 export default function NewQuotationClient({ personalWorkspace = false }: { personalWorkspace?: boolean }) {
   const searchParams = useSearchParams();
   const requestId = searchParams.get("requestId");
+  const costingSheetId = searchParams.get("costingSheetId");
 
   // Load Brand / Language options
   const {
@@ -294,6 +317,15 @@ export default function NewQuotationClient({ personalWorkspace = false }: { pers
     isLoading: requestLoading,
   } = useSWR<QuoteRequestItem>(
     requestId ? `${API_BASE}/api/v2/workspace/requests/${requestId}` : null,
+    fetchJson
+  );
+
+  // Load the costing sheet's workbench if a sheet was picked in Flow 1 (Costing-First)
+  const {
+    data: costingWorkbench,
+    isLoading: costingLoading,
+  } = useSWR<CostingWorkbenchResponse>(
+    costingSheetId ? `${API_BASE}/api/v2/costing-sheets/${costingSheetId}` : null,
     fetchJson
   );
 
@@ -321,7 +353,7 @@ export default function NewQuotationClient({ personalWorkspace = false }: { pers
       </header>
 
       {options ? (
-        requestId && requestLoading ? (
+        (requestId && requestLoading) || (costingSheetId && costingLoading) ? (
           <div className="rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface)] p-8 text-center">
             <p className={cn(getTypographyClassName("bodyMd"), "text-[var(--color-muted)]")}>
               Loading request context…
@@ -332,6 +364,8 @@ export default function NewQuotationClient({ personalWorkspace = false }: { pers
             key={quoteRequest?.id ?? "standalone"}
             quoteRequest={quoteRequest ?? null}
             requestId={requestId}
+            costingSheetId={costingSheetId}
+            costingWorkbench={costingWorkbench ?? null}
             options={options}
             personalWorkspace={personalWorkspace}
             defaultDesignerId={meData?.profile?.id ?? null}
