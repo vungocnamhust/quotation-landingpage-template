@@ -18,6 +18,8 @@ from core.rules.destination_rules import (
     VALID_DESTINATION_SLUGS,
     match_destination_slug,
 )
+from core.rules.media_classification import classify_media_asset
+from core.rules.r2_paths import accommodation_slug_segment
 
 
 RESOLVER_VERSION = "brochure-media-v3"
@@ -43,11 +45,7 @@ class Candidate:
 
     @property
     def classification(self) -> str:
-        value = f"{self.parent_prefix}/{self.r2_key.rsplit('/', 1)[-1]}".lower()
-        for tag in ("exterior", "interior", "room", "hero", "ornament"):
-            if tag in value:
-                return tag
-        return "generic"
+        return classify_media_asset(self.parent_prefix, self.r2_key.rsplit("/", 1)[-1])
 
     @property
     def landscape(self) -> bool:
@@ -168,12 +166,28 @@ def _matches_destination(candidate: Candidate, aliases: set[str]) -> bool:
 def _matches_accommodation(candidate: Candidate, hotel_tokens: set[str], dest_aliases: set[str]) -> tuple[bool, int]:
     """Returns (is_match, tier) where tier 1 is exact hotel, tier 2 is dest accommodation, tier 3 is dest scenic."""
     path_norm = remove_diacritics(f"{candidate.parent_prefix}/{candidate.r2_key}".casefold())
+    path_segments = [s for s in path_norm.split("/") if s]
     segments = [s for s in _NON_ALPHANUM.split(path_norm) if s]
 
     if "accommodations" in segments:
-        for token in hotel_tokens:
-            if token in segments or f"/{token}" in path_norm or f"-{token}" in path_norm or token in candidate.r2_key.casefold():
-                return True, 1
+        # Index-aware (R3): a hotel-name token only proves tier-1 identity
+        # when it appears in the {hotel-slug} segment itself. Matching it
+        # anywhere in the flattened path (the old behavior) let the shared
+        # {province} segment — present for every hotel in that city — cause
+        # every hotel's images to collide with every other hotel's search.
+        hotel_segment = accommodation_slug_segment(path_segments)
+        if hotel_segment:
+            hotel_segment_tokens = {t for t in _NON_ALPHANUM.split(hotel_segment) if t}
+            compact_segment = hotel_segment.replace("-", "")
+            # A token shared with the destination (the city name is
+            # routinely suffixed onto every hotel slug in that city, e.g.
+            # `metropole-hanoi` / `lotte-hanoi`) is not hotel-distinctive by
+            # itself; require an actual hotel-name token unless the hotel
+            # name is nothing but the destination name.
+            distinctive_tokens = {t for t in hotel_tokens if t not in dest_aliases} or hotel_tokens
+            for token in distinctive_tokens:
+                if token in hotel_segment_tokens or token == hotel_segment or (len(token) >= 4 and token in compact_segment):
+                    return True, 1
         if _matches_destination(candidate, dest_aliases):
             return True, 2
 
@@ -317,38 +331,42 @@ class BrochureMediaResolver:
         patched_days: dict[int, dict[str, Any]] = {}
         gallery_candidates: list[Candidate] = []
 
-        # 1. Resolve Day Galleries
+        # 1. Resolve Day Galleries — top-up preserving order (D5). A day that
+        # already carries 1-2 images is never wiped to fill it; it is only
+        # ever topped up to GALLERY_LIMIT, and existing refs (manual or auto)
+        # keep both their position and their original payload untouched.
         for index, day in enumerate(days):
             images = _record(_record(day).get("images"))
-            existing_carousel = [
-                Candidate(_r2(asset), "", None, None, True)
-                for asset in _assets(images.get("carousel"))
-                if self._has_assigned_r2(asset)
-            ]
-            if existing_carousel:
-                gallery_candidates.extend(existing_carousel)
+            existing_assets = [asset for asset in _assets(images.get("carousel")) if self._has_assigned_r2(asset)]
+            existing_candidates = [Candidate(_r2(asset), "", None, None, True) for asset in existing_assets]
+            gallery_candidates.extend(existing_candidates)
+
+            if len(existing_assets) >= GALLERY_LIMIT:
                 continue
 
             field_id = f"itinerary.days.{index}.gallery"
             day_aliases = destination_aliases(_record(day).get("destinationRef"), fallback_ref=day)
             pool = self._destination_pool(day_aliases, fallback_aliases=trip_dest_aliases)
+            needed = GALLERY_LIMIT - len(existing_assets)
+            existing_keys = {candidate.r2_key for candidate in existing_candidates}
             picks = self._pick(
                 quotation_id=quotation_id,
                 lang=lang,
                 field_id=field_id,
                 pool=pool,
                 preferred=("hero", "generic"),
-                limit=GALLERY_LIMIT,
+                excluded=existing_keys,
+                limit=needed,
             )
             if picks:
-                patched_days[index] = {"images": {"carousel": [_ref(item) for item in picks]}}
+                patched_days[index] = {"images": {"carousel": [*existing_assets, *[_ref(item) for item in picks]]}}
                 gallery_candidates.extend(picks)
                 rationale.append({
                     "fieldId": field_id,
                     "candidateCount": len(pool),
                     "reason": (
                         "insufficient_catalogue_media"
-                        if len(picks) < GALLERY_LIMIT
+                        if len(existing_assets) + len(picks) < GALLERY_LIMIT
                         else "destination catalogue" if any(_matches_destination(p, day_aliases) for p in picks) else "trip catalogue"
                     ),
                 })
@@ -490,7 +508,7 @@ class BrochureMediaResolver:
                     lang=lang,
                     field_id=f"stays.hotels.{index}.roomImage",
                     pool=hotel_pool,
-                    preferred=("room", "interior", "generic"),
+                    preferred=("interior", "generic"),
                     excluded=picked_keys,
                 )
                 if picks:

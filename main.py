@@ -180,6 +180,7 @@ from services.media_factory import (
     _media_service,
     _media_library_service,
 )
+from core.rules.media_classification import classify_media_asset
 from services.quotation_validation import (
     _sanitize_html_sync_payload,
     _validate_v2_copy_overrides,
@@ -190,8 +191,7 @@ from quote_document_adapter import _build_compatibility_payload_from_quote_reque
 
 
 def _media_classification(item) -> str:
-    value = f"{item.parent_prefix}/{item.file_name}".lower()
-    return next((tag for tag in ("exterior", "interior", "room", "hero", "ornament") if tag in value), "generic")
+    return classify_media_asset(item.parent_prefix, item.file_name)
 
 
 # Compatibility exports for existing scripts/tests. New V2 handlers import
@@ -7421,8 +7421,14 @@ def _validate_v2_fact_media_slots(slots: Any) -> dict[str, Any]:
             continue
         items = value if is_gallery_field(field_id) else [value]
         max_items = int(descriptor["maxItems"])
+        min_items = int(descriptor["minItems"])
         if not isinstance(items, list) or (not items and not is_gallery_field(field_id)) or len(items) > max_items:
             raise HTTPException(status_code=422, detail={"message": "Invalid media selection cardinality.", "invalidKeys": [field_id]})
+        if is_gallery_field(field_id) and items and len(items) < min_items:
+            raise HTTPException(
+                status_code=422,
+                detail={"message": f"This gallery requires at least {min_items} images.", "invalidKeys": [field_id]},
+            )
         result: list[dict[str, str]] = []
         for item in items:
             if not isinstance(item, dict) or not isinstance(item.get("r2Key"), str) or not item["r2Key"] or not is_allowed_prefix(item["r2Key"]):
@@ -7445,9 +7451,13 @@ def _validate_v2_fact_media_fields(fields: Any) -> dict[str, Any]:
 
 
 def _set_fact_media_field(document: dict[str, Any], field_id: str, value: Any) -> None:
-    if field_id == "brand.logo":
-        document.setdefault("brand", {})["logo"] = value or {"status": "empty"}
-    elif field_id in {"assets.hero", "assets.itineraryDivider", "assets.staysDivider", "assets.hotelDivider"}:
+    # `brand.logo` and `assets.themeOrnaments.*` are deliberately absent here
+    # (Plan 16.1 quyết định #4): neither is a fact media slot per the
+    # registry (`is_fact_media_field` rejects both before this function is
+    # ever reached), so a branch for them can never execute. Brand logo and
+    # theme ornaments are owned by Brand Profile / Theme, not the media
+    # picker.
+    if field_id in {"assets.hero", "assets.itineraryDivider", "assets.staysDivider", "assets.hotelDivider"}:
         document.setdefault("assets", {})[field_id.rsplit(".", 1)[-1]] = value or {"status": "empty"}
     elif field_id.startswith("itinerary.days."):
         index = int(field_id.split(".")[2]); days = document.setdefault("itinerary", {}).setdefault("days", [])

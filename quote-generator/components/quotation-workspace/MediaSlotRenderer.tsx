@@ -5,12 +5,12 @@ import { useMemo, useState, useTransition } from "react";
 import { Sparkles } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
-import { apiErrorMessage, quotationFetch } from "../../lib/apiError.ts";
+import { apiErrorMessage } from "../../lib/apiError.ts";
 import type { EditableBrochureContract } from "./useQuotationWorkspace.ts";
 import type { DraftMediaRef, DraftMediaSelections, DraftMediaSlotValue } from "./factsTypes.ts";
+import { useMediaSlotSave } from "./useMediaSlotSave.ts";
 
 const MediaPicker = dynamic(() => import("./MediaPicker"));
-const API_BASE = process.env.NEXT_PUBLIC_QUOTATION_API_URL ?? "";
 
 export type MediaRef = DraftMediaRef;
 export type MediaSlotValue = DraftMediaSlotValue;
@@ -78,6 +78,12 @@ export function MediaSlotRenderer({ workspace, editorRoute, context = {}, readOn
     const [message, setMessage] = useState("");
     const [pending, startTransition] = useTransition();
     const slots = useMemo(() => (workspace.contract?.mediaSlotRegistry ?? []).filter((slot) => slot.editorRoute === editorRoute).flatMap((slot) => fieldIdFor(slot, context).map((fieldId) => ({ slot, fieldId }))), [context, editorRoute, workspace.contract?.mediaSlotRegistry]);
+    const { saveSlot } = useMediaSlotSave({
+        quotationId: workspace.quotationId ?? "",
+        lang: workspace.lang ?? "en",
+        currentRevision: workspace.currentRevision ?? 0,
+        onSaved: workspace.onSaved ?? (() => undefined),
+    });
     const save = (fieldId: string, value: MediaRef | MediaRef[] | null) => startTransition(async () => {
         try {
             if (workspace.onDraftSelectionChange) {
@@ -88,8 +94,8 @@ export function MediaSlotRenderer({ workspace, editorRoute, context = {}, readOn
             if (!workspace.quotationId || !workspace.lang || workspace.currentRevision === undefined || !workspace.onSaved) {
                 throw new Error("The quotation media workspace is not ready.");
             }
-            await quotationFetch(`${API_BASE}/api/v2/quotations/${workspace.quotationId}/facts/media?lang=${encodeURIComponent(workspace.lang)}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ baseRevision: workspace.currentRevision, slots: [{ fieldId, value }] }) }, "Media could not be saved.");
-            setMessage("Saved media fact."); await workspace.onSaved();
+            await saveSlot(fieldId, value);
+            setMessage("Saved media fact.");
         } catch (error) { setMessage(apiErrorMessage(error)); }
     });
     if (!slots.length) return null;

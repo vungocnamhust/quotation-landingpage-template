@@ -7,10 +7,10 @@ from services.media_default_service import MediaDefaultService
 class BrochureMediaResolverTests(unittest.TestCase):
     def setUp(self):
         self.catalogue = [
-            Candidate("library/media/vietnam/north/hanoi/ha-noi/hero-a.jpg", "library/media/vietnam/north/hanoi/ha-noi", 1800, 900, True),
-            Candidate("library/media/vietnam/north/hanoi/ha-noi/generic-b.jpg", "library/media/vietnam/north/hanoi/ha-noi", 1600, 900, True),
-            Candidate("library/media/accommodations/vietnam/north/hanoi/ha-noi/metropole/exterior.jpg", "library/media/accommodations/vietnam/north/hanoi/ha-noi/metropole", 1600, 900, True),
-            Candidate("library/media/accommodations/vietnam/north/hanoi/ha-noi/metropole/room.jpg", "library/media/accommodations/vietnam/north/hanoi/ha-noi/metropole", 1600, 900, True),
+            Candidate("library/media/vietnam/north/ha-noi/hero-a.jpg", "library/media/vietnam/north/ha-noi", 1800, 900, True),
+            Candidate("library/media/vietnam/north/ha-noi/generic-b.jpg", "library/media/vietnam/north/ha-noi", 1600, 900, True),
+            Candidate("library/media/accommodations/vietnam/north/ha-noi/metropole-hanoi/exteriors/exterior.jpg", "library/media/accommodations/vietnam/north/ha-noi/metropole-hanoi/exteriors", 1600, 900, True),
+            Candidate("library/media/accommodations/vietnam/north/ha-noi/metropole-hanoi/interiors/room.jpg", "library/media/accommodations/vietnam/north/ha-noi/metropole-hanoi/interiors", 1600, 900, True),
         ]
         self.document = {"assets": {}, "itinerary": {"days": [{"destinationRef": {"id": "dst_hanoi", "slug": "ha-noi"}, "images": {}}]}, "stays": {"hotels": [{"destinationRef": {"id": "dst_hanoi", "slug": "ha-noi"}, "name": "metropole"}]}}
 
@@ -61,8 +61,8 @@ class BrochureMediaResolverTests(unittest.TestCase):
 
     def test_resolves_long_hotel_name_token_matching(self):
         catalogue = [
-            Candidate("library/media/accommodations/vietnam/north/hanoi/ha-noi/metropole/exterior.jpg", "library/media/accommodations/vietnam/north/hanoi/ha-noi/metropole", 1600, 900, True),
-            Candidate("library/media/accommodations/vietnam/north/hanoi/ha-noi/metropole/room.jpg", "library/media/accommodations/vietnam/north/hanoi/ha-noi/metropole", 1600, 900, True),
+            Candidate("library/media/accommodations/vietnam/north/ha-noi/metropole-hanoi/exteriors/exterior.jpg", "library/media/accommodations/vietnam/north/ha-noi/metropole-hanoi/exteriors", 1600, 900, True),
+            Candidate("library/media/accommodations/vietnam/north/ha-noi/metropole-hanoi/interiors/room.jpg", "library/media/accommodations/vietnam/north/ha-noi/metropole-hanoi/interiors", 1600, 900, True),
         ]
         resolver = BrochureMediaResolver(catalogue)
         document = {
@@ -77,8 +77,26 @@ class BrochureMediaResolverTests(unittest.TestCase):
         result = resolver.resolve_missing(document=document, quotation_id="quo_hotel", lang="en")
         self.assertTrue(result["hasChanges"])
         hotel_patch = result["patch"]["stays"]["hotels"][0]
-        self.assertEqual(hotel_patch["hotelImage"]["r2Key"], "library/media/accommodations/vietnam/north/hanoi/ha-noi/metropole/exterior.jpg")
-        self.assertEqual(hotel_patch["roomImage"]["r2Key"], "library/media/accommodations/vietnam/north/hanoi/ha-noi/metropole/room.jpg")
+        self.assertEqual(hotel_patch["hotelImage"]["r2Key"], "library/media/accommodations/vietnam/north/ha-noi/metropole-hanoi/exteriors/exterior.jpg")
+        self.assertEqual(hotel_patch["roomImage"]["r2Key"], "library/media/accommodations/vietnam/north/ha-noi/metropole-hanoi/interiors/room.jpg")
+
+    def test_two_hotels_in_the_same_city_never_swap_images(self):
+        """R3: a destination-name token embedded in a sibling hotel's slug
+        (both hotels are `...-hanoi`) must never satisfy tier-1 for the
+        other hotel — only the candidate's own {hotel-slug} segment can."""
+        catalogue = [
+            Candidate("accommodations/vietnam/north/ha-noi/metropole-hanoi/exteriors/a.jpg", "accommodations/vietnam/north/ha-noi/metropole-hanoi/exteriors", 1600, 900, True),
+            Candidate("accommodations/vietnam/north/ha-noi/lotte-hanoi/exteriors/b.jpg", "accommodations/vietnam/north/ha-noi/lotte-hanoi/exteriors", 1600, 900, True),
+        ]
+        resolver = BrochureMediaResolver(catalogue)
+        document = {
+            "assets": {},
+            "itinerary": {"days": []},
+            "stays": {"hotels": [{"name": "Metropole Hanoi", "city": "Hà Nội", "hotelImage": {}, "roomImage": {}}]},
+        }
+        result = resolver.resolve_missing(document=document, quotation_id="quo_two_hotels", lang="en")
+        hotel_patch = result["patch"]["stays"]["hotels"][0]
+        self.assertEqual(hotel_patch["hotelImage"]["r2Key"], "accommodations/vietnam/north/ha-noi/metropole-hanoi/exteriors/a.jpg")
 
     def test_reports_has_changes_false_when_already_fully_assigned(self):
         resolver = BrochureMediaResolver(self.catalogue)
@@ -124,13 +142,29 @@ class BrochureMediaResolverTests(unittest.TestCase):
             "insufficient_catalogue_media",
         )
 
-    def test_manual_carousel_is_not_overwritten(self):
+    def test_partial_gallery_is_topped_up_preserving_the_manual_image_and_its_position(self):
         document = {
             "assets": {},
-            "itinerary": {"days": [{"destination": "Hanoi", "images": {"carousel": [{"r2Key": "manual.jpg", "source": "manual"}]}}]},
+            "itinerary": {"days": [{"destination": "Hanoi", "images": {"carousel": [{"r2Key": "manual.jpg", "source": "manual", "altText": "Keep me"}]}}]},
             "stays": {"hotels": []},
         }
         result = BrochureMediaResolver(self.catalogue).resolve_missing(document=document, quotation_id="quo_manual", lang="en")
+        carousel = result["patch"]["itinerary"]["days"][0]["images"]["carousel"]
+        self.assertLessEqual(len(carousel), GALLERY_LIMIT)
+        self.assertEqual(carousel[0], {"r2Key": "manual.jpg", "source": "manual", "altText": "Keep me"})
+        self.assertNotIn("manual.jpg", [item["r2Key"] for item in carousel[1:]])
+
+    def test_full_gallery_is_never_touched_even_if_shorter_than_gallery_limit_would_prefer(self):
+        document = {
+            "assets": {},
+            "itinerary": {"days": [{"destination": "Hanoi", "images": {"carousel": [
+                {"r2Key": "one.jpg", "source": "manual"},
+                {"r2Key": "two.jpg", "source": "manual"},
+                {"r2Key": "three.jpg", "source": "manual"},
+            ]}}]},
+            "stays": {"hotels": []},
+        }
+        result = BrochureMediaResolver(self.catalogue).resolve_missing(document=document, quotation_id="quo_full_gallery", lang="en")
         self.assertNotIn("days", result["patch"]["itinerary"])
 
     def test_required_missing_slots_enforces_exact_gallery_cardinality_and_hotel_media(self):

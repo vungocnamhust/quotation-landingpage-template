@@ -214,8 +214,10 @@ async def put_quotation_fact_media_v2(
         quotation = await quotes.get_quotation_by_id(quotation_id)
         if quotation is None or quotation.template_name != V2_RENDERER_NAME:
             raise HTTPException(status_code=404, detail="Quotation was not found.")
-        if quotation.quotation_family_id:
-            raise HTTPException(status_code=409, detail={"message": "Fact media is immutable for a business quotation version. Update it in Design.", "code": "immutable_facts"})
+        # Media is deliberately carved out of the immutable-facts rule (Plan
+        # 16.1 D2): it never affects commercial integrity, and published
+        # releases pin a historical document_revision, so editing media on
+        # the live version never mutates anything already published.
         effective_lang = lang or quotation.baseline_lang
         current = await documents.get_current_document(quotation_id, effective_lang)
         if current is None:

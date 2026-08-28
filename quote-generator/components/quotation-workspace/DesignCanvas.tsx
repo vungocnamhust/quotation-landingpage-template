@@ -12,6 +12,8 @@ import { matchEditableSource, resolveInspectorDescriptor, resolveEditableHandoff
 import type { QuotationFacts } from './factsTypes.ts';
 import { useToast } from '../staff-workspace/ToastProvider.tsx';
 import { useDesignCanvasSave } from './useDesignCanvasSave.ts';
+import { useMediaSlotSave } from './useMediaSlotSave.ts';
+import { withManualSource } from '../../lib/rules/mediaSlotReconciler.ts';
 
 export type FactInspectorPatch = Partial<
   Pick<QuotationFacts['designer_facts'], 'seller_subtitle' | 'designer_kicker' | 'designer_title' | 'designer_quote' | 'designer_signature' | 'designer_experience' | 'cta_body'>
@@ -133,7 +135,7 @@ export default function DesignCanvas({
   const [isMediaDrawerOpen, setIsMediaDrawerOpen] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
   const inspectorRef = useRef<HTMLDivElement>(null);
-  const { patchContentValues, savePresentationOverride, saveMediaSlot } = useDesignCanvasSave({
+  const { patchContentValues, savePresentationOverride } = useDesignCanvasSave({
     quotationId,
     lang,
     currentRevision,
@@ -142,6 +144,7 @@ export default function DesignCanvas({
     notify,
     clearScope,
   });
+  const { saveSlot } = useMediaSlotSave({ quotationId, lang, currentRevision, onSaved });
 
   const mediaSlots = contract?.mediaSlotRegistry ?? [];
   const activeMediaMatch = findMediaMatch(mediaSlots, selected);
@@ -282,6 +285,24 @@ export default function DesignCanvas({
     throw new Error(`${descriptor.fieldId} is not editable from the Design canvas.`);
   };
 
+  const saveMedia = async (fieldId: string, value: unknown) => {
+    try {
+      await saveSlot(fieldId, value);
+      clearScope('design:media');
+      toast('Media updated successfully.', 'success');
+      setIsMediaDrawerOpen(false);
+    } catch (error) {
+      const message = apiErrorMessage(error);
+      notify({
+        message,
+        type: 'error',
+        persistent: true,
+        scope: 'design:media',
+        action: { label: 'Retry', onClick: () => void saveMedia(fieldId, value) },
+      });
+    }
+  };
+
   const select = (selection: ResolvedInspectorSelection, value: string) => {
     setSelected(selection.descriptor);
     setResolvedHandoff(selection.handoff);
@@ -368,14 +389,10 @@ export default function DesignCanvas({
           open={isMediaDrawerOpen}
           onClose={() => setIsMediaDrawerOpen(false)}
           onSelect={(r2Key) => {
-            void saveMediaSlot(activeMediaMatch.fieldId, { r2Key, source: 'manual' }, () => setIsMediaDrawerOpen(false));
+            void saveMedia(activeMediaMatch.fieldId, withManualSource(r2Key));
           }}
           onConfirm={(r2Keys) => {
-            void saveMediaSlot(
-              activeMediaMatch.fieldId,
-              r2Keys.map((k) => ({ r2Key: k, source: 'manual' })),
-              () => setIsMediaDrawerOpen(false)
-            );
+            void saveMedia(activeMediaMatch.fieldId, r2Keys.map((k) => withManualSource(k)));
           }}
           initialPrefix={activeInitialPrefix}
           context={

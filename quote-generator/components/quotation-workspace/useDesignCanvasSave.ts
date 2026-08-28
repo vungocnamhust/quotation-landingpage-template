@@ -92,45 +92,5 @@ export function useDesignCanvasSave({ quotationId, lang, currentRevision, onSave
     }
   };
 
-  const saveMediaSlot = async (
-    fieldId: string,
-    mediaValue: unknown,
-    onDrawerClose: () => void,
-    retryCount = 0
-  ): Promise<void> => {
-    try {
-      await quotationFetch(
-        `${API_BASE}/api/v2/quotations/${quotationId}/presentation/overrides?lang=${encodeURIComponent(lang)}`,
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            baseRevision: currentRevision,
-            mediaOverrides: { [fieldId]: mediaValue },
-          }),
-        },
-        'Media could not be saved.'
-      );
-      await onSaved();
-      clearScope('design:media');
-      toast('Media updated successfully.', 'success');
-      onDrawerClose();
-    } catch (error) {
-      if (retryCount < 1 && error instanceof Error && error.message.includes('conflict')) {
-        await onSaved();
-        return saveMediaSlot(fieldId, mediaValue, onDrawerClose, retryCount + 1);
-      }
-      const message = apiErrorMessage(error);
-      notify({
-        message,
-        type: 'error',
-        persistent: true,
-        scope: 'design:media',
-        action: { label: 'Retry', onClick: () => void saveMediaSlot(fieldId, mediaValue, onDrawerClose) },
-      });
-      throw new Error(message);
-    }
-  };
-
-  return { patchContentValues, savePresentationOverride, saveMediaSlot };
+  return { patchContentValues, savePresentationOverride };
 }

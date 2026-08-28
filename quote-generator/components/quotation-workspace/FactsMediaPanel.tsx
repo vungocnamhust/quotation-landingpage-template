@@ -7,10 +7,11 @@ import { cn } from '../../utils/cn.ts';
 import { apiErrorMessage, quotationFetch } from '../../lib/apiError.ts';
 import { useToast } from '../staff-workspace/ToastProvider.tsx';
 import type { MediaPickerContext } from './MediaPicker.tsx';
+import { useMediaSlotSave } from './useMediaSlotSave.ts';
 
 const MediaDrawer = dynamic(() => import('./MediaDrawer'));
 const API_BASE = process.env.NEXT_PUBLIC_QUOTATION_API_URL ?? '';
-type MediaRef = { r2Key: string; status: 'ready'; altText?: string };
+type MediaRef = { r2Key: string; status: 'ready'; source?: 'manual' | 'auto' | 'fallback'; altText?: string };
 type RecordValue = Record<string, unknown>;
 type Descriptor = { fieldId: string; owner: string; kind: string; section: string };
 function record(value: unknown): RecordValue { return value && typeof value === 'object' && !Array.isArray(value) ? value as RecordValue : {}; }
@@ -89,6 +90,7 @@ export default function FactsMediaPanel({ quotationId, lang, document, currentRe
   const [selection, setSelection] = useState<{ fieldId: string; gallery: boolean } | null>(null);
   const [message, setMessage] = useState('Select all quotation images here. The Design stage is read-only for media.');
   const [pending, startTransition] = useTransition();
+  const { saveSlots } = useMediaSlotSave({ quotationId, lang, currentRevision, onSaved });
 
   const fields = useMemo(() => {
     const declared = (contract?.fields ?? []).filter((field) => field.owner === 'fact' && ['image', 'gallery'].includes(field.kind) && !field.fieldId.includes('*'));
@@ -125,16 +127,12 @@ export default function FactsMediaPanel({ quotationId, lang, document, currentRe
   const save = () => startTransition(async () => {
     if (!Object.keys(draft).length) return;
     try {
-      const response = await quotationFetch<{ currentRevision: number }>(
-        `${API_BASE}/api/v2/quotations/${quotationId}/facts/media?lang=${encodeURIComponent(lang)}`,
-        { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ baseRevision: currentRevision, fields: draft }) },
-        'Fact media could not be saved.'
-      );
+      const entries = Object.entries(draft).map(([fieldId, value]) => ({ fieldId, value }));
+      const response = await saveSlots(entries);
       const msg = `Saved Fact media revision ${response.currentRevision}.`;
       setMessage(msg);
       toast(msg, 'success');
       setDraft({});
-      await onSaved();
     } catch (error) {
       const msg = apiErrorMessage(error);
       setMessage(msg);
@@ -174,7 +172,7 @@ export default function FactsMediaPanel({ quotationId, lang, document, currentRe
 
   const confirm = (keys: string[]) => {
     if (!selection) return;
-    const next = keys.map((r2Key) => ({ r2Key, status: 'ready' as const, altText: '' }));
+    const next = keys.map((r2Key) => ({ r2Key, status: 'ready' as const, source: 'manual' as const, altText: '' }));
     setDraft((current) => ({ ...current, [selection.fieldId]: selection.gallery ? next : next[0] ?? null }));
     setSelection(null);
   };

@@ -84,18 +84,27 @@ class EditableBrochureContractTests(unittest.TestCase):
 
     def test_fact_media_slots_are_atomic_and_registry_limited(self):
         prefix = settings.media_library_roots[0]
-        value = main._validate_v2_fact_media_slots([{"fieldId": "itinerary.days.0.gallery", "value": [{"r2Key": f"{prefix}/one.jpg"}, {"r2Key": f"{prefix}/two.jpg"}]}])
-        self.assertEqual(len(value["itinerary.days.0.gallery"]), 2)
+        value = main._validate_v2_fact_media_slots([{"fieldId": "itinerary.days.0.gallery", "value": [{"r2Key": f"{prefix}/one.jpg"}, {"r2Key": f"{prefix}/two.jpg"}, {"r2Key": f"{prefix}/three.jpg"}]}])
+        self.assertEqual(len(value["itinerary.days.0.gallery"]), 3)
         with self.assertRaises(Exception):
             main._validate_v2_fact_media_slots([{"fieldId": "assets.hero", "value": [{"r2Key": f"{prefix}/one.jpg"}, {"r2Key": f"{prefix}/two.jpg"}]}])
+
+    def test_fact_media_slots_below_min_items_are_rejected(self):
+        prefix = settings.media_library_roots[0]
+        with self.assertRaises(Exception):
+            main._validate_v2_fact_media_slots([{"fieldId": "itinerary.days.0.gallery", "value": [{"r2Key": f"{prefix}/one.jpg"}, {"r2Key": f"{prefix}/two.jpg"}]}])
 
     def test_fact_media_validation_preserves_gallery_order(self):
         prefix = settings.media_library_roots[0]
         value = main._validate_v2_fact_media_fields({"itinerary.days.0.gallery": [
             {"r2Key": f"{prefix}/one.jpg", "altText": "One"},
             {"r2Key": f"{prefix}/two.jpg", "altText": "Two"},
+            {"r2Key": f"{prefix}/three.jpg", "altText": "Three"},
         ]})
-        self.assertEqual([item["r2Key"] for item in value["itinerary.days.0.gallery"]], [f"{prefix}/one.jpg", f"{prefix}/two.jpg"])
+        self.assertEqual(
+            [item["r2Key"] for item in value["itinerary.days.0.gallery"]],
+            [f"{prefix}/one.jpg", f"{prefix}/two.jpg", f"{prefix}/three.jpg"],
+        )
 
     def test_fact_media_supports_clear_and_enforces_gallery_limit(self):
         prefix = settings.media_library_roots[0]
