@@ -344,11 +344,12 @@ export const HotelEditorCard = memo(function HotelEditorCard({
               readOnly={readOnly}
               context={{
                 index,
+                entityId: hotel.id,
                 destinationId: hotel.destination_ref?.id,
                 accommodationName: hotel.name ?? undefined,
                 profileAssetKeys: {
-                  [`stays.hotels.${index}.hotelImage`]: hotel.hotel_asset,
-                  [`stays.hotels.${index}.roomImage`]: hotel.room_asset,
+                  [`stays.hotels.${hotel.id ?? index}.hotelImage`]: hotel.hotel_asset,
+                  [`stays.hotels.${hotel.id ?? index}.roomImage`]: hotel.room_asset,
                 },
               }}
             />

@@ -27,8 +27,8 @@ export interface MediaSlotResetResult {
 }
 
 /**
- * The single write facade for every media surface (Design canvas, Facts
- * media panel, MediaSlotRenderer). Plan 16.1 D1/D3: `PUT /facts/media` is
+ * The single write facade for every media surface (Design canvas,
+ * MediaSlotRenderer). Plan 16.1 D1/D3: `PUT /facts/media` is
  * the only media write path — there is deliberately no second call target
  * (the retired `presentation/overrides.mediaOverrides` shape).
  */

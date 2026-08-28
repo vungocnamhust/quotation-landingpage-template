@@ -9,6 +9,7 @@ import { apiErrorMessage } from "../../lib/apiError.ts";
 import type { EditableBrochureContract } from "./useQuotationWorkspace.ts";
 import type { DraftMediaRef, DraftMediaSelections, DraftMediaSlotValue } from "./factsTypes.ts";
 import { useMediaSlotSave } from "./useMediaSlotSave.ts";
+import { resolveEntityIndex } from "../../lib/rules/mediaSlotReconciler.ts";
 
 const MediaPicker = dynamic(() => import("./MediaPicker"));
 
@@ -25,20 +26,41 @@ export type MediaWorkspace = {
     draftSelections?: DraftMediaSelections;
     onDraftSelectionChange?: (fieldId: string, value: MediaSlotValue) => void;
 };
-export type MediaSlotContext = { index?: number; destinationId?: string; accommodationName?: string; travelDesignerId?: string; profileAssetKeys?: Record<string, string | null | undefined> };
+export type MediaSlotContext = { index?: number; entityId?: string; destinationId?: string; accommodationName?: string; travelDesignerId?: string; profileAssetKeys?: Record<string, string | null | undefined> };
+
+function record(value: unknown): Record<string, unknown> {
+    return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
+}
 
 function fieldIdFor(slot: Slot, context: MediaSlotContext): string[] {
     const template = slot.fieldTemplate;
     if (!template.includes("*")) return [template];
-    if (context.index !== undefined) return [template.replace("*", String(context.index))];
+    // The day/hotel token embeds its stable id (Plan 16.1 M3.3) whenever the
+    // caller has one, so this fieldId keeps addressing the right entity even
+    // if the list is reordered before the pending save reaches the server.
+    const token = context.entityId ?? (context.index !== undefined ? String(context.index) : undefined);
+    if (token !== undefined) return [template.replace("*", token)];
     return (slot.keys ?? []).map((key) => template.replace("*", key));
 }
 
-function sourceFor(slot: Slot, fieldId: string): string[] {
+function entityArray(document: Record<string, unknown> | undefined, root: string, child: string): Record<string, unknown>[] {
+    const list = record(document?.[root])[child];
+    return Array.isArray(list) ? (list as unknown[]).map(record) : [];
+}
+
+function sourceFor(document: Record<string, unknown> | undefined, slot: Slot, fieldId: string): string[] {
     const source = slot.source ?? `/${fieldId.replaceAll(".", "/")}`;
     const templateParts = slot.fieldTemplate.split(".");
     const fieldParts = fieldId.split(".");
-    const wildcard = fieldParts[templateParts.indexOf("*")] ?? "";
+    let wildcard = fieldParts[templateParts.indexOf("*")] ?? "";
+    if (wildcard && !/^\d+$/.test(wildcard)) {
+        const root = fieldId.startsWith("itinerary.days.") ? "itinerary" : fieldId.startsWith("stays.hotels.") ? "stays" : null;
+        const child = root === "itinerary" ? "days" : root === "stays" ? "hotels" : null;
+        if (root && child) {
+            const index = resolveEntityIndex(entityArray(document, root, child), wildcard);
+            if (index !== null) wildcard = String(index);
+        }
+    }
     return source.split("/").filter(Boolean).map((part) => part === "*" ? wildcard : part);
 }
 
@@ -47,7 +69,7 @@ function readValue(workspace: MediaWorkspace, slot: Slot, fieldId: string): Medi
     const document = workspace.document;
     if (!document) return null;
     let current: unknown = document;
-    for (const key of sourceFor(slot, fieldId)) {
+    for (const key of sourceFor(document, slot, fieldId)) {
         if (!current || typeof current !== "object") return null;
         current = (current as Record<string, unknown>)[key];
     }

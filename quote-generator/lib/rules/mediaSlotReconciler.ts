@@ -5,7 +5,7 @@
  * `document_json` fact media slots are the single store of truth for media —
  * there is no second `mediaOverrides` store to reconcile against. This module
  * only carries the shape (`MediaRef`) and the cardinality rule (R9) shared by
- * every write surface (DesignCanvas, FactsMediaPanel, MediaSlotRenderer).
+ * every write surface (DesignCanvas, MediaSlotRenderer).
  */
 
 export type MediaSource = 'manual' | 'auto' | 'fallback';

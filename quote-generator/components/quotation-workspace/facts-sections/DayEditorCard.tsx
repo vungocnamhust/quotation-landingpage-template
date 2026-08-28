@@ -391,6 +391,7 @@ export const DayEditorCard = memo(function DayEditorCard({
               readOnly={readOnly}
               context={{
                 index,
+                entityId: day.id,
                 destinationId: day.destination_ref?.id,
               }}
             />
