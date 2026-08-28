@@ -237,7 +237,40 @@ lại là monolith phân lớp. Cho agency nhỏ:
 | **[15.4](./15.4-costing.md)** | Costing Dual-Track: `costing_sheets` (neo request HOẶC quotation, attach khi sinh báo giá) + `service_lines` + workbench 2 chỗ đứng (request-costing screen + stage trong workspace) + `costingToFactsHandoff` prefill | 🟡 2 FK + auth callback + handoff một chiều | Flow 1 (costing-first) và Flow 2 (brochure-first) đều chạy E2E; snapshot bất động khi supersede rate |
 | **[15.5](./15.5-apply-pricing.md)** | Apply pricing: nút "Apply to Commercial" → ghi 1 pricing option qua pipeline facts chính thống (callback), log `costing_applications` bất biến + drift badge + event `costing.applied` | ✅ Có, qua facts API sẵn có (callback gói đường cũ) | Sale kiểm soát, không auto-overwrite; nguyên tử 3-trong-1; drift detection 2 chiều |
 | **[15.6](./15.6-booking-operations.md)** | Booking & Operations: `bookings`/`booking_lines` copy-on-deposit (snapshot cả terms — T3) + deadline engine từ policy JSONB (E9 sinh lời) + voucher/booking_code (E10) + Operations board deadline-driven + T9 cash-flow guardrail | 🟡 Đọc service_lines + mirror status | Operator trả lời được "hạn nào sắp cháy"; đổi policy/giá sau booking → chứng từ bất động |
-| **15.7+** | AI drafter (TripAnalyst/ServiceDrafter từ plan 14, thu nhỏ), Finance, Allotment | — | Chỉ bắt đầu khi 15.5 chạy ổn ở production |
+| **[15.7](./15.7-ai-service-drafter.md)** | **AI Platform Layer** (agent factory + toolset catalog dùng chung + guardrails + `ai_runs`) + Service Drafter: TripAnalyst (0 tool, human gate) → ServiceDrafter (tools read-only, allowlist per-run, schema không có tiền) → ghi qua costing API 15.4 `source=ai_draft` | 🟡 2 điểm additive khai báo (cột `ai_meta_json` + affordance costing UI) | Zero-hallucination kiểm bằng máy; platform nghiệm thu khi 15.8 dùng mà không sửa file nào |
+| **[15.8](./15.8-text-to-catalog-ingestion.md)** | **Interactive Ingestion Co-Pilot** (consumer thứ 2 của platform): Extractor 0-tool (raw text) → parser deterministic → Resolver có tool read-only (chỉ nhìn payload, tra catalog, đề xuất action + **đặt câu hỏi làm rõ**, trần 2 vòng) → kiểm chứng deterministic → staging → Diff Viewer 3 cột → commit replay qua service 15.1–15.3 (ActorRef = operator) | ❌ Không (chỉ gọi hàm public catalog + import platform) | Paste tariff mơ hồ → Co-Pilot hỏi đúng chỗ → DB đúng qua cửa chính; paste lại → skip_duplicate; AI không có quyền INSERT |
+| **15.9+** | Finance (M7 — đọc voucher/application log), Allotment (M8) | — | Xem điều kiện bắt đầu bên dưới |
+
+### Điều kiện bắt đầu các bước hoãn (gate nghiệp vụ, không phải gate kỹ thuật)
+
+Thiết kế 15.7/15.8 đã viết xong; **implement chỉ bắt đầu khi đủ các điều kiện sau** — đây là
+bài học sống còn từ plan 14 (xây AI trước flow thủ công = rủi ro 🔴 cao nhất):
+
+**Bắt đầu 15.8 (Ingestion Co-Pilot — làm TRƯỚC 15.7):**
+1. 15.1–15.3 chạy production, sale/operator đã nhập tay catalog một thời gian — đủ để biết
+   pattern tariff thật (định dạng email NCC hay gặp, ca mơ hồ điển hình) làm golden test.
+2. Có backlog bảng giá thật đang chờ nhập (≥ vài chục tariff) — Co-Pilot phải có việc thật để
+   nghiệm thu, không demo bằng dữ liệu bịa.
+3. 15.4 đã đóng API (không còn thay đổi schema costing) — vì 15.7 kế tiếp phụ thuộc nó.
+
+**Bắt đầu 15.7 (AI Service Drafter — sau 15.8):**
+1. 15.4–15.5 chạy production ổn định: sale đã lên dự toán tay qua cả 2 luồng (Costing-First /
+   Brochure-First) đủ nhiều để biết "chọn dịch vụ đúng" nghĩa là gì trong thực tế — chuẩn để
+   đo AI là hành vi sale thật, không phải phỏng đoán.
+2. Catalog đủ giàu nhờ 15.8 (đa số destination chính có ≥ vài product/category phổ biến kèm
+   rate active) — nếu không, Drafter chỉ trả `rate_missing` và không đánh giá được.
+3. Có tập request văn xuôi thật (≥20–30 ca đa dạng archetype) làm bộ nghiệm thu TripAnalyst.
+
+**Bắt đầu 15.9 Finance (M7):**
+1. 15.6 chạy production đủ **một chu kỳ đóng sổ thật** (một mùa vụ / vài tháng) — đã tích lũy
+   voucher_ref, booking_lines với terms snapshot, và `costing_applications` log thật để thiết
+   kế trên dữ liệu thay vì đoán.
+2. Xác định được đúng MỘT nhu cầu kế toán cụ thể làm mũi nhọn đầu tiên (đối soát AP theo NCC
+   *hoặc* báo cáo margin) — không thiết kế "Finance module" chung chung.
+3. Nếu 15.7/15.8 đã triển khai: chúng đã ổn định (dòng `source=ai_draft` được Finance xử lý
+   y như dòng người).
+
+**Allotment (M8)**: chỉ khi có hợp đồng allotment thật với NCC — trước đó free-sell là đúng.
 
 Mỗi bước 15.x sẽ có tài liệu thiết kế riêng khi bắt tay làm — tài liệu này chỉ chốt boundary,
 invariant và thứ tự.
