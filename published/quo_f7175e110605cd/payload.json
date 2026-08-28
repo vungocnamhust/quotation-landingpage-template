@@ -1,0 +1,235 @@
+{
+  "quotationNarrative": "A premium and slow-paced journey designed for luxury travelers, showcasing the cultural depth of Hanoi, the cinematic landscapes of Ha Long Bay, the timeless heritage of Hoi An, and coastal luxury in Da Nang.",
+  "programOverview": {
+    "heading": "PROGRAM OVERVIEW",
+    "paragraphs": [
+      "This 12-day luxury journey is tailored perfectly to capture the essence of Northern and Central Vietnam.",
+      "The itinerary is designed to provide a perfect balance of guided exploration and leisure time, staying in the country's most iconic luxury properties such as Peridot Grand Luxury Boutique Hotel, Celina Of The Sea Cruise, Anantara Hoi An Resort, and Hyatt Regency Danang Resort and Spa."
+    ]
+  },
+  "landingpageContent": {
+    "heroSection": {
+      "headline": "Tina’s Vietnam Birthday Escape",
+      "subtitle": "12 Days 11 Nights - Tailor-made for VIP Guests"
+    },
+    "visualDescription": "A luxury travel landing page with premium Northern and Central Vietnam landscapes from Ha Long Bay to Da Nang."
+  },
+  "journeyGlance": {
+    "market": "Global Luxury",
+    "guestProfile": "VIP Family",
+    "hotelStandard": "5★ Ultra-Luxury",
+    "mealPreference": "Fine dining & Local specialties",
+    "priceType": "Indicative",
+    "tourCode": "VN-2027-LUX",
+    "domesticFlights": "Included as per itinerary",
+    "priceBasis": "Double / Villa sharing",
+    "partnerNote": "Birthday celebration on Day 4 & Day 11",
+    "validity": "30 days"
+  },
+  "whyWorks": {
+    "privateFlexible": "Private vehicle and English-speaking guide allow guests to travel at a comfortable pace.",
+    "comfort": "Premium vehicles and carefully curated luxury accommodations including Beach Front Pool Villa.",
+    "muslimFriendly": "Dietary requirements and special occasions (Birthday) meticulously handled.",
+    "balancedHighlights": "A balanced mix of cultural immersion, heritage sites, and modern luxury."
+  },
+  "itinerary": [
+    {
+      "dayNumber": 1,
+      "destination": "Hanoi",
+      "summary": "Upon arrival at Noi Bai International Airport, you are welcomed by a dedicated concierge representative and escorted by luxury private transfer to Peridot Grand Luxury Boutique Hotel. The day remains intentionally light, allowing you and your group time to settle in and refresh. In the evening, a curated welcome dinner introduces Northern Vietnamese cuisine in a refined setting, setting a graceful tone for the journey ahead.",
+      "mainInclusions": "Fast-track Arrival Service, Private airport pickup, Welcome Dinner",
+      "senseOfPace": "Relaxed",
+      "dining": "Lunch is included for morning arrival; Dinner",
+      "date": "2027-03-27"
+    },
+    {
+      "dayNumber": 2,
+      "destination": "Hanoi",
+      "summary": "This half-day introduction to Hanoi focuses on the capital’s essential cultural landmarks at an unhurried pace. With a private historian guide, you visit Ba Dinh Cultural Square, the iconic One Pillar Pagoda, and the tranquil courtyards of the Temple of Literature—Vietnam’s first national university. The afternoon unfolds with a leisurely stroll through the French Quarter's tree-lined avenues, boutique cafes, and the serene shores of Hoan Kiem Lake.",
+      "mainInclusions": "Ba Dinh Historic Square, One Pillar Pagoda, Temple of Literature, French Quarter architectural walk",
+      "senseOfPace": "Moderate",
+      "dining": "Breakfast, Lunch",
+      "date": "2027-03-28"
+    },
+    {
+      "dayNumber": 3,
+      "destination": "Hanoi",
+      "summary": "Experience Hanoi from an exhilarating perspective aboard an open-air vintage Soviet-era Gaz-69 Jeep. Traverse hidden backstreets, lively local markets, and historic landmarks including the Long Bien Bridge. Along the way, savor iconic Hanoi culinary delights—from fragrant Pho to traditional egg coffee—crafted by storied family vendors.",
+      "mainInclusions": "Private vintage Jeep excursion, English-speaking specialist guide, Street food tastings & egg coffee",
+      "senseOfPace": "Active",
+      "dining": "Breakfast, Lunch",
+      "date": "2027-03-29"
+    },
+    {
+      "dayNumber": 4,
+      "destination": "Halong Bay",
+      "summary": "A scenic morning private transfer journeys eastward through the Red River Delta to Ha Long. Step aboard the luxurious Celina Of The Sea Cruise for an unforgettable voyage amidst thousands of dramatic limestone karsts and emerald waters. Explore majestic caves, kayak in secluded lagoons, and savor a refined gourmet dinner as the sun sets over the Gulf of Tonkin.",
+      "mainInclusions": "Private luxury highway transfer, Full board cruise dining, Cave exploration & kayaking",
+      "senseOfPace": "Relaxed",
+      "dining": "Breakfast, Lunch, Dinner",
+      "date": "2027-03-30"
+    },
+    {
+      "dayNumber": 5,
+      "destination": "Hoi An",
+      "summary": "Greet the morning with a serene Tai Chi session on the sun deck as mist drifts over the karst towers. Enjoy a leisurely brunch while cruising back to the harbor. Disembark for a private transfer to Noi Bai International Airport for a short domestic flight to Da Nang. Upon arrival, an effortless private transfer whisks you south to the enchanting riverside oasis of Anantara Hoi An Resort.",
+      "mainInclusions": "Morning Tai Chi & brunch, Domestic flight to Da Nang, Private luxury transfer to Hoi An",
+      "senseOfPace": "Moderate",
+      "dining": "Brunch, Dinner",
+      "date": "2027-03-31"
+    },
+    {
+      "dayNumber": 6,
+      "destination": "Hoi An",
+      "summary": "Immerse yourself in the UNESCO World Heritage Ancient Town of Hoi An on an unhurried guided walking tour. Wander through merchant houses, century-old assembly halls, and the Japanese Covered Bridge. In the afternoon, visit traditional silk and lantern crafting workshops to create your own silk lantern, followed by sunset views along the Thu Bon River.",
+      "mainInclusions": "Private heritage walking tour, Ancient town entrance ticket, Lantern making masterclass",
+      "senseOfPace": "Relaxed",
+      "dining": "Breakfast, Lunch",
+      "date": "2027-04-01"
+    },
+    {
+      "dayNumber": 7,
+      "destination": "Hoi An",
+      "summary": "Discover the peaceful rural rhythms surrounding Hoi An. Glide through the lush waterways of the Bay Mau coconut palm forest in traditional bamboo basket boats. Later, visit an organic farming village where you gather fresh herbs and participate in an exclusive hands-on culinary workshop preparing Central Vietnamese specialties.",
+      "mainInclusions": "Eco-tour & bamboo basket boat experience, Organic farm visit, Private cooking class & lunch",
+      "senseOfPace": "Active",
+      "dining": "Breakfast, Lunch",
+      "date": "2027-04-02"
+    },
+    {
+      "dayNumber": 8,
+      "destination": "Da Nang",
+      "summary": "After a relaxed breakfast overlooking the river, embark on a scenic private coastal drive north to Da Nang. Stop to explore the sacred Marble Mountains and limestone caves with sweeping coastal vistas. Arrive at the Hyatt Regency Danang Resort and Spa to check into your expansive 3-Bedroom Beach Front Pool Villa, spending the rest of the day in pure beachfront luxury.",
+      "mainInclusions": "Private coastal transfer, Marble Mountains guided visit, Villa check-in & leisure",
+      "senseOfPace": "Relaxed",
+      "dining": "Breakfast",
+      "date": "2027-04-03"
+    },
+    {
+      "dayNumber": 9,
+      "destination": "Da Nang",
+      "summary": "Ascend into the mist-shrouded Truong Son Mountains via the world-record Ba Na Hills cable car system. Walk along the world-renowned Golden Bridge held aloft by colossal stone hands. Explore the French Village, lush Le Jardin D'Amour gardens, and Linh Ung Pagoda before enjoying a panoramic lunch with breathtaking mountain views.",
+      "mainInclusions": "Ba Na Hills round-trip VIP cable car, Golden Bridge access, Private guide & gourmet buffet lunch",
+      "senseOfPace": "Moderate",
+      "dining": "Breakfast, Lunch",
+      "date": "2027-04-04"
+    },
+    {
+      "dayNumber": 10,
+      "destination": "Da Nang",
+      "summary": "Depart Da Nang in the morning for a magnificent excursion over the breathtaking Hai Van Pass to Hue, the former royal capital of the Nguyen Dynasty. Tour the grand Imperial Citadel and Forbidden Purple City, cruise the serene Perfume River by dragon boat, and explore the poetic Tu Duc Tomb before returning to your beachfront villa in Da Nang.",
+      "mainInclusions": "Private Hai Van Pass drive, Hue Imperial Citadel & Royal Tomb admissions, Dragon boat cruise & royal lunch",
+      "senseOfPace": "Immersive",
+      "dining": "Breakfast, Lunch",
+      "date": "2027-04-05"
+    },
+    {
+      "dayNumber": 11,
+      "destination": "Da Nang",
+      "summary": "Spend the morning exploring the lush Son Tra Peninsula and visiting the monumental Lady Buddha statue at Linh Ung Pagoda. In the afternoon, board an exclusive private yacht for a 2-hour coastal voyage along the Da Nang shoreline, sipping champagne as the sun dips below the horizon over the East Sea.",
+      "mainInclusions": "Son Tra Peninsula excursion, Private 2-hour luxury ocean yacht charter with sunset drinks & canapés",
+      "senseOfPace": "Relaxed",
+      "dining": "Breakfast, Lunch",
+      "date": "2027-04-06"
+    },
+    {
+      "dayNumber": 12,
+      "destination": "Departure",
+      "summary": "Your final morning in Central Vietnam is enjoyed at leisure at Hyatt Regency Danang Resort and Spa, allowing you to savor a beachfront breakfast, stroll along the pristine sands of Non Nuoc Beach, or enjoy a quiet moment by the private pool. At the appropriate time, your private chauffeur provides a seamless transfer to Da Nang International Airport (DAD) for your scheduled departure, concluding a magnificent and unforgettable luxury journey through Vietnam.",
+      "mainInclusions": "Hyatt Regency beachfront leisure, Private airport transfer to Da Nang International Airport (DAD)",
+      "senseOfPace": "Relaxed",
+      "dining": "Breakfast",
+      "date": "2027-04-07"
+    }
+  ],
+  "hotelPlan": {
+    "hotels": [
+      {
+        "destination": "Hanoi",
+        "checkInDate": "2027-03-27",
+        "checkOutDate": "2027-03-30",
+        "hotelArrangement": "Peridot Grand Luxury Boutique Hotel (Grand Deluxe)"
+      },
+      {
+        "destination": "Ha Long",
+        "checkInDate": "2027-03-30",
+        "checkOutDate": "2027-03-31",
+        "hotelArrangement": "Celina Of The Sea Cruise (Executive Balcony)"
+      },
+      {
+        "destination": "Hoi An",
+        "checkInDate": "2027-03-31",
+        "checkOutDate": "2027-04-03",
+        "hotelArrangement": "Anantara Hoi An Resort (Deluxe Balcony)"
+      },
+      {
+        "destination": "Da Nang",
+        "checkInDate": "2027-04-03",
+        "checkOutDate": "2027-04-07",
+        "hotelArrangement": "Hyatt Regency Danang Resort and Spa (3 Bedroom Beach Front Pool Villa)"
+      }
+    ],
+    "roomNotes": "Premium rooms and beachfront pool villas, all breakfasts included, VIP birthday setup."
+  },
+  "optionalEnhancements": [
+    {
+      "title": "Upgrade to Seaplane flight over Halong Bay",
+      "status": "Recommended"
+    }
+  ],
+  "bookingTerms": {
+    "deposit": "<ul style=\"margin: 0; padding-left: 16px; display: grid; gap: 4px;\"><li>A deposit of 30% of the total tour cost is required upon confirmation of the booking. This deposit is non-refundable.</li><li>For bookings confirmed within 60 days of arrival, full payment of 100% of the total tour cost is required at the time of confirmation.</li></ul>",
+    "balance": "<ul style=\"margin: 0; padding-left: 16px; display: grid; gap: 4px;\"><li>The remaining 70% balance must be paid no later than 60 days prior to the scheduled arrival date.</li></ul>",
+    "cancellation": "<div style=\"margin-bottom: 4px;\">Written notice required. Cancellation fees apply based on arrival date:</div><ul style=\"margin: 0; padding-left: 16px; display: grid; gap: 4px;\"><li>> 45 days prior: Deposit forfeited (30%)</li><li>45 – 31 days prior: 50% of total tour cost</li><li>30 – 20 days prior: 75% of total tour cost</li><li>< 20 days prior: 100% of total tour cost</li></ul><div style=\"margin-top: 12px;\">Any non-refundable payments, cancellation charges or penalties imposed by hotels, airlines, cruise operators and other service providers may also apply in addition to the cancellation fees stated above.</div>",
+    "confirmation": ""
+  },
+  "finalization": {
+    "finalDetailsRequired": "Copy of passport valid for 6 months.",
+    "afterConfirmation": "24/7 dedicated local concierge support."
+  },
+  "pricing": {
+    "currency": "USD",
+    "pricingTitle": "INVESTMENT DETAILS",
+    "basis": "Quotation based on 16D15N Package",
+    "priceOptions": [
+      {
+        "label": "Package 16D15N (16 Days 15 Nights)",
+        "notes": "Single occupancy supplement: $1,570",
+        "amount": 4450.0
+      },
+      {
+        "label": "Package 8D7N (8 Days 7 Nights)",
+        "notes": "Single occupancy supplement: $1,300",
+        "amount": 2350.0
+      }
+    ],
+    "subtotal": 4450.0,
+    "discountTotal": 0.0,
+    "taxTotal": 0.0,
+    "grandTotal": 4450.0
+  },
+  "retrievalStatus": {
+    "hotel": "pending",
+    "activity": "pending",
+    "guide": "pending",
+    "transfer": "pending",
+    "flight": "pending"
+  },
+  "candidateBlocks": [],
+  "inclusions": [
+    "Private airport transfer, International arrival fast-track assistance and Vietnam visa services",
+    "All private transfer with english-speaking guides mentioned in the itinerary",
+    "All accommodations, experiences, admission fee, and exclusive arrangements throughout the journey of Hanoi, Ha Long, Hoi An, Da Nang, and Hue",
+    "All meals mentioned in the itinerary",
+    "Domestic flights"
+  ],
+  "exclusions": [
+    "International flights",
+    "Travel insurance",
+    "Personal expenses",
+    "Optional experiences not specified in the itinerary",
+    "Tips and gratuities",
+    "Any services not expressly listed as included"
+  ],
+  "quotationNumber": "VN-2027-LUX"
+}
