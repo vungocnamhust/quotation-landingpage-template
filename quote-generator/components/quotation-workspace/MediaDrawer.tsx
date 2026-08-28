@@ -24,6 +24,7 @@ export type MediaDrawerProps = {
   context?: MediaPickerContext;
   selectionMode?: "single" | "multiple";
   maxSelection?: number;
+  minSelection?: number;
   initialSelection?: string[];
   initialPrefix?: string;
 };
@@ -40,6 +41,7 @@ export default function MediaDrawer({
   context,
   selectionMode = "single",
   maxSelection = 1,
+  minSelection = 0,
   initialSelection = [],
   initialPrefix,
 }: MediaDrawerProps) {
@@ -143,6 +145,7 @@ export default function MediaDrawer({
           context={context}
           selectionMode={selectionMode}
           maxSelection={maxSelection}
+          minSelection={minSelection}
           initialSelection={initialSelection}
           initialPrefix={initialPrefix}
         />

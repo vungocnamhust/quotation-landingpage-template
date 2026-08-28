@@ -12,6 +12,7 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from editable_brochure_contract import resolve_media_entity_index
 from repositories.destination_repository import DestinationRepository
 from repositories.media_library_repository import MediaLibraryRepository
 from services.brochure_media_resolver import BrochureMediaResolver, Candidate
@@ -26,6 +27,91 @@ def _asset_key(value: Any) -> str:
     return str(_record(value).get("r2Key") or "").strip()
 
 
+def _clear_media_field(document: dict[str, Any], field_id: str) -> None:
+    """Blank a single fact media field so the resolver treats it as empty.
+
+    Used only by the `fieldIds` + `force` Reset-to-default path (Plan 16.1
+    D4) — the one deliberate way to overwrite a manual selection, always
+    initiated by the user on an exact slot.
+    """
+    if field_id.startswith("assets."):
+        key = field_id.rsplit(".", 1)[-1]
+        assets = document.get("assets")
+        if isinstance(assets, dict):
+            assets[key] = {"status": "empty"}
+        return
+    if field_id.startswith("itinerary.days."):
+        index = resolve_media_entity_index("itinerary", "days", field_id.split(".")[2], document)
+        days = _record(document.get("itinerary")).get("days")
+        if index is not None and isinstance(days, list) and 0 <= index < len(days) and isinstance(days[index], dict):
+            images = days[index].get("images")
+            if isinstance(images, dict):
+                images["carousel"] = []
+        return
+    if field_id.startswith("stays.hotels."):
+        parts = field_id.split(".")
+        index = resolve_media_entity_index("stays", "hotels", parts[2], document)
+        hotels = _record(document.get("stays")).get("hotels")
+        if index is not None and isinstance(hotels, list) and 0 <= index < len(hotels) and isinstance(hotels[index], dict):
+            hotels[index][parts[3]] = {"status": "empty"}
+
+
+def _requested_media_targets(field_ids: list[str], document: dict[str, Any]) -> dict[str, Any]:
+    """Resolve requested fieldIds into a filter spec, so a Reset-to-default
+    call touches exactly those slots and never incidentally autofills an
+    unrelated empty slot elsewhere in the document."""
+    assets: set[str] = set()
+    days: set[int] = set()
+    hotel_fields: set[tuple[int, str]] = set()
+    for field_id in field_ids:
+        if field_id.startswith("assets."):
+            assets.add(field_id.rsplit(".", 1)[-1])
+        elif field_id.startswith("itinerary.days."):
+            index = resolve_media_entity_index("itinerary", "days", field_id.split(".")[2], document)
+            if index is not None:
+                days.add(index)
+        elif field_id.startswith("stays.hotels."):
+            parts = field_id.split(".")
+            index = resolve_media_entity_index("stays", "hotels", parts[2], document)
+            if index is not None:
+                hotel_fields.add((index, parts[3]))
+    return {"assets": assets, "days": days, "hotel_fields": hotel_fields}
+
+
+def _filter_media_patch(patch: dict[str, Any], targets: dict[str, Any]) -> dict[str, Any]:
+    filtered_assets = {k: v for k, v in _record(patch.get("assets")).items() if k in targets["assets"]}
+    filtered_days: dict[str, Any] = {}
+    for raw_index, value in _record(_record(patch.get("itinerary")).get("days")).items():
+        try:
+            index = int(raw_index)
+        except (TypeError, ValueError):
+            continue
+        if index in targets["days"]:
+            filtered_days[raw_index] = value
+    filtered_hotels: dict[str, Any] = {}
+    for raw_index, value in _record(_record(patch.get("stays")).get("hotels")).items():
+        try:
+            index = int(raw_index)
+        except (TypeError, ValueError):
+            continue
+        changes = {k: v for k, v in _record(value).items() if (index, k) in targets["hotel_fields"]}
+        if changes:
+            filtered_hotels[raw_index] = changes
+    return {
+        "assets": filtered_assets,
+        "itinerary": {"days": filtered_days} if filtered_days else {},
+        "stays": {"hotels": filtered_hotels} if filtered_hotels else {},
+    }
+
+
+def _count_patch_entries(patch: dict[str, Any]) -> int:
+    return (
+        len(_record(patch.get("assets")))
+        + sum(len(_record(_record(day).get("images")).get("carousel") or []) for day in _record(_record(patch.get("itinerary")).get("days")).values())
+        + sum(len(_record(hotel)) for hotel in _record(_record(patch.get("stays")).get("hotels")).values())
+    )
+
+
 class MediaDefaultService:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
@@ -38,7 +124,20 @@ class MediaDefaultService:
         document: dict[str, Any],
         quotation_id: str,
         lang: str,
+        field_ids: list[str] | None = None,
     ) -> dict[str, Any]:
+        """Fill missing media defaults.
+
+        Without `field_ids`: fills every empty slot, never overwrites an
+        existing value (today's behavior). With `field_ids` (Plan 16.1 D4,
+        Reset-to-default): the listed slots are cleared and re-resolved —
+        the one deliberate path allowed to overwrite a manual selection —
+        and the resulting patch is restricted to exactly those slots, so no
+        other empty slot is incidentally autofilled in the same call.
+        """
+        if field_ids:
+            for field_id in field_ids:
+                _clear_media_field(document, field_id)
         await self._hydrate_destination_refs(document)
         catalogue = await self.media_repository.list_active_candidates()
         candidates = [
@@ -46,7 +145,13 @@ class MediaDefaultService:
             for item in catalogue
         ]
         result = BrochureMediaResolver(candidates).resolve_missing(document=document, quotation_id=quotation_id, lang=lang)
-        self.apply_patch(document, result["patch"])
+        patch = result["patch"]
+        if field_ids:
+            patch = _filter_media_patch(patch, _requested_media_targets(field_ids, document))
+            result["patch"] = patch
+            result["appliedCount"] = _count_patch_entries(patch)
+            result["hasChanges"] = bool(patch["assets"] or patch["itinerary"] or patch["stays"])
+        self.apply_patch(document, patch)
         document.setdefault("presentation", {})["mediaDefaults"] = {
             "resolverVersion": result["resolverVersion"],
             "rationale": result["rationale"],

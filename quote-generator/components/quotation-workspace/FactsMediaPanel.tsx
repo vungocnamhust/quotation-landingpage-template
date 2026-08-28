@@ -216,6 +216,7 @@ export default function FactsMediaPanel({ quotationId, lang, document, currentRe
         onClose={() => setSelection(null)}
         selectionMode={selection?.gallery ? 'multiple' : 'single'}
         maxSelection={selection?.gallery ? 3 : 1}
+        minSelection={selection?.gallery ? 3 : 1}
         initialPrefix={activeTarget.initialPrefix}
         context={activeTarget.context}
         onConfirm={confirm}

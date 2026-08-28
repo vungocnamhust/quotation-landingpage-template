@@ -6,6 +6,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{{tour_title}} - {{ "Luxury Quotation" | translate(lang) }}</title>
+  
+  <!-- Open Graph & Social Sharing Metadata -->
+  <meta property="og:title" content="{{tour_title}} - {{ "Luxury Quotation" | translate(lang) }}" />
+  <meta property="og:description" content="{{lede | default(tour_title)}}" />
+  <meta property="og:image" content="{{img_0 or ((brand.logo if brand else '') or '/assets/vietnam-safar-logo.png')}}" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="{{tour_title}} - {{ "Luxury Quotation" | translate(lang) }}" />
+  <meta name="twitter:description" content="{{lede | default(tour_title)}}" />
+  <meta name="twitter:image" content="{{img_0 or ((brand.logo if brand else '') or '/assets/vietnam-safar-logo.png')}}" />
   <script id="auto-version-checker">
     (function () {
       const CURRENT_VERSION = {{ latest_version | default (1)
@@ -6131,6 +6141,51 @@
         }
         parent.removeChild(el);
       });
+
+      // Synchronize Page Title and Open Graph / Twitter Card Social Metadata
+      const tourTitleEl = document.querySelector('[data-editable="tour_title"]') || document.querySelector('h1.hero-title, h1');
+      const tourTitleText = tourTitleEl ? tourTitleEl.innerText.trim() : '';
+      if (tourTitleText) {
+        const luxuryLabel = (typeof CLIENT_I18N !== 'undefined' && CLIENT_I18N.luxury_quotation) ? CLIENT_I18N.luxury_quotation : 'Luxury Quotation';
+        const fullTitle = `${tourTitleText} - ${luxuryLabel}`;
+        document.title = fullTitle;
+        const cloneTitle = clone.querySelector('title');
+        if (cloneTitle) {
+          cloneTitle.textContent = fullTitle;
+        }
+
+        const ledeEl = document.querySelector('[data-editable="lede"]');
+        const ledeText = ledeEl ? ledeEl.innerText.trim() : tourTitleText;
+        
+        let heroImgUrl = '';
+        const heroEl = document.querySelector('.hero');
+        if (heroEl) {
+          const bgStyle = heroEl.style.getPropertyValue('--hero-img') || document.documentElement.style.getPropertyValue('--hero-img');
+          if (bgStyle) {
+            heroImgUrl = bgStyle.replace(/^url\(["']?/, '').replace(/["']?\)$/, '');
+          }
+        }
+
+        const cloneHead = clone.querySelector('head') || clone;
+        const setOrCreateMeta = (propName, propVal, contentVal) => {
+          let metaTag = cloneHead.querySelector(`meta[${propName}="${propVal}"]`);
+          if (!metaTag) {
+            metaTag = document.createElement('meta');
+            metaTag.setAttribute(propName, propVal);
+            cloneHead.appendChild(metaTag);
+          }
+          metaTag.setAttribute('content', contentVal);
+        };
+
+        setOrCreateMeta('property', 'og:title', fullTitle);
+        setOrCreateMeta('property', 'og:description', ledeText);
+        if (heroImgUrl) setOrCreateMeta('property', 'og:image', heroImgUrl);
+        setOrCreateMeta('property', 'og:type', 'website');
+        setOrCreateMeta('name', 'twitter:card', 'summary_large_image');
+        setOrCreateMeta('name', 'twitter:title', fullTitle);
+        setOrCreateMeta('name', 'twitter:description', ledeText);
+        if (heroImgUrl) setOrCreateMeta('name', 'twitter:image', heroImgUrl);
+      }
 
       let html = '<!DOCTYPE html>\n' + clone.outerHTML;
 

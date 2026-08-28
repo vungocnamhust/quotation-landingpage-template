@@ -7643,11 +7643,13 @@ async def _apply_missing_media_defaults(
     document: dict[str, Any],
     quotation_id: str,
     lang: str,
+    field_ids: list[str] | None = None,
 ) -> dict[str, Any]:
     return await MediaDefaultService(session).apply_missing(
         document=document,
         quotation_id=quotation_id,
         lang=lang,
+        field_ids=field_ids,
     )
 
 

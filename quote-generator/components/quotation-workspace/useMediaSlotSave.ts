@@ -20,6 +20,12 @@ export interface MediaSlotSaveResult {
   currentRevision: number;
 }
 
+export interface MediaSlotResetResult {
+  currentRevision: number;
+  applied: boolean;
+  appliedCount: number;
+}
+
 /**
  * The single write facade for every media surface (Design canvas, Facts
  * media panel, MediaSlotRenderer). Plan 16.1 D1/D3: `PUT /facts/media` is
@@ -54,5 +60,32 @@ export function useMediaSlotSave({ quotationId, lang, currentRevision, onSaved }
 
   const saveSlot = (fieldId: string, value: unknown) => saveSlots([{ fieldId, value }]);
 
-  return { saveSlot, saveSlots };
+  /**
+   * Reset a single slot back to its resolver-computed default (Plan 16.1
+   * D4). This is the only path allowed to overwrite a manual selection —
+   * `force` scopes the overwrite to exactly this one fieldId server-side.
+   */
+  const resetSlotToDefault = async (fieldId: string, retryCount = 0): Promise<MediaSlotResetResult> => {
+    try {
+      const result = await quotationFetch<MediaSlotResetResult>(
+        `${API_BASE}/api/v2/quotations/${quotationId}/facts/media-defaults?lang=${encodeURIComponent(lang)}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ baseRevision: currentRevision, dryRun: false, fieldIds: [fieldId], force: true }),
+        },
+        'Media could not be reset to default.'
+      );
+      await onSaved();
+      return result;
+    } catch (error) {
+      if (retryCount < 1 && error instanceof QuotationApiError && error.kind === 'conflict') {
+        await onSaved();
+        return resetSlotToDefault(fieldId, retryCount + 1);
+      }
+      throw error;
+    }
+  };
+
+  return { saveSlot, saveSlots, resetSlotToDefault };
 }

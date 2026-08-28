@@ -37,6 +37,8 @@ class FactsDesignerRequest(BaseModel):
 class PresentationMediaDefaultsRequest(BaseModel):
     baseRevision: int
     dryRun: bool = True
+    fieldIds: Annotated[list[str], Field(max_length=32)] | None = None
+    force: bool = False
 
 
 def _get_helpers():
@@ -333,6 +335,11 @@ async def apply_quotation_media_defaults_v2(
 ):
     h = _get_helpers()
     await h.require_owned_quotation(quotation_id, principal)
+    reset_field_ids = payload.fieldIds if (payload.fieldIds and payload.force) else None
+    if reset_field_ids:
+        for field_id in reset_field_ids:
+            if not h.is_fact_media_field(field_id):
+                raise HTTPException(status_code=422, detail={"message": "Unknown or non-Fact media field.", "invalidKeys": [field_id]})
     async with h._get_db_session_factory()() as session:
         quotes, documents = QuotationRepository(session), QuotationDocumentRepository(session)
         quotation = await quotes.get_quotation_by_id(quotation_id)
@@ -348,7 +355,7 @@ async def apply_quotation_media_defaults_v2(
                 detail={"message": "Media defaults revision conflict.", "currentRevision": current.revision},
             )
         next_document = copy.deepcopy(current.document_json)
-        result = await h._apply_missing_media_defaults(session, next_document, quotation_id, effective_lang)
+        result = await h._apply_missing_media_defaults(session, next_document, quotation_id, effective_lang, field_ids=reset_field_ids)
         has_changes = result.get("hasChanges", False)
         applied_count = result.get("appliedCount", 0)
 

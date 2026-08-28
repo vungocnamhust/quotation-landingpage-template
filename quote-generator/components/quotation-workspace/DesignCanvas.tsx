@@ -337,6 +337,7 @@ export default function DesignCanvas({
           context={activeMediaMatch.slot.pickerContext === 'library' ? undefined : activeMediaTarget.context}
           selectionMode={activeMediaMatch.slot.maxItems > 1 ? 'multiple' : 'single'}
           maxSelection={activeMediaMatch.slot.maxItems}
+          minSelection={activeMediaMatch.slot.minItems}
         />
       ) : null}
     </>
