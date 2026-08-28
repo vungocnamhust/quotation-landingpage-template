@@ -175,9 +175,12 @@ class EditableBrochureContractTests(unittest.TestCase):
         )
 
     def test_runtime_uses_canonical_gallery_before_legacy_slots(self):
+        # Plan 16.1 D1/M3.1: canonical fact media always wins; the frozen
+        # `presentation.mediaOverrides` is only a fallback for documents that
+        # predate the single-store model.
         source = (Path(__file__).resolve().parents[1] / "quote-generator/display/runtimePageBuilder.ts").read_text()
         self.assertIn("const canonicalGallery = recordList(images.carousel)", source)
-        self.assertIn("const galleryAssets = galleryOverride.length ? galleryOverride : canonicalGallery.length ? canonicalGallery : [images.hero, images.small1, images.small2].filter(Boolean)", source)
+        self.assertIn("const galleryAssets = canonicalGallery.length ? canonicalGallery : galleryOverride.length ? galleryOverride : [images.hero, images.small1, images.small2].filter(Boolean)", source)
 
     def test_runtime_emits_the_registry_owned_inclusion_heading_descriptors(self):
         source = (Path(__file__).resolve().parents[1] / "quote-generator/display/runtimePageBuilder.ts").read_text()

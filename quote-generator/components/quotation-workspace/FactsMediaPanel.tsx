@@ -6,8 +6,9 @@ import { getTypographyClassName } from '../../config/typography.ts';
 import { cn } from '../../utils/cn.ts';
 import { apiErrorMessage, quotationFetch } from '../../lib/apiError.ts';
 import { useToast } from '../staff-workspace/ToastProvider.tsx';
-import type { MediaPickerContext } from './MediaPicker.tsx';
 import { useMediaSlotSave } from './useMediaSlotSave.ts';
+import { derivePickerTarget } from '../../lib/rules/mediaSlotAdapter.ts';
+import { entityFieldToken, resolveEntityIndex } from '../../lib/rules/mediaSlotReconciler.ts';
 
 const MediaDrawer = dynamic(() => import('./MediaDrawer'));
 const API_BASE = process.env.NEXT_PUBLIC_QUOTATION_API_URL ?? '';
@@ -17,72 +18,6 @@ type Descriptor = { fieldId: string; owner: string; kind: string; section: strin
 function record(value: unknown): RecordValue { return value && typeof value === 'object' && !Array.isArray(value) ? value as RecordValue : {}; }
 function label(id: string) { return id.replaceAll('.', ' · '); }
 function ref(value: unknown): MediaRef | null { const item = record(value); return typeof item.r2Key === 'string' && item.r2Key ? { r2Key: item.r2Key, status: 'ready', altText: typeof item.altText === 'string' ? item.altText : '' } : null; }
-
-function getFieldMediaTarget(
-  fieldId: string,
-  document: RecordValue
-): { initialPrefix?: string; context?: MediaPickerContext } {
-  const rawDays = record(document.itinerary).days;
-  const days: unknown[] = Array.isArray(rawDays) ? rawDays : [];
-  const rawHotels = record(document.stays).hotels;
-  const hotels: unknown[] = Array.isArray(rawHotels) ? rawHotels : [];
-
-  if (fieldId.startsWith('itinerary.days.')) {
-    const dayIndex = Number(fieldId.split('.')[2]);
-    const day = record(days[dayIndex]);
-    const destRef = record(day.destinationRef);
-    const prefix =
-      typeof destRef.mediaPrefix === 'string' && destRef.mediaPrefix
-        ? destRef.mediaPrefix
-        : typeof destRef.defaultMediaPrefix === 'string' && destRef.defaultMediaPrefix
-        ? destRef.defaultMediaPrefix
-        : typeof destRef.slug === 'string' && destRef.slug
-        ? `destination/${destRef.slug}`
-        : undefined;
-    const destId = typeof destRef.id === 'string' ? destRef.id : undefined;
-    return {
-      initialPrefix: prefix,
-      context: destId ? { kind: 'destination', destinationId: destId } : undefined,
-    };
-  }
-
-  if (fieldId.startsWith('stays.hotels.')) {
-    const hotelIndex = Number(fieldId.split('.')[2]);
-    const hotel = record(hotels[hotelIndex]);
-    const destRef = record(hotel.destinationRef);
-    const hotelName = typeof hotel.name === 'string' ? hotel.name : undefined;
-    const destId = typeof destRef.id === 'string' ? destRef.id : undefined;
-    const prefix =
-      typeof destRef.mediaPrefix === 'string' && destRef.mediaPrefix
-        ? destRef.mediaPrefix
-        : typeof destRef.defaultMediaPrefix === 'string' && destRef.defaultMediaPrefix
-        ? destRef.defaultMediaPrefix
-        : destId
-        ? 'accommodations'
-        : undefined;
-    return {
-      initialPrefix: prefix,
-      context:
-        destId && hotelName
-          ? { kind: 'accommodation', destinationId: destId, accommodationName: hotelName }
-          : undefined,
-    };
-  }
-
-  if (fieldId === 'assets.hero' || fieldId === 'assets.itineraryDivider' || fieldId === 'assets.staysDivider' || fieldId === 'assets.hotelDivider') {
-    const firstDay = record(days[0]);
-    const destRef = record(firstDay.destinationRef);
-    const prefix =
-      typeof destRef.mediaPrefix === 'string' && destRef.mediaPrefix
-        ? destRef.mediaPrefix
-        : typeof destRef.defaultMediaPrefix === 'string' && destRef.defaultMediaPrefix
-        ? destRef.defaultMediaPrefix
-        : undefined;
-    return { initialPrefix: prefix };
-  }
-
-  return {};
-}
 
 export default function FactsMediaPanel({ quotationId, lang, document, currentRevision, contract, onSaved }: { quotationId: string; lang: string; document: RecordValue; currentRevision: number; contract?: { fields: Descriptor[] }; onSaved: () => Promise<unknown> | void }) {
   const { toast } = useToast();
@@ -98,11 +33,17 @@ export default function FactsMediaPanel({ quotationId, lang, document, currentRe
     const hotels = Array.isArray(record(document.stays).hotels) ? record(document.stays).hotels as unknown[] : [];
     return [
       ...declared,
-      ...itinerary.map((_, index) => ({ fieldId: `itinerary.days.${index}.gallery`, owner: 'fact', kind: 'gallery', section: 'itinerary' })),
-      ...hotels.flatMap((_, index) => [
-        { fieldId: `stays.hotels.${index}.hotelImage`, owner: 'fact', kind: 'image', section: 'hotels' },
-        { fieldId: `stays.hotels.${index}.roomImage`, owner: 'fact', kind: 'image', section: 'hotels' }
-      ])
+      // A day/hotel's fieldId embeds its stable id (Plan 16.1 M3.3), not its
+      // array position, so a save submitted after the list is reordered
+      // elsewhere still lands on the right entity.
+      ...itinerary.map((day, index) => ({ fieldId: `itinerary.days.${entityFieldToken(record(day), index)}.gallery`, owner: 'fact', kind: 'gallery', section: 'itinerary' })),
+      ...hotels.flatMap((hotel, index) => {
+        const token = entityFieldToken(record(hotel), index);
+        return [
+          { fieldId: `stays.hotels.${token}.hotelImage`, owner: 'fact', kind: 'image', section: 'hotels' },
+          { fieldId: `stays.hotels.${token}.roomImage`, owner: 'fact', kind: 'image', section: 'hotels' }
+        ];
+      })
     ];
   }, [contract, document]);
 
@@ -111,17 +52,17 @@ export default function FactsMediaPanel({ quotationId, lang, document, currentRe
     if (fieldId in draft) return draft[fieldId];
     if (fieldId.startsWith('assets.')) return ref(record(document.assets)[leaf]);
     if (fieldId.startsWith('itinerary.days.')) {
-      const day = Number(fieldId.split('.')[2]);
       const rawDays = record(document.itinerary).days;
       const days: unknown[] = Array.isArray(rawDays) ? rawDays : [];
-      const images = record(record(days[day]).images);
+      const day = resolveEntityIndex(days.map(record), fieldId.split('.')[2]);
+      const images = day === null ? {} : record(record(days[day]).images);
       const carousel = images.carousel;
       return Array.isArray(carousel) ? carousel.map(ref).filter((item): item is MediaRef => item !== null) : [];
     }
-    const index = Number(fieldId.split('.')[2]);
     const rawHotels = record(document.stays).hotels;
     const hotels: unknown[] = Array.isArray(rawHotels) ? rawHotels : [];
-    return ref(record(hotels[index])[leaf]);
+    const index = resolveEntityIndex(hotels.map(record), fieldId.split('.')[2]);
+    return index === null ? null : ref(record(hotels[index])[leaf]);
   };
 
   const save = () => startTransition(async () => {
@@ -179,7 +120,7 @@ export default function FactsMediaPanel({ quotationId, lang, document, currentRe
 
   const activeTarget = useMemo(() => {
     if (!selection) return {};
-    return getFieldMediaTarget(selection.fieldId, document);
+    return derivePickerTarget(document, selection.fieldId);
   }, [selection, document]);
 
   return (

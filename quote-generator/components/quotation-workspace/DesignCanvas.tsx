@@ -4,11 +4,12 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { DisplayDocument } from '../../display/runtimePageBuilder.ts';
 import { apiErrorMessage } from '../../lib/apiError.ts';
 import { buildContentMutation } from '../../lib/rules/designMutation.ts';
+import { derivePickerTarget, matchSlotDescriptor } from '../../lib/rules/mediaSlotAdapter.ts';
 import type { EditableBrochureContract } from './useQuotationWorkspace.ts';
 import BoundaryCanvas, { type InspectorDescriptor, type ResolvedInspectorSelection } from './BoundaryCanvas.tsx';
 import ContextualInspector from './ContextualInspector.tsx';
 import MediaDrawer from './MediaDrawer.tsx';
-import { matchEditableSource, resolveInspectorDescriptor, resolveEditableHandoff, type ResolvedHandoff } from './editableHandoff.ts';
+import { resolveInspectorDescriptor, resolveEditableHandoff, type ResolvedHandoff } from './editableHandoff.ts';
 import type { QuotationFacts } from './factsTypes.ts';
 import { useToast } from '../staff-workspace/ToastProvider.tsx';
 import { useDesignCanvasSave } from './useDesignCanvasSave.ts';
@@ -52,42 +53,6 @@ function readDocumentPath(document: Record<string, unknown>, source: string): un
   }
 
   return cursor;
-}
-
-function findMediaMatch(
-  mediaSlots: NonNullable<EditableBrochureContract['mediaSlotRegistry']>,
-  selected: InspectorDescriptor | null
-) {
-  if (!selected) return null;
-  for (const slot of mediaSlots) {
-    const template = slot.fieldTemplate;
-    const source = slot.source;
-    if (template === selected.fieldId) {
-      return { slot, fieldId: template };
-    }
-    const wildcardIndices = matchEditableSource(source, selected.source);
-    if (wildcardIndices && wildcardIndices.length > 0) {
-      const sourceParts = selected.source.slice(1).split('/');
-      const indexVal = sourceParts[wildcardIndices[0]];
-      const concreteFieldId = template.includes('*') ? template.replace('*', indexVal) : template;
-      return { slot, fieldId: concreteFieldId };
-    }
-  }
-  if (selected.fieldId.startsWith('hero.bannerImage')) {
-    return {
-      slot: {
-        fieldTemplate: 'hero.bannerImage',
-        source: '/hero/bannerImage',
-        editorRoute: 'hero',
-        pickerContext: 'library' as const,
-        minItems: 1,
-        maxItems: 1,
-        requiredForPublish: true,
-      },
-      fieldId: 'hero.bannerImage',
-    };
-  }
-  return null;
 }
 
 export default function DesignCanvas({
@@ -147,7 +112,7 @@ export default function DesignCanvas({
   const { saveSlot } = useMediaSlotSave({ quotationId, lang, currentRevision, onSaved });
 
   const mediaSlots = contract?.mediaSlotRegistry ?? [];
-  const activeMediaMatch = findMediaMatch(mediaSlots, selected);
+  const activeMediaMatch = selected ? matchSlotDescriptor(mediaSlots, selected.fieldId, selected.source) : null;
   const activeMediaValue = selected ? readDocumentPath(document, selected.source) : null;
 
   useEffect(() => {
@@ -320,36 +285,10 @@ export default function DesignCanvas({
 
   const offset = selectedTop ?? 0;
 
-  const activeInitialPrefix = useMemo(() => {
-    if (!activeMediaMatch) return undefined;
-    const fieldId = activeMediaMatch.fieldId;
-    if (fieldId.startsWith('itinerary.days.')) {
-      const dayIndex = Number(fieldId.split('.')[2]);
-      const day = facts?.trip_facts?.itinerary?.[dayIndex];
-      const destRef = day?.destination_ref;
-      return (
-        destRef?.mediaPrefix ||
-        destRef?.defaultMediaPrefix ||
-        (destRef?.slug ? `destination/${destRef.slug}` : undefined)
-      );
-    }
-    if (fieldId.startsWith('stays.hotels.')) {
-      const hotelIndex = Number(fieldId.split('.')[2]);
-      const hotel = facts?.service_facts?.hotels?.[hotelIndex];
-      const destRef = hotel?.destination_ref;
-      return (
-        destRef?.mediaPrefix ||
-        destRef?.defaultMediaPrefix ||
-        (destRef?.slug ? `destination/${destRef.slug}` : undefined)
-      );
-    }
-    if (fieldId === 'assets.hero' || fieldId === 'assets.itineraryDivider' || fieldId === 'assets.staysDivider' || fieldId === 'assets.hotelDivider') {
-      const firstDay = facts?.trip_facts?.itinerary?.[0];
-      const destRef = firstDay?.destination_ref;
-      return destRef?.mediaPrefix || destRef?.defaultMediaPrefix || undefined;
-    }
-    return undefined;
-  }, [activeMediaMatch, facts]);
+  const activeMediaTarget = useMemo(
+    () => (activeMediaMatch ? derivePickerTarget(document, activeMediaMatch.fieldId) : {}),
+    [activeMediaMatch, document]
+  );
 
   return (
     <>
@@ -394,14 +333,8 @@ export default function DesignCanvas({
           onConfirm={(r2Keys) => {
             void saveMedia(activeMediaMatch.fieldId, r2Keys.map((k) => withManualSource(k)));
           }}
-          initialPrefix={activeInitialPrefix}
-          context={
-            activeMediaMatch.slot.pickerContext === 'library'
-              ? undefined
-              : {
-                  kind: activeMediaMatch.slot.pickerContext as 'destination' | 'accommodation' | 'team',
-                }
-          }
+          initialPrefix={activeMediaTarget.initialPrefix}
+          context={activeMediaMatch.slot.pickerContext === 'library' ? undefined : activeMediaTarget.context}
           selectionMode={activeMediaMatch.slot.maxItems > 1 ? 'multiple' : 'single'}
           maxSelection={activeMediaMatch.slot.maxItems}
         />

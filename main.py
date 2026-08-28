@@ -43,7 +43,7 @@ from editable_brochure_contract import (
     editable_contract_payload,
     design_identity_field, is_design_copy_field,
     is_fact_media_field, media_slot_descriptor, expand_media_slot_field_ids,
-    is_gallery_field,
+    is_gallery_field, resolve_media_entity_index,
 )
 from quote_generation import (
     BRAND_PROFILES,
@@ -7460,12 +7460,22 @@ def _set_fact_media_field(document: dict[str, Any], field_id: str, value: Any) -
     if field_id in {"assets.hero", "assets.itineraryDivider", "assets.staysDivider", "assets.hotelDivider"}:
         document.setdefault("assets", {})[field_id.rsplit(".", 1)[-1]] = value or {"status": "empty"}
     elif field_id.startswith("itinerary.days."):
-        index = int(field_id.split(".")[2]); days = document.setdefault("itinerary", {}).setdefault("days", [])
-        if index >= len(days): raise HTTPException(status_code=422, detail={"message": "Itinerary image no longer matches a day.", "invalidKeys": [field_id]})
+        # `field_id`'s day segment is a stable id (v4 contract) or a numeric
+        # index (legacy v3); resolved id-first so the target survives an
+        # itinerary reorder that happened after the client read this fieldId.
+        token = field_id.split(".")[2]
+        index = resolve_media_entity_index("itinerary", "days", token, document)
+        if index is None:
+            raise HTTPException(status_code=422, detail={"message": "Itinerary image no longer matches a day.", "invalidKeys": [field_id]})
+        days = document.setdefault("itinerary", {}).setdefault("days", [])
         days[index].setdefault("images", {})["carousel"] = value or []
     elif field_id.startswith("stays.hotels."):
-        parts = field_id.split("."); index, key = int(parts[2]), parts[3]; hotels = document.setdefault("stays", {}).setdefault("hotels", [])
-        if index >= len(hotels): raise HTTPException(status_code=422, detail={"message": "Stay image no longer matches a hotel.", "invalidKeys": [field_id]})
+        parts = field_id.split(".")
+        token, key = parts[2], parts[3]
+        index = resolve_media_entity_index("stays", "hotels", token, document)
+        if index is None:
+            raise HTTPException(status_code=422, detail={"message": "Stay image no longer matches a hotel.", "invalidKeys": [field_id]})
+        hotels = document.setdefault("stays", {}).setdefault("hotels", [])
         hotels[index][key] = value or {"status": "empty"}
         if key == "hotelImage":
             hotel_source_fact_id = str(
@@ -7478,22 +7488,24 @@ def _set_fact_media_field(document: dict[str, Any], field_id: str, value: Any) -
                     seg["hotelImage"] = value or {"status": "empty"}
     elif field_id == "designer.image":
         document.setdefault("designer", {})["image"] = value or {"status": "empty"}
-    elif field_id.startswith("assets.themeOrnaments."):
-        document.setdefault("assets", {}).setdefault("themeOrnaments", {})[field_id.rsplit(".", 1)[-1]] = value or {"status": "empty"}
 
 
 def _get_fact_media_field(document: dict[str, Any], field_id: str) -> Any:
-    if field_id == "brand.logo": return (document.get("brand") or {}).get("logo")
-    if field_id.startswith("assets.themeOrnaments."): return ((document.get("assets") or {}).get("themeOrnaments") or {}).get(field_id.rsplit(".", 1)[-1])
+    # See _set_fact_media_field: `brand.logo` / `assets.themeOrnaments.*`
+    # branches were removed as dead code (quyết định #4) — neither is ever
+    # produced by expand_media_slot_field_ids, which is the only caller path
+    # that reaches this function.
     if field_id.startswith("assets."): return (document.get("assets") or {}).get(field_id.rsplit(".", 1)[-1])
     if field_id == "designer.image": return (document.get("designer") or {}).get("image")
     parts = field_id.split(".")
     if field_id.startswith("itinerary.days.") and len(parts) >= 4:
-        days = ((document.get("itinerary") or {}).get("days") or []); index = int(parts[2])
-        return ((days[index].get("images") or {}).get("carousel")) if index < len(days) else None
+        index = resolve_media_entity_index("itinerary", "days", parts[2], document)
+        days = ((document.get("itinerary") or {}).get("days") or [])
+        return ((days[index].get("images") or {}).get("carousel")) if index is not None else None
     if field_id.startswith("stays.hotels.") and len(parts) >= 4:
-        hotels = ((document.get("stays") or {}).get("hotels") or []); index = int(parts[2])
-        return hotels[index].get(parts[3]) if index < len(hotels) else None
+        index = resolve_media_entity_index("stays", "hotels", parts[2], document)
+        hotels = ((document.get("stays") or {}).get("hotels") or [])
+        return hotels[index].get(parts[3]) if index is not None else None
     return None
 
 

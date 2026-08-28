@@ -132,11 +132,14 @@ class QuoteDocumentBrand(QuoteBaseModel):
 
 
 class QuoteDocumentAssets(QuoteBaseModel):
+    # No `themeOrnaments` field (Plan 16.1 quyết định #4): no render path —
+    # V2 or legacy — ever reads it. Ornaments come from theme tokens
+    # (`display/themes/brochureTheme.ts` ornamentRegistry,
+    # `config/runtimeThemeTokens.ts` --color-ornament), not a document field.
     hero: QuoteAssetRef = Field(default_factory=QuoteAssetRef)
     itineraryDivider: QuoteAssetRef = Field(default_factory=QuoteAssetRef)
     staysDivider: QuoteAssetRef = Field(default_factory=QuoteAssetRef)
     hotelDivider: QuoteAssetRef = Field(default_factory=QuoteAssetRef)
-    themeOrnaments: Dict[str, QuoteAssetRef] = Field(default_factory=dict)
 
 
 class QuoteDocumentTraveler(QuoteBaseModel):

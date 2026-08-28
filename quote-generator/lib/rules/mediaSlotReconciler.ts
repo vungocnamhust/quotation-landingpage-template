@@ -48,3 +48,31 @@ export function withManualSource(r2Key: string, altText = ''): MediaRef {
 export function normalizeSelection(r2Keys: readonly string[]): MediaRef[] {
   return r2Keys.map((r2Key) => withManualSource(r2Key));
 }
+
+/**
+ * Resolve a day/hotel media fieldId segment (`token`) to its current array
+ * index — mirrors `resolve_media_entity_index` in
+ * editable_brochure_contract.py (Plan 16.1 M3.3): id first
+ * (`sourceFactId`/`id`), numeric index as the legacy fallback. Keeps a
+ * fieldId targeting the right entity even after the list is reordered.
+ */
+export function resolveEntityIndex(items: readonly Record<string, unknown>[], token: string): number | null {
+  const byId = items.findIndex((item) => {
+    const candidate = String(item.sourceFactId ?? item.id ?? '');
+    return candidate !== '' && candidate === token;
+  });
+  if (byId >= 0) return byId;
+  if (/^\d+$/.test(token)) {
+    const numeric = Number(token);
+    return numeric >= 0 && numeric < items.length ? numeric : null;
+  }
+  return null;
+}
+
+/** The stable id token a new fieldId should embed for this entity, falling
+ * back to its current index when no stable id is available yet (e.g. a
+ * pre-create draft). */
+export function entityFieldToken(item: Record<string, unknown> | undefined, fallbackIndex: number): string {
+  const id = item ? String(item.sourceFactId ?? item.id ?? '') : '';
+  return id || String(fallbackIndex);
+}

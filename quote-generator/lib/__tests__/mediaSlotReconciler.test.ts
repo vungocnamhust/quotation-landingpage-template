@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeSelection, validateCardinality, withManualSource } from '../rules/mediaSlotReconciler.ts';
+import { entityFieldToken, normalizeSelection, resolveEntityIndex, validateCardinality, withManualSource } from '../rules/mediaSlotReconciler.ts';
 
 describe('mediaSlotReconciler', () => {
   it('rejects a gallery selection below minItems', () => {
@@ -30,5 +30,25 @@ describe('mediaSlotReconciler', () => {
 
   it('tags a manual selection with source and ready status', () => {
     assert.deepEqual(withManualSource('a.jpg', 'Alt'), { r2Key: 'a.jpg', status: 'ready', source: 'manual', altText: 'Alt' });
+  });
+
+  it('resolveEntityIndex finds an entity by stable id regardless of position', () => {
+    const items = [{ sourceFactId: 'day_a' }, { sourceFactId: 'day_b' }];
+    assert.equal(resolveEntityIndex(items, 'day_b'), 1);
+  });
+
+  it('resolveEntityIndex falls back to numeric index for a legacy token', () => {
+    const items = [{ sourceFactId: 'day_a' }, { sourceFactId: 'day_b' }];
+    assert.equal(resolveEntityIndex(items, '1'), 1);
+  });
+
+  it('resolveEntityIndex returns null for an id that no longer exists', () => {
+    assert.equal(resolveEntityIndex([{ sourceFactId: 'day_a' }], 'day_z'), null);
+  });
+
+  it('entityFieldToken prefers the stable id and falls back to the index', () => {
+    assert.equal(entityFieldToken({ sourceFactId: 'day_a' }, 3), 'day_a');
+    assert.equal(entityFieldToken({}, 3), '3');
+    assert.equal(entityFieldToken(undefined, 3), '3');
   });
 });

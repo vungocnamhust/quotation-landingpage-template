@@ -339,6 +339,25 @@ def resolve_id_keyed_source(source: str, document: dict[str, Any]) -> tuple[str,
     return source, scope
 
 
+def resolve_media_entity_index(root: str, child: str, token: str, document: dict[str, Any]) -> int | None:
+    """Resolve a day/hotel media fieldId segment (`token`) to its current
+    array index in `document`.
+
+    `token` may be a stable entity id (`sourceFactId`/`id`, the v4 id-keyed
+    contract — Plan 16.1 M3.3) or a plain numeric index (the legacy v3
+    contract); id is tried first, numeric index is the fallback. This is the
+    same id-first resolution `resolve_id_keyed_source` already uses for
+    content sources, reused here so a media fieldId keeps addressing the
+    right day/hotel even after the itinerary or stay list is reordered.
+    Returns None when the entity no longer exists.
+    """
+    spec = _ID_KEYED_ENTITY_SOURCES.get((root, child))
+    if spec is None:
+        return None
+    items = (document.get(root) or {}).get(child) or []
+    return _resolve_entity_index(items, token, id_keys=spec["id_keys"], index_key=spec["index_key"])
+
+
 def expand_media_slot_field_ids(document: dict[str, Any]) -> tuple[str, ...]:
     """Expand only the registry's declared wildcard slots for this document."""
     fields: list[str] = []

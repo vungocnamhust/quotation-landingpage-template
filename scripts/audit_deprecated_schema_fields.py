@@ -8,6 +8,11 @@ Deprecated fields scanned:
 - meta.themeOrnaments
 - itinerary.days[*].labelHighlights
 - itinerary.days[*].labelNotes
+- assets.themeOrnaments (Plan 16.1 quyết định #4 — schema field removed; a
+  document still carrying this is a stale snapshot, not a live write)
+- brand.logo (Plan 16.1 quyết định #4 — kept as a legacy-compat read path
+  only; tracked here to watch its usage decline toward zero, not to flag it
+  as broken)
 """
 from __future__ import annotations
 
@@ -45,6 +50,8 @@ DEPRECATED_FIELD_CHECKS = (
             if day.get("labelNotes") == ""
         ),
     ),
+    ("assets.themeOrnaments", lambda doc: bool((doc.get("assets") or {}).get("themeOrnaments"))),
+    ("brand.logo", lambda doc: bool(((doc.get("brand") or {}).get("logo") or {}).get("r2Key"))),
 )
 
 
