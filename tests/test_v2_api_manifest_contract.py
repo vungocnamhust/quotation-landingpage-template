@@ -116,10 +116,22 @@ EXPECTED_V2_OPERATIONS = {
 
 
 
+def _extract_all_routes(routes):
+    out = []
+    for r in routes:
+        if hasattr(r, "routes"):
+            out.extend(_extract_all_routes(r.routes))
+        elif hasattr(r, "original_router") and hasattr(r.original_router, "routes"):
+            out.extend(_extract_all_routes(r.original_router.routes))
+        else:
+            out.append(r)
+    return out
+
+
 def test_v2_route_manifest_is_exact() -> None:
     actual = {
         (route.path, method)
-        for route in main.app.routes
+        for route in _extract_all_routes(main.app.routes)
         for method in getattr(route, "methods", set())
         if method in {"GET", "POST", "PUT", "PATCH", "DELETE"}
         and (route.path.startswith("/api/v2/") or route.path.startswith("/api/internal/v2/"))

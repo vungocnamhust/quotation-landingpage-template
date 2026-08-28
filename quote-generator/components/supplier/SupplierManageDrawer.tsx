@@ -163,11 +163,8 @@ function SelectField({
   );
 }
 
-export function SupplierManageDrawer({ mode, editingSupplier, onClose, onSaved, onMutate }: Props) {
-  const { toast } = useToast();
-  const [draft, setDraft] = useState<SupplierInput>(editingSupplier ? toDraft(editingSupplier) : blankDraft());
-  const [pending, setPending] = useState(false);
-  const [message, setMessage] = useState("");
+export function SupplierManageDrawer(props: Props) {
+  const { mode, onClose, editingSupplier } = props;
 
   useEffect(() => {
     if (!mode) return;
@@ -179,6 +176,27 @@ export function SupplierManageDrawer({ mode, editingSupplier, onClose, onSaved, 
   }, [mode, onClose]);
 
   if (!mode) return null;
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={editingSupplier ? "Edit Supplier" : "Add Supplier"}
+      className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-xs"
+    >
+      <SupplierManageDrawerContent
+        key={editingSupplier ? `edit:${editingSupplier.id}` : `create:${mode}`}
+        {...props}
+      />
+    </div>
+  );
+}
+
+function SupplierManageDrawerContent({ editingSupplier, onClose, onSaved, onMutate }: Props) {
+  const { toast } = useToast();
+  const [draft, setDraft] = useState<SupplierInput>(editingSupplier ? toDraft(editingSupplier) : blankDraft());
+  const [pending, setPending] = useState(false);
+  const [message, setMessage] = useState("");
 
   const setDraftField = <K extends keyof SupplierInput>(key: K, next: SupplierInput[K]) =>
     setDraft((current) => ({ ...current, [key]: next }));
@@ -256,14 +274,8 @@ export function SupplierManageDrawer({ mode, editingSupplier, onClose, onSaved, 
   };
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={editingSupplier ? "Edit Supplier" : "Add Supplier"}
-      className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-xs"
-    >
-      <div className="h-full w-full max-w-xl overflow-y-auto border-l border-[var(--color-border-strong)] bg-[var(--color-surface)] p-5 shadow-[var(--elevation-card)] sm:p-6">
-        <div className="flex items-start justify-between gap-4">
+    <div className="h-full w-full max-w-xl overflow-y-auto border-l border-[var(--color-border-strong)] bg-[var(--color-surface)] p-5 shadow-[var(--elevation-card)] sm:p-6">
+      <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className={cn(getTypographyClassName("cardTitle"), "text-[var(--color-on-surface)]")}>
               {editingSupplier ? "Edit Supplier" : "Add Supplier"}
@@ -576,8 +588,7 @@ export function SupplierManageDrawer({ mode, editingSupplier, onClose, onSaved, 
           </p>
         ) : null}
       </div>
-    </div>
-  );
+    );
 }
 
 export default SupplierManageDrawer;
