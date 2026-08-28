@@ -23,6 +23,19 @@ export type CustomerFacts = {
   nationality?: string | null;
 };
 
+export type WorkflowSummary = {
+  facts: { ready: boolean };
+  content: { ready: boolean };
+  design: { ready: boolean };
+  review: { ready: boolean };
+};
+
+export type CommercialSummary = {
+  label: string | null;
+  currency: string | null;
+  groupTotalAmountMinor: number | null;
+};
+
 export type QuotationItem = {
   id: string;
   title: string | null;
@@ -34,6 +47,9 @@ export type QuotationItem = {
   updatedAt: string;
   tripFacts?: TripFacts;
   customerFacts?: CustomerFacts;
+  workflow?: WorkflowSummary;
+  commercial?: CommercialSummary;
+  workflowLane?: "facts" | "content" | "review" | "published";
 };
 
 function StatusBadge({ status }: { status: string }) {

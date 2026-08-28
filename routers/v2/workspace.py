@@ -1,7 +1,9 @@
 """Staff workspace routes."""
 from __future__ import annotations
 
-from fastapi import APIRouter
+from typing import Annotated, Literal
+
+from fastapi import APIRouter, Query
 
 from api import runtime
 from api.dependencies import EditorPrincipalDep, OwnedV2QuotationDep, get_active_travel_designer
@@ -20,14 +22,21 @@ async def get_workspace_me(principal: EditorPrincipalDep) -> dict:
 @router.get("/quotations")
 async def list_workspace_quotations(
     principal: EditorPrincipalDep,
-    status: str | None = None,
-    q: str = "",
-    cursor: str | None = None,
-    limit: int = 20,
+    status: Annotated[str | None, Query()] = None,
+    q: Annotated[str, Query()] = "",
+    cursor: Annotated[str | None, Query()] = None,
+    limit: Annotated[int, Query(ge=1, le=100)] = 20,
+    workflow_lane: Annotated[Literal["facts", "content", "review", "published"] | None, Query(alias="workflowLane")] = None,
 ) -> dict:
     del principal
     return await list_workspace_quotations_service(
-        runtime.get_session_factory(), status=status, query=q, cursor=cursor, limit=limit,
+        runtime.get_session_factory(),
+        status=status,
+        query=q,
+        cursor=cursor,
+        limit=limit,
+        workflow_lane=workflow_lane,
+        workflow_loader=runtime.load_quotation_workflow,
     )
 
 

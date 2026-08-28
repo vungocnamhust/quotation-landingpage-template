@@ -67,6 +67,37 @@ class WorkspaceOwnershipTests(unittest.TestCase):
         # Unassigned quote is accessible to authenticated staff
         self.assertEqual(self.client.get("/api/v2/workspace/quotations/quo_unassigned/overview", headers=headers).status_code, 200)
 
+    def test_list_exposes_fail_closed_workflow_lane_and_keeps_cursor_contract(self):
+        headers = {"X-DMC-Email": "first@example.com"}
+        first = self.client.get("/api/v2/workspace/quotations?workflowLane=facts&limit=1", headers=headers)
+        self.assertEqual(first.status_code, 200)
+        payload = first.json()
+        self.assertEqual(len(payload["items"]), 1)
+        item = payload["items"][0]
+        self.assertEqual(item["workflowLane"], "facts")
+        self.assertEqual(item["workflow"], {
+            "facts": {"ready": False},
+            "content": {"ready": False},
+            "design": {"ready": False},
+            "review": {"ready": False},
+        })
+        self.assertEqual(item["commercial"], {
+            "label": None,
+            "currency": None,
+            "groupTotalAmountMinor": None,
+        })
+        self.assertIsNotNone(payload["nextCursor"])
+
+        second = self.client.get(
+            f"/api/v2/workspace/quotations?workflowLane=facts&limit=1&cursor={payload['nextCursor']}",
+            headers=headers,
+        )
+        self.assertEqual(second.status_code, 200)
+        self.assertNotEqual(second.json()["items"][0]["id"], item["id"])
+        legacy = self.client.get("/api/v2/workspace/quotations?status=draft", headers=headers)
+        self.assertEqual(legacy.status_code, 200)
+        self.assertTrue(all(row["status"] == "draft" for row in legacy.json()["items"]))
+
     def test_creator_and_assigned_designer_both_have_access(self):
         # First designer is the creator of quo_shared
         headers_first = {"X-DMC-Email": "first@example.com"}
