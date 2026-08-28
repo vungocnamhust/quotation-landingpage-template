@@ -18,8 +18,9 @@ from schemas.v2.quote_request import (
     RequestQuotationVersionsResponseSchema,
     QuotationVersionSummarySchema,
     QuoteRequestUpdateSchema,
+    QuoteRequestStatusUpdateSchema,
 )
-from services.quote_request_service import QuoteRequestService
+from services.quote_request_service import QuoteRequestService, RequestRevisionConflictError
 
 router = APIRouter(
     prefix="/api/v2/workspace/requests",
@@ -73,11 +74,37 @@ async def get_quote_request(
     request_id: str,
     session: DbSessionDep,
 ) -> QuoteRequestResponseSchema:
+    if payload.status is not None:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Use PATCH /{request_id}/status with baseRevision for workflow changes.")
     repo = QuoteRequestRepository(session)
     req = await repo.get_by_id(request_id)
     if not req:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"QuoteRequest {request_id} not found.")
     return QuoteRequestResponseSchema.model_validate(req)
+
+
+@router.patch("/{request_id}/status", response_model=QuoteRequestResponseSchema)
+async def update_quote_request_status(
+    request_id: str,
+    payload: QuoteRequestStatusUpdateSchema,
+    session: DbSessionDep,
+    principal: EditorPrincipalDep,
+) -> QuoteRequestResponseSchema:
+    service = QuoteRequestService(session)
+    try:
+        req = await service.transition_request_status(
+            request_id, target_status=payload.status, base_revision=payload.baseRevision,
+            actor_email=principal.email,
+        )
+        await session.commit()
+        await session.refresh(req)
+        return QuoteRequestResponseSchema.model_validate(req)
+    except KeyError as err:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(err)) from err
+    except RequestRevisionConflictError as err:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail={"message": str(err), "currentRevision": err.current_revision}) from err
+    except ValueError as err:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(err)) from err
 
 
 @router.put("/{request_id}", response_model=QuoteRequestResponseSchema)

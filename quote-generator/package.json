@@ -17,6 +17,7 @@
     "lint:v2-runtime-imports": "node scripts/lint-v2-runtime-imports.mjs"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
     "@tiptap/extension-highlight": "^3.30.0",
     "@tiptap/pm": "^3.30.0",
     "@tiptap/react": "^3.30.0",

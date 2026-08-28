@@ -409,6 +409,8 @@ class TestQuoteRequestService(unittest.IsolatedAsyncioTestCase):
             id="req_preservation_001",
             role="traveller",
             customer_name="Alice Smith",
+            status="under_review",
+            current_revision=1,
             email="alice@example.com",
             destinations=["Hanoi"],
             start_date="2026-11-01",
@@ -418,6 +420,8 @@ class TestQuoteRequestService(unittest.IsolatedAsyncioTestCase):
             payload_json={"brand_id": "selvara", "travel_designer_id": "td_assigned"},
         )
         service.repo.get_by_id = AsyncMock(return_value=req)
+        service.repo.get_by_id_for_update = AsyncMock(return_value=req)
+        service.repo.append_revision = AsyncMock()
         service.repo.update_status = AsyncMock()
 
         from quote_document import CreateQuoteRequestV1

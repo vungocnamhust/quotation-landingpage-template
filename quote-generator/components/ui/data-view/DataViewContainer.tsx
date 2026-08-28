@@ -7,6 +7,7 @@ import { cn } from "../../../utils/cn.ts";
 import { DataViewToggle, type ViewModeOption } from "./DataViewToggle.tsx";
 import { DataGrid } from "./DataGrid.tsx";
 import { DataTable, type ColumnDef } from "./DataTable.tsx";
+import { DataKanban, type KanbanConfig } from "./DataKanban.tsx";
 
 export interface FilterOption {
   label: string;
@@ -35,6 +36,7 @@ export interface DataViewContainerProps<T> {
   // Renderers
   gridItemRenderer: (item: T, index: number) => React.ReactNode;
   tableColumns: ColumnDef<T>[];
+  kanbanConfig?: KanbanConfig<T, string>;
 
   // State Overrides
   isLoading?: boolean;
@@ -65,6 +67,7 @@ export function DataViewContainer<T>({
   onViewModeChange: externalOnViewModeChange,
   gridItemRenderer,
   tableColumns,
+  kanbanConfig,
   isLoading = false,
   error,
   emptyTitle = "No items found",
@@ -78,7 +81,8 @@ export function DataViewContainer<T>({
 }: DataViewContainerProps<T>) {
   const [internalViewMode, setInternalViewMode] = useState<ViewModeOption>(defaultViewMode);
 
-  const currentViewMode = externalViewMode ?? internalViewMode;
+  const requestedViewMode = externalViewMode ?? internalViewMode;
+  const currentViewMode = requestedViewMode === "kanban" && !kanbanConfig ? "grid" : requestedViewMode;
   const handleViewModeChange = (mode: ViewModeOption) => {
     if (externalOnViewModeChange) {
       externalOnViewModeChange(mode);
@@ -144,6 +148,7 @@ export function DataViewContainer<T>({
           <DataViewToggle
             viewMode={currentViewMode}
             onViewModeChange={handleViewModeChange}
+            kanbanAvailable={Boolean(kanbanConfig)}
           />
         </div>
       </div>
@@ -188,7 +193,7 @@ export function DataViewContainer<T>({
             {emptyDescription}
           </p>
         </div>
-      ) : currentViewMode === "grid" ? (
+      ) : currentViewMode === "kanban" && kanbanConfig ? <DataKanban items={items} keyExtractor={keyExtractor} kanbanConfig={kanbanConfig} /> : currentViewMode === "grid" ? (
         <DataGrid
           items={items}
           keyExtractor={keyExtractor}

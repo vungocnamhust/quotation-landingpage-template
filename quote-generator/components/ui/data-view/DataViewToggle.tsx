@@ -1,21 +1,23 @@
 "use client";
 
 import React from "react";
-import { LayoutGrid, Table } from "lucide-react";
+import { Kanban, LayoutGrid, Table } from "lucide-react";
 import { getTypographyClassName } from "../../../config/typography.ts";
 import { cn } from "../../../utils/cn.ts";
 
-export type ViewModeOption = "grid" | "table";
+export type ViewModeOption = "grid" | "table" | "kanban";
 
 export interface DataViewToggleProps {
   viewMode: ViewModeOption;
   onViewModeChange: (mode: ViewModeOption) => void;
+  kanbanAvailable?: boolean;
   className?: string;
 }
 
 export const DataViewToggle = React.memo(function DataViewToggle({
   viewMode,
   onViewModeChange,
+  kanbanAvailable = false,
   className,
 }: DataViewToggleProps) {
   return (
@@ -43,6 +45,7 @@ export const DataViewToggle = React.memo(function DataViewToggle({
         <LayoutGrid size={15} aria-hidden="true" />
         <span className="hidden sm:inline">Grid</span>
       </button>
+      {kanbanAvailable ? <button type="button" aria-label="Kanban view" aria-pressed={viewMode === "kanban"} onClick={() => onViewModeChange("kanban")} className={cn(getTypographyClassName("caption"), "inline-flex items-center gap-1.5 rounded-[calc(var(--radius-button)-2px)] px-2.5 py-1.5 transition-all", viewMode === "kanban" ? "bg-[var(--color-accent)] text-white shadow-2xs" : "text-[var(--color-muted)] hover:text-[var(--color-on-surface)]")}><Kanban size={15} aria-hidden="true" /><span className="hidden sm:inline">Kanban</span></button> : null}
 
       <button
         type="button"

@@ -97,6 +97,7 @@ class QuoteRequestRevision(Base):
     )
     revision: Mapped[int] = mapped_column(Integer, nullable=False)
     role: Mapped[str] = mapped_column(String(32), nullable=False)
+    status: Mapped[str | None] = mapped_column(String(32), nullable=True)
 
     customer_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     email: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -132,4 +133,3 @@ class QuoteRequestRevision(Base):
     )
 
     request: Mapped[QuoteRequest] = relationship("QuoteRequest", back_populates="revisions")
-

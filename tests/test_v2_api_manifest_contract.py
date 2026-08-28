@@ -107,6 +107,7 @@ EXPECTED_V2_OPERATIONS = {
     ("/api/v2/workspace/quotations", "GET"), ("/api/v2/workspace/quotations/{quotation_id}/overview", "GET"),
     ("/api/v2/workspace/requests", "GET"), ("/api/v2/workspace/requests", "POST"),
     ("/api/v2/workspace/requests/{request_id}", "GET"), ("/api/v2/workspace/requests/{request_id}", "PATCH"), ("/api/v2/workspace/requests/{request_id}", "PUT"),
+    ("/api/v2/workspace/requests/{request_id}/status", "PATCH"),
     ("/api/v2/workspace/requests/{request_id}/revisions", "GET"),
     ("/api/v2/workspace/requests/{request_id}/revisions/{revision}", "GET"),
     ("/api/v2/workspace/requests/{request_id}/revisions/{revision}/quotation-versions", "GET"),

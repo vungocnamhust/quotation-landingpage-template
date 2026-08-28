@@ -19,6 +19,20 @@ from schemas.v2.quote_request import (
 from services.outbox_service import OutboxService
 
 
+REQUEST_STATUS_TRANSITIONS: dict[str, frozenset[str]] = {
+    "new": frozenset({"under_review", "archived"}),
+    "under_review": frozenset({"quotation_created", "archived"}),
+    "quotation_created": frozenset({"archived"}),
+    "archived": frozenset({"under_review"}),
+}
+
+
+class RequestRevisionConflictError(Exception):
+    def __init__(self, current_revision: int) -> None:
+        self.current_revision = current_revision
+        super().__init__("Request changed in another session.")
+
+
 MONTH_MAP = {
     "jan": 1, "january": 1,
     "feb": 2, "february": 2,
@@ -546,6 +560,55 @@ class QuoteRequestService:
 
         return req, rev
 
+    async def transition_request_status(
+        self,
+        request_id: str,
+        *,
+        target_status: str,
+        base_revision: int,
+        actor_email: str | None,
+        updated_by_profile_id: str | None = None,
+        linked_quotation_id: str | None = None,
+        allow_system_conversion: bool = False,
+    ) -> QuoteRequest:
+        req = await self.repo.get_by_id_for_update(request_id)
+        if req is None:
+            raise KeyError(f"QuoteRequest {request_id} not found.")
+        if req.current_revision != base_revision:
+            raise RequestRevisionConflictError(req.current_revision)
+        allowed = target_status in REQUEST_STATUS_TRANSITIONS.get(req.status, frozenset())
+        if allow_system_conversion and req.status == "new" and target_status == "quotation_created":
+            allowed = True
+        if not allowed:
+            raise ValueError(f"Cannot move request from '{req.status}' to '{target_status}'.")
+
+        previous_status = req.status
+        req.status = target_status
+        req.current_revision += 1
+        req.updated_by_profile_id = updated_by_profile_id
+        if linked_quotation_id is not None:
+            req.linked_quotation_id = linked_quotation_id
+        await self.repo.create_revision(
+            request_id=req.id, revision=req.current_revision, role=req.role, status=req.status,
+            customer_name=req.customer_name, email=req.email, phone=req.phone,
+            company_name=req.company_name, market=req.market, preferred_contact=req.preferred_contact,
+            destinations=req.destinations, start_date=req.start_date, end_date=req.end_date,
+            raw_dates_text=req.raw_dates_text, adults=req.adults, children=req.children,
+            kid_ages=req.kid_ages, children_details=req.children_details,
+            travel_style=req.travel_style, special_requirements=req.special_requirements,
+            payload_json=req.payload_json,
+            change_summary=f"Workflow status changed from {previous_status} to {target_status}",
+            change_source="workflow_status_change", created_by_profile_id=updated_by_profile_id,
+        )
+        await self.session.flush()
+        await OutboxService(self.session).emit_event(
+            event_type="quote_request.status_changed", aggregate_type="quote_request", aggregate_id=req.id,
+            brand_id=str(req.payload_json.get("brand_id") or "selvara"), actor_email=actor_email,
+            payload={"previous_status": previous_status, "status": target_status,
+                     "revision": req.current_revision, "linked_quotation_id": req.linked_quotation_id},
+        )
+        return req
+
     async def get_request_revisions(self, request_id: str) -> list[QuoteRequestRevision]:
         req = await self.repo.get_by_id(request_id)
         if not req:
@@ -747,11 +810,16 @@ class QuoteRequestService:
             actions=QuotationChangePlanService.build_initial(canonical.model_dump(mode="json")),
         )
 
-        # Update QuoteRequest status to quotation_created and link quotation_id
-        await self.repo.update_status(
-            request_id=req.id,
-            status="quotation_created",
+        # Conversion is a workflow transition too; it must be revisioned and
+        # emitted through the same transactional outbox path as Kanban moves.
+        await self.transition_request_status(
+            req.id,
+            target_status="quotation_created",
+            base_revision=req.current_revision,
+            actor_email=req.email,
+            updated_by_profile_id=effective_designer,
             linked_quotation_id=quotation.id,
+            allow_system_conversion=True,
         )
 
         outbox = OutboxService(self.session)

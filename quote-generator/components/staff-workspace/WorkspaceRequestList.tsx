@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useState, useTransition, useMemo } from "react";
+import { useState, useTransition, useMemo, useCallback } from "react";
 import useSWR from "swr";
 import { Search, Inbox, LayoutGrid, List } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography.ts";
@@ -9,6 +9,10 @@ import { apiErrorMessage, quotationFetch } from "../../lib/apiError.ts";
 import { cn } from "../../utils/cn.ts";
 import { WorkspaceRequestCard } from "./WorkspaceRequestCard.tsx";
 import { WorkspaceRequestTable } from "./WorkspaceRequestTable.tsx";
+import { DataKanban } from "../ui/data-view/DataKanban.tsx";
+import { WorkspaceRequestKanbanCard } from "./WorkspaceRequestKanbanCard.tsx";
+import { REQUEST_KANBAN_COLUMNS, canTransitionRequestStatus, type RequestStatus } from "../../lib/requestWorkflow.ts";
+import { useToast } from "./ToastProvider.tsx";
 import type { QuoteRequestItem } from "../quotation-workspace/factsTypes.ts";
 
 const API_BASE = process.env.NEXT_PUBLIC_QUOTATION_API_URL ?? "";
@@ -28,7 +32,11 @@ export default function WorkspaceRequestList() {
   const [query, setQuery] = useState(searchParams.get("q") ?? "");
   const [role, setRole] = useState(searchParams.get("role") ?? "");
   const [status, setStatus] = useState(searchParams.get("status") ?? "");
-  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "table" | "kanban">(
+    () => (searchParams.get("view") as "grid" | "table" | "kanban") || "grid"
+  );
+  const [pendingIds, setPendingIds] = useState<Set<string>>(() => new Set());
+  const { toast } = useToast();
   const [, startTransition] = useTransition();
 
   const params = new URLSearchParams();
@@ -40,6 +48,35 @@ export default function WorkspaceRequestList() {
     `${API_BASE}/api/v2/workspace/requests?${params}`,
     fetcher
   );
+  const laneUrl = useCallback((lane: RequestStatus) => `${API_BASE}/api/v2/workspace/requests?${new URLSearchParams({ q: query.trim(), role, status: lane, limit: "24" })}`, [query, role]);
+  const newLane = useSWR<Response>(viewMode === "kanban" ? laneUrl("new") : null, fetcher);
+  const reviewLane = useSWR<Response>(viewMode === "kanban" ? laneUrl("under_review") : null, fetcher);
+  const quotationLane = useSWR<Response>(viewMode === "kanban" ? laneUrl("quotation_created") : null, fetcher);
+  const archivedLane = useSWR<Response>(viewMode === "kanban" ? laneUrl("archived") : null, fetcher);
+  const lanes = useMemo<Record<RequestStatus, typeof newLane>>(
+    () => ({
+      new: newLane,
+      under_review: reviewLane,
+      quotation_created: quotationLane,
+      archived: archivedLane,
+    }),
+    [newLane, reviewLane, quotationLane, archivedLane]
+  );
+  const kanbanItems = useMemo(
+    () => REQUEST_KANBAN_COLUMNS.flatMap((column) => lanes[column.id].data?.items ?? []),
+    [lanes]
+  );
+  const moveRequest = useCallback(async (item: QuoteRequestItem, from: RequestStatus, target: RequestStatus) => {
+    if (pendingIds.has(item.id)) return;
+    const source = lanes[from]; const destination = lanes[target];
+    const beforeSource = source.data; const beforeDestination = destination.data;
+    setPendingIds(previous => new Set(previous).add(item.id));
+    await source.mutate(current => current ? { ...current, items: current.items.filter(candidate => candidate.id !== item.id), total: Math.max(0, current.total - 1) } : current, false);
+    await destination.mutate(current => current ? { ...current, items: [{ ...item, status: target, current_revision: (item.current_revision ?? 1) + 1 }, ...current.items], total: current.total + 1 } : current, false);
+    try { const updated = await quotationFetch<QuoteRequestItem>(`${API_BASE}/api/v2/workspace/requests/${item.id}/status`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: target, baseRevision: item.current_revision ?? 1 }) }, "Request status could not be saved."); await destination.mutate(current => current ? { ...current, items: current.items.map(candidate => candidate.id === item.id ? updated : candidate) } : current, false); await Promise.all([source.mutate(), destination.mutate()]); }
+    catch (err) { await source.mutate(beforeSource, false); await destination.mutate(beforeDestination, false); toast(apiErrorMessage(err), "error", { action: err instanceof Error && "status" in err ? { label: "Reload", onClick: () => void Promise.all([source.mutate(), destination.mutate()]) } : undefined }); }
+    finally { setPendingIds(previous => { const next = new Set(previous); next.delete(item.id); return next; }); }
+  }, [lanes, pendingIds, toast]);
 
   const applyFilter = (next: Partial<{ q: string; role: string; status: string }>) =>
     startTransition(() => {
@@ -139,6 +176,7 @@ export default function WorkspaceRequestList() {
             <LayoutGrid size={15} aria-hidden="true" />
             <span className="hidden sm:inline">Grid</span>
           </button>
+          <button type="button" onClick={() => setViewMode("kanban")} className={cn(getTypographyClassName("caption"), "flex items-center gap-1.5 rounded-[calc(var(--radius-button)-2px)] px-3 py-1.5 transition-all cursor-pointer", viewMode === "kanban" ? "bg-[var(--color-accent-wash)] text-[var(--color-accent)] shadow-2xs" : "text-[var(--color-muted)] hover:text-[var(--color-on-surface)]")} aria-label="Kanban View">Kanban</button>
           <button
             type="button"
             onClick={() => setViewMode("table")}
@@ -215,7 +253,8 @@ export default function WorkspaceRequestList() {
         </div>
       ) : null}
 
-      {!isLoading && !error && items.length > 0 ? (
+      {viewMode === "kanban" ? <DataKanban items={kanbanItems} keyExtractor={(item) => item.id} kanbanConfig={{ columns: REQUEST_KANBAN_COLUMNS, statusAccessor: item => item.status, renderCard: item => <WorkspaceRequestKanbanCard item={item} pending={pendingIds.has(item.id)} />, canDrop: (item, target) => canTransitionRequestStatus(item.status, target), onItemMove: moveRequest, isItemPending: item => pendingIds.has(item.id), getColumnLoadState: lane => ({ isLoading: lanes[lane].isLoading, error: lanes[lane].error ? apiErrorMessage(lanes[lane].error) : null }) }} /> : null}
+      {!isLoading && !error && items.length > 0 && viewMode !== "kanban" ? (
         viewMode === "table" ? (
           <WorkspaceRequestTable items={items} />
         ) : (

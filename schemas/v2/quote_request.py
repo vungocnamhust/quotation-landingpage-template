@@ -252,6 +252,11 @@ class QuoteRequestUpdateSchema(BaseModel):
     partner_id: str | None = None
 
 
+class QuoteRequestStatusUpdateSchema(BaseModel):
+    status: Literal["new", "under_review", "quotation_created", "archived"]
+    baseRevision: int = Field(ge=1)
+
+
 class QuoteRequestResponseSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -300,6 +305,7 @@ class QuoteRequestRevisionDetailSchema(BaseModel):
     request_id: str
     revision: int
     role: str
+    status: str | None = None
     customer_name: str | None
     email: str | None
     phone: str | None

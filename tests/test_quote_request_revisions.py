@@ -8,10 +8,19 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 import main
 from db.base import Base
 from schemas.v2.quote_request import QuoteRequestCreateSchema, QuoteRequestEditPayloadSchema
-from services.quote_request_service import QuoteRequestService
+from services.quote_request_service import QuoteRequestService, RequestRevisionConflictError
 
 
 class TestQuoteRequestRevisions(unittest.IsolatedAsyncioTestCase):
+    async def test_status_transition_is_revisioned_and_conflict_safe(self):
+        async with self.session_factory() as session:
+            service = QuoteRequestService(session)
+            req = await service.create_quote_request(QuoteRequestCreateSchema(role="traveller", customer_name="Status Test", email="status@example.com", destinations=[]))
+            await service.transition_request_status(req.id, target_status="under_review", base_revision=1, actor_email="editor@example.com")
+            self.assertEqual(req.status, "under_review")
+            self.assertEqual(req.current_revision, 2)
+            with self.assertRaises(RequestRevisionConflictError):
+                await service.transition_request_status(req.id, target_status="quotation_created", base_revision=1, actor_email="editor@example.com")
     async def asyncSetUp(self):
         self.db_file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
         self.db_file.close()

@@ -76,6 +76,7 @@ class QuoteRequestRepository:
             request_id=req.id,
             revision=1,
             role=role,
+            status=req.status,
             customer_name=customer_name,
             email=email,
             phone=phone,
@@ -106,6 +107,7 @@ class QuoteRequestRepository:
         request_id: str,
         revision: int,
         role: str,
+        status: str | None = None,
         customer_name: str | None = None,
         email: str | None = None,
         phone: str | None = None,
@@ -131,6 +133,7 @@ class QuoteRequestRepository:
             request_id=request_id,
             revision=revision,
             role=role,
+            status=status,
             customer_name=customer_name,
             email=email,
             phone=phone,
@@ -158,6 +161,10 @@ class QuoteRequestRepository:
 
     async def get_by_id(self, request_id: str) -> QuoteRequest | None:
         return await self.session.get(QuoteRequest, request_id)
+
+    async def get_by_id_for_update(self, request_id: str) -> QuoteRequest | None:
+        stmt = select(QuoteRequest).where(QuoteRequest.id == request_id).with_for_update()
+        return (await self.session.scalars(stmt)).one_or_none()
 
     async def get_revisions_by_request_id(self, request_id: str) -> list[QuoteRequestRevision]:
         stmt = (
@@ -232,6 +239,7 @@ class QuoteRequestRepository:
             request_id=req.id,
             revision=next_revision,
             role=role,
+            status=req.status,
             customer_name=customer_name,
             email=email,
             phone=phone,
@@ -315,4 +323,3 @@ class QuoteRequestRepository:
             req.linked_quotation_id = linked_quotation_id
         await self.session.flush()
         return req
-
