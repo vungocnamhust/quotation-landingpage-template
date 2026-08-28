@@ -1,35 +1,29 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useMemo, useState, useTransition } from "react";
 import { Plus } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
 import { useToast } from "../staff-workspace/ToastProvider.tsx";
-import { useOperationsBoard } from "./useOperationsBoard.ts";
-import { BookingCard } from "./BookingCard.tsx";
-import { TransitionDialog, type TransitionRequest } from "./TransitionDialog.tsx";
-import { CreateBookingDialog } from "./CreateBookingDialog.tsx";
+import { DataViewToggle, type ViewModeOption } from "../ui/data-view/DataViewToggle.tsx";
 import { CancelBookingDialog, type CancelBookingRequest } from "./CancelBookingDialog.tsx";
-import { URGENCY_GROUP_LABEL, URGENCY_GROUPS, type BookingBoardItem, type BookingLineProfile, type UrgencyGroup } from "./types.ts";
-
-type BookingGroup = { bookingId: string; context: BookingBoardItem; lines: BookingLineProfile[] };
-
-function urgencyGroupOf(item: BookingBoardItem): UrgencyGroup {
-  if (item.line.status === "delivered" || item.line.status === "cancelled") return "done";
-  if (item.line.urgency === "overdue") return "overdue";
-  if (item.line.urgency === "due_soon") return "due_soon";
-  return "upcoming";
-}
-
-function matchesSearch(item: BookingBoardItem, query: string): boolean {
-  if (!query) return true;
-  const haystack = `${item.booking_code} ${item.party_label_snapshot ?? ""} ${item.line.title_snapshot} ${item.line.supplier_name_snapshot ?? ""}`.toLowerCase();
-  return haystack.includes(query.toLowerCase());
-}
+import { CreateBookingDialog } from "./CreateBookingDialog.tsx";
+import { OperationsGrid } from "./OperationsGrid.tsx";
+import { OperationsKanban } from "./OperationsKanban.tsx";
+import { OperationsTable } from "./OperationsTable.tsx";
+import { TransitionDialog, type TransitionRequest } from "./TransitionDialog.tsx";
+import { matchesOperationsSearch, normalizeOperationsView } from "./operationsView.ts";
+import type { BookingBoardItem } from "./types.ts";
+import { useOperationsBoard } from "./useOperationsBoard.ts";
 
 export function OperationsBoard() {
   const { items, isLoading, actionError, createNewBooking, transitionLine, cancelWholeBooking } = useOperationsBoard();
   const { toast } = useToast();
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [, startTransition] = useTransition();
 
   const [search, setSearch] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -39,31 +33,29 @@ export function OperationsBoard() {
   const [pendingCancel, setPendingCancel] = useState<CancelBookingRequest | null>(null);
   const [isCancellingBooking, setIsCancellingBooking] = useState(false);
 
-  const filtered = useMemo(() => items.filter((item) => matchesSearch(item, search)), [items, search]);
+  const viewMode = normalizeOperationsView(searchParams.get("view"));
+  const filtered = useMemo(() => items.filter((item) => matchesOperationsSearch(item, search)), [items, search]);
 
-  const groupsByUrgency = useMemo(() => {
-    const byUrgency = new Map<UrgencyGroup, Map<string, BookingGroup>>();
-    for (const group of URGENCY_GROUPS) byUrgency.set(group, new Map());
-    for (const item of filtered) {
-      const bucket = byUrgency.get(urgencyGroupOf(item));
-      if (!bucket) continue;
-      const existing = bucket.get(item.booking_id);
-      if (existing) {
-        existing.lines.push(item.line);
-      } else {
-        bucket.set(item.booking_id, { bookingId: item.booking_id, context: item, lines: [item.line] });
-      }
-    }
-    return byUrgency;
-  }, [filtered]);
+  const setViewMode = useCallback((nextView: ViewModeOption) => {
+    startTransition(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (nextView === "kanban") params.delete("view"); else params.set("view", nextView);
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    });
+  }, [pathname, router, searchParams, startTransition]);
 
-  const openAdvance = (bookingContext: BookingBoardItem, line: BookingLineProfile, to: "requested" | "confirmed" | "delivered") => {
-    setPendingTransition({ request: { line, to }, bookingId: bookingContext.booking_id, bookingRevision: bookingContext.booking_revision });
-  };
+  const openAdvance = useCallback((item: BookingBoardItem, to: "requested" | "confirmed" | "delivered") => {
+    setPendingTransition({ request: { line: item.line, to }, bookingId: item.booking_id, bookingRevision: item.booking_revision });
+  }, []);
 
-  const openCancelLine = (bookingContext: BookingBoardItem, line: BookingLineProfile) => {
-    setPendingTransition({ request: { line, to: "cancelled" }, bookingId: bookingContext.booking_id, bookingRevision: bookingContext.booking_revision });
-  };
+  const openCancelLine = useCallback((item: BookingBoardItem) => {
+    setPendingTransition({ request: { line: item.line, to: "cancelled" }, bookingId: item.booking_id, bookingRevision: item.booking_revision });
+  }, []);
+
+  const openCancelBooking = useCallback((item: BookingBoardItem) => {
+    setPendingCancel({ bookingId: item.booking_id, bookingCode: item.booking_code, bookingRevision: item.booking_revision });
+  }, []);
 
   const handleTransitionSubmit = async (input: { supplier_ref?: string; cancel_reason?: string }) => {
     if (!pendingTransition) return;
@@ -73,11 +65,10 @@ export function OperationsBoard() {
       const result = await transitionLine(bookingId, request.line.id, bookingRevision, { to: request.to, ...input });
       if (!result) return;
       const updatedLine = result.lines.find((line) => line.id === request.line.id);
-      if (request.to !== "confirmed") {
-        setPendingTransition(null);
-        toast(request.to === "cancelled" ? "Booking line cancelled." : "Booking line updated.", "success");
-      }
-      return updatedLine?.voucher_ref ? { voucherRef: updatedLine.voucher_ref } : undefined;
+      if (request.to === "confirmed" && updatedLine?.voucher_ref) return { voucherRef: updatedLine.voucher_ref };
+      setPendingTransition(null);
+      toast(request.to === "cancelled" ? "Booking line cancelled." : "Booking line updated.", "success");
+      return undefined;
     } finally {
       setIsTransitioning(false);
     }
@@ -110,105 +101,40 @@ export function OperationsBoard() {
     }
   };
 
-  const hasAnyItems = items.length > 0;
+  const renderBoard = () => {
+    if (viewMode === "grid") return <OperationsGrid items={filtered} onAdvance={openAdvance} onCancelLine={openCancelLine} onCancelBooking={openCancelBooking} />;
+    if (viewMode === "table") return <OperationsTable items={filtered} onAdvance={openAdvance} onCancelLine={openCancelLine} onCancelBooking={openCancelBooking} />;
+    return <OperationsKanban items={filtered} onAdvance={openAdvance} onCancelLine={openCancelLine} onCancelBooking={openCancelBooking} />;
+  };
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <input
-          type="search"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search booking code, party or service…"
-          className={cn(
-            getTypographyClassName("bodySm"),
-            "w-full max-w-sm rounded-[var(--radius-button)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[var(--color-on-surface)]",
-          )}
-        />
-        <button
-          type="button"
-          onClick={() => setIsCreateOpen(true)}
-          className={cn(
-            getTypographyClassName("buttonPrimary"),
-            "flex items-center gap-2 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-accent-wash)] px-4 py-2.5 text-[var(--color-accent)] shadow-xs transition-all hover:bg-[var(--color-surface-hover)]",
-          )}
-        >
-          <Plus size={16} aria-hidden="true" />
-          Start a booking
-        </button>
+        <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search booking code, party, supplier, service, or voucher…" className={cn(getTypographyClassName("bodySm"), "w-full max-w-xl rounded-[var(--radius-button)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[var(--color-on-surface)]")} />
+        <div className="flex flex-wrap items-center gap-3">
+          <DataViewToggle viewMode={viewMode} onViewModeChange={setViewMode} kanbanAvailable />
+          <button type="button" onClick={() => setIsCreateOpen(true)} className={cn(getTypographyClassName("buttonPrimary"), "flex items-center gap-2 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-accent-wash)] px-4 py-2.5 text-[var(--color-accent)] shadow-xs transition-all hover:bg-[var(--color-surface-hover)]")}>
+            <Plus size={16} aria-hidden="true" />
+            Start a booking
+          </button>
+        </div>
       </div>
 
-      {actionError ? (
-        <div className={cn(getTypographyClassName("bodySm"), "rounded-[var(--radius-card)] border border-rose-200 bg-rose-50 p-3 text-rose-700")}>
-          {actionError}
-        </div>
-      ) : null}
+      {actionError ? <div className={cn(getTypographyClassName("bodySm"), "rounded-[var(--radius-card)] border border-rose-200 bg-rose-50 p-3 text-rose-700")}>{actionError}</div> : null}
 
-      {isLoading ? (
-        <p className={cn(getTypographyClassName("bodySm"), "text-[var(--color-muted)]")}>Loading operations board…</p>
-      ) : !hasAnyItems ? (
+      {isLoading ? <p className={cn(getTypographyClassName("bodySm"), "text-[var(--color-muted)]")}>Loading operations board…</p> : items.length === 0 ? (
         <div className="rounded-[var(--radius-card)] border border-dashed border-[var(--color-border)] p-10 text-center">
-          <p className={cn(getTypographyClassName("bodyMd"), "text-[var(--color-muted)]")}>
-            No bookings yet. Start one once a quotation&apos;s deposit lands.
-          </p>
+          <p className={cn(getTypographyClassName("bodyMd"), "text-[var(--color-muted)]")}>No bookings yet. Start one once a quotation&apos;s deposit lands.</p>
         </div>
-      ) : (
-        URGENCY_GROUPS.map((group) => {
-          const bookingsInGroup = groupsByUrgency.get(group);
-          if (!bookingsInGroup || bookingsInGroup.size === 0) return null;
-          return (
-            <section key={group} className="flex flex-col gap-3">
-              <h2 className={cn(getTypographyClassName("sectionTitle"), "text-[var(--color-on-surface)]")}>
-                {URGENCY_GROUP_LABEL[group]}
-              </h2>
-              <div className="flex flex-col gap-3">
-                {Array.from(bookingsInGroup.values()).map(({ bookingId, context, lines }) => (
-                  <BookingCard
-                    key={bookingId}
-                    bookingId={bookingId}
-                    bookingCode={context.booking_code}
-                    quotationId={context.quotation_id}
-                    partyLabel={context.party_label_snapshot}
-                    travelStartDate={context.travel_start_date}
-                    travelEndDate={context.travel_end_date}
-                    lines={lines}
-                    hasCashFlowWarning={filtered.some((item) => item.booking_id === bookingId && item.cash_flow_warning)}
-                    onAdvance={(line, to) => openAdvance(context, line, to)}
-                    onCancelLine={(line) => openCancelLine(context, line)}
-                    onCancelBooking={() =>
-                      setPendingCancel({ bookingId, bookingCode: context.booking_code, bookingRevision: context.booking_revision })
-                    }
-                  />
-                ))}
-              </div>
-            </section>
-          );
-        })
-      )}
+      ) : filtered.length === 0 ? (
+        <div className="rounded-[var(--radius-card)] border border-dashed border-[var(--color-border)] p-10 text-center">
+          <p className={cn(getTypographyClassName("bodyMd"), "text-[var(--color-muted)]")}>No booking lines match your search.</p>
+        </div>
+      ) : renderBoard()}
 
-      <TransitionDialog
-        request={pendingTransition?.request ?? null}
-        isSubmitting={isTransitioning}
-        errorMessage={actionError}
-        onClose={() => setPendingTransition(null)}
-        onSubmit={handleTransitionSubmit}
-      />
-
-      <CreateBookingDialog
-        isOpen={isCreateOpen}
-        isSubmitting={isCreating}
-        errorMessage={actionError}
-        onClose={() => setIsCreateOpen(false)}
-        onSubmit={handleCreateBooking}
-      />
-
-      <CancelBookingDialog
-        request={pendingCancel}
-        isSubmitting={isCancellingBooking}
-        errorMessage={actionError}
-        onClose={() => setPendingCancel(null)}
-        onSubmit={handleCancelBooking}
-      />
+      <TransitionDialog request={pendingTransition?.request ?? null} isSubmitting={isTransitioning} errorMessage={actionError} onClose={() => setPendingTransition(null)} onSubmit={handleTransitionSubmit} />
+      <CreateBookingDialog isOpen={isCreateOpen} isSubmitting={isCreating} errorMessage={actionError} onClose={() => setIsCreateOpen(false)} onSubmit={handleCreateBooking} />
+      <CancelBookingDialog request={pendingCancel} isSubmitting={isCancellingBooking} errorMessage={actionError} onClose={() => setPendingCancel(null)} onSubmit={handleCancelBooking} />
     </div>
   );
 }

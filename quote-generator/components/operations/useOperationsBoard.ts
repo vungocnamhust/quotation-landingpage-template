@@ -11,7 +11,8 @@ import {
   updateBookingLineOps,
 } from "../../lib/quotationApi.ts";
 import { apiErrorMessage, QuotationApiError } from "../../lib/apiError.ts";
-import type { BookingLineStatus } from "./types.ts";
+import { mergeBookingDetailIntoBoard, optimisticallyCancelBooking, optimisticallyTransitionBoardLine } from "./operationsBoardCache.ts";
+import type { BookingBoardResponse, BookingDetailResponse, BookingLineStatus } from "./types.ts";
 
 function newIdempotencyKey(): string {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -56,6 +57,38 @@ export function useOperationsBoard(filters: OperationsBoardFilters = {}) {
     [mutate],
   );
 
+  const runOptimisticBookingAction = useCallback(
+    async (
+      optimisticData: (current: BookingBoardResponse | undefined) => BookingBoardResponse | undefined,
+      action: () => Promise<BookingDetailResponse>,
+    ): Promise<BookingDetailResponse | null> => {
+      let detail: BookingDetailResponse | null = null;
+      try {
+        await mutate(
+          async (current) => {
+            detail = await action();
+            return mergeBookingDetailIntoBoard(current, detail);
+          },
+          {
+            optimisticData: (current) => optimisticData(current ?? { items: [] }) ?? { items: [] },
+            rollbackOnError: true,
+            populateCache: true,
+            revalidate: true,
+          },
+        );
+        setActionError(null);
+        return detail;
+      } catch (error) {
+        setActionError(apiErrorMessage(error));
+        if (error instanceof QuotationApiError && error.kind === "conflict") {
+          await mutate();
+        }
+        return null;
+      }
+    },
+    [mutate],
+  );
+
   const createNewBooking = useCallback(
     (input: { quotation_id: string; deposit_received_at: string; customer_balance_due_date?: string | null }) =>
       runAction(async () => {
@@ -73,17 +106,16 @@ export function useOperationsBoard(filters: OperationsBoardFilters = {}) {
       baseBookingRevision: number,
       input: { to: BookingLineStatus; supplier_ref?: string | null; cancel_reason?: string | null },
     ) =>
-      runAction(async () => {
-        const result = await transitionBookingLine(
+      runOptimisticBookingAction(
+        (current) => optimisticallyTransitionBoardLine(current, bookingId, lineId, input.to),
+        async () => transitionBookingLine(
           bookingId,
           lineId,
           { base_booking_revision: baseBookingRevision, ...input },
           newIdempotencyKey(),
-        );
-        await mutate();
-        return result;
-      }),
-    [mutate, runAction],
+        ),
+      ),
+    [runOptimisticBookingAction],
   );
 
   const updateLineOps = useCallback(
@@ -113,12 +145,11 @@ export function useOperationsBoard(filters: OperationsBoardFilters = {}) {
 
   const cancelWholeBooking = useCallback(
     (bookingId: string, baseBookingRevision: number, reason: string) =>
-      runAction(async () => {
-        const result = await cancelBooking(bookingId, { base_booking_revision: baseBookingRevision, reason });
-        await mutate();
-        return result;
-      }),
-    [mutate, runAction],
+      runOptimisticBookingAction(
+        (current) => optimisticallyCancelBooking(current, bookingId),
+        () => cancelBooking(bookingId, { base_booking_revision: baseBookingRevision, reason }),
+      ),
+    [runOptimisticBookingAction],
   );
 
   return {
