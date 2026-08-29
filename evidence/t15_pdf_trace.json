@@ -1,0 +1,22 @@
+{
+  "test_case": "T-15",
+  "slug_endpoint": {
+    "url": "/en/q/ue5sl9lg1xe48frw/pdf/download",
+    "status": 302,
+    "location": "/media/pr_capella_travel_en_ue5sl9lg1xe48frw_1/pdf",
+    "cache_control": "no-store"
+  },
+  "fallback_endpoint": {
+    "url": "/p/yqckzrvw6gjuq-okue90fzje/pdf/download",
+    "status": 302,
+    "location": "/media/pr_capella_travel_en_ue5sl9lg1xe48frw_1/pdf",
+    "cache_control": "no-store"
+  },
+  "release_media_endpoint": {
+    "url": "/media/pr_capella_travel_en_ue5sl9lg1xe48frw_1/pdf",
+    "status": 200,
+    "content_type": "application/pdf",
+    "cache_control": "public, max-age=31536000, immutable",
+    "size_bytes": 2896075
+  }
+}
