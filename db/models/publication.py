@@ -79,6 +79,7 @@ class PublicationRelease(Base):
     target_id: Mapped[str] = mapped_column(ForeignKey("publication_targets.id", ondelete="CASCADE"), nullable=False)
     release_number: Mapped[int] = mapped_column(Integer, nullable=False)
     document_revision: Mapped[int] = mapped_column(Integer, nullable=False)
+    source_base_revision: Mapped[int] = mapped_column(Integer, nullable=False)
     render_profile_snapshot: Mapped[dict] = mapped_column(JSON_VARIANT, nullable=False)
     asset_manifest: Mapped[dict] = mapped_column(JSON_VARIANT, nullable=False, default=dict)
     pdf_r2_key: Mapped[str | None] = mapped_column(String(512), nullable=True)

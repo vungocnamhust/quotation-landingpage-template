@@ -18,10 +18,13 @@ class ReactPublicationContractTests(unittest.TestCase):
             "content": {"sections": {}},
             "presentation": {"renderer": "quote-generator", "themeId": "brochure", "layoutVersion": 1},
         }).model_dump(mode="json")
+        # contract-v2: `templateId` added by the Design workstream (Plan 16.2 D10) —
+        # deliberate public-shape change, not drift.
         self.assertEqual(document["presentation"], {
             "renderer": "quote-generator",
             "themeId": "brochure",
             "layoutVersion": 1,
+            "templateId": "",
             "copyOverrides": {},
             "mediaOverrides": {},
             "mediaDefaults": {},

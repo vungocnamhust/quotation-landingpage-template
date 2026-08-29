@@ -19,6 +19,7 @@ from markupsafe import Markup, escape
 from pydantic import BaseModel, ConfigDict, ValidationError, Field, field_validator, model_validator
 from sqlalchemy import func, text
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated, Any, List, Optional, Literal
 from datetime import date, datetime, timezone
 from github_publish import publish_to_github, publish_file_to_github
@@ -28,6 +29,7 @@ from destination_catalog_seed import BASELINE_DESTINATION_COORDINATES
 from quote_document import (
     BrandContentPolicy,
     BrandProfile,
+    CreateQuotePricingOptionFact,
     CreateQuoteRequestV1,
     QuoteDocumentV1,
     SECTION_REGISTRY,
@@ -181,6 +183,7 @@ from services.media_factory import (
     _media_library_service,
 )
 from core.rules.media_classification import classify_media_asset
+from core.rules.readiness_rules import PublishReadinessGate
 from services.quotation_validation import (
     _sanitize_html_sync_payload,
     _validate_v2_copy_overrides,
@@ -3852,6 +3855,146 @@ async def _store_uploaded_draft_asset(
     }
 
 
+async def _apply_costing_pricing_option(
+    session,
+    *,
+    quotation_id: str,
+    base_revision: int,
+    target_option_id: str | None,
+    option_label: str | None,
+    sell_total_minor: int,
+    currency: str,
+    actor: Any,
+    lang: str | None = None,
+) -> dict[str, Any]:
+    from repositories.quotation_repository import (
+        QuotationRepository,
+        QuotationDocumentRepository,
+        ContentDraftRepository,
+    )
+    from repositories.errors import DocumentRevisionConflictError
+    from services.costing_service import CostingConflictError, CostingValidationError
+    from services.skeleton_builder import SkeletonBuilder
+
+    quotes, documents, drafts = (
+        QuotationRepository(session),
+        QuotationDocumentRepository(session),
+        ContentDraftRepository(session),
+    )
+    quotation = await quotes.get_quotation_by_id(quotation_id)
+    if quotation is None:
+        raise CostingValidationError(f"Quotation '{quotation_id}' was not found.")
+    if quotation.quotation_family_id:
+        raise CostingConflictError("Facts are immutable for a business quotation version.", current_revision=base_revision)
+    if quotation.source_kind != "manual":
+        raise CostingConflictError("Facts are read-only for this quotation source.", current_revision=base_revision)
+
+    effective_lang = lang or quotation.baseline_lang
+    current = await documents.get_current_document(quotation_id, effective_lang)
+    if current is None:
+        raise CostingValidationError("Canonical document was not found.")
+    if current.revision != base_revision:
+        raise DocumentRevisionConflictError(
+            quotation_id=quotation_id,
+            lang=effective_lang,
+            expected_revision=base_revision,
+            current_revision=current.revision,
+            current_document=current.document_json,
+        )
+
+    request_snapshot = await quotes.get_latest_quotation_request(quotation_id)
+    version_facts = await quotes.get_version_facts(quotation_id)
+    snapshot = version_facts.canonical_facts_json if version_facts is not None else (request_snapshot.request_json if request_snapshot else {})
+    snapshot_normalized = normalize_legacy_facts_snapshot(snapshot) if snapshot else {}
+    payload = CreateQuoteRequestV1.model_validate(snapshot_normalized)
+
+    options = list(payload.pricing_facts.options or [])
+    matched_opt = None
+    target_id = target_option_id
+
+    if target_id:
+        for opt in options:
+            if opt.id == target_id:
+                matched_opt = opt
+                break
+        if matched_opt is None:
+            raise CostingValidationError(f"Target pricing option '{target_id}' was not found.")
+    else:
+        if len(options) >= 3:
+            raise CostingConflictError(
+                "Maximum 3 commercial pricing options reached.",
+                current_revision=base_revision,
+            )
+        target_id = f"opt_{len(options) + 1}"
+        matched_opt = None
+
+    adults = max(payload.customer_facts.adults or 2, 1)
+
+    if matched_opt is not None:
+        matched_opt.label = option_label or matched_opt.label or "Theo dự toán"
+        per_adult = max(1, sell_total_minor // adults)
+        matched_opt.currency = currency
+        matched_opt.group_total_amount_minor = sell_total_minor
+        matched_opt.per_adult_amount_minor = per_adult
+        matched_opt.per_traveler_amount_minor = per_adult
+    else:
+        per_adult = max(1, sell_total_minor // adults)
+        new_opt = CreateQuotePricingOptionFact(
+            id=target_id,
+            label=option_label or "Theo dự toán",
+            currency=currency,
+            group_total_amount_minor=sell_total_minor,
+            per_adult_amount_minor=per_adult,
+            per_traveler_amount_minor=per_adult,
+        )
+        options.append(new_opt)
+        payload.pricing_facts.options = options
+
+    canonical, resolved = await _resolve_v2_facts(payload, session=session)
+    if resolved.get("missingInputs"):
+        raise CostingValidationError(f"Missing required inputs: {resolved['missingInputs']}")
+
+    rebuilt = SkeletonBuilder().build(
+        quotation_id=quotation_id,
+        payload=canonical,
+        resolved_facts=resolved,
+        template=quotation.template_name,
+    )
+    _preserve_content_owned_values(current.document_json, rebuilt)
+    rebuilt["presentation"] = copy.deepcopy((current.document_json.get("presentation") or {}))
+    if "viewOverrides" in current.document_json:
+        rebuilt["viewOverrides"] = copy.deepcopy(current.document_json["viewOverrides"])
+    _copy_fact_media_slots(current.document_json, rebuilt)
+    await _apply_missing_media_defaults(session, rebuilt, quotation_id, effective_lang)
+    validated = _normalize_quote_document_structure_or_422(
+        _hydrate_canonical_quote_document(rebuilt, quotation, lang=effective_lang, revision=base_revision)
+    )
+
+    saved = await documents.save_current_document(
+        quotation_id=quotation_id,
+        lang=effective_lang,
+        document_json=validated,
+        expected_revision=base_revision,
+    )
+    canonical_doc = _hydrate_canonical_quote_document(saved.document_json, quotation, lang=effective_lang, revision=saved.revision)
+    await documents.append_document_revision(
+        quotation_id=quotation_id,
+        lang=effective_lang,
+        revision=saved.revision,
+        document_json=canonical_doc,
+        change_source="apply_costing_pricing",
+    )
+    await quotes.create_quotation_request(quotation_id=quotation_id, request_json=canonical.model_dump(mode="json"))
+    await drafts.mark_stale(quotation_id)
+
+    return {
+        "new_revision": saved.revision,
+        "target_option_id": target_id,
+        "pricing_options": [opt.model_dump(mode="json") for opt in canonical.pricing_facts.options],
+        "document": canonical_doc,
+    }
+
+
 # Router modules receive all legacy-compatible runtime hooks here.  Lambdas
 # deliberately resolve attributes at request time so the established test and
 # Compose override seams remain intact without a router importing ``main``.
@@ -3863,6 +4006,7 @@ configure_v2_runtime(
     draft_asset_store=lambda **kwargs: _store_uploaded_draft_asset(**kwargs),
     travel_designer_serializer=lambda profile: _serialize_travel_designer(profile),
     quotation_workflow_loader=lambda quotation_id: _canonical_workflow(quotation_id),
+    pricing_option_applier=lambda **kwargs: _apply_costing_pricing_option(**kwargs),
 )
 
 
@@ -4785,15 +4929,23 @@ async def create_quotation_v2_legacy(payload: CreateQuoteRequestV1):
     }
 
 
-async def _resolve_v2_facts(payload: CreateQuoteRequestV1) -> tuple[CreateQuoteRequestV1, dict[str, Any]]:
-    async with _get_db_session_factory()() as session:
-        await _seed_destination_catalog(session)
+async def _resolve_v2_facts(payload: CreateQuoteRequestV1, session: AsyncSession | None = None) -> tuple[CreateQuoteRequestV1, dict[str, Any]]:
+    if session is not None:
         resolver = FactsResolver()
         try:
             canonical, resolved = await resolver.resolve(payload, DestinationRepository(session).resolve)
         except FactsResolutionError as exc:
             raise HTTPException(status_code=422, detail={"message": str(exc), "missingInputs": exc.missing_inputs}) from exc
-        await session.commit()
+        return canonical, resolved
+
+    async with _get_db_session_factory()() as sess:
+        await _seed_destination_catalog(sess)
+        resolver = FactsResolver()
+        try:
+            canonical, resolved = await resolver.resolve(payload, DestinationRepository(sess).resolve)
+        except FactsResolutionError as exc:
+            raise HTTPException(status_code=422, detail={"message": str(exc), "missingInputs": exc.missing_inputs}) from exc
+        await sess.commit()
         return canonical, resolved
 
 
@@ -8768,22 +8920,31 @@ def _build_release_asset_manifest(document: Any) -> dict[str, str]:
 
 
 async def _validate_release_asset_manifest(document: Any) -> dict[str, dict[str, str]]:
-    """Freeze only existing, approved R2 media into a release manifest."""
+    """Freeze only existing, approved R2 media into a release manifest.
+
+    Called before any DB transaction/lock is opened so a slow R2 (or a
+    missing asset) never holds `FOR UPDATE` on the publication target.
+    """
     manifest = _build_release_asset_manifest(document)
     try:
         storage = R2Storage()
     except R2StorageConfigurationError as exc:
         raise HTTPException(status_code=422, detail={"message": "R2 storage must be configured before publishing."}) from exc
+    semaphore = asyncio.Semaphore(10)
     validated: dict[str, dict[str, str]] = {}
-    for token, r2_key in manifest.items():
-        try:
-            metadata = await asyncio.to_thread(storage.head_object, r2_key)
-        except Exception as exc:
-            raise HTTPException(status_code=422, detail={"message": f"Published asset is missing from R2: {r2_key}"}) from exc
-        validated[token] = {
-            "r2Key": r2_key,
-            "contentType": str(metadata.get("ContentType") or "application/octet-stream"),
-        }
+
+    async def check(token: str, r2_key: str) -> None:
+        async with semaphore:
+            try:
+                metadata = await asyncio.to_thread(storage.head_object, r2_key)
+            except Exception as exc:
+                raise HTTPException(status_code=422, detail={"message": f"Published asset is missing from R2: {r2_key}"}) from exc
+            validated[token] = {
+                "r2Key": r2_key,
+                "contentType": str(metadata.get("ContentType") or "application/octet-stream"),
+            }
+
+    await asyncio.gather(*(check(token, r2_key) for token, r2_key in manifest.items()))
     return validated
 
 
@@ -8844,53 +9005,9 @@ def _apply_branded_media_urls(document: Any, *, hostname: str, release_id: str, 
     return transform(document)
 
 
-async def _legacy_purge_public_url(urls: str | list[str]) -> None:
-    files = [urls] if isinstance(urls, str) else sorted(set(urls))
-    if not files:
-        return
-    zone_id, token = os.getenv("CLOUDFLARE_ZONE_ID", ""), os.getenv("CLOUDFLARE_API_TOKEN", "")
-    if not zone_id or not token:
-        raise RuntimeError("Cloudflare cache purge credentials are not configured.")
-    import urllib.request
-
-    payload = json.dumps({"files": files}).encode("utf-8")
-    request = urllib.request.Request(
-        f"https://api.cloudflare.com/client/v4/zones/{zone_id}/purge_cache",
-        data=payload,
-        headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
-        method="POST",
-    )
-    try:
-        response = await asyncio.to_thread(urllib.request.urlopen, request, timeout=10)
-        body = json.loads(response.read().decode("utf-8"))
-        if not body.get("success"):
-            raise RuntimeError(f"Cloudflare cache purge rejected: {body.get('errors') or body}")
-    except Exception as exc:
-        log.exception("Cloudflare cache purge failed for %s", files)
-        raise RuntimeError("Cloudflare cache purge failed") from exc
-
-
-def _release_cache_urls(*, hostname: str, target: Any, release: Any) -> list[str]:
-    base = f"https://{hostname}/{target.locale}/q/{target.public_slug}"
-    urls = [base, f"{base}/pdf/download"]
-    manifest = release.asset_manifest or {}
-    for token in manifest:
-        urls.append(f"https://{hostname}/media/{release.id}/{token}")
-    return urls
-
-
 def _fallback_public_url(target: Any) -> str:
     slug = getattr(target, "fallback_slug", None) or getattr(target, "public_slug", "")
     return f"https://{settings.public_fallback_hostname}/p/{slug}"
-
-
-def _fallback_release_cache_urls(*, target: Any, release: Any) -> list[str]:
-    base = _fallback_public_url(target)
-    urls = [base, f"{base}/pdf/download"]
-    manifest = release.asset_manifest or {}
-    for token in manifest:
-        urls.append(f"https://{settings.public_fallback_hostname}/media/{release.id}/{token}")
-    return urls
 
 
 def _release_transition_cache_urls(*, hostnames: list[str], target: Any, releases: list[Any | None]) -> list[str]:
@@ -8968,7 +9085,14 @@ async def _canonical_review_status(quotation_id: str, lang: str | None = None) -
         publications = await targets.list_targets(quotation_id, locale=lang)
         summary = [{"targetId": item.id, "brandId": item.brand_id, "status": item.status, "activeReleaseId": item.active_release_id} for item in publications]
         impact_blockers = [f"impact:{item.stage}:{item.scope}" for item in pending_impacts]
-        return {"ready": not resolved["missingInputs"] and not content_blockers and asset_readiness["ready"] and not presentation_errors and not impact_blockers, "missingInputs": resolved["missingInputs"], "blockingDrafts": pending_drafts, "contentBlockers": content_blockers, "contentReadiness": content_readiness, "presentationErrors": presentation_errors, "assetReadiness": asset_readiness, "impactBlockers": impact_blockers, "currentRevision": document.revision, "publicationTargets": summary}
+        gate_result = PublishReadinessGate().evaluate_review(
+            missing_inputs=resolved["missingInputs"],
+            content_blockers=content_blockers,
+            asset_ready=asset_readiness["ready"],
+            presentation_errors=presentation_errors,
+            impact_blockers=impact_blockers,
+        )
+        return {"ready": gate_result.passed, "missingInputs": resolved["missingInputs"], "blockingDrafts": pending_drafts, "contentBlockers": content_blockers, "contentReadiness": content_readiness, "presentationErrors": presentation_errors, "assetReadiness": asset_readiness, "impactBlockers": impact_blockers, "currentRevision": document.revision, "publicationTargets": summary}
 
 
 @app.get("/api/v2/quotations/{quotation_id}/review-status")
@@ -9084,6 +9208,14 @@ async def publish_canonical_quotation_v2(quotation_id: str, body: CanonicalPubli
         raise HTTPException(status_code=422, detail={"message": "Quotation is not ready to publish.", "review": review})
     if review["currentRevision"] != body.baseRevision:
         raise HTTPException(status_code=409, detail={"message": "Document revision conflict.", "currentRevision": review["currentRevision"]})
+    # Freeze the asset manifest (R2 HEAD checks) before opening any
+    # transaction/advisory lock so a slow or missing asset never holds
+    # `FOR UPDATE` on the publication target (Plan 16.2 F-05).
+    async with _get_db_session_factory()() as precheck_session:
+        precheck_document = await QuotationDocumentRepository(precheck_session).get_current_document(quotation_id, effective_lang)
+    if precheck_document is None:
+        raise HTTPException(status_code=404, detail="Canonical quotation document was not found.")
+    asset_manifest = await _validate_release_asset_manifest(precheck_document.document_json)
     async with _get_db_session_factory()() as session:
         quotes, documents = QuotationRepository(session), QuotationDocumentRepository(session)
         target_repository, brands = PublicationTargetRepository(session), BrandRepository(session)
@@ -9098,6 +9230,13 @@ async def publish_canonical_quotation_v2(quotation_id: str, body: CanonicalPubli
             raise HTTPException(status_code=404, detail="Canonical quotation document was not found.")
         if document.revision != body.baseRevision:
             raise HTTPException(status_code=409, detail={"message": "Document revision conflict.", "currentRevision": document.revision})
+        # TOCTOU re-check (F-04): re-run the pure readiness decision against
+        # data fetched inside the lock. A blocker can appear between the
+        # pre-lock review call above and here without bumping the revision
+        # (e.g. a concurrent pending impact); this must not slip through.
+        locked_review = await _canonical_review_status(quotation_id, effective_lang)
+        if not locked_review["ready"]:
+            raise HTTPException(status_code=422, detail={"message": "Quotation is not ready to publish.", "review": locked_review})
         brand = await brands.get_active(brand_id)
         if brand is None:
             raise HTTPException(status_code=422, detail={"message": "Brand is unavailable for publishing.", "missingInputs": ["brandId"]})
@@ -9107,11 +9246,22 @@ async def publish_canonical_quotation_v2(quotation_id: str, body: CanonicalPubli
             locale=effective_lang,
             public_slug=secrets.token_urlsafe(12).lower(),
         )
+        # Idempotent replay (D2/F-07): a duplicate publish call for the same
+        # base revision returns the release/job already created instead of
+        # rendering a second PDF and firing duplicate outbox events.
+        existing_release = await target_repository.get_release_by_source_revision(
+            target_id=target.id, source_base_revision=body.baseRevision
+        )
+        if existing_release is not None:
+            existing_job = await target_repository.get_latest_job(existing_release.id)
+            public_url = f"https://{brand.hostname}/{effective_lang}/q/{target.public_slug}"
+            return JSONResponse(status_code=200, content={"status": "queued", "version": existing_release.release_number, "published_url": public_url, "fallback_url": _fallback_public_url(target), "targetId": target.id, "releaseId": existing_release.id, "jobId": existing_job.id if existing_job else None})
         release = await target_repository.create_release(
             target=target,
             document_revision=document.revision,
+            source_base_revision=body.baseRevision,
             render_profile_snapshot=_serialize_brand_render_profile(brand),
-            asset_manifest=await _validate_release_asset_manifest(document.document_json),
+            asset_manifest=asset_manifest,
         )
         public_url = f"https://{brand.hostname}/{effective_lang}/q/{target.public_slug}"
         fallback_url = _fallback_public_url(target)
@@ -9316,6 +9466,12 @@ async def unpublish_canonical_target(quotation_id: str, target_id: str, principa
         active_release = await repository.get_release(target.active_release_id) if target.active_release_id else None
         target.status = "unpublished"
         target.active_release_id = None
+        if active_release is not None:
+            # Keep the release row consistent with the target it's no longer
+            # bound to — otherwise it reads as `published + is_current=True`
+            # forever, a trap for any query that trusts it standalone (F-09).
+            active_release.is_current = False
+            active_release.status = "superseded"
         if brand is not None and active_release is not None:
             await _enqueue_release_purge(repository, target=target, releases=[active_release], hostnames=[brand.hostname], event="unpublish")
         await session.commit()

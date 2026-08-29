@@ -1251,6 +1251,29 @@ class BrochureRouteContractTests(unittest.TestCase):
 
         asyncio.run(_assert_publication())
 
+    def test_publish_twice_with_same_base_revision_replays_idempotently(self):
+        # Plan 16.2 F-07/T-01: a duplicate publish call for the same
+        # baseRevision must not create a second release/job.
+        document = _sample_document()
+        asyncio.run(self._seed_brochure_document("quo_test", copy.deepcopy(document)))
+        with patch.object(main, "_inspect_asset_readiness", return_value={"ready": True, "missing": [], "invalid": [], "checkedAt": ""}):
+            first = self.client.post("/api/v2/quotations/quo_test/publish", json={"baseRevision": 1})
+            second = self.client.post("/api/v2/quotations/quo_test/publish", json={"baseRevision": 1})
+
+        self.assertIn(first.status_code, (200, 202))
+        self.assertEqual(second.status_code, 200)
+        self.assertEqual(first.json()["releaseId"], second.json()["releaseId"])
+        self.assertEqual(first.json()["targetId"], second.json()["targetId"])
+
+        async def _assert_single_release():
+            async with self.session_factory() as session:
+                target_repo = PublicationTargetRepository(session)
+                target = await session.get(PublicationTarget, first.json()["targetId"])
+                releases = await target_repo.list_releases(target.id)
+                self.assertEqual(len(releases), 1)
+
+        asyncio.run(_assert_single_release())
+
     def test_public_fallback_resolves_only_active_published_target(self):
         document = _sample_document()
         asyncio.run(self._seed_brochure_document("quo_test", copy.deepcopy(document)))

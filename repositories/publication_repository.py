@@ -5,6 +5,7 @@ import secrets
 from datetime import datetime, timezone
 from typing import Any
 
+from fastapi import HTTPException
 from sqlalchemy import Select, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -192,7 +193,8 @@ class PublicationTargetRepository:
             return target
         # The advisory lock in publish is the normal serialization path.  The
         # savepoint makes this method safe when a second process reaches the
-        # unique target constraint independently.
+        # unique target constraint independently. Each retry mints a fresh
+        # slug so a collision on the previous attempt's insert cannot repeat.
         for _attempt in range(3):
             try:
                 async with self.session.begin_nested():
@@ -217,13 +219,30 @@ class PublicationTargetRepository:
                 )
                 if target is not None:
                     return target
-        raise RuntimeError("Unable to create or lock publication target after unique-conflict retries.")
+                public_slug = secrets.token_urlsafe(12).lower()
+        raise HTTPException(
+            status_code=503,
+            detail={"message": "Unable to create or lock publication target after unique-conflict retries."},
+        )
+
+    async def get_release_by_source_revision(
+        self, *, target_id: str, source_base_revision: int
+    ) -> PublicationRelease | None:
+        """Idempotency lookup: a prior publish call for the same base revision."""
+        return await self.session.scalar(
+            select(PublicationRelease).where(
+                PublicationRelease.target_id == target_id,
+                PublicationRelease.source_base_revision == source_base_revision,
+                PublicationRelease.status != "failed",
+            )
+        )
 
     async def create_release(
         self,
         *,
         target: PublicationTarget,
         document_revision: int,
+        source_base_revision: int,
         render_profile_snapshot: dict[str, Any],
         asset_manifest: dict[str, str],
         pdf_r2_key: str | None = None,
@@ -244,6 +263,7 @@ class PublicationTargetRepository:
                 target_id=locked_target.id,
                 release_number=next_number,
                 document_revision=document_revision,
+                source_base_revision=source_base_revision,
                 render_profile_snapshot=render_profile_snapshot,
                 asset_manifest=asset_manifest,
                 pdf_r2_key=pdf_r2_key,
@@ -255,7 +275,10 @@ class PublicationTargetRepository:
                 return release
             except IntegrityError:
                 continue
-        raise RuntimeError("Unable to allocate a publication release number after unique-conflict retries.")
+        raise HTTPException(
+            status_code=503,
+            detail={"message": "Unable to allocate a publication release number after unique-conflict retries."},
+        )
 
     async def activate_release(self, *, target: PublicationTarget, release: PublicationRelease) -> PublicationRelease | None:
         locked_target = await self.lock_target_for_update(target.id)

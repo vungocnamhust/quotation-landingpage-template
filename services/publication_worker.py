@@ -172,15 +172,32 @@ async def _run_cache_purge(job: PublicationJob) -> None:
         if current is None or context is None:
             return
         brand, target, _release = context
+        if not settings.cdn_purge_enabled:
+            log.info("CDN purge disabled (cdn_purge_enabled=False); marking job %s succeeded as no-op.", current.id)
+            current.status = "succeeded"
+            current.locked_at = None
+            current.locked_by = None
+            await session.commit()
+            return
+        urls = current.payload_json.get("urls") if isinstance(current.payload_json, dict) else None
         try:
-            urls = current.payload_json.get("urls") if isinstance(current.payload_json, dict) else None
             await purge_public_urls(urls or [f"https://{brand.hostname}/{target.locale}/q/{target.public_slug}"])
         except Exception as exc:
             current.last_error = str(exc)[:4000]
             current.status = "failed" if current.attempts >= current.max_attempts else "queued"
             current.locked_at = None
             current.locked_by = None
-            if current.status == "queued": current.next_run_at = datetime.now(timezone.utc) + timedelta(seconds=min(settings.publication_job_backoff_max_seconds, settings.publication_job_backoff_base_seconds * (2 ** max(current.attempts - 1, 0))))
+            if current.status == "queued":
+                current.next_run_at = datetime.now(timezone.utc) + timedelta(seconds=min(settings.publication_job_backoff_max_seconds, settings.publication_job_backoff_base_seconds * (2 ** max(current.attempts - 1, 0))))
+            elif current.status == "failed":
+                # Terminal purge failure: symmetric with the PDF-render failure
+                # branch, which already emits an outbox event on exhaustion.
+                await OutboxService(session).emit_event(
+                    event_type="quotation.publication.cache_purge_failed",
+                    aggregate_type="quotation",
+                    aggregate_id=current.release_id,
+                    payload={"error": current.last_error, "release_id": current.release_id, "urls": urls or []},
+                )
         else:
             current.status = "succeeded"
             current.locked_at = None

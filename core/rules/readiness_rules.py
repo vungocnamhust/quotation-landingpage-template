@@ -77,3 +77,31 @@ class PublishReadinessGate:
 
         passed = len([i for i in issues if i.severity == Severity.ERROR]) == 0
         return GateResult(passed=passed, issues=issues)
+
+    def evaluate_review(
+        self,
+        *,
+        missing_inputs: list[Any],
+        content_blockers: list[Any],
+        asset_ready: bool,
+        presentation_errors: list[Any],
+        impact_blockers: list[Any],
+    ) -> GateResult:
+        """Pure decision for `/review-status` and the publish endpoint's
+        in-lock re-check (Plan 16.2 D4/D7): given the already-fetched
+        readiness inputs, decide whether the quotation may publish. No I/O —
+        callers own fetching facts, content blockers, asset HEAD checks, and
+        presentation/impact validation.
+        """
+        issues: list[GateIssue] = []
+        if missing_inputs:
+            issues.append(GateIssue(field="facts", code="MISSING_INPUTS", message="Required facts are missing.", severity=Severity.ERROR))
+        if content_blockers:
+            issues.append(GateIssue(field="content", code="CONTENT_BLOCKERS", message="Content sections are incomplete.", severity=Severity.ERROR))
+        if not asset_ready:
+            issues.append(GateIssue(field="assets", code="ASSETS_NOT_READY", message="Referenced media is not available in R2.", severity=Severity.ERROR))
+        if presentation_errors:
+            issues.append(GateIssue(field="presentation", code="PRESENTATION_INVALID", message="Presentation contract is invalid.", severity=Severity.ERROR))
+        if impact_blockers:
+            issues.append(GateIssue(field="impacts", code="PENDING_IMPACTS", message="Pending version impacts must be resolved.", severity=Severity.ERROR))
+        return GateResult(passed=not issues, issues=issues)

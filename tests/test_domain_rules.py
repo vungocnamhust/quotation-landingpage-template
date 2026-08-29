@@ -169,3 +169,23 @@ class TestPublishReadinessGate:
         assert result.passed is False
         assert any(e.code == "HERO_TITLE_EMPTY" for e in result.errors)
         assert any(e.code == "MISSING_TOUR_DATES" for e in result.errors)
+
+    def test_evaluate_review_passes_with_no_blockers(self):
+        gate = PublishReadinessGate()
+        result = gate.evaluate_review(
+            missing_inputs=[], content_blockers=[], asset_ready=True,
+            presentation_errors=[], impact_blockers=[],
+        )
+        assert result.passed is True
+        assert result.errors == []
+
+    def test_evaluate_review_fails_on_any_blocker_category(self):
+        gate = PublishReadinessGate()
+        result = gate.evaluate_review(
+            missing_inputs=[], content_blockers=[], asset_ready=False,
+            presentation_errors=[], impact_blockers=["impact:review:pricing"],
+        )
+        assert result.passed is False
+        codes = {e.code for e in result.errors}
+        assert "ASSETS_NOT_READY" in codes
+        assert "PENDING_IMPACTS" in codes
