@@ -5,6 +5,7 @@ from db.models.quote_request import QuoteRequest
 from schemas.v2.quote_request import QuoteRequestCreateSchema
 from services.quote_request_service import (
     QuoteRequestService,
+    RequestAlreadyConvertedError,
     convert_request_to_quotation_facts,
     derive_children_details,
     parse_advisor_dates_to_iso,
@@ -453,6 +454,7 @@ class TestQuoteRequestService(unittest.IsolatedAsyncioTestCase):
              patch("repositories.quotation_repository.QuotationDocumentRepository.save_current_document", new_callable=AsyncMock, return_value=mock_saved_doc), \
              patch("repositories.quotation_repository.QuotationDocumentRepository.append_document_revision", new_callable=AsyncMock), \
              patch("services.outbox_service.OutboxService.emit_event", new_callable=AsyncMock), \
+             patch("repositories.costing_repository.CostingRepository.get_active_sheet_by_request", new_callable=AsyncMock, return_value=None), \
              patch("repositories.travel_designer_repository.TravelDesignerRepository.get_profile", new_callable=AsyncMock) as mock_get_profile:
 
             mock_profile = MagicMock(id="td_assigned", email="assigned@example.com", name="Assigned Designer")
@@ -524,3 +526,28 @@ class TestQuoteRequestService(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(options[1]["label"], "Premium Option")
         self.assertEqual(options[1]["per_traveler_amount_minor"], 450000)
         self.assertEqual(options[1]["group_total_amount_minor"], 1125000)
+
+    async def test_generate_quotation_retry_after_conversion_returns_existing_quotation(self):
+        """Plan 16.3 F-03/D3: a retry after a committed conversion resumes, never 500s."""
+        mock_session = AsyncMock()
+        service = QuoteRequestService(mock_session)
+
+        converted = QuoteRequest(
+            id="req_converted_001",
+            role="traveller",
+            customer_name="Alice Smith",
+            status="quotation_created",
+            current_revision=3,
+            linked_quotation_id="quo_existing_1",
+            email="alice@example.com",
+            destinations=["Hanoi"],
+            adults=2,
+            children=0,
+            payload_json={"brand_id": "selvara"},
+        )
+        service.repo.get_by_id_for_update = AsyncMock(return_value=converted)
+
+        with self.assertRaises(RequestAlreadyConvertedError) as ctx:
+            await service.generate_quotation_from_request(request_id="req_converted_001")
+        self.assertEqual(ctx.exception.linked_quotation_id, "quo_existing_1")
+        self.assertEqual(ctx.exception.current_revision, 3)

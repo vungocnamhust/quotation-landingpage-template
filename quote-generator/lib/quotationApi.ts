@@ -703,7 +703,15 @@ export async function deleteDraftRate(rateId: string): Promise<void> {
 // recompute totals client-side from raw lines (see costingReconciler.ts).
 // ---------------------------------------------------------------------------
 
-export type BookingStatus = 'quoted' | 'on_hold' | 'confirmed' | 'cancelled';
+// Mirror of schemas/v2/costing.py BookingStatus — keep the 7 values in sync (16.3 F-16).
+export type BookingStatus =
+  | 'quoted'
+  | 'on_hold'
+  | 'to_request'
+  | 'requested'
+  | 'confirmed'
+  | 'delivered'
+  | 'cancelled';
 export type ServiceLineSource = 'manual' | 'ai_draft';
 
 export type ProductRef = {

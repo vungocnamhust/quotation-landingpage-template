@@ -137,22 +137,42 @@ export async function runQuotationFastTrackPipeline({
       })),
     };
 
-    const res = await quotationFetch<{
-      quotation_id: string;
-      redirect_url?: string;
-      current_revision?: number;
-    }>(
-      `${API_BASE}/api/v2/workspace/requests/${requestId}/generate-quotation`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(overridesPayload),
-      },
-      "Failed to generate quotation from request."
-    );
-
-    quotationId = res.quotation_id;
-    baseRevision = res.current_revision || 1;
+    try {
+      const res = await quotationFetch<{
+        quotation_id: string;
+        redirect_url?: string;
+        current_revision?: number;
+      }>(
+        `${API_BASE}/api/v2/workspace/requests/${requestId}/generate-quotation`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(overridesPayload),
+        },
+        "Failed to generate quotation from request."
+      );
+      quotationId = res.quotation_id;
+      baseRevision = res.current_revision || 1;
+    } catch (error) {
+      // Retry after a committed conversion (network drop, double click): the
+      // backend answers 409 with the existing quotation — resume, don't fail.
+      const linkedQuotationId =
+        error instanceof QuotationApiError &&
+        error.status === 409 &&
+        error.detail &&
+        typeof error.detail === "object" &&
+        typeof (error.detail as { linkedQuotationId?: unknown }).linkedQuotationId === "string"
+          ? (error.detail as { linkedQuotationId: string }).linkedQuotationId
+          : null;
+      if (!linkedQuotationId) throw error;
+      quotationId = linkedQuotationId;
+      const doc = await quotationFetch<{ currentRevision: number }>(
+        `${API_BASE}/api/v2/quotations/${quotationId}/document?lang=${encodeURIComponent(lang)}`,
+        { method: "GET" },
+        "The resumed quotation's document could not be loaded."
+      );
+      baseRevision = doc.currentRevision;
+    }
   } else if (!existingQuotation) {
     const res = await quotationFetch<{
       quotationId: string;

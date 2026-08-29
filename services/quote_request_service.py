@@ -33,6 +33,21 @@ class RequestRevisionConflictError(Exception):
         super().__init__("Request changed in another session.")
 
 
+# Editable placeholder pricing used only when a request carries no budget and no
+# override amounts — never silently substituted for a provided value (16.3 F-14).
+_PLACEHOLDER_PER_TRAVELER_MINOR = 350_000
+_PLACEHOLDER_GROUP_TOTAL_MINOR = 700_000
+
+
+class RequestAlreadyConvertedError(Exception):
+    """Retry of generate-quotation after the request was converted — carry the existing quotation."""
+
+    def __init__(self, *, linked_quotation_id: str | None, current_revision: int) -> None:
+        self.linked_quotation_id = linked_quotation_id
+        self.current_revision = current_revision
+        super().__init__("This request was already converted to a quotation.")
+
+
 MONTH_MAP = {
     "jan": 1, "january": 1,
     "feb": 2, "february": 2,
@@ -239,8 +254,10 @@ def convert_request_to_quotation_facts(
         or (overrides.pricing.currency if overrides and overrides.pricing and overrides.pricing.currency else None)
         or (payload.get("currency") or "USD")
     )
-    per_traveler_minor = 350000
-    group_total_minor = 700000
+    # Editable placeholders shown to the sale when the request carries no budget at all;
+    # never used to override an amount the sale actually provided (16.3 F-14).
+    per_traveler_minor = _PLACEHOLDER_PER_TRAVELER_MINOR
+    group_total_minor = _PLACEHOLDER_GROUP_TOTAL_MINOR
     per_adult_minor = None
     per_child_minor = None
 
@@ -255,7 +272,7 @@ def convert_request_to_quotation_facts(
             opt_per_traveler = opt_adult
 
             if opt_total is not None and opt_adult is None and adults > 0:
-                opt_per_traveler = int(opt_total / adults)
+                opt_per_traveler = opt_total // adults
                 opt_adult = opt_per_traveler
             elif opt_adult is not None and opt_total is None:
                 calculated_total = opt_adult * adults
@@ -267,8 +284,10 @@ def convert_request_to_quotation_facts(
                 "id": f"opt-{idx}",
                 "label": opt_ov.label or f"Option {idx}",
                 "currency": opt_curr,
-                "per_traveler_amount_minor": opt_per_traveler or 350000,
-                "group_total_amount_minor": opt_total or 700000,
+                "per_traveler_amount_minor": opt_per_traveler
+                if opt_per_traveler is not None
+                else _PLACEHOLDER_PER_TRAVELER_MINOR,
+                "group_total_amount_minor": opt_total if opt_total is not None else _PLACEHOLDER_GROUP_TOTAL_MINOR,
                 "per_adult_amount_minor": opt_adult,
                 "per_child_amount_minor": opt_child,
             })
@@ -280,7 +299,7 @@ def convert_request_to_quotation_facts(
             per_adult_minor = pricing_ov.per_adult_amount_minor
             per_traveler_minor = per_adult_minor
         elif pricing_ov.group_total_amount_minor is not None and adults > 0:
-            per_traveler_minor = int(pricing_ov.group_total_amount_minor / adults)
+            per_traveler_minor = pricing_ov.group_total_amount_minor // adults
             per_adult_minor = per_traveler_minor
         if pricing_ov.per_child_amount_minor is not None:
             per_child_minor = pricing_ov.per_child_amount_minor
@@ -299,13 +318,15 @@ def convert_request_to_quotation_facts(
         budget_raw = payload.get("budget")
         budget_basis = payload.get("budget_basis") or "Total trip"
         if budget_raw is not None and float(budget_raw) > 0:
-            budget_val = float(budget_raw)
+            # Major→minor on the integer side of the boundary: round once, then only
+            # integer math — int(1234.56 * 100) truncates to 123455 (16.3 F-14).
+            budget_minor = round(float(budget_raw) * 100)
             if budget_basis in ["Per person", "Per person / day"]:
-                per_traveler_minor = int(budget_val * 100)
-                group_total_minor = int(budget_val * adults * 100)
+                per_traveler_minor = budget_minor
+                group_total_minor = budget_minor * adults
             else:
-                group_total_minor = int(budget_val * 100)
-                per_traveler_minor = int((budget_val / adults) * 100) if adults > 0 else group_total_minor
+                group_total_minor = budget_minor
+                per_traveler_minor = budget_minor // adults if adults > 0 else group_total_minor
         per_adult_minor = per_traveler_minor
         pricing_options = [
             {
@@ -630,9 +651,16 @@ class QuoteRequestService:
         template_name: str = "itinerary-imagery-v1",
         overrides: QuotationMinimalOverridesSchema | None = None,
     ) -> dict[str, Any]:
-        req = await self.repo.get_by_id(request_id)
+        # Lock the request for the whole conversion (Plan 16.3 F-04): the end-of-flow
+        # status transition re-reads under FOR UPDATE, but without the lock up front two
+        # concurrent conversions can both build a quotation before either transitions.
+        req = await self.repo.get_by_id_for_update(request_id)
         if not req:
             raise KeyError(f"QuoteRequest {request_id} not found.")
+        if req.status == "quotation_created":
+            raise RequestAlreadyConvertedError(
+                linked_quotation_id=req.linked_quotation_id, current_revision=req.current_revision
+            )
 
         source_revision = overrides.request_revision if overrides and overrides.request_revision else req.current_revision
         source_req = req

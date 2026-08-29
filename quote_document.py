@@ -501,8 +501,11 @@ class CreateQuotePricingOptionFact(QuoteBaseModel):
 
     @field_validator("per_traveler_amount_minor")
     @classmethod
-    def require_positive_per_traveler(cls, value: int | None) -> int:
-        if value is None or value <= 0:
+    def require_positive_per_traveler(cls, value: int | None) -> int | None:
+        # None is allowed (16.3 D8): a costing handoff ships only the group total
+        # (chốt #9 — per-person derivation belongs to the pricing reconciler/server),
+        # and group_total_amount_minor stays required-positive either way.
+        if value is not None and value <= 0:
             raise ValueError("per_traveler_amount_minor must be greater than 0")
         return value
 

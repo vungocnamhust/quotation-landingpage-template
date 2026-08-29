@@ -163,7 +163,14 @@ class QuoteRequestRepository:
         return await self.session.get(QuoteRequest, request_id)
 
     async def get_by_id_for_update(self, request_id: str) -> QuoteRequest | None:
-        stmt = select(QuoteRequest).where(QuoteRequest.id == request_id).with_for_update()
+        # populate_existing: after blocking on a concurrent committer, overwrite any
+        # stale identity-map attributes so the revision check compares fresh state.
+        stmt = (
+            select(QuoteRequest)
+            .where(QuoteRequest.id == request_id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        )
         return (await self.session.scalars(stmt)).one_or_none()
 
     async def get_revisions_by_request_id(self, request_id: str) -> list[QuoteRequestRevision]:

@@ -20,7 +20,11 @@ from schemas.v2.quote_request import (
     QuoteRequestUpdateSchema,
     QuoteRequestStatusUpdateSchema,
 )
-from services.quote_request_service import QuoteRequestService, RequestRevisionConflictError
+from services.quote_request_service import (
+    QuoteRequestService,
+    RequestAlreadyConvertedError,
+    RequestRevisionConflictError,
+)
 
 router = APIRouter(
     prefix="/api/v2/workspace/requests",
@@ -244,6 +248,22 @@ async def generate_quotation_from_request(
         return GenerateQuotationFromRequestResponseSchema(**res)
     except KeyError as err:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(err)) from err
+    except RequestAlreadyConvertedError as err:
+        # Retry after a committed conversion (e.g. network drop): hand back the
+        # existing quotation so the client resumes instead of failing (16.3 F-03/D3).
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "message": "This request was already converted to a quotation.",
+                "linkedQuotationId": err.linked_quotation_id,
+                "currentRevision": err.current_revision,
+            },
+        ) from err
+    except RequestRevisionConflictError as err:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"message": "Request changed in another session.", "currentRevision": err.current_revision},
+        ) from err
     except HTTPException:
         raise
     except Exception as err:
