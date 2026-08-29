@@ -2131,11 +2131,11 @@
             "label_meals": null,
             "segment_city": "Da Nang",
             "layout_images": {
-                "hero": "/published/quo_f7175e110605cd/draft_assets/f3b840a1232e42e88f54228232ed9c03.jpg",
+                "hero": "/assets/da-nang/danang1.jpg",
                 "small-1": "/assets/da-nang/danang3.jpg",
                 "small-2": "/assets/da-nang/hero/hero1.jpg",
                 "carousel": [
-                    "/published/quo_f7175e110605cd/draft_assets/f3b840a1232e42e88f54228232ed9c03.jpg",
+                    "/assets/da-nang/danang1.jpg",
                     "/assets/da-nang/danang3.jpg",
                     "/assets/da-nang/hero/hero1.jpg"
                 ]
