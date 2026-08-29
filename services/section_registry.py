@@ -14,6 +14,7 @@ SECTION_TYPES = (
     "inclusions_exclusions",
     "booking_terms",
     "designer",
+    "finalization",
 )
 
 
@@ -29,6 +30,7 @@ class QuoteSection(QuoteBaseModel):
         "inclusions_exclusions",
         "booking_terms",
         "designer",
+        "finalization",
     ]
     enabled: bool = True
     order: int = 0
@@ -140,6 +142,14 @@ SECTION_REGISTRY: Dict[str, SectionDefinition] = {
         pdf_anchor="designer",
         required_document_paths=["designer.name"],
         editor_schema={"fields": ["designer.name", "designer.signature", "designer.title", "designer.experience", "designer.quote", "designer.phone", "designer.email", "designer.image"]},
+    ),
+    "finalization": SectionDefinition(
+        type="finalization",
+        label="Finalization",
+        web_anchor="finalization",
+        pdf_anchor="finalization",
+        required_document_paths=[],
+        editor_schema={"fields": ["content.sections.finalization.blocks"]},
     ),
 }
 

@@ -25,6 +25,7 @@ SECTION_TYPES = (
     "inclusions_exclusions",
     "booking_terms",
     "designer",
+    "finalization",
 )
 
 

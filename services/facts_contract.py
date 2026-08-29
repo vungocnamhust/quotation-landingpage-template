@@ -21,7 +21,7 @@ _TRIP_FACT_KEYS = {
     "itinerary", "special_requirements", "display_route_text", "display_travel_dates",
 }
 _DAY_FACT_KEYS = {
-    "id", "day_number", "destination", "destination_ref", "summary", "overnight", "meals", "highlights",
+    "id", "day_number", "destination", "summary", "overnight", "meals", "highlights",
     "notes", "sense_of_pace", "display_date",
 }
 _BOOKING_ITEM_KEYS = {"key", "label", "body"}

@@ -78,8 +78,6 @@ async def get_quote_request(
     request_id: str,
     session: DbSessionDep,
 ) -> QuoteRequestResponseSchema:
-    if payload.status is not None:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Use PATCH /{request_id}/status with baseRevision for workflow changes.")
     repo = QuoteRequestRepository(session)
     req = await repo.get_by_id(request_id)
     if not req:
