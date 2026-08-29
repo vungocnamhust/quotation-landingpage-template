@@ -18,6 +18,9 @@ export async function GET(
     headers: {
       'Content-Type': media.contentType,
       'Cache-Control': 'public, max-age=31536000, immutable',
+      // Excluded from proxy.ts's matcher (starts with `media`), so this
+      // route sets its own defense-in-depth cache-isolation header (F-21).
+      Vary: 'Host',
     },
   });
 }

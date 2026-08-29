@@ -5,12 +5,22 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // Cache-key defense-in-depth (Plan 16.2 F-21): brand isolation is
+        // enforced server-side by the resolve query, but a CDN/reverse-proxy
+        // that keys its cache without Host could otherwise cross-serve one
+        // brand's brochure on another brand's domain.
         source: '/:locale(en|vi|ar)/q/:slug',
-        headers: [{ key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=86400' }],
+        headers: [
+          { key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=86400' },
+          { key: 'Vary', value: 'Host' },
+        ],
       },
       {
         source: '/p/:fallbackSlug',
-        headers: [{ key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=86400' }],
+        headers: [
+          { key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=86400' },
+          { key: 'Vary', value: 'Host' },
+        ],
       },
     ];
   },
@@ -23,6 +33,10 @@ const nextConfig: NextConfig = {
       {
         source: '/api/v1/:path*',
         destination: `${backendUrl}/api/v1/:path*`,
+      },
+      {
+        source: '/api/v2/:path*',
+        destination: `${backendUrl}/api/v2/:path*`,
       },
     ];
   },

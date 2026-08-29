@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import DisplayPage from '../../../../components/DisplayPage';
@@ -12,20 +13,47 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
-export default async function PublicQuotationPage({
-  params,
-}: {
-  params: Promise<{ locale: string; slug: string }>;
-}) {
-  const [{ locale, slug }, headerStore] = await Promise.all([params, headers()]);
-  if (!LANGUAGE_CODES.includes(locale as LanguageCode)) notFound();
+async function resolvePageProps(locale: string, slug: string) {
+  const headerStore = await headers();
   const hostname = (headerStore.get('x-forwarded-host') ?? headerStore.get('host') ?? '')
     .split(',')[0]!
     .trim()
     .replace(/:\d+$/, '')
     .toLowerCase();
-  if (!hostname) notFound();
-  const payload = await resolvePublicQuotation({ hostname, locale: locale as LanguageCode, slug });
+  if (!LANGUAGE_CODES.includes(locale as LanguageCode) || !hostname) return null;
+  return resolvePublicQuotation({ hostname, locale: locale as LanguageCode, slug });
+}
+
+// Plan 16.2 D9: brochure pages are per-brand, canonical public documents —
+// title/OG/canonical must reflect the resolving brand's own hostname, not a
+// static app-wide default.
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string; slug: string }>;
+}): Promise<Metadata> {
+  const { locale, slug } = await params;
+  const payload = await resolvePageProps(locale, slug);
+  if (!payload) return {};
+  const trip = payload.document.trip as { title?: string; lede?: string } | undefined;
+  const title = trip?.title || payload.brandProfile.displayName;
+  const description = trip?.lede || undefined;
+  const canonical = `https://${payload.brandProfile.hostname}/${locale}/q/${slug}`;
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: { title, description, url: canonical, siteName: payload.brandProfile.displayName },
+  };
+}
+
+export default async function PublicQuotationPage({
+  params,
+}: {
+  params: Promise<{ locale: string; slug: string }>;
+}) {
+  const { locale, slug } = await params;
+  const payload = await resolvePageProps(locale, slug);
   if (!payload) notFound();
   return <DisplayPage documentModel={buildDisplayDocumentFromQuoteDocument({
     document: payload.document,

@@ -13,10 +13,13 @@ function serviceHeaders(): Record<string, string> {
  * A streamed App Router `notFound()` can already have committed a 200 status
  * through an ancestor loading boundary. Public publication visibility cannot
  * rely on that rendering detail: unpublish and brand disable must take effect
- * as an HTTP 404 before any brochure response is streamed.
+ * as an HTTP 404 before any brochure response is streamed. This gate covers
+ * both the branded `/{locale}/q/{slug}` route and the global fallback
+ * `/p/{fallbackSlug}` route (Plan 16.2 F-19) — a quotation removed from
+ * publication must 404 on both doors, not just the branded one.
  */
 export async function proxy(request: NextRequest) {
-  const match = request.nextUrl.pathname.match(/^\/(en|vi|ar)\/q\/([^/]+)(?:\/.*)?$/);
+  const match = request.nextUrl.pathname.match(/^\/(?:(en|vi|ar)\/q|p)\/([^/]+)(?:\/.*)?$/);
   if (!match) return NextResponse.next();
 
   const [, locale, slug] = match;
@@ -26,9 +29,11 @@ export async function proxy(request: NextRequest) {
   const resolvedHostname = hostname.replace(/:\d+$/, '').toLowerCase();
   if (!resolvedHostname) return new NextResponse(null, { status: 404 });
 
-  const search = new URLSearchParams({ hostname: resolvedHostname, locale, slug });
+  const preflightUrl = locale
+    ? `${INTERNAL_API_BASE}/api/internal/v2/public-quotations/resolve?${new URLSearchParams({ hostname: resolvedHostname, locale, slug })}`
+    : `${INTERNAL_API_BASE}/api/internal/v2/public-quotations/fallback/${encodeURIComponent(slug)}`;
   try {
-    const response = await fetch(`${INTERNAL_API_BASE}/api/internal/v2/public-quotations/resolve?${search}`, {
+    const response = await fetch(preflightUrl, {
       headers: serviceHeaders(),
       cache: 'no-store',
     });
@@ -37,7 +42,12 @@ export async function proxy(request: NextRequest) {
   } catch {
     return new NextResponse(null, { status: 503 });
   }
-  return NextResponse.next();
+  const response = NextResponse.next();
+  // Defense-in-depth cache isolation (F-21): a CDN/reverse-proxy that keys
+  // its cache without the Host header could otherwise serve one brand's
+  // brochure on another brand's domain.
+  response.headers.set('Vary', 'Host');
+  return response;
 }
 
 export const config = {
