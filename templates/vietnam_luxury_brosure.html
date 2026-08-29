@@ -6,6 +6,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{{tour_title}} - {{ "Luxury Quotation" | translate(lang) }}</title>
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="{{tour_title}} - {{ 'Luxury Quotation' | translate(lang) }}" />
+  <meta property="og:description" content="{% if subtitle %}{{ subtitle }}{% elif hero_p %}{{ hero_p }}{% else %}{{ tour_title }}{% endif %}" />
+  <meta property="og:image" content="{{ hero_img_custom or img_0 or '/assets/brands/hero/elder.png' }}" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="{{tour_title}} - {{ 'Luxury Quotation' | translate(lang) }}" />
+  <meta name="twitter:description" content="{% if subtitle %}{{ subtitle }}{% elif hero_p %}{{ hero_p }}{% else %}{{ tour_title }}{% endif %}" />
+  <meta name="twitter:image" content="{{ hero_img_custom or img_0 or '/assets/brands/hero/elder.png' }}" />
   <script id="auto-version-checker">
     (function() {
       const CURRENT_VERSION = {{ latest_version | default(1) }};
