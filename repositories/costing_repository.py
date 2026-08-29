@@ -32,6 +32,10 @@ class CostingSheetAlreadyAttachedError(Exception):
     """Attach guard (quotation_id IS NULL) matched no row — the sheet was attached concurrently."""
 
 
+class CostingLineDuplicateError(Exception):
+    """The (sheet_id, idempotency_key) unique index fired — a concurrent duplicate create."""
+
+
 class CostingRepository:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
@@ -171,8 +175,14 @@ class CostingRepository:
         line = ServiceLine(id=line_id, sheet_id=sheet.id, tenant_id=tenant_id, created_at=now, updated_at=now, **values)
         self.session.add(line)
         sheet.lines.append(line)
-        await self._bump_revision_guarded(sheet, expected_revision=expected_revision)
-        await self.session.flush()
+        try:
+            await self._bump_revision_guarded(sheet, expected_revision=expected_revision)
+            await self.session.flush()
+        except IntegrityError as err:
+            # Concurrent duplicate with the same Idempotency-Key: the loser replays
+            # gracefully instead of surfacing a 500 (16.3 F-18).
+            await self.session.rollback()
+            raise CostingLineDuplicateError(str(err)) from err
         return line
 
     async def get_line_by_idempotency_key(

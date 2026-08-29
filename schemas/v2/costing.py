@@ -70,6 +70,12 @@ class ServiceLineWriteSchema(BaseModel):
 
     supplier_id: str | None = Field(default=None, max_length=64)
     product_id: str | None = Field(default=None, max_length=64)
+    # Named ``rate_id`` here (the domain concept the client picks from) but
+    # persisted/echoed back as ``tariff_id`` — see ServiceLineResponseSchema
+    # below. This is a deliberate, frozen split, not drift (16.3 F-27):
+    # ``service_lines.tariff_id`` is #D0's frozen LLM output contract
+    # (14.0-dmc-catalog-and-booking-model.md §2.7, spec §6.1) and must not be
+    # renamed. Do not "fix" this by unifying the names.
     rate_id: str | None = Field(default=None, max_length=64)
     price_line_id: int | None = None
 
@@ -140,6 +146,11 @@ class ServiceLineResponseSchema(BaseModel):
     title: str
     supplier_id: str | None
     product_id: str | None
+    # Mirrors db.models.costing.ServiceLine.tariff_id verbatim (frozen #D0
+    # contract, see the comment on ServiceLineWriteSchema.rate_id above) —
+    # the write side calls the same value ``rate_id``. Frontend code should
+    # bridge through lib/rules/costingAdapter.ts rather than reading this
+    # field name directly.
     tariff_id: str | None
     price_line_id: int | None
     unit: str

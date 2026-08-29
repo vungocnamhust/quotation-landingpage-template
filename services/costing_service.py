@@ -17,6 +17,7 @@ from core.kernel import ActorRef, generate_id, validate_currency
 from core.rules.costing_rules import ServiceLineInput, summarize
 from db.models.costing import CostingSheet
 from repositories.costing_repository import (
+    CostingLineDuplicateError,
     CostingRepository,
     CostingRevisionRaceError,
     CostingSheetAlreadyAttachedError,
@@ -233,6 +234,12 @@ class CostingService:
             )
         except CostingRevisionRaceError as err:
             raise await self._conflict_from_race(sheet_id) from err
+        except CostingLineDuplicateError:
+            # The concurrent twin with the same key already landed — replay its result.
+            sheet = await self.repository.get_sheet_by_id(sheet_id)
+            if sheet is None:
+                return None
+            return await self._to_workbench(sheet)
 
         sheet = await self.repository.get_sheet_by_id(sheet_id)
         return await self._to_workbench(sheet)

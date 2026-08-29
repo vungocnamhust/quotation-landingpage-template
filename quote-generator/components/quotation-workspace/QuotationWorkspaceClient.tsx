@@ -804,7 +804,7 @@ export default function QuotationWorkspaceClient({
             ) : null}
             <CostingWorkbench
               anchor={{ quotationId }}
-              baseRevision={documentData?.currentRevision ?? workflowData?.currentRevision ?? 1}
+              baseRevision={documentData?.currentRevision ?? workflowData?.currentRevision}
               existingOptions={
                 ((factsData?.facts as Record<string, unknown> | undefined)?.pricing_facts as { options?: Array<Record<string, unknown>> } | undefined)?.options?.map((opt) => ({
                   id: String(opt.id || ""),

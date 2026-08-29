@@ -117,6 +117,63 @@ describe('costingToFactsHandoff', () => {
     assert.equal(result.service_facts.hotels.length, 2);
   });
 
+  it('drops an accommodation line with day_number null instead of throwing (16.3 F-23)', () => {
+    const fallback = fallbackWithDays(2);
+    const wb = workbench({
+      items: [line({ id: 'l1', day_number: null, product_ref: { property_id: 'acc_1', destination_name: 'Hanoi' } })],
+    });
+    const result = buildFactsFromCostingWorkbench(wb, fallback);
+    assert.deepEqual(result.trip_facts.itinerary, fallback.trip_facts.itinerary);
+    assert.equal(result.service_facts.hotels.length, 0);
+  });
+
+  it('drops an accommodation line whose day_number is out of the itinerary range (16.3 F-23)', () => {
+    const fallback = fallbackWithDays(2);
+    const wb = workbench({
+      items: [
+        line({ id: 'l1', day_number: 1, product_ref: { property_id: 'acc_1', destination_name: 'Hanoi' } }),
+        // day 9 has no corresponding itinerary day — the costed night silently
+        // has nowhere to land and must not throw or corrupt the itinerary.
+        line({ id: 'l2', day_number: 9, product_ref: { property_id: 'acc_9', destination_name: 'Nowhere' } }),
+      ],
+    });
+    const result = buildFactsFromCostingWorkbench(wb, fallback);
+    assert.equal(result.trip_facts.itinerary.length, 2);
+    assert.equal(result.trip_facts.itinerary[0].accommodation_id, 'acc_1');
+    assert.equal(result.trip_facts.itinerary[1].accommodation_id, null);
+    // Only the in-range line survives into the clustered hotel list.
+    assert.equal(result.service_facts.hotels.length, 1);
+    assert.equal(result.service_facts.hotels[0].accommodation_id, 'acc_1');
+  });
+
+  it('drops a non-accommodation line with day_number out of range without touching the itinerary', () => {
+    const fallback = fallbackWithDays(1);
+    const wb = workbench({
+      items: [line({ id: 'l1', category: 'transportation', day_number: 4, product_ref: { destination_name: 'Da Nang' } })],
+    });
+    const result = buildFactsFromCostingWorkbench(wb, fallback);
+    assert.deepEqual(result.trip_facts.itinerary, fallback.trip_facts.itinerary);
+  });
+
+  it('keeps the sale-set accommodation on a day even when a conflicting hotel line covers it (no drift signal — documents current behavior)', () => {
+    const fallback = fallbackWithDays(1);
+    fallback.trip_facts.itinerary[0] = {
+      ...fallback.trip_facts.itinerary[0],
+      destination: 'Hoi An',
+      accommodation_id: 'acc_sale_picked',
+      accommodation_name: 'Sale-Picked Resort',
+    };
+    const wb = workbench({
+      items: [line({ id: 'l1', day_number: 1, product_ref: { property_id: 'acc_costed', destination_name: 'Da Nang' } })],
+    });
+    const result = buildFactsFromCostingWorkbench(wb, fallback);
+    // The `day.destination || destinationName` / `day.accommodation_id || ...`
+    // guards keep whatever the sale already set — the costed line's conflicting
+    // property is silently ignored rather than flagged (Plan 16.3 F-23).
+    assert.equal(result.trip_facts.itinerary[0].destination, 'Hoi An');
+    assert.equal(result.trip_facts.itinerary[0].accommodation_id, 'acc_sale_picked');
+  });
+
   it('never overwrites a destination the sale already set', () => {
     const fallback = fallbackWithDays(1);
     fallback.trip_facts.itinerary[0] = { ...fallback.trip_facts.itinerary[0], destination: 'Hoi An' };

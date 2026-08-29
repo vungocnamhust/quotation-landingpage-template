@@ -415,4 +415,6 @@ class GenerateQuotationFromRequestResponseSchema(BaseModel):
     redirect_url: str
     status: str = "draft"
     current_revision: int = 1
+    # The request's still-open (unattached) costing sheet, when one exists (16.3 F-26).
+    costing_sheet_id: str | None = None
     facts_snapshot: dict[str, Any] = Field(default_factory=dict)

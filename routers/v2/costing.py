@@ -31,7 +31,15 @@ def _conflict_detail(err: CostingConflictError) -> dict:
     return {"message": str(err), "currentRevision": err.current_revision}
 
 
+def _validation_detail(err: CostingValidationError):
+    """Keep structured 422 payloads (e.g. T6 rate candidates) machine-readable (16.3 F-17)."""
+    payload = err.args[0] if err.args else str(err)
+    return payload if isinstance(payload, dict) else str(payload)
+
+
 async def _enforce_quotation_ownership_for_sheet(sheet_id: str, session, principal: EditorPrincipalDep) -> None:
+    # Deliberate (16.3 F-28): a sheet not yet attached to a quotation has no owner —
+    # any authenticated editor may work it, mirroring the unowned quote_request surface.
     sheet = await CostingRepository(session).get_sheet_by_id(sheet_id)
     if sheet is not None and sheet.quotation_id:
         await require_owned_v2_quotation(sheet.quotation_id, principal)
@@ -51,7 +59,7 @@ async def create_costing_sheet(
         await session.commit()
         return sheet
     except CostingValidationError as err:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(err)) from err
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=_validation_detail(err)) from err
     except CostingConflictError as err:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=_conflict_detail(err)) from err
 
@@ -128,7 +136,7 @@ async def attach_costing_sheet_to_quotation(
         await session.commit()
         return workbench
     except CostingValidationError as err:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(err)) from err
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=_validation_detail(err)) from err
     except CostingConflictError as err:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=_conflict_detail(err)) from err
 
@@ -152,7 +160,7 @@ async def create_service_line(
         await session.commit()
         return workbench
     except CostingValidationError as err:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(err)) from err
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=_validation_detail(err)) from err
     except CostingConflictError as err:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=_conflict_detail(err)) from err
 
@@ -174,7 +182,7 @@ async def update_service_line(
         await session.commit()
         return workbench
     except CostingValidationError as err:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(err)) from err
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=_validation_detail(err)) from err
     except CostingConflictError as err:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=_conflict_detail(err)) from err
 

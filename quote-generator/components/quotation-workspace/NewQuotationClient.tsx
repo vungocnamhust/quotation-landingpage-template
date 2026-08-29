@@ -100,6 +100,16 @@ function QuotationIntakeInner({
           const msg = apiErrorMessage(error);
           setFieldErrors(apiErrorFieldErrors(error));
           const failure = error instanceof FastTrackFailure ? error : null;
+          // 16.3 F-29: surface the concrete review blockers instead of a bare failure line.
+          const reviewBlockers =
+            failure?.review && typeof failure.review === "object" && Array.isArray((failure.review as { blockers?: unknown }).blockers)
+              ? ((failure.review as { blockers: unknown[] }).blockers.filter(
+                  (item): item is string => typeof item === "string"
+                ))
+              : [];
+          const blockerSuffix = reviewBlockers.length
+            ? ` Cần xử lý: ${reviewBlockers.join("; ")}.`
+            : "";
           const retry = failure && failure.retryable
             ? {
                 quotationId: failure.quotationId,
@@ -109,7 +119,7 @@ function QuotationIntakeInner({
             : null;
           setFastTrackResume(retry);
           notify({
-            message: msg,
+            message: `${msg}${blockerSuffix}`,
             type: "error",
             persistent: true,
             scope: "create-quotation",
@@ -330,9 +340,20 @@ export default function NewQuotationClient({ personalWorkspace = false }: { pers
   const {
     data: costingWorkbench,
     isLoading: costingLoading,
+    error: costingError,
+    mutate: mutateCostingWorkbench,
   } = useSWR<CostingWorkbenchResponse>(
     costingSheetId ? `${API_BASE}/api/v2/costing-sheets/${costingSheetId}` : null,
     fetchJson
+  );
+
+  // 16.3 F-11: a pasted/stale URL can pair request A with a sheet of request B —
+  // never prefill or attach across requests; treat the mismatch like a failed load.
+  const costingMismatch = Boolean(
+    costingSheetId &&
+    costingWorkbench &&
+    requestId &&
+    costingWorkbench.sheet.quote_request_id !== requestId
   );
 
   // Load Current User / Travel Designer profile
@@ -364,6 +385,28 @@ export default function NewQuotationClient({ personalWorkspace = false }: { pers
             <p className={cn(getTypographyClassName("bodyMd"), "text-[var(--color-muted)]")}>
               Loading request context…
             </p>
+          </div>
+        ) : costingSheetId && (costingError || costingMismatch || !costingWorkbench) ? (
+          // 16.3 F-10/F-11: never fall through to a silent no-prefill intake when a
+          // costing sheet was explicitly requested but cannot be used.
+          <div className="rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface)] p-8 text-center">
+            <p className={cn(getTypographyClassName("bodyMd"), "text-rose-700")}>
+              {costingMismatch
+                ? `Costing sheet ${costingSheetId} belongs to a different request and cannot prefill this quotation.`
+                : `The costing sheet could not be loaded, so the quotation cannot be prefilled from the estimate.`}
+            </p>
+            {!costingMismatch ? (
+              <button
+                type="button"
+                onClick={() => void mutateCostingWorkbench()}
+                className={cn(
+                  getTypographyClassName("buttonSecondary"),
+                  "mt-4 rounded-full border border-[var(--color-border)] px-5 py-2 text-[var(--color-on-surface)] transition hover:bg-[var(--color-surface-muted)]"
+                )}
+              >
+                Retry loading the costing sheet
+              </button>
+            ) : null}
           </div>
         ) : (
           <QuotationIntakeInner

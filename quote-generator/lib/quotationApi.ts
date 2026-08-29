@@ -731,6 +731,10 @@ export type ServiceLineProfile = {
   title: string;
   supplier_id: string | null;
   product_id: string | null;
+  // Deliberately named `tariff_id` on the wire, not `rate_id` — mirrors the
+  // backend's frozen #D0 LLM output contract (schemas/v2/costing.py, 16.3
+  // F-27). Don't rename this field; consume it via costingAdapter.ts's
+  // `rateId` bridge instead.
   tariff_id: string | null;
   price_line_id: number | null;
   unit: string;

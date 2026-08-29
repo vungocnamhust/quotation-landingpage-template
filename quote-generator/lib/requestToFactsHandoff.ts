@@ -245,7 +245,9 @@ export function buildInitialFactsFromRequest(
       const destRef = first.destination_ref ?? null;
 
       return {
-        id: `stay_${Date.now()}_${idx + 1}`,
+        // Deterministic id (16.3 F-22): this module promises a pure prefill —
+        // derive identity from the day span, never from the clock.
+        id: `stay_d${dayStart}-${dayEnd}_${idx + 1}`,
         accommodation_id: null,
         name: null,
         destination: dest,

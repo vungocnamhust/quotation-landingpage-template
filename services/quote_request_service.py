@@ -876,11 +876,18 @@ class QuoteRequestService:
             },
         )
 
+        # Surface the request's still-open costing sheet so the client is not the
+        # sole source of truth for the stage-3 attach orchestration (16.3 F-26).
+        from repositories.costing_repository import CostingRepository
+
+        open_sheet = await CostingRepository(self.session).get_active_sheet_by_request(req.id)
+
         return {
             "quotation_id": quotation.id,
             "request_id": req.id,
             "redirect_url": f"/workspace/quotations/{quotation.id}/edit?stage=facts&lang={effective_lang}",
             "status": "draft",
             "current_revision": saved.revision,
+            "costing_sheet_id": open_sheet.id if open_sheet else None,
             "facts_snapshot": canonical.model_dump(mode="json"),
         }

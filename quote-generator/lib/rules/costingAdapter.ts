@@ -98,6 +98,8 @@ export function draftFromServiceLine(line: ServiceLineProfile): ServiceLineDraft
     title: line.title,
     supplierId: line.supplier_id,
     productId: line.product_id,
+    // Bridges the frozen wire name `tariff_id` to the domain name `rateId`
+    // (16.3 F-27) — see the comment on ServiceLineProfile.tariff_id.
     rateId: line.tariff_id,
     priceLineId: line.price_line_id,
     unit: line.unit,
