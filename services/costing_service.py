@@ -1,9 +1,10 @@
-"""Costing aggregate service — 15.4 §1.7. Orchestrates resolve→snapshot→CAS→totals→attach.
+"""Costing aggregate service — 15.4 §1.7 + 15.5 apply. Orchestrates resolve→snapshot→CAS→totals→attach→apply.
 
-Never reads/writes facts, never touches document revision, never emits outbox
-(that is 15.5's ``costing.applied`` event), never imports quote_request/quotation
-service internals. The only touch points into those aggregates are read-only
-lookups via their repositories (chốt #7 in AGENTS.md-style module boundaries).
+Sheet/line writes never touch facts or the document revision. The single
+sanctioned crossing is 15.5's ``apply_pricing``: it writes the target pricing
+option via ``api.runtime.apply_pricing_option`` (facts-side CAS) and emits the
+``costing.applied`` outbox event. Everything else touches other aggregates only
+through read-only repository lookups.
 """
 from __future__ import annotations
 
@@ -15,7 +16,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.kernel import ActorRef, generate_id, validate_currency
 from core.rules.costing_rules import ServiceLineInput, summarize
 from db.models.costing import CostingSheet
-from repositories.costing_repository import CostingRepository, CostingSheetSlotTakenError
+from repositories.costing_repository import (
+    CostingRepository,
+    CostingRevisionRaceError,
+    CostingSheetAlreadyAttachedError,
+    CostingSheetSlotTakenError,
+)
 from repositories.destination_repository import DestinationRepository
 from repositories.product_repository import ProductRepository
 from repositories.quotation_repository import QuotationRepository
@@ -145,7 +151,12 @@ class CostingService:
         if payload.rounding_increment_minor is not None:
             values["rounding_increment_minor"] = payload.rounding_increment_minor
 
-        sheet = await self.repository.update_settings(sheet, values=values)
+        try:
+            sheet = await self.repository.update_settings(
+                sheet, values=values, expected_revision=payload.base_costing_revision
+            )
+        except CostingRevisionRaceError as err:
+            raise await self._conflict_from_race(sheet_id) from err
         return await self._to_workbench(sheet)
 
     async def attach_quotation(
@@ -177,14 +188,23 @@ class CostingService:
                 current_revision=sheet.costing_revision,
             )
 
-        sheet.updated_by = actor.serialize()
         try:
             sheet = await self.repository.attach_to_quotation(
-                sheet, quotation_id=payload.quotation_id, idempotency_key=idempotency_key
+                sheet,
+                quotation_id=payload.quotation_id,
+                idempotency_key=idempotency_key,
+                updated_by=actor.serialize(),
             )
         except CostingSheetSlotTakenError as err:
             raise CostingConflictError(
                 f"quotation '{payload.quotation_id}' already has a costing sheet.", current_revision=sheet.costing_revision
+            ) from err
+        except CostingSheetAlreadyAttachedError as err:
+            # Concurrent attach won the quotation_id IS NULL guard; re-read for an honest 409.
+            current = await self.repository.get_sheet_revision(sheet_id)
+            raise CostingConflictError(
+                f"Sheet '{sheet_id}' was just attached to another quotation.",
+                current_revision=current if current is not None else sheet.costing_revision,
             ) from err
         return await self._to_workbench(sheet)
 
@@ -204,7 +224,15 @@ class CostingService:
         values["idempotency_key"] = idempotency_key
         values["created_by"] = actor.serialize()
         values["updated_by"] = actor.serialize()
-        await self.repository.insert_line(sheet, line_id=generate_id(LINE_ID_PREFIX), values=values)
+        try:
+            await self.repository.insert_line(
+                sheet,
+                line_id=generate_id(LINE_ID_PREFIX),
+                values=values,
+                expected_revision=payload.base_costing_revision,
+            )
+        except CostingRevisionRaceError as err:
+            raise await self._conflict_from_race(sheet_id) from err
 
         sheet = await self.repository.get_sheet_by_id(sheet_id)
         return await self._to_workbench(sheet)
@@ -224,7 +252,12 @@ class CostingService:
 
         values = await self._resolve_line_values(sheet, payload)
         values["updated_by"] = actor.serialize()
-        await self.repository.update_line(sheet, line, values=values)
+        try:
+            await self.repository.update_line(
+                sheet, line, values=values, expected_revision=payload.base_costing_revision
+            )
+        except CostingRevisionRaceError as err:
+            raise await self._conflict_from_race(sheet_id) from err
 
         sheet = await self.repository.get_sheet_by_id(sheet_id)
         return await self._to_workbench(sheet)
@@ -242,7 +275,10 @@ class CostingService:
             return None
         self._guard_booked_line(line, sheet)
 
-        await self.repository.delete_line(sheet, line)
+        try:
+            await self.repository.delete_line(sheet, line, expected_revision=base_costing_revision)
+        except CostingRevisionRaceError as err:
+            raise await self._conflict_from_race(sheet_id) from err
         sheet = await self.repository.get_sheet_by_id(sheet_id)
         return await self._to_workbench(sheet)
 
@@ -262,6 +298,14 @@ class CostingService:
                 "and can no longer be edited or deleted from the costing grid.",
                 current_revision=sheet.costing_revision,
             )
+
+    async def _conflict_from_race(self, sheet_id: str) -> CostingConflictError:
+        """Build the 409 for a lost version-guarded write, with the revision the winner left behind."""
+        current = await self.repository.get_sheet_revision(sheet_id)
+        return CostingConflictError(
+            f"Costing sheet '{sheet_id}' was modified by a concurrent write. Reload and retry.",
+            current_revision=current if current is not None else 0,
+        )
 
     @staticmethod
     def _check_revision(sheet: CostingSheet, base_costing_revision: int) -> None:

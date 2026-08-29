@@ -169,4 +169,26 @@ describe('costingToFactsHandoff', () => {
     buildFactsFromCostingWorkbench(wb, fallback);
     assert.deepEqual(fallback, snapshot);
   });
+
+  it('serializeFactsForApi strips the intake-only keys the backend forbids (Plan 16.3 F-02)', async () => {
+    const { serializeFactsForApi } = await import('../../components/quotation-workspace/factsTypes.ts');
+    const fallback = fallbackWithDays(2);
+    const wb = workbench({
+      items: [line({ id: 'l1', day_number: 1, product_ref: { property_id: 'acc_1', destination_name: 'Hanoi' } })],
+      summary: { cost_total_minor: 1_000_000, sell_total_minor: 1_200_000, margin_minor: 200_000, margin_bps: 1667, by_day: [], by_category: [] },
+    });
+    const facts = buildFactsFromCostingWorkbench(wb, fallback);
+    const payload = serializeFactsForApi(facts);
+
+    // TripFactDay is extra="forbid" server-side: these keys must never ship.
+    const forbiddenDayKeys = ['accommodation_id', 'accommodation_name', 'room_type', 'destination_ref', 'title'];
+    for (const day of payload.trip_facts.itinerary as Record<string, unknown>[]) {
+      for (const key of forbiddenDayKeys) {
+        assert.equal(key in day, false, `serialized itinerary day must not carry '${key}'`);
+      }
+    }
+    assert.equal('destination_refs' in payload.trip_facts, false);
+    // Stay data survives through the canonical channel instead.
+    assert.ok(payload.service_facts.hotels.length >= 1);
+  });
 });

@@ -13,6 +13,7 @@ import MinimalQuotationIntakeForm from "./MinimalQuotationIntakeForm.tsx";
 import RequestRecapPanel from "./RequestRecapPanel.tsx";
 import {
   createBrochureFacts,
+  serializeFactsForApi,
   type PricingOptionFact,
   type QuotationFacts,
   type QuotationOptions,
@@ -227,7 +228,9 @@ function QuotationIntakeInner({
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(facts),
+              // Raw editor facts carry intake-only keys the backend forbids
+              // (extra="forbid" on TripFactDay) — always ship the serialized contract.
+              body: JSON.stringify(serializeFactsForApi(facts)),
             },
             "Quotation could not be created."
           );

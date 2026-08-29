@@ -408,6 +408,99 @@ class CostingServiceTests(unittest.TestCase):
 
         asyncio.run(scenario())
 
+    def test_version_guarded_bump_rejects_stale_writer_even_with_stale_identity_map(self):
+        """Plan 16.3 F-01 exit gate: 2 writers on the same base revision → exactly one wins.
+
+        Session A holds an in-memory sheet at revision 0 (identity-map stale), session B
+        commits revision 1; A's write must die at the SQL guard, not silently land.
+        """
+
+        async def scenario():
+            from repositories.costing_repository import CostingRepository, CostingRevisionRaceError
+
+            async with self.session_factory() as session_a:
+                service_a = CostingService(session_a)
+                sheet = await service_a.create_sheet(
+                    CostingSheetCreateSchema(request_id="req_test1", currency="USD"), actor=ACTOR
+                )
+                await session_a.commit()
+                repo_a = CostingRepository(session_a)
+                stale_sheet = await repo_a.get_sheet_by_id(sheet.id)
+                await session_a.commit()  # release the read transaction, keep the stale object
+
+                async with self.session_factory() as session_b:
+                    service_b = CostingService(session_b)
+                    await service_b.update_settings(
+                        sheet.id,
+                        CostingSettingsUpdateSchema(base_costing_revision=0, markup_rate_bps=2_000),
+                        actor=ACTOR,
+                    )
+                    await session_b.commit()
+
+                self.assertEqual(stale_sheet.costing_revision, 0)  # A still believes revision 0
+                with self.assertRaises(CostingRevisionRaceError):
+                    await repo_a.update_settings(
+                        stale_sheet, values={"markup_rate_bps": 3_000}, expected_revision=0
+                    )
+                await session_a.rollback()
+
+                current = await CostingRepository(session_a).get_sheet_revision(sheet.id)
+                self.assertEqual(current, 1)  # B's write survived intact
+
+        asyncio.run(scenario())
+
+    def test_concurrent_attach_loses_to_quotation_id_null_guard(self):
+        """Plan 16.3 F-01: attach of one sheet to two quotations — the loser gets a typed error."""
+
+        async def scenario():
+            from repositories.costing_repository import (
+                CostingRepository,
+                CostingSheetAlreadyAttachedError,
+            )
+
+            async with self.session_factory() as session_a:
+                service_a = CostingService(session_a)
+                sheet = await service_a.create_sheet(
+                    CostingSheetCreateSchema(request_id="req_test1"), actor=ACTOR
+                )
+                await session_a.commit()
+
+                for qid in ("qtn_race_1", "qtn_race_2"):
+                    await QuotationRepository(session_a).create_quotation(
+                        quotation_id=qid,
+                        brand_id="brand_capella",
+                        template_name="quote-generator",
+                        baseline_lang="en",
+                        source_request_id="req_test1",
+                    )
+                await session_a.commit()
+
+                repo_a = CostingRepository(session_a)
+                stale_sheet = await repo_a.get_sheet_by_id(sheet.id)
+                await session_a.commit()
+
+                async with self.session_factory() as session_b:
+                    service_b = CostingService(session_b)
+                    await service_b.attach_quotation(
+                        sheet.id,
+                        AttachQuotationSchema(quotation_id="qtn_race_1"),
+                        actor=ACTOR,
+                        idempotency_key="attach-winner",
+                    )
+                    await session_b.commit()
+
+                self.assertIsNone(stale_sheet.quotation_id)  # A still believes unattached
+                with self.assertRaises(CostingSheetAlreadyAttachedError):
+                    await repo_a.attach_to_quotation(
+                        stale_sheet, quotation_id="qtn_race_2", idempotency_key="attach-loser"
+                    )
+                await session_a.rollback()
+
+                fresh = await CostingRepository(session_a).get_sheet_by_id(sheet.id)
+                self.assertEqual(fresh.quotation_id, "qtn_race_1")  # winner untouched
+
+        asyncio.run(scenario())
+
     def test_check_2_parent_null_is_rejected_by_check_constraint(self):
         async def scenario():
             async with self.session_factory() as session:

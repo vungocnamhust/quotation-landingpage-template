@@ -5,6 +5,7 @@ import { Lock } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
 import { SUPPORTED_CURRENCIES } from "../../lib/rules/pricingReconciler.ts";
+import { formatMinorAmount as formatMinor } from "../../lib/moneyFormat.ts";
 import type { CostingSheetProfile, CostingSummary } from "./types.ts";
 
 export interface CostingSettingsBarProps {
@@ -13,12 +14,6 @@ export interface CostingSettingsBarProps {
   lineCount: number;
   disabled?: boolean;
   onUpdate: (input: { currency?: string; markup_rate_bps?: number; rounding_increment_minor?: number }) => void;
-}
-
-function formatMinor(amountMinor: number, currency: string): string {
-  const divisor = currency === "VND" ? 1 : 100;
-  const major = amountMinor / divisor;
-  return `${major.toLocaleString(undefined, { maximumFractionDigits: divisor === 1 ? 0 : 2 })} ${currency}`;
 }
 
 export function CostingSettingsBar({ sheet, summary, lineCount, disabled, onUpdate }: CostingSettingsBarProps) {

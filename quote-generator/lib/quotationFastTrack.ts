@@ -1,4 +1,5 @@
 import { QuotationApiError, quotationFetch } from "./apiError.ts";
+import { serializeFactsForApi } from "../components/quotation-workspace/factsTypes.ts";
 import type { PricingOptionFact, QuotationFacts } from "../components/quotation-workspace/factsTypes.ts";
 import { staysAdapter } from "./rules/staysAdapter.ts";
 import { staysReconciler } from "./rules/staysReconciler.ts";
@@ -161,7 +162,9 @@ export async function runQuotationFastTrackPipeline({
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(facts),
+        // Raw editor facts carry intake-only keys the backend forbids
+        // (extra="forbid" on TripFactDay) — always ship the serialized contract.
+        body: JSON.stringify(serializeFactsForApi(facts)),
       },
       "Quotation could not be created."
     );

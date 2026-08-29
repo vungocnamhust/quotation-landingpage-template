@@ -4,16 +4,12 @@ import { Trash2 } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
 import type { ServiceLineProfile } from "./types.ts";
+import { formatMinorAmount as formatMinor } from "../../lib/moneyFormat.ts";
 
 export interface ServiceLineRowProps {
   line: ServiceLineProfile;
   disabled?: boolean;
   onDelete: (lineId: string) => void;
-}
-
-function formatMinor(amountMinor: number, currency: string): string {
-  const divisor = currency === "VND" ? 1 : 100;
-  return `${(amountMinor / divisor).toLocaleString(undefined, { maximumFractionDigits: divisor === 1 ? 0 : 2 })} ${currency}`;
 }
 
 export function ServiceLineRow({ line, disabled, onDelete }: ServiceLineRowProps) {
