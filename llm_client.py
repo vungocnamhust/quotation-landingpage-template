@@ -1,9 +1,24 @@
 import os
+import httpx
 from dotenv import load_dotenv
 from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai.providers.openai import OpenAIProvider
 
 load_dotenv()
+
+# A hung provider call must never block a Fast Track request forever (16.3 F-06).
+# Per-request read timeout; pydantic_ai's retries stay bounded on top of it.
+_LLM_TIMEOUT_SECONDS = float(os.getenv("LLM_TIMEOUT_SECONDS", "120"))
+_http_client: httpx.AsyncClient | None = None
+
+
+def _get_http_client() -> httpx.AsyncClient:
+    global _http_client
+    if _http_client is None or _http_client.is_closed:
+        _http_client = httpx.AsyncClient(
+            timeout=httpx.Timeout(_LLM_TIMEOUT_SECONDS, connect=10.0)
+        )
+    return _http_client
 
 def get_model() -> OpenAIChatModel:
     """
@@ -31,7 +46,8 @@ def get_model() -> OpenAIChatModel:
 
     provider = OpenAIProvider(
         base_url=base_url,
-        api_key=api_key
+        api_key=api_key,
+        http_client=_get_http_client(),
     )
 
     return OpenAIChatModel(

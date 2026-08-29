@@ -85,6 +85,9 @@ EXPECTED_V2_OPERATIONS = {
     ("/api/v2/quotations/{quotation_id}/facts/media", "PUT"),
     ("/api/v2/quotations/{quotation_id}/facts/media-defaults", "POST"),
     ("/api/v2/quotations/{quotation_id}/fast-track/assemble", "POST"),
+    # 16.3 F-21: real progress stream, observational only — POST above is the
+    # single source of truth for the outcome.
+    ("/api/v2/quotations/{quotation_id}/fast-track/stream", "GET"),
     ("/api/v2/quotations/{quotation_id}/impacts", "GET"),
     ("/api/v2/quotations/{quotation_id}/impacts/accept", "POST"),
     ("/api/v2/quotations/{quotation_id}/impacts/generate-selected", "POST"),

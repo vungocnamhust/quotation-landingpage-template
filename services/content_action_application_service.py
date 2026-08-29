@@ -1,9 +1,11 @@
 """Application service for Actionable Content Plan HTTP use cases."""
 from __future__ import annotations
 
+import asyncio
 import copy
 import time
 import uuid
+from collections.abc import Awaitable, Callable
 from typing import Any, Literal
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -87,6 +89,7 @@ class ContentActionApplicationService:
 
     async def generate_and_apply(
         self, *, quotation_id: str, plan_id: str, action_ids: list[str], expected_revision: int, writing_style: Literal["storytelling", "detailed"], profile_id: str | None, correlation_id: str, idempotency_key: str, document_overlay: dict[str, Any] | None = None,
+        on_action_complete: Callable[[int, int], Awaitable[None]] | None = None,
     ) -> tuple[list[Any], int]:
         replay = await self._replay_bypass_if_idempotent(
             quotation_id=quotation_id,
@@ -99,7 +102,7 @@ class ContentActionApplicationService:
         plan, actions, quotation, facts, document, brand = await self._execution_context(quotation_id, plan_id, action_ids, "bypass")
         if document.revision != expected_revision:
             raise DocumentRevisionConflictError(quotation_id=quotation_id, lang=quotation.baseline_lang, expected_revision=expected_revision, current_revision=document.revision, current_document=document.document_json)
-        generated = await self._generate_all(actions=actions, facts=facts, document=document.document_json, quotation=quotation, brand=brand, writing_style=writing_style)
+        generated = await self._generate_all(actions=actions, facts=facts, document=document.document_json, quotation=quotation, brand=brand, writing_style=writing_style, on_action_complete=on_action_complete)
         lang = quotation.baseline_lang
         brand_id = quotation.brand_id
         selected_action_ids = [row.id for row in actions]
@@ -128,6 +131,22 @@ class ContentActionApplicationService:
             await self.plans.mark_actions(action_ids=selected_action_ids, state="applied", draft_ids={action_id: draft.id for action_id, draft in zip(selected_action_ids, draft_rows)}, applied_document_revision=saved.revision, idempotency_key=idempotency_key, correlation_id=correlation_id, profile_id=profile_id)
             await OutboxService(self.session).emit_event(event_type="quotation.content_action.applied", aggregate_type="quotation", aggregate_id=quotation_id, brand_id=brand_id, correlation_id=correlation_id, payload={"plan_id": plan_id, "action_ids": selected_action_ids, "document_revision": saved.revision, "idempotency_key": idempotency_key})
         return draft_rows, saved.revision
+
+    async def replay_bypass_if_idempotent(
+        self,
+        *,
+        quotation_id: str,
+        plan_id: str,
+        action_ids: list[str],
+        idempotency_key: str,
+    ) -> tuple[list[Any], int] | None:
+        """Public replay lookup for orchestrators (Fast Track D4) — see the private impl."""
+        return await self._replay_bypass_if_idempotent(
+            quotation_id=quotation_id,
+            plan_id=plan_id,
+            action_ids=action_ids,
+            idempotency_key=idempotency_key,
+        )
 
     async def _replay_bypass_if_idempotent(
         self,
@@ -185,7 +204,17 @@ class ContentActionApplicationService:
             raise ContentActionNotFoundError("Content action context is unavailable.")
         return plan, actions, quotation, CreateQuoteRequestV1.model_validate(version_facts.canonical_facts_json), document, brand
 
-    async def _generate_all(self, *, actions: list[Any], facts: CreateQuoteRequestV1, document: dict[str, Any], quotation: Any, brand: Any, writing_style: str) -> list[dict[str, Any]]:
+    async def _generate_all(
+        self,
+        *,
+        actions: list[Any],
+        facts: CreateQuoteRequestV1,
+        document: dict[str, Any],
+        quotation: Any,
+        brand: Any,
+        writing_style: str,
+        on_action_complete: Callable[[int, int], Awaitable[None]] | None = None,
+    ) -> list[dict[str, Any]]:
         predecessor_document = None
         predecessor_facts = None
         if quotation.parent_quotation_id:
@@ -198,14 +227,15 @@ class ContentActionApplicationService:
         version_facts = await self.quotes.get_version_facts(quotation.id)
         if version_facts is None:
             raise ContentActionNotFoundError("Immutable Facts snapshot is unavailable.")
-        output: list[dict[str, Any]] = []
-        for action in actions:
+        current_facts_json = facts.model_dump(mode="json")
+
+        async def _generate_one(action: Any) -> dict[str, Any]:
             scope = action.scope
             inherited = InheritedContentContextService.for_scope(
                 scope=scope,
                 predecessor_document=predecessor_document,
                 predecessor_facts=predecessor_facts,
-                current_facts=facts.model_dump(mode="json"),
+                current_facts=current_facts_json,
             )
             snapshot = draft_service.facts_snapshot(facts, scope, inherited_reference=inherited)
             missing = draft_service.missing_for_scope(facts, scope)
@@ -222,7 +252,7 @@ class ContentActionApplicationService:
             )
             candidate = draft_service.validate_candidate(scope, candidate)
             prompt_version = f"cap-{uuid.uuid4().hex[:24]}"
-            output.append(
+            return (
                 {
                     "scope": scope,
                     "candidate": candidate,
@@ -250,7 +280,24 @@ class ContentActionApplicationService:
                     },
                 }
             )
-        return output
+
+        total = len(actions)
+        completed = 0
+
+        async def _generate_one_and_report(action: Any) -> dict[str, Any]:
+            nonlocal completed
+            result = await _generate_one(action)
+            # Single-threaded event loop: no lock needed between the increment
+            # and the report — no `await` separates them (16.3 F-21).
+            completed += 1
+            if on_action_complete is not None:
+                await on_action_complete(completed, total)
+            return result
+
+        # All remote generations run concurrently (16.3 F-07); gather preserves
+        # action order and the first failure aborts the whole batch — same
+        # all-or-nothing semantics as the sequential loop, at 1/N the latency.
+        return list(await asyncio.gather(*(_generate_one_and_report(action) for action in actions)))
 
     async def _latest_plan(self, quotation_id: str) -> Any:
         from sqlalchemy import select

@@ -13,6 +13,10 @@ type Props = {
 export default function FastTrackProgressModal({ isOpen, progress }: Props) {
   if (!isOpen) return null;
 
+  // Every number here now comes from the server's real progress stream
+  // (16.3 F-21) — the assemble POST is the only source of truth for
+  // completion, but these percentages reflect events the server actually
+  // published as it worked, not fabricated client-side counts.
   const currentStage = progress?.stage ?? "create";
   const currentNum = progress?.current ?? 0;
   const totalNum = progress?.total ?? 1;
@@ -22,7 +26,9 @@ export default function FastTrackProgressModal({ isOpen, progress }: Props) {
       : currentStage === "facts_media"
       ? 35
       : currentStage === "content_generation"
-      ? Math.min(90, Math.round(35 + (currentNum / Math.max(1, totalNum)) * 55))
+      ? Math.min(90, Math.round(35 + (currentNum / Math.max(1, totalNum)) * 50))
+      : currentStage === "review"
+      ? 95
       : 100;
 
   const steps = [
@@ -50,7 +56,7 @@ export default function FastTrackProgressModal({ isOpen, progress }: Props) {
           ? `Drafting & applying narrative copy (${progress.current}/${progress.total} sections)...`
           : "Writing engaging destination narratives, daily itineraries, and terms.",
       icon: Sparkles,
-      isDone: currentStage === "complete",
+      isDone: ["review", "complete"].includes(currentStage),
       isCurrent: currentStage === "content_generation",
     },
   ];

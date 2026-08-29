@@ -6,10 +6,47 @@ import { staysReconciler } from "./rules/staysReconciler.ts";
 
 const API_BASE = process.env.NEXT_PUBLIC_QUOTATION_API_URL ?? "";
 
+/**
+ * Subscribes to the server's real Fast Track progress feed (16.3 F-21) — the
+ * assemble POST below is still the single source of truth for the outcome;
+ * this stream is observational only, keyed by the same X-Correlation-ID.
+ * Returns a cleanup function that always closes the connection.
+ */
+function subscribeToFastTrackProgress(
+  quotationId: string,
+  correlationId: string,
+  lang: string,
+  onProgress: ((progress: FastTrackProgress) => void) | undefined,
+): () => void {
+  if (typeof EventSource === "undefined" || !onProgress) return () => {};
+
+  const streamUrl = `${API_BASE}/api/v2/quotations/${quotationId}/fast-track/stream?correlationId=${encodeURIComponent(correlationId)}&lang=${encodeURIComponent(lang)}`;
+  const source = new EventSource(streamUrl, { withCredentials: true });
+
+  source.addEventListener("progress", (event) => {
+    try {
+      const data = JSON.parse((event as MessageEvent<string>).data) as {
+        stage: FastTrackStage;
+        message: string;
+        current?: number;
+        total?: number;
+      };
+      onProgress(data);
+    } catch {
+      // Malformed progress frame — never let a cosmetic channel break the flow.
+    }
+  });
+  source.addEventListener("complete", () => source.close());
+  source.addEventListener("error", () => source.close());
+
+  return () => source.close();
+}
+
 export type FastTrackStage =
   | "create"
   | "facts_media"
   | "content_generation"
+  | "review"
   | "complete";
 
 export type FastTrackProgress = {
@@ -194,18 +231,10 @@ export async function runQuotationFastTrackPipeline({
   }
 
   // The server owns media mutation, bypass generation, atomic apply, and the
-  // canonical readiness decision. The client never infers completion.
-  onProgress?.({
-    stage: "facts_media",
-    message: "Auto-resolving destination and accommodation photography from library...",
-  });
-
-  onProgress?.({
-    stage: "content_generation",
-    message: "Generating luxury storytelling narratives and daily itinerary in parallel...",
-    current: 1,
-    total: 2,
-  });
+  // canonical readiness decision. The client never infers completion — the
+  // stream below relays the server's own real milestones (16.3 F-21).
+  const correlationId = `fast-track-${crypto.randomUUID()}`;
+  const closeProgressStream = subscribeToFastTrackProgress(quotationId, correlationId, lang, onProgress);
 
   try {
     const result = await quotationFetch<{
@@ -220,7 +249,7 @@ export async function runQuotationFastTrackPipeline({
         headers: {
           "Content-Type": "application/json",
           "Idempotency-Key": idempotencyKey ?? crypto.randomUUID(),
-          "X-Correlation-ID": `fast-track-${crypto.randomUUID()}`,
+          "X-Correlation-ID": correlationId,
         },
         body: JSON.stringify({ baseRevision, writingStyle: "storytelling" }),
       },
@@ -247,6 +276,10 @@ export async function runQuotationFastTrackPipeline({
     } else {
       throw new FastTrackFailure(error instanceof Error ? error.message : "Fast Track assembly could not complete.", quotationId, error);
     }
+  } finally {
+    // The server's own "complete"/"error" events already close the stream
+    // client-side; this is the deterministic backstop for every other outcome.
+    closeProgressStream();
   }
 
   // ---------------------------------------------------------------------------
