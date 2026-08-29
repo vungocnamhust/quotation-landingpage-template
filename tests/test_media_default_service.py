@@ -18,7 +18,11 @@ CATALOGUE = [
 class FakeMediaRepository:
     async def list_active_candidates(self):
         return [
-            type("Row", (), {"r2_key": c.r2_key, "parent_prefix": c.parent_prefix, "width": c.width, "height": c.height, "preview_status": "ready"})()
+            type("Row", (), {
+                "r2_key": c.r2_key, "parent_prefix": c.parent_prefix, "width": c.width, "height": c.height,
+                "preview_status": "ready", "media_kind": "", "subject_type": "", "destination_id": "",
+                "accommodation_slug": "", "accommodation_kind": "",
+            })()
             for c in CATALOGUE
         ]
 

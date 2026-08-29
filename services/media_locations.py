@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+from core.rules.r2_paths import r2_province_segment
 from db.models.destination import DestinationCatalog
 from db.models.travel_designer import TravelDesignerProfile
 
@@ -30,7 +31,7 @@ def destination_location(destination: DestinationCatalog) -> MediaLocation:
     if destination.media_prefix and destination.media_prefix.strip():
         leaf_prefix = destination.media_prefix.strip().strip("/")
         return MediaLocation("destination", leaf_prefix, "destination", destination.id, destination_id=destination.id)
-    parts = [destination.country_slug, destination.region_slug, destination.province_slug, destination.slug]
+    parts = [destination.country_slug, destination.region_slug, r2_province_segment(destination.province_slug), destination.slug]
     if not all(parts):
         raise ValueError("Destination geographic mapping is incomplete.")
     return MediaLocation("destination", "/".join(parts), "destination", destination.id, destination_id=destination.id)

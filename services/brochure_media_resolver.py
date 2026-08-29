@@ -19,7 +19,7 @@ from core.rules.destination_rules import (
     match_destination_slug,
 )
 from core.rules.media_classification import classify_media_asset
-from core.rules.r2_paths import accommodation_slug_segment
+from core.rules.r2_paths import accommodation_slug_segment, parse_accommodation_key
 
 
 RESOLVER_VERSION = "brochure-media-v3"
@@ -42,6 +42,14 @@ class Candidate:
     preview_ready: bool = False
     source: str = "auto"
     review_required: bool = False
+    # Structured taxonomy already resolved at sync time (Plan 16.1 D6) — a
+    # first-class priority signal for matching, substring-path matching
+    # remains the fallback for objects synced before this metadata existed.
+    media_kind: str = ""
+    subject_type: str = ""
+    destination_id: str = ""
+    accommodation_slug: str = ""
+    accommodation_kind: str = ""
 
     @property
     def classification(self) -> str:
@@ -50,6 +58,13 @@ class Candidate:
     @property
     def landscape(self) -> bool:
         return self.width is None or self.height is None or self.width >= self.height
+
+    @property
+    def asset_category(self) -> str | None:
+        """`exteriors` | `interiors`, parsed on demand from the path — not a
+        stored column (R4/M2.3), since it is fully derivable from `r2_key`."""
+        parts = parse_accommodation_key(f"{self.parent_prefix}/{self.r2_key}".split("/"))
+        return parts.category if parts else None
 
 
 def remove_diacritics(text: str) -> str:
@@ -145,6 +160,14 @@ def accommodation_distinct_tokens(name: str | None) -> set[str]:
 def _matches_destination(candidate: Candidate, aliases: set[str]) -> bool:
     if not aliases:
         return False
+    # Tier-0 (D6): a candidate synced with structured metadata carries its
+    # real DestinationCatalog.id — `destination_aliases()` already adds the
+    # day/hotel's own `destinationRef.id` into `aliases` verbatim, so an
+    # exact id match is a strictly more reliable signal than the path-string
+    # heuristics below, and is checked first. Candidates synced before this
+    # metadata existed have an empty `destination_id` and fall through.
+    if candidate.destination_id and candidate.destination_id.strip().casefold() in aliases:
+        return True
     path_norm = remove_diacritics(f"{candidate.parent_prefix}/{candidate.r2_key}".casefold())
     segments = [s for s in _NON_ALPHANUM.split(path_norm) if s]
     compact_path = "".join(segments)
@@ -223,14 +246,22 @@ def _ref(candidate: Candidate) -> dict[str, str]:
     return result
 
 
+def _is_preview_or_published_key(r2_key: str) -> bool:
+    segments = {s for s in r2_key.casefold().split("/") if s}
+    return "preview" in segments or "published" in segments
+
+
 class BrochureMediaResolver:
     def __init__(self, candidates: Iterable[Candidate]) -> None:
         # The resolver is catalogue-only: review-required placeholders and
         # brand-local files are not eligible photography candidates.
+        # Defense-in-depth layer 2 of 2 (R5): reject a preview/published key
+        # even if it somehow reached this far — see
+        # `MediaLibraryRepository.list_active_candidates` for layer 1.
         self.candidates = tuple(
             candidate
             for candidate in candidates
-            if candidate.r2_key and not candidate.review_required
+            if candidate.r2_key and not candidate.review_required and not _is_preview_or_published_key(candidate.r2_key)
         )
         self.catalogue_candidates = self.candidates
         self.valid_keys = {c.r2_key for c in self.candidates}

@@ -51,9 +51,20 @@ class MediaLibraryRepository:
         return set(result.all())
 
     async def list_active_candidates(self) -> list[MediaLibraryObject]:
-        """Return the indexed catalogue once for a quotation-level resolver."""
+        """Return the indexed catalogue once for a quotation-level resolver.
+
+        Defense-in-depth layer 1 of 2 (R5): `is_media_key` already keeps
+        preview/published objects out of the index at ingest time, but this
+        excludes them again at read time so any ingest path that skips that
+        check can never leak a thumbnail into a brochure. Layer 2 is the
+        `BrochureMediaResolver.__init__` guard.
+        """
         result = await self.session.scalars(
-            select(MediaLibraryObject).where(MediaLibraryObject.is_active.is_(True))
+            select(MediaLibraryObject).where(
+                MediaLibraryObject.is_active.is_(True),
+                MediaLibraryObject.r2_key.notlike("%/preview/%"),
+                MediaLibraryObject.r2_key.notlike("%/published/%"),
+            )
         )
         return list(result.all())
 

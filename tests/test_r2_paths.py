@@ -4,6 +4,7 @@ from core.rules.r2_paths import (
     ACCOMMODATION_ROOT,
     accommodation_slug_segment,
     parse_accommodation_key,
+    r2_province_segment,
 )
 
 
@@ -42,3 +43,11 @@ def test_accommodation_slug_segment_is_the_single_source_for_hotel_identity():
 def test_category_vocabulary_matches_the_confirmed_r2_grammar():
     assert ACCOMMODATION_CATEGORIES == {"exteriors", "interiors"}
     assert ACCOMMODATION_ROOT == "accommodations"
+
+
+def test_r2_province_segment_matches_the_hyphenated_db_slug_verbatim():
+    # Resolved by the live bucket audit (M2.2a): destination catalog roots
+    # already use the hyphenated form (`da-lat`, `mui-ne`) matching
+    # DestinationCatalog.province_slug exactly.
+    assert r2_province_segment("ha-noi") == "ha-noi"
+    assert r2_province_segment("da-lat") == "da-lat"

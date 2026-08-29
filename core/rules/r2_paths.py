@@ -64,3 +64,22 @@ def accommodation_slug_segment(segments: list[str]) -> str | None:
     destination-name token match every hotel in that destination (R3)."""
     parts = parse_accommodation_key(segments)
     return parts.accommodation_slug if parts else None
+
+
+def r2_province_segment(province_slug: str) -> str:
+    """SSOT for the `{province}` segment — shared by the write path
+    (`services/media_locations.py::destination_location`) and, going
+    forward, anything else that needs to build rather than just parse an R2
+    key (Plan 16.1 M2.2b).
+
+    Resolved by `scripts/audit_r2_province_segments.py` against the live
+    bucket (task M2.2a): the destination catalog roots (`vietnam/{region}/{province}/...`)
+    already use the hyphenated form matching `DestinationCatalog.province_slug`
+    exactly (`da-lat`, `mui-ne`, `nha-trang`, ...) — this is the bucket's own
+    prevailing convention. `accommodations/vietnam/north/hanoi/...` is a
+    single legacy folder predating this convention; it is not migrated by
+    this change (a real production R2 rename needs an explicit, separate
+    decision), and is unaffected because `_matches_destination`'s alias
+    matching already tries the compact form as a fallback when reading.
+    """
+    return province_slug

@@ -141,7 +141,18 @@ class MediaDefaultService:
         await self._hydrate_destination_refs(document)
         catalogue = await self.media_repository.list_active_candidates()
         candidates = [
-            Candidate(item.r2_key, item.parent_prefix, item.width, item.height, item.preview_status == "ready")
+            Candidate(
+                item.r2_key,
+                item.parent_prefix,
+                item.width,
+                item.height,
+                item.preview_status == "ready",
+                media_kind=item.media_kind or "",
+                subject_type=item.subject_type or "",
+                destination_id=item.destination_id or "",
+                accommodation_slug=item.accommodation_slug or "",
+                accommodation_kind=item.accommodation_kind or "",
+            )
             for item in catalogue
         ]
         result = BrochureMediaResolver(candidates).resolve_missing(document=document, quotation_id=quotation_id, lang=lang)

@@ -1,6 +1,6 @@
 import unittest
 
-from services.brochure_media_resolver import BrochureMediaResolver, Candidate, GALLERY_LIMIT
+from services.brochure_media_resolver import BrochureMediaResolver, Candidate, GALLERY_LIMIT, _matches_destination
 from services.media_default_service import MediaDefaultService
 
 
@@ -166,6 +166,40 @@ class BrochureMediaResolverTests(unittest.TestCase):
         }
         result = BrochureMediaResolver(self.catalogue).resolve_missing(document=document, quotation_id="quo_full_gallery", lang="en")
         self.assertNotIn("days", result["patch"]["itinerary"])
+
+    def test_destination_id_exact_match_is_a_tier_0_signal_ahead_of_string_aliases(self):
+        # D6: a candidate synced with structured metadata should match on
+        # its real DestinationCatalog.id even when the alias set is
+        # deliberately unhelpful for path-string matching.
+        structured = Candidate("shared/media/random/unrelated/name/x.jpg", "shared/media/random/unrelated/name", destination_id="dst_hanoi")
+        self.assertTrue(_matches_destination(structured, {"dst_hanoi"}))
+
+    def test_destination_id_mismatch_falls_back_to_string_aliases(self):
+        structured = Candidate("shared/media/vietnam/north/ha-noi/x.jpg", "shared/media/vietnam/north/ha-noi", destination_id="dst_other")
+        self.assertTrue(_matches_destination(structured, {"ha-noi"}))
+
+    def test_candidate_without_destination_id_still_matches_by_path_string(self):
+        legacy = Candidate("shared/media/vietnam/north/ha-noi/x.jpg", "shared/media/vietnam/north/ha-noi")
+        self.assertTrue(_matches_destination(legacy, {"ha-noi"}))
+
+    def test_candidate_asset_category_is_derived_from_the_r2_key_not_a_stored_field(self):
+        exterior = Candidate("accommodations/vietnam/north/ha-noi/metropole-hanoi/exteriors/a.jpg", "accommodations/vietnam/north/ha-noi/metropole-hanoi/exteriors")
+        interior = Candidate("accommodations/vietnam/north/ha-noi/metropole-hanoi/interiors/a.jpg", "accommodations/vietnam/north/ha-noi/metropole-hanoi/interiors")
+        non_accommodation = Candidate("shared/media/vietnam/hero.jpg", "shared/media/vietnam")
+        self.assertEqual(exterior.asset_category, "exteriors")
+        self.assertEqual(interior.asset_category, "interiors")
+        self.assertIsNone(non_accommodation.asset_category)
+
+    def test_resolver_rejects_preview_and_published_candidates_even_if_marked_active(self):
+        # R5 layer 2: defense-in-depth even if a preview/published object
+        # somehow reaches the resolver (layer 1 is the repository query).
+        sneaky = [
+            Candidate("shared/media/vietnam/north/ha-noi/preview/x.jpg", "shared/media/vietnam/north/ha-noi/preview"),
+            Candidate("shared/media/vietnam/north/ha-noi/published/x.jpg", "shared/media/vietnam/north/ha-noi/published"),
+            Candidate("shared/media/vietnam/north/ha-noi/legit.jpg", "shared/media/vietnam/north/ha-noi"),
+        ]
+        resolver = BrochureMediaResolver(sneaky)
+        self.assertEqual([c.r2_key for c in resolver.candidates], ["shared/media/vietnam/north/ha-noi/legit.jpg"])
 
     def test_required_missing_slots_enforces_exact_gallery_cardinality_and_hotel_media(self):
         document = {
