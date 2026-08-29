@@ -95,3 +95,7 @@ class R2Storage:
 
     def head_object(self, key: str) -> dict:
         return self.client.head_object(Bucket=self.bucket, Key=key)
+
+    def list_objects(self, *, prefix: str, continuation_token: str | None = None, max_keys: int = 1000) -> dict:
+        extra = {"ContinuationToken": continuation_token} if continuation_token else {}
+        return self.client.list_objects_v2(Bucket=self.bucket, Prefix=prefix, MaxKeys=max_keys, **extra)
