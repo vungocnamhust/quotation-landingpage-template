@@ -12,6 +12,20 @@ import type {
   WorkflowResponse,
 } from '../../components/quotation-workspace/useQuotationWorkspace.ts';
 
+// Plan 16.2 F-18: blocker ids must survive the server reordering its list
+// between polls. A positional `content-blocker-${idx}` id makes React
+// misattribute identity across reorders the same way `key={index}` would —
+// this hashes the blocker's own content instead, so identity only changes
+// when what it describes actually changes.
+function hashBlockerContent(...parts: string[]): string {
+  const input = parts.join(' ');
+  let hash = 5381;
+  for (let i = 0; i < input.length; i += 1) {
+    hash = ((hash << 5) + hash + input.charCodeAt(i)) | 0;
+  }
+  return (hash >>> 0).toString(36);
+}
+
 export type BlockerCategory = 'facts' | 'content' | 'design' | 'publish';
 export type BlockerStage = 'facts' | 'content' | 'design' | 'publish' | 'review';
 
@@ -108,7 +122,7 @@ export function mapPresentationErrorToBlocker(
     const dayNumber = parsed.index + 1;
     if (parsed.field === 'description') {
       return {
-        id: `design-error-${index}`,
+        id: `design-error-${hashBlockerContent(error)}`,
         category: 'design',
         title: isVi
           ? `Nội dung Ngày ${dayNumber} quá dài (vượt quá 1,150 ký tự)`
@@ -130,7 +144,7 @@ export function mapPresentationErrorToBlocker(
 
     if (parsed.field === 'title') {
       return {
-        id: `design-error-${index}`,
+        id: `design-error-${hashBlockerContent(error)}`,
         category: 'design',
         title: isVi
           ? `Tiêu đề Ngày ${dayNumber} quá dài (vượt quá 170 ký tự)`
@@ -151,7 +165,7 @@ export function mapPresentationErrorToBlocker(
     }
 
     return {
-      id: `design-error-${index}`,
+      id: `design-error-${hashBlockerContent(error)}`,
       category: 'design',
       title: isVi ? `Lỗi dữ liệu Ngày ${dayNumber}` : `Day ${dayNumber} Layout Error`,
       description: isVi
@@ -172,7 +186,7 @@ export function mapPresentationErrorToBlocker(
   if (parsed.domain === 'stays' && parsed.index !== undefined) {
     const hotelNumber = parsed.index + 1;
     return {
-      id: `design-error-${index}`,
+      id: `design-error-${hashBlockerContent(error)}`,
       category: 'design',
       title: isVi
         ? `Thông tin Khách sạn ${hotelNumber} quá dài (vượt quá 2,100 ký tự)`
@@ -193,7 +207,7 @@ export function mapPresentationErrorToBlocker(
   }
 
   return {
-    id: `design-error-${index}`,
+    id: `design-error-${hashBlockerContent(error)}`,
     category: 'design',
     title: isVi ? 'Lỗi cấu hình hiển thị' : 'Presentation & Layout Check Failed',
     description: error,
@@ -281,9 +295,9 @@ export function fromReviewResponse(
   }
 
   // 3. Content Blockers
-  contentBlockers.forEach((blocker: ContentBlocker, idx: number) => {
+  contentBlockers.forEach((blocker: ContentBlocker) => {
     list.push({
-      id: `content-blocker-${idx}`,
+      id: `content-blocker-${hashBlockerContent(blocker.sectionId, blocker.path, blocker.message)}`,
       category: 'content',
       title: isVi ? `Nội dung chưa hoàn thiện tại ${blocker.sectionId}` : `Content Blocker in ${blocker.sectionId}`,
       description: blocker.message,
@@ -296,10 +310,10 @@ export function fromReviewResponse(
   });
 
   // 4. Content Readiness Issues
-  contentReadiness.forEach((item: ContentReadiness, idx: number) => {
+  contentReadiness.forEach((item: ContentReadiness) => {
     if (item.status) {
       list.push({
-        id: `content-readiness-${idx}`,
+        id: `content-readiness-${hashBlockerContent(item.sectionId, item.label, item.status)}`,
         category: 'content',
         title: item.label,
         description: item.missing.map((m) => m.message).join('. ') || (isVi ? 'Nội dung chưa đầy đủ.' : 'Content incomplete.'),

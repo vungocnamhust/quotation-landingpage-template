@@ -9287,7 +9287,7 @@ async def get_publication_job(job_id: str, principal: Principal = Depends(requir
         raise HTTPException(status_code=404, detail="Publication job was not found.")
     _brand, target, _release = context
     await require_owned_quotation(target.quotation_id, principal)
-    return {"id": job.id, "releaseId": job.release_id, "type": job.job_type, "status": job.status, "attempts": job.attempts, "maxAttempts": job.max_attempts, "lockedAt": job.locked_at.isoformat() if job.locked_at else None, "lastError": job.last_error}
+    return {"id": job.id, "releaseId": job.release_id, "type": job.job_type, "status": job.status, "attempts": job.attempts, "maxAttempts": job.max_attempts, "lockedAt": job.locked_at.isoformat() if job.locked_at else None, "lastError": job.last_error, "brandId": target.brand_id}
 
 
 @app.get("/api/internal/v2/public-quotations/resolve")
@@ -9437,9 +9437,18 @@ async def list_canonical_publications(quotation_id: str, lang: str | None = None
 
 @app.post("/api/v2/quotations/{quotation_id}/publication-targets/{target_id}/releases/{release_number}/restore")
 async def restore_canonical_publication(quotation_id: str, target_id: str, release_number: int, principal: Principal = Depends(require_editor), _owned=Depends(require_owned_quotation)):
+    """Restore a prior release as the target's active one.
+
+    Plan 16.2 F-17: deliberately revision-agnostic. Unlike publish, this does
+    not take a `baseRevision` — the canonical document's revision is
+    irrelevant here (a release is a frozen snapshot, not a document edit),
+    and `pg_advisory_xact_lock(target_id)` is what serializes concurrent
+    restore/unpublish calls on the same target.
+    """
     async with _get_db_session_factory()() as session:
         repository, brands = PublicationTargetRepository(session), BrandRepository(session)
-        await session.execute(text("SELECT pg_advisory_xact_lock(hashtext(:target_key))"), {"target_key": target_id})
+        if session.bind.dialect.name == "postgresql":
+            await session.execute(text("SELECT pg_advisory_xact_lock(hashtext(:target_key))"), {"target_key": target_id})
         target = await repository.lock_target_for_update(target_id, quotation_id=quotation_id)
         if target is None:
             raise HTTPException(status_code=404, detail="Publication target was not found.")
@@ -9456,9 +9465,12 @@ async def restore_canonical_publication(quotation_id: str, target_id: str, relea
 
 @app.post("/api/v2/quotations/{quotation_id}/publication-targets/{target_id}/unpublish")
 async def unpublish_canonical_target(quotation_id: str, target_id: str, principal: Principal = Depends(require_editor), _owned=Depends(require_owned_quotation)):
+    """Take a target off public visibility. Revision-agnostic — see
+    `restore_canonical_publication`'s docstring for why (Plan 16.2 F-17)."""
     async with _get_db_session_factory()() as session:
         repository, brands = PublicationTargetRepository(session), BrandRepository(session)
-        await session.execute(text("SELECT pg_advisory_xact_lock(hashtext(:target_key))"), {"target_key": target_id})
+        if session.bind.dialect.name == "postgresql":
+            await session.execute(text("SELECT pg_advisory_xact_lock(hashtext(:target_key))"), {"target_key": target_id})
         target = await repository.lock_target_for_update(target_id, quotation_id=quotation_id)
         if target is None:
             raise HTTPException(status_code=404, detail="Publication target was not found.")

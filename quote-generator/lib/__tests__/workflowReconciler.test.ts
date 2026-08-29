@@ -165,7 +165,32 @@ describe('workflowReconciler pure domain rules', () => {
 
       const blockers = fromReviewResponse(review, null, null, 'en');
       assert.equal(blockers.length, 1);
-      assert.equal(blockers[0].id, 'content-readiness-0');
+      assert.equal(blockers[0].id, 'content-readiness-1h075f0');
+    });
+
+    it('keeps a stable blocker id across server reorders (Plan 16.2 F-18)', () => {
+      const buildReview = (order: [string, string]): ReviewResponse => ({
+        ready: false,
+        missingInputs: [],
+        blockingDrafts: [],
+        contentBlockers: order.map((sectionId) => ({
+          sectionId,
+          sectionType: sectionId,
+          path: `${sectionId}.title`,
+          message: `${sectionId} is incomplete.`,
+        })),
+        contentReadiness: [],
+      });
+
+      const first = fromReviewResponse(buildReview(['hero', 'itinerary']), null, null, 'en');
+      const reordered = fromReviewResponse(buildReview(['itinerary', 'hero']), null, null, 'en');
+
+      const heroId = first.find((item) => item.description.startsWith('hero'))?.id;
+      const heroIdAfterReorder = reordered.find((item) => item.description.startsWith('hero'))?.id;
+      assert.ok(heroId);
+      // A positional id (`content-blocker-${idx}`) would flip here since hero
+      // moved from index 0 to index 1 — the content-hashed id must not.
+      assert.equal(heroId, heroIdAfterReorder);
     });
   });
 });

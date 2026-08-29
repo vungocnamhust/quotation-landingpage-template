@@ -12,17 +12,19 @@ import {
 } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
-import type { ReviewResponse, WorkflowResponse } from "./useQuotationWorkspace.ts";
 import type { ResolvedHandoff } from "./editableHandoff.ts";
-import { fromReviewResponse, type BlockerCategory, type CanonicalBlockerItem } from "../../lib/rules/workflowReconciler.ts";
+import type { BlockerCategory, CanonicalBlockerItem } from "../../lib/rules/workflowReconciler.ts";
 import { workflowAdapter } from "../../lib/rules/workflowAdapter.ts";
+import type { CanonicalWorkflowStatus } from "../../lib/rules/workflowAdapter.ts";
 
 export type Stage = "facts" | "content" | "design" | "review";
 
 export interface ReviewBlockersPanelProps {
-  reviewData?: ReviewResponse | null;
-  workflowData?: WorkflowResponse | null;
-  publicationJob?: { id: string; status: string; lastError: string | null } | null;
+  // Plan 16.2 F-15: the parent computes this once via
+  // workflowAdapter.fromServerWorkflow and uses the same value for the
+  // Publish gate — this panel renders it rather than re-deriving its own
+  // blocker list from the raw /review-status and /workflow responses.
+  workflow: CanonicalWorkflowStatus;
   onSetStage: (stage: Stage) => void;
   onNavigateHandoff?: (target: ResolvedHandoff) => void;
 }
@@ -40,19 +42,12 @@ export type BlockerItem = {
 };
 
 export function ReviewBlockersPanel({
-  reviewData,
-  workflowData,
-  publicationJob,
+  workflow,
   onSetStage,
   onNavigateHandoff,
 }: ReviewBlockersPanelProps) {
   const items: BlockerItem[] = useMemo(() => {
-    const canonicalItems: CanonicalBlockerItem[] = fromReviewResponse(
-      reviewData,
-      workflowData,
-      publicationJob,
-      "vi"
-    );
+    const canonicalItems: CanonicalBlockerItem[] = workflow.blockers;
 
     return canonicalItems.map((item) => ({
       id: item.id,
@@ -75,7 +70,7 @@ export function ReviewBlockersPanel({
         }
       },
     }));
-  }, [reviewData, workflowData, publicationJob, onSetStage, onNavigateHandoff]);
+  }, [workflow.blockers, onSetStage, onNavigateHandoff]);
 
   const categoryGroups: Array<{
     key: BlockerCategory;

@@ -4,12 +4,12 @@ import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { getTypographyClassName } from '../../config/typography.ts';
 import { cn } from '../../utils/cn.ts';
-import { apiErrorMessage, quotationFetch } from '../../lib/apiError.ts';
+import { apiErrorMessage } from '../../lib/apiError.ts';
+import { restoreRelease, unpublishTarget } from '../../lib/publicationApi.ts';
 import { useToast } from '../staff-workspace/ToastProvider.tsx';
 
 import CustomSelect from '../ui/CustomSelect.tsx';
 
-const API_BASE = process.env.NEXT_PUBLIC_QUOTATION_API_URL ?? '';
 type Brand = { id: string; displayName: string; hostname: string; status: 'active' | 'disabled' };
 type Publication = { targetId: string; brandId: string; hostname: string; locale: string; slug: string; fallbackUrl: string; status: string; release?: { number: number } | null; releases: Array<{ number: number; status: string; isCurrent: boolean; job?: { type: string; status: string; attempts: number; maxAttempts: number; lastError: string | null } | null }> };
 
@@ -23,9 +23,15 @@ export default function PublicationTargetManager({ quotationId, brandId, onBrand
   async function action(targetId: string, actionName: 'unpublish' | 'restore', release?: number) {
     const actionKey = `${targetId}-${actionName}-${release ?? ''}`;
     setRunningAction(actionKey);
-    const suffix = actionName === 'restore' ? `/releases/${release}/restore` : '/unpublish';
     try {
-      await quotationFetch(`${API_BASE}/api/v2/quotations/${quotationId}/publication-targets/${targetId}${suffix}`, { method: 'POST' }, `${actionName} failed.`);
+      // Plan 16.2 F-17: unpublish/restore are revision-agnostic by design —
+      // the advisory lock on the target, not a baseRevision token, is what
+      // serializes these mutations.
+      if (actionName === 'restore') {
+        await restoreRelease(quotationId, targetId, release as number);
+      } else {
+        await unpublishTarget(quotationId, targetId);
+      }
       if (refresh) await refresh();
       const success = actionName === 'restore' ? `Release #${release} restored and cache synchronization queued.` : 'Publication target unpublished and cache synchronization queued.';
       clearScope(`publication-target:${targetId}`);

@@ -1274,6 +1274,44 @@ class BrochureRouteContractTests(unittest.TestCase):
 
         asyncio.run(_assert_single_release())
 
+    def test_unpublish_and_restore_are_revision_agnostic(self):
+        # Plan 16.2 F-17: unpublish/restore take no baseRevision — a
+        # concurrent document edit after publish must not block either call.
+        document = _sample_document()
+        asyncio.run(self._seed_brochure_document("quo_test", copy.deepcopy(document)))
+        with patch.object(main, "_inspect_asset_readiness", return_value={"ready": True, "missing": [], "invalid": [], "checkedAt": ""}):
+            published = self.client.post("/api/v2/quotations/quo_test/publish", json={"baseRevision": 1}).json()
+
+        async def _activate():
+            async with self.session_factory() as session:
+                repository = PublicationTargetRepository(session)
+                target = await session.get(PublicationTarget, published["targetId"])
+                release = await repository.get_release(published["releaseId"])
+                release.pdf_r2_key = "quotations/quo_test/react/test.pdf"
+                await repository.activate_release(target=target, release=release)
+                await session.commit()
+
+        asyncio.run(_activate())
+
+        # Neither call below takes a baseRevision — no request payload at
+        # all — which is the point: they cannot be blocked by the document
+        # having moved on since publish.
+        unpublish = self.client.post(f"/api/v2/quotations/quo_test/publication-targets/{published['targetId']}/unpublish")
+        self.assertEqual(unpublish.status_code, 200)
+
+        async def _assert_superseded():
+            async with self.session_factory() as session:
+                repository = PublicationTargetRepository(session)
+                release = await repository.get_release(published["releaseId"])
+                self.assertFalse(release.is_current)
+                self.assertEqual(release.status, "superseded")
+
+        asyncio.run(_assert_superseded())
+
+        restore = self.client.post(f"/api/v2/quotations/quo_test/publication-targets/{published['targetId']}/releases/1/restore")
+        self.assertEqual(restore.status_code, 200)
+        self.assertEqual(restore.json()["status"], "published")
+
     def test_public_fallback_resolves_only_active_published_target(self):
         document = _sample_document()
         asyncio.run(self._seed_brochure_document("quo_test", copy.deepcopy(document)))

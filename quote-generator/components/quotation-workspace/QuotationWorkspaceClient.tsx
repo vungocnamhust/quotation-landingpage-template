@@ -32,7 +32,10 @@ import {
   type QuotationFacts,
   type QuoteRequestItem,
 } from "./factsTypes.ts";
-import { apiErrorMessage, quotationFetch } from "../../lib/apiError.ts";
+import { apiErrorMessage, quotationFetch, QuotationApiError } from "../../lib/apiError.ts";
+import { publishQuotation } from "../../lib/publicationApi.ts";
+import { usePublicationJob } from "./usePublicationJob.ts";
+import { workflowAdapter } from "../../lib/rules/workflowAdapter.ts";
 import { buildDisplayDocumentFromQuoteDocument } from "../../display/runtimePageBuilder.ts";
 import type { ViewMode } from "../../display/contracts.ts";
 import { updateDesignerPresentationFacts } from "../../lib/prefillEngine.ts";
@@ -198,12 +201,21 @@ export default function QuotationWorkspaceClient({
       ),
     [documentData?.document, search],
   );
-  const [publicationJob, setPublicationJob] = useState<{
-    id: string;
-    status: string;
-    lastError: string | null;
-  } | null>(null);
-  const reviewReady = workflowData?.review.ready ?? false;
+  const [publicationJobId, setPublicationJobId] = useState<string | null>(null);
+  // Plan 16.2 F-13/F-14: keyed strictly to the id of the job actually
+  // requested — a stray response for a superseded job can never overwrite
+  // this state, and switching brand/republishing mid-flight naturally
+  // re-keys to the new job instead of leaking the old one's status.
+  const publicationJob = usePublicationJob(publicationJobId);
+  // Plan 16.2 F-15: one canonical computation feeds both the Publish gate
+  // and the ReviewBlockersPanel badges — they can no longer disagree,
+  // because they are now reading the same value instead of each deriving
+  // it independently from /review-status and /workflow.
+  const canonicalWorkflow = useMemo(
+    () => workflowAdapter.fromServerWorkflow(workflowData, reviewData, publicationJob, lang),
+    [workflowData, reviewData, publicationJob, lang]
+  );
+  const reviewReady = canonicalWorkflow.isReady;
   const loadError =
     workspace.facts.error ??
     workspace.document.error ??
@@ -308,45 +320,52 @@ export default function QuotationWorkspaceClient({
     });
   }
 
+  // Plan 16.2 F-01: `publish` is redefined every render, closing over that
+  // render's `documentData.currentRevision`. Storing it directly as a toast
+  // action's onClick freezes that closure — a later `document.mutate()`
+  // never reaches the button the user clicks. Routing "Retry" through this
+  // ref instead means the click always invokes whichever `publish` closure
+  // is current at click time.
+  const publishRef = useRef(() => {});
+
   function publish() {
     if (!documentData || !reviewReady) return;
+    const baseRevision = documentData.currentRevision;
     startTransition(async () => {
-      let payload: {
-        published_url?: string;
-        fallback_url?: string;
-        pdfUrl?: string;
-        jobId?: string;
-        status?: string;
-        version?: number;
-      };
+      let payload: Awaited<ReturnType<typeof publishQuotation>>;
       try {
-        payload = await quotationFetch(
-          `${API_BASE}/api/v2/quotations/${quotationId}/publish?lang=${encodeURIComponent(
-            lang
-          )}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              baseRevision: documentData.currentRevision,
-              brandId: selectedBrandId || undefined,
-            }),
-          },
-          "Publish failed."
-        );
+        payload = await publishQuotation(quotationId, lang, {
+          baseRevision,
+          brandId: selectedBrandId || undefined,
+        });
       } catch (error) {
-        const message = apiErrorMessage(error);
-        notify({ message, type: "error", persistent: true, scope: "publish:request", action: { label: "Retry", onClick: publish } });
+        const recovery = error instanceof QuotationApiError ? error.metadata.recovery : null;
+        if (recovery === "reload") {
+          // D1: never resend the stale baseRevision — refresh first, then
+          // let the user re-trigger publish with the button's own (now
+          // fresh) closure.
+          await workspace.document.mutate();
+          const currentRevision = error instanceof QuotationApiError ? error.metadata.currentRevision : undefined;
+          notify({
+            message: `This quotation changed in another session${currentRevision != null ? ` (now revision ${currentRevision})` : ""}. Review the latest version, then publish again.`,
+            type: "error",
+            persistent: true,
+            scope: "publish:request",
+            action: { label: "Publish latest revision", onClick: () => publishRef.current() },
+          });
+          return;
+        }
+        if (recovery === "open-blockers") {
+          notify({ message: apiErrorMessage(error), type: "error", persistent: true, scope: "publish:request", action: { label: "Open blockers", onClick: scrollToBlockers } });
+          return;
+        }
+        notify({ message: apiErrorMessage(error), type: "error", persistent: true, scope: "publish:request", action: { label: "Retry", onClick: () => publishRef.current() } });
         return;
       }
       setPublishedUrl(payload.published_url ?? null);
       setFallbackUrl(payload.fallback_url ?? null);
       setPdfUrl(payload.pdfUrl ?? null);
-      setPublicationJob({
-        id: payload.jobId ?? '',
-        status: payload.status ?? "queued",
-        lastError: null,
-      });
+      setPublicationJobId(payload.jobId ?? null);
       try {
         await workspace.refresh();
       } catch (error) {
@@ -364,31 +383,25 @@ export default function QuotationWorkspaceClient({
   }
 
   useEffect(() => {
-    if (!publicationJob?.id || !['queued', 'running'].includes(publicationJob.status)) return;
-    const timer = window.setTimeout(async () => {
-      try {
-        const job = await quotationFetch<{ id: string; status: string; lastError: string | null }>(
-          `${API_BASE}/api/v2/publication-jobs/${publicationJob.id}`,
-          undefined,
-          'Unable to refresh publication status.',
-        );
-        setPublicationJob(job);
-        if (job.status === 'succeeded') {
-          await refreshWorkspace();
-          clearScope('publish:job');
-          toast('Publication is live.', 'success');
-        }
-        if (job.status === 'failed') {
-          notify({ message: job.lastError || 'Publication failed before the PDF could be published.', type: 'error', persistent: true, scope: 'publish:job', action: { label: 'Open review', onClick: () => setStage('review') } });
-        }
-      } catch (error) {
-        const message = apiErrorMessage(error);
-        setPublicationJob((current) => current ? { ...current, status: 'failed', lastError: message } : current);
-        notify({ message: `Publication status could not be refreshed: ${message}`, type: 'error', persistent: true, scope: 'publish:job', action: { label: 'Retry status', onClick: () => setPublicationJob((current) => current ? { ...current, status: 'queued' } : current) } });
-      }
-    }, 1500);
-    return () => window.clearTimeout(timer);
-  }, [clearScope, notify, publicationJob, refreshWorkspace, setStage, toast]);
+    publishRef.current = publish;
+  });
+
+  // Surface terminal job transitions exactly once per (job, status) pair —
+  // usePublicationJob owns polling/correlation; this only reacts to it.
+  const handledJobTransitionRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!publicationJob) return;
+    const key = `${publicationJob.id}:${publicationJob.status}`;
+    if (handledJobTransitionRef.current === key) return;
+    handledJobTransitionRef.current = key;
+    if (publicationJob.status === "succeeded") {
+      void refreshWorkspace();
+      clearScope("publish:job");
+      toast("Publication is live.", "success");
+    } else if (publicationJob.status === "failed") {
+      notify({ message: publicationJob.lastError || "Publication failed before the PDF could be published.", type: "error", persistent: true, scope: "publish:job", action: { label: "Open review", onClick: () => setStage("review") } });
+    }
+  }, [publicationJob, refreshWorkspace, clearScope, toast, notify, setStage]);
 
   const labels: Record<Stage, string> = {
     facts: "Facts",
@@ -406,7 +419,7 @@ export default function QuotationWorkspaceClient({
     if (item === "costing") return false;
     if (item === "content") return workflowData?.content.ready ?? false;
     if (item === "design") return workflowData?.design.ready ?? false;
-    if (item === "review") return workflowData?.review.ready ?? false;
+    if (item === "review") return canonicalWorkflow.isReady;
     return false;
   };
 
@@ -789,7 +802,41 @@ export default function QuotationWorkspaceClient({
                 onRecovered={handleAttachRecovered}
               />
             ) : null}
-            <CostingWorkbench anchor={{ quotationId }} />
+            <CostingWorkbench
+              anchor={{ quotationId }}
+              baseRevision={documentData?.currentRevision ?? workflowData?.currentRevision ?? 1}
+              existingOptions={
+                ((factsData?.facts as Record<string, unknown> | undefined)?.pricing_facts as { options?: Array<Record<string, unknown>> } | undefined)?.options?.map((opt) => ({
+                  id: String(opt.id || ""),
+                  label: opt.label as string | undefined,
+                  currency: opt.currency as string | undefined,
+                  group_total_amount_minor: (opt.group_total_amount_minor as number | undefined) ?? (opt.groupTotalAmountMinor as number | undefined),
+                  per_adult_amount_minor: (opt.per_adult_amount_minor as number | undefined) ?? (opt.perAdultAmountMinor as number | undefined),
+                  per_traveler_amount_minor: (opt.per_traveler_amount_minor as number | undefined) ?? (opt.perTravelerAmountMinor as number | undefined),
+                })) ||
+                (documentData?.document?.pricingOptions as Array<Record<string, unknown>> | undefined)?.map((opt) => ({
+                  id: String(opt.id || ""),
+                  label: opt.label as string | undefined,
+                  currency: opt.currency as string | undefined,
+                  group_total_amount_minor: (opt.groupTotalAmountMinor as number | undefined) ?? (opt.group_total_amount_minor as number | undefined),
+                  per_adult_amount_minor: (opt.perAdultAmountMinor as number | undefined) ?? (opt.per_adult_amount_minor as number | undefined),
+                  per_traveler_amount_minor: (opt.perTravelerAmountMinor as number | undefined) ?? (opt.per_traveler_amount_minor as number | undefined),
+                })) ||
+                []
+              }
+              adultsCount={
+                (factsData?.facts as Record<string, unknown> | undefined)?.customer_facts
+                  ? Number(((factsData?.facts as Record<string, unknown>).customer_facts as Record<string, unknown>).adults || 2)
+                  : 2
+              }
+              onApplyPricingSuccess={() => {
+                refreshWorkspace();
+                notify({
+                  type: "success",
+                  message: "Giá thương mại đã được đồng bộ từ bảng dự toán sang báo giá.",
+                });
+              }}
+            />
           </>
         ) : stage === "costing" && !loadError ? (
           <StagePanelSkeleton stage="costing" />
@@ -921,9 +968,7 @@ export default function QuotationWorkspaceClient({
         {stage === "review" && !reviewReady ? (
           <div ref={blockersRef}>
             <ReviewBlockersPanel
-              reviewData={reviewData}
-              workflowData={workflowData}
-              publicationJob={publicationJob}
+              workflow={canonicalWorkflow}
               onSetStage={(stg) => setStage(stg)}
               onNavigateHandoff={navigateHandoff}
             />
@@ -963,7 +1008,7 @@ export default function QuotationWorkspaceClient({
               <button
                 type="button"
                 onClick={publish}
-                disabled={pending || !reviewReady || !selectedBrandId}
+                disabled={pending || !reviewReady || !selectedBrandId || publicationJob?.status === "queued" || publicationJob?.status === "running"}
                 className={cn(
                   getTypographyClassName("buttonPrimary"),
                   "min-h-11 rounded-[var(--radius-button)] bg-[var(--color-accent)] !text-white hover:bg-[color-mix(in_srgb,var(--color-accent)_85%,black)] px-6 shadow-md border border-transparent transition-all disabled:opacity-50"
