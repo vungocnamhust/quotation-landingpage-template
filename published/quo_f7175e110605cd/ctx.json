@@ -573,10 +573,10 @@
             "label_highlights": "Highlights:",
             "label_notes": "Notes:",
             "description": [
-                "Today is free at leisure in Da Nang. No service is arranged during this time, including vehicle, guide, activities or meals unless otherwise specified. Take the day to explore the city independently — stroll across the iconic Dragon Bridge, browse the stalls at Han Market, or wander along the golden sands of My Khe Beach at your own pace, discovering the coastal city's laid-back charm.\nAlternatively, simply stay in and unwind at the resort, enjoying its pool, spa, and beachfront facilities without a fixed schedule. Whether spent wandering the city or relaxing by the sea, the day is entirely yours to shape as you wish."
+                "Today is free at leisure in Da Nang. No service is arranged during this time, including vehicle, guide, activities or meals unless otherwise specified. Take the day to explore the city independently — stroll across the iconic Dragon Bridge, browse the stalls at Han Market, or wander along the golden sands of My Khe Beach at your own pace, discovering the coastal city's laid-back charm.\nAlternatively, simply stay in and unwind at the resort, enjoying its pool, spa, and beachfront facilities without a fixed schedule. Whether spent wandering the city or relaxing by the sea, the day is entirely yours to shape as you wish.\nHighlights:\nFree Day"
             ],
             "description_html": [
-                "<p dir=\"ltr\">Today is free at leisure in Da Nang. <strong>No service is arranged</strong> during this time, including vehicle, guide, activities or meals unless otherwise specified. Take the day to explore the city independently — stroll across the iconic <strong>Dragon Bridge</strong>, browse the stalls at <strong>Han Market</strong>, or wander along the golden sands of <strong>My Khe Beach</strong> at your own pace, discovering the coastal city's laid-back charm.</p>\n<p dir=\"ltr\">Alternatively, simply stay in and unwind at the resort, enjoying its pool, spa, and beachfront facilities without a fixed schedule. Whether spent wandering the city or relaxing by the sea, the day is entirely yours to shape as you wish.</p>"
+                "<p dir=\"ltr\">Today is free at leisure in Da Nang. <strong>No service is arranged</strong> during this time, including vehicle, guide, activities or meals unless otherwise specified. Take the day to explore the city independently — stroll across the iconic <strong>Dragon Bridge</strong>, browse the stalls at <strong>Han Market</strong>, or wander along the golden sands of <strong>My Khe Beach</strong> at your own pace, discovering the coastal city's laid-back charm.</p>\n<p dir=\"ltr\">Alternatively, simply stay in and unwind at the resort, enjoying its pool, spa, and beachfront facilities without a fixed schedule. Whether spent wandering the city or relaxing by the sea, the day is entirely yours to shape as you wish.</p><p></p>\n<p data-deletable=\"day_activities_10\" style=\"font-size:13px;color: var(--text-muted);margin-top:8px\">\n<strong data-editable=\"day_label_highlights_10\" style=\"color: var(--primary);letter-spacing:.06em\" spellcheck=\"false\">Highlights:</strong>\n<span data-editable=\"day_highlights_10\" spellcheck=\"false\">Free Day</span>\n</p>"
             ],
             "overnight": "Da Nang",
             "meals": [
@@ -690,11 +690,11 @@
                 "Connecting flight in Hanoi"
             ],
             "layout_images": {
-                "hero": "/assets/da-nang/danang1.jpg",
+                "hero": "/published/quo_f7175e110605cd/draft_assets/f3b840a1232e42e88f54228232ed9c03.jpg",
                 "small-1": "/assets/da-nang/danang3.jpg",
                 "small-2": "/assets/da-nang/hero/hero1.jpg",
                 "carousel": [
-                    "/assets/da-nang/danang1.jpg",
+                    "/published/quo_f7175e110605cd/draft_assets/f3b840a1232e42e88f54228232ed9c03.jpg",
                     "/assets/da-nang/danang3.jpg",
                     "/assets/da-nang/hero/hero1.jpg"
                 ]
@@ -1115,7 +1115,7 @@
             "dayNumber": 10,
             "date": "2026-09-24",
             "lang": "en",
-            "title": "Day 10: Exhilarating Hai Van Pass & Coastal Marble Mountains",
+            "title": "Day 10 – Free Day in Da Nang – City & Resort at Leisure",
             "description": [
                 "Gear up for an exhilarating morning pillion motorbike ride along the famous winding coastal roads of the Hai Van Pass, taking in dramatic ocean views. Stop to explore the mystical limestone peaks of Marble Mountains, climbing stone steps into sacred cave sanctuaries including Huyen Khong Cave.\nContinue your coastal ride along scenic shorelines, taking in panoramic sea views and enjoying a fresh seafood lunch by the water. Weather permitting, enjoy coastal water activities before making your way along picturesque roads back to Hoi An for a relaxing evening."
             ],
@@ -1130,7 +1130,7 @@
                 "Starts at 8:30 AM for about 8.5 hours"
             ],
             "destinations": [
-                "Hoi An"
+                "Da Nang"
             ],
             "label_highlights": "Highlights:",
             "label_notes": "Notes:",
@@ -1144,8 +1144,8 @@
                     "/published/quo_f7175e110605ab/draft_assets/c6e50fdc85a34af2a947554a133bc3e7.jpg"
                 ]
             },
-            "segment_city": "Hoi An",
-            "title_html": "<div style=\"mso-element:para-border-div;border:none;border-bottom:solid #1B365D 1.0pt; padding:0in 0in 4.0pt 0in\"> <b>Day 10: Exhilarating Hai Van Pass & Coastal Marble Mountains</b><br /></div>",
+            "segment_city": "Da Nang",
+            "title_html": "<b>Day 10 – Free Day in Da Nang – City & Resort at Leisure</b>",
             "description_html": [
                 "<span style=\"color:windowtext\">Gear up for an exhilarating morning pillion motorbike ride along the famous winding coastal roads of the <b>Hai Van Pass</b>, taking in dramatic ocean views. Stop to explore the mystical limestone peaks of <b>Marble Mountains</b>, climbing stone steps into sacred cave sanctuaries including <b>Huyen Khong Cave</b>.</span><br /><br /><span style=\"color:windowtext\">Continue your coastal ride along scenic shorelines, taking in panoramic sea views and enjoying a fresh seafood lunch by the water. Weather permitting, enjoy coastal water activities before making your way along picturesque roads back to Hoi An for a relaxing evening.</span>"
             ],
@@ -1154,7 +1154,8 @@
                 "Starts at <b>8:30 AM</b> for about <b>8.5 hours</b>"
             ],
             "layout_type": "single",
-            "is_alternate": true
+            "is_alternate": true,
+            "destination": "Da Nang"
         },
         {
             "dayNumber": 11,
@@ -1515,7 +1516,7 @@
             "destination": "Da Nang",
             "displayName": "Da Nang",
             "mapTitle": "Day 10 — Da Nang",
-            "kind": "visit",
+            "kind": "overnight",
             "showMarker": true
         },
         {
@@ -2139,10 +2140,10 @@
             "title": "Day 10 – Free Day in Da Nang – City & Resort at Leisure",
             "title_html": "<b>Day 10 – Free Day in Da Nang – City & Resort at Leisure</b>",
             "description": [
-                "Today is free at leisure in Da Nang. No service is arranged during this time, including vehicle, guide, activities or meals unless otherwise specified. Take the day to explore the city independently — stroll across the iconic Dragon Bridge, browse the stalls at Han Market, or wander along the golden sands of My Khe Beach at your own pace, discovering the coastal city's laid-back charm.\nAlternatively, simply stay in and unwind at the resort, enjoying its pool, spa, and beachfront facilities without a fixed schedule. Whether spent wandering the city or relaxing by the sea, the day is entirely yours to shape as you wish."
+                "Today is free at leisure in Da Nang. No service is arranged during this time, including vehicle, guide, activities or meals unless otherwise specified. Take the day to explore the city independently — stroll across the iconic Dragon Bridge, browse the stalls at Han Market, or wander along the golden sands of My Khe Beach at your own pace, discovering the coastal city's laid-back charm.\nAlternatively, simply stay in and unwind at the resort, enjoying its pool, spa, and beachfront facilities without a fixed schedule. Whether spent wandering the city or relaxing by the sea, the day is entirely yours to shape as you wish.\nHighlights:\nFree Day"
             ],
             "description_html": [
-                "<p dir=\"ltr\">Today is free at leisure in Da Nang. <strong>No service is arranged</strong> during this time, including vehicle, guide, activities or meals unless otherwise specified. Take the day to explore the city independently — stroll across the iconic <strong>Dragon Bridge</strong>, browse the stalls at <strong>Han Market</strong>, or wander along the golden sands of <strong>My Khe Beach</strong> at your own pace, discovering the coastal city's laid-back charm.</p>\n<p dir=\"ltr\">Alternatively, simply stay in and unwind at the resort, enjoying its pool, spa, and beachfront facilities without a fixed schedule. Whether spent wandering the city or relaxing by the sea, the day is entirely yours to shape as you wish.</p>"
+                "<p dir=\"ltr\">Today is free at leisure in Da Nang. <strong>No service is arranged</strong> during this time, including vehicle, guide, activities or meals unless otherwise specified. Take the day to explore the city independently — stroll across the iconic <strong>Dragon Bridge</strong>, browse the stalls at <strong>Han Market</strong>, or wander along the golden sands of <strong>My Khe Beach</strong> at your own pace, discovering the coastal city's laid-back charm.</p>\n<p dir=\"ltr\">Alternatively, simply stay in and unwind at the resort, enjoying its pool, spa, and beachfront facilities without a fixed schedule. Whether spent wandering the city or relaxing by the sea, the day is entirely yours to shape as you wish.</p><p></p>\n<p data-deletable=\"day_activities_10\" style=\"font-size:13px;color: var(--text-muted);margin-top:8px\">\n<strong data-editable=\"day_label_highlights_10\" style=\"color: var(--primary);letter-spacing:.06em\" spellcheck=\"false\">Highlights:</strong>\n<span data-editable=\"day_highlights_10\" spellcheck=\"false\">Free Day</span>\n</p>"
             ],
             "overnight": "Da Nang",
             "meals": [
@@ -2280,17 +2281,17 @@
             "label_meals": null,
             "segment_city": "Da Nang",
             "layout_images": {
-                "hero": "/assets/da-nang/danang1.jpg",
+                "hero": "/published/quo_f7175e110605cd/draft_assets/f3b840a1232e42e88f54228232ed9c03.jpg",
                 "small-1": "/assets/da-nang/danang3.jpg",
                 "small-2": "/assets/da-nang/hero/hero1.jpg",
                 "carousel": [
-                    "/assets/da-nang/danang1.jpg",
+                    "/published/quo_f7175e110605cd/draft_assets/f3b840a1232e42e88f54228232ed9c03.jpg",
                     "/assets/da-nang/danang3.jpg",
                     "/assets/da-nang/hero/hero1.jpg"
                 ]
             },
             "carousel": [
-                "/assets/da-nang/danang1.jpg",
+                "/published/quo_f7175e110605cd/draft_assets/f3b840a1232e42e88f54228232ed9c03.jpg",
                 "/assets/da-nang/danang3.jpg",
                 "/assets/da-nang/hero/hero1.jpg"
             ]
@@ -3188,9 +3189,9 @@
                 "day_meals_9": "Breakfast; Lunch",
                 "day_img_carousel_10": "<div class=\"carousel-inner\" style=\"position: absolute; inset: 0px; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); transform: translateX(-200%);\">\n<div class=\"carousel-slide\" style=\"flex: 0 0 100%; height: 100%; background: url(\"/published/quo_f7175e110605cd/draft_assets/575e541c28e7493f9f1d1cd738b7beeb.jpg\") center center / cover no-repeat;\">\n</div>\n<div class=\"carousel-slide\" style=\"flex: 0 0 100%; height: 100%; background: url(\"/published/quo_f7175e110605cd/draft_assets/6675bf738f4c4913a9c8733c6ea637aa.jpg\") center center / cover no-repeat;\">\n</div>\n<div class=\"carousel-slide\" style=\"flex: 0 0 100%; height: 100%; background: url(\"/published/quo_f7175e110605cd/draft_assets/3b21e69ff0d84a3b89c88f129f484cd5.jpg\") center center / cover no-repeat;\">\n</div>\n</div>\n<div class=\"carousel-dots no-print\" style=\"position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3;\">\n<button aria-label=\"Go to slide 1\" class=\"carousel-dot\" style=\"width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;\"></button>\n<button aria-label=\"Go to slide 2\" class=\"carousel-dot\" style=\"width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;\"></button>\n<button aria-label=\"Go to slide 3\" class=\"carousel-dot active\" style=\"width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;\"></button>\n</div>",
                 "day_title_10": "<b>Day 10 – Free Day in Da Nang – City & Resort at Leisure</b>",
-                "day_desc_10_0": "<p dir=\"ltr\">Today is free at leisure in Da Nang. <strong>No service is arranged</strong> during this time, including vehicle, guide, activities or meals unless otherwise specified. Take the day to explore the city independently — stroll across the iconic <strong>Dragon Bridge</strong>, browse the stalls at <strong>Han Market</strong>, or wander along the golden sands of <strong>My Khe Beach</strong> at your own pace, discovering the coastal city's laid-back charm.</p>\n<p dir=\"ltr\">Alternatively, simply stay in and unwind at the resort, enjoying its pool, spa, and beachfront facilities without a fixed schedule. Whether spent wandering the city or relaxing by the sea, the day is entirely yours to shape as you wish.</p>",
                 "day_label_highlights_10": "Highlights:",
                 "day_highlights_10": "Free Day",
+                "day_desc_10_0": "<p dir=\"ltr\">Today is free at leisure in Da Nang. <strong>No service is arranged</strong> during this time, including vehicle, guide, activities or meals unless otherwise specified. Take the day to explore the city independently — stroll across the iconic <strong>Dragon Bridge</strong>, browse the stalls at <strong>Han Market</strong>, or wander along the golden sands of <strong>My Khe Beach</strong> at your own pace, discovering the coastal city's laid-back charm.</p>\n<p dir=\"ltr\">Alternatively, simply stay in and unwind at the resort, enjoying its pool, spa, and beachfront facilities without a fixed schedule. Whether spent wandering the city or relaxing by the sea, the day is entirely yours to shape as you wish.</p><p></p>\n<p data-deletable=\"day_activities_10\" style=\"font-size:13px;color: var(--text-muted);margin-top:8px\">\n<strong data-editable=\"day_label_highlights_10\" style=\"color: var(--primary);letter-spacing:.06em\" spellcheck=\"false\">Highlights:</strong>\n<span data-editable=\"day_highlights_10\" spellcheck=\"false\">Free Day</span>\n</p>",
                 "day_label_notes_10": "Notes:",
                 "day_note_10_0": "No service arranged",
                 "day_overnight_10": "Da Nang",
@@ -3204,7 +3205,7 @@
                 "day_note_11_0": "Sense of Pace:\n                    Relaxed",
                 "day_overnight_11": "Da Nang",
                 "day_meals_11": "Breakfast; Dinner",
-                "day_img_carousel_12": "<div class=\"carousel-inner\" style=\"position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);\">\n                <div class=\"carousel-slide\" style=\"flex: 0 0 100%; height: 100%; background: url('/assets/da-nang/danang1.jpg') center/cover no-repeat;\"></div>\n                <div class=\"carousel-slide\" style=\"flex: 0 0 100%; height: 100%; background: url('/assets/da-nang/danang3.jpg') center/cover no-repeat;\"></div>\n                <div class=\"carousel-slide\" style=\"flex: 0 0 100%; height: 100%; background: url('/assets/da-nang/hero/hero1.jpg') center/cover no-repeat;\"></div>\n              </div>\n              <div class=\"carousel-dots no-print\" style=\"position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3;\">\n                <button aria-label=\"Go to slide 1\" class=\"carousel-dot active\" style=\"width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;\"></button>\n                <button aria-label=\"Go to slide 2\" class=\"carousel-dot\" style=\"width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;\"></button>\n                <button aria-label=\"Go to slide 3\" class=\"carousel-dot\" style=\"width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;\"></button>\n              </div>\n              <button aria-label=\"Previous slide\" class=\"carousel-prev-btn no-print\" style=\"position: absolute; top: 50%; left: 16px; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.85); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.9); color: #1c1c1a; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; box-shadow: 0 2px 8px rgba(0,0,0,0.12); font-size: 18px; line-height: 1;\">‹</button>\n              <button aria-label=\"Next slide\" class=\"carousel-next-btn no-print\" style=\"position: absolute; top: 50%; right: 16px; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.85); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.9); color: #1c1c1a; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; box-shadow: 0 2px 8px rgba(0,0,0,0.12); font-size: 18px; line-height: 1;\">›</button>",
+                "day_img_carousel_12": "<div class=\"carousel-inner\" style=\"position: absolute; inset: 0; display: flex; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);\">\n                <div class=\"carousel-slide\" style=\"flex: 0 0 100%; height: 100%; background: url(\"/published/quo_f7175e110605cd/draft_assets/f3b840a1232e42e88f54228232ed9c03.jpg\") center center / cover no-repeat;\"></div>\n                <div class=\"carousel-slide\" style=\"flex: 0 0 100%; height: 100%; background: url('/assets/da-nang/danang3.jpg') center/cover no-repeat;\"></div>\n                <div class=\"carousel-slide\" style=\"flex: 0 0 100%; height: 100%; background: url('/assets/da-nang/hero/hero1.jpg') center/cover no-repeat;\"></div>\n              </div>\n              <div class=\"carousel-dots no-print\" style=\"position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 3;\">\n                <button aria-label=\"Go to slide 1\" class=\"carousel-dot active\" style=\"width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;\"></button>\n                <button aria-label=\"Go to slide 2\" class=\"carousel-dot\" style=\"width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;\"></button>\n                <button aria-label=\"Go to slide 3\" class=\"carousel-dot\" style=\"width: 6px; height: 6px; border-radius: 50%; border: none; background: rgba(255,255,255,0.4); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s;\"></button>\n              </div>\n              <button aria-label=\"Previous slide\" class=\"carousel-prev-btn no-print\" style=\"position: absolute; top: 50%; left: 16px; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.85); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.9); color: #1c1c1a; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; box-shadow: 0 2px 8px rgba(0,0,0,0.12); font-size: 18px; line-height: 1;\">‹</button>\n              <button aria-label=\"Next slide\" class=\"carousel-next-btn no-print\" style=\"position: absolute; top: 50%; right: 16px; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.85); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.9); color: #1c1c1a; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; box-shadow: 0 2px 8px rgba(0,0,0,0.12); font-size: 18px; line-height: 1;\">›</button>",
                 "day_title_12": "<b>Day 12 - Leisurely Da Nang: Coastal Morning & Onward Departure</b>",
                 "day_desc_12_0": "<p>\n                  Your final morning in Central Vietnam is enjoyed at leisure at <strong>Hyatt Regency Danang Resort and Spa</strong>, allowing you to savor a beachfront breakfast, stroll along the pristine sands of Non Nuoc Beach, or enjoy a quiet moment by the private pool. At the appropriate time, your private chauffeur provides a seamless transfer to <strong>Da Nang International Airport (DAD)</strong> for your scheduled departure, concluding a magnificent and unforgettable luxury journey through Vietnam.\n                </p>\n                <p data-deletable=\"day_activities_12\" style=\"font-size:13px;color: var(--text-muted);margin-top:8px\"><br /></p>",
                 "day_label_notes_12": "Notes:",
@@ -3264,11 +3265,11 @@
                 "payment_desc": "Commercial conditions, deposits, and cancellation policy for this booking.",
                 "payment_cta": "Approve & Book Now",
                 "booking_term_label_0": "Deposit",
-                "booking_term_body_0": "A deposit of 30% of the total tour cost is required upon confirmation of the booking. This deposit is non-refundable.For bookings confirmed within 60 days of arrival, full payment of 100% of the total tour cost is required at the time of confirmation.",
+                "booking_term_body_0": "<ul style=\"margin: 0; padding-left: 16px; display: grid; gap: 4px;\"><li>A deposit of 30% of the total tour cost is required upon confirmation of the booking. This deposit is non-refundable.</li><li>For bookings confirmed within 60 days of arrival, full payment of 100% of the total tour cost is required at the time of confirmation.</li></ul>",
                 "booking_term_label_1": "Balance",
-                "booking_term_body_1": "The remaining 70% balance must be paid no later than 60 days prior to the scheduled arrival date.",
+                "booking_term_body_1": "<ul style=\"margin: 0; padding-left: 16px; display: grid; gap: 4px;\"><li>The remaining 70% balance must be paid no later than 60 days prior to the scheduled arrival date.</li></ul>",
                 "booking_term_label_2": "Cancellation",
-                "booking_term_body_2": "Written notice required. Cancellation fees apply based on arrival date:> 45 days prior: Deposit forfeited (30%)45 – 31 days prior: 50% of total tour cost30 – 20 days prior: 75% of total tour costAny non-refundable payments, cancellation charges or penalties imposed by hotels, airlines, cruise operators and other service providers may also apply in addition to the cancellation fees stated above.",
+                "booking_term_body_2": "<div style=\"margin-bottom: 4px;\">Written notice required. Cancellation fees apply based on arrival date:</div><ul style=\"margin: 0; padding-left: 16px; display: grid; gap: 4px;\"><li>> 45 days prior: Deposit forfeited (30%)</li><li>45 – 31 days prior: 50% of total tour cost</li><li>30 – 20 days prior: 75% of total tour cost</li><li>< 20 days prior: 100% of total tour cost</li></ul><div style=\"margin-top: 12px;\">Any non-refundable payments, cancellation charges or penalties imposed by hotels, airlines, cruise operators and other service providers may also apply in addition to the cancellation fees stated above.</div>",
                 "designer_img": "/assets/dias_team/hieu.jpg",
                 "seller_subtitle": "(Trung Hieu Pham)",
                 "designer_signature": "Travel Designer",
@@ -3434,7 +3435,7 @@
                         "hero": "/published/quo_f7175e110605cd/draft_assets/575e541c28e7493f9f1d1cd738b7beeb.jpg",
                         "small-1": "/published/quo_f7175e110605cd/draft_assets/6675bf738f4c4913a9c8733c6ea637aa.jpg",
                         "small-2": "/published/quo_f7175e110605cd/draft_assets/3b21e69ff0d84a3b89c88f129f484cd5.jpg",
-                        "segment_city": "Da Nang"
+                        "segment_city": "Hue"
                     },
                     "11": {
                         "carousel": [
@@ -3449,18 +3450,18 @@
                     },
                     "12": {
                         "carousel": [
-                            "/assets/da-nang/danang1.jpg",
+                            "/published/quo_f7175e110605cd/draft_assets/f3b840a1232e42e88f54228232ed9c03.jpg",
                             "/assets/da-nang/danang3.jpg",
                             "/assets/da-nang/hero/hero1.jpg"
                         ],
-                        "hero": "/assets/da-nang/danang1.jpg",
+                        "hero": "/published/quo_f7175e110605cd/draft_assets/f3b840a1232e42e88f54228232ed9c03.jpg",
                         "small-1": "/assets/da-nang/danang3.jpg",
                         "small-2": "/assets/da-nang/hero/hero1.jpg",
                         "segment_city": "Da Nang"
                     }
                 }
             },
-            "captured_from_version": 154
+            "captured_from_version": 155
         }
     },
     "hero_img": "/assets/brands/hero/elder.png?v=27",

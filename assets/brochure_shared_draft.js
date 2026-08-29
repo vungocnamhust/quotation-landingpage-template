@@ -677,7 +677,12 @@
       if (small2Target && images.small2 && images.small2.url) setAssetImage(small2Target, images.small2.url);
       const carouselTarget = document.querySelector(`[data-editable="day_img_carousel_${dayNumber}"]`);
       if (carouselTarget) {
-        const urls = carouselUrls.length ? carouselUrls : (heroUrl ? [heroUrl] : []);
+        let urls = [...carouselUrls];
+        if (heroUrl && (!urls.length || urls[0] !== heroUrl)) {
+          if (urls.length) urls[0] = heroUrl;
+          else urls = [heroUrl];
+        }
+        if (!urls.length && heroUrl) urls = [heroUrl];
         if (urls.length) carouselTarget.innerHTML = buildCarouselMarkup(urls);
       }
     });
@@ -1008,11 +1013,24 @@
       const uploaded = await uploadAsset(file);
       await persistMediaSelection(uploaded.assetId || "", path);
       clearTransientAssetPreview(path);
-      setPath(state, path, {
+      const uploadedAsset = {
         assetId: uploaded.assetId || "",
         url: uploaded.originalUrl || uploaded.previewUrl || tempUrl,
         status: uploaded.status || "ready",
-      });
+      };
+      setPath(state, path, uploadedAsset);
+      const dayMatch = path.match(/^itinerary\.days\.(\d+)\.images\.hero$/);
+      if (dayMatch) {
+        const dayIdx = Number(dayMatch[1]);
+        const dayObj = getPath(state, `itinerary.days.${dayIdx}`);
+        if (dayObj && dayObj.images) {
+          if (Array.isArray(dayObj.images.carousel) && dayObj.images.carousel.length > 0) {
+            dayObj.images.carousel[0] = uploadedAsset;
+          } else {
+            dayObj.images.carousel = [uploadedAsset];
+          }
+        }
+      }
       applyDraftToDom(state);
       syncEditorFields(document.getElementById("brochure-draft-sidebar"));
       scheduleSave();
