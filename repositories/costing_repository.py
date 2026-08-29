@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from db.models.costing import CostingSheet, ServiceLine
+from db.models.costing_application import CostingApplication
 
 DEFAULT_TENANT_ID = "capella"
 
@@ -46,7 +47,7 @@ class CostingRepository:
         result = await self.session.execute(
             select(CostingSheet)
             .where(CostingSheet.id == sheet_id, CostingSheet.tenant_id == tenant_id)
-            .options(selectinload(CostingSheet.lines))
+            .options(selectinload(CostingSheet.lines), selectinload(CostingSheet.applications))
         )
         return result.scalar_one_or_none()
 
@@ -61,7 +62,7 @@ class CostingRepository:
                 CostingSheet.quotation_id.is_(None),
                 CostingSheet.tenant_id == tenant_id,
             )
-            .options(selectinload(CostingSheet.lines))
+            .options(selectinload(CostingSheet.lines), selectinload(CostingSheet.applications))
             .order_by(CostingSheet.created_at.desc())
             .limit(1)
         )
@@ -73,7 +74,7 @@ class CostingRepository:
         result = await self.session.execute(
             select(CostingSheet)
             .where(CostingSheet.quotation_id == quotation_id, CostingSheet.tenant_id == tenant_id)
-            .options(selectinload(CostingSheet.lines))
+            .options(selectinload(CostingSheet.lines), selectinload(CostingSheet.applications))
         )
         return result.scalar_one_or_none()
 
@@ -82,6 +83,39 @@ class CostingRepository:
         if line is None or line.tenant_id != tenant_id:
             return None
         return line
+
+    async def get_application_by_idempotency_key(
+        self, sheet_id: str, *, idempotency_key: str, tenant_id: str = DEFAULT_TENANT_ID
+    ) -> CostingApplication | None:
+        result = await self.session.execute(
+            select(CostingApplication).where(
+                CostingApplication.sheet_id == sheet_id,
+                CostingApplication.idempotency_key == idempotency_key,
+                CostingApplication.tenant_id == tenant_id,
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def get_latest_application_for_sheet(
+        self, sheet_id: str, *, tenant_id: str = DEFAULT_TENANT_ID
+    ) -> CostingApplication | None:
+        result = await self.session.execute(
+            select(CostingApplication)
+            .where(CostingApplication.sheet_id == sheet_id, CostingApplication.tenant_id == tenant_id)
+            .order_by(CostingApplication.created_at.desc())
+            .limit(1)
+        )
+        return result.scalar_one_or_none()
+
+    async def list_applications_for_sheet(
+        self, sheet_id: str, *, tenant_id: str = DEFAULT_TENANT_ID
+    ) -> list[CostingApplication]:
+        result = await self.session.execute(
+            select(CostingApplication)
+            .where(CostingApplication.sheet_id == sheet_id, CostingApplication.tenant_id == tenant_id)
+            .order_by(CostingApplication.created_at.desc())
+        )
+        return list(result.scalars().all())
 
     # ----------------------------------------------------------------- writes
 
@@ -213,3 +247,13 @@ class CostingRepository:
         await self.session.delete(line)
         await self._bump_revision_guarded(sheet, expected_revision=expected_revision)
         await self.session.flush()
+
+    async def insert_application(
+        self, *, application_id: str, tenant_id: str = DEFAULT_TENANT_ID, values: dict[str, Any]
+    ) -> CostingApplication:
+        now = datetime.now(timezone.utc)
+        app = CostingApplication(id=application_id, tenant_id=tenant_id, created_at=now, **values)
+        self.session.add(app)
+        await self.session.flush()
+        return app
+

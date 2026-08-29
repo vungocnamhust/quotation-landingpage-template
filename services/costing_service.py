@@ -13,9 +13,11 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.runtime import apply_pricing_option
 from core.kernel import ActorRef, generate_id, validate_currency
 from core.rules.costing_rules import ServiceLineInput, summarize
 from db.models.costing import CostingSheet
+from notification.domain.events import EventType
 from repositories.costing_repository import (
     CostingLineDuplicateError,
     CostingRepository,
@@ -24,14 +26,19 @@ from repositories.costing_repository import (
     CostingSheetSlotTakenError,
 )
 from repositories.destination_repository import DestinationRepository
+from repositories.errors import DocumentRevisionConflictError
 from repositories.product_repository import ProductRepository
 from repositories.quotation_repository import QuotationRepository
 from repositories.quote_request_repository import QuoteRequestRepository
 from repositories.rate_repository import RateRepository
 from repositories.supplier_repository import SupplierRepository
 from schemas.v2.costing import (
+    ApplyPricingRequestSchema,
+    ApplyPricingResponseSchema,
     AttachQuotationSchema,
     CategoryTotalSchema,
+    CostingApplicationResponseSchema,
+    CostingDriftSchema,
     CostingSettingsUpdateSchema,
     CostingSheetCreateSchema,
     CostingSheetResponseSchema,
@@ -42,9 +49,11 @@ from schemas.v2.costing import (
     ServiceLineResponseSchema,
     ServiceLineWriteSchema,
 )
+from services.outbox_service import OutboxService
 
 SHEET_ID_PREFIX = "cst"
 LINE_ID_PREFIX = "csl"
+APPLICATION_ID_PREFIX = "cga"
 
 # Deviation from 15.4-costing.md §1.3: the plan calls for deriving the default
 # currency via ``taxonomy_rules.infer_default_currency(brand_id, market)``, but
@@ -289,7 +298,146 @@ class CostingService:
         sheet = await self.repository.get_sheet_by_id(sheet_id)
         return await self._to_workbench(sheet)
 
+    async def apply_pricing(
+        self,
+        sheet_id: str,
+        payload: ApplyPricingRequestSchema,
+        *,
+        actor: ActorRef,
+        idempotency_key: str | None = None,
+    ) -> ApplyPricingResponseSchema | None:
+        sheet = await self.repository.get_sheet_by_id(sheet_id)
+        if sheet is None:
+            return None
+
+        if not sheet.quotation_id:
+            raise CostingValidationError("Costing sheet must be attached to a quotation before applying pricing.")
+
+        self._check_revision(sheet, payload.base_costing_revision)
+
+        if not sheet.lines:
+            raise CostingValidationError("Cannot apply pricing for a costing sheet with no service lines.")
+
+        line_inputs = [
+            ServiceLineInput(
+                line_id=line.id,
+                day_number=line.day_number,
+                category=line.category,
+                unit_cost_minor=line.unit_cost_minor,
+                qty_unit=line.qty_unit,
+                qty_time=line.qty_time,
+                fx_rate_ppm=line.fx_rate_ppm,
+                sell_override_minor=line.sell_override_minor,
+            )
+            for line in sheet.lines
+        ]
+        summary = summarize(
+            line_inputs,
+            markup_rate_bps=sheet.markup_rate_bps,
+            rounding_increment_minor=sheet.rounding_increment_minor,
+        )
+
+        if summary.sell_total_minor <= 0:
+            raise CostingValidationError("Cannot apply pricing when sell total is less than or equal to zero.")
+
+        # Check idempotency replay
+        if idempotency_key:
+            existing_app = await self.repository.get_application_by_idempotency_key(
+                sheet_id, idempotency_key=idempotency_key
+            )
+            if existing_app is not None:
+                summary_schema = self._build_summary_schema(summary)
+                pricing_opts: list[dict[str, Any]] = []
+                req = await self.quotation_repository.get_latest_quotation_request(sheet.quotation_id)
+                if req and req.request_json:
+                    pricing_opts = (req.request_json.get("pricing_facts") or {}).get("options") or []
+                return ApplyPricingResponseSchema(
+                    application=CostingApplicationResponseSchema.model_validate(existing_app),
+                    facts_revision=existing_app.facts_revision_after,
+                    costing_revision=sheet.costing_revision,
+                    summary=summary_schema,
+                    pricing_options=pricing_opts,
+                )
+
+        try:
+            facts_res = await apply_pricing_option(
+                session=self.session,
+                quotation_id=sheet.quotation_id,
+                base_revision=payload.base_revision,
+                target_option_id=payload.target_option_id,
+                option_label=payload.option_label,
+                sell_total_minor=summary.sell_total_minor,
+                currency=sheet.currency,
+                actor=actor,
+                lang=payload.lang,
+            )
+        except DocumentRevisionConflictError as exc:
+            raise CostingConflictError(
+                f"Quotation facts revision conflict: {exc}",
+                current_revision=exc.current_revision,
+            ) from exc
+
+        app_id = generate_id(APPLICATION_ID_PREFIX)
+        app_values = {
+            "sheet_id": sheet.id,
+            "quotation_id": sheet.quotation_id,
+            "costing_revision_at_apply": sheet.costing_revision,
+            "facts_revision_after": facts_res["new_revision"],
+            "target_option_id": facts_res["target_option_id"],
+            "sell_total_minor": summary.sell_total_minor,
+            "currency": sheet.currency,
+            "cost_total_minor": summary.cost_total_minor,
+            "margin_bps": summary.margin_bps,
+            "idempotency_key": idempotency_key,
+            "created_by": actor.serialize(),
+        }
+        app = await self.repository.insert_application(application_id=app_id, values=app_values)
+
+        outbox = OutboxService(self.session)
+        await outbox.emit_event(
+            event_type=EventType.COSTING_APPLIED.value,
+            aggregate_type="costing_sheet",
+            aggregate_id=sheet.id,
+            actor_email=actor.actor_id,
+            payload={
+                "sheet_id": sheet.id,
+                "quotation_id": sheet.quotation_id,
+                "application_id": app.id,
+                "sell_total_minor": summary.sell_total_minor,
+                "currency": sheet.currency,
+                "margin_bps": summary.margin_bps,
+                "cost_total_minor": summary.cost_total_minor,
+                "costing_revision_at_apply": sheet.costing_revision,
+                "facts_revision_after": facts_res["new_revision"],
+                "target_option_id": facts_res["target_option_id"],
+                "actor": actor.serialize(),
+            },
+        )
+
+        summary_schema = self._build_summary_schema(summary)
+        return ApplyPricingResponseSchema(
+            application=CostingApplicationResponseSchema.model_validate(app),
+            facts_revision=facts_res["new_revision"],
+            costing_revision=sheet.costing_revision,
+            summary=summary_schema,
+            pricing_options=facts_res.get("pricing_options", []),
+        )
+
     # ------------------------------------------------------------- helpers
+
+    @staticmethod
+    def _build_summary_schema(summary) -> CostingSummarySchema:
+        return CostingSummarySchema(
+            cost_total_minor=summary.cost_total_minor,
+            sell_total_minor=summary.sell_total_minor,
+            margin_minor=summary.margin_minor,
+            margin_bps=summary.margin_bps,
+            by_day=[DayTotalSchema(day_number=d.day_number, cost_minor=d.cost_minor, sell_minor=d.sell_minor) for d in summary.by_day],
+            by_category=[
+                CategoryTotalSchema(category=c.category, cost_minor=c.cost_minor, sell_minor=c.sell_minor)
+                for c in summary.by_category
+            ],
+        )
 
     @staticmethod
     def _guard_booked_line(line, sheet: CostingSheet) -> None:
@@ -434,19 +582,56 @@ class CostingService:
             item = item.model_copy(update={"cost_minor": totals.cost_minor, "sell_minor": totals.sell_minor, "product_ref": product_ref})
             items.append(item)
 
-        summary_schema = CostingSummarySchema(
-            cost_total_minor=summary.cost_total_minor,
-            sell_total_minor=summary.sell_total_minor,
-            margin_minor=summary.margin_minor,
-            margin_bps=summary.margin_bps,
-            by_day=[DayTotalSchema(day_number=d.day_number, cost_minor=d.cost_minor, sell_minor=d.sell_minor) for d in summary.by_day],
-            by_category=[
-                CategoryTotalSchema(category=c.category, cost_minor=c.cost_minor, sell_minor=c.sell_minor)
-                for c in summary.by_category
-            ],
-        )
+        summary_schema = self._build_summary_schema(summary)
+
+        applications = await self.repository.list_applications_for_sheet(sheet.id)
+        app_schemas = [CostingApplicationResponseSchema.model_validate(app) for app in applications]
+
+        drift = None
+        if applications and sheet.quotation_id:
+            latest_app = applications[0]
+            costing_modified = (sheet.costing_revision != latest_app.costing_revision_at_apply)
+            commercial_modified = False
+            target_label = None
+            try:
+                quotation_req = await self.quotation_repository.get_latest_quotation_request(sheet.quotation_id)
+                if quotation_req and quotation_req.request_json:
+                    pricing_facts = quotation_req.request_json.get("pricing_facts") or {}
+                    options = pricing_facts.get("options") or []
+                    matched = next((opt for opt in options if opt.get("id") == latest_app.target_option_id), None)
+                    if matched is None:
+                        commercial_modified = True
+                    else:
+                        target_label = matched.get("label")
+                        if (
+                            matched.get("group_total_amount_minor") != latest_app.sell_total_minor
+                            or matched.get("currency") != latest_app.currency
+                        ):
+                            commercial_modified = True
+            except Exception:
+                pass
+
+            drift = CostingDriftSchema(
+                has_drift=costing_modified or commercial_modified,
+                costing_modified_since_apply=costing_modified,
+                commercial_modified_since_apply=commercial_modified,
+                last_applied_at=latest_app.created_at,
+                last_applied_costing_revision=latest_app.costing_revision_at_apply,
+                last_applied_facts_revision=latest_app.facts_revision_after,
+                last_applied_sell_total_minor=latest_app.sell_total_minor,
+                last_applied_currency=latest_app.currency,
+                target_option_id=latest_app.target_option_id,
+                target_option_label=target_label,
+            )
+        elif not applications and sheet.quotation_id:
+            drift = CostingDriftSchema(has_drift=False)
+
         return CostingWorkbenchResponseSchema(
-            sheet=CostingSheetResponseSchema.model_validate(sheet), items=items, summary=summary_schema
+            sheet=CostingSheetResponseSchema.model_validate(sheet),
+            items=items,
+            summary=summary_schema,
+            applications=app_schemas,
+            drift=drift,
         )
 
     async def _product_ref(self, product_id: str) -> ProductRefSchema | None:

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -212,7 +212,67 @@ class CostingSheetFindResponseSchema(BaseModel):
     sheet: CostingSheetResponseSchema | None = None
 
 
+class CostingApplicationResponseSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+
+    id: str
+    sheet_id: str
+    quotation_id: str
+    costing_revision_at_apply: int
+    facts_revision_after: int
+    target_option_id: str
+    sell_total_minor: int
+    currency: str
+    cost_total_minor: int
+    margin_bps: int
+    idempotency_key: str | None = None
+    created_by: str | None = None
+    created_at: datetime
+
+
+class CostingDriftSchema(BaseModel):
+    model_config = ConfigDict(extra="ignore", populate_by_name=True)
+
+    has_drift: bool = False
+    costing_modified_since_apply: bool = False
+    commercial_modified_since_apply: bool = False
+    last_applied_at: datetime | None = None
+    last_applied_costing_revision: int | None = None
+    last_applied_facts_revision: int | None = None
+    last_applied_sell_total_minor: int | None = None
+    last_applied_currency: str | None = None
+    target_option_id: str | None = None
+    target_option_label: str | None = None
+
+
+class ApplyPricingRequestSchema(BaseModel):
+    model_config = ConfigDict(extra="ignore", populate_by_name=True)
+
+    base_revision: int = Field(alias="baseRevision", ge=0)
+    base_costing_revision: int = Field(alias="baseCostingRevision", ge=0)
+    target_option_id: str | None = Field(default=None, alias="targetOptionId")
+    option_label: str | None = Field(default=None, alias="optionLabel")
+    lang: str | None = None
+
+
+class ApplyPricingResponseSchema(BaseModel):
+    # Serialized snake_case like every other costing response (16.3 F-15/D7) —
+    # the camelCase aliases made FastAPI's by-alias serialization diverge from
+    # the frontend types.
+    application: CostingApplicationResponseSchema
+    facts_revision: int
+    costing_revision: int
+    summary: CostingSummarySchema
+    pricing_options: list[dict[str, Any]] = Field(default_factory=list)
+    drift: CostingDriftSchema | None = None
+
+
 class CostingWorkbenchResponseSchema(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     sheet: CostingSheetResponseSchema
     items: list[ServiceLineResponseSchema] = Field(default_factory=list)
     summary: CostingSummarySchema
+    applications: list[CostingApplicationResponseSchema] = Field(default_factory=list)
+    drift: CostingDriftSchema | None = None
+

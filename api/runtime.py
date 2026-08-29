@@ -17,6 +17,7 @@ DatabaseUnavailablePredicate = Callable[[BaseException], bool]
 DraftAssetStore = Callable[..., Awaitable[dict[str, Any]]]
 TravelDesignerSerializer = Callable[[Any], dict[str, Any]]
 QuotationWorkflowLoader = Callable[[str], Awaitable[dict[str, Any]]]
+PricingOptionApplier = Callable[..., Awaitable[dict[str, Any]]]
 
 _media_service_provider: MediaServiceProvider | None = None
 _session_factory_provider: SessionFactoryProvider | None = None
@@ -25,6 +26,7 @@ _database_unavailable_predicate: DatabaseUnavailablePredicate | None = None
 _draft_asset_store: DraftAssetStore | None = None
 _travel_designer_serializer: TravelDesignerSerializer | None = None
 _quotation_workflow_loader: QuotationWorkflowLoader | None = None
+_pricing_option_applier: PricingOptionApplier | None = None
 
 
 def configure_v2_runtime(
@@ -36,10 +38,11 @@ def configure_v2_runtime(
     draft_asset_store: DraftAssetStore,
     travel_designer_serializer: TravelDesignerSerializer,
     quotation_workflow_loader: QuotationWorkflowLoader,
+    pricing_option_applier: PricingOptionApplier | None = None,
 ) -> None:
     global _media_service_provider, _session_factory_provider, _load_context_provider
     global _database_unavailable_predicate, _draft_asset_store
-    global _travel_designer_serializer, _quotation_workflow_loader
+    global _travel_designer_serializer, _quotation_workflow_loader, _pricing_option_applier
     _media_service_provider = media_service_provider
     _session_factory_provider = session_factory_provider
     _load_context_provider = load_context_provider
@@ -47,6 +50,7 @@ def configure_v2_runtime(
     _draft_asset_store = draft_asset_store
     _travel_designer_serializer = travel_designer_serializer
     _quotation_workflow_loader = quotation_workflow_loader
+    _pricing_option_applier = pricing_option_applier
 
 
 def _configured(value: Any, name: str) -> Any:
@@ -81,3 +85,8 @@ def serialize_travel_designer(profile: Any) -> dict[str, Any]:
 
 async def load_quotation_workflow(quotation_id: str) -> dict[str, Any]:
     return await _configured(_quotation_workflow_loader, "quotation_workflow_loader")(quotation_id)
+
+
+async def apply_pricing_option(**kwargs: Any) -> dict[str, Any]:
+    return await _configured(_pricing_option_applier, "pricing_option_applier")(**kwargs)
+

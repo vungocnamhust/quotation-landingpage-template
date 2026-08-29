@@ -34,6 +34,7 @@ EXPECTED_V2_OPERATIONS = {
     ("/api/v2/costing-sheets/{sheet_id}/lines", "POST"),
     ("/api/v2/costing-sheets/{sheet_id}/lines/{line_id}", "PUT"),
     ("/api/v2/costing-sheets/{sheet_id}/lines/{line_id}", "DELETE"),
+    ("/api/v2/costing-sheets/{sheet_id}/apply-pricing", "POST"),
     ("/api/v2/destinations", "GET"), ("/api/v2/destinations", "POST"),
     ("/api/v2/destinations/{destination_id}", "GET"), ("/api/v2/destinations/{destination_id}", "PUT"),
     ("/api/v2/destinations/{destination_id}/status", "PATCH"),

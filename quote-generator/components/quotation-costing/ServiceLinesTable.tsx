@@ -42,7 +42,15 @@ export function ServiceLinesTable({ workbench, disabled, onDeleteLine }: Service
               {group.rows.map((row) => {
                 const line = linesById.get(row.id);
                 if (!line) return null;
-                return <ServiceLineRow key={row.id} line={line} disabled={disabled} onDelete={onDeleteLine} />;
+                return (
+                  <ServiceLineRow
+                    key={row.id}
+                    line={line}
+                    sheetCurrency={workbench.sheet.currency}
+                    disabled={disabled}
+                    onDelete={onDeleteLine}
+                  />
+                );
               })}
             </tbody>
           </table>

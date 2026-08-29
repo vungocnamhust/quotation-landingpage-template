@@ -5,7 +5,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 
 
 revision = "20260904_42"
-down_revision = "20260902_40"
+down_revision = "20260903_41"
 branch_labels = None
 depends_on = None
 

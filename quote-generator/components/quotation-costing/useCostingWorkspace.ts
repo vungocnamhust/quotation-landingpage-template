@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import useSWR from "swr";
 import {
+  applyCostingPricing,
   attachCostingSheetToQuotation,
   createCostingSheet,
   createServiceLine,
@@ -14,7 +15,12 @@ import {
   updateServiceLine,
 } from "../../lib/quotationApi.ts";
 import { apiErrorMessage, QuotationApiError } from "../../lib/apiError.ts";
-import type { CostingWorkbenchAnchor, CostingWorkbenchResponse, ServiceLineWriteInput } from "./types.ts";
+import type {
+  ApplyPricingResponse,
+  CostingWorkbenchAnchor,
+  CostingWorkbenchResponse,
+  ServiceLineWriteInput,
+} from "./types.ts";
 
 function newIdempotencyKey(): string {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -23,16 +29,17 @@ function newIdempotencyKey(): string {
 }
 
 /**
- * Headless hook for the Costing Workbench (15.4) — resolves-or-creates the
+ * Headless hook for the Costing Workbench (15.4 / 15.5) — resolves-or-creates the
  * sheet for the given anchor, then owns the workbench SWR cache and every
  * mutation. Every write's response IS the new cache value (the server always
- * returns the fresh `{sheet, items, summary}`), so mutations never trigger a
+ * returns the fresh `{sheet, items, summary, applications, drift}`), so mutations never trigger a
  * revalidating refetch — they just replace the cache with the response.
  */
 export function useCostingWorkspace(anchor: CostingWorkbenchAnchor) {
   const [sheetId, setSheetId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [isCreatingSheet, setIsCreatingSheet] = useState(false);
+  const [isApplyingPricing, setIsApplyingPricing] = useState(false);
 
   const anchorKind: "request" | "quotation" = anchor.requestId ? "request" : "quotation";
   const anchorId = anchor.requestId ?? anchor.quotationId ?? "";
@@ -161,11 +168,48 @@ export function useCostingWorkspace(anchor: CostingWorkbenchAnchor) {
     [applyResult, resolvedSheetId, runAction],
   );
 
+  const applyPricing = useCallback(
+    async (
+      input: {
+        base_revision: number;
+        target_option_id?: string | null;
+        option_label?: string | null;
+        lang?: string | null;
+      },
+      idempotencyKey?: string,
+    ): Promise<ApplyPricingResponse | null> => {
+      if (!resolvedSheetId) return null;
+      setIsApplyingPricing(true);
+      try {
+        return await runAction(async () => {
+          const response = await applyCostingPricing(
+            resolvedSheetId,
+            {
+              base_revision: input.base_revision,
+              base_costing_revision: baseCostingRevision,
+              target_option_id: input.target_option_id,
+              option_label: input.option_label,
+              lang: input.lang,
+            },
+            idempotencyKey || newIdempotencyKey(),
+          );
+          const fresh = await getCostingWorkbench(resolvedSheetId);
+          applyResult(fresh);
+          return response;
+        });
+      } finally {
+        setIsApplyingPricing(false);
+      }
+    },
+    [applyResult, baseCostingRevision, resolvedSheetId, runAction],
+  );
+
   return {
     sheetId: resolvedSheetId,
     workbench,
     isLoading: isFinding || isLoadingWorkbench,
     isCreatingSheet,
+    isApplyingPricing,
     actionError,
     createSheet,
     updateSettings,
@@ -173,6 +217,7 @@ export function useCostingWorkspace(anchor: CostingWorkbenchAnchor) {
     editLine,
     removeLine,
     attachToQuotation,
+    applyPricing,
     refresh: () => (resolvedSheetId ? mutateWorkbench() : undefined),
   };
 }

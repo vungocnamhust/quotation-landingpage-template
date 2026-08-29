@@ -6,23 +6,62 @@ import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
 import { SUPPORTED_CURRENCIES } from "../../lib/rules/pricingReconciler.ts";
 import { formatMinorAmount as formatMinor } from "../../lib/moneyFormat.ts";
-import type { CostingSheetProfile, CostingSummary } from "./types.ts";
+import type { CostingDriftProfile, CostingSheetProfile, CostingSummary } from "./types.ts";
+import { DriftBadge } from "./DriftBadge.tsx";
+import { ApplyPricingButton } from "./ApplyPricingButton.tsx";
+import type { ExistingPricingOption } from "./ApplyPricingDialog.tsx";
 
 export interface CostingSettingsBarProps {
   sheet: CostingSheetProfile;
   summary: CostingSummary;
   lineCount: number;
   disabled?: boolean;
+  drift?: CostingDriftProfile | null;
+  existingOptions?: ExistingPricingOption[];
+  adultsCount?: number;
   onUpdate: (input: { currency?: string; markup_rate_bps?: number; rounding_increment_minor?: number }) => void;
+  onApplyPricing?: (targetOptionId: string | null, optionLabel: string) => Promise<void>;
+  isApplyingPricing?: boolean;
 }
 
-export function CostingSettingsBar({ sheet, summary, lineCount, disabled, onUpdate }: CostingSettingsBarProps) {
+export function CostingSettingsBar({
+  sheet,
+  summary,
+  lineCount,
+  disabled,
+  drift,
+  existingOptions,
+  adultsCount,
+  onUpdate,
+  onApplyPricing,
+  isApplyingPricing,
+}: CostingSettingsBarProps) {
   const [markupInput, setMarkupInput] = useState(String(sheet.markup_rate_bps));
   const [roundingInput, setRoundingInput] = useState(String(sheet.rounding_increment_minor));
   const currencyLocked = lineCount > 0;
 
   return (
-    <div className="flex flex-col gap-3 rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+    <div className="flex flex-col gap-3 rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-xs">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--color-border)] pb-3">
+        <div className="flex items-center gap-3">
+          <span className={cn(getTypographyClassName("label"), "text-[var(--color-on-surface)]")}>
+            Thiết lập & Tổng quan dự toán
+          </span>
+          <DriftBadge drift={drift} />
+        </div>
+
+        {onApplyPricing ? (
+          <ApplyPricingButton
+            sheet={sheet}
+            summary={summary}
+            existingOptions={existingOptions}
+            adultsCount={adultsCount}
+            onApply={onApplyPricing}
+            isApplying={isApplyingPricing}
+          />
+        ) : null}
+      </div>
+
       <div className="flex flex-wrap items-end gap-4">
         <div className="flex flex-col gap-1.5">
           <span className={cn(getTypographyClassName("label"), "flex items-center gap-1 text-[var(--color-muted)]")}>

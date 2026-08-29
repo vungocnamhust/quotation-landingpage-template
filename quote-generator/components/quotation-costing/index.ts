@@ -5,3 +5,7 @@ export { CostingSettingsBar } from "./CostingSettingsBar.tsx";
 export { ServiceLinesTable } from "./ServiceLinesTable.tsx";
 export { ServiceLineRow } from "./ServiceLineRow.tsx";
 export { AddServiceLineFlow } from "./AddServiceLineFlow.tsx";
+export { ApplyPricingButton } from "./ApplyPricingButton.tsx";
+export { ApplyPricingDialog } from "./ApplyPricingDialog.tsx";
+export { DriftBadge } from "./DriftBadge.tsx";
+

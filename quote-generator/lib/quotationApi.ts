@@ -803,10 +803,65 @@ export type CostingSheetProfile = {
   updated_at: string;
 };
 
+export type CostingApplicationProfile = {
+  id: string;
+  sheet_id: string;
+  quotation_id: string;
+  costing_revision_at_apply: number;
+  facts_revision_after: number;
+  target_option_id: string;
+  sell_total_minor: number;
+  currency: string;
+  cost_total_minor: number;
+  margin_bps: number;
+  idempotency_key?: string | null;
+  created_by?: string | null;
+  created_at: string;
+};
+
+export type CostingDriftProfile = {
+  has_drift: boolean;
+  costing_modified_since_apply?: boolean;
+  commercial_modified_since_apply?: boolean;
+  last_applied_at?: string | null;
+  last_applied_costing_revision?: number | null;
+  last_applied_facts_revision?: number | null;
+  last_applied_sell_total_minor?: number | null;
+  last_applied_currency?: string | null;
+  target_option_id?: string | null;
+  target_option_label?: string | null;
+};
+
 export type CostingWorkbenchResponse = {
   sheet: CostingSheetProfile;
   items: ServiceLineProfile[];
   summary: CostingSummary;
+  applications?: CostingApplicationProfile[];
+  drift?: CostingDriftProfile | null;
+};
+
+export type ApplyPricingRequestPayload = {
+  base_revision: number;
+  base_costing_revision: number;
+  target_option_id?: string | null;
+  option_label?: string | null;
+  lang?: string | null;
+};
+
+export type ApplyPricingResponse = {
+  application: CostingApplicationProfile;
+  facts_revision: number;
+  costing_revision: number;
+  summary: CostingSummary;
+  pricing_options: Array<{
+    id: string;
+    label?: string;
+    currency?: string;
+    group_total_amount_minor?: number;
+    per_adult_amount_minor?: number;
+    per_traveler_amount_minor?: number;
+  }>;
+  drift?: CostingDriftProfile | null;
 };
 
 export async function createCostingSheet(input: {
@@ -893,6 +948,22 @@ export async function deleteServiceLine(
     `/api/v2/costing-sheets/${encodeURIComponent(sheetId)}/lines/${encodeURIComponent(lineId)}?${params.toString()}`,
     { method: 'DELETE' },
   );
+}
+
+export async function applyCostingPricing(
+  sheetId: string,
+  input: ApplyPricingRequestPayload,
+  idempotencyKey?: string,
+): Promise<ApplyPricingResponse> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (idempotencyKey) {
+    headers['Idempotency-Key'] = idempotencyKey;
+  }
+  return request<ApplyPricingResponse>(`/api/v2/costing-sheets/${encodeURIComponent(sheetId)}/apply-pricing`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(input),
+  });
 }
 
 // ---------------------------------------------------------------------------

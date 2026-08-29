@@ -8,12 +8,14 @@ import { formatMinorAmount as formatMinor } from "../../lib/moneyFormat.ts";
 
 export interface ServiceLineRowProps {
   line: ServiceLineProfile;
+  sheetCurrency?: string;
   disabled?: boolean;
   onDelete: (lineId: string) => void;
 }
 
-export function ServiceLineRow({ line, disabled, onDelete }: ServiceLineRowProps) {
+export function ServiceLineRow({ line, sheetCurrency = "USD", disabled, onDelete }: ServiceLineRowProps) {
   const isCatalogLine = Boolean(line.product_id);
+  const hasFx = line.cost_currency !== sheetCurrency;
 
   return (
     <tr className="border-b border-[var(--color-border)] last:border-b-0">
@@ -23,6 +25,7 @@ export function ServiceLineRow({ line, disabled, onDelete }: ServiceLineRowProps
           <span className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>
             {[line.category, line.subcategory].filter(Boolean).join(" · ")}
             {isCatalogLine ? " · catalog" : " · manual"}
+            {hasFx ? ` · fx from ${formatMinor(line.unit_cost_minor, line.cost_currency)}` : ""}
           </span>
         </div>
       </td>
@@ -30,10 +33,10 @@ export function ServiceLineRow({ line, disabled, onDelete }: ServiceLineRowProps
         {line.qty_unit} {line.unit} × {line.qty_time} {line.time_basis}
       </td>
       <td className={cn(getTypographyClassName("bodySm"), "px-3 py-2 text-right text-[var(--color-on-surface)]")}>
-        {formatMinor(line.cost_minor, line.cost_currency)}
+        {formatMinor(line.cost_minor, sheetCurrency)}
       </td>
       <td className={cn(getTypographyClassName("bodySm"), "px-3 py-2 text-right text-[var(--color-accent)]")}>
-        {formatMinor(line.sell_minor, line.cost_currency)}
+        {formatMinor(line.sell_minor, sheetCurrency)}
       </td>
       <td className="px-3 py-2 text-right">
         <button

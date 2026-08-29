@@ -74,6 +74,9 @@ class CostingSheet(Base):
     lines: Mapped[list["ServiceLine"]] = relationship(
         "ServiceLine", cascade="all, delete-orphan", order_by="ServiceLine.day_number, ServiceLine.sort_order"
     )
+    applications: Mapped[list["CostingApplication"]] = relationship(
+        "CostingApplication", cascade="all, delete-orphan", order_by="CostingApplication.created_at"
+    )
 
 
 class ServiceLine(Base):

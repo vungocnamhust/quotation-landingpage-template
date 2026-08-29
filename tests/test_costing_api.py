@@ -180,5 +180,51 @@ class CostingApiTests(unittest.TestCase):
         self.assertEqual(find_response.json()["sheet"]["quotation_id"], "qtn_api1")
 
 
+class ApplyPricingResponseShapeTests(unittest.TestCase):
+    def test_apply_pricing_response_serializes_snake_case(self):
+        """Plan 16.3 F-15/D7: the wire shape is snake_case like every other costing response."""
+        from datetime import datetime, timezone
+
+        from schemas.v2.costing import (
+            ApplyPricingResponseSchema,
+            CostingApplicationResponseSchema,
+            CostingSummarySchema,
+        )
+
+        payload = ApplyPricingResponseSchema(
+            application=CostingApplicationResponseSchema(
+                id="cga_1",
+                sheet_id="cst_1",
+                quotation_id="qtn_1",
+                costing_revision_at_apply=2,
+                facts_revision_after=5,
+                target_option_id="opt-standard",
+                sell_total_minor=1_200_000,
+                currency="USD",
+                cost_total_minor=1_000_000,
+                margin_bps=1_667,
+                created_at=datetime.now(timezone.utc),
+            ),
+            facts_revision=5,
+            costing_revision=2,
+            summary=CostingSummarySchema(
+                cost_total_minor=1_000_000,
+                sell_total_minor=1_200_000,
+                margin_minor=200_000,
+                margin_bps=1_667,
+                by_day=[],
+                by_category=[],
+            ),
+            pricing_options=[],
+        ).model_dump(by_alias=True)
+
+        self.assertIn("facts_revision", payload)
+        self.assertIn("costing_revision", payload)
+        self.assertIn("pricing_options", payload)
+        self.assertNotIn("factsRevision", payload)
+        self.assertNotIn("costingRevision", payload)
+        self.assertNotIn("pricingOptions", payload)
+
+
 if __name__ == "__main__":
     unittest.main()

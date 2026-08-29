@@ -1,4 +1,8 @@
 import type {
+  ApplyPricingRequestPayload,
+  ApplyPricingResponse,
+  CostingApplicationProfile,
+  CostingDriftProfile,
   CostingSheetProfile,
   CostingSummary,
   CostingWorkbenchResponse,
@@ -7,6 +11,10 @@ import type {
 } from "../../lib/quotationApi.ts";
 
 export type {
+  ApplyPricingRequestPayload,
+  ApplyPricingResponse,
+  CostingApplicationProfile,
+  CostingDriftProfile,
   CostingSheetProfile,
   CostingSummary,
   CostingWorkbenchResponse,

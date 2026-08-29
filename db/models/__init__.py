@@ -2,6 +2,7 @@ from db.models.brand import Brand
 from db.models.accommodation import AccommodationProfile
 from db.models.booking import Booking, BookingLine, BusinessCodeCounter
 from db.models.costing import CostingSheet, ServiceLine
+from db.models.costing_application import CostingApplication
 from db.models.destination import DestinationAlias, DestinationCatalog
 from db.models.media import MediaAsset, MediaSelection
 from db.models.outbox import OutboxEvent
@@ -30,6 +31,7 @@ __all__ = [
     "BookingLine",
     "BusinessCodeCounter",
     "CostingSheet",
+    "CostingApplication",
     "ServiceLine",
     "DestinationAlias",
     "DestinationCatalog",
@@ -59,4 +61,5 @@ __all__ = [
     "TravelDesignerProfile",
     "TravelStyleTag",
 ]
+
 

@@ -9,6 +9,8 @@ from api.dependencies import DbSessionDep, EditorPrincipalDep, require_owned_v2_
 from core.kernel import ActorRef
 from repositories.costing_repository import CostingRepository
 from schemas.v2.costing import (
+    ApplyPricingRequestSchema,
+    ApplyPricingResponseSchema,
     AttachQuotationSchema,
     CostingSettingsUpdateSchema,
     CostingSheetCreateSchema,
@@ -205,3 +207,31 @@ async def delete_service_line(
         return workbench
     except CostingConflictError as err:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=_conflict_detail(err)) from err
+
+
+@router.post("/{sheet_id}/apply-pricing", response_model=ApplyPricingResponseSchema)
+async def apply_costing_pricing(
+    sheet_id: str,
+    payload: ApplyPricingRequestSchema,
+    session: DbSessionDep,
+    principal: EditorPrincipalDep,
+    idempotency_key: Annotated[str | None, Header(alias="Idempotency-Key")] = None,
+) -> ApplyPricingResponseSchema:
+    await _enforce_quotation_ownership_for_sheet(sheet_id, session, principal)
+    service = CostingService(session)
+    try:
+        response = await service.apply_pricing(
+            sheet_id,
+            payload,
+            actor=_actor_from_principal(principal),
+            idempotency_key=idempotency_key,
+        )
+        if response is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Costing sheet '{sheet_id}' was not found.")
+        await session.commit()
+        return response
+    except CostingValidationError as err:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=_validation_detail(err)) from err
+    except CostingConflictError as err:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=_conflict_detail(err)) from err
+
