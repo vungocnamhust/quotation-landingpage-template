@@ -829,12 +829,22 @@ export default function QuotationWorkspaceClient({
                   ? Number(((factsData?.facts as Record<string, unknown>).customer_facts as Record<string, unknown>).adults || 2)
                   : 2
               }
+              childrenCount={
+                (factsData?.facts as Record<string, unknown> | undefined)?.customer_facts
+                  ? Number(((factsData?.facts as Record<string, unknown>).customer_facts as Record<string, unknown>).children || 0)
+                  : 0
+              }
               onApplyPricingSuccess={() => {
                 refreshWorkspace();
                 notify({
                   type: "success",
                   message: "Giá thương mại đã được đồng bộ từ bảng dự toán sang báo giá.",
                 });
+              }}
+              onApplyPricingConflict={() => {
+                // 16.3 P0 fix: a 409 means baseRevision (from documentData/workflowData)
+                // is stale — refresh it so a retry doesn't repeat the same conflict.
+                refreshWorkspace();
               }}
             />
           </>

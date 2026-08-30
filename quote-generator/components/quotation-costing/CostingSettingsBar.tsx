@@ -19,6 +19,7 @@ export interface CostingSettingsBarProps {
   drift?: CostingDriftProfile | null;
   existingOptions?: ExistingPricingOption[];
   adultsCount?: number;
+  childrenCount?: number;
   onUpdate: (input: { currency?: string; markup_rate_bps?: number; rounding_increment_minor?: number }) => void;
   onApplyPricing?: (targetOptionId: string | null, optionLabel: string) => Promise<void>;
   isApplyingPricing?: boolean;
@@ -32,6 +33,7 @@ export function CostingSettingsBar({
   drift,
   existingOptions,
   adultsCount,
+  childrenCount,
   onUpdate,
   onApplyPricing,
   isApplyingPricing,
@@ -56,10 +58,19 @@ export function CostingSettingsBar({
             summary={summary}
             existingOptions={existingOptions}
             adultsCount={adultsCount}
+            childrenCount={childrenCount}
+            drift={drift}
             onApply={onApplyPricing}
             isApplying={isApplyingPricing}
           />
-        ) : null}
+        ) : (
+          // 15.5 §2.3 / chốt #9: no route to apply pricing into something that
+          // doesn't exist yet — hint at the "Tạo báo giá từ dự toán" CTA above
+          // instead of silently rendering nothing here (16.3 P1 fix).
+          <span className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>
+            Bấm &ldquo;Tạo báo giá từ dự toán&rdquo; ở trên trước khi áp giá vào báo giá.
+          </span>
+        )}
       </div>
 
       <div className="flex flex-wrap items-end gap-4">

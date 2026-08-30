@@ -17,7 +17,12 @@ export interface CostingWorkbenchProps {
   baseRevision?: number;
   existingOptions?: ExistingPricingOption[];
   adultsCount?: number;
+  childrenCount?: number;
   onApplyPricingSuccess?: (response: ApplyPricingResponse) => void;
+  /** Fired on a 409 from apply-pricing, alongside the existing costing-only
+   * reload — lets the host also refresh the facts/document resource that owns
+   * `baseRevision`, so a retry doesn't repeat the same conflict (16.3 P0 fix). */
+  onApplyPricingConflict?: () => void;
   className?: string;
 }
 
@@ -34,7 +39,9 @@ export function CostingWorkbench({
   baseRevision,
   existingOptions,
   adultsCount,
+  childrenCount,
   onApplyPricingSuccess,
+  onApplyPricingConflict,
   className,
 }: CostingWorkbenchProps) {
   const {
@@ -87,11 +94,15 @@ export function CostingWorkbench({
       // 16.3 F-25: a not-yet-loaded document revision must never silently become 1.
       throw new Error("Bản ghi báo giá chưa tải xong phiên bản hiện tại. Vui lòng đợi rồi thử lại.");
     }
-    const res = await applyPricing({
-      base_revision: baseRevision,
-      target_option_id: targetOptionId,
-      option_label: optionLabel,
-    });
+    const res = await applyPricing(
+      {
+        base_revision: baseRevision,
+        target_option_id: targetOptionId,
+        option_label: optionLabel,
+      },
+      undefined,
+      onApplyPricingConflict,
+    );
     if (!res) {
       // runAction swallowed the failure into the workbench banner; the confirm
       // dialog must not close as if the apply succeeded (16.3 F-24).
@@ -119,6 +130,7 @@ export function CostingWorkbench({
         drift={workbench.drift}
         existingOptions={existingOptions}
         adultsCount={adultsCount}
+        childrenCount={childrenCount}
         onUpdate={(input) => void updateSettings(input)}
         onApplyPricing={workbench.sheet.quotation_id ? handleApplyPricing : undefined}
         isApplyingPricing={isApplyingPricing}

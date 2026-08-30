@@ -73,7 +73,7 @@ export function useCostingWorkspace(anchor: CostingWorkbenchAnchor) {
   );
 
   const runAction = useCallback(
-    async <T,>(action: () => Promise<T>): Promise<T | null> => {
+    async <T,>(action: () => Promise<T>, onConflict?: () => void): Promise<T | null> => {
       try {
         return await action();
       } catch (error) {
@@ -81,6 +81,11 @@ export function useCostingWorkspace(anchor: CostingWorkbenchAnchor) {
         if (error instanceof QuotationApiError && error.kind === "conflict") {
           // Someone else moved the sheet on — reload the authoritative state.
           if (resolvedSheetId) await mutateWorkbench();
+          // Callers whose CAS also spans a resource this module doesn't own
+          // (e.g. applyPricing's facts/document baseRevision) get a chance to
+          // refresh that resource too, so a retry doesn't repeat the same 409
+          // forever (16.3 P0 fix).
+          onConflict?.();
         }
         return null;
       }
@@ -177,6 +182,7 @@ export function useCostingWorkspace(anchor: CostingWorkbenchAnchor) {
         lang?: string | null;
       },
       idempotencyKey?: string,
+      onConflict?: () => void,
     ): Promise<ApplyPricingResponse | null> => {
       if (!resolvedSheetId) return null;
       setIsApplyingPricing(true);
@@ -196,7 +202,7 @@ export function useCostingWorkspace(anchor: CostingWorkbenchAnchor) {
           const fresh = await getCostingWorkbench(resolvedSheetId);
           applyResult(fresh);
           return response;
-        });
+        }, onConflict);
       } finally {
         setIsApplyingPricing(false);
       }

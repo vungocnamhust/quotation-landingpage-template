@@ -8,6 +8,7 @@ through read-only repository lookups.
 """
 from __future__ import annotations
 
+import logging
 from datetime import date
 from typing import Any
 
@@ -50,6 +51,8 @@ from schemas.v2.costing import (
     ServiceLineWriteSchema,
 )
 from services.outbox_service import OutboxService
+
+log = logging.getLogger(__name__)
 
 SHEET_ID_PREFIX = "cst"
 LINE_ID_PREFIX = "csl"
@@ -310,14 +313,9 @@ class CostingService:
         if sheet is None:
             return None
 
-        if not sheet.quotation_id:
-            raise CostingValidationError("Costing sheet must be attached to a quotation before applying pricing.")
-
-        self._check_revision(sheet, payload.base_costing_revision)
-
-        if not sheet.lines:
-            raise CostingValidationError("Cannot apply pricing for a costing sheet with no service lines.")
-
+        # Server-authoritative totals off current lines — pure/read-only, safe to
+        # compute before any gate. Used both for the replay's cosmetic breakdown
+        # and for a fresh apply's real totals below.
         line_inputs = [
             ServiceLineInput(
                 line_id=line.id,
@@ -337,27 +335,49 @@ class CostingService:
             rounding_increment_minor=sheet.rounding_increment_minor,
         )
 
-        if summary.sell_total_minor <= 0:
-            raise CostingValidationError("Cannot apply pricing when sell total is less than or equal to zero.")
-
-        # Check idempotency replay
+        # 16.3 P0 fix (chốt #6): idempotency replay must win over every CAS/
+        # validation gate below. Previously the CAS/validation checks ran first,
+        # so a retry could get a spurious 409/422 if the sheet moved on for any
+        # unrelated reason after the original successful apply. The authoritative
+        # fields (application, facts_revision, costing_revision, totals) are read
+        # back from the immutable application row, never recomputed from live
+        # state — only the by_day/by_category breakdown is a cosmetic refresh.
         if idempotency_key:
             existing_app = await self.repository.get_application_by_idempotency_key(
                 sheet_id, idempotency_key=idempotency_key
             )
             if existing_app is not None:
-                summary_schema = self._build_summary_schema(summary)
                 pricing_opts: list[dict[str, Any]] = []
                 req = await self.quotation_repository.get_latest_quotation_request(sheet.quotation_id)
                 if req and req.request_json:
                     pricing_opts = (req.request_json.get("pricing_facts") or {}).get("options") or []
+                fresh_breakdown = self._build_summary_schema(summary)
+                replay_summary = CostingSummarySchema(
+                    cost_total_minor=existing_app.cost_total_minor,
+                    sell_total_minor=existing_app.sell_total_minor,
+                    margin_minor=existing_app.sell_total_minor - existing_app.cost_total_minor,
+                    margin_bps=existing_app.margin_bps,
+                    by_day=fresh_breakdown.by_day,
+                    by_category=fresh_breakdown.by_category,
+                )
                 return ApplyPricingResponseSchema(
                     application=CostingApplicationResponseSchema.model_validate(existing_app),
                     facts_revision=existing_app.facts_revision_after,
-                    costing_revision=sheet.costing_revision,
-                    summary=summary_schema,
+                    costing_revision=existing_app.costing_revision_at_apply,
+                    summary=replay_summary,
                     pricing_options=pricing_opts,
                 )
+
+        if not sheet.quotation_id:
+            raise CostingValidationError("Costing sheet must be attached to a quotation before applying pricing.")
+
+        self._check_revision(sheet, payload.base_costing_revision)
+
+        if not sheet.lines:
+            raise CostingValidationError("Cannot apply pricing for a costing sheet with no service lines.")
+
+        if summary.sell_total_minor <= 0:
+            raise CostingValidationError("Cannot apply pricing when sell total is less than or equal to zero.")
 
         try:
             facts_res = await apply_pricing_option(
@@ -376,6 +396,18 @@ class CostingService:
                 f"Quotation facts revision conflict: {exc}",
                 current_revision=exc.current_revision,
             ) from exc
+
+        # 16.3 P1 fix: apply_pricing never bumps costing_sheets itself, so the
+        # Python-level `_check_revision` above is only a fast pre-check — a
+        # concurrent line/settings write could still commit while the facts
+        # write above was in flight. This is the DB-level compare-and-swap
+        # that closes that window before anything derived from `summary` is
+        # persisted; nothing has committed yet (router commits once, at the
+        # end), so a race here rolls the facts write above back too.
+        try:
+            await self.repository.verify_revision_guarded(sheet.id, expected_revision=payload.base_costing_revision)
+        except CostingRevisionRaceError as err:
+            raise await self._conflict_from_race(sheet.id) from err
 
         app_id = generate_id(APPLICATION_ID_PREFIX)
         app_values = {
@@ -608,8 +640,15 @@ class CostingService:
                             or matched.get("currency") != latest_app.currency
                         ):
                             commercial_modified = True
-            except Exception:
-                pass
+            except (KeyError, TypeError, AttributeError) as err:
+                # Only a malformed/unexpected pricing_facts shape is safe to
+                # degrade from — anything else (a real DB/connection error)
+                # should propagate, not silently report "no drift" (16.3 P2 fix).
+                log.warning(
+                    "Drift detection could not read pricing_facts for quotation '%s': %s",
+                    sheet.quotation_id,
+                    err,
+                )
 
             drift = CostingDriftSchema(
                 has_drift=costing_modified or commercial_modified,

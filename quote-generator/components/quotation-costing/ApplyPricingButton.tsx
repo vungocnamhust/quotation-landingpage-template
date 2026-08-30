@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import type { CostingSheetProfile, CostingSummary } from './types.ts';
+import type { CostingDriftProfile, CostingSheetProfile, CostingSummary } from './types.ts';
 import { ApplyPricingDialog, type ExistingPricingOption } from './ApplyPricingDialog.tsx';
 import { getTypographyClassName } from '../../config/typography.ts';
 import { cn } from '../../utils/cn.ts';
@@ -11,6 +11,8 @@ type ApplyPricingButtonProps = {
   summary: CostingSummary;
   existingOptions?: ExistingPricingOption[];
   adultsCount?: number;
+  childrenCount?: number;
+  drift?: CostingDriftProfile | null;
   onApply: (targetOptionId: string | null, optionLabel: string) => Promise<void>;
   isApplying?: boolean;
   className?: string;
@@ -21,6 +23,8 @@ export const ApplyPricingButton: React.FC<ApplyPricingButtonProps> = ({
   summary,
   existingOptions = [],
   adultsCount = 2,
+  childrenCount = 0,
+  drift,
   onApply,
   isApplying = false,
   className = '',
@@ -69,6 +73,8 @@ export const ApplyPricingButton: React.FC<ApplyPricingButtonProps> = ({
         summary={summary}
         existingOptions={existingOptions}
         adultsCount={adultsCount}
+        childrenCount={childrenCount}
+        drift={drift}
         isApplying={isApplying}
       />
       ) : null}

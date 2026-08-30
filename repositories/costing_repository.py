@@ -153,6 +153,29 @@ class CostingRepository:
         for field, value in (extra_values or {}).items():
             setattr(sheet, field, value)
 
+    async def verify_revision_guarded(self, sheet_id: str, *, expected_revision: int) -> None:
+        """Atomic CAS re-check with no revision bump (Plan 16.3 P1 fix).
+
+        ``apply_pricing`` doesn't itself mutate ``costing_sheets`` — it only
+        reads a summary and writes to facts — so it never went through
+        ``_bump_revision_guarded`` and had no DB-level guarantee that a
+        concurrent line/settings write couldn't commit between its initial
+        read and its final insert. This performs the same SQL-level
+        compare-and-swap as every other write path (a real ``UPDATE ... WHERE
+        costing_revision = :expected``, safe under concurrent access
+        regardless of isolation level) without changing the revision itself,
+        closing that window. Call it as the last step before persisting
+        anything derived from the read.
+        """
+        result = await self.session.execute(
+            update(CostingSheet)
+            .where(CostingSheet.id == sheet_id, CostingSheet.costing_revision == expected_revision)
+            .values(updated_at=datetime.now(timezone.utc))
+            .execution_options(synchronize_session=False)
+        )
+        if result.rowcount != 1:
+            raise CostingRevisionRaceError(sheet_id, expected_revision)
+
     async def get_sheet_revision(self, sheet_id: str, *, tenant_id: str = DEFAULT_TENANT_ID) -> int | None:
         """Current revision straight from the DB, bypassing the identity map (post-race re-read)."""
         result = await self.session.execute(

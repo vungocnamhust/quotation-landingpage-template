@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import type { CostingSheetProfile, CostingSummary } from './types.ts';
+import type { CostingDriftProfile, CostingSheetProfile, CostingSummary } from './types.ts';
 import { getTypographyClassName } from '../../config/typography.ts';
 import { cn } from '../../utils/cn.ts';
 import { formatMinorAmount } from '../../lib/moneyFormat.ts';
+import { pricingReconciler, MAX_COMMERCIAL_OPTIONS } from '../../lib/rules/pricingReconciler.ts';
 
 export type ExistingPricingOption = {
   id: string;
@@ -23,6 +24,10 @@ type ApplyPricingDialogProps = {
   summary: CostingSummary;
   existingOptions?: ExistingPricingOption[];
   adultsCount?: number;
+  childrenCount?: number;
+  /** Chốt #7 (15.5): when the target option was manually edited since the last
+   * apply, the dialog must warn explicitly before the sale confirms overwriting it. */
+  drift?: CostingDriftProfile | null;
   isApplying?: boolean;
 };
 
@@ -38,6 +43,8 @@ export const ApplyPricingDialog: React.FC<ApplyPricingDialogProps> = ({
   summary,
   existingOptions = [],
   adultsCount = 2,
+  childrenCount = 0,
+  drift,
   isApplying = false,
 }) => {
   const [selectedOptionId, setSelectedOptionId] = useState<string>(() => {
@@ -85,7 +92,18 @@ export const ApplyPricingDialog: React.FC<ApplyPricingDialogProps> = ({
   const newSellMinor = summary.sell_total_minor;
   const deltaMinor = newSellMinor - currentSellMinor;
   const deltaPercent = currentSellMinor > 0 ? ((deltaMinor / currentSellMinor) * 100).toFixed(1) : null;
-  const perAdultMinor = Math.max(1, Math.floor(newSellMinor / Math.max(adultsCount, 1)));
+  // Display-only, never persisted (§2.3) — derived via the same reconciler the
+  // rest of the app uses, not reinvented inline (16.3 P0 fix: the previous
+  // Math.floor(total / adults) here ignored children entirely).
+  const { perAdultMinor: inferredPerAdultMinor } = pricingReconciler.inferOptionRatesFromTotal(
+    newSellMinor,
+    adultsCount,
+    childrenCount,
+  );
+  const perAdultMinor = inferredPerAdultMinor ?? 0;
+  const wasManuallyEditedSinceLastApply = Boolean(
+    selectedOption && drift?.commercial_modified_since_apply,
+  );
 
   return (
     <div
@@ -167,6 +185,11 @@ export const ApplyPricingDialog: React.FC<ApplyPricingDialogProps> = ({
                         {opt.label || `Tùy chọn ${idx + 1}`}
                       </span>
                       <span className={cn(getTypographyClassName('caption'), "ml-2 text-slate-400")}>({opt.id})</span>
+                      {drift?.commercial_modified_since_apply && drift.target_option_id === opt.id ? (
+                        <span className={cn(getTypographyClassName('caption'), "ml-2 text-amber-600 dark:text-amber-400")}>
+                          · đã sửa tay sau lần áp giá trước
+                        </span>
+                      ) : null}
                     </div>
                   </div>
                   <span className={cn(getTypographyClassName('bodyMd'), "text-[var(--color-accent)]")}>
@@ -175,7 +198,7 @@ export const ApplyPricingDialog: React.FC<ApplyPricingDialogProps> = ({
                 </label>
               ))}
 
-              {existingOptions.length < 3 && (
+              {existingOptions.length < MAX_COMMERCIAL_OPTIONS && (
                 <label
                   className={`flex items-center justify-between p-3 rounded-xl border border-dashed cursor-pointer transition-all ${
                     selectedOptionId === '__NEW__'
@@ -279,6 +302,17 @@ export const ApplyPricingDialog: React.FC<ApplyPricingDialogProps> = ({
               </div>
             </div>
           </div>
+
+          {wasManuallyEditedSinceLastApply && (
+            <div className={cn(getTypographyClassName('bodySm'), "flex items-start gap-2.5 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400")}>
+              <svg className="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+              </svg>
+              <span>
+                Gói giá này đã bị sửa tay sau lần áp giá gần nhất. Xác nhận sẽ ghi đè giá trị đã sửa bằng tổng giá bán mới từ dự toán.
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Footer */}

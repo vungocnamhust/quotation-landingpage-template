@@ -3928,24 +3928,27 @@ async def _apply_costing_pricing_option(
         target_id = f"opt_{len(options) + 1}"
         matched_opt = None
 
-    adults = max(payload.customer_facts.adults or 2, 1)
-
     if matched_opt is not None:
+        # 15.5 §1.5(3): no per-person math in the backend. Preserve the sale's
+        # existing split only if the currency didn't change under it; otherwise
+        # clear it so pricingReconciler.inferOptionRatesFromTotal re-derives it
+        # the moment the sale opens the pricing panel.
+        currency_unchanged = matched_opt.currency == currency
         matched_opt.label = option_label or matched_opt.label or "Theo dự toán"
-        per_adult = max(1, sell_total_minor // adults)
         matched_opt.currency = currency
         matched_opt.group_total_amount_minor = sell_total_minor
-        matched_opt.per_adult_amount_minor = per_adult
-        matched_opt.per_traveler_amount_minor = per_adult
+        if not currency_unchanged:
+            matched_opt.per_adult_amount_minor = None
+            matched_opt.per_traveler_amount_minor = None
+            matched_opt.per_child_amount_minor = None
     else:
-        per_adult = max(1, sell_total_minor // adults)
+        # New option: no prior split to preserve, and still not the backend's
+        # job to invent one — leave per-person fields for the FE to derive.
         new_opt = CreateQuotePricingOptionFact(
             id=target_id,
             label=option_label or "Theo dự toán",
             currency=currency,
             group_total_amount_minor=sell_total_minor,
-            per_adult_amount_minor=per_adult,
-            per_traveler_amount_minor=per_adult,
         )
         options.append(new_opt)
         payload.pricing_facts.options = options
