@@ -983,25 +983,28 @@ export default function QuotationWorkspaceClient({
                 "text-[var(--color-on-surface)]"
               )}
             >
-              {reviewData?.ready
-                ? "The canonical document is ready for review and publish."
-                : "Resolve the remaining factual or content-review checks before publishing."}
+              {
+                // Plan 16.2 F-15: this block only renders when `reviewReady`
+                // (== canonicalWorkflow.isReady) is true, so it must describe
+                // readiness from that same single source rather than the
+                // independently-fetched `reviewData.ready` flag, which can
+                // disagree and show a "not ready" message above an enabled
+                // Publish button.
+                canonicalWorkflow.isReady
+                  ? "The canonical document is ready for review and publish."
+                  : "Resolve the remaining factual or content-review checks before publishing."
+              }
             </p>
-            {reviewData?.missingInputs.length ||
-            reviewData?.blockingDrafts.length ? (
+            {canonicalWorkflow.blockers.length ? (
               <ul
                 className={cn(
                   getTypographyClassName("bodySm"),
                   "text-[var(--color-muted)]"
                 )}
               >
-                <li>
-                  Missing facts: {reviewData.missingInputs.join(", ") || "none"}
-                </li>
-                <li>
-                  Content to review:{" "}
-                  {reviewData.blockingDrafts.join(", ") || "none"}
-                </li>
+                {canonicalWorkflow.blockers.map((blocker) => (
+                  <li key={blocker.id}>{blocker.description}</li>
+                ))}
               </ul>
             ) : null}
             <div className="flex flex-wrap gap-3">
