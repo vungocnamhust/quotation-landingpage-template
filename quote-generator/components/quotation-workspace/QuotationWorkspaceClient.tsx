@@ -1011,7 +1011,17 @@ export default function QuotationWorkspaceClient({
               <button
                 type="button"
                 onClick={publish}
-                disabled={pending || !reviewReady || !selectedBrandId || publicationJob?.status === "queued" || publicationJob?.status === "running"}
+                disabled={
+                  pending ||
+                  !reviewReady ||
+                  !selectedBrandId ||
+                  // Plan 16.2 F-14: only block the button when the in-flight job
+                  // belongs to the brand currently selected — a job queued for
+                  // another brand must not lock out this one (advisory lock is
+                  // per quotation+brand+locale on the backend).
+                  ((publicationJob?.status === "queued" || publicationJob?.status === "running") &&
+                    (!publicationJob.brandId || publicationJob.brandId === selectedBrandId))
+                }
                 className={cn(
                   getTypographyClassName("buttonPrimary"),
                   "min-h-11 rounded-[var(--radius-button)] bg-[var(--color-accent)] !text-white hover:bg-[color-mix(in_srgb,var(--color-accent)_85%,black)] px-6 shadow-md border border-transparent transition-all disabled:opacity-50"
