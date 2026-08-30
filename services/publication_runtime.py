@@ -49,7 +49,10 @@ def render_react_pdf_bytes(*, hostname: str, release_id: str) -> bytes:
 
 def release_cache_urls(*, hostname: str, target: Any, release: Any) -> list[str]:
     base = f"https://{hostname}/{target.locale}/q/{target.public_slug}"
-    urls = [base, f"{base}/pdf/download"]
+    # /pdf/download is a stable-slug door that now redirects (no-store) to the
+    # release-keyed PDF below; purging it is a no-op and only the release-keyed
+    # URL below actually needs invalidating on supersede.
+    urls = [base, f"https://{hostname}/media/{release.id}/pdf"]
     urls.extend(f"https://{hostname}/media/{release.id}/{token}" for token in (release.asset_manifest or {}))
     return urls
 
@@ -57,7 +60,7 @@ def release_cache_urls(*, hostname: str, target: Any, release: Any) -> list[str]
 def fallback_release_cache_urls(*, fallback_hostname: str, target: Any, release: Any) -> list[str]:
     slug = getattr(target, "fallback_slug", None) or target.public_slug
     base = f"https://{fallback_hostname}/p/{slug}"
-    urls = [base, f"{base}/pdf/download"]
+    urls = [base, f"https://{fallback_hostname}/media/{release.id}/pdf"]
     urls.extend(f"https://{fallback_hostname}/media/{release.id}/{token}" for token in (release.asset_manifest or {}))
     return urls
 

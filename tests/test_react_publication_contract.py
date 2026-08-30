@@ -70,7 +70,13 @@ class ReactPublicationContractTests(unittest.TestCase):
         self.assertEqual(urls, sorted(urls))
         self.assertIn("https://journeys.capellatravel.com/media/pr_old/old-token", urls)
         self.assertIn("https://journeys.capellatravel.com/media/pr_new/new-token", urls)
-        self.assertIn("https://journeys.capellatravel.com/en/q/opaque-slug/pdf/download", urls)
+        # Plan 16.2 F-02/PB2.1: /pdf/download is now a stable-slug door that
+        # 302s (no-store) to the release-keyed PDF below — it is never itself
+        # cache-frozen, so purging it is a no-op. Only the release-keyed PDF
+        # URL needs invalidating on supersede.
+        self.assertIn("https://journeys.capellatravel.com/media/pr_old/pdf", urls)
+        self.assertIn("https://journeys.capellatravel.com/media/pr_new/pdf", urls)
+        self.assertNotIn("https://journeys.capellatravel.com/en/q/opaque-slug/pdf/download", urls)
 
     def test_r2_asset_is_a_valid_hero_source_before_public_url_resolution(self):
         document = QuoteDocumentV1.model_validate({
