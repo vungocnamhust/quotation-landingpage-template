@@ -234,8 +234,8 @@
   "quotationNumber": "VN-2027-LUX",
   "flightRecommendations": {
     "kicker": "International Flight Routing",
-    "title": "Flight Recommendations:",
-    "subtitle": "Curated 5-star international flight routing options with optimized connection schedules in Taipei (EVA Air) or Tokyo Narita (ANA) for maximum comfort and reliability.",
+    "title": "Flight Recommendations",
+    "subtitle": "",
     "options": [
       {
         "optionId": "opt_1",
