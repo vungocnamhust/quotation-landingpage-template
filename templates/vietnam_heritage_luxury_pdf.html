@@ -1079,10 +1079,7 @@
             <strong><span class="ltr-token">{{ opt.pricePerPerson.displayText or
                 ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~ opt.pricePerPerson.currency) }}</span></strong>
             {% endif %}
-            {% if opt.isConfirmedMainOption %}
-            <div style="margin-top:8px;font-size:8px;letter-spacing:.14em;color:#daa520;font-weight:800">{{ "✓ CONFIRMED
-              MAIN OPTION" | translate(lang) }}</div>
-            {% elif opt.isAlternativeOption %}
+            {% if opt.isAlternativeOption %}
             <div style="margin-top:8px;font-size:8px;letter-spacing:.14em;color:rgba(216,189,133,.6);font-weight:700">{{
               "ALTERNATIVE OPTION" | translate(lang) }}</div>
             {% endif %}

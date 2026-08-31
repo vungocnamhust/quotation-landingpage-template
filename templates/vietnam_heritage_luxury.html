@@ -2980,10 +2980,7 @@
                   opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~
                   opt.pricePerPerson.currency) }}</span></strong>
               {% endif %}
-              {% if opt.isConfirmedMainOption %}
-              <div style="margin-top:12px;font-size:10px;letter-spacing:.14em;color: #8c6b23;font-weight:800">
-                {{ "✓ CONFIRMED MAIN OPTION" | translate(lang) }}</div>
-              {% elif opt.isAlternativeOption %}
+              {% if opt.isAlternativeOption %}
               <div style="margin-top:12px;font-size:10px;letter-spacing:.14em;color:#8c6b23;font-weight:700">
                 {{ "ALTERNATIVE OPTION" | translate(lang) }}</div>
               {% endif %}

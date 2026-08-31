@@ -4666,9 +4666,7 @@
                 </div>
 
                 <div class="investment-col" style="align-items: flex-end;">
-                  {% if opt.isConfirmedMainOption %}
-                  <div class="investment-badge confirmed">{{ "✓ CONFIRMED MAIN OPTION" | translate(lang) }}</div>
-                  {% elif opt.isAlternativeOption %}
+                  {% if opt.isAlternativeOption %}
                   <div class="investment-badge alternative">{{ "ALTERNATIVE OPTION" | translate(lang) }}</div>
                   {% endif %}
                 </div>

@@ -2933,10 +2933,7 @@
               opt.pricePerPerson.displayText or ('{:,.0f}'.format(opt.pricePerPerson.amount) ~ ' ' ~
               opt.pricePerPerson.currency) }}</strong>
             {% endif %}
-            {% if opt.isConfirmedMainOption %}
-            <div style="margin-top:12px;font-size:10px;letter-spacing:.14em;color:#daa520;font-weight:800">✓ CONFIRMED
-              MAIN OPTION</div>
-            {% endif %}
+
           </div>
           {% endfor %}
         </div>
