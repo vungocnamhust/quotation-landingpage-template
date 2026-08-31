@@ -254,6 +254,9 @@ harden qua 16.3 — gate kỹ thuật đạt). Gate dữ liệu được hạ c�
 2. Khối lượng dữ liệu test đạt bằng **corpus ~30 ca thật ẩn danh hóa + seeding qua chính
    pipeline 15.8** (xem 15.8 §4) — không seed bằng INSERT tay; chạy lại corpus →
    skip_duplicate là bài nghiệm thu chống trùng miễn phí.
+   → **Code 15.8 đã xong (audit 2026-08-31, 76 tests xanh); phần dữ liệu đang thực thi theo
+   runbook riêng [15.8b](./15.8b-corpus-and-seeding-runbook.md)** (corpus 8→30 ca, seed ≥25
+   entries, trip request corpus cho 15.7).
 3. 15.8 bootstrap luôn AI Platform Layer (factory/guardrails/ai_runs/toolset B); chiều nghiệm
    thu đảo: 15.7 sau này phải dùng platform mà không sửa file nào.
 

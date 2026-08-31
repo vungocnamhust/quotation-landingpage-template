@@ -397,6 +397,106 @@ class BookingServiceTests(unittest.TestCase):
 
         asyncio.run(scenario())
 
+    def test_finance_readiness_events_are_self_standing_and_bulk_cancel_respects_terminal_lines(self):
+        """Mốc A (Finance readiness audit 2026-08-31):
+
+        - booking.line.confirmed / .delivered payloads must let a future Finance consumer
+          originate a payable without joining back (supplier, cost total, currency, voucher).
+        - Header-level cancel must compute per-line penalties from FROZEN policy, skip
+          delivered lines (terminal), and emit booking.cancelled with a penalty summary.
+        """
+
+        async def scenario():
+            from sqlalchemy import select
+
+            from db.models.outbox import OutboxEvent
+            from schemas.v2.booking import BookingCancelSchema
+            from schemas.v2.costing import ServiceLineCreateSchema as LineSchema
+
+            async with self.session_factory() as session:
+                sheet_id, _ = await self._make_sheet_with_line(session)
+                costing = CostingService(session)
+                sheet = await costing.get_workbench(sheet_id)
+                await costing.create_line(
+                    sheet_id,
+                    LineSchema(
+                        base_costing_revision=sheet.sheet.costing_revision,
+                        day_number=2,
+                        service_date=date(2026, 7, 16),
+                        category="transportation",
+                        title="Xe 16 chỗ HN-HL",
+                        supplier_id="sup_la_siesta",
+                        unit="vehicle",
+                        time_basis="day",
+                        unit_cost_minor=500_000,
+                        cost_currency="USD",
+                        qty_unit=1,
+                        qty_time=1,
+                    ),
+                    actor=ACTOR,
+                    idempotency_key="line-2",
+                )
+                await session.commit()
+
+                booking_service = BookingService(session)
+                detail = await booking_service.create_booking(
+                    BookingCreateSchema(quotation_id="qtn_bk1", deposit_received_at=date(2026, 6, 1)),
+                    actor=ACTOR,
+                    idempotency_key="c-fin",
+                    today=date(2026, 6, 1),
+                )
+                await session.commit()
+                booking_id = detail.booking.id
+                line_a, line_b = detail.lines[0].id, detail.lines[1].id
+
+                # Line A: to_request → requested → confirmed → delivered
+                revision = detail.booking.booking_revision
+                for idx, target in enumerate(("requested", "confirmed", "delivered")):
+                    result = await booking_service.transition_line(
+                        booking_id,
+                        line_a,
+                        BookingLineTransitionSchema(base_booking_revision=revision, to=target),
+                        actor=ACTOR,
+                        idempotency_key=f"fin-t{idx}",
+                        today=date(2026, 6, 2 + idx),
+                    )
+                    await session.commit()
+                    revision = result.booking.booking_revision
+
+                events = (await session.execute(select(OutboxEvent))).scalars().all()
+                confirmed = next(e for e in events if e.event_type == "booking.line.confirmed")
+                delivered = next(e for e in events if e.event_type == "booking.line.delivered")
+                for payload in (confirmed.payload_json, delivered.payload_json):
+                    # Arrange/Assert: self-standing payable payload — no join-back needed.
+                    self.assertEqual(payload["supplier_id"], "sup_la_siesta")
+                    self.assertEqual(payload["cost_total_minor"], 2_000_000)  # 2 rooms × 1_000_000
+                    self.assertEqual(payload["cost_currency"], "USD")
+                    self.assertEqual(payload["quotation_id"], "qtn_bk1")
+                    self.assertTrue(payload["booking_code"].startswith("BK-"))
+                self.assertTrue(delivered.payload_json["voucher_ref"].startswith("VC-"))
+
+                # Bulk cancel on 2026-07-06: line B serves 2026-07-16 → 10 days remaining,
+                # inside the 14-day tier → 25% penalty.
+                cancelled_detail = await booking_service.cancel_booking(
+                    booking_id,
+                    BookingCancelSchema(base_booking_revision=revision, reason="Khách hủy đoàn"),
+                    actor=ACTOR,
+                    today=date(2026, 7, 6),
+                )
+                await session.commit()
+
+                by_id = {line.id: line for line in cancelled_detail.lines}
+                self.assertEqual(by_id[line_a].status, "delivered")  # terminal — untouched
+                self.assertEqual(by_id[line_b].status, "cancelled")
+                self.assertEqual(by_id[line_b].cancel_penalty_minor, 125_000)  # 25% × 500_000
+
+                events = (await session.execute(select(OutboxEvent))).scalars().all()
+                header_event = next(e for e in events if e.event_type == "booking.cancelled")
+                self.assertEqual(header_event.payload_json["penalty_total_minor"], 125_000)
+                self.assertEqual(len(header_event.payload_json["lines"]), 1)  # delivered line excluded
+
+        asyncio.run(scenario())
+
 
 if __name__ == "__main__":
     unittest.main()

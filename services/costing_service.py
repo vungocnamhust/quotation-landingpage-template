@@ -222,8 +222,19 @@ class CostingService:
         return await self._to_workbench(sheet)
 
     async def create_line(
-        self, sheet_id: str, payload: ServiceLineWriteSchema, *, actor: ActorRef, idempotency_key: str
+        self,
+        sheet_id: str,
+        payload: ServiceLineWriteSchema,
+        *,
+        actor: ActorRef,
+        idempotency_key: str,
+        source: str | None = None,
+        ai_meta_json: dict[str, Any] | None = None,
     ) -> CostingWorkbenchResponseSchema | None:
+        """``source``/``ai_meta_json`` are server-internal overrides (15.7) — never part of the
+        public ``ServiceLineWriteSchema`` a staff client can set. Only ``draft_run_service``
+        passes them, with ``source="ai_draft"``; every other caller leaves them ``None`` and
+        gets byte-identical behavior to before 15.7."""
         sheet = await self.repository.get_sheet_by_id(sheet_id)
         if sheet is None:
             return None
@@ -237,6 +248,10 @@ class CostingService:
         values["idempotency_key"] = idempotency_key
         values["created_by"] = actor.serialize()
         values["updated_by"] = actor.serialize()
+        if source is not None:
+            values["source"] = source
+        if ai_meta_json is not None:
+            values["ai_meta_json"] = ai_meta_json
         try:
             await self.repository.insert_line(
                 sheet,

@@ -54,6 +54,8 @@ class EventType(str, Enum):
     BOOKING_CREATED = "booking.created"
     BOOKING_LINE_CONFIRMED = "booking.line.confirmed"
     BOOKING_LINE_CANCELLED = "booking.line.cancelled"
+    BOOKING_LINE_DELIVERED = "booking.line.delivered"
+    BOOKING_CANCELLED = "booking.cancelled"
 
     # System & Generic
     SYSTEM_ANNOUNCEMENT = "system.announcement"

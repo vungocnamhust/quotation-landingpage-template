@@ -4,16 +4,18 @@ import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
 import { groupRowsByDay } from "../../lib/rules/costingReconciler.ts";
 import { toCostingRows } from "../../lib/rules/costingAdapter.ts";
-import type { CostingWorkbenchResponse } from "./types.ts";
+import type { CostingWorkbenchResponse, ServiceLineWriteInput } from "./types.ts";
 import { ServiceLineRow } from "./ServiceLineRow.tsx";
 
 export interface ServiceLinesTableProps {
   workbench: CostingWorkbenchResponse;
   disabled?: boolean;
   onDeleteLine: (lineId: string) => void;
+  /** Additive AI-drafter affordance (15.7 §2) — omit to keep every row's Swap control hidden. */
+  onSwapLine?: (input: Omit<ServiceLineWriteInput, "base_costing_revision">) => Promise<unknown>;
 }
 
-export function ServiceLinesTable({ workbench, disabled, onDeleteLine }: ServiceLinesTableProps) {
+export function ServiceLinesTable({ workbench, disabled, onDeleteLine, onSwapLine }: ServiceLinesTableProps) {
   const rows = toCostingRows(workbench);
   const groups = groupRowsByDay(rows);
   const linesById = new Map(workbench.items.map((line) => [line.id, line]));
@@ -49,6 +51,7 @@ export function ServiceLinesTable({ workbench, disabled, onDeleteLine }: Service
                     sheetCurrency={workbench.sheet.currency}
                     disabled={disabled}
                     onDelete={onDeleteLine}
+                    onSwap={onSwapLine}
                   />
                 );
               })}

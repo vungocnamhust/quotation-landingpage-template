@@ -168,6 +168,9 @@ class ServiceLineResponseSchema(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+    # Additive (15.7) — {reason, run_id, day_number, flags[]}, NULL for manual lines.
+    ai_meta_json: dict[str, Any] | None = None
+
     cost_minor: int = 0
     sell_minor: int = 0
     product_ref: ProductRefSchema | None = None

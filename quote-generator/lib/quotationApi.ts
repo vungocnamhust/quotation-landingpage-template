@@ -714,6 +714,17 @@ export type BookingStatus =
   | 'cancelled';
 export type ServiceLineSource = 'manual' | 'ai_draft';
 
+// AI Drafter (15.7) flags carried on a line's ai_meta_json — kept here (not in the AI
+// section below) so ServiceLineProfile doesn't need a forward reference.
+export type ServiceLineAiFlag = 'rate_missing' | 'rate_conflict' | 'has_supplement_in_range' | 'needs_manual';
+
+export type ServiceLineAiMeta = {
+  reason: string;
+  run_id: string;
+  day_number: number | null;
+  flags: ServiceLineAiFlag[];
+};
+
 export type ProductRef = {
   property_id?: string | null;
   destination_id?: string | null;
@@ -747,6 +758,7 @@ export type ServiceLineProfile = {
   sell_override_minor: number | null;
   booking_status: BookingStatus;
   source: ServiceLineSource;
+  ai_meta_json: ServiceLineAiMeta | null;
   note: string | null;
   sort_order: number;
   created_at: string;
@@ -964,6 +976,165 @@ export async function applyCostingPricing(
     headers,
     body: JSON.stringify(input),
   });
+}
+
+// ---------------------------------------------------------------------------
+// AI Service Drafter (15.7) — mirrors schemas/v2/ai_drafter.py + schemas/trip_profile.py +
+// schemas/service_draft.py. TripAnalyst (0 tools, prose -> TripProfile, human-reviewed) then
+// ServiceDrafter (per-day catalog agent, zero-money output — no field here ever names an
+// amount/price/currency; price resolution is server-side only via core/rules/rate_selection).
+// Request bodies alias to camelCase (ConfigDict(populate_by_name=True) on the Pydantic side);
+// TripProfile itself has no aliasing, so its fields stay snake_case on the wire either way.
+// Response bodies stay snake_case.
+// ---------------------------------------------------------------------------
+
+export type TripArchetype =
+  | 'solo'
+  | 'couple'
+  | 'honeymoon'
+  | 'family_with_young_kids'
+  | 'family_with_teens'
+  | 'multi_generation'
+  | 'friends_group'
+  | 'corporate_incentive';
+
+export type TripPace = 'relaxed' | 'moderate' | 'packed';
+export type TripMobility = 'full' | 'limited' | 'wheelchair';
+export type TripQualityTier = 'ultra_luxury' | 'luxury' | 'premium' | 'standard' | 'value';
+
+export type PartyComposition = {
+  adults: number;
+  children: number;
+  infants: number;
+  child_ages: number[];
+};
+
+export type RoomAllocation = {
+  room_type: string;
+  count: number;
+  extra_bed: boolean;
+  occupants_note?: string | null;
+};
+
+export type TripProfile = {
+  archetype: TripArchetype;
+  party: PartyComposition;
+  room_config: RoomAllocation[];
+  mobility: TripMobility;
+  pace: TripPace;
+  dietary: string[];
+  quality_tier: TripQualityTier;
+  guide_need: boolean;
+  guide_languages: string[];
+  // Verbatim excerpts from the customer's prose — never the model's own paraphrase.
+  special_flags: string[];
+  // Things the model is NOT sure about — render in red; sale confirms before Draft can run.
+  confidence_notes: string[];
+};
+
+export type ServiceDraftFlag = ServiceLineAiFlag;
+
+export type ServiceDraft = {
+  category: string;
+  subcategory: string | null;
+  product_id: string;
+  occupancy_basis: string;
+  price_for: string;
+  pax_count: number;
+  qty_unit: number;
+  qty_time: number;
+  selection_reason: string;
+  flags: ServiceDraftFlag[];
+};
+
+export type DayDraftResult = {
+  day_number: number;
+  services: ServiceDraft[];
+  skipped_reasons: string[];
+};
+
+/** Day -> destination/date anchor the caller supplies (backend does not rebuild the itinerary — see routers/v2/ai_drafter.py). */
+export type DraftDaySpec = {
+  dayNumber: number;
+  destinationId: string;
+  serviceDate: string;
+};
+
+export type AiRunStatus = 'succeeded' | 'partial' | 'failed';
+
+export type AiRunSummary = {
+  id: string;
+  agent_name: string;
+  status: AiRunStatus;
+  idempotency_key: string;
+  stats: Record<string, unknown>;
+  created_at: string;
+};
+
+export type AiRunListResponse = { runs: AiRunSummary[] };
+
+export type AnalyzeTripResponse = {
+  run_id: string;
+  trip_profile: TripProfile;
+  fallback_used: boolean;
+  confidence_notes: string[];
+};
+
+export type DraftDayOutcome = {
+  day_number: number;
+  lines_created: number;
+  draft: DayDraftResult | null;
+  error: string | null;
+};
+
+export type DraftServicesResponse = {
+  run_id: string;
+  status: AiRunStatus;
+  days_done: number[];
+  days_failed: number[];
+  day_outcomes: DraftDayOutcome[];
+  created_line_ids: string[];
+  manual_review_count: number;
+};
+
+function newAiDrafterIdempotencyKey(): string {
+  return typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : `idem_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+export async function analyzeTripProfile(
+  sheetId: string,
+  rawText: string,
+  idempotencyKey: string = newAiDrafterIdempotencyKey(),
+): Promise<AnalyzeTripResponse> {
+  return request<AnalyzeTripResponse>(`/api/v2/costing-sheets/${encodeURIComponent(sheetId)}/ai/analyze`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey },
+    body: JSON.stringify({ rawText }),
+  });
+}
+
+export async function draftServices(
+  sheetId: string,
+  input: {
+    runId: string;
+    tripProfile: TripProfile;
+    days: DraftDaySpec[];
+    dayNumbers?: number[] | null;
+    baseCostingRevision: number;
+  },
+  idempotencyKey: string = newAiDrafterIdempotencyKey(),
+): Promise<DraftServicesResponse> {
+  return request<DraftServicesResponse>(`/api/v2/costing-sheets/${encodeURIComponent(sheetId)}/ai/draft`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey },
+    body: JSON.stringify(input),
+  });
+}
+
+export async function listAiRuns(sheetId: string): Promise<AiRunListResponse> {
+  return request<AiRunListResponse>(`/api/v2/costing-sheets/${encodeURIComponent(sheetId)}/ai/runs`);
 }
 
 // ---------------------------------------------------------------------------

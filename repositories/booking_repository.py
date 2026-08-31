@@ -163,14 +163,19 @@ class BookingRepository:
             raise BookingSlotTakenError(str(err)) from err
         return line
 
-    async def cancel_all_open_lines(self, booking: Booking, *, reason: str, actor: str, on_date: date) -> None:
+    async def cancel_all_open_lines(
+        self, booking: Booking, *, reason: str, actor: str, on_date: date, penalties: dict[str, int] | None = None
+    ) -> None:
         now = datetime.now(timezone.utc)
         for line in booking.lines:
-            if line.status == "cancelled":
+            # "delivered" is terminal too — a consumed service cannot be un-delivered by a bulk cancel.
+            if line.status in ("cancelled", "delivered"):
                 continue
             line.status = "cancelled"
             line.cancelled_at = now
             line.cancel_reason = reason
+            if penalties is not None and line.id in penalties:
+                line.cancel_penalty_minor = penalties[line.id]
             line.updated_by = actor
             line.updated_at = now
         booking.booking_revision += 1

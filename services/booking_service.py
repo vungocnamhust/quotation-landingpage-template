@@ -262,7 +262,12 @@ class BookingService:
                 aggregate_type="booking_line",
                 aggregate_id=line.id,
                 actor_email=actor.actor_id,
-                payload={"booking_id": booking.id, "voucher_ref": values["voucher_ref"], "supplier_ref": payload.supplier_ref},
+                payload={
+                    **self._finance_line_payload(booking, line),
+                    "voucher_ref": values["voucher_ref"],
+                    "supplier_ref": payload.supplier_ref,
+                    "deposit_due_date": values["deposit_due_date"].isoformat() if values.get("deposit_due_date") else None,
+                },
             )
         elif payload.to == "cancelled":
             await outbox.emit_event(
@@ -270,7 +275,21 @@ class BookingService:
                 aggregate_type="booking_line",
                 aggregate_id=line.id,
                 actor_email=actor.actor_id,
-                payload={"booking_id": booking.id, "penalty_minor": values["cancel_penalty_minor"], "reason": payload.cancel_reason},
+                payload={
+                    **self._finance_line_payload(booking, line),
+                    "penalty_minor": values["cancel_penalty_minor"],
+                    "penalty_currency": await self._sheet_currency(booking.sheet_id),
+                    "reason": payload.cancel_reason,
+                },
+            )
+        elif payload.to == "delivered":
+            # Accrual moment for Finance (M7): the service was consumed, the payable is final.
+            await outbox.emit_event(
+                event_type="booking.line.delivered",
+                aggregate_type="booking_line",
+                aggregate_id=line.id,
+                actor_email=actor.actor_id,
+                payload=self._finance_line_payload(booking, line),
             )
 
         booking = await self.repository.get_booking_by_id(booking.id)
@@ -342,10 +361,41 @@ class BookingService:
             return None
         self._check_revision(booking, payload.base_booking_revision)
 
-        await self.repository.cancel_all_open_lines(booking, reason=payload.reason, actor=actor.serialize(), on_date=today)
-        for line in booking.lines:
+        # Penalties are documentary evidence (Finance readiness): compute per open line from the
+        # FROZEN cancellation policy before flipping status — same math as the per-line transition.
+        penalties: dict[str, int] = {
+            line.id: cancellation_penalty_minor(
+                line.cancellation_policy_snapshot_json, line.sell_minor_snapshot, line.service_date or today, today
+            )
+            for line in booking.lines
+            if line.status not in _TERMINAL_LINE_STATUSES
+        }
+        cancelled_lines = [line for line in booking.lines if line.id in penalties]
+        await self.repository.cancel_all_open_lines(
+            booking, reason=payload.reason, actor=actor.serialize(), on_date=today, penalties=penalties
+        )
+        for line in cancelled_lines:
             await self._mirror_service_line_status(line.source_service_line_id, "cancelled")
         booking = await self.repository.update_header(booking, values={"status": "cancelled", "updated_by": actor.serialize()})
+
+        outbox = OutboxService(self.session)
+        await outbox.emit_event(
+            event_type="booking.cancelled",
+            aggregate_type="booking",
+            aggregate_id=booking.id,
+            actor_email=actor.actor_id,
+            payload={
+                "booking_code": booking.booking_code,
+                "quotation_id": booking.quotation_id,
+                "reason": payload.reason,
+                "penalty_currency": await self._sheet_currency(booking.sheet_id),
+                "lines": [
+                    {"line_id": line.id, "voucher_ref": line.voucher_ref, "penalty_minor": penalties[line.id]}
+                    for line in cancelled_lines
+                ],
+                "penalty_total_minor": sum(penalties.values()),
+            },
+        )
         return self._to_detail(booking, today=today)
 
     # ------------------------------------------------------------- helpers
@@ -362,6 +412,34 @@ class BookingService:
     @staticmethod
     def _find_line(booking: Booking, line_id: str) -> BookingLine | None:
         return next((line for line in booking.lines if line.id == line_id), None)
+
+    @staticmethod
+    def _finance_line_payload(booking: Booking, line: BookingLine) -> dict[str, Any]:
+        """Self-standing documentary payload (Finance readiness — mốc A).
+
+        A future Finance consumer must be able to originate a payable from this payload
+        alone, without joining back into booking/costing tables.
+        """
+        return {
+            "booking_id": booking.id,
+            "booking_code": booking.booking_code,
+            "quotation_id": booking.quotation_id,
+            "source_service_line_id": line.source_service_line_id,
+            "supplier_id": line.supplier_id_snapshot,
+            "supplier_name": line.supplier_name_snapshot,
+            "category": line.category,
+            "title": line.title_snapshot,
+            "service_date": line.service_date.isoformat() if line.service_date else None,
+            "cost_total_minor": line.unit_cost_minor_snapshot * line.qty_unit * line.qty_time,
+            "cost_currency": line.cost_currency_snapshot,
+            "sell_minor": line.sell_minor_snapshot,
+            "voucher_ref": line.voucher_ref,
+            "balance_due_date": line.balance_due_date.isoformat() if line.balance_due_date else None,
+        }
+
+    async def _sheet_currency(self, sheet_id: str) -> str | None:
+        sheet = await self.costing_repository.get_sheet_by_id(sheet_id)
+        return sheet.currency if sheet is not None else None
 
     async def _mirror_service_line_status(self, source_service_line_id: str, status: str) -> None:
         service_line = await self.costing_repository.get_line_by_id(source_service_line_id)

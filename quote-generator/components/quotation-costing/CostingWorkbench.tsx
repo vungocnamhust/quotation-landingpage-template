@@ -7,8 +7,12 @@ import { useCostingWorkspace } from "./useCostingWorkspace.ts";
 import { CostingSettingsBar } from "./CostingSettingsBar.tsx";
 import { ServiceLinesTable } from "./ServiceLinesTable.tsx";
 import { AddServiceLineFlow } from "./AddServiceLineFlow.tsx";
-import type { ApplyPricingResponse, CostingWorkbenchAnchor } from "./types.ts";
+import { deriveDaySpecsFromLines } from "./ai/deriveDaySpecs.ts";
+import type { ApplyPricingResponse, CostingWorkbenchAnchor, DraftDaySpec } from "./types.ts";
 import type { ExistingPricingOption } from "./ApplyPricingDialog.tsx";
+
+// Mirrors schemas/service_draft.py DraftFlag — see ServiceLineRow.tsx for the row-level check.
+const NEEDS_MANUAL_REVIEW_FLAGS = new Set(["rate_missing", "rate_conflict", "needs_manual"]);
 
 export interface CostingWorkbenchProps {
   anchor: CostingWorkbenchAnchor;
@@ -23,6 +27,12 @@ export interface CostingWorkbenchProps {
    * reload — lets the host also refresh the facts/document resource that owns
    * `baseRevision`, so a retry doesn't repeat the same conflict (16.3 P0 fix). */
   onApplyPricingConflict?: () => void;
+  /** Day -> destination/date anchors for the AI Service Drafter (15.7 §1.6) — pass this
+   * from a host that already has the itinerary loaded (e.g. `factsData.facts.itinerary_days`)
+   * so Draft can run on days that have no service lines yet. When omitted, the workbench
+   * falls back to deriving anchors from the sheet's existing lines (`deriveDaySpecsFromLines`),
+   * which only covers days the sheet already has catalog-sourced lines on. */
+  aiDrafterDays?: DraftDaySpec[];
   className?: string;
 }
 
@@ -42,6 +52,7 @@ export function CostingWorkbench({
   childrenCount,
   onApplyPricingSuccess,
   onApplyPricingConflict,
+  aiDrafterDays,
   className,
 }: CostingWorkbenchProps) {
   const {
@@ -56,6 +67,7 @@ export function CostingWorkbench({
     addLine,
     removeLine,
     applyPricing,
+    refresh,
   } = useCostingWorkspace(anchor);
 
   if (isLoading) {
@@ -113,6 +125,19 @@ export function CostingWorkbench({
     }
   };
 
+  const resolvedAiDays = aiDrafterDays ?? deriveDaySpecsFromLines(workbench.items);
+  const manualReviewCount = workbench.items.filter((line) =>
+    (line.ai_meta_json?.flags ?? []).some((flag) => NEEDS_MANUAL_REVIEW_FLAGS.has(flag)),
+  ).length;
+
+  const handleAiDraftComplete = () => {
+    // The Draft response's created lines already live server-side (written through
+    // costing_service like any other line) — reload the authoritative workbench state
+    // instead of hand-merging the response into the SWR cache (16.3-style discipline:
+    // never recompute/derive what the server already returns fresh).
+    void refresh();
+  };
+
   return (
     <div className={cn("flex flex-col gap-4", className)}>
       {headerAction ? <div className="flex justify-end">{headerAction(sheetId)}</div> : null}
@@ -134,9 +159,17 @@ export function CostingWorkbench({
         onUpdate={(input) => void updateSettings(input)}
         onApplyPricing={workbench.sheet.quotation_id ? handleApplyPricing : undefined}
         isApplyingPricing={isApplyingPricing}
+        aiDrafterDays={resolvedAiDays}
+        manualReviewCount={manualReviewCount}
+        onAiDraftComplete={handleAiDraftComplete}
+        onAiDraftConflict={() => void refresh()}
       />
 
-      <ServiceLinesTable workbench={workbench} onDeleteLine={(lineId) => void removeLine(lineId)} />
+      <ServiceLinesTable
+        workbench={workbench}
+        onDeleteLine={(lineId) => void removeLine(lineId)}
+        onSwapLine={(input) => addLine(input)}
+      />
 
       <AddServiceLineFlow sheetCurrency={workbench.sheet.currency} onAdd={(input) => addLine(input)} />
     </div>

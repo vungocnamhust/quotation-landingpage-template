@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from datetime import date, datetime
 
+from typing import Any
+
 from sqlalchemy import (
     BigInteger,
     CheckConstraint,
@@ -23,6 +25,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from db.base import Base
+from db.types import JSON_VARIANT
 
 
 class CostingSheet(Base):
@@ -122,6 +125,11 @@ class ServiceLine(Base):
     booking_status: Mapped[str] = mapped_column(String(16), nullable=False, default="quoted", server_default="quoted")
     source: Mapped[str] = mapped_column(String(16), nullable=False, default="manual", server_default="manual")
     idempotency_key: Mapped[str | None] = mapped_column(String(64), nullable=True)
+
+    # Additive (15.7): AI provenance for an ai_draft line — {reason, run_id, day_number,
+    # flags[]}. NULL for every manual line; never a home for an amount/price (Zero-Money
+    # Invariant — prices only ever live in unit_cost_minor, resolved server-side).
+    ai_meta_json: Mapped[dict[str, Any] | None] = mapped_column(JSON_VARIANT, nullable=True)
 
     note: Mapped[str | None] = mapped_column(String(2000), nullable=True)
     sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")

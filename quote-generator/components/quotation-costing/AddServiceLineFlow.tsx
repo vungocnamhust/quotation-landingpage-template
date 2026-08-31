@@ -16,6 +16,9 @@ export interface AddServiceLineFlowProps {
   sheetCurrency: string;
   disabled?: boolean;
   onAdd: (input: Omit<ServiceLineWriteInput, "base_costing_revision">) => Promise<unknown>;
+  /** Pre-scopes the catalog picker to one category — used by `SwapLineDialog` (15.7 §2) so
+   * replacing an AI-drafted line starts from the same category the flagged line was in. */
+  initialCategory?: ProductCategory;
 }
 
 type Mode = "catalog" | "manual";
@@ -34,9 +37,11 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-export function AddServiceLineFlow({ sheetCurrency, disabled, onAdd }: AddServiceLineFlowProps) {
+export function AddServiceLineFlow({ sheetCurrency, disabled, onAdd, initialCategory }: AddServiceLineFlowProps) {
   const [mode, setMode] = useState<Mode>("catalog");
-  const [draft, setDraft] = useState<ServiceLineDraftForm>(() => emptyServiceLineDraft({ qtyUnit: 1, qtyTime: 1 }));
+  const [draft, setDraft] = useState<ServiceLineDraftForm>(() =>
+    emptyServiceLineDraft({ qtyUnit: 1, qtyTime: 1, category: initialCategory ?? null }),
+  );
   const [selectedProduct, setSelectedProduct] = useState<ProductProfile | null>(null);
   const [rateDrawerOpen, setRateDrawerOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -150,6 +155,7 @@ export function AddServiceLineFlow({ sheetCurrency, disabled, onAdd }: AddServic
                 setSelectedProduct(product ?? null);
                 setDraft((d) => ({ ...d, productId, rateId: null, priceLineId: null }));
               }}
+              category={initialCategory}
               size="sm"
               allowManage={false}
               placeholder="Select a product..."

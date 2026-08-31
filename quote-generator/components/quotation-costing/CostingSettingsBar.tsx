@@ -6,10 +6,11 @@ import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
 import { SUPPORTED_CURRENCIES } from "../../lib/rules/pricingReconciler.ts";
 import { formatMinorAmount as formatMinor } from "../../lib/moneyFormat.ts";
-import type { CostingDriftProfile, CostingSheetProfile, CostingSummary } from "./types.ts";
+import type { CostingDriftProfile, CostingSheetProfile, CostingSummary, DraftDaySpec, DraftServicesResponse } from "./types.ts";
 import { DriftBadge } from "./DriftBadge.tsx";
 import { ApplyPricingButton } from "./ApplyPricingButton.tsx";
 import type { ExistingPricingOption } from "./ApplyPricingDialog.tsx";
+import { AIDraftButton } from "./ai/AIDraftButton.tsx";
 
 export interface CostingSettingsBarProps {
   sheet: CostingSheetProfile;
@@ -23,6 +24,12 @@ export interface CostingSettingsBarProps {
   onUpdate: (input: { currency?: string; markup_rate_bps?: number; rounding_increment_minor?: number }) => void;
   onApplyPricing?: (targetOptionId: string | null, optionLabel: string) => Promise<void>;
   isApplyingPricing?: boolean;
+  /** Additive AI Service Drafter affordances (15.7 §2) — all optional so the bar renders
+   * exactly as before when a host doesn't wire them up yet. */
+  aiDrafterDays?: DraftDaySpec[];
+  manualReviewCount?: number;
+  onAiDraftComplete?: (result: DraftServicesResponse) => void;
+  onAiDraftConflict?: () => void;
 }
 
 export function CostingSettingsBar({
@@ -37,6 +44,10 @@ export function CostingSettingsBar({
   onUpdate,
   onApplyPricing,
   isApplyingPricing,
+  aiDrafterDays,
+  manualReviewCount = 0,
+  onAiDraftComplete,
+  onAiDraftConflict,
 }: CostingSettingsBarProps) {
   const [markupInput, setMarkupInput] = useState(String(sheet.markup_rate_bps));
   const [roundingInput, setRoundingInput] = useState(String(sheet.rounding_increment_minor));
@@ -50,7 +61,30 @@ export function CostingSettingsBar({
             Thiết lập & Tổng quan dự toán
           </span>
           <DriftBadge drift={drift} />
+          {manualReviewCount > 0 ? (
+            <span
+              title="Service lines whose AI metadata flags rate_missing, rate_conflict, or needs_manual"
+              className={cn(
+                getTypographyClassName("label"),
+                "inline-flex items-center gap-1 rounded-full border border-rose-300 bg-rose-50 px-2.5 py-1 text-rose-700",
+              )}
+            >
+              {manualReviewCount} dòng cần tay
+            </span>
+          ) : null}
         </div>
+
+        <div className="flex items-center gap-2">
+          {aiDrafterDays && onAiDraftComplete ? (
+            <AIDraftButton
+              sheetId={sheet.id}
+              baseCostingRevision={sheet.costing_revision}
+              days={aiDrafterDays}
+              disabled={disabled}
+              onDraftComplete={onAiDraftComplete}
+              onConflict={onAiDraftConflict}
+            />
+          ) : null}
 
         {onApplyPricing ? (
           <ApplyPricingButton
@@ -71,6 +105,7 @@ export function CostingSettingsBar({
             Bấm &ldquo;Tạo báo giá từ dự toán&rdquo; ở trên trước khi áp giá vào báo giá.
           </span>
         )}
+        </div>
       </div>
 
       <div className="flex flex-wrap items-end gap-4">
