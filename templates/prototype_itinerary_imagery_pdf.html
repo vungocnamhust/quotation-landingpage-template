@@ -188,10 +188,17 @@
       content: none;
     }
 
+    /* Top inset is pushed past the ~36-37px .page-header so the frame forms a
+       complete, fully-visible closed rectangle starting just below the header
+       (matching the ~14px gap used on the other 3 sides) instead of having its
+       top edge hidden behind the header's opaque background. */
     .pdf-page--shell::before {
       content: "";
       position: absolute;
-      inset: 14px;
+      top: 50px;
+      right: 14px;
+      bottom: 14px;
+      left: 14px;
       border-style: solid;
       border-width: 20px;
       border-image-source: var(--indochine-border);
@@ -207,7 +214,10 @@
     .pdf-page--shell::after {
       content: "";
       position: absolute;
-      inset: 24px;
+      top: 60px;
+      right: 24px;
+      bottom: 24px;
+      left: 24px;
       border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
       opacity: 0.6;
       pointer-events: none;
@@ -1075,8 +1085,8 @@
     .hotel-plan-container {
       display: flex;
       flex-direction: column;
-      gap: 32px;
-      margin-top: 20px;
+      gap: 36px;
+      margin-top: 28px;
     }
 
     .hotel-card-editorial {
@@ -1137,13 +1147,15 @@
     }
 
     .img-wrapper-main,
-    .img-wrapper-sub {
+    .img-wrapper-sub,
+    .hotel-image-wrapper {
       aspect-ratio: 4 / 3;
       width: 100%;
       border-radius: 0;
       overflow: hidden;
       position: relative;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+      box-shadow: none !important;
+      border: 1px solid rgba(0, 0, 0, 0.04);
     }
 
     .img-wrapper-main img,
@@ -1825,8 +1837,8 @@
     </div>
   </div>
 
-  <!-- ═══════════════════ PAGE 5 — Hotel Plan & Pricing ═══════════════════ -->
-  <div class="pdf-page pdf-page--shell">
+  <!-- ═══════════════════ PAGE 5 — Hotel Plan ═══════════════════ -->
+  <div class="pdf-page pdf-page--no-shell">
     <div class="pdf-indochine-art pdf-indochine-art--van-mieu hotel-plan-van-mieu" aria-hidden="true"></div>
     <div class="page-header">
       <span class="brand">{% if brand and brand.logo %}<img src="{{ brand.logo }}"
@@ -1869,7 +1881,7 @@
               <div class="img-wrapper-sub"
                 style="height: auto !important; aspect-ratio: auto !important; box-shadow: none; border-radius: 0; background: transparent; overflow: visible !important;">
                 <div class="hotel-image-wrapper"
-                  style="aspect-ratio: 4/3; position: relative; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.06);">
+                  style="aspect-ratio: 4/3; position: relative; overflow: hidden;">
                   <img src="{{ item.room_img }}" alt="{{ item.name }} Room"
                     style="width: 100%; height: 100%; object-fit: cover;">
                 </div>
@@ -2254,8 +2266,11 @@
           style="display: grid; grid-template-columns: 0.8fr 1.2fr; gap: 60px; align-items: center; position: relative; z-index: 1;">
           <!-- Left Column: Image & Name -->
           <div style="text-align: center;">
-            <div data-editable="designer_img"
-              style="margin: 0 auto 24px; width: 100%; max-width: 260px; aspect-ratio: 3/4; border-radius: 200px 200px 0 0; overflow: hidden; border: 4px solid #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.05); background-image: url('{{ designer_img | default('/assets/dias_team/hieu.jpg') }}'); background-size: cover; background-position: center;">
+            <div class="designer-portrait-frame" data-editable="designer_img"
+              style="margin: 0 auto 24px; width: 100%; max-width: 260px; aspect-ratio: 3/4; border-radius: 200px 200px 0 0; overflow: hidden; border: 4px solid #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.05); position: relative;">
+              <img src="{{ designer_img | default('/assets/dias_team/hieu.jpg') }}"
+                alt="{{ letter_sender | default('Travel Designer') }}"
+                style="width: 100%; height: 100%; object-fit: cover; display: block;">
             </div>
             <h3 class="font-serif" style="font-size: 24px; color: var(--emerald); margin: 0 0 2px;"
               data-editable="seller_name">{{ seller_name or "Eddie" |
