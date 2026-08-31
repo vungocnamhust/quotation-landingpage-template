@@ -229,6 +229,11 @@
       z-index: 2;
     }
 
+    /* No mix-blend-mode: it becomes a live PDF blend-mode group at print
+       time, which third-party PDF viewers (macOS Preview/Quartz in
+       particular) commonly render as a flat gray box instead of actually
+       blending. opacity + filter alone get flattened into plain pixels by
+       Chrome's print pipeline, so they render identically everywhere. */
     .pdf-indochine-art {
       position: absolute;
       pointer-events: none;
@@ -236,7 +241,6 @@
       background-repeat: no-repeat;
       background-size: contain;
       background-position: center;
-      mix-blend-mode: multiply;
       opacity: 0.25;
       filter: sepia(0.5) hue-rotate(-20deg) contrast(1.2) brightness(0.9);
     }
@@ -246,7 +250,6 @@
       width: 220px;
       aspect-ratio: 251 / 168;
       opacity: 0.15;
-      filter: grayscale(1) contrast(3) brightness(1.2);
     }
 
     .pdf-indochine-art--buffalo {
@@ -261,7 +264,6 @@
       width: 240px;
       aspect-ratio: 597 / 429;
       opacity: 0.15;
-      filter: grayscale(1) contrast(3) brightness(1.2);
     }
 
     .pdf-indochine-art--lantern {
@@ -269,13 +271,6 @@
       width: 96px;
       aspect-ratio: 166 / 295;
       opacity: 0.25;
-    }
-
-    .cover-lantern {
-      top: 78px;
-      right: 54px;
-      opacity: 0.25;
-      background-color: white;
     }
 
     .route-cyclo {
@@ -1237,13 +1232,17 @@
       position: relative;
     }
 
+    /* No box-shadow: a blurred shadow needs the same soft-mask/shading
+       construct in the printed PDF as a blurred text-shadow, and Preview/
+       Quartz renders it as a flat gray box instead of a soft drop shadow
+       (same failure as .luxury-marker-label's old text-shadow). The white
+       border alone gives enough separation from the map tiles. */
     .luxury-marker {
       width: 28px;
       height: 28px;
       background: var(--primary);
       border-radius: 50%;
       border: 2px solid #fff;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1253,6 +1252,12 @@
       font-family: var(--sans);
     }
 
+    /* A blurred text-shadow needs a soft-mask/shading group in the printed
+       PDF. Chrome's own PDF viewer handles it, but macOS Preview/Quartz
+       renders that construct as an opaque gray box instead of a soft glow
+       (the same class of bug as mix-blend-mode). A solid, unblurred
+       background rectangle achieves the same "readable over any tile"
+       purpose with plain fill content that renders identically everywhere. */
     .luxury-marker-label {
       position: absolute;
       left: 38px;
@@ -1262,7 +1267,9 @@
       font-weight: 600;
       color: var(--text-main);
       white-space: nowrap;
-      text-shadow: 0 0 4px var(--bg-main), 0 0 4px var(--bg-main), 0 0 4px var(--bg-main);
+      background: var(--bg-main);
+      padding: 1px 6px;
+      border-radius: 3px;
     }
 
     .timeline {
@@ -1346,8 +1353,22 @@
       filter: sepia(0.7) hue-rotate(-10deg) saturate(0.4) contrast(1.05) brightness(0.98) !important;
     }
 
+    /* A tile that hasn't loaded (or failed and is between retries) must stay
+       invisible rather than showing a browser-default gray/broken-image box
+       over the map. */
+    .leaflet-tile:not(.leaflet-tile-loaded) {
+      visibility: hidden !important;
+    }
+
+    /* mix-blend-mode becomes a live PDF transparency-group blend operator
+       when this page is printed/saved as PDF. Chrome's own PDF viewer
+       renders it fine, but third-party viewers (notably macOS Preview /
+       Quartz) have long-standing bugs with blend-mode groups and commonly
+       fall back to painting a flat gray rectangle instead of blending —
+       exactly the "gray box over the map" defect. Dropped in favor of
+       filter-only, which Chrome flattens into the rasterized tile pixels
+       at print time instead of a live blend operator. */
     .leaflet-tile-pane {
-      mix-blend-mode: multiply;
       filter: sepia(0.2);
     }
 
@@ -1453,7 +1474,6 @@
       <img class="cover-media" src="{{ hero_img_custom | default(img_0 | default('/assets/vietnam-safar-logo.png')) }}"
         alt="">
       <div class="cover-overlay"></div>
-      <div class="pdf-indochine-art pdf-indochine-art--lantern cover-lantern" aria-hidden="true"></div>
       <div class="cover-body">
         <div class="cover-top">
           <div class="cover-kicker" data-editable="cover_kicker">{{ cover_kicker | default("A Privately Arranged
@@ -1511,7 +1531,8 @@
             letter_highlight | default('This journey was designed to leave room for both discovery and rest.') }}</p>
           <div>
             <img src="/assets/brands/indochine_icon/ruong_bac_thang.svg" alt="Indochine motif"
-              style="width: 100%; max-width: 160px; opacity: 0.85; display: block;" onerror="this.style.display='none'">
+              style="width: 100%; max-width: 160px; opacity: 0.85; display: block; filter: sepia(0.7) saturate(3.5) hue-rotate(-8deg) brightness(0.9);"
+              onerror="this.style.display='none'">
           </div>
         </div>
 
@@ -2019,7 +2040,7 @@
         <div class="price-cards" style="display: flex; flex-direction: column; gap: 16px;">
           {% for opt in price_options %}
           <div class="price-card"
-            style="display: grid; grid-template-columns: 60px 2fr 1fr auto; align-items: center; padding: 24px; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border-left: 4px solid var(--c_primary, var(--primary, #17412e)); color: var(--text-main, #333);">
+            style="display: grid; grid-template-columns: 60px 2fr 1fr auto; align-items: center; padding: 24px; background: #ffffff; border-radius: 12px; border: 1px solid rgba(0,0,0,0.06); border-left: 4px solid var(--c_primary, var(--primary, #17412e)); color: var(--text-main, #333);">
 
             <div class="investment-num font-serif"
               style="font-size: 28px; font-weight: 700; line-height: 1; color: color-mix(in srgb, var(--c_primary, var(--primary, #17412e)) 20%, transparent); align-self: flex-start;">
@@ -2267,7 +2288,7 @@
           <!-- Left Column: Image & Name -->
           <div style="text-align: center;">
             <div class="designer-portrait-frame" data-editable="designer_img"
-              style="margin: 0 auto 24px; width: 100%; max-width: 260px; aspect-ratio: 3/4; border-radius: 200px 200px 0 0; overflow: hidden; border: 4px solid #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.05); position: relative;">
+              style="margin: 0 auto 24px; width: 100%; max-width: 260px; aspect-ratio: 3/4; border-radius: 200px 200px 0 0; overflow: hidden; border: 4px solid #fff; position: relative;">
               <img src="{{ designer_img | default('/assets/dias_team/hieu.jpg') }}"
                 alt="{{ letter_sender | default('Travel Designer') }}"
                 style="width: 100%; height: 100%; object-fit: cover; display: block;">
@@ -2589,11 +2610,30 @@
 
         __mapTileLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi', {
           maxZoom: 18,
-          attribution: '&copy; Bản đồ chủ quyền Việt Nam | Dữ liệu bản đồ &copy; Google'
+          attribution: '&copy; Bản đồ chủ quyền Việt Nam | Dữ liệu bản đồ &copy; Google',
+          // A tile that fails (e.g. rate-limited/blocked from a production
+          // server IP) falls back to a fully transparent placeholder instead
+          // of a broken-image glyph or default gray box, so worst case the
+          // page's own ivory background shows through cleanly.
+          errorTileUrl: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7'
         }).addTo(map);
         __mapTileLayer.on('load', function () {
           __mapTilesEverLoaded = true;
           __mapLastTileLoadAt = Date.now();
+        });
+        // Transient failures (rate limiting, flaky network) get a couple of
+        // delayed retries against the real tile URL before we give up and
+        // leave the transparent fallback in place.
+        const __tileRetryCounts = {};
+        __mapTileLayer.on('tileerror', function (e) {
+          const key = e.coords.x + ',' + e.coords.y + ',' + e.coords.z;
+          const count = __tileRetryCounts[key] || 0;
+          if (count < 2) {
+            __tileRetryCounts[key] = count + 1;
+            setTimeout(function () {
+              e.tile.src = __mapTileLayer.getTileUrl(e.coords);
+            }, 400 * (count + 1));
+          }
         });
 
         const dataEl = document.getElementById('itinerary-data');

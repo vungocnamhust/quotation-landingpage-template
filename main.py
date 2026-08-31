@@ -7609,7 +7609,7 @@ async def get_quotation_pdf(quotation_id: str, request: Request):
     if use_static_pdf_cache:
         published_pdf = await _get_latest_published_pdf_html(quotation_id, target_lang)
         if published_pdf:
-            return HTMLResponse(content=published_pdf)
+            return HTMLResponse(content=published_pdf, headers=no_cache_headers)
     
     # Trigger lazy translation if not available
     if target_lang != baseline_lang:
@@ -7649,7 +7649,7 @@ async def get_quotation_pdf(quotation_id: str, request: Request):
             )
             draft = _ensure_brochure_draft(ctx_data, quotation_id, effective_lang, lang_ctx, force_brand_from_ctx=preview_mode)
             _store_brochure_draft(ctx_data, effective_lang, draft)
-        return HTMLResponse(content=rendered_html)
+        return HTMLResponse(content=rendered_html, headers=no_cache_headers)
     except Exception as err:
         log.exception("[/quotations] Dynamic PDF render failed for %s: %s", quotation_id, err)
         raise HTTPException(status_code=500, detail=f"PDF render error: {err}")
