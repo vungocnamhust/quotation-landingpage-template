@@ -1,16 +1,45 @@
 "use client";
 
-import { use } from "react";
+import { use, useMemo } from "react";
 import { ArrowLeft, FileOutput } from "lucide-react";
 import { useRequestDetail } from "../../../../../components/staff-workspace/useRequestDetail";
 import { useWorkspaceNavigation, WorkspaceNavigationLink } from "../../../../../components/staff-workspace/WorkspaceNavigation";
 import { CostingWorkbench } from "../../../../../components/quotation-costing/CostingWorkbench.tsx";
+import type { DraftDaySpec } from "../../../../../components/quotation-costing/types.ts";
+import { dateForItineraryDay } from "../../../../../lib/rules/datesRules.ts";
 import { getTypographyClassName } from "../../../../../config/typography";
 import { cn } from "../../../../../utils/cn";
 
 type Props = {
   params: Promise<{ id: string }>;
 };
+
+// Mirrors schemas/v2/quote_request.py BasicItineraryDayInputSchema — the request payload's
+// raw itinerary shape, before it is hydrated into a QuotationFacts trip.
+type RequestItineraryDay = {
+  day_number?: number | null;
+  destination_ref_id?: string | null;
+};
+
+/** Day -> destination/date anchors for the AI Service Drafter (15.7) — derived from the same
+ * request payload this page already recaps above, not rebuilt server-side (routers/v2/ai_drafter.py
+ * deliberately stays out of the facts/itinerary pipeline). */
+function deriveAiDrafterDays(
+  startDate: string | null | undefined,
+  itineraryDays: unknown
+): DraftDaySpec[] | undefined {
+  if (!Array.isArray(itineraryDays)) return undefined;
+  const days = (itineraryDays as RequestItineraryDay[]).reduce<DraftDaySpec[]>((acc, day, index) => {
+    const dayNumber = day.day_number ?? index + 1;
+    const destinationId = day.destination_ref_id;
+    const serviceDate = dateForItineraryDay(startDate, dayNumber);
+    if (destinationId && serviceDate) {
+      acc.push({ dayNumber, destinationId, serviceDate });
+    }
+    return acc;
+  }, []);
+  return days.length > 0 ? days : undefined;
+}
 
 /**
  * Flow 1 (Costing-First) host — request-anchored CostingWorkbench. Read-only
@@ -22,6 +51,10 @@ export default function RequestCostingPage({ params }: Props) {
   const { id } = use(params);
   const { request, error, isLoading } = useRequestDetail(id);
   const { push } = useWorkspaceNavigation();
+  const aiDrafterDays = useMemo(
+    () => deriveAiDrafterDays(request?.start_date, request?.payload_json?.itinerary_days),
+    [request?.start_date, request?.payload_json]
+  );
 
   return (
     <div className="flex flex-col gap-6 pb-16">
@@ -55,6 +88,7 @@ export default function RequestCostingPage({ params }: Props) {
 
       <CostingWorkbench
         anchor={{ requestId: id }}
+        aiDrafterDays={aiDrafterDays}
         headerAction={(sheetId) => (
           <button
             type="button"

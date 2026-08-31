@@ -60,6 +60,9 @@ import { isQuotationStageLoading } from "../../lib/stageLoading.ts";
 import { CostingWorkbench } from "../quotation-costing/CostingWorkbench.tsx";
 import { AttachRecoveryBanner } from "../quotation-costing/AttachRecoveryBanner.tsx";
 import { clearAttachRecovery, readAttachRecovery } from "../../lib/attachRecovery.ts";
+import type { DraftDaySpec } from "../quotation-costing/types.ts";
+import { tripAdapter } from "../../lib/rules/tripAdapter.ts";
+import { dateForItineraryDay } from "../../lib/rules/datesRules.ts";
 
 const ContentStudioClient = dynamic(
   () => import("../content-studio/ContentStudioClient"),
@@ -431,6 +434,25 @@ export default function QuotationWorkspaceClient({
     (factsData?.facts
       ? hydrateDestinationRefs(factsData.facts, factsData.resolvedFacts)
       : undefined);
+
+  // AI Service Drafter (15.7) needs day -> destination/date anchors it cannot rebuild
+  // itself (routers/v2/ai_drafter.py deliberately stays out of the facts pipeline).
+  // Derived from the same canonical trip the itinerary editor uses, so it always agrees
+  // with what the sale sees on the Facts tab.
+  const aiDrafterDays = useMemo<DraftDaySpec[] | undefined>(() => {
+    if (!activeFacts) return undefined;
+    const canonicalTrip = tripAdapter.fromQuotationFacts(activeFacts);
+    const days = canonicalTrip.itinerary.reduce<DraftDaySpec[]>((acc, day) => {
+      const dayNumber = day.day_number;
+      const destinationId = day.destination_ref?.id;
+      const serviceDate = dateForItineraryDay(canonicalTrip.startDate, dayNumber);
+      if (dayNumber != null && destinationId && serviceDate) {
+        acc.push({ dayNumber, destinationId, serviceDate });
+      }
+      return acc;
+    }, []);
+    return days.length > 0 ? days : undefined;
+  }, [activeFacts]);
   const stageResourcesReady =
     stage === "facts"
       ? Boolean(factsData?.facts && activeFacts && options)
@@ -805,6 +827,7 @@ export default function QuotationWorkspaceClient({
             <CostingWorkbench
               anchor={{ quotationId }}
               baseRevision={documentData?.currentRevision ?? workflowData?.currentRevision}
+              aiDrafterDays={aiDrafterDays}
               existingOptions={
                 ((factsData?.facts as Record<string, unknown> | undefined)?.pricing_facts as { options?: Array<Record<string, unknown>> } | undefined)?.options?.map((opt) => ({
                   id: String(opt.id || ""),
