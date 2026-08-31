@@ -231,5 +231,104 @@
     "Tips and gratuities",
     "Any services not expressly listed as included"
   ],
-  "quotationNumber": "VN-2027-LUX"
+  "quotationNumber": "VN-2027-LUX",
+  "flightRecommendations": {
+    "kicker": "International Flight Routing",
+    "title": "Flight Recommendations:",
+    "subtitle": "Curated 5-star international flight routing options with optimized connection schedules in Taipei (EVA Air) or Tokyo Narita (ANA) for maximum comfort and reliability.",
+    "options": [
+      {
+        "optionId": "opt_1",
+        "carrierName": "EVA Air (5-Star Carrier)",
+        "carrierCode": "BR",
+        "description": "Trans-Pacific routing via Taipei (TPE)",
+        "arrivalAdvisory": "Upon your 11:05 AM arrival at Noi Bai International Airport (HAN), your private tour director and luxury chauffeur will welcome you at the arrival hall for direct transfer to your hotel.",
+        "departureAdvisory": "Private airport transfer will be scheduled from your hotel at 09:00 AM on 07 Apr to ensure effortless international check-in and priority luggage handling for Flight BR 386.",
+        "routes": [
+          {
+            "routeId": "outbound",
+            "sector": "Outbound Sector",
+            "route": "Chicago (ORD) ➔ Hanoi (HAN)",
+            "transit": "🔄 Transit in Taipei (TPE): 4 hours 10 minutes",
+            "leg1": {
+              "flight": "BR 55",
+              "time": "12:30 AM ➔ 04:55 AM (+1)",
+              "subtime": "Fri 26 Mar (ORD) → Sat 27 Mar (TPE)",
+              "note": "Late Thu night departure"
+            },
+            "leg2": {
+              "flight": "BR 397",
+              "time": "09:05 AM ➔ 11:05 AM",
+              "subtime": "Sat 27 Mar (TPE) → Sat 27 Mar (HAN)",
+              "note": "Mid-day Hanoi arrival"
+            }
+          },
+          {
+            "routeId": "return",
+            "sector": "Return Sector",
+            "route": "Hanoi (HAN) ➔ Chicago (ORD)",
+            "transit": "🔄 Transit in Taipei (TPE): 4 hours 40 minutes",
+            "leg1": {
+              "flight": "BR 386",
+              "time": "12:05 PM ➔ 03:55 PM",
+              "subtime": "Wed 07 Apr (HAN) → Wed 07 Apr (TPE)",
+              "note": "Afternoon Hanoi departure"
+            },
+            "leg2": {
+              "flight": "BR 56",
+              "time": "08:35 PM ➔ 09:00 PM",
+              "subtime": "Wed 07 Apr (TPE) → Wed 07 Apr (ORD)",
+              "note": "Same-day Chicago arrival"
+            }
+          }
+        ]
+      },
+      {
+        "optionId": "opt_2",
+        "carrierName": "ANA - All Nippon Airways (5-Star Carrier)",
+        "carrierCode": "NH",
+        "description": "Trans-Pacific routing via Tokyo Narita (NRT)",
+        "arrivalAdvisory": "Upon your 01:30 PM arrival at Noi Bai International Airport (HAN), your private tour director and luxury chauffeur will welcome you at the arrival hall for direct transfer to your hotel.",
+        "departureAdvisory": "Private airport transfer will be scheduled from your hotel at 11:00 AM on 07 Apr to ensure effortless international check-in and priority luggage handling for Flight NH 898.",
+        "routes": [
+          {
+            "routeId": "outbound",
+            "sector": "Outbound Sector",
+            "route": "Chicago (ORD) ➔ Hanoi (HAN)",
+            "transit": "🔄 Transit in Tokyo (NRT): 3 hours 05 minutes",
+            "leg1": {
+              "flight": "NH 11",
+              "time": "11:50 AM ➔ 03:25 PM (+1)",
+              "subtime": "Thu 25 Mar (ORD) → Fri 26 Mar (NRT)",
+              "note": "Late morning departure"
+            },
+            "leg2": {
+              "flight": "NH 897",
+              "time": "06:30 PM ➔ 01:30 PM (+1)",
+              "subtime": "Fri 26 Mar (NRT) → Sat 27 Mar (HAN)",
+              "note": "Mid-day Hanoi arrival"
+            }
+          },
+          {
+            "routeId": "return",
+            "sector": "Return Sector",
+            "route": "Hanoi (HAN) ➔ Chicago (ORD)",
+            "transit": "🔄 Transit in Tokyo (NRT): 2 hours 05 minutes",
+            "leg1": {
+              "flight": "NH 898",
+              "time": "02:00 PM ➔ 09:05 PM",
+              "subtime": "Wed 07 Apr (HAN) → Wed 07 Apr (NRT)",
+              "note": "Afternoon Hanoi departure"
+            },
+            "leg2": {
+              "flight": "NH 12",
+              "time": "11:10 PM ➔ 08:30 PM",
+              "subtime": "Wed 07 Apr (NRT) → Wed 07 Apr (ORD)",
+              "note": "Same-day Chicago arrival"
+            }
+          }
+        ]
+      }
+    ]
+  }
 }

@@ -4177,7 +4177,7 @@
     </section>
 
 
-    <section id="hotels" class="indochine-shell"
+    <section id="hotels" class="indochine-shell indochine-shell--no-border"
       style="background: var(--bg-alt); border: 1px solid var(--line); border-radius: 0; padding: var(--section-padding) 0; margin: 40px 0; box-shadow: 0 18px 45px rgba(17,19,15,0.04);">
       <div class="indochine-watermark indochine-watermark--van-mieu hotel-plan-watermark" aria-hidden="true"></div>
       <style>
@@ -4527,6 +4527,198 @@
             rtl_mixed(lang) }}</div>
         </div>
         {% endif %}
+      </div>
+    </section>
+
+    <!-- ── Flight Recommendations (International Routing Options) ───────────────────────── -->
+    <section id="flights" class="quotation-vibrant-light indochine-shell indochine-shellline"
+      style="padding: var(--section-padding) 0; position: relative; background: var(--bg-main);">
+      <style>
+        #flights .flight-investment-row {
+          display: grid;
+          grid-template-columns: 48px 1.3fr 1fr 1fr;
+          align-items: center;
+          gap: 20px;
+          padding: 20px;
+          background: #ffffff;
+          border: 1px solid var(--line);
+          border-radius: 6px;
+        }
+        @media (max-width: 980px) {
+          #flights .flight-investment-row {
+            grid-template-columns: 1fr !important;
+            gap: 16px !important;
+            padding: 16px !important;
+          }
+        }
+      </style>
+      <div class="container">
+
+        <div class="investment-header" style="margin-bottom: 32px;">
+          <div>
+            <div class="kicker"
+              style="color: var(--accent); margin-bottom: 8px; font-size: 11px; letter-spacing: 0.16em; font-weight: 700; text-transform: uppercase;"
+              data-editable="flight_kicker">International Flight Routing</div>
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+              <h2 style="margin-bottom: 0; font-family: var(--serif); font-size: clamp(28px, 4vw, 42px); font-weight: 600; color: var(--primary);"
+                data-editable="flight_h2">Flight Recommendations:</h2>
+              <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <span style="font-family: var(--sans); font-size: 11px; font-weight: 700; color: var(--primary); background: color-mix(in srgb, var(--primary) 10%, transparent); border: 1px solid color-mix(in srgb, var(--primary) 22%, transparent); padding: 4px 12px; border-radius: 999px; letter-spacing: 0.04em;">Option 1: EVA Air</span>
+                <span style="font-family: var(--sans); font-size: 11px; font-weight: 700; color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent); padding: 4px 12px; border-radius: 999px; letter-spacing: 0.04em;">Option 2: ANA</span>
+              </div>
+            </div>
+            <p style="margin-top: 8px; font-size: 14px; color: var(--text-muted); max-width: 720px;" data-editable="flight_p">
+              Curated 5-star international flight routing options with optimized connection schedules in Taipei (EVA Air) or Tokyo Narita (ANA) for maximum comfort and reliability.
+            </p>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 40px;">
+
+          <!-- ══════════════ OPTION 1: EVA AIR ══════════════ -->
+          <div class="flight-option-group" style="background: color-mix(in srgb, var(--primary) 3%, #ffffff); border: 1px solid var(--line); border-radius: 8px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--primary);"></span>
+                <h3 style="font-family: var(--serif); font-size: 22px; font-weight: 600; color: var(--primary); margin: 0;">Option 1: EVA Air (5-Star Carrier)</h3>
+              </div>
+              <span style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Trans-Pacific via Taipei (TPE)</span>
+            </div>
+
+            <div class="investment-list" style="display: flex; flex-direction: column; gap: 16px;">
+              <!-- Opt 1 Block 1: Outbound (ORD -> HAN) -->
+              <div class="investment-row flight-investment-row">
+                <div class="investment-num" style="font-family: var(--serif); font-size: 26px; font-weight: 700; color: color-mix(in srgb, var(--primary) 25%, transparent);">01</div>
+                <div class="investment-col" style="gap: 4px;">
+                  <div class="investment-title" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 15px; font-weight: 600; color: var(--text-main);" data-editable="opt1_flight_route_1">
+                    <span>Chicago (ORD) ➔ Hanoi (HAN)</span>
+                    <span style="font-size: 11px; font-weight: 600; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); padding: 2px 8px; border-radius: 4px;">Outbound Sector</span>
+                  </div>
+                  <div class="investment-desc" style="font-size: 12.5px; line-height: 1.4; color: var(--text-muted);" data-editable="opt1_flight_desc_1">
+                    <div>Inbound sector arriving in Hanoi on Day 1 for tour commencement.</div>
+                    <div style="color: var(--primary); font-size: 12px; font-weight: 600; margin-top: 3px;">🔄 Transit in Taipei (TPE): 4 hours 10 minutes</div>
+                  </div>
+                </div>
+                <!-- Leg 1 -->
+                <div class="investment-col flight-leg-col">
+                  <div style="font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px;">Leg 1 · Flight BR 55</div>
+                  <div class="investment-price" style="font-size: 16px; line-height: 1.2;"><span class="ltr-token" data-editable="opt1_flight_time_1_leg1">12:30 AM ➔ 04:55 AM (+1)</span></div>
+                  <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;" data-editable="opt1_flight_subtime_1_leg1">Fri 26 Mar (ORD) → Sat 27 Mar (TPE)</div>
+                  <div style="font-size: 11px; color: var(--accent); margin-top: 2px;">Late Thu night departure</div>
+                </div>
+                <!-- Leg 2 -->
+                <div class="investment-col flight-leg-col">
+                  <div style="font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px;">Leg 2 · Flight BR 397</div>
+                  <div class="investment-price" style="font-size: 16px; line-height: 1.2;"><span class="ltr-token" data-editable="opt1_flight_time_1_leg2">09:05 AM ➔ 11:05 AM</span></div>
+                  <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;" data-editable="opt1_flight_subtime_1_leg2">Sat 27 Mar (TPE) → Sat 27 Mar (HAN)</div>
+                  <div style="font-size: 11px; color: var(--primary); margin-top: 2px;">Mid-day Hanoi arrival</div>
+                </div>
+              </div>
+
+              <!-- Opt 1 Block 2: Return (HAN -> ORD) -->
+              <div class="investment-row flight-investment-row">
+                <div class="investment-num" style="font-family: var(--serif); font-size: 26px; font-weight: 700; color: color-mix(in srgb, var(--primary) 25%, transparent);">02</div>
+                <div class="investment-col" style="gap: 4px;">
+                  <div class="investment-title" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 15px; font-weight: 600; color: var(--text-main);" data-editable="opt1_flight_route_2">
+                    <span>Hanoi (HAN) ➔ Chicago (ORD)</span>
+                    <span style="font-size: 11px; font-weight: 600; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); padding: 2px 8px; border-radius: 4px;">Return Sector</span>
+                  </div>
+                  <div class="investment-desc" style="font-size: 12.5px; line-height: 1.4; color: var(--text-muted);" data-editable="opt1_flight_desc_2">
+                    <div>Return journey departing Hanoi at conclusion of journey.</div>
+                    <div style="color: var(--primary); font-size: 12px; font-weight: 600; margin-top: 3px;">🔄 Transit in Taipei (TPE): 4 hours 40 minutes</div>
+                  </div>
+                </div>
+                <!-- Leg 1 -->
+                <div class="investment-col flight-leg-col">
+                  <div style="font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px;">Leg 1 · Flight BR 386</div>
+                  <div class="investment-price" style="font-size: 16px; line-height: 1.2;"><span class="ltr-token" data-editable="opt1_flight_time_2_leg1">12:05 PM ➔ 03:55 PM</span></div>
+                  <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;" data-editable="opt1_flight_subtime_2_leg1">Wed 07 Apr (HAN) → Wed 07 Apr (TPE)</div>
+                  <div style="font-size: 11px; color: var(--accent); margin-top: 2px;">Afternoon Hanoi departure</div>
+                </div>
+                <!-- Leg 2 -->
+                <div class="investment-col flight-leg-col">
+                  <div style="font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px;">Leg 2 · Flight BR 56</div>
+                  <div class="investment-price" style="font-size: 16px; line-height: 1.2;"><span class="ltr-token" data-editable="opt1_flight_time_2_leg2">08:35 PM ➔ 09:00 PM</span></div>
+                  <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;" data-editable="opt1_flight_subtime_2_leg2">Wed 07 Apr (TPE) → Wed 07 Apr (ORD)</div>
+                  <div style="font-size: 11px; color: var(--primary); margin-top: 2px;">Same-day Chicago arrival</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ══════════════ OPTION 2: ANA (ALL NIPPON AIRWAYS) ══════════════ -->
+          <div class="flight-option-group" style="background: color-mix(in srgb, var(--accent) 3%, #ffffff); border: 1px solid var(--line); border-radius: 8px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent);"></span>
+                <h3 style="font-family: var(--serif); font-size: 22px; font-weight: 600; color: var(--accent); margin: 0;">Option 2: ANA - All Nippon Airways (5-Star Carrier)</h3>
+              </div>
+              <span style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Trans-Pacific via Tokyo Narita (NRT)</span>
+            </div>
+
+            <div class="investment-list" style="display: flex; flex-direction: column; gap: 16px;">
+              <!-- Opt 2 Block 1: Outbound (ORD -> HAN) -->
+              <div class="investment-row flight-investment-row">
+                <div class="investment-num" style="font-family: var(--serif); font-size: 26px; font-weight: 700; color: color-mix(in srgb, var(--accent) 25%, transparent);">01</div>
+                <div class="investment-col" style="gap: 4px;">
+                  <div class="investment-title" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 15px; font-weight: 600; color: var(--text-main);" data-editable="opt2_flight_route_1">
+                    <span>Chicago (ORD) ➔ Hanoi (HAN)</span>
+                    <span style="font-size: 11px; font-weight: 600; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); padding: 2px 8px; border-radius: 4px;">Outbound Sector</span>
+                  </div>
+                  <div class="investment-desc" style="font-size: 12.5px; line-height: 1.4; color: var(--text-muted);" data-editable="opt2_flight_desc_1">
+                    <div>Inbound sector via Tokyo Narita arriving on Day 1 for tour start.</div>
+                    <div style="color: var(--primary); font-size: 12px; font-weight: 600; margin-top: 3px;">🔄 Transit in Tokyo (NRT): 3 hours 05 minutes</div>
+                  </div>
+                </div>
+                <!-- Leg 1 -->
+                <div class="investment-col flight-leg-col">
+                  <div style="font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px;">Leg 1 · Flight NH 11</div>
+                  <div class="investment-price" style="font-size: 16px; line-height: 1.2;"><span class="ltr-token" data-editable="opt2_flight_time_1_leg1">11:50 AM ➔ 03:25 PM (+1)</span></div>
+                  <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;" data-editable="opt2_flight_subtime_1_leg1">Thu 25 Mar (ORD) → Fri 26 Mar (NRT)</div>
+                  <div style="font-size: 11px; color: var(--accent); margin-top: 2px;">Late morning departure</div>
+                </div>
+                <!-- Leg 2 -->
+                <div class="investment-col flight-leg-col">
+                  <div style="font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px;">Leg 2 · Flight NH 897</div>
+                  <div class="investment-price" style="font-size: 16px; line-height: 1.2;"><span class="ltr-token" data-editable="opt2_flight_time_1_leg2">06:30 PM ➔ 01:30 PM (+1)</span></div>
+                  <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;" data-editable="opt2_flight_subtime_1_leg2">Fri 26 Mar (NRT) → Sat 27 Mar (HAN)</div>
+                  <div style="font-size: 11px; color: var(--primary); margin-top: 2px;">Mid-day Hanoi arrival</div>
+                </div>
+              </div>
+
+              <!-- Opt 2 Block 2: Return (HAN -> ORD) -->
+              <div class="investment-row flight-investment-row">
+                <div class="investment-num" style="font-family: var(--serif); font-size: 26px; font-weight: 700; color: color-mix(in srgb, var(--accent) 25%, transparent);">02</div>
+                <div class="investment-col" style="gap: 4px;">
+                  <div class="investment-title" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 15px; font-weight: 600; color: var(--text-main);" data-editable="opt2_flight_route_2">
+                    <span>Hanoi (HAN) ➔ Chicago (ORD)</span>
+                    <span style="font-size: 11px; font-weight: 600; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); padding: 2px 8px; border-radius: 4px;">Return Sector</span>
+                  </div>
+                  <div class="investment-desc" style="font-size: 12.5px; line-height: 1.4; color: var(--text-muted);" data-editable="opt2_flight_desc_2">
+                    <div>Return journey via Tokyo Narita at conclusion of journey.</div>
+                    <div style="color: var(--primary); font-size: 12px; font-weight: 600; margin-top: 3px;">🔄 Transit in Tokyo (NRT): 2 hours 05 minutes</div>
+                  </div>
+                </div>
+                <!-- Leg 1 -->
+                <div class="investment-col flight-leg-col">
+                  <div style="font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px;">Leg 1 · Flight NH 898</div>
+                  <div class="investment-price" style="font-size: 16px; line-height: 1.2;"><span class="ltr-token" data-editable="opt2_flight_time_2_leg1">02:00 PM ➔ 09:05 PM</span></div>
+                  <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;" data-editable="opt2_flight_subtime_2_leg1">Wed 07 Apr (HAN) → Wed 07 Apr (NRT)</div>
+                  <div style="font-size: 11px; color: var(--accent); margin-top: 2px;">Afternoon Hanoi departure</div>
+                </div>
+                <!-- Leg 2 -->
+                <div class="investment-col flight-leg-col">
+                  <div style="font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px;">Leg 2 · Flight NH 12</div>
+                  <div class="investment-price" style="font-size: 16px; line-height: 1.2;"><span class="ltr-token" data-editable="opt2_flight_time_2_leg2">11:10 PM ➔ 08:30 PM</span></div>
+                  <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;" data-editable="opt2_flight_subtime_2_leg2">Wed 07 Apr (NRT) → Wed 07 Apr (ORD)</div>
+                  <div style="font-size: 11px; color: var(--primary); margin-top: 2px;">Same-day Chicago arrival</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
       </div>
     </section>
 
