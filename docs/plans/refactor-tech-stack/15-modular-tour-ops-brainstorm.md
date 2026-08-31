@@ -237,7 +237,7 @@ lại là monolith phân lớp. Cho agency nhỏ:
 | **[15.4](./15.4-costing.md)** | Costing Dual-Track: `costing_sheets` (neo request HOẶC quotation, attach khi sinh báo giá) + `service_lines` + workbench 2 chỗ đứng (request-costing screen + stage trong workspace) + `costingToFactsHandoff` prefill | 🟡 2 FK + auth callback + handoff một chiều | Flow 1 (costing-first) và Flow 2 (brochure-first) đều chạy E2E; snapshot bất động khi supersede rate |
 | **[15.5](./15.5-apply-pricing.md)** | Apply pricing: nút "Apply to Commercial" → ghi 1 pricing option qua pipeline facts chính thống (callback), log `costing_applications` bất biến + drift badge + event `costing.applied` | ✅ Có, qua facts API sẵn có (callback gói đường cũ) | Sale kiểm soát, không auto-overwrite; nguyên tử 3-trong-1; drift detection 2 chiều |
 | **[15.6](./15.6-booking-operations.md)** | Booking & Operations: `bookings`/`booking_lines` copy-on-deposit (snapshot cả terms — T3) + deadline engine từ policy JSONB (E9 sinh lời) + voucher/booking_code (E10) + Operations board deadline-driven + T9 cash-flow guardrail | 🟡 Đọc service_lines + mirror status | Operator trả lời được "hạn nào sắp cháy"; đổi policy/giá sau booking → chứng từ bất động |
-| **[15.7](./15.7-ai-service-drafter.md)** | **AI Platform Layer** (agent factory + toolset catalog dùng chung + guardrails + `ai_runs`) + Service Drafter: TripAnalyst (0 tool, human gate) → ServiceDrafter (tools read-only, allowlist per-run, schema không có tiền) → ghi qua costing API 15.4 `source=ai_draft` | 🟡 2 điểm additive khai báo (cột `ai_meta_json` + affordance costing UI) | Zero-hallucination kiểm bằng máy; platform nghiệm thu khi 15.8 dùng mà không sửa file nào |
+| **[15.7](./15.7-ai-service-drafter.md)** | **AI Platform Layer** (agent factory + toolset catalog dùng chung + guardrails + `ai_runs`) + Service Drafter: TripAnalyst (0 tool, human gate) → ServiceDrafter (tools read-only, allowlist per-run, schema không có tiền) → ghi qua costing API 15.4 `source=ai_draft` | 🟡 2 điểm additive khai báo (cột `ai_meta_json` + affordance costing UI) | ✅ **Code đã xong (2026-08-31)** — toolset nhóm A, 2 agent, router 3 operations, migration `_46`, 40 test mới + 8 ca nhóm A xanh, kernel platform 0 file sửa. Zero-hallucination kiểm bằng máy; platform nghiệm thu khi 15.8 dùng mà không sửa file nào. **Chưa qua Exit Gate §4** (kịch bản thật + corpus request văn xuôi) — chờ dữ liệu 15.8b |
 | **[15.8](./15.8-text-to-catalog-ingestion.md)** | **Interactive Ingestion Co-Pilot** (consumer thứ 2 của platform): Extractor 0-tool (raw text) → parser deterministic → Resolver có tool read-only (chỉ nhìn payload, tra catalog, đề xuất action + **đặt câu hỏi làm rõ**, trần 2 vòng) → kiểm chứng deterministic → staging → Diff Viewer 3 cột → commit replay qua service 15.1–15.3 (ActorRef = operator) | ❌ Không (chỉ gọi hàm public catalog + import platform) | Paste tariff mơ hồ → Co-Pilot hỏi đúng chỗ → DB đúng qua cửa chính; paste lại → skip_duplicate; AI không có quyền INSERT |
 | **15.9+** | Finance (M7 — đọc voucher/application log), Allotment (M8) | — | Xem điều kiện bắt đầu bên dưới |
 
@@ -267,6 +267,18 @@ harden qua 16.3 — gate kỹ thuật đạt). Gate dữ liệu được hạ c�
 2. Catalog đủ giàu nhờ 15.8 — cụ thể hóa: exit gate #2 của 15.8 đạt (≥25 entries có rate
    active sau seeding corpus) — nếu không, Drafter chỉ trả `rate_missing` và không đánh giá được.
 3. Có tập request văn xuôi thật (≥20–30 ca đa dạng archetype) làm bộ nghiệm thu TripAnalyst.
+
+→ **Code 15.7 đã xong (audit 2026-08-31): toolset nhóm A (`search_accommodations`,
+`search_transport`, `search_activities_and_dining`, `resolve_applicable_rates`), 2 agent
+(`trip_analyst` 0-tool + fallback rooming-heuristic, `service_drafter` per-day tool-using),
+`draft_run_service` (server tự resolve giá qua `rate_selection`, không tin tariff_id AI đề
+xuất), router 3 operations (`/ai/analyze`, `/ai/draft`, `/ai/runs`), migration `service_lines
+.ai_meta_json`, FE (`TripProfileReviewDialog`, `DraftProgress`, badge/Swap trên
+`ServiceLineRow`) — 40 test mới xanh, 0 file platform bị sửa (điều kiện nghiệm thu kiến trúc
+#3 đạt). Điều kiện #2/#3 ở trên (catalog giàu qua 15.8b + corpus request thật) VẪN CHƯA đạt —
+đây là lý do Exit Gate §4 của [15.7](./15.7-ai-service-drafter.md#4-exit-gate) (kịch bản thật
+2000 ký tự end-to-end + zero-hallucination kiểm bằng máy trên dữ liệu thật) chưa chạy được.
+Đang chờ chung một runbook dữ liệu với 15.8b.**
 
 **Bắt đầu 15.9 Finance (M7):**
 1. 15.6 chạy production đủ **một chu kỳ đóng sổ thật** (một mùa vụ / vài tháng) — đã tích lũy
