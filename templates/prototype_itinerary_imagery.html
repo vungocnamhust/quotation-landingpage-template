@@ -7058,8 +7058,8 @@
     document.querySelectorAll('.carousel-container').forEach(container => {
       const inner = container.querySelector('.carousel-inner');
       const slides = container.querySelectorAll('.carousel-slide');
-      const prevBtn = container.querySelector('.carousel-control.prev') || container.parentElement.querySelector('.carousel-control.prev');
-      const nextBtn = container.querySelector('.carousel-control.next') || container.parentElement.querySelector('.carousel-control.next');
+      const prevBtn = container.querySelector('.carousel-control.prev, .carousel-prev-btn') || container.parentElement.querySelector('.carousel-control.prev, .carousel-prev-btn');
+      const nextBtn = container.querySelector('.carousel-control.next, .carousel-next-btn') || container.parentElement.querySelector('.carousel-control.next, .carousel-next-btn');
       const dots = container.querySelectorAll('.carousel-dot');
 
       if (!inner || slides.length <= 1) return;

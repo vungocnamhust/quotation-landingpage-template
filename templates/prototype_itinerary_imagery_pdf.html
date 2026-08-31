@@ -623,11 +623,14 @@
       border: 1px solid var(--line);
       border-radius: 4px;
       padding: 16px;
-      align-items: start;
+      align-items: stretch;
       page-break-inside: avoid;
-      min-height: 280px;
-      height: auto;
-      overflow: visible;
+      /* Fixed (not min-) height, calibrated so exactly 2 cards + the 12px
+         gap fit inside one A4 itinerary page. Content past this budget is
+         clamped (see .day-copy-body p) rather than allowed to grow the
+         card, which is what pushed pagination down to 1 day per page. */
+      height: 384px;
+      overflow: hidden;
     }
 
     .day-card.is-alternate {
@@ -651,8 +654,8 @@
       flex-direction: column;
       justify-content: flex-start;
       min-height: 0;
-      height: auto;
-      overflow: visible;
+      height: 100%;
+      overflow: hidden;
     }
 
     .day-card h3 {
@@ -694,18 +697,27 @@
       justify-content: flex-start;
       gap: 6px;
       min-height: 0;
-      overflow: visible;
+      overflow: hidden;
     }
 
     .day-copy-body {
       flex: 0 0 auto;
       display: block;
       min-height: 0;
-      overflow: visible;
+      overflow: hidden;
     }
 
     .day-copy-body p:last-child {
       margin-bottom: 0 !important;
+    }
+
+    /* Clamp long descriptions so a single verbose day can't grow the card
+       past its fixed height budget and push pagination to 1 day/page. */
+    .day-copy-body p {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 5;
+      overflow: hidden;
     }
 
     .day-highlights {
@@ -714,6 +726,10 @@
       color: var(--text-muted);
       line-height: 1.42;
       overflow-wrap: anywhere;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      overflow: hidden;
     }
 
     .day-notes {
@@ -726,6 +742,8 @@
       border-radius: 2px;
       line-height: 1.42;
       overflow-wrap: anywhere;
+      max-height: 48px;
+      overflow: hidden;
     }
 
     .day-notes ul {
@@ -748,8 +766,8 @@
       display: grid;
       grid-template-rows: minmax(0, 2.15fr) minmax(0, 1fr);
       gap: 8px;
-      height: auto;
-      align-self: start;
+      height: 100%;
+      align-self: stretch;
     }
 
     .day-media-main,
@@ -1584,7 +1602,6 @@
               <span class="font-serif" style="font-size:13px;font-weight:500;color:var(--emerald);display:block;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ segment.displayName }}</span>
               {% set segment_duration = segment.mapSegmentDuration or segment.nightsLabel or segment.daysLabel %}
               {% if segment_duration %}<span style="font-size:9px;color:var(--muted);font-weight:400;display:block;margin-top:4px;">{{ segment_duration }}</span>{% endif %}
-              {% if segment.hotelName %}<div style="font-size:8px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">{{ segment.hotelName }}</div>{% endif %}
             </div>
           </div>
           {% if not loop.last %}<div style="flex:1; min-width:15px; max-width:40px; height:1px; background:var(--accent); opacity:0.5; margin-top:13px;"></div>{% endif %}
@@ -1645,7 +1662,8 @@
     </div>
   </div>
 
-  <!-- ═══════════════════ PAGE 4 — Itinerary ═══════════════════ -->
+  <!-- ═══════════════════ PAGE 4+ — Itinerary (2 days per A4 page) ═══════════════════ -->
+  {% for day_pair in itinerary_days | batch(2) %}
   <div class="pdf-page pdf-page--no-shell">
     <div class="page-header">
       <span class="brand">{% if brand and brand.logo %}<img src="{{ brand.logo }}"
@@ -1655,13 +1673,15 @@
       <span class="ref"><span class="ltr-token">{{ quotation_number }} · {{ quotation_date }}</span></span>
     </div>
     <div class="page-inner">
+      {% if loop.first %}
       <div class="section-label" data-editable="itinerary_kicker">{{ itinerary_kicker | default("Service Program" |
         translate(lang)) }}</div>
       <h2 data-editable="itinerary_h2">{{ itinerary_h2 }}</h2>
       <p class="section-p" data-editable="itinerary_p">{{ itinerary_p }}</p>
+      {% endif %}
 
       <div class="itinerary">
-        {% for day in itinerary_days %}
+        {% for day in day_pair %}
         {% set imgs = day.layout_images | default({}) %}
         <div class="day-card {% if day.is_alternate %}is-alternate{% endif %}">
           <div class="day-content">
@@ -1755,6 +1775,7 @@
       </div>
     </div>
   </div>
+  {% endfor %}
 
 
   <!-- ── PDF: Chapter Divider — SELECTED ACCOMMODATIONS ─── -->
@@ -2534,6 +2555,14 @@
         return points;
       }
 
+      // Tracks whether the route map's tiles have finished loading, so the
+      // print trigger below can wait for them instead of firing on a blind
+      // timer (which raced the async Leaflet tile requests and produced a
+      // blank/incomplete map in the printed PDF).
+      let __mapTileLayer = null;
+      let __mapTilesEverLoaded = false;
+      let __mapLastTileLoadAt = 0;
+
       document.addEventListener("DOMContentLoaded", function () {
         const map = L.map('map', {
           zoomControl: false,
@@ -2543,10 +2572,14 @@
           boxZoom: false
         });
 
-        L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi', {
+        __mapTileLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi', {
           maxZoom: 18,
           attribution: '&copy; Bản đồ chủ quyền Việt Nam | Dữ liệu bản đồ &copy; Google'
         }).addTo(map);
+        __mapTileLayer.on('load', function () {
+          __mapTilesEverLoaded = true;
+          __mapLastTileLoadAt = Date.now();
+        });
 
         const dataEl = document.getElementById('itinerary-data');
         const routeStopsEl = document.getElementById('route-stops-data');
@@ -2683,11 +2716,6 @@
               nightsBadge = `<span style="font-size:9px;color:var(--muted);font-weight:400;display:block;margin-top:4px;">${dayRangeStr}</span>`;
             }
 
-            let hotelBadge = '';
-            if (dest.hotelName) {
-              hotelBadge = `<div style="font-size:8px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">${dest.hotelName}</div>`;
-            }
-
             const itemDiv = document.createElement('div');
             itemDiv.style.cssText = 'display:flex; flex-direction:column; align-items:center; gap:8px; width: 85px; position:relative;';
             itemDiv.innerHTML = `
@@ -2695,7 +2723,6 @@
             <div style="text-align:center; width:100%;">
               <span class="font-serif" style="font-size:13px;font-weight:500;color:var(--emerald);display:block;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${dest.displayName}</span>
               ${nightsBadge}
-              ${hotelBadge}
             </div>
           `;
 
@@ -2748,9 +2775,25 @@
         }
       });
 
-      // Auto-trigger print dialog after a safe delay to let tiles render
+      // Auto-trigger print dialog once the route map's tiles have actually
+      // finished loading (with a hard cap so print still fires even if the
+      // tile server is slow/unreachable). A fixed delay alone raced the
+      // async Leaflet tile requests — especially the second round triggered
+      // by the fitBounds/invalidateSize calls above — leaving a blank map
+      // in the printed PDF when tiles hadn't painted yet.
       window.addEventListener('load', function () {
-        setTimeout(function () { window.print(); }, 1200);
+        const startedAt = Date.now();
+        const hardCapMs = 4000;
+        const quietPeriodMs = 250;
+        (function waitForMapThenPrint() {
+          const elapsed = Date.now() - startedAt;
+          const settled = __mapTilesEverLoaded && (Date.now() - __mapLastTileLoadAt > quietPeriodMs);
+          if (settled || !__mapTileLayer || elapsed > hardCapMs) {
+            setTimeout(function () { window.print(); }, 150);
+            return;
+          }
+          setTimeout(waitForMapThenPrint, 100);
+        })();
       });
     </script>
 </body>
