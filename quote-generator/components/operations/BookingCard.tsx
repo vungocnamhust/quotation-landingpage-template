@@ -51,6 +51,12 @@ export function BookingCard({
           <p className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>
             {partyLabel ?? "Party TBD"} · {formatDate(travelStartDate)} – {formatDate(travelEndDate)}
           </p>
+          <a
+            href={`/workspace/finance/ap?bookingId=${encodeURIComponent(bookingId)}`}
+            className={cn(getTypographyClassName("caption"), "text-[var(--color-accent)] hover:underline")}
+          >
+            Hóa đơn liên quan
+          </a>
         </div>
         <button
           type="button"

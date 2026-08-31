@@ -72,6 +72,10 @@ class BookingService:
             return None
         return self._to_detail(booking, today=today)
 
+    async def get_line_by_voucher_ref(self, voucher_ref: str) -> BookingLine | None:
+        """Read-only — no flush/commit. Sole exception carved for AP voucher matching (15.9 §9)."""
+        return await self.repository.get_line_by_voucher_ref(voucher_ref)
+
     async def list_board(
         self,
         *,

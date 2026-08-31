@@ -11,6 +11,7 @@ import {
   Boxes,
   Palette,
   ClipboardList,
+  Receipt,
 } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography.ts";
 import { apiErrorMessage, quotationFetch } from "../../lib/apiError.ts";
@@ -40,6 +41,7 @@ const nav = [
   { label: "Product Catalog", href: "/workspace/catalog", icon: Boxes },
   { label: "Content Studio", href: "/workspace/content-studio", icon: Palette },
   { label: "Operations", href: "/workspace/operations", icon: ClipboardList },
+  { label: "Finance", href: "/workspace/finance/ap", icon: Receipt },
 ] as const;
 
 function UserAvatar({ name }: { name: string }) {

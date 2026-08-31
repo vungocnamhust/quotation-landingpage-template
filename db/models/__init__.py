@@ -22,6 +22,7 @@ from db.models.quote_request import QuoteRequest, QuoteRequestRevision
 from db.models.partner import PartnerProfile
 from db.models.product import Product
 from db.models.supplier import Supplier
+from db.models.supplier_invoice import ApPayment, ApPaymentAllocation, SupplierInvoice, SupplierInvoiceLine
 from db.models.travel_designer import TravelDesignerBrandDefault, TravelDesignerProfile
 from db.models.travel_style import TravelStyleTag
 from db.models.rooming_heuristic import RoomingHeuristicRule
@@ -61,6 +62,10 @@ __all__ = [
     "RateSource",
     "RoomingHeuristicRule",
     "Supplier",
+    "SupplierInvoice",
+    "SupplierInvoiceLine",
+    "ApPayment",
+    "ApPaymentAllocation",
     "TravelDesignerBrandDefault",
     "TravelDesignerProfile",
     "TravelStyleTag",

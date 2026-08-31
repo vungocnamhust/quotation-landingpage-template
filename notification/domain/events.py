@@ -57,6 +57,13 @@ class EventType(str, Enum):
     BOOKING_LINE_DELIVERED = "booking.line.delivered"
     BOOKING_CANCELLED = "booking.cancelled"
 
+    # Finance — AP reconciliation events (15.9)
+    FINANCE_AP_INVOICE_RECEIVED = "finance.ap.invoice.received"
+    FINANCE_AP_INVOICE_MATCHED = "finance.ap.invoice.matched"
+    FINANCE_AP_INVOICE_DISPUTED = "finance.ap.invoice.disputed"
+    FINANCE_AP_INVOICE_APPROVED = "finance.ap.invoice.approved"
+    FINANCE_AP_PAYMENT_RECORDED = "finance.ap.payment.recorded"
+
     # System & Generic
     SYSTEM_ANNOUNCEMENT = "system.announcement"
 

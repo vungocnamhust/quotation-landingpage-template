@@ -70,6 +70,15 @@ class BookingRepository:
         )
         return result.scalar_one_or_none()
 
+    async def get_line_by_voucher_ref(
+        self, voucher_ref: str, *, tenant_id: str = DEFAULT_TENANT_ID
+    ) -> BookingLine | None:
+        """Read-only lookup for AP voucher matching (15.9) — ``voucher_ref`` is globally unique."""
+        result = await self.session.execute(
+            select(BookingLine).where(BookingLine.voucher_ref == voucher_ref, BookingLine.tenant_id == tenant_id)
+        )
+        return result.scalar_one_or_none()
+
     async def list_board_lines(
         self,
         *,

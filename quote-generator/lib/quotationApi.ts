@@ -1681,5 +1681,238 @@ export async function rejectIngestionBatch(
   });
 }
 
+// ---------------------------------------------------------------------------
+// AP Reconciliation (15.9) — mirrors schemas/v2/finance_ap.py. Request bodies
+// use camelCase (the Pydantic side aliases them); responses stay snake_case,
+// same split as the AI Drafter section above.
+// ---------------------------------------------------------------------------
+
+export type ApInvoiceStatus = "draft" | "received" | "matched" | "disputed" | "approved" | "paid" | "void";
+export type ApLineType = "service" | "adjustment" | "penalty" | "fee";
+export type ApMatchStatus = "unmatched" | "auto_matched" | "manual_matched" | "waived" | "disputed";
+export type ApPaymentMethod = "bank_transfer" | "cash" | "card" | "other";
+
+export type ApInvoiceLine = {
+  id: number;
+  invoice_id: string;
+  line_type: ApLineType;
+  booking_id: string | null;
+  booking_line_id: string | null;
+  voucher_ref: string | null;
+  description: string;
+  amount_minor: number;
+  expected_cost_minor: number | null;
+  variance_minor: number | null;
+  match_status: ApMatchStatus;
+  match_issues_json: string[];
+  match_note: string | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+  variance_sheet_minor: number | null;
+};
+
+export type ApPaymentAllocation = {
+  id: number;
+  payment_id: string;
+  invoice_id: string;
+  amount_minor: number;
+  created_at: string;
+};
+
+export type ApSupplierInvoice = {
+  id: string;
+  supplier_id: string;
+  invoice_number: string | null;
+  invoice_date: string;
+  received_at: string;
+  due_date: string | null;
+  currency: string;
+  gross_total_minor: number;
+  tax_minor: number;
+  status: ApInvoiceStatus;
+  invoice_revision: number;
+  file_ref: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  lines: ApInvoiceLine[];
+  allocations: ApPaymentAllocation[];
+  allocated_minor: number;
+  balance_minor: number;
+};
+
+export type ApSupplierInvoiceListItem = {
+  id: string;
+  supplier_id: string;
+  invoice_number: string | null;
+  invoice_date: string;
+  due_date: string | null;
+  currency: string;
+  gross_total_minor: number;
+  status: ApInvoiceStatus;
+  matched_line_count: number;
+  total_line_count: number;
+};
+
+export type ApPayment = {
+  id: string;
+  supplier_id: string;
+  payment_code: string;
+  paid_at: string;
+  currency: string;
+  amount_minor: number;
+  fx_rate_ppm: number | null;
+  method: ApPaymentMethod;
+  reference: string | null;
+  notes: string | null;
+  created_at: string;
+  allocations: ApPaymentAllocation[];
+};
+
+export async function listSupplierInvoices(filters: {
+  supplierId?: string;
+  status?: ApInvoiceStatus;
+  dueWithinDays?: number;
+  overdueOnly?: boolean;
+  search?: string;
+} = {}): Promise<ApSupplierInvoiceListItem[]> {
+  const params = new URLSearchParams();
+  if (filters.supplierId) params.set("supplier_id", filters.supplierId);
+  if (filters.status) params.set("status", filters.status);
+  if (filters.dueWithinDays != null) params.set("dueWithinDays", String(filters.dueWithinDays));
+  if (filters.overdueOnly) params.set("overdueOnly", "true");
+  if (filters.search) params.set("search", filters.search);
+  const query = params.toString();
+  const result = await request<{ items: ApSupplierInvoiceListItem[] }>(`/api/v2/ap/invoices${query ? `?${query}` : ""}`);
+  return result.items;
+}
+
+export async function getSupplierInvoice(invoiceId: string): Promise<ApSupplierInvoice> {
+  return request<ApSupplierInvoice>(`/api/v2/ap/invoices/${encodeURIComponent(invoiceId)}`);
+}
+
+export async function createSupplierInvoice(
+  input: {
+    supplierId: string;
+    invoiceNumber?: string | null;
+    invoiceDate: string;
+    dueDate?: string | null;
+    currency: string;
+    grossTotalMinor: number;
+    taxMinor?: number;
+    fileRef?: string | null;
+    notes?: string | null;
+  },
+  idempotencyKey: string,
+): Promise<ApSupplierInvoice> {
+  return request<ApSupplierInvoice>("/api/v2/ap/invoices", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Idempotency-Key": idempotencyKey },
+    body: JSON.stringify(input),
+  });
+}
+
+export async function updateSupplierInvoice(
+  invoiceId: string,
+  input: {
+    baseInvoiceRevision: number;
+    action?: "record" | "void";
+    invoiceNumber?: string | null;
+    invoiceDate?: string | null;
+    dueDate?: string | null;
+    currency?: string;
+    grossTotalMinor?: number;
+    taxMinor?: number;
+    fileRef?: string | null;
+    notes?: string | null;
+  },
+): Promise<ApSupplierInvoice> {
+  return request<ApSupplierInvoice>(`/api/v2/ap/invoices/${encodeURIComponent(invoiceId)}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+}
+
+export type ApInvoiceLineDraft = {
+  lineType: ApLineType;
+  bookingId?: string | null;
+  voucherRef?: string | null;
+  description: string;
+  amountMinor: number;
+  sortOrder?: number;
+};
+
+export async function upsertSupplierInvoiceLines(
+  invoiceId: string,
+  baseInvoiceRevision: number,
+  lines: ApInvoiceLineDraft[],
+): Promise<ApSupplierInvoice> {
+  return request<ApSupplierInvoice>(`/api/v2/ap/invoices/${encodeURIComponent(invoiceId)}/lines`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ baseInvoiceRevision, lines }),
+  });
+}
+
+export async function matchSupplierInvoiceLine(
+  invoiceId: string,
+  lineId: number,
+  input: {
+    baseInvoiceRevision: number;
+    mode: "auto" | "manual";
+    bookingLineId?: string | null;
+    voucherRef?: string | null;
+    toleranceBps?: number;
+  },
+): Promise<ApSupplierInvoice> {
+  return request<ApSupplierInvoice>(
+    `/api/v2/ap/invoices/${encodeURIComponent(invoiceId)}/lines/${encodeURIComponent(String(lineId))}/match`,
+    { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) },
+  );
+}
+
+export async function actOnSupplierInvoiceLine(
+  invoiceId: string,
+  lineId: number,
+  action: "unmatch" | "waive" | "dispute",
+  input: { baseInvoiceRevision: number; note?: string | null },
+): Promise<ApSupplierInvoice> {
+  return request<ApSupplierInvoice>(
+    `/api/v2/ap/invoices/${encodeURIComponent(invoiceId)}/lines/${encodeURIComponent(String(lineId))}/${action}`,
+    { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input) },
+  );
+}
+
+export async function approveSupplierInvoice(invoiceId: string, baseInvoiceRevision: number): Promise<ApSupplierInvoice> {
+  return request<ApSupplierInvoice>(`/api/v2/ap/invoices/${encodeURIComponent(invoiceId)}/approve`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ baseInvoiceRevision }),
+  });
+}
+
+export async function recordApPayment(
+  input: {
+    supplierId: string;
+    paidAt: string;
+    currency: string;
+    amountMinor: number;
+    fxRatePpm?: number | null;
+    method: ApPaymentMethod;
+    reference?: string | null;
+    notes?: string | null;
+    allocations: Array<{ invoiceId: string; amountMinor: number }>;
+  },
+  idempotencyKey: string,
+): Promise<ApPayment> {
+  return request<ApPayment>("/api/v2/ap/payments", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Idempotency-Key": idempotencyKey },
+    body: JSON.stringify(input),
+  });
+}
+
 
 
