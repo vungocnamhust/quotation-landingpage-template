@@ -1260,16 +1260,19 @@
        purpose with plain fill content that renders identically everywhere. */
     .luxury-marker-label {
       position: absolute;
-      left: 38px;
-      top: 3px;
+      left: 32px;
+      top: -12px;
       font-family: var(--serif);
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 600;
       color: var(--text-main);
       white-space: nowrap;
-      background: var(--bg-main);
-      padding: 1px 6px;
+      background: var(--bg-main, #ffffff);
+      padding: 2px 7px;
       border-radius: 3px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+      pointer-events: none;
     }
 
     .timeline {
@@ -2950,39 +2953,14 @@
             });
           }
 
-          // Cluster markers that end up rendering too close together on
-          // screen (e.g. Hanoi/Halong Bay, Da Nang/Hoi An) once the zoom
-          // level from fitBounds is known -- exact-coordinate matching
-          // alone misses destinations that are merely nearby, not
-          // identical, whose circles/labels then collide or hide each
-          // other. Clustering happens in screen pixels, after the view is
-          // set, so it reflects what will actually overlap on the page.
-          const MARKER_PROXIMITY_PX = 70;
-          const markerClusters = [];
-          mapSegments.forEach(segment => {
-            const pt = map.latLngToContainerPoint(segment.displayCoords);
-            const cluster = markerClusters.find(c => c.some(s => pt.distanceTo(s._pt) < MARKER_PROXIMITY_PX));
-            if (cluster) {
-              cluster.push(Object.assign(segment, { _pt: pt }));
-            } else {
-              markerClusters.push([Object.assign(segment, { _pt: pt })]);
-            }
-          });
-          markerClusters.forEach(cluster => {
-            cluster.forEach((segment, occurrenceIdx) => {
-              segment.offsetPattern = getOffsetPattern(occurrenceIdx);
-            });
-          });
-
           // Draw markers
           const timelineContainer = document.getElementById('map-timeline');
           if (timelineContainer) timelineContainer.innerHTML = '';
           mapSegments.forEach((dest, idx) => {
             const dayRangeStr = dest.daysLabel || '';
             const explicitDuration = (dest.mapSegmentDuration || '').trim();
-            const off = dest.offsetPattern || [0, 0];
             const markerHtml = `
-          <div class="luxury-marker-wrapper" id="marker-wrapper-${idx}" style="transform: translate(${off[0]}px, ${off[1]}px);">
+          <div class="luxury-marker-wrapper" id="marker-wrapper-${idx}">
             <div class="luxury-marker">${idx + 1}</div>
             <div class="luxury-marker-label">${dest.displayName}</div>
           </div>

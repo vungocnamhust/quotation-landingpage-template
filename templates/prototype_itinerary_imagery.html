@@ -1277,33 +1277,14 @@
         border-width: 1.5px;
       }
 
-          .luxury-marker-label {
-      position: absolute;
-      left: 38px;
-      top: 3px;
-      font-family: var(--serif);
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--text-main);
-      white-space: nowrap;
-      text-shadow: 0 0 4px var(--bg-main), 0 0 4px var(--bg-main), 0 0 4px var(--bg-main), 0 0 4px #ffffff;
-    }
-
-    .luxury-marker-label.label-left {
-      left: auto !important;
-      right: 38px !important;
-      text-align: right !important;
-    }
-
-    .luxury-marker-label.label-bottom-right {
-      left: 38px !important;
-      top: 8px !important;
-    }
-
-    .luxury-marker-label.label-top-right {
-      left: 38px !important;
-      top: -8px !important;
-    }
+      .luxury-marker-label {
+        font-size: 11px;
+        left: 26px;
+        top: -10px;
+        max-width: 110px;
+        white-space: nowrap;
+        line-height: 1.15;
+      }
     }
 
     .map-section {
@@ -1468,49 +1449,26 @@
       z-index: 10;
     }
 
-        .luxury-marker-label {
+    .luxury-marker-label {
       position: absolute;
-      left: 38px;
-      top: 3px;
+      left: 32px;
+      top: -12px;
       font-family: var(--serif);
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 600;
       color: var(--text-main);
       white-space: nowrap;
-      text-shadow: 0 0 4px var(--bg-main), 0 0 4px var(--bg-main), 0 0 4px var(--bg-main), 0 0 4px #ffffff;
-    }
-
-    .luxury-marker-label.label-left {
-      left: auto !important;
-      right: 38px !important;
-      text-align: right !important;
-    }
-
-    .luxury-marker-label.label-bottom-right {
-      left: 38px !important;
-      top: 8px !important;
-    }
-
-    .luxury-marker-label.label-top-right {
-      left: 38px !important;
-      top: -8px !important;
+      background: var(--bg-main, #ffffff);
+      padding: 1px 7px;
+      border-radius: 3px;
+      border: 1px solid var(--line);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      pointer-events: none;
+      transition: color 0.3s;
+      z-index: 5;
     }
 
     .luxury-marker.active+.luxury-marker-label {
-    .luxury-marker-label.label-left {
-      left: auto !important;
-      right: 36px !important;
-      text-align: right !important;
-    }
-    .luxury-marker-label.label-bottom-right {
-      left: 36px !important;
-      top: 10px !important;
-    }
-    .luxury-marker-label.label-top-right {
-      left: 36px !important;
-      top: -10px !important;
-    }
-
       color: var(--accent);
     }
 
@@ -2909,6 +2867,14 @@
     }
 
     @media (max-width: 768px) {
+      .luxury-marker-label {
+        font-size: 11px;
+        left: 26px;
+        top: -10px;
+        max-width: 110px;
+        white-space: nowrap;
+        line-height: 1.15;
+      }
       .container {
         width: min(1180px, 88%);
       }
@@ -6861,7 +6827,7 @@
           popupOffset = [0, -25];
         } else {
           html = `
-              <div class="luxury-marker-wrapper" id="marker-wrapper-${idx}" style="transform: translate(${off[0]}px, ${off[1]}px);">
+              <div class="luxury-marker-wrapper" id="marker-wrapper-${idx}">
                 <div class="luxury-marker">${idx + 1}</div>
                 <div class="luxury-marker-label">${formatMixedContent(dest.displayName)}</div>
               </div>
