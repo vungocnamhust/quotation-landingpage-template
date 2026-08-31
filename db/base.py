@@ -6,4 +6,4 @@ class Base(DeclarativeBase):
 
 
 # Import models so Base.metadata is fully populated for Alembic.
-from db.models import booking, brand, costing, media, product, publication, quotation, quote_request, rate, rooming_heuristic, supplier, travel_style  # noqa: E402,F401
+from db.models import ai_run, booking, brand, costing, ingestion, media, product, publication, quotation, quote_request, rate, rooming_heuristic, supplier, travel_style  # noqa: E402,F401

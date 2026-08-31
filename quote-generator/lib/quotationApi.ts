@@ -1304,5 +1304,211 @@ export async function updateDestinationStatus(id: string, isActive: boolean): Pr
   });
 }
 
+// ---------------------------------------------------------------------------------------------
+// Catalog Ingestion (15.8) — Interactive Ingestion Co-Pilot
+
+export type IngestionBatchStatus =
+  | "draft"
+  | "needs_clarification"
+  | "ready"
+  | "committed"
+  | "rejected"
+  | "archived";
+
+export type IngestionSourceChannel = "email" | "zalo" | "whatsapp" | "portal" | "in_person" | "internal";
+export type IngestionSourceDocumentType =
+  | "rate_sheet"
+  | "contract"
+  | "amendment"
+  | "quotation"
+  | "promotion"
+  | "manual_note";
+
+export type IngestionClarification = {
+  id: string;
+  question: string;
+  blocking: boolean;
+  source_quote?: string | null;
+  options?: string[] | null;
+  target_path: string;
+};
+
+export type IngestionResolutionAction = "create" | "update" | "supersede_rate" | "skip_duplicate" | "needs_input";
+
+export type IngestionResolutionEntry = {
+  entity_ref: string;
+  entity_type: "supplier" | "product" | "rate";
+  action: IngestionResolutionAction;
+  matched_id?: string | null;
+  evidence: string;
+  clarifications: IngestionClarification[];
+};
+
+export type IngestionResolution = {
+  entries: IngestionResolutionEntry[];
+  clarifications: IngestionClarification[];
+};
+
+export type IngestionUnresolvedItem = {
+  description: string;
+  reason?: string | null;
+  source_quote?: string | null;
+  target_path?: string | null;
+};
+
+export type IngestionPriceLineCandidate = {
+  price_for_hint?: string | null;
+  occupancy_hint?: string | null;
+  tier_pax_text?: string | null;
+  amount_text: string;
+  currency_text?: string | null;
+  source_quote: string;
+};
+
+export type IngestionRateGroupCandidate = {
+  product_title_text: string;
+  validity_text: string;
+  rate_basis_hint?: string | null;
+  price_lines: IngestionPriceLineCandidate[];
+  supplements: unknown[];
+  blackout_text?: string | null;
+  policy_text?: string | null;
+  source_quote: string;
+};
+
+export type IngestionProductCandidate = {
+  title_text: string;
+  category_hint?: string | null;
+  subcategory_hint?: string | null;
+  unit_hint?: string | null;
+  time_basis_hint?: string | null;
+  destination_text?: string | null;
+  source_quote: string;
+};
+
+export type IngestionSupplierCandidate = {
+  name_text: string;
+  type_hint?: string | null;
+  destination_text?: string | null;
+  contact_text?: string | null;
+  source_quote: string;
+};
+
+export type IngestionPayload = {
+  supplier: IngestionSupplierCandidate | null;
+  products: IngestionProductCandidate[];
+  rate_groups: IngestionRateGroupCandidate[];
+  unresolved: IngestionUnresolvedItem[];
+  covers_multiple_suppliers: boolean;
+  doc_meta: Record<string, unknown>;
+};
+
+export type IngestionBatch = {
+  id: string;
+  status: IngestionBatchStatus;
+  raw_text: string;
+  source_channel: string;
+  source_document_type: string;
+  payload: IngestionPayload;
+  parsed: Record<string, unknown>;
+  resolution: IngestionResolution | null;
+  conversation: Array<Record<string, unknown>>;
+  operator_edits: Record<string, unknown>;
+  commit_result: Record<string, unknown> | null;
+  error: Record<string, unknown> | null;
+  batch_revision: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type IngestionBatchSummary = {
+  id: string;
+  status: IngestionBatchStatus;
+  source_channel: string;
+  source_document_type: string;
+  unresolved_count: number;
+  products_count: number;
+  rate_groups_count: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type IngestionBatchListResponse = { items: IngestionBatchSummary[]; total: number };
+
+function newIngestionIdempotencyKey(): string {
+  return typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `idem_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+export async function createIngestionBatch(
+  input: { rawText: string; sourceChannel: IngestionSourceChannel; sourceDocumentType: IngestionSourceDocumentType },
+  idempotencyKey: string = newIngestionIdempotencyKey(),
+): Promise<IngestionBatch> {
+  return request<IngestionBatch>("/api/v2/ingestion-batches", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Idempotency-Key": idempotencyKey },
+    body: JSON.stringify(input),
+  });
+}
+
+export async function listIngestionBatches(status?: IngestionBatchStatus): Promise<IngestionBatchListResponse> {
+  const query = status ? `?status=${encodeURIComponent(status)}` : "";
+  return request<IngestionBatchListResponse>(`/api/v2/ingestion-batches${query}`);
+}
+
+export async function getIngestionBatch(id: string): Promise<IngestionBatch> {
+  return request<IngestionBatch>(`/api/v2/ingestion-batches/${encodeURIComponent(id)}`);
+}
+
+export async function answerIngestionBatchClarifications(
+  id: string,
+  answers: Record<string, unknown>,
+  baseBatchRevision: number,
+): Promise<IngestionBatch> {
+  return request<IngestionBatch>(`/api/v2/ingestion-batches/${encodeURIComponent(id)}/answers`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ answers, baseBatchRevision }),
+  });
+}
+
+export async function editIngestionBatch(
+  id: string,
+  edits: Record<string, unknown>,
+  baseBatchRevision: number,
+): Promise<IngestionBatch> {
+  return request<IngestionBatch>(`/api/v2/ingestion-batches/${encodeURIComponent(id)}/edits`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ edits, baseBatchRevision }),
+  });
+}
+
+export async function commitIngestionBatch(
+  id: string,
+  baseBatchRevision: number,
+  acknowledgeUnresolved = false,
+  idempotencyKey: string = newIngestionIdempotencyKey(),
+): Promise<IngestionBatch> {
+  return request<IngestionBatch>(`/api/v2/ingestion-batches/${encodeURIComponent(id)}/commit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Idempotency-Key": idempotencyKey },
+    body: JSON.stringify({ baseBatchRevision, acknowledgeUnresolved }),
+  });
+}
+
+export async function rejectIngestionBatch(
+  id: string,
+  baseBatchRevision: number,
+  reason?: string,
+): Promise<IngestionBatch> {
+  return request<IngestionBatch>(`/api/v2/ingestion-batches/${encodeURIComponent(id)}/reject`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ baseBatchRevision, reason }),
+  });
+}
+
 
 

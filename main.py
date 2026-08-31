@@ -115,6 +115,7 @@ from routers.v2.partners import router as partners_router
 from routers.v2.suppliers import router as suppliers_router
 from routers.v2.products import router as products_router
 from routers.v2.rates import router as rates_router
+from routers.v2.ingestion import router as ingestion_router
 from routers.v2.costing import router as costing_router
 from routers.v2.bookings import router as bookings_router
 from routers.v2.quote_requests import router as quote_requests_router
@@ -227,6 +228,7 @@ app.include_router(partners_router)
 app.include_router(suppliers_router)
 app.include_router(products_router)
 app.include_router(rates_router)
+app.include_router(ingestion_router)
 app.include_router(costing_router)
 app.include_router(bookings_router)
 app.include_router(quote_requests_router)

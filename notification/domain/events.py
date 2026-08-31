@@ -44,6 +44,9 @@ class EventType(str, Enum):
     CATALOG_RATE_ACTIVATED = "catalog.rate.activated"
     CATALOG_RATE_SUPERSEDED = "catalog.rate.superseded"
 
+    # Catalog ingestion events (15.8)
+    CATALOG_INGESTION_BATCH_COMMITTED = "catalog.ingestion_batch.committed"
+
     # Costing events (15.5)
     COSTING_APPLIED = "costing.applied"
 

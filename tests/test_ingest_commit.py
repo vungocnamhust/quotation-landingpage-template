@@ -1,0 +1,147 @@
+import os
+import tempfile
+import unittest
+
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
+from core.kernel import ActorRef
+from db.base import Base
+from db.models.destination import DestinationAlias, DestinationCatalog
+from repositories.ingestion_repository import IngestionRepository
+from repositories.product_repository import ProductRepository
+from repositories.rate_repository import RateRepository
+from repositories.supplier_repository import SupplierRepository
+from schemas.catalog_ingest import CatalogIngestPayload, ProductCandidate, RateGroupCandidate, PriceLineCandidate, SupplierCandidate
+from services.ingestion.commit_service import CommitError, commit_batch
+from services.ingestion.extraction_service import parse_payload
+
+ACTOR = ActorRef(actor_id="operator@capella.travel", actor_type="staff")
+
+
+def _ready_payload() -> CatalogIngestPayload:
+    return CatalogIngestPayload(
+        supplier=SupplierCandidate(name_text="Brand New Supplier Co", source_quote="Brand New Supplier Co"),
+        products=[
+            ProductCandidate(
+                title_text="Riverside Villa — Garden View",
+                destination_text="Hanoi",
+                category_hint="accommodation",
+                source_quote="Riverside Villa Garden View",
+            )
+        ],
+        rate_groups=[
+            RateGroupCandidate(
+                product_title_text="Riverside Villa — Garden View",
+                validity_text="01/01/2026 - 31/03/2026",
+                source_quote="01/01/2026 - 31/03/2026, adult 1.500.000 VND",
+                price_lines=[
+                    PriceLineCandidate(
+                        price_for_hint="adult",
+                        amount_text="1.500.000",
+                        currency_text="VND",
+                        source_quote="adult 1.500.000 VND",
+                    )
+                ],
+            )
+        ],
+    )
+
+
+def _resolution_entries() -> list[dict]:
+    return [
+        {"entity_ref": "/supplier", "entity_type": "supplier", "action": "create", "matched_id": None, "evidence": "new supplier", "clarifications": []},
+        {"entity_ref": "/products/0", "entity_type": "product", "action": "create", "matched_id": None, "evidence": "new product", "clarifications": []},
+        {"entity_ref": "/rate_groups/0", "entity_type": "rate", "action": "create", "matched_id": None, "evidence": "new rate", "clarifications": []},
+    ]
+
+
+class IngestCommitTests(unittest.IsolatedAsyncioTestCase):
+    async def asyncSetUp(self):
+        self.database_file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
+        self.database_file.close()
+        self.engine = create_async_engine(f"sqlite+aiosqlite:///{self.database_file.name}")
+        self.session_factory = async_sessionmaker(self.engine, class_=AsyncSession, expire_on_commit=False)
+        async with self.engine.begin() as connection:
+            await connection.run_sync(Base.metadata.create_all)
+        async with self.session_factory() as session:
+            session.add(DestinationCatalog(id="dst_hanoi", canonical_name="Hanoi", slug="hanoi"))
+            session.add(DestinationAlias(id="dal_hanoi", destination_id="dst_hanoi", normalized_alias="hanoi"))
+            await session.commit()
+        self.session = self.session_factory()
+
+    async def asyncTearDown(self):
+        await self.session.close()
+        await self.engine.dispose()
+        os.unlink(self.database_file.name)
+
+    async def _make_ready_batch(self, *, payload=None, entries=None):
+        payload = payload or _ready_payload()
+        reparsed, parsed = parse_payload(payload)
+        repository = IngestionRepository(self.session)
+        batch = await repository.insert(
+            batch_id="igb_test1",
+            values={
+                "status": "ready",
+                "raw_text": "irrelevant for commit test",
+                "source_channel": "email",
+                "source_document_type": "rate_sheet",
+                "payload_json": {"payload": reparsed.model_dump(mode="json"), "parsed": parsed},
+                "resolution_json": {"entries": entries if entries is not None else _resolution_entries(), "clarifications": []},
+                "conversation_json": [],
+                "operator_edits_json": {},
+                "idempotency_key": "idem-1",
+                "created_by": ACTOR.serialize(),
+                "updated_by": ACTOR.serialize(),
+            },
+        )
+        await self.session.commit()
+        return batch
+
+    async def test_commit_creates_supplier_product_rate_and_rate_source(self):
+        batch = await self._make_ready_batch()
+        committed = await commit_batch(self.session, batch=batch, actor=ACTOR, expected_revision=0, idempotency_key="commit-1")
+        await self.session.commit()
+
+        assert committed.status == "committed"
+        result = committed.commit_result_json
+        supplier = await SupplierRepository(self.session).get_by_id(result["supplier_id"])
+        assert supplier is not None
+        assert supplier.created_by == ACTOR.serialize()
+
+        assert len(result["product_ids"]) == 1
+        product = await ProductRepository(self.session).get_by_id(result["product_ids"][0])
+        assert product is not None
+        assert product.supplier_id == result["supplier_id"]
+
+        assert len(result["rate_ids"]) == 1
+        rate = await RateRepository(self.session).get_by_id(result["rate_ids"][0])
+        assert rate is not None
+        assert rate.lifecycle_status == "active"
+        assert rate.lines[0].amount_minor == 1_500_000
+        assert rate.source_id == result["rate_source_id"]
+
+    async def test_commit_blocked_when_unresolved_items_not_acknowledged(self):
+        payload = _ready_payload()
+        payload.rate_groups[0].price_lines[0] = PriceLineCandidate(
+            price_for_hint="adult", amount_text="liên hệ", source_quote="liên hệ"
+        )
+        batch = await self._make_ready_batch(payload=payload)
+        with self.assertRaises(CommitError):
+            await commit_batch(self.session, batch=batch, actor=ACTOR, expected_revision=0, idempotency_key="commit-2")
+
+    async def test_commit_blocked_when_needs_input_entries_remain(self):
+        entries = _resolution_entries()
+        entries[1]["action"] = "needs_input"
+        batch = await self._make_ready_batch(entries=entries)
+        with self.assertRaises(CommitError):
+            await commit_batch(self.session, batch=batch, actor=ACTOR, expected_revision=0, idempotency_key="commit-3")
+
+    async def test_commit_is_idempotent_on_already_committed_batch(self):
+        batch = await self._make_ready_batch()
+        first = await commit_batch(self.session, batch=batch, actor=ACTOR, expected_revision=0, idempotency_key="commit-4")
+        await self.session.commit()
+        second = await commit_batch(self.session, batch=first, actor=ACTOR, expected_revision=first.batch_revision, idempotency_key="commit-4")
+        assert second.commit_result_json == first.commit_result_json
+
+        products, total = await ProductRepository(self.session).list(active_only=None)
+        assert total == 1  # replay must not create a second product

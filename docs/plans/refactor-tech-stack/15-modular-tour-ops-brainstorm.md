@@ -246,19 +246,23 @@ lại là monolith phân lớp. Cho agency nhỏ:
 Thiết kế 15.7/15.8 đã viết xong; **implement chỉ bắt đầu khi đủ các điều kiện sau** — đây là
 bài học sống còn từ plan 14 (xây AI trước flow thủ công = rủi ro 🔴 cao nhất):
 
-**Bắt đầu 15.8 (Ingestion Co-Pilot — làm TRƯỚC 15.7):**
-1. 15.1–15.3 chạy production, sale/operator đã nhập tay catalog một thời gian — đủ để biết
-   pattern tariff thật (định dạng email NCC hay gặp, ca mơ hồ điển hình) làm golden test.
-2. Có backlog bảng giá thật đang chờ nhập (≥ vài chục tariff) — Co-Pilot phải có việc thật để
-   nghiệm thu, không demo bằng dữ liệu bịa.
-3. 15.4 đã đóng API (không còn thay đổi schema costing) — vì 15.7 kế tiếp phụ thuộc nó.
+**Bắt đầu 15.8 (Ingestion Co-Pilot — làm TRƯỚC 15.7):** ✅ **ĐÃ CHỐT KHỞI ĐỘNG 2026-08-30
+theo phương án đường tắt** (audit code: 15.1–15.6 implement đủ, contract suites xanh, 15.4 đã
+harden qua 16.3 — gate kỹ thuật đạt). Gate dữ liệu được hạ có chủ đích:
+1. ~~Backlog vài chục tariff~~ → chỉ cần **~10 email tariff thật** làm hạt giống corpus
+   (operator gom từ hộp thư) — vì chính 15.8 là công cụ tạo backlog.
+2. Khối lượng dữ liệu test đạt bằng **corpus ~30 ca thật ẩn danh hóa + seeding qua chính
+   pipeline 15.8** (xem 15.8 §4) — không seed bằng INSERT tay; chạy lại corpus →
+   skip_duplicate là bài nghiệm thu chống trùng miễn phí.
+3. 15.8 bootstrap luôn AI Platform Layer (factory/guardrails/ai_runs/toolset B); chiều nghiệm
+   thu đảo: 15.7 sau này phải dùng platform mà không sửa file nào.
 
 **Bắt đầu 15.7 (AI Service Drafter — sau 15.8):**
 1. 15.4–15.5 chạy production ổn định: sale đã lên dự toán tay qua cả 2 luồng (Costing-First /
    Brochure-First) đủ nhiều để biết "chọn dịch vụ đúng" nghĩa là gì trong thực tế — chuẩn để
    đo AI là hành vi sale thật, không phải phỏng đoán.
-2. Catalog đủ giàu nhờ 15.8 (đa số destination chính có ≥ vài product/category phổ biến kèm
-   rate active) — nếu không, Drafter chỉ trả `rate_missing` và không đánh giá được.
+2. Catalog đủ giàu nhờ 15.8 — cụ thể hóa: exit gate #2 của 15.8 đạt (≥25 entries có rate
+   active sau seeding corpus) — nếu không, Drafter chỉ trả `rate_missing` và không đánh giá được.
 3. Có tập request văn xuôi thật (≥20–30 ca đa dạng archetype) làm bộ nghiệm thu TripAnalyst.
 
 **Bắt đầu 15.9 Finance (M7):**

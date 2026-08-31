@@ -1,0 +1,101 @@
+{
+  "corpus_version": "1",
+  "note": "SYNTHETIC placeholder corpus — see README.md. Not real supplier data.",
+  "cases": [
+    {
+      "file": "hotel_seasonal_01.txt",
+      "category_focus": "accommodation",
+      "expected": {
+        "supplier_present": true,
+        "products_min": 1,
+        "rate_groups_min": 1,
+        "unresolved_min": 0,
+        "requires_clarification": false
+      },
+      "scripted_answers": {}
+    },
+    {
+      "file": "hotel_seasonal_02.txt",
+      "category_focus": "accommodation",
+      "expected": {
+        "supplier_present": true,
+        "products_min": 1,
+        "rate_groups_min": 1,
+        "unresolved_min": 0,
+        "requires_clarification": false
+      },
+      "scripted_answers": {}
+    },
+    {
+      "file": "transportation_01.txt",
+      "category_focus": "transportation",
+      "expected": {
+        "supplier_present": true,
+        "products_min": 1,
+        "rate_groups_min": 1,
+        "unresolved_min": 0,
+        "requires_clarification": false
+      },
+      "scripted_answers": {}
+    },
+    {
+      "file": "guide_01.txt",
+      "category_focus": "guide",
+      "expected": {
+        "supplier_present": true,
+        "products_min": 1,
+        "rate_groups_min": 1,
+        "unresolved_min": 0,
+        "requires_clarification": false
+      },
+      "scripted_answers": {}
+    },
+    {
+      "file": "ticket_01.txt",
+      "category_focus": "ticket",
+      "expected": {
+        "supplier_present": true,
+        "products_min": 1,
+        "rate_groups_min": 1,
+        "unresolved_min": 0,
+        "requires_clarification": false
+      },
+      "scripted_answers": {}
+    },
+    {
+      "file": "visa_01.txt",
+      "category_focus": "visa",
+      "expected": {
+        "supplier_present": true,
+        "products_min": 1,
+        "rate_groups_min": 1,
+        "unresolved_min": 0,
+        "requires_clarification": false
+      },
+      "scripted_answers": {}
+    },
+    {
+      "file": "trap_ambiguous_price_01.txt",
+      "category_focus": "trap",
+      "expected": {
+        "supplier_present": true,
+        "products_min": 1,
+        "unresolved_min": 1,
+        "requires_clarification": true
+      },
+      "scripted_answers": {
+        "validity_text": "15/12/2026",
+        "amount_text": "1.200.000"
+      }
+    },
+    {
+      "file": "trap_two_suppliers_01.txt",
+      "category_focus": "trap",
+      "expected": {
+        "covers_multiple_suppliers": true,
+        "requires_clarification": true
+      },
+      "scripted_answers": {}
+    }
+  ]
+}

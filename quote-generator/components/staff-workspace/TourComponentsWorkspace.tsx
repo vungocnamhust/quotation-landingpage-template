@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { MapPin, Plus, Truck } from "lucide-react";
+import { MapPin, Plus, Sparkles, Truck } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
 import { DataViewContainer } from "../ui/data-view/DataViewContainer.tsx";
+import { WorkspaceNavigationLink } from "./WorkspaceNavigation.tsx";
 import {
   updateProductStatus,
   updateSupplierStatus,
@@ -200,31 +201,43 @@ export default function TourComponentsWorkspace() {
 
   return (
     <main className="flex flex-col gap-6">
-      <header>
-        <p
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p
+            className={cn(
+              getTypographyClassName("overline"),
+              "text-[var(--color-accent)]",
+            )}
+          >
+            Commercial operations
+          </p>
+          <h1
+            className={cn(
+              getTypographyClassName("pageTitle"),
+              "mt-1 text-[var(--color-on-surface)]",
+            )}
+          >
+            Product Catalog
+          </h1>
+          <p
+            className={cn(
+              getTypographyClassName("bodyLg"),
+              "mt-1 text-[var(--color-muted)]",
+            )}
+          >
+            {currentCategoryMeta.description}
+          </p>
+        </div>
+        <WorkspaceNavigationLink
+          href="/workspace/catalog-import"
           className={cn(
-            getTypographyClassName("overline"),
-            "text-[var(--color-accent)]",
+            getTypographyClassName("buttonPrimary"),
+            "flex items-center gap-2 rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-accent-wash)] px-5 py-3 text-[var(--color-accent)] shadow-xs transition-all hover:bg-[var(--color-surface-hover)]",
           )}
         >
-          Commercial operations
-        </p>
-        <h1
-          className={cn(
-            getTypographyClassName("pageTitle"),
-            "mt-1 text-[var(--color-on-surface)]",
-          )}
-        >
-          Product Catalog
-        </h1>
-        <p
-          className={cn(
-            getTypographyClassName("bodyLg"),
-            "mt-1 text-[var(--color-muted)]",
-          )}
-        >
-          {currentCategoryMeta.description}
-        </p>
+          <Sparkles size={16} aria-hidden="true" />
+          <span>Import từ văn bản</span>
+        </WorkspaceNavigationLink>
       </header>
 
       <div
