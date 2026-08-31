@@ -34,6 +34,8 @@ class RunBudget:
     max_retries: int = 2
     calls: int = 0
     retries: int = 0
+    tokens_in: int = 0
+    tokens_out: int = 0
 
     def has_budget(self) -> bool:
         """Non-raising check — tools should call this BEFORE doing work and degrade
@@ -53,8 +55,15 @@ class RunBudget:
     def record_retry(self) -> None:
         self.retries += 1
 
+    def record_usage(self, usage: object) -> None:
+        """Accumulate token usage from a ``pydantic_ai`` ``AgentRunResult.usage`` (a
+        ``RunUsage`` with ``input_tokens``/``output_tokens``). Duck-typed rather than
+        importing the pydantic_ai type here to keep this module dependency-light."""
+        self.tokens_in += getattr(usage, "input_tokens", 0) or 0
+        self.tokens_out += getattr(usage, "output_tokens", 0) or 0
+
     def stats(self) -> dict[str, int]:
-        return {"calls": self.calls, "retries": self.retries}
+        return {"calls": self.calls, "retries": self.retries, "tokens_in": self.tokens_in, "tokens_out": self.tokens_out}
 
 
 @dataclass

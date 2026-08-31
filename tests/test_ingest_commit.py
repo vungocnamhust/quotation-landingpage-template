@@ -1,12 +1,16 @@
 import os
 import tempfile
 import unittest
+from datetime import date
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from core.kernel import ActorRef
 from db.base import Base
 from db.models.destination import DestinationAlias, DestinationCatalog
+from db.models.product import Product
+from db.models.rate import Rate, RatePriceLine
+from db.models.supplier import Supplier
 from repositories.ingestion_repository import IngestionRepository
 from repositories.product_repository import ProductRepository
 from repositories.rate_repository import RateRepository
@@ -14,6 +18,8 @@ from repositories.supplier_repository import SupplierRepository
 from schemas.catalog_ingest import CatalogIngestPayload, ProductCandidate, RateGroupCandidate, PriceLineCandidate, SupplierCandidate
 from services.ingestion.commit_service import CommitError, commit_batch
 from services.ingestion.extraction_service import parse_payload
+from services.product_service import normalize_product_title
+from services.supplier_service import normalize_supplier_name
 
 ACTOR = ActorRef(actor_id="operator@capella.travel", actor_type="staff")
 
@@ -145,3 +151,81 @@ class IngestCommitTests(unittest.IsolatedAsyncioTestCase):
 
         products, total = await ProductRepository(self.session).list(active_only=None)
         assert total == 1  # replay must not create a second product
+
+    async def test_commit_supersede_rate_preserves_old_rate_as_superseded(self):
+        """R3 immutability — supersede creates a NEW active rate and marks the old one
+        'superseded', it never mutates the old rate's amounts (15.3 chốt R3)."""
+        title_normalized = normalize_product_title("Riverside Villa — Garden View")
+        name_normalized = normalize_supplier_name("Brand New Supplier Co")
+        self.session.add(
+            Supplier(
+                id="sup_existing",
+                name="Brand New Supplier Co",
+                name_normalized=name_normalized,
+                supplier_type="direct",
+                default_currency="VND",
+            )
+        )
+        self.session.add(
+            Product(
+                id="prd_existing",
+                destination_id="dst_hanoi",
+                category="accommodation",
+                title="Riverside Villa — Garden View",
+                title_normalized=title_normalized,
+                supplier_id="sup_existing",
+                unit="room",
+                time_basis="night",
+            )
+        )
+        self.session.add(
+            Rate(
+                id="rat_existing",
+                product_id="prd_existing",
+                currency="VND",
+                rate_basis="net",
+                valid_from=date(2026, 1, 1),
+                valid_to=date(2026, 2, 28),
+                season_name="Old season",
+                lifecycle_status="active",
+            )
+        )
+        self.session.add(RatePriceLine(rate_id="rat_existing", price_for="adult", occupancy_basis="na", unit="person", amount_minor=1_000_000))
+        await self.session.commit()
+
+        entries = [
+            {"entity_ref": "/supplier", "entity_type": "supplier", "action": "skip_duplicate", "matched_id": "sup_existing", "evidence": "matches existing", "clarifications": []},
+            {"entity_ref": "/products/0", "entity_type": "product", "action": "update", "matched_id": "prd_existing", "evidence": "matches existing", "clarifications": []},
+            {"entity_ref": "/rate_groups/0", "entity_type": "rate", "action": "supersede_rate", "matched_id": "prd_existing", "evidence": "new season overlaps", "clarifications": []},
+        ]
+        batch = await self._make_ready_batch(entries=entries)
+        committed = await commit_batch(self.session, batch=batch, actor=ACTOR, expected_revision=0, idempotency_key="commit-supersede")
+        await self.session.commit()
+
+        new_rate = await RateRepository(self.session).get_by_id(committed.commit_result_json["rate_ids"][0])
+        assert new_rate.lifecycle_status == "active"
+        assert new_rate.lines[0].amount_minor == 1_500_000
+
+        old_rate = await RateRepository(self.session).get_by_id("rat_existing")
+        assert old_rate.lifecycle_status == "superseded"
+        assert old_rate.lines[0].amount_minor == 1_000_000  # untouched, not mutated
+
+    async def test_commit_mid_failure_rolls_back_all_writes(self):
+        """Chốt #7 — commit is one transaction: a failure partway through (here, a price
+        line missing price_for_hint, only caught while building the rate) must leave 0
+        catalog records behind, including the supplier/product already written earlier in
+        the same call."""
+        payload = _ready_payload()
+        payload.rate_groups[0].price_lines[0] = PriceLineCandidate(
+            amount_text="1.500.000", currency_text="VND", source_quote="1.500.000 VND"
+        )  # no price_for_hint -> _price_lines_for raises CommitError
+        batch = await self._make_ready_batch(payload=payload)
+
+        with self.assertRaises(CommitError):
+            await commit_batch(self.session, batch=batch, actor=ACTOR, expected_revision=0, idempotency_key="commit-midfail")
+        await self.session.rollback()
+
+        suppliers, total = await SupplierRepository(self.session).list(active_only=None)
+        assert total == 0, "supplier created earlier in the same failed commit must be rolled back"
+        products, total = await ProductRepository(self.session).list(active_only=None)
+        assert total == 0, "product created earlier in the same failed commit must be rolled back"

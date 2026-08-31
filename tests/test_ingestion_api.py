@@ -36,14 +36,42 @@ CLEAN_PAYLOAD = CatalogIngestPayload(
 )
 
 
-async def _fake_extractor(sanitized_text: str) -> CatalogIngestPayload:
-    return CLEAN_PAYLOAD.model_copy(deep=True)
+class _FakeUsage:
+    input_tokens = 0
+    output_tokens = 0
+
+
+async def _fake_extractor(sanitized_text: str) -> tuple[CatalogIngestPayload, _FakeUsage]:
+    return CLEAN_PAYLOAD.model_copy(deep=True), _FakeUsage()
 
 
 async def _fake_resolver(session, tenant_id, payload):
     entries = [
         ResolutionEntry(entity_ref="/supplier", entity_type="supplier", action="create", evidence="new supplier"),
         ResolutionEntry(entity_ref="/products/0", entity_type="product", action="create", evidence="new product"),
+    ]
+    return ResolutionPlan(entries=entries), AllowlistRecorder(), RunBudget(max_calls=5)
+
+
+async def _fake_resolver_with_clarification(session, tenant_id, payload):
+    from schemas.catalog_ingest import Clarification
+
+    entries = [
+        ResolutionEntry(entity_ref="/supplier", entity_type="supplier", action="create", evidence="new supplier"),
+        ResolutionEntry(
+            entity_ref="/products/0",
+            entity_type="product",
+            action="needs_input",
+            evidence="category_hint is missing",
+            clarifications=[
+                Clarification(
+                    id="product-0-category",
+                    question="What category is this?",
+                    blocking=True,
+                    target_path="/products/0/category_hint",
+                )
+            ],
+        ),
     ]
     return ResolutionPlan(entries=entries), AllowlistRecorder(), RunBudget(max_calls=5)
 
@@ -93,17 +121,6 @@ class IngestionApiTests(unittest.TestCase):
             session.add(DestinationCatalog(id="dst_hanoi", canonical_name="Hanoi", slug="hanoi"))
             session.add(DestinationAlias(id="dal_hanoi", destination_id="dst_hanoi", normalized_alias="hanoi"))
             await session.commit()
-
-    def _create_batch(self, **overrides):
-        payload = {
-            "rawText": "Sunrise Travel Co — Halong Cruise Deluxe Cabin, contact us for rates.",
-            "sourceChannel": "email",
-            "sourceDocumentType": "rate_sheet",
-        }
-        payload.update(overrides)
-        return self.client.post(
-            "/api/v2/ingestion-batches", json=payload, headers={"Idempotency-Key": "test-create-1"}
-        )
 
     def test_create_batch_runs_extractor_and_resolver_round_1(self):
         response = self._create_batch()
@@ -166,3 +183,72 @@ class IngestionApiTests(unittest.TestCase):
                 headers={"Idempotency-Key": "commit-attempt-1", "X-DMC-Email": "editor@capella.travel", "X-DMC-Role": "editor"},
             )
         self.assertEqual(response.status_code, 403)
+
+    def test_commit_missing_idempotency_key_header_returns_422(self):
+        created = self._create_batch()
+        batch_id, revision = created.json()["id"], created.json()["batch_revision"]
+        response = self.client.post(
+            f"/api/v2/ingestion-batches/{batch_id}/commit", json={"baseBatchRevision": revision}
+        )
+        self.assertEqual(response.status_code, 422)
+
+    def test_create_missing_idempotency_key_header_returns_422(self):
+        response = self.client.post(
+            "/api/v2/ingestion-batches",
+            json={"rawText": "text", "sourceChannel": "email", "sourceDocumentType": "rate_sheet"},
+        )
+        self.assertEqual(response.status_code, 422)
+
+    def test_edit_with_stale_revision_returns_409(self):
+        created = self._create_batch()
+        batch_id = created.json()["id"]
+        stale_revision = created.json()["batch_revision"] + 5
+        response = self.client.put(
+            f"/api/v2/ingestion-batches/{batch_id}/edits",
+            json={"edits": {}, "baseBatchRevision": stale_revision},
+        )
+        self.assertEqual(response.status_code, 409)
+
+    def test_answer_with_stale_revision_returns_409(self):
+        with patch.object(resolution_service, "_run_resolver", new=AsyncMock(side_effect=_fake_resolver_with_clarification)):
+            created = self._create_batch(idempotency_key="test-create-clarify")
+        self.assertEqual(created.json()["status"], "needs_clarification", created.text)
+        batch_id = created.json()["id"]
+        stale_revision = created.json()["batch_revision"] + 5
+        response = self.client.post(
+            f"/api/v2/ingestion-batches/{batch_id}/answers",
+            json={"answers": {"product-0-category": "accommodation"}, "baseBatchRevision": stale_revision},
+        )
+        self.assertEqual(response.status_code, 409)
+
+    def test_answer_resolves_blocking_clarification_and_reaches_ready(self):
+        with patch.object(resolution_service, "_run_resolver", new=AsyncMock(side_effect=_fake_resolver_with_clarification)):
+            created = self._create_batch(idempotency_key="test-create-clarify-2")
+        self.assertEqual(created.json()["status"], "needs_clarification", created.text)
+        batch_id, revision = created.json()["id"], created.json()["batch_revision"]
+        response = self.client.post(
+            f"/api/v2/ingestion-batches/{batch_id}/answers",
+            json={"answers": {"product-0-category": "accommodation"}, "baseBatchRevision": revision},
+        )
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertIn(response.json()["status"], {"ready", "draft"})
+
+    def test_rate_limit_returns_429_after_daily_max(self):
+        import routers.v2.ingestion as ingestion_router
+
+        with patch.object(ingestion_router, "MAX_BATCHES_PER_ACTOR_PER_DAY", 1):
+            first = self._create_batch(idempotency_key="rate-limit-1")
+            self.assertEqual(first.status_code, 201, first.text)
+            second = self._create_batch(idempotency_key="rate-limit-2")
+        self.assertEqual(second.status_code, 429)
+
+    def _create_batch(self, idempotency_key="test-create-1", **overrides):
+        payload = {
+            "rawText": "Sunrise Travel Co — Halong Cruise Deluxe Cabin, contact us for rates.",
+            "sourceChannel": "email",
+            "sourceDocumentType": "rate_sheet",
+        }
+        payload.update(overrides)
+        return self.client.post(
+            "/api/v2/ingestion-batches", json=payload, headers={"Idempotency-Key": idempotency_key}
+        )

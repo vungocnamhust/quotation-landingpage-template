@@ -27,7 +27,25 @@ class TestRunBudget:
         budget = RunBudget(max_calls=5)
         budget.record_call()
         budget.record_retry()
-        assert budget.stats() == {"calls": 1, "retries": 1}
+        assert budget.stats() == {"calls": 1, "retries": 1, "tokens_in": 0, "tokens_out": 0}
+
+    def test_record_usage_accumulates_tokens(self):
+        budget = RunBudget(max_calls=5)
+
+        class FakeUsage:
+            input_tokens = 120
+            output_tokens = 45
+
+        budget.record_usage(FakeUsage())
+        budget.record_usage(FakeUsage())
+        assert budget.stats()["tokens_in"] == 240
+        assert budget.stats()["tokens_out"] == 90
+
+    def test_record_usage_tolerates_missing_attributes(self):
+        budget = RunBudget(max_calls=5)
+        budget.record_usage(object())
+        assert budget.stats()["tokens_in"] == 0
+        assert budget.stats()["tokens_out"] == 0
 
 
 class TestAllowlistRecorder:

@@ -329,7 +329,7 @@ async def commit_batch(
     }
 
     await OutboxService(session).emit_event(
-        event_type="catalog.ingestion_batch.committed",
+        event_type="catalog.ingestion.committed",
         aggregate_type="ingestion_batch",
         aggregate_id=batch.id,
         actor_email=actor.actor_id,

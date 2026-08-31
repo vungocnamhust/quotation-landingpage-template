@@ -105,6 +105,7 @@ async def _run_resolver(
         result = await agent.run(payload.model_dump_json(), deps=deps)
     except Exception as exc:  # pragma: no cover - network/provider errors
         raise ResolutionError("The Resolver agent did not return a valid plan.") from exc
+    budget.record_usage(result.usage)
     return result.output, allowlist, budget
 
 

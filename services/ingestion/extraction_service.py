@@ -46,13 +46,14 @@ def _quote_verified(source_quote: str | None, sanitized_text: str) -> bool:
     return bool(source_quote) and source_quote.strip() in sanitized_text
 
 
-async def _run_extractor(sanitized_text: str) -> CatalogIngestPayload:
+async def _run_extractor(sanitized_text: str) -> tuple[CatalogIngestPayload, object]:
+    """Returns (payload, usage) — usage is a pydantic_ai ``RunUsage`` for token accounting."""
     agent = build_agent(AGENT_NAME, output_type=CatalogIngestPayload, prompt_file="ingest_extractor", tools=())
     try:
         result = await agent.run(wrap_with_delimiter(sanitized_text))
     except Exception as exc:  # pragma: no cover - network/provider errors
         raise ExtractionError("The Extractor agent did not return a valid payload.") from exc
-    return result.output
+    return result.output, result.usage
 
 
 def verify_source_quotes(payload: CatalogIngestPayload, sanitized_text: str) -> CatalogIngestPayload:
@@ -228,7 +229,8 @@ async def create_batch(
 
     sanitized = sanitize_ingest_text(raw_text)
     budget = RunBudget(max_calls=0)  # Extractor is 0-tool by architecture
-    extracted = await _run_extractor(sanitized)
+    extracted, usage = await _run_extractor(sanitized)
+    budget.record_usage(usage)
     verified = verify_source_quotes(extracted, sanitized)
     parsed_payload, parsed = parse_payload(verified)
 
