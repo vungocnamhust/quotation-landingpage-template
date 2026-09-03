@@ -99,7 +99,7 @@ async def find_active_rates(
         return _budget_exhausted_notice()
     ctx.deps.budget.record_call()
     rates, _total = await ctx.deps.rate_repository.list_by_product(
-        product_id, tenant_id=ctx.deps.tenant_id, lifecycle="active", limit=50
+        product_id, tenant_id=ctx.deps.tenant_id, lifecycle="active"
     )
     if window_from and window_to:
         try:
@@ -263,7 +263,7 @@ async def resolve_applicable_rates(
         return {"tariff_id": None, "price_line_id": None, "has_conflict": False, "rate_missing": True, "price_band": None}
 
     rate_rows, _total = await ctx.deps.rate_repository.list_by_product(
-        product_id, tenant_id=ctx.deps.tenant_id, lifecycle="active", limit=50
+        product_id, tenant_id=ctx.deps.tenant_id, lifecycle="active"
     )
     candidates = rate_candidates_from_rows(rate_rows)
     selection = select_rates(candidates, local_date, pax)

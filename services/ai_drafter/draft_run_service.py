@@ -120,7 +120,7 @@ async def _resolve_price_serverside(
     """Returns ``(tariff_id, price_line_id, flags)``. Never trusts anything from the LLM —
     re-derives everything from ``rate_selection`` against rates freshly loaded from the DB."""
     rate_rows, _total = await RateRepository(session).list_by_product(
-        product_id, tenant_id=tenant_id, lifecycle="active", limit=50
+        product_id, tenant_id=tenant_id, lifecycle="active"
     )
     candidates = rate_candidates_from_rows(rate_rows)
     selection = select_rates(candidates, service_date, pax_count)

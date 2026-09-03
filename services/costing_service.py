@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.runtime import apply_pricing_option
 from core.kernel import ActorRef, generate_id, validate_amount_minor, validate_currency
 from core.rules.costing_rules import ServiceLineInput, summarize
-from core.rules.rate_selection import pick_price_line, select_rates
+from core.rules.rate_selection import covers_service_date, pick_price_line, select_rates
 from db.models.costing import CostingSheet
 from notification.domain.events import EventType
 from repositories.costing_repository import (
@@ -561,7 +561,10 @@ class CostingService:
         if product is None:
             raise CostingValidationError(f"product '{payload.product_id}' was not found.")
 
-        rate_rows, _total = await self.rate_repository.list_by_product(product.id, lifecycle="active", limit=200)
+        # R2 (Track 2 re-review): load every lifecycle status for this product — a rate
+        # id that exists but was superseded/expired/is still draft must still surface as a
+        # T6 candidates list, not a bare "not found" that gives the caller no way forward.
+        rate_rows, _total = await self.rate_repository.list_by_product(product.id, lifecycle=None)
         rate = next((row for row in rate_rows if row.id == payload.rate_id), None)
         if rate is None:
             raise CostingValidationError(f"rate '{payload.rate_id}' was not found for product '{payload.product_id}'.")
@@ -574,6 +577,13 @@ class CostingService:
              "validity": {"valid_from": candidate.valid_from.isoformat(), "valid_to": candidate.valid_to.isoformat()}}
             for candidate in selection.candidates
         ]
+        if rate.lifecycle_status != "active":
+            raise CostingValidationError(
+                {
+                    "message": f"rate '{rate.id}' is not active (status '{rate.lifecycle_status}').",
+                    "candidates": candidate_payload,
+                },
+            )
         if selected_candidate is None:
             raise CostingValidationError(
                 {"message": f"rate '{rate.id}' does not cover this service date and party size.", "candidates": candidate_payload},
@@ -645,8 +655,15 @@ class CostingService:
 
     async def _authoritative_party_size(self, sheet: CostingSheet) -> int:
         if sheet.quotation_id:
-            facts = await self.quotation_repository.get_version_facts(sheet.quotation_id)
-            customer = (facts.canonical_facts_json or {}).get("customer_facts") if facts else None
+            # R1 (Track 2 re-review): a quotation attached mid-flight (Flow 2, or before
+            # 15.5 ever applied) may not have a ``quotation_version_facts`` row yet — fall
+            # back to the latest raw request snapshot rather than 422ing every catalog pick.
+            version_facts = await self.quotation_repository.get_version_facts(sheet.quotation_id)
+            if version_facts is not None:
+                customer = (version_facts.canonical_facts_json or {}).get("customer_facts")
+            else:
+                request = await self.quotation_repository.get_latest_quotation_request(sheet.quotation_id)
+                customer = (request.request_json or {}).get("customer_facts") if request else None
             adults = customer.get("adults") if isinstance(customer, dict) else None
             children = customer.get("children") if isinstance(customer, dict) else None
         else:
@@ -687,13 +704,26 @@ class CostingService:
         destinations = await self.destination_repository.get_by_ids(
             {product.destination_id for product in products.values() if product.destination_id}
         )
+        # R5 (Track 2 re-review): a snapshot-preserving edit (qty/day/date on a catalog line
+        # whose rate/price_line did not change — see ``same_catalog_snapshot`` above) never
+        # re-validates the frozen ``unit_cost_minor`` against the rate's current validity
+        # (R3 says it shouldn't). Surface that as a non-blocking flag instead of silence.
+        tariffs = await self.rate_repository.get_by_ids({line.tariff_id for line in lines if line.tariff_id})
 
         items: list[ServiceLineResponseSchema] = []
         for line in lines:
             totals = totals_by_line[line.id]
             product_ref = self._product_ref_from_maps(products.get(line.product_id), destinations) if line.product_id else None
+            stale = self._rate_snapshot_is_stale(line, tariffs.get(line.tariff_id) if line.tariff_id else None)
             item = ServiceLineResponseSchema.model_validate(line)
-            item = item.model_copy(update={"cost_minor": totals.cost_minor, "sell_minor": totals.sell_minor, "product_ref": product_ref})
+            item = item.model_copy(
+                update={
+                    "cost_minor": totals.cost_minor,
+                    "sell_minor": totals.sell_minor,
+                    "product_ref": product_ref,
+                    "rate_snapshot_stale": stale,
+                }
+            )
             items.append(item)
 
         summary_schema = self._build_summary_schema(summary)
@@ -754,6 +784,21 @@ class CostingService:
             applications=app_schemas,
             drift=drift,
         )
+
+    @staticmethod
+    def _rate_snapshot_is_stale(line, rate) -> bool:
+        """R5: True when a catalog line's frozen snapshot no longer matches what its
+        source rate would resolve to today — the rate was superseded/expired, or the
+        line's own ``service_date`` now falls outside the rate's validity/blackout.
+        Informational only (R3 forbids re-pricing the line); the UI can badge it."""
+        if rate is None:
+            return False
+        if rate.lifecycle_status != "active":
+            return True
+        if line.service_date is None:
+            return False
+        [candidate] = rate_candidates_from_rows([rate])
+        return not covers_service_date(candidate, line.service_date)
 
     @staticmethod
     def _product_ref_from_maps(product, destinations: dict[str, Any]) -> ProductRefSchema | None:

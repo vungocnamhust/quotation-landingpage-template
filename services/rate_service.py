@@ -66,7 +66,7 @@ class RateService:
         product = await self.product_repository.get_by_id(product_id)
         if product is None:
             return None
-        rates, _total = await self.repository.list_by_product(product_id, lifecycle=lifecycle, on_date=on_date, limit=limit)
+        rates, _total = await self.repository.list_by_product(product_id, lifecycle=lifecycle)
         if on_date is not None:
             date_predicate = is_rate_available_on_date if lifecycle == "active" else covers_service_date
             allowed_ids = {

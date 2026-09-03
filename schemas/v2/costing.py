@@ -176,6 +176,8 @@ class ServiceLineResponseSchema(BaseModel):
     cost_minor: int = 0
     sell_minor: int = 0
     product_ref: ProductRefSchema | None = None
+    # R5 (Track 2 re-review) — informational only; R3 forbids re-pricing a snapshot.
+    rate_snapshot_stale: bool = False
 
 
 class DayTotalSchema(BaseModel):

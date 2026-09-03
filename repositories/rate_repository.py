@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy import select, update
@@ -26,15 +26,33 @@ class RateRepository:
         )
         return result.scalar_one_or_none()
 
+    async def get_by_ids(self, rate_ids: set[str], *, tenant_id: str = DEFAULT_TENANT_ID) -> dict[str, Rate]:
+        if not rate_ids:
+            return {}
+        result = await self.session.scalars(
+            select(Rate)
+            .where(Rate.id.in_(rate_ids), Rate.tenant_id == tenant_id)
+            .options(selectinload(Rate.lines))
+        )
+        return {rate.id: rate for rate in result}
+
     async def list_by_product(
         self,
         product_id: str,
         *,
         tenant_id: str = DEFAULT_TENANT_ID,
         lifecycle: str | None = "active",
-        on_date: date | None = None,
-        limit: int = 100,
     ) -> tuple[list[Rate], int]:
+        """Returns every rate row for the product matching ``lifecycle`` (``None`` = all
+        statuses), unfiltered by date and unlimited.
+
+        R3 (Track 2 re-review): this used to accept ``on_date``/``limit`` kwargs that had
+        no effect on the query — date/blackout filtering moved to the shared pure selection
+        adapter (``services/rate_candidates.py`` + ``core/rules/rate_selection.py``) so that
+        ``total`` agrees with the blackout-filtered set, and every caller needs the full
+        candidate set before that adapter runs. Callers that want a capped/paginated view
+        (e.g. the rates list API) slice the returned list themselves.
+        """
         stmt = (
             select(Rate)
             .where(Rate.product_id == product_id, Rate.tenant_id == tenant_id)
@@ -43,9 +61,6 @@ class RateRepository:
         )
         if lifecycle:
             stmt = stmt.where(Rate.lifecycle_status == lifecycle)
-        # Blackouts are JSON and therefore evaluated by the shared pure
-        # selection adapter in the service. Keeping all product rates here
-        # makes ``total`` agree with the returned blackout-filtered set.
         result = await self.session.scalars(stmt)
         items = list(result.all())
         return items, len(items)

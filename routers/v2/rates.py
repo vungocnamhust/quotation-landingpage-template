@@ -163,3 +163,8 @@ async def supersede_rate(
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(err)) from err
     except RateValidationError as err:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(err)) from err
+    except IntegrityError as err:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Rate payload conflicts with an existing price-line or provenance constraint.",
+        ) from err
