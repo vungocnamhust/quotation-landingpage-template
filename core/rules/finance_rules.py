@@ -26,6 +26,7 @@ MATCH_ISSUES = (
     "DUPLICATE_VOUCHER",
     "PENALTY_CURRENCY_UNCOMPARABLE",
     "FX_MULTI_SHEET_CURRENCY",
+    "SHEET_CURRENCY_UNRESOLVED",
 )
 
 _MATCHED_LIKE = frozenset({"auto_matched", "manual_matched", "waived"})
@@ -57,6 +58,23 @@ def _identity_ppm(ppm: int | None) -> int:
 def to_sheet_minor(amount_minor: int, ppm: int | None) -> int:
     """Convert an amount from its own currency to sheet currency via ``ppm`` (rounded half-up)."""
     return _round_half_up_div(amount_minor * _identity_ppm(ppm), _PPM_IDENTITY)
+
+
+def scale_actual_sheet_minor(
+    *, actual_sheet_minor_total: int, allocation_amount_minor: int, invoice_gross_total_minor: int
+) -> int:
+    """Proportional share of an invoice's matched-lines actual cost (sheet currency) that one
+    payment allocation represents (§12.5 H4).
+
+    Payment allocations in this module are invoice-level, not line-level, so a single
+    allocation has no direct claim on any one matched line's actual cost. This scales the
+    invoice's aggregate actual-cost-in-sheet-currency by the allocation's share of the
+    invoice's ``gross_total_minor`` — the same currency the allocation itself is denominated
+    in (chốt: allocation amounts are invoice-currency, matching the balance/Σ checks below).
+    """
+    if invoice_gross_total_minor == 0:
+        return 0
+    return _round_half_up_div(actual_sheet_minor_total * allocation_amount_minor, invoice_gross_total_minor)
 
 
 def expected_cost_minor_for_booking_line(*, unit_cost_minor_snapshot: int, qty_unit: int, qty_time: int) -> int:
@@ -168,8 +186,20 @@ class AllocationInput:
 def validate_payment_allocations(
     *, payment_amount_minor: int, allocations: list[AllocationInput], invoice_balance_minor: dict[str, int]
 ) -> GateResult:
-    """Σ per payment ≤ payment amount; Σ per invoice ≤ that invoice's remaining balance."""
+    """Positive-payment gate: Σ per payment ≤ payment amount; Σ per invoice ≤ remaining balance;
+    every allocation must itself be positive (§12.3 H2 — a payment's sign governs its
+    allocations' sign; the negative half of this rule lives in ``validate_reversal_allocations``).
+    """
     issues: list[GateIssue] = []
+    for alloc in allocations:
+        if alloc.amount_minor <= 0:
+            issues.append(
+                GateIssue(
+                    field="allocations",
+                    code="invalid_sign",
+                    message=f"Allocation to invoice '{alloc.invoice_id}' must be positive for a positive payment (got {alloc.amount_minor}).",
+                )
+            )
     total = sum(a.amount_minor for a in allocations)
     if total > payment_amount_minor:
         issues.append(
@@ -192,4 +222,70 @@ def validate_payment_allocations(
                     message=f"Allocation of {amount} to invoice '{invoice_id}' exceeds remaining balance {remaining}.",
                 )
             )
+    return GateResult(passed=not any(i.severity == Severity.ERROR for i in issues), issues=issues)
+
+
+def validate_reversal_allocations(
+    *, payment_amount_minor: int, allocations: list[AllocationInput], invoice_paid_minor: dict[str, int]
+) -> GateResult:
+    """Negative-payment (reversal) gate (§12.2 H1, §12.3 H2) — a reversal is not exempt from
+    validation, it has its own mirrored rules instead of the positive-payment ones:
+
+    1. The payment amount itself must be negative (callers route here only for that case).
+    2. Every allocation must itself be negative — same sign as the payment (H2).
+    3. Σ allocations must equal the payment amount exactly (a reversal is a precise undo,
+       never a partial-sum-under-budget like a forward payment can be).
+    4. Each invoice's reversed total may not exceed what was actually paid on it before this
+       reversal (``invoice_paid_minor`` — net Σ prior allocations, i.e. ``get_balances_for_invoices``)
+       — a reversal can undo a payment, never manufacture a negative balance.
+    """
+    issues: list[GateIssue] = []
+    if payment_amount_minor >= 0:
+        issues.append(
+            GateIssue(field="amount_minor", code="not_negative", message="Reversal validation requires a negative payment amount.")
+        )
+        return GateResult(passed=False, issues=issues)
+
+    for alloc in allocations:
+        if alloc.amount_minor >= 0:
+            issues.append(
+                GateIssue(
+                    field="allocations",
+                    code="invalid_sign",
+                    message=f"Reversal allocation to invoice '{alloc.invoice_id}' must be negative (got {alloc.amount_minor}).",
+                )
+            )
+
+    total = sum(a.amount_minor for a in allocations)
+    if total != payment_amount_minor:
+        issues.append(
+            GateIssue(
+                field="allocations",
+                code="sum_mismatch",
+                message=f"Reversal allocations sum to {total} but the payment is {payment_amount_minor}.",
+            )
+        )
+
+    per_invoice: dict[str, int] = {}
+    for alloc in allocations:
+        per_invoice[alloc.invoice_id] = per_invoice.get(alloc.invoice_id, 0) + alloc.amount_minor
+    for invoice_id, amount in per_invoice.items():
+        already_paid = invoice_paid_minor.get(invoice_id, 0)
+        if already_paid <= 0:
+            issues.append(
+                GateIssue(
+                    field="allocations",
+                    code="no_prior_payment",
+                    message=f"Invoice '{invoice_id}' has no prior payment to reverse.",
+                )
+            )
+        elif already_paid + amount < 0:
+            issues.append(
+                GateIssue(
+                    field="allocations",
+                    code="exceeds_paid_amount",
+                    message=f"Reversal of {amount} on invoice '{invoice_id}' exceeds the {already_paid} already paid.",
+                )
+            )
+
     return GateResult(passed=not any(i.severity == Severity.ERROR for i in issues), issues=issues)

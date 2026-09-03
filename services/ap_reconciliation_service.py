@@ -5,11 +5,12 @@ crossings into those aggregates are read-only lookups via ``BookingRepository``
 (existing ``get_line_by_id`` plus the new ``get_line_by_voucher_ref``) and
 ``CostingRepository.get_sheet_by_id`` (for the F2 penalty-currency guard).
 
-Deliberate scope triage for this pass (documented, not silently dropped):
-payment-side ``fx_variance_sheet_minor`` and the multi-sheet-currency guard
-(``FX_MULTI_SHEET_CURRENCY``) are not computed — §1.2 calls this combination
-rare for a boutique DMC (single sheet currency almost always). Price variance
-at match time (the load-bearing part of §1.2) is fully implemented.
+§12.5 (H4) scope note: ``fx_variance_sheet_minor`` is a read-time computation
+over an invoice's matched lines, scaled by each payment allocation's share of
+the invoice total (``finance_rules.scale_actual_sheet_minor`` — allocations
+are invoice-level, not line-level, so this is a proportional assumption, not
+an exact per-line figure). It is never persisted to a new column; it rides in
+the outbox event payload and the payment response only, per spec.
 """
 from __future__ import annotations
 
@@ -25,10 +26,12 @@ from core.rules.finance_rules import (
     derive_invoice_status,
     expected_cost_minor_for_booking_line,
     is_within_tolerance,
+    scale_actual_sheet_minor,
     suggest_penalty_expected,
     to_sheet_minor,
     validate_invoice_transition,
     validate_payment_allocations,
+    validate_reversal_allocations,
 )
 from db.models.booking import BookingLine
 from db.models.supplier_invoice import ApPayment, SupplierInvoice, SupplierInvoiceLine
@@ -148,6 +151,14 @@ class ApReconciliationService:
         try:
             invoice = await self.repository.insert_invoice(invoice_id=generate_id(INVOICE_ID_PREFIX), values=values)
         except SupplierInvoiceSlotTakenError as err:
+            # §12.6 M1 — the loser of an idempotency-key race replays the winner's row instead
+            # of surfacing a conflict (same pattern `record_payment` already used). A collision
+            # on `invoice_number` uniqueness instead of the key falls through to the 409 below,
+            # since a re-fetch by key then finds nothing.
+            if idempotency_key:
+                existing = await self.repository.get_invoice_by_idempotency_key(idempotency_key)
+                if existing is not None:
+                    return await self._to_response(existing)
             raise APConflictError(
                 f"Supplier '{payload.supplier_id}' already has an invoice numbered '{payload.invoice_number}', "
                 "or the idempotency key was just used by a concurrent write.",
@@ -175,7 +186,15 @@ class ApReconciliationService:
             if value is not None:
                 values[field] = value
         if payload.currency is not None:
-            values["currency"] = validate_currency(payload.currency)
+            new_currency = validate_currency(payload.currency)
+            if new_currency != invoice.currency and any(line.match_status != "unmatched" for line in invoice.lines):
+                # §12.6 M3 — currency lock once a line has been matched/waived/disputed,
+                # same philosophy as costing's CS1 (see costing_service._check_revision usage).
+                raise APConflictError(
+                    f"Currency is locked on invoice '{invoice.id}' once a line has been matched.",
+                    current_revision=invoice.invoice_revision,
+                )
+            values["currency"] = new_currency
         if payload.gross_total_minor is not None:
             values["gross_total_minor"] = payload.gross_total_minor
         if payload.tax_minor is not None:
@@ -264,14 +283,21 @@ class ApReconciliationService:
         issues: list[str] = []
         snap_ppm: int | None
         if line.line_type == "penalty":
-            sheet_currency = await self._sheet_currency_for_booking_line(booking_line) or invoice.currency
-            expected_cost_minor, penalty_issue = suggest_penalty_expected(
-                cancel_penalty_minor=booking_line.cancel_penalty_minor,
-                sheet_currency=sheet_currency,
-                invoice_currency=invoice.currency,
-            )
-            if penalty_issue:
-                issues.append(penalty_issue)
+            sheet_currency = await self._sheet_currency_for_booking_line(booking_line)
+            if sheet_currency is None:
+                # §12.4 H3: no silent stand-in for a currency we couldn't resolve — that
+                # previously made `sheet_currency == invoice.currency` trivially true and
+                # disabled the F2 guard by accident. Fail explicit instead.
+                expected_cost_minor = None
+                issues.append("SHEET_CURRENCY_UNRESOLVED")
+            else:
+                expected_cost_minor, penalty_issue = suggest_penalty_expected(
+                    cancel_penalty_minor=booking_line.cancel_penalty_minor,
+                    sheet_currency=sheet_currency,
+                    invoice_currency=invoice.currency,
+                )
+                if penalty_issue:
+                    issues.append(penalty_issue)
             snap_ppm = None  # penalty comparand is already sheet-currency (identity)
         else:
             if invoice.currency != booking_line.cost_currency_snapshot:
@@ -431,9 +457,35 @@ class ApReconciliationService:
                 raise APValidationError(f"Invoice '{invoice_id}' was not found.")
             invoices[invoice_id] = invoice
 
+        # §12.1 C1 — creditors stay strictly separated (Tourplan lesson §0): every allocated
+        # invoice must belong to the supplier the payment itself claims. No exception —
+        # paying on behalf of / netting across suppliers is out of scope for M7a.
+        for invoice_id, invoice in invoices.items():
+            if invoice.supplier_id != payload.supplier_id:
+                raise APValidationError(
+                    f"Invoice '{invoice_id}' belongs to supplier '{invoice.supplier_id}', not the payment's "
+                    f"supplier '{payload.supplier_id}' — cross-supplier settlement is out of scope for M7a."
+                )
+
+        allocation_inputs = [AllocationInput(invoice_id=a.invoice_id, amount_minor=a.amount_minor) for a in payload.allocations]
+
         if payload.amount_minor < 0:
             if not payload.reference or not payload.notes:
                 raise APValidationError("Negative (reversal) payments require both reference and notes (chốt #9).")
+            for invoice_id, invoice in invoices.items():
+                if invoice.status not in ("approved", "paid"):
+                    raise APValidationError(
+                        f"Invoice '{invoice_id}' must be 'approved' or 'paid' to reverse a payment against it."
+                    )
+            # §12.2 H1 — reversal has its own rules but is not exempt from a gate: every
+            # allocation negative, Σ matches the payment exactly, and no invoice's net-paid
+            # total is pulled below zero (`invoice_paid_minor` = net Σ prior allocations).
+            invoice_paid_minor = await self.repository.get_balances_for_invoices(invoice_ids)
+            gate = validate_reversal_allocations(
+                payment_amount_minor=payload.amount_minor, allocations=allocation_inputs, invoice_paid_minor=invoice_paid_minor
+            )
+            if not gate.passed:
+                raise APValidationError("; ".join(issue.message for issue in gate.issues))
         else:
             for invoice_id, invoice in invoices.items():
                 if invoice.status != "approved":
@@ -444,11 +496,52 @@ class ApReconciliationService:
             }
             gate = validate_payment_allocations(
                 payment_amount_minor=payload.amount_minor,
-                allocations=[AllocationInput(invoice_id=a.invoice_id, amount_minor=a.amount_minor) for a in payload.allocations],
+                allocations=allocation_inputs,
                 invoice_balance_minor=invoice_balance_minor,
             )
             if not gate.passed:
                 raise APValidationError("; ".join(issue.message for issue in gate.issues))
+
+        # §12.5 H4 — resolve each allocated invoice's sheet currency (via its matched lines,
+        # read-only) and refuse a payment spanning more than one; then compute the
+        # per-allocation FX variance for the now-guaranteed single sheet currency.
+        sheet_currency_by_invoice: dict[str, str | None] = {}
+        actual_sheet_minor_by_invoice: dict[str, int] = {}
+        for invoice_id, invoice in invoices.items():
+            currency, actual_total = await self._invoice_sheet_currency_and_actual(invoice)
+            sheet_currency_by_invoice[invoice_id] = currency
+            actual_sheet_minor_by_invoice[invoice_id] = actual_total
+
+        resolved_currencies = {c for c in sheet_currency_by_invoice.values() if c is not None}
+        if len(resolved_currencies) > 1:
+            raise APValidationError(
+                {
+                    "code": "FX_MULTI_SHEET_CURRENCY",
+                    "message": "This payment allocates across invoices whose bookings use different sheet "
+                    "currencies — split into separate payments (§1.2).",
+                }
+            )
+
+        fx_variances: list[int | None] = []
+        for alloc in payload.allocations:
+            invoice = invoices[alloc.invoice_id]
+            sheet_currency = sheet_currency_by_invoice.get(alloc.invoice_id)
+            if sheet_currency is None or invoice.gross_total_minor == 0:
+                fx_variances.append(None)
+                continue
+            scaled_actual = scale_actual_sheet_minor(
+                actual_sheet_minor_total=actual_sheet_minor_by_invoice[alloc.invoice_id],
+                allocation_amount_minor=alloc.amount_minor,
+                invoice_gross_total_minor=invoice.gross_total_minor,
+            )
+            decomposition = decompose_variance(
+                expected_cost_minor=None,
+                actual_amount_minor=scaled_actual,
+                snapshot_fx_rate_ppm=None,
+                allocation_amount_minor=alloc.amount_minor,
+                payment_fx_rate_ppm=payload.fx_rate_ppm,
+            )
+            fx_variances.append(decomposition.fx_variance_sheet_minor)
 
         payment_code = await self._next_payment_code()
         payment_values: dict[str, Any] = {
@@ -476,16 +569,23 @@ class ApReconciliationService:
                     return self._to_payment_response(existing)
             raise APConflictError("A concurrent payment write raced this one — reload and retry.", current_revision=0) from err
 
-        if payload.amount_minor >= 0:
+        if payload.amount_minor > 0:
             for invoice_id, invoice in invoices.items():
                 new_balances = await self.repository.get_balances_for_invoices([invoice_id])
                 if new_balances.get(invoice_id, 0) >= invoice.gross_total_minor and invoice.status == "approved":
-                    await self.repository.update_header(
-                        invoice, values={"status": "paid", "updated_by": actor.serialize()}, expected_revision=invoice.invoice_revision
-                    )
+                    try:
+                        await self.repository.update_header(
+                            invoice, values={"status": "paid", "updated_by": actor.serialize()}, expected_revision=invoice.invoice_revision
+                        )
+                    except SupplierInvoiceRevisionRaceError as err:
+                        # §12.6 M2 — nothing has committed yet (this whole call is one
+                        # transaction); surfacing 409 here rolls the payment insert back too,
+                        # so a client retry (same Idempotency-Key) re-runs cleanly from scratch
+                        # rather than leaving a paid-in-full invoice stuck at 'approved'.
+                        raise await self._conflict_from_race(invoice_id) from err
 
-        await self._emit_payment(payment, actor=actor)
-        return self._to_payment_response(payment)
+        await self._emit_payment(payment, actor=actor, fx_variances=fx_variances)
+        return self._to_payment_response(payment, fx_variances=fx_variances)
 
     # ------------------------------------------------------------------ helpers
 
@@ -515,6 +615,25 @@ class ApReconciliationService:
             return None
         sheet = await self.costing_repository.get_sheet_by_id(booking.sheet_id)
         return sheet.currency if sheet else None
+
+    async def _invoice_sheet_currency_and_actual(self, invoice: SupplierInvoice) -> tuple[str | None, int]:
+        """Read-only (§12.5 H4) — the sheet currency behind an invoice's matched lines, and
+        their summed actual cost in that currency. Assumes every matched line shares one
+        sheet currency; ``record_payment`` enforces that assumption across invoices in a
+        single payment via the ``FX_MULTI_SHEET_CURRENCY`` guard."""
+        sheet_currency: str | None = None
+        total_sheet_minor = 0
+        for line in invoice.lines:
+            if line.match_status not in _MATCHED_LIKE_STATUSES or line.booking_line_id is None:
+                continue
+            booking_line = await self.booking_repository.get_line_by_id(line.booking_line_id)
+            if booking_line is None:
+                continue
+            if sheet_currency is None:
+                sheet_currency = await self._sheet_currency_for_booking_line(booking_line)
+            snap_ppm = None if line.line_type == "penalty" else booking_line.fx_rate_ppm_snapshot
+            total_sheet_minor += to_sheet_minor(line.amount_minor, snap_ppm)
+        return sheet_currency, total_sheet_minor
 
     async def _derive_and_apply_status(self, invoice: SupplierInvoice, *, actor: ActorRef) -> None:
         if invoice.status not in _PRE_APPROVAL_STATUSES:
@@ -558,8 +677,11 @@ class ApReconciliationService:
             },
         )
 
-    async def _emit_payment(self, payment: ApPayment, *, actor: ActorRef) -> None:
+    async def _emit_payment(
+        self, payment: ApPayment, *, actor: ActorRef, fx_variances: list[int | None] | None = None
+    ) -> None:
         outbox = OutboxService(self.session)
+        variances = fx_variances if fx_variances is not None else [None] * len(payment.allocations)
         await outbox.emit_event(
             event_type=EventType.FINANCE_AP_PAYMENT_RECORDED.value,
             aggregate_type="ap_payment",
@@ -572,7 +694,13 @@ class ApReconciliationService:
                 "currency": payment.currency,
                 "amount_minor": payment.amount_minor,
                 "allocations": [
-                    {"invoice_id": alloc.invoice_id, "amount_minor": alloc.amount_minor} for alloc in payment.allocations
+                    {
+                        "invoice_id": alloc.invoice_id,
+                        "amount_minor": alloc.amount_minor,
+                        # §12.5 H4 — read-time enrichment, self-contained in the event payload.
+                        "fx_variance_sheet_minor": variance,
+                    }
+                    for alloc, variance in zip(payment.allocations, variances)
                 ],
                 "actor": actor.serialize(),
             },
@@ -605,7 +733,13 @@ class ApReconciliationService:
             return None
         return to_sheet_minor(line.variance_minor, booking_line.fx_rate_ppm_snapshot)
 
-    def _to_payment_response(self, payment: ApPayment) -> ApPaymentResponseSchema:
+    def _to_payment_response(
+        self, payment: ApPayment, *, fx_variances: list[int | None] | None = None
+    ) -> ApPaymentResponseSchema:
         response = ApPaymentResponseSchema.model_validate(payment)
-        response.allocations = [ApPaymentAllocationResponseSchema.model_validate(a) for a in payment.allocations]
+        variances = fx_variances if fx_variances is not None else [None] * len(payment.allocations)
+        allocation_schemas = [ApPaymentAllocationResponseSchema.model_validate(a) for a in payment.allocations]
+        for schema, variance in zip(allocation_schemas, variances):
+            schema.fx_variance_sheet_minor = variance
+        response.allocations = allocation_schemas
         return response

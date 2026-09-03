@@ -9,10 +9,12 @@ from core.rules.finance_rules import (
     derive_invoice_status,
     expected_cost_minor_for_booking_line,
     is_within_tolerance,
+    scale_actual_sheet_minor,
     suggest_penalty_expected,
     to_sheet_minor,
     validate_invoice_transition,
     validate_payment_allocations,
+    validate_reversal_allocations,
 )
 
 
@@ -222,3 +224,119 @@ def test_validate_payment_allocations_sums_repeated_invoice_id():
     )
     assert result.passed is False
     assert any(issue.code == "exceeds_invoice_balance" for issue in result.issues)
+
+
+def test_validate_payment_allocations_rejects_nonpositive_allocation():
+    """§12.3 H2 — a positive payment's allocations must themselves be positive."""
+    result = validate_payment_allocations(
+        payment_amount_minor=100,
+        allocations=[AllocationInput(invoice_id="inv_1", amount_minor=150), AllocationInput(invoice_id="inv_2", amount_minor=-50)],
+        invoice_balance_minor={"inv_1": 500, "inv_2": 500},
+    )
+    assert result.passed is False
+    assert any(issue.code == "invalid_sign" for issue in result.issues)
+
+
+def test_validate_payment_allocations_rejects_zero_allocation():
+    result = validate_payment_allocations(
+        payment_amount_minor=100,
+        allocations=[AllocationInput(invoice_id="inv_1", amount_minor=0)],
+        invoice_balance_minor={"inv_1": 500},
+    )
+    assert result.passed is False
+    assert any(issue.code == "invalid_sign" for issue in result.issues)
+
+
+# ------------------------------------------------------------- reversal allocations (§12.2 H1)
+
+
+def test_validate_reversal_allocations_happy_path():
+    result = validate_reversal_allocations(
+        payment_amount_minor=-500,
+        allocations=[AllocationInput(invoice_id="inv_1", amount_minor=-500)],
+        invoice_paid_minor={"inv_1": 2_000},
+    )
+    assert result.passed is True
+
+
+def test_validate_reversal_allocations_requires_negative_payment():
+    result = validate_reversal_allocations(
+        payment_amount_minor=500,
+        allocations=[AllocationInput(invoice_id="inv_1", amount_minor=-500)],
+        invoice_paid_minor={"inv_1": 2_000},
+    )
+    assert result.passed is False
+    assert any(issue.code == "not_negative" for issue in result.issues)
+
+
+def test_validate_reversal_allocations_rejects_positive_allocation():
+    """§12.3 H2 — a reversal's allocations must themselves be negative."""
+    result = validate_reversal_allocations(
+        payment_amount_minor=-500,
+        allocations=[AllocationInput(invoice_id="inv_1", amount_minor=500)],
+        invoice_paid_minor={"inv_1": 2_000},
+    )
+    assert result.passed is False
+    assert any(issue.code == "invalid_sign" for issue in result.issues)
+
+
+def test_validate_reversal_allocations_sum_must_match_exactly():
+    result = validate_reversal_allocations(
+        payment_amount_minor=-500,
+        allocations=[AllocationInput(invoice_id="inv_1", amount_minor=-300)],
+        invoice_paid_minor={"inv_1": 2_000},
+    )
+    assert result.passed is False
+    assert any(issue.code == "sum_mismatch" for issue in result.issues)
+
+
+def test_validate_reversal_allocations_no_prior_payment():
+    result = validate_reversal_allocations(
+        payment_amount_minor=-500,
+        allocations=[AllocationInput(invoice_id="inv_1", amount_minor=-500)],
+        invoice_paid_minor={"inv_1": 0},
+    )
+    assert result.passed is False
+    assert any(issue.code == "no_prior_payment" for issue in result.issues)
+
+
+def test_validate_reversal_allocations_exceeds_paid_amount():
+    result = validate_reversal_allocations(
+        payment_amount_minor=-500,
+        allocations=[AllocationInput(invoice_id="inv_1", amount_minor=-500)],
+        invoice_paid_minor={"inv_1": 300},
+    )
+    assert result.passed is False
+    assert any(issue.code == "exceeds_paid_amount" for issue in result.issues)
+
+
+def test_validate_reversal_allocations_mixed_sign_bypass_is_blocked():
+    """§12.3 H2 regression — a mixed-sign allocation set can no longer sneak a positive leg
+    through the reversal path (and validate_payment_allocations blocks the mirror case)."""
+    result = validate_reversal_allocations(
+        payment_amount_minor=-100,
+        allocations=[AllocationInput(invoice_id="inv_1", amount_minor=-150), AllocationInput(invoice_id="inv_2", amount_minor=50)],
+        invoice_paid_minor={"inv_1": 1_000, "inv_2": 1_000},
+    )
+    assert result.passed is False
+    assert any(issue.code == "invalid_sign" for issue in result.issues)
+
+
+# ------------------------------------------------------------------- scale_actual_sheet_minor (§12.5 H4)
+
+
+def test_scale_actual_sheet_minor_proportional_share():
+    # allocation is half the invoice gross -> half the actual sheet total
+    assert scale_actual_sheet_minor(actual_sheet_minor_total=1_000, allocation_amount_minor=500, invoice_gross_total_minor=1_000) == 500
+
+
+def test_scale_actual_sheet_minor_full_allocation_is_identity():
+    assert scale_actual_sheet_minor(actual_sheet_minor_total=777, allocation_amount_minor=2_000, invoice_gross_total_minor=2_000) == 777
+
+
+def test_scale_actual_sheet_minor_zero_gross_is_zero():
+    assert scale_actual_sheet_minor(actual_sheet_minor_total=1_000, allocation_amount_minor=500, invoice_gross_total_minor=0) == 0
+
+
+def test_scale_actual_sheet_minor_negative_allocation_scales_negatively():
+    assert scale_actual_sheet_minor(actual_sheet_minor_total=1_000, allocation_amount_minor=-500, invoice_gross_total_minor=1_000) == -500

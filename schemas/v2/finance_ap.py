@@ -10,7 +10,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from core.rules.finance_rules import INVOICE_STATUSES, LINE_TYPES, MATCH_STATUSES, PAYMENT_METHODS
 
@@ -116,7 +116,17 @@ class PaymentAllocationInputSchema(BaseModel):
     model_config = ConfigDict(extra="ignore", populate_by_name=True)
 
     invoice_id: str = Field(alias="invoiceId", min_length=1, max_length=64)
+    # Sign is validated against the payment's own sign in the pure rules (§12.3 H2) — a
+    # schema-level validator has no access to the sibling payment amount, so this only
+    # rejects the one thing that's wrong under either sign: exactly zero.
     amount_minor: int = Field(alias="amountMinor")
+
+    @field_validator("amount_minor")
+    @classmethod
+    def _amount_minor_not_zero(cls, value: int) -> int:
+        if value == 0:
+            raise ValueError("amount_minor must not be zero.")
+        return value
 
 
 class RecordPaymentRequestSchema(BaseModel):
@@ -133,6 +143,13 @@ class RecordPaymentRequestSchema(BaseModel):
     reference: str | None = Field(default=None, max_length=128)
     notes: str | None = Field(default=None, max_length=2000)
     allocations: list[PaymentAllocationInputSchema] = Field(default_factory=list, min_length=1)
+
+    @field_validator("amount_minor")
+    @classmethod
+    def _amount_minor_not_zero(cls, value: int) -> int:
+        if value == 0:
+            raise ValueError("amount_minor must not be zero.")
+        return value
 
 
 class SupplierInvoiceLineResponseSchema(BaseModel):
@@ -167,6 +184,10 @@ class ApPaymentAllocationResponseSchema(BaseModel):
     invoice_id: str
     amount_minor: int
     created_at: datetime
+
+    # Read-time enrichment (§12.5 H4) — not a column; computed at payment time from the
+    # invoice's matched lines and carried into the outbox payload + this response only.
+    fx_variance_sheet_minor: int | None = None
 
 
 class SupplierInvoiceResponseSchema(BaseModel):
