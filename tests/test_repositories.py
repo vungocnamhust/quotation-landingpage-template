@@ -3,7 +3,8 @@ import tempfile
 import unittest
 
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from tests._db import make_test_engine
 
 from db.base import Base
 from db.models.media import MediaSelection
@@ -20,7 +21,7 @@ class RepositoryContractTests(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
         self.db_file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
         self.db_file.close()
-        self.engine = create_async_engine(f"sqlite+aiosqlite:///{self.db_file.name}")
+        self.engine = make_test_engine(f"sqlite+aiosqlite:///{self.db_file.name}")
         self.session_factory = async_sessionmaker(self.engine, class_=AsyncSession, expire_on_commit=False)
         async with self.engine.begin() as connection:
             await connection.exec_driver_sql("PRAGMA journal_mode=WAL")
@@ -349,6 +350,12 @@ class RepositoryContractTests(unittest.IsolatedAsyncioTestCase):
             media_repo = MediaRepository(session)
             await quotation_repo.create_quotation(
                 quotation_id="quo_repo_shared_inventory",
+                brand_id="vietnam_safar",
+                template_name="brochure",
+                baseline_lang="en",
+            )
+            await quotation_repo.create_quotation(
+                quotation_id="quo_other_inventory",
                 brand_id="vietnam_safar",
                 template_name="brochure",
                 baseline_lang="en",
