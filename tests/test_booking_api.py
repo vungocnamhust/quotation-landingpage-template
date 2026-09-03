@@ -2,10 +2,12 @@ import asyncio
 import os
 import tempfile
 import unittest
+from datetime import datetime, timezone
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from tests._db import make_test_engine
 
 import db.session as db_session
 import main
@@ -23,6 +25,24 @@ CANCELLATION_POLICY = {
     "no_show_penalty_percent": 100,
 }
 PAYMENT_TERMS = {"balance_due_days_before_service": 10, "deposit_due_days_after_confirm": 3}
+BOOKING_FIXTURE_FACTS = {
+    "source": {"kind": "manual"},
+    "brand_id": "brand_capella",
+    "lang": "en",
+    "trip_facts": {
+        "start_date": "2026-07-15",
+        "end_date": "2026-07-20",
+        "duration_days": 6,
+        "duration_nights": 5,
+        "itinerary": [],
+    },
+    "customer_facts": {"customer_name": "Jane Doe", "adults": 2, "children": 0},
+    "pricing_facts": {"conditions": [], "options": []},
+    "service_facts": {"hotels": [], "inclusions": [], "exclusions": []},
+    "booking_facts": {"items": []},
+    "presentation_options": {"theme_id": "brochure", "renderer": "quote-generator"},
+}
+BOOKING_FIXTURE_RESOLVED_FACTS = {"partyLabel": "Jane Doe", "factsHash": "booking-api-fixture-v1"}
 
 
 class BookingApiTests(unittest.TestCase):
@@ -30,7 +50,7 @@ class BookingApiTests(unittest.TestCase):
     def setUpClass(cls):
         cls.database_file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
         cls.database_file.close()
-        cls.engine = create_async_engine(f"sqlite+aiosqlite:///{cls.database_file.name}")
+        cls.engine = make_test_engine(f"sqlite+aiosqlite:///{cls.database_file.name}")
         cls.session_factory = async_sessionmaker(cls.engine, class_=AsyncSession, expire_on_commit=False)
         asyncio.run(cls._create_schema())
         cls.session_patch = patch.object(db_session, "get_session_factory", return_value=cls.session_factory)
@@ -81,8 +101,27 @@ class BookingApiTests(unittest.TestCase):
                 role="customer", customer_name="Jane Doe", email="jane@example.com", request_id="req_bkapi1"
             )
             await session.commit()
-            await QuotationRepository(session).create_quotation(
-                quotation_id="qtn_bkapi1", brand_id="brand_capella", template_name="quote-generator", baseline_lang="en"
+            quotation_repository = QuotationRepository(session)
+            quotation = await quotation_repository.create_quotation(
+                quotation_id="qtn_bkapi1",
+                brand_id="brand_capella",
+                template_name="quote-generator",
+                baseline_lang="en",
+                source_kind="manual",
+                status="draft",
+                quotation_family_id="qtn_bkapi1",
+                business_version=1,
+            )
+            await quotation_repository.create_quotation_request(
+                quotation_id=quotation.id, request_json=BOOKING_FIXTURE_FACTS
+            )
+            await quotation_repository.create_version_facts(
+                quotation_id=quotation.id,
+                canonical_facts_json=BOOKING_FIXTURE_FACTS,
+                resolved_facts_json=BOOKING_FIXTURE_RESOLVED_FACTS,
+                facts_hash="booking-api-fixture-v1",
+                source_request_id=None,
+                source_request_revision=None,
             )
             await session.commit()
 
@@ -207,6 +246,40 @@ class BookingApiTests(unittest.TestCase):
             json={"base_booking_revision": detail["booking"]["booking_revision"], "unit_cost_minor_snapshot": 1},
         )
         self.assertEqual(response.status_code, 422, response.text)
+
+    def test_header_status_cannot_bypass_cancel_or_active(self):
+        self._create_sheet_with_line()
+        detail = self._create_booking()
+        for forbidden_status in ("active", "cancelled"):
+            response = self.client.put(
+                f"/api/v2/bookings/{detail['booking']['id']}",
+                json={"base_booking_revision": detail["booking"]["booking_revision"], "status": forbidden_status},
+            )
+            self.assertEqual(response.status_code, 422, response.text)
+
+    def test_create_and_transition_require_nonempty_idempotency_key(self):
+        self._create_sheet_with_line()
+        missing_create = self.client.post(
+            "/api/v2/bookings", json={"quotation_id": "qtn_bkapi1", "deposit_received_at": "2026-06-01"}
+        )
+        self.assertEqual(missing_create.status_code, 422, missing_create.text)
+        detail = self._create_booking()
+        missing_transition = self.client.post(
+            f"/api/v2/bookings/{detail['booking']['id']}/lines/{detail['lines'][0]['id']}/transition",
+            json={"base_booking_revision": detail["booking"]["booking_revision"], "to": "requested"},
+        )
+        self.assertEqual(missing_transition.status_code, 422, missing_transition.text)
+
+    def test_today_uses_configured_ops_timezone_at_18z(self):
+        from routers.v2.bookings import _today
+
+        self.assertEqual(_today(datetime(2026, 7, 14, 18, tzinfo=timezone.utc)).isoformat(), "2026-07-15")
+
+    def test_booking_routes_do_not_reapply_quotation_ownership(self):
+        import inspect
+        import routers.v2.bookings as booking_routes
+
+        self.assertNotIn("require_owned_v2_quotation", inspect.getsource(booking_routes))
 
 
 if __name__ == "__main__":

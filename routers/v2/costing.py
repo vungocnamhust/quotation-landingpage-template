@@ -217,7 +217,7 @@ async def apply_costing_pricing(
     payload: ApplyPricingRequestSchema,
     session: DbSessionDep,
     principal: EditorPrincipalDep,
-    idempotency_key: Annotated[str | None, Header(alias="Idempotency-Key")] = None,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key", min_length=1, max_length=64)],
 ) -> ApplyPricingResponseSchema:
     await _enforce_quotation_ownership_for_sheet(sheet_id, session, principal)
     service = CostingService(session)

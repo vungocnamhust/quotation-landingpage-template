@@ -1,6 +1,6 @@
 # 15. Modular Tour Ops — Brainstorm (thay thế Plan 14)
 
-> **Loại tài liệu**: Brainstorm kiến trúc module cho hệ thống quản lý tour lấy cảm hứng Tourplan,
+> **Loại tài liệu**: Brainstorm kiến trúc module cho hệ thống quản lý tour lấy cảm hứng Tourplan (Tourplan simplest system),
 > phiên bản MVP cho agency nhỏ, thiết kế để scale mà không viết lại.
 >
 > **Quan hệ với Plan 14**: Plan 14 bị **hủy bỏ** vì làm quá nhiều việc cùng lúc
@@ -133,7 +133,7 @@ Kernel **không phải module ngang hàng** — nó là tầng thấp nhất, v�
 | K3 | **LocalServiceDate** | Calendar date thuần: ISO `YYYY-MM-DD`, **KHÔNG lưu timezone trên từng ngày**. Timezone là thuộc tính của destination/property nếu sau này cần. `TIMESTAMPTZ` chỉ cho audit fields | Validator dùng `dates_rules.parse_iso_date` sẵn có. Lưu tz per-date = over-engineering, tạo 2 nguồn sự thật |
 | K4 | **ActorRef** | `{actor_id, actor_type ∈ staff \| ai_agent \| system \| customer}` — chữ ký ghi của MỌI module mới nhận ActorRef, không nhận user_id/email thô. Khi AI drafter (15.7) bắt đầu ghi, không hàm nào đổi chữ ký | Tương thích outbox hiện tại: serialize xuống `actor_email` + thêm `actor_type` vào payload. Permission/Identity nằm NGOÀI kernel |
 | K5 | **Outbox + audit** | Dùng nguyên `OutboxService`/`outbox_relay` sẵn có — không xây outbox thứ hai. Audit = pattern revision-row đã có (supersede của rates chính là audit log giá) + cột `created_by`/`updated_by` nhận ActorRef. KHÔNG bảng audit toàn cục | MVP handler đồng bộ sau commit (đang chạy vậy); đổi sink sang broker sau không sửa tầng tích hợp |
-| K6 | **ID generator** | Giữ convention prefix-string (E7: `sup_`, `prd_`, `svl_`…), nhưng generator bên dưới đổi `uuid4().hex` → **UUIDv7 hex** cho bảng mới: sortable, cùng kiểu cột `String(64)`, không breaking. Business code hiển thị (`BK-2026-00123`) là cột riêng, sinh khi confirm (= `voucher_ref` E10) | |
+| K6 | **ID generator** | Giữ convention prefix-string (E7: `sup_`, `prd_`, `svl_`…), generator dùng **16-hex time-sortable** (48-bit millisecond timestamp + 16-bit monotonic counter seed ngẫu nhiên, kiểu `String(64)`). Concurrency boundary: an toàn cao cho standard load (~2⁻¹⁶/cặp cùng ms); khuyến nghị giới hạn ≤ 4 worker song song khi bulk seeding/ingestion để xác suất va chạm cùng ms < 0.2%. Business code hiển thị (`BK-2026-00123`) là cột riêng, sinh khi confirm (= `voucher_ref` E10) | |
 | K7 | **tenant_id** | Bảo hiểm giá rẻ: chỉ thêm vào bảng của **module mới** (default `'capella'`, indexed), không retrofit bảng cũ. Lưu ý `brand_id` là brand bán hàng, KHÔNG phải tenant — không nhầm hai khái niệm | |
 | K8 | **Idempotency** | Scope hẹp: chỉ POST tạo dòng tiền (`service-lines`, `bookings`, apply-pricing) nhận header `Idempotency-Key`; lưu theo pattern unique-key của `PublicationJob`. Không store toàn cục cho mọi endpoint | |
 

@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from services.facts_contract import normalize_legacy_facts_snapshot
+from services.facts_contract import classify_facts_mutation, normalize_legacy_facts_snapshot
 from quote_document import CreateQuoteRequestV1
 
 
@@ -30,3 +30,9 @@ def test_create_request_rejects_markup_and_angle_brackets_in_booking_fact_text(b
         CreateQuoteRequestV1.model_validate(
             {"booking_facts": {"items": [{"label": "Deposit", "body": body}]}}
         )
+
+
+def test_facts_mutation_policy_is_status_and_source_based_not_family_based():
+    assert classify_facts_mutation("draft", "manual") == "mutable"
+    assert classify_facts_mutation("published", "manual") == "revision_locked"
+    assert classify_facts_mutation("draft", "imported") == "source_read_only"

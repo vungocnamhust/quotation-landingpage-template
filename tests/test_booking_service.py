@@ -4,7 +4,8 @@ import tempfile
 import unittest
 from datetime import date
 
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from tests._db import make_test_engine
 
 from core.kernel import ActorRef
 from db.base import Base
@@ -12,15 +13,18 @@ from db.models.destination import DestinationCatalog
 from db.models.supplier import Supplier
 from repositories.quote_request_repository import QuoteRequestRepository
 from repositories.quotation_repository import QuotationRepository
+from repositories.booking_repository import BookingRepository, BookingSlotTakenError
 from repositories.supplier_repository import SupplierRepository
 from schemas.v2.booking import (
     BookingAddLineSchema,
     BookingCancelSchema,
     BookingCreateSchema,
+    BookingHeaderUpdateSchema,
+    BookingLineOpsUpdateSchema,
     BookingLineTransitionSchema,
 )
 from schemas.v2.costing import CostingSheetCreateSchema, ServiceLineCreateSchema
-from services.booking_service import BookingConflictError, BookingService
+from services.booking_service import BookingConflictError, BookingService, BookingValidationError
 from services.costing_service import CostingConflictError, CostingService
 
 ACTOR = ActorRef(actor_id="ops@example.com", actor_type="staff")
@@ -33,6 +37,24 @@ CANCELLATION_POLICY = {
     "no_show_penalty_percent": 100,
 }
 PAYMENT_TERMS = {"balance_due_days_before_service": 10, "deposit_due_days_after_confirm": 3}
+BOOKING_FIXTURE_FACTS = {
+    "source": {"kind": "manual"},
+    "brand_id": "brand_capella",
+    "lang": "en",
+    "trip_facts": {
+        "start_date": "2026-07-15",
+        "end_date": "2026-07-20",
+        "duration_days": 6,
+        "duration_nights": 5,
+        "itinerary": [],
+    },
+    "customer_facts": {"customer_name": "Jane Doe", "adults": 2, "children": 0},
+    "pricing_facts": {"conditions": [], "options": []},
+    "service_facts": {"hotels": [], "inclusions": [], "exclusions": []},
+    "booking_facts": {"items": []},
+    "presentation_options": {"theme_id": "brochure", "renderer": "quote-generator"},
+}
+BOOKING_FIXTURE_RESOLVED_FACTS = {"partyLabel": "Jane Doe", "factsHash": "booking-fixture-v1"}
 
 
 class BookingServiceTests(unittest.TestCase):
@@ -40,7 +62,7 @@ class BookingServiceTests(unittest.TestCase):
     def setUpClass(cls):
         cls.db_file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
         cls.db_file.close()
-        cls.engine = create_async_engine(f"sqlite+aiosqlite:///{cls.db_file.name}")
+        cls.engine = make_test_engine(f"sqlite+aiosqlite:///{cls.db_file.name}")
         cls.session_factory = async_sessionmaker(cls.engine, class_=AsyncSession, expire_on_commit=False)
 
     @classmethod
@@ -74,8 +96,27 @@ class BookingServiceTests(unittest.TestCase):
                 role="customer", customer_name="Jane Doe", email="jane@example.com", request_id="req_bk1"
             )
             await session.commit()
-            await QuotationRepository(session).create_quotation(
-                quotation_id="qtn_bk1", brand_id="brand_capella", template_name="quote-generator", baseline_lang="en"
+            quotation_repository = QuotationRepository(session)
+            quotation = await quotation_repository.create_quotation(
+                quotation_id="qtn_bk1",
+                brand_id="brand_capella",
+                template_name="quote-generator",
+                baseline_lang="en",
+                source_kind="manual",
+                status="draft",
+                quotation_family_id="qtn_bk1",
+                business_version=1,
+            )
+            await quotation_repository.create_quotation_request(
+                quotation_id=quotation.id, request_json=BOOKING_FIXTURE_FACTS
+            )
+            await quotation_repository.create_version_facts(
+                quotation_id=quotation.id,
+                canonical_facts_json=BOOKING_FIXTURE_FACTS,
+                resolved_facts_json=BOOKING_FIXTURE_RESOLVED_FACTS,
+                facts_hash="booking-fixture-v1",
+                source_request_id=None,
+                source_request_revision=None,
             )
             await session.commit()
 
@@ -214,6 +255,28 @@ class BookingServiceTests(unittest.TestCase):
 
         asyncio.run(scenario())
 
+    def test_booking_reused_idempotency_key_with_different_payload_conflicts(self):
+        async def scenario():
+            async with self.session_factory() as session:
+                await self._make_sheet_with_line(session)
+                service = BookingService(session)
+                await service.create_booking(
+                    BookingCreateSchema(quotation_id="qtn_bk1", deposit_received_at=date(2026, 6, 1)),
+                    actor=ACTOR,
+                    idempotency_key="booking-idempotency-conflict",
+                    today=date(2026, 6, 1),
+                )
+                await session.commit()
+                with self.assertRaises(BookingConflictError):
+                    await service.create_booking(
+                        BookingCreateSchema(quotation_id="qtn_bk1", deposit_received_at=date(2026, 6, 2)),
+                        actor=ACTOR,
+                        idempotency_key="booking-idempotency-conflict",
+                        today=date(2026, 6, 2),
+                    )
+
+        asyncio.run(scenario())
+
     def test_transition_to_confirmed_generates_voucher_and_is_idempotent(self):
         async def scenario():
             async with self.session_factory() as session:
@@ -267,6 +330,19 @@ class BookingServiceTests(unittest.TestCase):
                 )
                 self.assertEqual(retried.lines[0].voucher_ref, first_voucher)
 
+                with self.assertRaises(BookingConflictError):
+                    await booking_service.transition_line(
+                        booking_id,
+                        line_id,
+                        BookingLineTransitionSchema(
+                            base_booking_revision=confirmed.booking.booking_revision,
+                            to="delivered",
+                        ),
+                        actor=ACTOR,
+                        idempotency_key="t2",
+                        today=date(2026, 6, 3),
+                    )
+
         asyncio.run(scenario())
 
     def test_cancel_line_computes_penalty_from_frozen_tiers(self):
@@ -297,6 +373,119 @@ class BookingServiceTests(unittest.TestCase):
 
         asyncio.run(scenario())
 
+    def test_booking_rejects_manual_service_line_without_a_date(self):
+        async def scenario():
+            async with self.session_factory() as session:
+                sheet_id, _ = await self._make_sheet_with_line(session)
+                costing = CostingService(session)
+                sheet = await costing.get_workbench(sheet_id)
+                await costing.create_line(
+                    sheet_id,
+                    ServiceLineCreateSchema(
+                        base_costing_revision=sheet.sheet.costing_revision,
+                        day_number=None,
+                        category="transportation",
+                        title="Undated transfer",
+                        unit="vehicle",
+                        time_basis="trip",
+                        unit_cost_minor=100_000,
+                        cost_currency="USD",
+                    ),
+                    actor=ACTOR,
+                    idempotency_key="undated-line",
+                )
+                with self.assertRaises(BookingValidationError) as raised:
+                    await BookingService(session).create_booking(
+                        BookingCreateSchema(quotation_id="qtn_bk1", deposit_received_at=date(2026, 6, 1)),
+                        actor=ACTOR,
+                        idempotency_key="undated-booking",
+                        today=date(2026, 6, 1),
+                    )
+                self.assertIn("Every booking line requires a service date", str(raised.exception))
+
+        asyncio.run(scenario())
+
+    def test_cancellation_penalty_uses_frozen_cost_not_sell(self):
+        async def scenario():
+            async with self.session_factory() as session:
+                sheet_id, line_id = await self._make_sheet_with_line(session, service_date=date(2026, 7, 15))
+                line = await CostingService(session).repository.get_line_by_id(line_id)
+                assert line is not None
+                line.sell_override_minor = 2_400_000  # 20% commercial markup over the 2_000_000 cost.
+                await session.commit()
+                service = BookingService(session)
+                detail = await service.create_booking(
+                    BookingCreateSchema(quotation_id="qtn_bk1", deposit_received_at=date(2026, 6, 1)),
+                    actor=ACTOR,
+                    idempotency_key="cost-penalty",
+                    today=date(2026, 6, 1),
+                )
+                cancelled = await service.transition_line(
+                    detail.booking.id,
+                    detail.lines[0].id,
+                    BookingLineTransitionSchema(
+                        base_booking_revision=detail.booking.booking_revision,
+                        to="cancelled",
+                        cancel_reason="supplier cancellation",
+                    ),
+                    actor=ACTOR,
+                    idempotency_key="cost-penalty-cancel",
+                    today=date(2026, 7, 10),
+                )
+                self.assertEqual(cancelled.lines[0].sell_minor_snapshot, 2_400_000)
+                self.assertEqual(cancelled.lines[0].cancel_penalty_minor, 500_000)
+
+        asyncio.run(scenario())
+
+    def test_terminal_line_rejects_ops_edits_and_preconfirm_fields_can_clear(self):
+        async def scenario():
+            async with self.session_factory() as session:
+                await self._make_sheet_with_line(session)
+                service = BookingService(session)
+                detail = await service.create_booking(
+                    BookingCreateSchema(quotation_id="qtn_bk1", deposit_received_at=date(2026, 6, 1)),
+                    actor=ACTOR,
+                    idempotency_key="ops-terminal",
+                    today=date(2026, 6, 1),
+                )
+                cleared = await service.update_line_ops(
+                    detail.booking.id,
+                    detail.lines[0].id,
+                    BookingLineOpsUpdateSchema(
+                        base_booking_revision=detail.booking.booking_revision,
+                        request_by_date=None,
+                        notes=None,
+                    ),
+                    actor=ACTOR,
+                    today=date(2026, 6, 1),
+                )
+                self.assertIsNone(cleared.lines[0].request_by_date)
+                cancelled = await service.transition_line(
+                    detail.booking.id,
+                    detail.lines[0].id,
+                    BookingLineTransitionSchema(
+                        base_booking_revision=cleared.booking.booking_revision,
+                        to="cancelled",
+                        cancel_reason="cancel for terminal edit test",
+                    ),
+                    actor=ACTOR,
+                    idempotency_key="ops-terminal-cancel",
+                    today=date(2026, 6, 2),
+                )
+                with self.assertRaises(BookingValidationError):
+                    await service.update_line_ops(
+                        detail.booking.id,
+                        detail.lines[0].id,
+                        BookingLineOpsUpdateSchema(
+                            base_booking_revision=cancelled.booking.booking_revision,
+                            notes="must fail",
+                        ),
+                        actor=ACTOR,
+                        today=date(2026, 6, 2),
+                    )
+
+        asyncio.run(scenario())
+
     def test_add_line_amendment_and_conflict_when_already_booked(self):
         async def scenario():
             async with self.session_factory() as session:
@@ -321,6 +510,7 @@ class BookingServiceTests(unittest.TestCase):
                     ServiceLineCreateSchema(
                         base_costing_revision=sheet.sheet.costing_revision,
                         day_number=2,
+                        service_date=date(2026, 7, 16),
                         category="transportation",
                         title="Airport transfer",
                         unit="vehicle",
@@ -396,6 +586,118 @@ class BookingServiceTests(unittest.TestCase):
                         actor=ACTOR,
                         today=date(2026, 6, 2),
                     )
+
+        asyncio.run(scenario())
+
+    def test_completed_header_requires_every_line_to_be_terminal(self):
+        async def scenario():
+            async with self.session_factory() as session:
+                await self._make_sheet_with_line(session)
+                service = BookingService(session)
+                detail = await service.create_booking(
+                    BookingCreateSchema(quotation_id="qtn_bk1", deposit_received_at=date(2026, 6, 1)),
+                    actor=ACTOR, idempotency_key="completed-gate", today=date(2026, 6, 1),
+                )
+                with self.assertRaises(BookingValidationError):
+                    await service.update_header(
+                        detail.booking.id,
+                        BookingHeaderUpdateSchema(base_booking_revision=detail.booking.booking_revision, status="completed"),
+                        actor=ACTOR, today=date(2026, 6, 1),
+                    )
+
+        asyncio.run(scenario())
+
+    def test_slot_collision_uses_savepoint_and_outer_transaction_survives(self):
+        async def scenario():
+            async with self.session_factory() as session:
+                await self._make_sheet_with_line(session)
+                service = BookingService(session)
+                detail = await service.create_booking(
+                    BookingCreateSchema(quotation_id="qtn_bk1", deposit_received_at=date(2026, 6, 1)),
+                    actor=ACTOR, idempotency_key="savepoint-booking", today=date(2026, 6, 1),
+                )
+                repository = BookingRepository(session)
+                existing_line = await repository.get_line_by_id(detail.lines[0].id)
+                assert existing_line is not None
+                duplicate_values = {
+                    "source_service_line_id": existing_line.source_service_line_id,
+                    "supplier_id_snapshot": existing_line.supplier_id_snapshot,
+                    "supplier_name_snapshot": existing_line.supplier_name_snapshot,
+                    "supplier_contact_snapshot_json": existing_line.supplier_contact_snapshot_json,
+                    "title_snapshot": existing_line.title_snapshot,
+                    "category": existing_line.category,
+                    "service_date": existing_line.service_date,
+                    "unit": existing_line.unit,
+                    "time_basis": existing_line.time_basis,
+                    "qty_unit": existing_line.qty_unit,
+                    "qty_time": existing_line.qty_time,
+                    "unit_cost_minor_snapshot": existing_line.unit_cost_minor_snapshot,
+                    "cost_currency_snapshot": existing_line.cost_currency_snapshot,
+                    "fx_rate_ppm_snapshot": existing_line.fx_rate_ppm_snapshot,
+                    "sell_minor_snapshot": existing_line.sell_minor_snapshot,
+                    "status": "to_request",
+                }
+                booking = await repository.get_booking_by_id(detail.booking.id)
+                assert booking is not None
+                with self.assertRaises(BookingSlotTakenError):
+                    await repository.insert_line(booking, line_id="bkl_duplicate_slot", values=duplicate_values)
+                await repository.update_header(booking, values={"notes": "outer transaction survived"})
+                await session.commit()
+                reloaded = await service.get_detail(detail.booking.id, today=date(2026, 6, 1))
+                assert reloaded is not None
+                self.assertEqual(reloaded.booking.notes, "outer transaction survived")
+
+        asyncio.run(scenario())
+
+    def test_rebooking_excludes_delivered_lines_and_recopies_cancelled_lines(self):
+        async def scenario():
+            async with self.session_factory() as session:
+                sheet_id, _ = await self._make_sheet_with_line(session)
+                costing = CostingService(session)
+                sheet = await costing.get_workbench(sheet_id)
+                await costing.create_line(
+                    sheet_id,
+                    ServiceLineCreateSchema(
+                        base_costing_revision=sheet.sheet.costing_revision,
+                        day_number=2,
+                        service_date=date(2026, 7, 16),
+                        category="transportation",
+                        title="Airport transfer",
+                        unit="vehicle",
+                        time_basis="trip",
+                        unit_cost_minor=200_000,
+                        cost_currency="USD",
+                    ),
+                    actor=ACTOR,
+                    idempotency_key="rebook-line-2",
+                )
+                service = BookingService(session)
+                first = await service.create_booking(
+                    BookingCreateSchema(quotation_id="qtn_bk1", deposit_received_at=date(2026, 6, 1)),
+                    actor=ACTOR, idempotency_key="rebook-first", today=date(2026, 6, 1),
+                )
+                revision = first.booking.booking_revision
+                delivered_line_id = first.lines[0].id
+                for index, target in enumerate(("requested", "confirmed", "delivered")):
+                    transitioned = await service.transition_line(
+                        first.booking.id,
+                        delivered_line_id,
+                        BookingLineTransitionSchema(base_booking_revision=revision, to=target),
+                        actor=ACTOR, idempotency_key=f"rebook-transition-{index}", today=date(2026, 6, 2 + index),
+                    )
+                    revision = transitioned.booking.booking_revision
+                await service.cancel_booking(
+                    first.booking.id,
+                    BookingCancelSchema(base_booking_revision=revision, reason="rebook remaining services"),
+                    actor=ACTOR, today=date(2026, 6, 6),
+                )
+                await session.commit()
+                second = await service.create_booking(
+                    BookingCreateSchema(quotation_id="qtn_bk1", deposit_received_at=date(2026, 6, 7)),
+                    actor=ACTOR, idempotency_key="rebook-second", today=date(2026, 6, 7),
+                )
+                self.assertEqual(len(second.lines), 1)
+                self.assertNotEqual(second.lines[0].source_service_line_id, first.lines[0].source_service_line_id)
 
         asyncio.run(scenario())
 

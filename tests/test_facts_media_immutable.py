@@ -1,14 +1,10 @@
-"""Plan 16.1 D2 — media is carved out of the immutable-facts rule.
-
-`PUT /facts/media` must succeed on a business quotation version
-(`quotation_family_id` set), while `PUT /facts` and `PUT /facts/designer`
-must keep rejecting with 409 `immutable_facts`.
-"""
+"""Plan 16.1 D2 media carve-out and Track 3 draft Facts policy."""
 from datetime import datetime
 
 import pytest
 from fastapi import HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from tests._db import make_test_engine
 from unittest.mock import patch
 
 import main as app_main
@@ -92,8 +88,8 @@ USER_PAYLOAD = {
 
 
 @pytest.mark.anyio
-async def test_facts_media_bypasses_immutable_facts_while_facts_and_designer_stay_blocked():
-    engine = create_async_engine("sqlite+aiosqlite:///:memory:", echo=False)
+async def test_draft_family_facts_are_mutable_while_designer_version_gate_remains():
+    engine = make_test_engine("sqlite+aiosqlite:///:memory:", echo=False)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
@@ -158,26 +154,31 @@ async def test_facts_media_bypasses_immutable_facts_while_facts_and_designer_sta
                 quotation_id="quo_immutable_media",
                 request_json=canonical.model_dump(mode="json"),
             )
+            await quotes.create_version_facts(
+                quotation_id="quo_immutable_media",
+                canonical_facts_json=canonical.model_dump(mode="json"),
+                resolved_facts_json=resolved,
+                facts_hash=resolved["factsHash"],
+                source_request_id=None,
+                source_request_revision=None,
+            )
             await session.commit()
 
         principal = Principal(email="test@example.com", role="editor")
 
-        # PUT /facts must stay blocked for a business quotation version.
-        with pytest.raises(HTTPException) as facts_exc:
-            await put_quotation_facts_v2(
-                quotation_id="quo_immutable_media",
-                payload=req,
-                baseRevision=1,
-                principal=principal,
-            )
-        assert facts_exc.value.status_code == 409
-        assert facts_exc.value.detail["code"] == "immutable_facts"
+        facts_result = await put_quotation_facts_v2(
+            quotation_id="quo_immutable_media",
+            payload=req,
+            baseRevision=1,
+            principal=principal,
+        )
+        assert facts_result["currentRevision"] == 2
 
         # PUT /facts/designer must stay blocked too.
         with pytest.raises(HTTPException) as designer_exc:
             await put_quotation_fact_designer_v2(
                 quotation_id="quo_immutable_media",
-                payload=FactsDesignerRequest(baseRevision=1, designerProfileId="td_b49deb4d9586"),
+                payload=FactsDesignerRequest(baseRevision=2, designerProfileId="td_b49deb4d9586"),
                 principal=principal,
             )
         assert designer_exc.value.status_code == 409
@@ -187,13 +188,29 @@ async def test_facts_media_bypasses_immutable_facts_while_facts_and_designer_sta
         result = await put_quotation_fact_media_v2(
             quotation_id="quo_immutable_media",
             payload=FactsMediaRequest(
-                baseRevision=1,
+                baseRevision=2,
                 slots=[{"fieldId": "assets.hero", "value": {"r2Key": "shared/media/hero.jpg", "altText": ""}}],
             ),
             principal=principal,
         )
         assert result["ok"] is True
-        assert result["currentRevision"] == 2
+        assert result["currentRevision"] == 3
         assert result["document"]["assets"]["hero"]["r2Key"] == "shared/media/hero.jpg"
+
+        async with factory() as session:
+            quotation = await QuotationRepository(session).get_quotation_by_id("quo_immutable_media")
+            assert quotation is not None
+            quotation.status = "published"
+            await session.commit()
+
+        with pytest.raises(HTTPException) as published_exc:
+            await put_quotation_facts_v2(
+                quotation_id="quo_immutable_media",
+                payload=req,
+                baseRevision=3,
+                principal=principal,
+            )
+        assert published_exc.value.status_code == 409
+        assert published_exc.value.detail["currentRevision"] == 3
 
     await engine.dispose()

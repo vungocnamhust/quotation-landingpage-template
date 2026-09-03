@@ -3,12 +3,13 @@ from __future__ import annotations
 
 from datetime import date, datetime, timezone
 from typing import Annotated
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Header, HTTPException, Query, status
 
-from api.dependencies import DbSessionDep, EditorPrincipalDep, require_owned_v2_quotation
+from api.dependencies import DbSessionDep, EditorPrincipalDep
+from core.config import settings
 from core.kernel import ActorRef
-from repositories.booking_repository import BookingRepository
 from schemas.v2.booking import (
     BookingAddLineSchema,
     BookingBoardResponseSchema,
@@ -32,14 +33,10 @@ def _conflict_detail(err: BookingConflictError) -> dict:
     return {"message": str(err), "currentRevision": err.current_revision}
 
 
-def _today() -> date:
-    return datetime.now(timezone.utc).date()
-
-
-async def _enforce_quotation_ownership_for_booking(booking_id: str, session, principal: EditorPrincipalDep) -> None:
-    booking = await BookingRepository(session).get_booking_by_id(booking_id)
-    if booking is not None:
-        await require_owned_v2_quotation(booking.quotation_id, principal)
+def _today(now: datetime | None = None) -> date:
+    """Global Operations follows its configured business timezone, not UTC midnight."""
+    instant = now or datetime.now(timezone.utc)
+    return instant.astimezone(ZoneInfo(settings.ops_timezone)).date()
 
 
 @router.post("", response_model=BookingDetailResponseSchema, status_code=status.HTTP_201_CREATED)
@@ -47,9 +44,8 @@ async def create_booking(
     payload: BookingCreateSchema,
     session: DbSessionDep,
     principal: EditorPrincipalDep,
-    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key", min_length=1, max_length=64)],
 ) -> BookingDetailResponseSchema:
-    await require_owned_v2_quotation(payload.quotation_id, principal)
     service = BookingService(session)
     try:
         detail = await service.create_booking(
@@ -73,8 +69,6 @@ async def list_booking_board(
     due_within_days: Annotated[int | None, Query(alias="dueWithinDays")] = None,
     overdue_only: Annotated[bool, Query(alias="overdueOnly")] = False,
 ) -> BookingBoardResponseSchema:
-    if quotation_id:
-        await require_owned_v2_quotation(quotation_id, principal)
     service = BookingService(session)
     return await service.list_board(
         today=_today(),
@@ -92,7 +86,6 @@ async def get_booking(
     session: DbSessionDep,
     principal: EditorPrincipalDep,
 ) -> BookingDetailResponseSchema:
-    await _enforce_quotation_ownership_for_booking(booking_id, session, principal)
     service = BookingService(session)
     detail = await service.get_detail(booking_id, today=_today())
     if detail is None:
@@ -107,7 +100,6 @@ async def update_booking_header(
     session: DbSessionDep,
     principal: EditorPrincipalDep,
 ) -> BookingDetailResponseSchema:
-    await _enforce_quotation_ownership_for_booking(booking_id, session, principal)
     service = BookingService(session)
     try:
         detail = await service.update_header(booking_id, payload, actor=_actor_from_principal(principal), today=_today())
@@ -117,6 +109,8 @@ async def update_booking_header(
         return detail
     except BookingConflictError as err:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=_conflict_detail(err)) from err
+    except BookingValidationError as err:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=err.args[0]) from err
 
 
 @router.post("/{booking_id}/lines/{line_id}/transition", response_model=BookingDetailResponseSchema)
@@ -126,9 +120,8 @@ async def transition_booking_line(
     payload: BookingLineTransitionSchema,
     session: DbSessionDep,
     principal: EditorPrincipalDep,
-    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key", min_length=1, max_length=64)],
 ) -> BookingDetailResponseSchema:
-    await _enforce_quotation_ownership_for_booking(booking_id, session, principal)
     service = BookingService(session)
     try:
         detail = await service.transition_line(
@@ -157,7 +150,6 @@ async def update_booking_line_ops(
     session: DbSessionDep,
     principal: EditorPrincipalDep,
 ) -> BookingDetailResponseSchema:
-    await _enforce_quotation_ownership_for_booking(booking_id, session, principal)
     service = BookingService(session)
     try:
         detail = await service.update_line_ops(booking_id, line_id, payload, actor=_actor_from_principal(principal), today=_today())
@@ -178,7 +170,6 @@ async def add_booking_line(
     session: DbSessionDep,
     principal: EditorPrincipalDep,
 ) -> BookingDetailResponseSchema:
-    await _enforce_quotation_ownership_for_booking(booking_id, session, principal)
     service = BookingService(session)
     try:
         detail = await service.add_line(booking_id, payload, actor=_actor_from_principal(principal), today=_today())
@@ -199,7 +190,6 @@ async def cancel_booking(
     session: DbSessionDep,
     principal: EditorPrincipalDep,
 ) -> BookingDetailResponseSchema:
-    await _enforce_quotation_ownership_for_booking(booking_id, session, principal)
     service = BookingService(session)
     try:
         detail = await service.cancel_booking(booking_id, payload, actor=_actor_from_principal(principal), today=_today())
@@ -209,3 +199,5 @@ async def cancel_booking(
         return detail
     except BookingConflictError as err:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=_conflict_detail(err)) from err
+    except BookingValidationError as err:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=err.args[0]) from err

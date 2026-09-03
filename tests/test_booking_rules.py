@@ -118,9 +118,14 @@ class CancellationPenaltyMinorTests(unittest.TestCase):
         penalty = cancellation_penalty_minor(GRADUATED_POLICY, self.SELL, date(2026, 6, 30), date(2026, 7, 2))
         self.assertEqual(penalty, 10_000_000)
 
-    def test_empty_tiers_is_always_free(self):
+    def test_cancellation_on_service_date_uses_no_show_percent(self):
+        policy = {**GRADUATED_POLICY, "no_show_penalty_percent": 75}
+        penalty = cancellation_penalty_minor(policy, self.SELL, date(2026, 6, 30), date(2026, 6, 30))
+        self.assertEqual(penalty, 7_500_000)
+
+    def test_empty_tiers_on_service_date_uses_default_no_show_penalty(self):
         penalty = cancellation_penalty_minor({"tiers": []}, self.SELL, date(2026, 6, 30), date(2026, 6, 30))
-        self.assertEqual(penalty, 0)
+        self.assertEqual(penalty, self.SELL)
 
 
 class ValidateTransitionTests(unittest.TestCase):

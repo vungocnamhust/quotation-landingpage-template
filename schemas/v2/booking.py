@@ -10,6 +10,7 @@ from schemas.v2.supplier import SupplierCancellationPolicySchema, SupplierContac
 
 BookingLineStatus = Literal["to_request", "requested", "confirmed", "delivered", "cancelled"]
 BookingHeaderStatus = Literal["active", "completed", "cancelled"]
+BookingHeaderMutableStatus = Literal["completed"]
 BookingLineUrgency = Literal["overdue", "due_soon", "ok"]
 
 
@@ -26,11 +27,11 @@ class BookingCreateSchema(BaseModel):
 class BookingHeaderUpdateSchema(BaseModel):
     """Body for ``PUT /bookings/{booking_id}``."""
 
-    model_config = ConfigDict(extra="ignore")
+    model_config = ConfigDict(extra="forbid")
 
     base_booking_revision: int = Field(ge=0)
     customer_balance_due_date: date | None = None
-    status: BookingHeaderStatus | None = None
+    status: BookingHeaderMutableStatus | None = None
     notes: str | None = Field(default=None, max_length=2000)
 
 

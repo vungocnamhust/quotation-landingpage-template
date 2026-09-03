@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Iterable
 
@@ -22,6 +23,16 @@ from db.models.quotation import (
 from repositories.errors import DocumentRevisionConflictError
 
 _UNSET = object()
+
+
+@dataclass(frozen=True)
+class CurrentQuotationFacts:
+    """Authoritative current Facts, with a legacy request-row fallback."""
+
+    canonical_facts_json: dict[str, Any]
+    resolved_facts_json: dict[str, Any] | None
+    facts_hash: str | None
+    version_facts: QuotationVersionFacts | None
 
 
 class QuotationRepository:
@@ -96,6 +107,42 @@ class QuotationRepository:
         return await self.session.scalar(
             select(QuotationVersionFacts).where(QuotationVersionFacts.quotation_id == quotation_id)
         )
+
+    async def get_current_facts(self, quotation_id: str) -> CurrentQuotationFacts | None:
+        version_facts = await self.get_version_facts(quotation_id)
+        if version_facts is not None:
+            return CurrentQuotationFacts(
+                canonical_facts_json=version_facts.canonical_facts_json,
+                resolved_facts_json=version_facts.resolved_facts_json,
+                facts_hash=version_facts.facts_hash,
+                version_facts=version_facts,
+            )
+        request = await self.get_latest_quotation_request(quotation_id)
+        if request is None:
+            return None
+        return CurrentQuotationFacts(
+            canonical_facts_json=request.request_json,
+            resolved_facts_json=None,
+            facts_hash=None,
+            version_facts=None,
+        )
+
+    async def update_version_facts(
+        self,
+        *,
+        quotation_id: str,
+        canonical_facts_json: dict[str, Any],
+        resolved_facts_json: dict[str, Any],
+        facts_hash: str,
+    ) -> QuotationVersionFacts | None:
+        row = await self.get_version_facts(quotation_id)
+        if row is None:
+            return None
+        row.canonical_facts_json = canonical_facts_json
+        row.resolved_facts_json = resolved_facts_json
+        row.facts_hash = facts_hash
+        await self.session.flush()
+        return row
 
     async def create_version_facts(
         self,

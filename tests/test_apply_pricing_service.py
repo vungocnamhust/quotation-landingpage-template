@@ -5,7 +5,8 @@ import unittest
 from datetime import date
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from tests._db import make_test_engine
 
 import db.session as db_session
 import main
@@ -35,7 +36,7 @@ class ApplyPricingServiceTests(unittest.TestCase):
     def setUpClass(cls):
         cls.db_file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
         cls.db_file.close()
-        cls.engine = create_async_engine(f"sqlite+aiosqlite:///{cls.db_file.name}")
+        cls.engine = make_test_engine(f"sqlite+aiosqlite:///{cls.db_file.name}")
         cls.session_factory = async_sessionmaker(cls.engine, class_=AsyncSession, expire_on_commit=False)
         cls.session_patch = patch.object(db_session, "get_session_factory", return_value=cls.session_factory)
         cls.session_patch.start()
@@ -79,6 +80,9 @@ class ApplyPricingServiceTests(unittest.TestCase):
             template_name="quote-generator",
             baseline_lang="en",
             source_kind="manual",
+            status="draft",
+            quotation_family_id=quotation_id,
+            business_version=1,
         )
         request_json = {
             "source": {"kind": "manual"},
@@ -116,6 +120,14 @@ class ApplyPricingServiceTests(unittest.TestCase):
             "presentation_options": {"theme_id": "brochure", "renderer": "quote-generator"},
         }
         await quotes.create_quotation_request(quotation_id=quotation.id, request_json=request_json)
+        await quotes.create_version_facts(
+            quotation_id=quotation.id,
+            canonical_facts_json=request_json,
+            resolved_facts_json={"factsHash": "before-apply"},
+            facts_hash="before-apply",
+            source_request_id=None,
+            source_request_revision=None,
+        )
         await main.QuotationDocumentRepository(session).save_current_document(
             quotation_id=quotation.id,
             lang="en",
@@ -207,7 +219,7 @@ class ApplyPricingServiceTests(unittest.TestCase):
                     option_label="Updated Costing Option",
                     lang="en",
                 )
-                resp = await service.apply_pricing(sheet_id, apply_req, actor=ACTOR)
+                resp = await service.apply_pricing(sheet_id, apply_req, actor=ACTOR, idempotency_key="atomicity-apply")
                 await session.commit()
 
                 self.assertIsNotNone(resp)
@@ -295,6 +307,7 @@ class ApplyPricingServiceTests(unittest.TestCase):
                                 target_option_id="opt_1",
                             ),
                             actor=ACTOR,
+                            idempotency_key="outbox-failure-apply",
                         )
                 await session.rollback()
 
@@ -315,6 +328,60 @@ class ApplyPricingServiceTests(unittest.TestCase):
                 opt = req.request_json["pricing_facts"]["options"][0]
                 self.assertEqual(opt["group_total_amount_minor"], 240000)
                 self.assertEqual(opt["per_adult_amount_minor"], 120000)
+
+        asyncio.run(_run())
+
+    def test_apply_pricing_document_write_failure_rolls_back_facts_application_and_sheet(self):
+        """The Facts/document CAS is inside the same transaction as the apply audit row."""
+
+        async def _run():
+            async with self.session_factory() as session:
+                quotation_id = await self._create_test_quotation(session)
+                service = CostingService(session)
+                sheet = await service.create_sheet(
+                    CostingSheetCreateSchema(quotation_id=quotation_id, currency="USD"), actor=ACTOR
+                )
+                await service.create_line(
+                    sheet.id,
+                    ServiceLineCreateSchema(
+                        base_costing_revision=0,
+                        category="accommodation",
+                        title="Hanoi Hotel",
+                        unit="room",
+                        time_basis="night",
+                        unit_cost_minor=50_000,
+                        cost_currency="USD",
+                    ),
+                    actor=ACTOR,
+                    idempotency_key="document-failure-line",
+                )
+                await session.commit()
+
+                async def _fail_document_write(*args, **kwargs):
+                    raise RuntimeError("injected document write failure")
+
+                with patch.object(main.QuotationDocumentRepository, "save_current_document", side_effect=_fail_document_write):
+                    with self.assertRaisesRegex(RuntimeError, "injected document write failure"):
+                        await service.apply_pricing(
+                            sheet.id,
+                            ApplyPricingRequestSchema(
+                                base_revision=1, base_costing_revision=1, target_option_id="opt_1"
+                            ),
+                            actor=ACTOR,
+                            idempotency_key="document-failure-apply",
+                        )
+                await session.rollback()
+
+            async with self.session_factory() as verify:
+                quotes = QuotationRepository(verify)
+                facts = await quotes.get_current_facts(quotation_id)
+                self.assertIsNotNone(facts)
+                self.assertEqual(facts.facts_hash, "before-apply")
+                applications = (await verify.execute(select(CostingApplication))).scalars().all()
+                self.assertEqual(applications, [])
+                persisted_sheet = await CostingService(verify).repository.get_sheet_by_id(sheet.id)
+                self.assertIsNotNone(persisted_sheet)
+                self.assertEqual(persisted_sheet.costing_revision, 1)
 
         asyncio.run(_run())
 
@@ -356,7 +423,7 @@ class ApplyPricingServiceTests(unittest.TestCase):
                     base_costing_revision=1,
                     target_option_id="opt_1",
                 )
-                resp = await service.apply_pricing(sheet_id, apply_req, actor=ACTOR)
+                resp = await service.apply_pricing(sheet_id, apply_req, actor=ACTOR, idempotency_key="currency-clear-apply")
                 await session.commit()
 
                 self.assertIsNotNone(resp)
@@ -407,6 +474,7 @@ class ApplyPricingServiceTests(unittest.TestCase):
                             target_option_id="opt_1",
                         ),
                         actor=ACTOR,
+                        idempotency_key="dual-cas-stale-costing",
                     )
 
                 # Case 2: Stale facts revision (passed 999 instead of 1)
@@ -419,16 +487,13 @@ class ApplyPricingServiceTests(unittest.TestCase):
                             target_option_id="opt_1",
                         ),
                         actor=ACTOR,
+                        idempotency_key="dual-cas-stale-facts",
                     )
 
         asyncio.run(_run())
 
-    def test_apply_pricing_rejects_line_edit_that_lands_mid_flight(self):
-        """16.3 P1 fix: apply_pricing doesn't itself touch costing_sheets, so the
-        Python-level pre-check at the top is only a fast check — this proves the
-        DB-level guard added right before insert_application actually catches a
-        concurrent write that commits *during* the facts write, and that nothing
-        (including the facts change) is left persisted."""
+    def test_apply_pricing_rejects_line_edit_before_facts_callback(self):
+        """The guarded costing write is acquired before Facts can mutate."""
 
         async def _run():
             async with self.session_factory() as session:
@@ -455,29 +520,32 @@ class ApplyPricingServiceTests(unittest.TestCase):
                     idempotency_key="line_1",
                 )
 
-                from api.runtime import apply_pricing_option as real_apply_pricing_option
+                real_verify = service.repository.verify_revision_guarded
+                callback_called = False
 
-                async def _apply_then_concurrent_write(**kwargs):
-                    # Simulate another transaction committing a line edit while
-                    # this facts write was in flight — same session stands in
-                    # for "another connection already committed" since SQLite
-                    # can't run two real concurrent transactions in-process.
-                    result = await real_apply_pricing_option(**kwargs)
-                    await session.execute(
-                        select(CostingSheet).where(CostingSheet.id == sheet_id)
-                    )
+                async def _concurrent_write_before_guard(*args, **kwargs):
+                    # A winning line edit after the Python check but before the
+                    # SQL guard must prevent the callback from being entered.
                     from sqlalchemy import update as sa_update
-
                     await session.execute(
                         sa_update(CostingSheet)
                         .where(CostingSheet.id == sheet_id)
                         .values(costing_revision=CostingSheet.costing_revision + 1)
                     )
-                    return result
+                    return await real_verify(*args, **kwargs)
 
-                with patch(
+                async def _facts_callback_must_not_run(**kwargs):
+                    nonlocal callback_called
+                    callback_called = True
+                    raise AssertionError("Facts callback must not run after a lost costing CAS")
+
+                with patch.object(
+                    service.repository,
+                    "verify_revision_guarded",
+                    side_effect=_concurrent_write_before_guard,
+                ), patch(
                     "services.costing_service.apply_pricing_option",
-                    side_effect=_apply_then_concurrent_write,
+                    side_effect=_facts_callback_must_not_run,
                 ):
                     with self.assertRaises(CostingConflictError):
                         await service.apply_pricing(
@@ -488,7 +556,9 @@ class ApplyPricingServiceTests(unittest.TestCase):
                                 target_option_id="opt_1",
                             ),
                             actor=ACTOR,
+                            idempotency_key="mid-flight-apply",
                         )
+                self.assertFalse(callback_called)
                 await session.rollback()
 
                 # Nothing persisted: no application row, facts option untouched.
@@ -503,6 +573,46 @@ class ApplyPricingServiceTests(unittest.TestCase):
                 req = await quotes.get_latest_quotation_request(quotation_id)
                 opt = req.request_json["pricing_facts"]["options"][0]
                 self.assertEqual(opt["group_total_amount_minor"], 240000)
+
+        asyncio.run(_run())
+
+    def test_apply_pricing_rejects_published_family_quotation_without_side_effects(self):
+        async def _run():
+            async with self.session_factory() as session:
+                quotation_id = await self._create_test_quotation(session)
+                quotation = await QuotationRepository(session).get_quotation_by_id(quotation_id)
+                assert quotation is not None
+                quotation.status = "published"
+                service = CostingService(session)
+                sheet = await service.create_sheet(
+                    CostingSheetCreateSchema(quotation_id=quotation_id, currency="USD"), actor=ACTOR
+                )
+                await service.create_line(
+                    sheet.id,
+                    ServiceLineCreateSchema(
+                        base_costing_revision=0,
+                        category="accommodation",
+                        title="Hanoi Hotel",
+                        unit="room",
+                        time_basis="night",
+                        unit_cost_minor=50000,
+                        cost_currency="USD",
+                    ),
+                    actor=ACTOR,
+                    idempotency_key="published-line",
+                )
+                with self.assertRaises(CostingConflictError) as raised:
+                    await service.apply_pricing(
+                        sheet.id,
+                        ApplyPricingRequestSchema(
+                            base_revision=1, base_costing_revision=1, target_option_id="opt_1"
+                        ),
+                        actor=ACTOR,
+                        idempotency_key="published-apply",
+                    )
+                self.assertEqual(raised.exception.current_revision, 1)
+                apps = (await session.execute(select(CostingApplication))).scalars().all()
+                self.assertEqual(apps, [])
 
         asyncio.run(_run())
 
@@ -558,6 +668,46 @@ class ApplyPricingServiceTests(unittest.TestCase):
                     )
                 ).scalars().all()
                 self.assertEqual(len(apps), 1)
+
+        asyncio.run(_run())
+
+    def test_apply_pricing_reused_idempotency_key_with_different_target_conflicts(self):
+        async def _run():
+            async with self.session_factory() as session:
+                quotation_id = await self._create_test_quotation(session)
+                service = CostingService(session)
+                sheet = await service.create_sheet(
+                    CostingSheetCreateSchema(quotation_id=quotation_id, currency="USD"), actor=ACTOR
+                )
+                await service.create_line(
+                    sheet.id,
+                    ServiceLineCreateSchema(
+                        base_costing_revision=0,
+                        category="accommodation",
+                        title="Hanoi Hotel",
+                        unit="room",
+                        time_basis="night",
+                        unit_cost_minor=50_000,
+                        cost_currency="USD",
+                    ),
+                    actor=ACTOR,
+                    idempotency_key="line-idempotency-conflict",
+                )
+                await service.apply_pricing(
+                    sheet.id,
+                    ApplyPricingRequestSchema(base_revision=1, base_costing_revision=1, target_option_id="opt_1"),
+                    actor=ACTOR,
+                    idempotency_key="apply-idempotency-conflict",
+                )
+                await session.commit()
+
+                with self.assertRaises(CostingConflictError):
+                    await service.apply_pricing(
+                        sheet.id,
+                        ApplyPricingRequestSchema(base_revision=1, base_costing_revision=1, target_option_id="other_option"),
+                        actor=ACTOR,
+                        idempotency_key="apply-idempotency-conflict",
+                    )
 
         asyncio.run(_run())
 
@@ -676,6 +826,7 @@ class ApplyPricingServiceTests(unittest.TestCase):
                         target_option_id="opt_1",
                     ),
                     actor=ACTOR,
+                    idempotency_key="drift-initial-apply",
                 )
                 await session.commit()
 
@@ -723,6 +874,7 @@ class ApplyPricingServiceTests(unittest.TestCase):
                         target_option_id="opt_1",
                     ),
                     actor=ACTOR,
+                    idempotency_key="drift-reapply",
                 )
                 await session.commit()
                 self.assertEqual(reapply_resp.application.sell_total_minor, 60000)
@@ -753,6 +905,7 @@ class ApplyPricingServiceTests(unittest.TestCase):
                         sheet_resp.id,
                         ApplyPricingRequestSchema(base_revision=1, base_costing_revision=0),
                         actor=ACTOR,
+                        idempotency_key="gate-unattached",
                     )
 
                 # Empty sheet attached to quotation
@@ -766,6 +919,7 @@ class ApplyPricingServiceTests(unittest.TestCase):
                         empty_sheet.id,
                         ApplyPricingRequestSchema(base_revision=1, base_costing_revision=0),
                         actor=ACTOR,
+                        idempotency_key="gate-empty-sheet",
                     )
 
                 # Same sheet, now with a line that nets to a zero sell total
@@ -790,6 +944,7 @@ class ApplyPricingServiceTests(unittest.TestCase):
                         empty_sheet.id,
                         ApplyPricingRequestSchema(base_revision=1, base_costing_revision=1, target_option_id="opt_1"),
                         actor=ACTOR,
+                        idempotency_key="gate-zero-sell",
                     )
 
         asyncio.run(_run())
@@ -833,6 +988,7 @@ class ApplyPricingServiceTests(unittest.TestCase):
                             target_option_id="opt_1",
                         ),
                         actor=ACTOR,
+                        idempotency_key="both-stale-apply",
                     )
 
                 apps = (
@@ -851,6 +1007,7 @@ class ApplyPricingServiceTests(unittest.TestCase):
         async def _run():
             async with self.session_factory() as session:
                 quotation_id = await self._create_test_quotation(session)  # ships with 1 option (opt_1)
+                quotes = QuotationRepository(session)
                 service = CostingService(session)
 
                 sheet_resp = await service.create_sheet(
@@ -878,6 +1035,7 @@ class ApplyPricingServiceTests(unittest.TestCase):
                     sheet_id,
                     ApplyPricingRequestSchema(base_revision=1, base_costing_revision=1, target_option_id=None, option_label="Deluxe"),
                     actor=ACTOR,
+                    idempotency_key="new-option-deluxe",
                 )
                 await session.commit()
                 self.assertEqual(resp2.application.target_option_id, "opt_2")
@@ -887,11 +1045,11 @@ class ApplyPricingServiceTests(unittest.TestCase):
                     sheet_id,
                     ApplyPricingRequestSchema(base_revision=resp2.facts_revision, base_costing_revision=1, target_option_id=None, option_label="Premium"),
                     actor=ACTOR,
+                    idempotency_key="new-option-premium",
                 )
                 await session.commit()
                 self.assertEqual(resp3.application.target_option_id, "opt_3")
 
-                quotes = QuotationRepository(session)
                 req = await quotes.get_latest_quotation_request(quotation_id)
                 self.assertEqual(len(req.request_json["pricing_facts"]["options"]), 3)
 
@@ -903,6 +1061,7 @@ class ApplyPricingServiceTests(unittest.TestCase):
                             base_revision=resp3.facts_revision, base_costing_revision=1, target_option_id=None, option_label="Ultra"
                         ),
                         actor=ACTOR,
+                        idempotency_key="new-option-ultra",
                     )
 
                 apps = (
@@ -911,5 +1070,51 @@ class ApplyPricingServiceTests(unittest.TestCase):
                     )
                 ).scalars().all()
                 self.assertEqual(len(apps), 2)
+
+        asyncio.run(_run())
+
+    def test_apply_pricing_allocates_a_noncolliding_option_id_from_a_gap(self):
+        async def _run():
+            async with self.session_factory() as session:
+                quotation_id = await self._create_test_quotation(session)
+                quotes = QuotationRepository(session)
+                current_facts = await quotes.get_current_facts(quotation_id)
+                assert current_facts is not None
+                canonical = current_facts.canonical_facts_json
+                canonical["pricing_facts"]["options"].append(
+                    {**canonical["pricing_facts"]["options"][0], "id": "opt_3", "label": "Premium"}
+                )
+                await quotes.update_version_facts(
+                    quotation_id=quotation_id,
+                    canonical_facts_json=canonical,
+                    resolved_facts_json=current_facts.resolved_facts_json or {"factsHash": "gap"},
+                    facts_hash=current_facts.facts_hash or "gap",
+                )
+                service = CostingService(session)
+                sheet = await service.create_sheet(
+                    CostingSheetCreateSchema(quotation_id=quotation_id, currency="USD"), actor=ACTOR
+                )
+                await service.create_line(
+                    sheet.id,
+                    ServiceLineCreateSchema(
+                        base_costing_revision=0,
+                        category="accommodation",
+                        title="Hanoi Hotel",
+                        unit="room",
+                        time_basis="night",
+                        unit_cost_minor=50000,
+                        cost_currency="USD",
+                    ),
+                    actor=ACTOR,
+                    idempotency_key="gap-line",
+                )
+                response = await service.apply_pricing(
+                    sheet.id,
+                    ApplyPricingRequestSchema(base_revision=1, base_costing_revision=1, target_option_id=None),
+                    actor=ACTOR,
+                    idempotency_key="gap-fill-apply",
+                )
+                assert response is not None
+                self.assertEqual(response.application.target_option_id, "opt_2")
 
         asyncio.run(_run())

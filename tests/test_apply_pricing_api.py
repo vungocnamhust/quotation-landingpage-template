@@ -5,7 +5,8 @@ import unittest
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from tests._db import make_test_engine
 
 import db.session as db_session
 import main
@@ -21,7 +22,7 @@ class ApplyPricingApiTests(unittest.TestCase):
     def setUpClass(cls):
         cls.database_file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
         cls.database_file.close()
-        cls.engine = create_async_engine(f"sqlite+aiosqlite:///{cls.database_file.name}")
+        cls.engine = make_test_engine(f"sqlite+aiosqlite:///{cls.database_file.name}")
         cls.session_factory = async_sessionmaker(cls.engine, class_=AsyncSession, expire_on_commit=False)
         asyncio.run(cls._create_schema())
         cls.session_patch = patch.object(db_session, "get_session_factory", return_value=cls.session_factory)
@@ -76,6 +77,9 @@ class ApplyPricingApiTests(unittest.TestCase):
                 template_name="quote-generator",
                 baseline_lang="en",
                 source_kind="manual",
+                status="draft",
+                quotation_family_id=quotation_id,
+                business_version=1,
             )
             request_json = {
                 "source": {"kind": "manual"},
@@ -109,6 +113,14 @@ class ApplyPricingApiTests(unittest.TestCase):
                 "presentation_options": {"theme_id": "brochure", "renderer": "quote-generator"},
             }
             await quotes.create_quotation_request(quotation_id=quotation.id, request_json=request_json)
+            await quotes.create_version_facts(
+                quotation_id=quotation.id,
+                canonical_facts_json=request_json,
+                resolved_facts_json={"factsHash": "before-apply"},
+                facts_hash="before-apply",
+                source_request_id=None,
+                source_request_revision=None,
+            )
             await main.QuotationDocumentRepository(session).save_current_document(
                 quotation_id=quotation.id,
                 lang="en",
@@ -234,6 +246,7 @@ class ApplyPricingApiTests(unittest.TestCase):
         # Costing revision mismatch -> 409
         res1 = self.client.post(
             f"/api/v2/costing-sheets/{sheet_id}/apply-pricing",
+            headers={"Idempotency-Key": "apply-conflict-costing"},
             json={
                 "base_revision": 1,
                 "base_costing_revision": 999,
@@ -245,6 +258,7 @@ class ApplyPricingApiTests(unittest.TestCase):
         # Facts revision mismatch -> 409
         res2 = self.client.post(
             f"/api/v2/costing-sheets/{sheet_id}/apply-pricing",
+            headers={"Idempotency-Key": "apply-conflict-facts"},
             json={
                 "base_revision": 999,
                 "base_costing_revision": 1,
@@ -271,6 +285,16 @@ class ApplyPricingApiTests(unittest.TestCase):
 
         res = self.client.post(
             f"/api/v2/costing-sheets/{sheet_id}/apply-pricing",
+            headers={"Idempotency-Key": "apply-validation"},
             json={"base_revision": 1, "base_costing_revision": 0},
         )
         self.assertEqual(res.status_code, 422)
+
+    def test_apply_pricing_requires_nonempty_idempotency_key(self):
+        quotation_id = asyncio.run(self._seed_quotation())
+        sheet = self.client.post("/api/v2/costing-sheets", json={"quotation_id": quotation_id, "currency": "USD"}).json()
+        response = self.client.post(
+            f"/api/v2/costing-sheets/{sheet['id']}/apply-pricing",
+            json={"base_revision": 1, "base_costing_revision": 0, "target_option_id": "opt_std"},
+        )
+        self.assertEqual(response.status_code, 422, response.text)

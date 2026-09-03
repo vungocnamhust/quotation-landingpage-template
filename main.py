@@ -8,6 +8,7 @@ import re
 import html
 import socket
 import secrets
+from contextlib import asynccontextmanager
 from functools import partial
 from dotenv import load_dotenv
 from fastapi import BackgroundTasks, Depends, FastAPI, Request, HTTPException, UploadFile, File, Form, Path
@@ -212,7 +213,19 @@ def _get_db_session_factory():
 
 configure_session_factory_provider(lambda: _get_db_session_factory())
 
-app = FastAPI(title="Quotation Webhook API")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Track 1 audit R-M3: Run destination catalog seeding strictly once at application startup
+    try:
+        async with _get_db_session_factory()() as session:
+            await _seed_destination_catalog(session)
+    except Exception as exc:
+        logging.getLogger(__name__).warning("Destination catalog startup seed warning: %s", exc)
+    yield
+
+
+app = FastAPI(title="Quotation Webhook API", lifespan=lifespan)
 app.include_router(health_router)
 app.include_router(travel_styles_router)
 app.include_router(quotation_options_router)
@@ -3880,6 +3893,7 @@ async def _apply_costing_pricing_option(
     )
     from repositories.errors import DocumentRevisionConflictError
     from services.costing_service import CostingConflictError, CostingValidationError
+    from services.facts_contract import classify_facts_mutation
     from services.skeleton_builder import SkeletonBuilder
 
     quotes, documents, drafts = (
@@ -3890,9 +3904,13 @@ async def _apply_costing_pricing_option(
     quotation = await quotes.get_quotation_by_id(quotation_id)
     if quotation is None:
         raise CostingValidationError(f"Quotation '{quotation_id}' was not found.")
-    if quotation.quotation_family_id:
-        raise CostingConflictError("Facts are immutable for a business quotation version.", current_revision=base_revision)
-    if quotation.source_kind != "manual":
+    mutation_policy = classify_facts_mutation(quotation.status, quotation.source_kind)
+    if mutation_policy == "revision_locked":
+        raise CostingConflictError(
+            "Facts are locked after publication; create a successor quotation version.",
+            current_revision=base_revision,
+        )
+    if mutation_policy == "source_read_only":
         raise CostingConflictError("Facts are read-only for this quotation source.", current_revision=base_revision)
 
     effective_lang = lang or quotation.baseline_lang
@@ -3908,9 +3926,8 @@ async def _apply_costing_pricing_option(
             current_document=current.document_json,
         )
 
-    request_snapshot = await quotes.get_latest_quotation_request(quotation_id)
-    version_facts = await quotes.get_version_facts(quotation_id)
-    snapshot = version_facts.canonical_facts_json if version_facts is not None else (request_snapshot.request_json if request_snapshot else {})
+    current_facts = await quotes.get_current_facts(quotation_id)
+    snapshot = current_facts.canonical_facts_json if current_facts is not None else {}
     snapshot_normalized = normalize_legacy_facts_snapshot(snapshot) if snapshot else {}
     payload = CreateQuoteRequestV1.model_validate(snapshot_normalized)
 
@@ -3931,7 +3948,11 @@ async def _apply_costing_pricing_option(
                 "Maximum 3 commercial pricing options reached.",
                 current_revision=base_revision,
             )
-        target_id = f"opt_{len(options) + 1}"
+        existing_ids = {option.id for option in options}
+        index = 1
+        while f"opt_{index}" in existing_ids:
+            index += 1
+        target_id = f"opt_{index}"
         matched_opt = None
 
     if matched_opt is not None:
@@ -3992,6 +4013,12 @@ async def _apply_costing_pricing_option(
         revision=saved.revision,
         document_json=canonical_doc,
         change_source="apply_costing_pricing",
+    )
+    await quotes.update_version_facts(
+        quotation_id=quotation_id,
+        canonical_facts_json=canonical.model_dump(mode="json"),
+        resolved_facts_json=resolved,
+        facts_hash=str(resolved["factsHash"]),
     )
     await quotes.create_quotation_request(quotation_id=quotation_id, request_json=canonical.model_dump(mode="json"))
     await drafts.mark_stale(quotation_id)
@@ -4948,7 +4975,6 @@ async def _resolve_v2_facts(payload: CreateQuoteRequestV1, session: AsyncSession
         return canonical, resolved
 
     async with _get_db_session_factory()() as sess:
-        await _seed_destination_catalog(sess)
         resolver = FactsResolver()
         try:
             canonical, resolved = await resolver.resolve(payload, DestinationRepository(sess).resolve)
@@ -7246,7 +7272,6 @@ async def _canonicalize_quote_destinations(payload: CreateQuoteRequestV1) -> tup
     missing: list[str] = []
     refs: dict[str, Any] = {"routeDestinationRefs": [], "itinerary": [], "hotels": []}
     async with _get_db_session_factory()() as session:
-        await _seed_destination_catalog(session)
         repository = DestinationRepository(session)
 
         async def resolve(value: str, path: str):
@@ -7284,7 +7309,6 @@ async def _canonicalize_quote_destinations(payload: CreateQuoteRequestV1) -> tup
 
 
 async def _resolve_media_location(session, payload: MediaLibraryLocationRequest):
-    await _seed_destination_catalog(session)
     destinations = DestinationRepository(session)
     if payload.kind == "team":
         if not payload.travelDesignerId:
@@ -8246,7 +8270,6 @@ async def _validate_accommodation_assets(session, *, asset_prefix: str, hotel_as
 
 
 async def _save_accommodation_profile(session, payload: AccommodationProfileRequest, profile=None):
-    await _seed_destination_catalog(session)
     destination = await session.get(__import__("db.models.destination", fromlist=["DestinationCatalog"]).DestinationCatalog, payload.destinationId)
     if destination is None or not destination.is_active:
         raise HTTPException(status_code=422, detail={"missingInputs": ["destinationId"]})
@@ -8276,7 +8299,6 @@ async def _save_accommodation_profile(session, payload: AccommodationProfileRequ
 @app.get("/api/v2/accommodations")
 async def list_accommodations(active: Literal["true", "false", "all"] = "true", query: str = "", destinationId: str | None = None, destination: str | None = None, principal: Principal = Depends(require_editor)):
     async with _get_db_session_factory()() as session:
-        await _seed_destination_catalog(session)
         dest_repo = DestinationRepository(session)
         resolved_dest_id = destinationId
         if destinationId:
@@ -9094,7 +9116,21 @@ async def _canonical_workflow(quotation_id: str, lang: str | None = None) -> dic
     effective_lang = (lang or quote.baseline_lang or "").strip().lower()
     if effective_lang not in {"en", "vi", "ar"}:
         raise HTTPException(status_code=422, detail={"message": "Unsupported quotation locale.", "locale": effective_lang})
-    review = await _canonical_review_status(quotation_id, effective_lang)
+    try:
+        review = await _canonical_review_status(quotation_id, effective_lang)
+    except HTTPException as exc:
+        if exc.status_code == 404:
+            return {
+                "quotationId": quotation_id,
+                "locale": effective_lang,
+                "currentRevision": None,
+                "facts": {"ready": False, "missingInputs": ["facts_not_initialized"]},
+                "content": {"ready": False, "blockingDrafts": [], "contentBlockers": [], "generationOptional": True},
+                "design": {"ready": False, "presentationErrors": [], "assetReadiness": {"ready": False, "missing": [], "invalid": []}},
+                "review": {"ready": False, "blockers": ["facts_not_initialized"]},
+                "publicationTargets": [],
+            }
+        raise
     unresolved = review["contentBlockers"]
     facts_ready = not review["missingInputs"]
     return {

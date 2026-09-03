@@ -84,6 +84,15 @@ class CostingRepository:
             return None
         return line
 
+    async def get_line_by_id_for_update(self, line_id: str, *, tenant_id: str = DEFAULT_TENANT_ID) -> ServiceLine | None:
+        result = await self.session.execute(
+            select(ServiceLine)
+            .where(ServiceLine.id == line_id, ServiceLine.tenant_id == tenant_id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        )
+        return result.scalar_one_or_none()
+
     async def get_application_by_idempotency_key(
         self, sheet_id: str, *, idempotency_key: str, tenant_id: str = DEFAULT_TENANT_ID
     ) -> CostingApplication | None:

@@ -157,7 +157,7 @@ class QuotationContentDraft(Base):
 
 
 class QuotationVersionFacts(Base):
-    """The one immutable, canonical Facts snapshot for a new-model version."""
+    """The authoritative current Facts snapshot for a new-model draft version."""
 
     __tablename__ = "quotation_version_facts"
     __table_args__ = (UniqueConstraint("quotation_id", name="uq_quotation_version_facts_quotation"),)

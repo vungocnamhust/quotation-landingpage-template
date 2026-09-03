@@ -108,6 +108,7 @@ class Settings:
     dmc_auth_proxy_url: str = os.getenv("DMC_AUTH_PROXY_URL", "").strip()
     cloudflare_access_team_domain: str = os.getenv("CLOUDFLARE_ACCESS_TEAM_DOMAIN", "").strip().lower()
     cloudflare_access_audience: str = os.getenv("CLOUDFLARE_ACCESS_AUDIENCE", "").strip()
+    ops_timezone: str = os.getenv("OPS_TIMEZONE", "Asia/Ho_Chi_Minh").strip() or "Asia/Ho_Chi_Minh"
 
     @property
     def media_library_roots(self) -> tuple[str, ...]:
@@ -140,6 +141,19 @@ class Settings:
         if not self.cloudflare_access_team_domain:
             return ""
         return f"https://{self.cloudflare_access_team_domain}/cdn-cgi/access/certs"
+
+    def __post_init__(self) -> None:
+        # Fail fast at startup, not on the first booking request of the day: an
+        # invalid OPS_TIMEZONE would otherwise surface as a 500 from
+        # `zoneinfo.ZoneInfo()` deep inside `routers/v2/bookings.py::_today`.
+        from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+        try:
+            ZoneInfo(self.ops_timezone)
+        except (ZoneInfoNotFoundError, ValueError) as err:
+            raise RuntimeError(
+                f"OPS_TIMEZONE={self.ops_timezone!r} is not a valid IANA timezone name."
+            ) from err
 
 
 settings = Settings()

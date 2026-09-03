@@ -109,7 +109,7 @@ def default_request_by(penalty_free_until: date | None, service_date: date) -> d
 
 def cancellation_penalty_minor(
     cancellation_policy: dict[str, Any] | None,
-    sell_or_cost_minor: int,
+    cost_minor: int,
     service_date: date,
     on_date: date,
 ) -> int:
@@ -119,13 +119,13 @@ def cancellation_penalty_minor(
     among tiers whose threshold is still ``>= days_remaining`` (the tightest
     bracket not yet exceeded). No qualifying tier (cancelling further out than
     every declared threshold) means free — 0 penalty. Cancelling on/after
-    ``service_date`` (``days_remaining < 0``) uses ``no_show_penalty_percent``.
+    ``service_date`` (``days_remaining <= 0``) uses ``no_show_penalty_percent``.
     """
     tiers = (cancellation_policy or {}).get("tiers") or []
     no_show_percent = int((cancellation_policy or {}).get("no_show_penalty_percent", 100))
     days_remaining = (service_date - on_date).days
 
-    if days_remaining < 0:
+    if days_remaining <= 0:
         percent = no_show_percent
     else:
         qualifying = [tier for tier in tiers if days_remaining <= int(tier["days_before_service_min"])]
@@ -135,7 +135,7 @@ def cancellation_penalty_minor(
             else 0
         )
 
-    return _round_half_up_div(sell_or_cost_minor * int(percent), 100)
+    return _round_half_up_div(cost_minor * int(percent), 100)
 
 
 def validate_transition(

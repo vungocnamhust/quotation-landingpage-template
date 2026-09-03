@@ -1,0 +1,76 @@
+name: Track 3 PostgreSQL concurrency acceptance
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "alembic/**"
+      - "core/**"
+      - "db/**"
+      - "repositories/booking_repository.py"
+      - "repositories/costing_repository.py"
+      - "repositories/quotation_repository.py"
+      - "services/booking_service.py"
+      - "services/costing_service.py"
+      - "routers/v2/bookings.py"
+      - "routers/v2/costing.py"
+      - "tests/test_track3_postgres_concurrency.py"
+      - "requirements*.txt"
+      - ".github/workflows/track3-postgres-concurrency.yml"
+  push:
+    branches: [main]
+    paths:
+      - "alembic/**"
+      - "core/**"
+      - "db/**"
+      - "repositories/booking_repository.py"
+      - "repositories/costing_repository.py"
+      - "repositories/quotation_repository.py"
+      - "services/booking_service.py"
+      - "services/costing_service.py"
+      - "routers/v2/bookings.py"
+      - "routers/v2/costing.py"
+      - "tests/test_track3_postgres_concurrency.py"
+      - "requirements*.txt"
+      - ".github/workflows/track3-postgres-concurrency.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  booking-and-apply-pricing-concurrency:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: quotation_track3_test
+          POSTGRES_USER: quotation
+          POSTGRES_PASSWORD: quotation_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U quotation -d quotation_track3_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      ENVIRONMENT: ci
+      DATABASE_URL: postgresql+asyncpg://quotation:quotation_password@localhost:5432/quotation_track3_test
+      TRACK3_POSTGRES_TEST_URL: postgresql+asyncpg://quotation:quotation_password@localhost:5432/quotation_track3_test
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.lock
+
+      - name: Install locked backend dependencies
+        run: pip install -r requirements.lock
+
+      - name: Run Track 3 PostgreSQL concurrency acceptance
+        run: PYTHONPATH=. pytest -m integration tests/test_track3_postgres_concurrency.py -v

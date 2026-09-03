@@ -965,15 +965,11 @@ export async function deleteServiceLine(
 export async function applyCostingPricing(
   sheetId: string,
   input: ApplyPricingRequestPayload,
-  idempotencyKey?: string,
+  idempotencyKey: string,
 ): Promise<ApplyPricingResponse> {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (idempotencyKey) {
-    headers['Idempotency-Key'] = idempotencyKey;
-  }
   return request<ApplyPricingResponse>(`/api/v2/costing-sheets/${encodeURIComponent(sheetId)}/apply-pricing`, {
     method: 'POST',
-    headers,
+    headers: { 'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey },
     body: JSON.stringify(input),
   });
 }
@@ -1148,6 +1144,7 @@ export async function listAiRuns(sheetId: string): Promise<AiRunListResponse> {
 
 export type BookingLineStatus = 'to_request' | 'requested' | 'confirmed' | 'delivered' | 'cancelled';
 export type BookingHeaderStatus = 'active' | 'completed' | 'cancelled';
+export type BookingHeaderMutableStatus = 'completed';
 export type BookingLineUrgency = 'overdue' | 'due_soon' | 'ok';
 
 export type SupplierContactProfile = {
@@ -1284,7 +1281,7 @@ export async function getBooking(bookingId: string): Promise<BookingDetailRespon
 
 export async function updateBookingHeader(
   bookingId: string,
-  input: { base_booking_revision: number; customer_balance_due_date?: string | null; status?: BookingHeaderStatus; notes?: string | null },
+  input: { base_booking_revision: number; customer_balance_due_date?: string | null; status?: BookingHeaderMutableStatus; notes?: string | null },
 ): Promise<BookingDetailResponse> {
   return request<BookingDetailResponse>(`/api/v2/bookings/${encodeURIComponent(bookingId)}`, {
     method: 'PUT',
@@ -1913,6 +1910,4 @@ export async function recordApPayment(
     body: JSON.stringify(input),
   });
 }
-
-
 

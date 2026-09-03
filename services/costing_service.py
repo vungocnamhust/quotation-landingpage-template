@@ -281,7 +281,7 @@ class CostingService:
             return None
         self._check_revision(sheet, payload.base_costing_revision)
 
-        line = await self.repository.get_line_by_id(line_id)
+        line = await self.repository.get_line_by_id_for_update(line_id)
         if line is None or line.sheet_id != sheet_id:
             return None
         self._guard_booked_line(line, sheet)
@@ -306,7 +306,7 @@ class CostingService:
             return None
         self._check_revision(sheet, base_costing_revision)
 
-        line = await self.repository.get_line_by_id(line_id)
+        line = await self.repository.get_line_by_id_for_update(line_id)
         if line is None or line.sheet_id != sheet_id:
             return None
         self._guard_booked_line(line, sheet)
@@ -324,7 +324,7 @@ class CostingService:
         payload: ApplyPricingRequestSchema,
         *,
         actor: ActorRef,
-        idempotency_key: str | None = None,
+        idempotency_key: str,
     ) -> ApplyPricingResponseSchema | None:
         sheet = await self.repository.get_sheet_by_id(sheet_id)
         if sheet is None:
@@ -359,31 +359,45 @@ class CostingService:
         # fields (application, facts_revision, costing_revision, totals) are read
         # back from the immutable application row, never recomputed from live
         # state — only the by_day/by_category breakdown is a cosmetic refresh.
-        if idempotency_key:
-            existing_app = await self.repository.get_application_by_idempotency_key(
-                sheet_id, idempotency_key=idempotency_key
+        existing_app = await self.repository.get_application_by_idempotency_key(sheet_id, idempotency_key=idempotency_key)
+        if existing_app is not None:
+            # A key identifies one commercial operation, not merely a response
+            # cache entry.  The immutable application row retains the two
+            # revision preconditions and resolved target, which are sufficient
+            # to reject a caller that accidentally reuses a key for a different
+            # apply operation while preserving a genuine lost-response retry.
+            if (
+                payload.base_costing_revision != existing_app.costing_revision_at_apply
+                or payload.base_revision != existing_app.facts_revision_after - 1
+                or (
+                    payload.target_option_id is not None
+                    and payload.target_option_id != existing_app.target_option_id
+                )
+            ):
+                raise CostingConflictError(
+                    f"Idempotency key '{idempotency_key}' was already used for a different pricing apply.",
+                    current_revision=existing_app.facts_revision_after,
+                )
+            pricing_opts: list[dict[str, Any]] = []
+            current_facts = await self.quotation_repository.get_current_facts(sheet.quotation_id)
+            if current_facts is not None:
+                pricing_opts = (current_facts.canonical_facts_json.get("pricing_facts") or {}).get("options") or []
+            fresh_breakdown = self._build_summary_schema(summary)
+            replay_summary = CostingSummarySchema(
+                cost_total_minor=existing_app.cost_total_minor,
+                sell_total_minor=existing_app.sell_total_minor,
+                margin_minor=existing_app.sell_total_minor - existing_app.cost_total_minor,
+                margin_bps=existing_app.margin_bps,
+                by_day=fresh_breakdown.by_day,
+                by_category=fresh_breakdown.by_category,
             )
-            if existing_app is not None:
-                pricing_opts: list[dict[str, Any]] = []
-                req = await self.quotation_repository.get_latest_quotation_request(sheet.quotation_id)
-                if req and req.request_json:
-                    pricing_opts = (req.request_json.get("pricing_facts") or {}).get("options") or []
-                fresh_breakdown = self._build_summary_schema(summary)
-                replay_summary = CostingSummarySchema(
-                    cost_total_minor=existing_app.cost_total_minor,
-                    sell_total_minor=existing_app.sell_total_minor,
-                    margin_minor=existing_app.sell_total_minor - existing_app.cost_total_minor,
-                    margin_bps=existing_app.margin_bps,
-                    by_day=fresh_breakdown.by_day,
-                    by_category=fresh_breakdown.by_category,
-                )
-                return ApplyPricingResponseSchema(
-                    application=CostingApplicationResponseSchema.model_validate(existing_app),
-                    facts_revision=existing_app.facts_revision_after,
-                    costing_revision=existing_app.costing_revision_at_apply,
-                    summary=replay_summary,
-                    pricing_options=pricing_opts,
-                )
+            return ApplyPricingResponseSchema(
+                application=CostingApplicationResponseSchema.model_validate(existing_app),
+                facts_revision=existing_app.facts_revision_after,
+                costing_revision=existing_app.costing_revision_at_apply,
+                summary=replay_summary,
+                pricing_options=pricing_opts,
+            )
 
         if not sheet.quotation_id:
             raise CostingValidationError("Costing sheet must be attached to a quotation before applying pricing.")
@@ -395,6 +409,17 @@ class CostingService:
 
         if summary.sell_total_minor <= 0:
             raise CostingValidationError("Cannot apply pricing when sell total is less than or equal to zero.")
+
+        # R6 (Track 2 re-review): this DB-level compare-and-swap runs before the facts
+        # write (not after, as in the original 16.3 P1 fix) — it still closes the same
+        # window, because the guarded UPDATE holds the row lock on ``costing_sheets``
+        # until this transaction commits, so a concurrent line/settings writer blocks
+        # here rather than racing past it. Do not move this back below the facts write
+        # without re-adding a second post-write CAS check.
+        try:
+            await self.repository.verify_revision_guarded(sheet.id, expected_revision=payload.base_costing_revision)
+        except CostingRevisionRaceError as err:
+            raise await self._conflict_from_race(sheet.id) from err
 
         try:
             facts_res = await apply_pricing_option(
@@ -413,18 +438,6 @@ class CostingService:
                 f"Quotation facts revision conflict: {exc}",
                 current_revision=exc.current_revision,
             ) from exc
-
-        # 16.3 P1 fix: apply_pricing never bumps costing_sheets itself, so the
-        # Python-level `_check_revision` above is only a fast pre-check — a
-        # concurrent line/settings write could still commit while the facts
-        # write above was in flight. This is the DB-level compare-and-swap
-        # that closes that window before anything derived from `summary` is
-        # persisted; nothing has committed yet (router commits once, at the
-        # end), so a race here rolls the facts write above back too.
-        try:
-            await self.repository.verify_revision_guarded(sheet.id, expected_revision=payload.base_costing_revision)
-        except CostingRevisionRaceError as err:
-            raise await self._conflict_from_race(sheet.id) from err
 
         app_id = generate_id(APPLICATION_ID_PREFIX)
         app_values = {
@@ -738,9 +751,9 @@ class CostingService:
             commercial_modified = False
             target_label = None
             try:
-                quotation_req = await self.quotation_repository.get_latest_quotation_request(sheet.quotation_id)
-                if quotation_req and quotation_req.request_json:
-                    pricing_facts = quotation_req.request_json.get("pricing_facts") or {}
+                current_facts = await self.quotation_repository.get_current_facts(sheet.quotation_id)
+                if current_facts is not None:
+                    pricing_facts = current_facts.canonical_facts_json.get("pricing_facts") or {}
                     options = pricing_facts.get("options") or []
                     matched = next((opt for opt in options if opt.get("id") == latest_app.target_option_id), None)
                     if matched is None:

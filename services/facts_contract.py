@@ -10,7 +10,7 @@ from __future__ import annotations
 import copy
 import html
 import re
-from typing import Any
+from typing import Any, Literal
 
 from quote_document import HTML_TAG_RE
 from services.pricing_contract import normalize_legacy_pricing_facts
@@ -25,6 +25,23 @@ _DAY_FACT_KEYS = {
     "notes", "sense_of_pace", "display_date",
 }
 _BOOKING_ITEM_KEYS = {"key", "label", "body"}
+
+FactsMutationPolicy = Literal["mutable", "revision_locked", "source_read_only"]
+
+
+def classify_facts_mutation(status: str, source_kind: str) -> FactsMutationPolicy:
+    """Classify whether a quotation's Facts may be changed.
+
+    Business-version provenance is intentionally absent from this policy.  A
+    version-family draft is the normal production quotation head and remains
+    editable; publication (or any other non-draft lifecycle state) is the
+    revision boundary.
+    """
+    if status != "draft":
+        return "revision_locked"
+    if source_kind != "manual":
+        return "source_read_only"
+    return "mutable"
 
 
 def _plain_text(value: Any) -> str | None:

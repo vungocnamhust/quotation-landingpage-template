@@ -7,6 +7,7 @@ from sqlalchemy import and_, inspect, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from sqlalchemy.orm.attributes import set_committed_value
 
 from db.models.booking import Booking, BookingLine, BusinessCodeCounter
 
@@ -16,6 +17,13 @@ DEFAULT_TENANT_ID = "capella"
 class BookingSlotTakenError(Exception):
     """Raised when a partial-unique slot (active booking per quotation, active line
     per source service_line, or an idempotency key) is already occupied."""
+
+
+class BookingRevisionRaceError(Exception):
+    def __init__(self, booking_id: str, expected_revision: int) -> None:
+        self.booking_id = booking_id
+        self.expected_revision = expected_revision
+        super().__init__(f"Booking '{booking_id}' revision moved beyond {expected_revision}.")
 
 
 class BookingRepository:
@@ -29,6 +37,16 @@ class BookingRepository:
             select(Booking)
             .where(Booking.id == booking_id, Booking.tenant_id == tenant_id)
             .options(selectinload(Booking.lines))
+        )
+        return result.scalar_one_or_none()
+
+    async def get_booking_by_id_fresh(self, booking_id: str, *, tenant_id: str = DEFAULT_TENANT_ID) -> Booking | None:
+        """Reload the aggregate after winning its CAS before evaluating live state."""
+        result = await self.session.execute(
+            select(Booking)
+            .where(Booking.id == booking_id, Booking.tenant_id == tenant_id)
+            .options(selectinload(Booking.lines))
+            .execution_options(populate_existing=True)
         )
         return result.scalar_one_or_none()
 
@@ -58,6 +76,19 @@ class BookingRepository:
             return None
         return line
 
+    async def get_line_by_id_fresh(self, line_id: str, *, tenant_id: str = DEFAULT_TENANT_ID) -> BookingLine | None:
+        result = await self.session.execute(
+            select(BookingLine)
+            .where(BookingLine.id == line_id, BookingLine.tenant_id == tenant_id)
+            .execution_options(populate_existing=True)
+        )
+        return result.scalar_one_or_none()
+
+    async def get_booking_revision(self, booking_id: str, *, tenant_id: str = DEFAULT_TENANT_ID) -> int | None:
+        return await self.session.scalar(
+            select(Booking.booking_revision).where(Booking.id == booking_id, Booking.tenant_id == tenant_id)
+        )
+
     async def get_active_line_by_source_service_line(
         self, source_service_line_id: str, *, tenant_id: str = DEFAULT_TENANT_ID
     ) -> BookingLine | None:
@@ -70,12 +101,43 @@ class BookingRepository:
         )
         return result.scalar_one_or_none()
 
+    async def list_active_lines_by_source_service_line_ids(
+        self, source_service_line_ids: list[str], *, tenant_id: str = DEFAULT_TENANT_ID
+    ) -> list[BookingLine]:
+        if not source_service_line_ids:
+            return []
+        result = await self.session.scalars(
+            select(BookingLine).where(
+                BookingLine.source_service_line_id.in_(source_service_line_ids),
+                BookingLine.status != "cancelled",
+                BookingLine.tenant_id == tenant_id,
+            )
+        )
+        return list(result.all())
+
     async def get_line_by_voucher_ref(
         self, voucher_ref: str, *, tenant_id: str = DEFAULT_TENANT_ID
     ) -> BookingLine | None:
         """Read-only lookup for AP voucher matching (15.9) — ``voucher_ref`` is globally unique."""
         result = await self.session.execute(
             select(BookingLine).where(BookingLine.voucher_ref == voucher_ref, BookingLine.tenant_id == tenant_id)
+        )
+        return result.scalar_one_or_none()
+
+    async def get_line_by_transition_idempotency_key(
+        self, idempotency_key: str, *, tenant_id: str = DEFAULT_TENANT_ID
+    ) -> BookingLine | None:
+        """Tenant-wide replay lookup — a key must identify one transition, not one line.
+
+        ``transition_idempotency_key`` carries no DB unique index (frozen migration
+        ``_42``), so this is a best-effort read guard backed by the service-level
+        compatibility check in ``BookingService.transition_line``, not a CAS.
+        """
+        result = await self.session.execute(
+            select(BookingLine)
+            .where(BookingLine.transition_idempotency_key == idempotency_key, BookingLine.tenant_id == tenant_id)
+            .order_by(BookingLine.updated_at.desc())
+            .limit(1)
         )
         return result.scalar_one_or_none()
 
@@ -118,14 +180,34 @@ class BookingRepository:
 
     # ----------------------------------------------------------------- writes
 
+    async def reserve_revision(self, booking: Booking, *, expected_revision: int) -> None:
+        now = datetime.now(timezone.utc)
+        result = await self.session.execute(
+            update(Booking)
+            .where(
+                Booking.id == booking.id,
+                Booking.tenant_id == booking.tenant_id,
+                Booking.booking_revision == expected_revision,
+            )
+            .values(booking_revision=expected_revision + 1, updated_at=now)
+            .execution_options(synchronize_session=False)
+        )
+        if result.rowcount != 1:
+            raise BookingRevisionRaceError(booking.id, expected_revision)
+        # The CAS statement already owns these writes.  Mark the identity-map
+        # copy as synchronized without dirtying it, otherwise a later flush
+        # would issue an unconditional second UPDATE for the same aggregate.
+        set_committed_value(booking, "booking_revision", expected_revision + 1)
+        set_committed_value(booking, "updated_at", now)
+
     async def insert_booking(self, *, booking_id: str, tenant_id: str = DEFAULT_TENANT_ID, values: dict[str, Any]) -> Booking:
         now = datetime.now(timezone.utc)
         booking = Booking(id=booking_id, tenant_id=tenant_id, created_at=now, updated_at=now, **values)
-        self.session.add(booking)
         try:
-            await self.session.flush()
+            async with self.session.begin_nested():
+                self.session.add(booking)
+                await self.session.flush()
         except IntegrityError as err:
-            await self.session.rollback()
             raise BookingSlotTakenError(str(err)) from err
         return booking
 
@@ -134,41 +216,36 @@ class BookingRepository:
     ) -> BookingLine:
         now = datetime.now(timezone.utc)
         line = BookingLine(id=line_id, booking_id=booking.id, tenant_id=tenant_id, created_at=now, updated_at=now, **values)
-        self.session.add(line)
-        # Only touch the in-memory collection if it's already loaded: appending to
-        # an unloaded collection on a just-flushed object triggers an
-        # async-incompatible lazy load. When it *is* loaded, appending keeps it in
-        # sync — a later get_booking_by_id() on the same identity-mapped object
-        # would otherwise skip re-populating an already-loaded relationship.
+        try:
+            async with self.session.begin_nested():
+                self.session.add(line)
+                await self.session.flush()
+        except IntegrityError as err:
+            raise BookingSlotTakenError(str(err)) from err
+        # Only touch the in-memory collection if it is already loaded.  Do this
+        # after the nested transaction succeeds: ``begin_nested`` autoflushes
+        # before it opens, so adding first would leak a unique-slot failure into
+        # the caller's outer transaction.
         if "lines" in inspect(booking).dict:
             booking.lines.append(line)
-        booking.booking_revision += 1
-        booking.updated_at = now
-        try:
-            await self.session.flush()
-        except IntegrityError as err:
-            await self.session.rollback()
-            raise BookingSlotTakenError(str(err)) from err
         return line
 
     async def update_header(self, booking: Booking, *, values: dict[str, Any]) -> Booking:
         for field, value in values.items():
             setattr(booking, field, value)
-        booking.booking_revision += 1
         booking.updated_at = datetime.now(timezone.utc)
         await self.session.flush()
         return booking
 
     async def update_line(self, booking: Booking, line: BookingLine, *, values: dict[str, Any]) -> BookingLine:
-        for field, value in values.items():
-            setattr(line, field, value)
-        line.updated_at = datetime.now(timezone.utc)
-        booking.booking_revision += 1
-        booking.updated_at = line.updated_at
         try:
-            await self.session.flush()
+            async with self.session.begin_nested():
+                for field, value in values.items():
+                    setattr(line, field, value)
+                line.updated_at = datetime.now(timezone.utc)
+                booking.updated_at = line.updated_at
+                await self.session.flush()
         except IntegrityError as err:
-            await self.session.rollback()
             raise BookingSlotTakenError(str(err)) from err
         return line
 
@@ -187,7 +264,6 @@ class BookingRepository:
                 line.cancel_penalty_minor = penalties[line.id]
             line.updated_by = actor
             line.updated_at = now
-        booking.booking_revision += 1
         booking.updated_at = now
         await self.session.flush()
 
@@ -211,10 +287,14 @@ class BookingRepository:
             await self.session.flush()
             return int(row)
 
-        self.session.add(BusinessCodeCounter(tenant_id=tenant_id, code_type=code_type, year=year, last_value=1))
         try:
-            await self.session.flush()
+            async with self.session.begin_nested():
+                self.session.add(BusinessCodeCounter(tenant_id=tenant_id, code_type=code_type, year=year, last_value=0))
+                await self.session.flush()
         except IntegrityError:
-            await self.session.rollback()
-            return await self.next_business_code_sequence(code_type=code_type, year=year, tenant_id=tenant_id)
-        return 1
+            pass
+        result = await self.session.execute(stmt)
+        row = result.scalar_one_or_none()
+        if row is None:
+            raise RuntimeError("Business code counter was not available after creation race.")
+        return int(row)

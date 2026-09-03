@@ -19,6 +19,7 @@ from repositories.travel_designer_repository import TravelDesignerRepository
 from repositories.errors import DocumentRevisionConflictError
 from schemas.brand_contract import _require_active_v2_brand
 from services.skeleton_builder import SkeletonBuilder
+from services.facts_contract import classify_facts_mutation
 
 
 router = APIRouter(prefix="/api/v2/quotations", tags=["quotation-facts"])
@@ -56,15 +57,15 @@ async def get_quotation_facts_v2(
     async with h._get_db_session_factory()() as session:
         quotes, documents = QuotationRepository(session), QuotationDocumentRepository(session)
         quotation = await quotes.get_quotation_by_id(quotation_id)
+        current_facts = await quotes.get_current_facts(quotation_id)
         request = await quotes.get_latest_quotation_request(quotation_id)
-        version_facts = await quotes.get_version_facts(quotation_id)
-        if quotation is None or (request is None and version_facts is None):
+        if quotation is None or current_facts is None:
             raise HTTPException(status_code=404, detail="Quotation facts were not found.")
         document = await documents.get_current_document(quotation_id, quotation.baseline_lang)
-        snapshot = version_facts.canonical_facts_json if version_facts is not None else request.request_json
+        snapshot = current_facts.canonical_facts_json
         payload = CreateQuoteRequestV1.model_validate(h.normalize_legacy_facts_snapshot(snapshot))
         canonical = payload
-        resolved = version_facts.resolved_facts_json if version_facts is not None else (await h._resolve_v2_facts(payload))[1]
+        resolved = current_facts.resolved_facts_json or (await h._resolve_v2_facts(payload))[1]
         if canonical.presentation_options.travel_designer_id is None and quotation.designer_profile_id:
             canonical.presentation_options.travel_designer_id = quotation.designer_profile_id
 
@@ -108,12 +109,6 @@ async def put_quotation_facts_v2(
 ):
     h = _get_helpers()
     await h.require_owned_quotation(quotation_id, principal)
-    canonical, resolved = await h._resolve_v2_facts(payload)
-    if resolved["missingInputs"]:
-        raise HTTPException(
-            status_code=422,
-            detail={"message": "Required quotation facts are missing.", "missingInputs": resolved["missingInputs"]},
-        )
     async with h._get_db_session_factory()() as session:
         quotes, documents, drafts, designers = (
             QuotationRepository(session),
@@ -124,10 +119,20 @@ async def put_quotation_facts_v2(
         quotation = await quotes.get_quotation_by_id(quotation_id)
         if quotation is None:
             raise HTTPException(status_code=404, detail="Quotation was not found.")
-        if quotation.quotation_family_id:
-            raise HTTPException(status_code=409, detail={"message": "Facts are immutable for a business quotation version. Create an Edit Quotation version.", "code": "immutable_facts", "editQuotationId": quotation_id})
-        if quotation.source_kind != "manual":
+        mutation_policy = classify_facts_mutation(quotation.status, quotation.source_kind)
+        if mutation_policy == "revision_locked":
+            raise HTTPException(
+                status_code=409,
+                detail={"message": "Facts are locked after publication; create a successor quotation version.", "currentRevision": quotation.current_revision},
+            )
+        if mutation_policy == "source_read_only":
             raise HTTPException(status_code=403, detail="Facts are read-only for this quotation source.")
+        canonical, resolved = await h._resolve_v2_facts(payload, session=session)
+        if resolved["missingInputs"]:
+            raise HTTPException(
+                status_code=422,
+                detail={"message": "Required quotation facts are missing.", "missingInputs": resolved["missingInputs"]},
+            )
         if canonical.brand_id != quotation.brand_id:
             raise HTTPException(
                 status_code=422,
@@ -189,6 +194,12 @@ async def put_quotation_facts_v2(
             revision=saved.revision,
             document_json=canonical_doc,
             change_source="update_facts",
+        )
+        await quotes.update_version_facts(
+            quotation_id=quotation_id,
+            canonical_facts_json=canonical.model_dump(mode="json"),
+            resolved_facts_json=resolved,
+            facts_hash=str(resolved["factsHash"]),
         )
         await quotes.create_quotation_request(quotation_id=quotation_id, request_json=canonical.model_dump(mode="json"))
         await drafts.mark_stale(quotation_id)

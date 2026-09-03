@@ -2,7 +2,8 @@ import asyncio
 import json
 import pytest
 from unittest.mock import patch
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from tests._db import make_test_engine
 
 from db.base import Base
 from db.models.destination import DestinationCatalog
@@ -266,7 +267,7 @@ def test_quote_document_destination_ref_preserves_and_serializes():
 
 @pytest.mark.anyio
 async def test_put_quotation_facts_pipeline_and_concurrency():
-    engine = create_async_engine("sqlite+aiosqlite:///:memory:", echo=False)
+    engine = make_test_engine("sqlite+aiosqlite:///:memory:", echo=False)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
@@ -334,6 +335,14 @@ async def test_put_quotation_facts_pipeline_and_concurrency():
                 quotation_id="quo_e4182874ee99",
                 request_json=canonical.model_dump(mode="json"),
             )
+            await quotes.create_version_facts(
+                quotation_id="quo_e4182874ee99",
+                canonical_facts_json=canonical.model_dump(mode="json"),
+                resolved_facts_json=resolved,
+                facts_hash=resolved["factsHash"],
+                source_request_id=None,
+                source_request_revision=None,
+            )
             await session.commit()
 
         principal = Principal(email="test@example.com", role="editor")
@@ -364,6 +373,9 @@ async def test_put_quotation_facts_pipeline_and_concurrency():
             saved_doc = await QuotationDocumentRepository(session).get_current_document("quo_e4182874ee99", "en")
             assert saved_doc is not None
             assert saved_doc.revision == 2
+            version_facts = await QuotationRepository(session).get_version_facts("quo_e4182874ee99")
+            assert version_facts is not None
+            assert version_facts.canonical_facts_json["trip_facts"]["destinations"] == ["Ho Chi Minh City"]
             # Must serialize with standard json.dumps cleanly
             raw_json = json.dumps(saved_doc.document_json)
             assert "Ho Chi Minh City" in raw_json
