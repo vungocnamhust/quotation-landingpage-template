@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Query, status
+from pydantic import BaseModel, Field
 
 from api.dependencies import DbSessionDep, EditorPrincipalDep
 from core.kernel import ActorRef
@@ -13,9 +14,13 @@ from schemas.v2.supplier import (
     SupplierResponseSchema,
     SupplierUpdateSchema,
 )
-from services.supplier_service import SupplierService
+from services.supplier_service import SupplierConflictError, SupplierService, SupplierValidationError
 
 router = APIRouter(prefix="/api/v2/suppliers", tags=["suppliers"])
+
+
+class SupplierStatusUpdateSchema(BaseModel):
+    is_active: bool = Field(alias="isActive")
 
 
 def _actor_from_principal(principal: EditorPrincipalDep) -> ActorRef:
@@ -54,8 +59,10 @@ async def create_supplier(
         supplier = await service.create_supplier(payload, actor=_actor_from_principal(principal))
         await session.commit()
         return supplier
-    except ValueError as err:
+    except SupplierConflictError as err:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(err)) from err
+    except SupplierValidationError as err:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(err)) from err
 
 
 @router.get("/{supplier_id}", response_model=SupplierResponseSchema)
@@ -85,23 +92,21 @@ async def update_supplier(
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Supplier was not found.")
         await session.commit()
         return supplier
-    except ValueError as err:
+    except SupplierConflictError as err:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(err)) from err
+    except SupplierValidationError as err:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(err)) from err
 
 
 @router.patch("/{supplier_id}/status", response_model=SupplierResponseSchema)
 async def set_supplier_status(
     supplier_id: str,
-    payload: dict[str, bool],
+    payload: SupplierStatusUpdateSchema,
     session: DbSessionDep,
     principal: EditorPrincipalDep = None,
 ) -> SupplierResponseSchema:
-    if "isActive" not in payload and "is_active" not in payload:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="isActive is required")
-    is_active = bool(payload.get("isActive", payload.get("is_active", True)))
-
     service = SupplierService(session)
-    supplier = await service.set_status(supplier_id, is_active=is_active, actor=_actor_from_principal(principal))
+    supplier = await service.set_status(supplier_id, is_active=payload.is_active, actor=_actor_from_principal(principal))
     if supplier is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Supplier was not found.")
     await session.commit()

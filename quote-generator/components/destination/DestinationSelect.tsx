@@ -35,6 +35,8 @@ export function DestinationSelect({
   helperText,
   "aria-label": ariaLabel,
   id: customId,
+  types,
+  parentId,
 }: DestinationSelectProps) {
   const generatedId = useId();
   const inputId = customId || generatedId;
@@ -50,7 +52,7 @@ export function DestinationSelect({
   const [highlightedIndex, setHighlightedIndex] = useState(0);
 
   const { results, isLoading, error: searchError, hasQuery } =
-    useDestinationSearch(query);
+    useDestinationSearch(query, { types, parentId });
 
   const [prevSingleValue, setPrevSingleValue] = useState(singleValueName);
   if (singleValueName !== prevSingleValue) {

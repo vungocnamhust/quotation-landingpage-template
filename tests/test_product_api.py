@@ -12,6 +12,7 @@ import main
 from db.base import Base
 from db.models.accommodation import AccommodationProfile
 from db.models.destination import DestinationCatalog
+from db.models.supplier import Supplier
 
 
 class ProductApiTests(unittest.TestCase):
@@ -59,6 +60,15 @@ class ProductApiTests(unittest.TestCase):
                     storage_slug="la-siesta",
                     asset_prefix="hanoi/la-siesta",
                     name="La Siesta Hotel",
+                )
+            )
+            session.add(
+                Supplier(
+                    id="sup_dummy",
+                    name="Dummy Supplier",
+                    name_normalized="dummy supplier",
+                    supplier_type="dmc",
+                    default_currency="USD",
                 )
             )
             await session.commit()

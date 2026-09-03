@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 SupplierType = Literal["direct", "dmc", "wholesaler", "bedbank", "ota", "freelancer", "gov", "other"]
 SupplierPreferredStatus = Literal["preferred", "recommended", "standard", "backup", "do_not_use"]
@@ -118,6 +118,13 @@ class SupplierBaseSchema(BaseModel):
     credit_terms_days: int = Field(default=0, ge=0)
     internal_notes: str | None = Field(default=None, max_length=2000)
 
+    @field_validator("name")
+    @classmethod
+    def _require_non_blank_name(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("name must not be blank")
+        return value
+
 
 class SupplierCreateSchema(SupplierBaseSchema):
     model_config = ConfigDict(extra="ignore")
@@ -144,6 +151,13 @@ class SupplierUpdateSchema(BaseModel):
     credit_terms_days: int | None = Field(default=None, ge=0)
     internal_notes: str | None = Field(default=None, max_length=2000)
     is_active: bool | None = None
+
+    @field_validator("name")
+    @classmethod
+    def _require_non_blank_name(cls, value: str | None) -> str | None:
+        if value is not None and not value.strip():
+            raise ValueError("name must not be blank")
+        return value
 
 
 class SupplierResponseSchema(SupplierBaseSchema):

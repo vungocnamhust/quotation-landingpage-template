@@ -111,4 +111,29 @@ class DestinationCatalogCrudTests(unittest.TestCase):
         items_all = res_all.json()["items"]
         self.assertTrue(any(item["id"] == th_id for item in items_all))
 
+    def test_reactivating_a_merged_destination_via_status_endpoint_is_rejected(self):
+        """Track 1 audit C1, HTTP layer."""
+        source_payload = {
+            "canonicalName": "Merge Source City",
+            "slug": "merge-source-city",
+            "aliases": [],
+            "latitude": 10.0,
+            "longitude": 106.0,
+        }
+        target_payload = {
+            "canonicalName": "Merge Target City",
+            "slug": "merge-target-city",
+            "aliases": [],
+            "latitude": 10.1,
+            "longitude": 106.1,
+        }
+        source_id = self.client.post("/api/v2/destinations", json=source_payload).json()["id"]
+        target_id = self.client.post("/api/v2/destinations", json=target_payload).json()["id"]
+
+        merged = self.client.post(f"/api/v2/destinations/{source_id}/merge", json={"targetId": target_id})
+        self.assertEqual(merged.status_code, 200, merged.text)
+
+        reactivated = self.client.patch(f"/api/v2/destinations/{source_id}/status", json={"isActive": True})
+        self.assertEqual(reactivated.status_code, 422, reactivated.text)
+
 

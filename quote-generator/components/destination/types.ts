@@ -103,4 +103,10 @@ export interface DestinationSelectProps {
 
   /** ID for accessibility */
   id?: string;
+
+  /** Restrict results to these destination_type values, e.g. ["province", "city", "sub_zone"] (15.2b §5.3). */
+  types?: DestinationType[];
+
+  /** Restrict results to direct children of this destination id (15.2b §5.3). */
+  parentId?: string;
 }

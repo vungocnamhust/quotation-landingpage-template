@@ -11,7 +11,11 @@ from db.base import Base
 from db.models.destination import DestinationAlias, DestinationCatalog
 from db.models.outbox import OutboxEvent
 from db.models.product import Product
-from repositories.destination_repository import DestinationMergeError, DestinationRepository
+from repositories.destination_repository import (
+    DestinationMergeError,
+    DestinationReactivationError,
+    DestinationRepository,
+)
 
 
 class DestinationMergeTests(unittest.TestCase):
@@ -231,6 +235,47 @@ class DestinationMergeTests(unittest.TestCase):
                 self.assertEqual(len(events), 1)
                 self.assertEqual(events[0].aggregate_id, "dst_hub_a")
                 self.assertEqual(events[0].payload_json["targetId"], "dst_hub_b")
+
+        asyncio.run(scenario())
+
+    def test_reactivating_a_merged_destination_is_rejected(self):
+        """Track 1 audit C1: PATCH /status {isActive: true} on a merged destination
+        must not resurrect it next to its own merge target."""
+
+        async def scenario():
+            async with self.session_factory() as session:
+                repository = DestinationRepository(session)
+                merged = await repository.merge(source_id="dst_hub_a", target_id="dst_hub_b")
+                await session.commit()
+
+                with self.assertRaises(DestinationReactivationError):
+                    await repository.set_status(merged, is_active=True)
+
+        asyncio.run(scenario())
+
+    def test_hand_inserted_reactivated_merged_row_is_never_surfaced_by_search_or_resolve(self):
+        """Track 1 audit C1: even a row that is somehow both is_active=True and
+        merged_into_id set (e.g. written directly, bypassing set_status) must never
+        leak out of search() or any of the three resolve() layers."""
+
+        async def scenario():
+            async with self.session_factory() as session:
+                repository = DestinationRepository(session)
+                await repository.merge(source_id="dst_hub_a", target_id="dst_hub_b")
+                await session.commit()
+
+                source = await session.get(DestinationCatalog, "dst_hub_a")
+                source.is_active = True
+                await session.commit()
+                self.assertTrue(source.is_active)
+                self.assertEqual(source.merged_into_id, "dst_hub_b")
+
+                search_rows = await repository.search("old hub a", active="true")
+                self.assertNotIn("dst_hub_a", {row[0].id for row in search_rows})
+
+                resolved = await repository.resolve("Old Hub A")
+                self.assertIsNotNone(resolved)
+                self.assertEqual(resolved.id, "dst_hub_b")
 
         asyncio.run(scenario())
 

@@ -10,6 +10,7 @@ from core.kernel import ActorRef
 from db.base import Base
 from db.models.accommodation import AccommodationProfile
 from db.models.destination import DestinationCatalog
+from db.models.supplier import Supplier
 from schemas.v2.product import ProductCreateSchema, ProductUpdateSchema
 from services.product_service import (
     ProductConflictError,
@@ -65,6 +66,15 @@ class ProductServiceTests(unittest.TestCase):
                     storage_slug="hue-hotel",
                     asset_prefix="hue/hue-hotel",
                     name="Hue Hotel",
+                )
+            )
+            session.add(
+                Supplier(
+                    id="sup_other",
+                    name="Other Supplier Co",
+                    name_normalized="other supplier co",
+                    supplier_type="dmc",
+                    default_currency="USD",
                 )
             )
             await session.commit()
@@ -298,14 +308,27 @@ class ProductServiceTests(unittest.TestCase):
         asyncio.run(scenario())
 
     def test_subcategory_note_without_other_subcategory_is_rejected(self):
-        with self.assertRaises(Exception):
-            ProductCreateSchema(
-                destination_id="dst_hanoi",
-                category="accommodation",
-                subcategory="hotel",
-                subcategory_note="A free-text note",
-                title="Note Without Other",
-            )
+        # Track 1 audit H6: this combo check now runs in the service against the
+        # merged (existing + payload) state, not at schema construction time, so a
+        # partial PUT that only changes subcategory can see the note that's
+        # already on the row. See the test_put_*_subcategory* cases below for the
+        # PUT-specific merged-state scenarios.
+        async def scenario():
+            async with self.session_factory() as session:
+                service = ProductService(session)
+                with self.assertRaises(ProductValidationError):
+                    await service.create_product(
+                        ProductCreateSchema(
+                            destination_id="dst_hanoi",
+                            category="accommodation",
+                            subcategory="hotel",
+                            subcategory_note="A free-text note",
+                            title="Note Without Other",
+                        ),
+                        actor=ACTOR,
+                    )
+
+        asyncio.run(scenario())
 
     def test_subcategory_note_with_other_subcategory_is_accepted(self):
         async def scenario():
@@ -412,6 +435,233 @@ class ProductServiceTests(unittest.TestCase):
                         ProductUpdateSchema(origin_destination_id="dst_hue"),
                         actor=ACTOR,
                     )
+
+        asyncio.run(scenario())
+
+    def test_create_with_unknown_destination_supplier_or_origin_is_422_not_500(self):
+        """Track 1 audit H2."""
+
+        async def scenario():
+            async with self.session_factory() as session:
+                service = ProductService(session)
+                with self.assertRaises(ProductValidationError):
+                    await service.create_product(
+                        ProductCreateSchema(
+                            destination_id="dst_does_not_exist",
+                            category="ticket",
+                            title="Ghost Destination Ticket",
+                        ),
+                        actor=ACTOR,
+                    )
+                with self.assertRaises(ProductValidationError):
+                    await service.create_product(
+                        ProductCreateSchema(
+                            destination_id="dst_hanoi",
+                            category="ticket",
+                            title="Ghost Supplier Ticket",
+                            supplier_id="sup_does_not_exist",
+                        ),
+                        actor=ACTOR,
+                    )
+                with self.assertRaises(ProductValidationError):
+                    await service.create_product(
+                        ProductCreateSchema(
+                            destination_id="dst_hue",
+                            origin_destination_id="dst_does_not_exist",
+                            category="transportation",
+                            title="Ghost Origin Bus",
+                        ),
+                        actor=ACTOR,
+                    )
+
+        asyncio.run(scenario())
+
+    def test_origin_destination_id_equal_to_destination_id_is_rejected(self):
+        """Track 1 audit M4."""
+
+        async def scenario():
+            async with self.session_factory() as session:
+                service = ProductService(session)
+                with self.assertRaises(ProductValidationError):
+                    await service.create_product(
+                        ProductCreateSchema(
+                            destination_id="dst_hanoi",
+                            origin_destination_id="dst_hanoi",
+                            category="transportation",
+                            title="Hanoi to Hanoi Nonsense Transfer",
+                        ),
+                        actor=ACTOR,
+                    )
+
+        asyncio.run(scenario())
+
+    def test_blank_title_is_rejected(self):
+        """Track 1 audit M3."""
+        with self.assertRaises(pydantic.ValidationError):
+            ProductCreateSchema(destination_id="dst_hanoi", category="ticket", title="   ")
+
+    def test_concurrent_create_with_same_dedupe_key_yields_one_conflict(self):
+        """Track 1 audit H3."""
+
+        async def scenario():
+            from unittest.mock import AsyncMock
+
+            async with self.session_factory() as session:
+                service = ProductService(session)
+                await service.create_product(
+                    ProductCreateSchema(destination_id="dst_hanoi", category="ticket", title="Race Ticket"),
+                    actor=ACTOR,
+                )
+                await session.commit()
+
+            with self.assertRaises(ProductConflictError):
+                async with self.session_factory() as session:
+                    service = ProductService(session)
+                    service.repository.find_dedupe_conflict = AsyncMock(return_value=None)
+                    await service.create_product(
+                        ProductCreateSchema(destination_id="dst_hanoi", category="ticket", title="Race Ticket"),
+                        actor=ACTOR,
+                    )
+
+            # Session usable afterwards for an unrelated request.
+            async with self.session_factory() as session:
+                service = ProductService(session)
+                other = await service.create_product(
+                    ProductCreateSchema(destination_id="dst_hanoi", category="ticket", title="Unrelated Ticket"),
+                    actor=ACTOR,
+                )
+                await session.commit()
+                self.assertTrue(other.id.startswith("prd_"))
+
+        asyncio.run(scenario())
+
+    def test_pagination_total_reflects_full_filtered_count_not_page_size(self):
+        """Track 1 audit H4."""
+
+        async def scenario():
+            async with self.session_factory() as session:
+                service = ProductService(session)
+                for i in range(5):
+                    await service.create_product(
+                        ProductCreateSchema(destination_id="dst_hanoi", category="ticket", title=f"Paginated Ticket {i}"),
+                        actor=ACTOR,
+                    )
+                await session.commit()
+
+                items, total = await service.list_products(limit=2)
+                self.assertEqual(len(items), 2)
+                self.assertEqual(total, 5)
+
+        asyncio.run(scenario())
+
+    def test_search_with_diacritics_finds_diacritic_stripped_normalized_title(self):
+        """Track 1 audit H5."""
+
+        async def scenario():
+            async with self.session_factory() as session:
+                service = ProductService(session)
+                await service.create_product(
+                    ProductCreateSchema(destination_id="dst_hanoi", category="ticket", title="Điểm Đến Á Đông Tour"),
+                    actor=ACTOR,
+                )
+                await session.commit()
+
+                items, total = await service.list_products(search="Điểm")
+                self.assertEqual(total, 1)
+                self.assertEqual(items[0].title, "Điểm Đến Á Đông Tour")
+
+        asyncio.run(scenario())
+
+    def test_put_only_subcategory_note_on_existing_other_star_product_is_accepted(self):
+        """Track 1 audit H6, bug (a): a partial PUT that sends only subcategory_note
+        must be validated against the *existing* subcategory, not None."""
+
+        async def scenario():
+            async with self.session_factory() as session:
+                service = ProductService(session)
+                product = await service.create_product(
+                    ProductCreateSchema(
+                        destination_id="dst_hanoi",
+                        category="accommodation",
+                        subcategory="other_overnight_accommodation",
+                        subcategory_note="Original note",
+                        title="Floating Bungalow For H6",
+                    ),
+                    actor=ACTOR,
+                )
+                await session.commit()
+
+                updated = await service.update_product(
+                    product.id,
+                    ProductUpdateSchema(subcategory_note="Updated note"),
+                    actor=ACTOR,
+                )
+                await session.commit()
+                self.assertEqual(updated.subcategory_note, "Updated note")
+
+        asyncio.run(scenario())
+
+    def test_put_changing_subcategory_away_from_other_star_without_clearing_note_is_rejected(self):
+        """Track 1 audit H6, bug (b): changing subcategory off other_* while a stale
+        note is still on the row must not silently persist an invalid combination."""
+
+        async def scenario():
+            async with self.session_factory() as session:
+                service = ProductService(session)
+                product = await service.create_product(
+                    ProductCreateSchema(
+                        destination_id="dst_hanoi",
+                        category="accommodation",
+                        subcategory="other_overnight_accommodation",
+                        subcategory_note="Floating bungalow",
+                        title="Floating Bungalow For H6b",
+                    ),
+                    actor=ACTOR,
+                )
+                await session.commit()
+
+                with self.assertRaises(ProductValidationError):
+                    await service.update_product(
+                        product.id,
+                        ProductUpdateSchema(subcategory="hotel"),
+                        actor=ACTOR,
+                    )
+
+                # And the persisted row must be untouched — no invalid combo saved.
+                from repositories.product_repository import ProductRepository
+
+                row = await ProductRepository(session).get_by_id(product.id)
+                self.assertEqual(row.subcategory, "other_overnight_accommodation")
+                self.assertEqual(row.subcategory_note, "Floating bungalow")
+
+        asyncio.run(scenario())
+
+    def test_put_changing_subcategory_away_from_other_star_and_clearing_note_together_is_accepted(self):
+        """Track 1 audit H6."""
+
+        async def scenario():
+            async with self.session_factory() as session:
+                service = ProductService(session)
+                product = await service.create_product(
+                    ProductCreateSchema(
+                        destination_id="dst_hanoi",
+                        category="accommodation",
+                        subcategory="other_overnight_accommodation",
+                        subcategory_note="Floating bungalow",
+                        title="Floating Bungalow For H6c",
+                    ),
+                    actor=ACTOR,
+                )
+                await session.commit()
+
+                updated = await service.update_product(
+                    product.id,
+                    ProductUpdateSchema(subcategory="hotel", subcategory_note=None),
+                    actor=ACTOR,
+                )
+                await session.commit()
+                self.assertEqual(updated.subcategory, "hotel")
+                self.assertIsNone(updated.subcategory_note)
 
         asyncio.run(scenario())
 

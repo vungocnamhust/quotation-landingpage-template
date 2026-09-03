@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from core.rules.catalog_vocab import CATEGORY, TIME_BASIS, UNIT
 
@@ -56,6 +56,13 @@ class ProductBaseSchema(BaseModel):
     default_max_pax: int | None = Field(default=None, ge=1)
     category_attributes: dict[str, CategoryAttributeValue] = Field(default_factory=dict)
 
+    @field_validator("title")
+    @classmethod
+    def _require_non_blank_title(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("title must not be blank")
+        return value
+
     @model_validator(mode="after")
     def _validate_boundaries(self) -> "ProductBaseSchema":
         if self.default_min_pax is not None and self.default_max_pax is not None:
@@ -65,8 +72,6 @@ class ProductBaseSchema(BaseModel):
             raise ValueError("property_id may only be set when category == 'accommodation'")
         if self.origin_destination_id is not None and self.category not in ("transportation", "flights"):
             raise ValueError("origin_destination_id may only be set when category is 'transportation' or 'flights'")
-        if self.subcategory_note is not None and not (self.subcategory or "").startswith("other_"):
-            raise ValueError("subcategory_note is only meaningful when subcategory is an other_* value")
         _validate_category_attributes(self.category_attributes)
         return self
 
@@ -94,13 +99,22 @@ class ProductUpdateSchema(BaseModel):
     category_attributes: dict[str, CategoryAttributeValue] | None = None
     is_active: bool | None = None
 
+    @field_validator("title")
+    @classmethod
+    def _require_non_blank_title(cls, value: str | None) -> str | None:
+        if value is not None and not value.strip():
+            raise ValueError("title must not be blank")
+        return value
+
     @model_validator(mode="after")
     def _validate_boundaries(self) -> "ProductUpdateSchema":
         if self.default_min_pax is not None and self.default_max_pax is not None:
             if self.default_min_pax > self.default_max_pax:
                 raise ValueError("default_min_pax must be <= default_max_pax")
-        if self.subcategory_note is not None and not (self.subcategory or "").startswith("other_"):
-            raise ValueError("subcategory_note is only meaningful when subcategory is an other_* value")
+        # subcategory/subcategory_note combo validation happens in the service layer
+        # against the *merged* (existing + payload) state — see ProductService._validate_subcategory
+        # (Track 1 audit H6). A payload-only check here would wrongly reject a
+        # PUT that only changes subcategory_note on an already-other_* product.
         if self.category_attributes is not None:
             _validate_category_attributes(self.category_attributes)
         return self

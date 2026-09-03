@@ -7233,36 +7233,12 @@ def _apply_travel_designer_snapshot(document: dict[str, Any], profile: dict[str,
 
 
 async def _seed_destination_catalog(session) -> None:
-    from destination_catalog_seed import COUNTRY_PARENT_PROFILES, get_seed_destination_profiles
+    # Track 1 audit M9: this used to duplicate repositories/destination_repository.py's
+    # seed_destination_catalog verbatim (two places to edit for every new seed column).
+    # Delegate to the single copy instead.
+    from repositories.destination_repository import seed_destination_catalog
 
-    repository = DestinationRepository(session)
-    for parent in COUNTRY_PARENT_PROFILES:
-        await repository.upsert(
-            destination_id=parent["id"],
-            canonical_name=parent["canonical_name"],
-            slug=parent["slug"],
-            aliases=[],
-            country_slug=parent["country_slug"],
-            latitude=parent["latitude"],
-            longitude=parent["longitude"],
-            destination_type=parent["destination_type"],
-            country_code=parent["country_code"],
-            timezone=parent["timezone"],
-        )
-    for profile in get_seed_destination_profiles():
-        await repository.upsert(
-            destination_id=f"dst_{profile['slug']}",
-            canonical_name=profile["canonical_name"],
-            slug=profile["slug"],
-            aliases=profile["aliases"],
-            country_slug=profile["country_slug"],
-            region_slug=profile["region_slug"],
-            province_slug=profile["province_slug"],
-            latitude=profile["latitude"],
-            longitude=profile["longitude"],
-            parent_id=profile.get("parent_id"),
-            timezone=profile.get("timezone"),
-        )
+    await seed_destination_catalog(session)
 
 
 async def _canonicalize_quote_destinations(payload: CreateQuoteRequestV1) -> tuple[CreateQuoteRequestV1, dict[str, Any]]:

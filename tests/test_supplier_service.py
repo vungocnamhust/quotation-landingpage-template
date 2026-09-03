@@ -14,7 +14,8 @@ from schemas.v2.supplier import (
     SupplierCreateSchema,
     SupplierUpdateSchema,
 )
-from services.supplier_service import SupplierService, normalize_supplier_name
+from services.product_service import normalize_product_title
+from services.supplier_service import SupplierService, SupplierValidationError, normalize_supplier_name
 
 
 class NormalizeSupplierNameTests(unittest.TestCase):
@@ -23,6 +24,20 @@ class NormalizeSupplierNameTests(unittest.TestCase):
 
     def test_lowercases(self):
         self.assertEqual(normalize_supplier_name("Saigon DMC"), "saigon dmc")
+
+    def test_folds_dJ_stroke_the_same_as_its_diacritic_free_form(self):
+        """Track 1 audit H1: NFD-based stripping never touches đ/Đ (U+0111/U+0110)
+        because they have no canonical decomposition — a hand-rolled normalizer that
+        only does NFD + strip-Mn silently lets 'Đông Á' and 'Dong A' dedupe as two
+        different suppliers, even though they're the same name."""
+        self.assertEqual(normalize_supplier_name("Khách sạn Đông Á"), normalize_supplier_name("Khach san Dong A"))
+        self.assertEqual(normalize_supplier_name("Hạ Long"), normalize_supplier_name("Ha Long"))
+        self.assertEqual(normalize_supplier_name("  Đà  Nẵng "), "da nang")
+
+    def test_is_the_same_function_object_as_product_normalizer(self):
+        """Track 1 audit H1/M7: guards against the two normalizers drifting back
+        into separate copies of the same algorithm."""
+        self.assertIs(normalize_supplier_name, normalize_product_title)
 
 
 class SupplierCancellationPolicyValidatorTests(unittest.TestCase):
@@ -178,6 +193,136 @@ class SupplierServiceTests(unittest.TestCase):
                 self.assertEqual(row.name_normalized, "new supplier name")
                 self.assertEqual(row.updated_by, "staff:editor@example.com")
                 self.assertEqual(row.created_by, "staff:creator@example.com")
+
+        asyncio.run(scenario())
+
+    def test_create_with_unknown_destination_id_is_rejected_with_422_not_500(self):
+        """Track 1 audit H2: SQLite has no FK enforcement unless PRAGMA foreign_keys=ON
+        is set, so this must be caught explicitly in the service, not left to the
+        database (which would 500 on Postgres and silently persist on SQLite)."""
+
+        async def scenario():
+            async with self.session_factory() as session:
+                service = SupplierService(session)
+                with self.assertRaises(SupplierValidationError):
+                    await service.create_supplier(
+                        SupplierCreateSchema(
+                            name="Ghost Destination Supplier",
+                            supplier_type="direct",
+                            default_currency="USD",
+                            destination_id="dst_does_not_exist",
+                        ),
+                        actor=ActorRef(actor_id="staff@example.com", actor_type="staff"),
+                    )
+
+        asyncio.run(scenario())
+
+    def test_unsupported_currency_is_422_not_409(self):
+        """Track 1 audit M2: SupplierService used to raise plain ValueError for every
+        failure, and the router mapped all of them to 409 — including a validation
+        error that should be 422."""
+
+        async def scenario():
+            async with self.session_factory() as session:
+                service = SupplierService(session)
+                with self.assertRaises(SupplierValidationError):
+                    await service.create_supplier(
+                        SupplierCreateSchema(name="Bad Currency Co", supplier_type="direct", default_currency="XYZ"),
+                        actor=ActorRef(actor_id="staff@example.com", actor_type="staff"),
+                    )
+
+        asyncio.run(scenario())
+
+    def test_blank_name_is_rejected(self):
+        """Track 1 audit M3."""
+        with self.assertRaises(pydantic.ValidationError):
+            SupplierCreateSchema(name="   ", supplier_type="direct", default_currency="USD")
+
+    def test_concurrent_create_with_same_dedupe_key_yields_one_conflict(self):
+        """Track 1 audit H3: check-then-insert is a TOCTOU race. Two concurrent
+        creates that both pass the pre-check must not both reach the database — the
+        loser's IntegrityError must become a typed conflict, not an unhandled 500
+        that also poisons the session for the next request."""
+
+        async def scenario():
+            from services.supplier_service import SupplierConflictError
+
+            async with self.session_factory() as outer_session:
+                service_a = SupplierService(outer_session)
+                actor = ActorRef(actor_id="staff@example.com", actor_type="staff")
+
+                async def create():
+                    return await service_a.create_supplier(
+                        SupplierCreateSchema(name="Race Supplier Co", supplier_type="direct", default_currency="USD"),
+                        actor=actor,
+                    )
+
+                # Simulate the race deterministically: pre-check passes for both,
+                # then the second insert collides on the unique index at flush().
+                await create()
+                await outer_session.commit()
+
+                with self.assertRaises(SupplierConflictError):
+                    async with self.session_factory() as session:
+                        service_b = SupplierService(session)
+                        # Force the pre-check to look stale, as it would under a real race.
+                        from unittest.mock import AsyncMock
+
+                        service_b.repository.get_by_normalized_name = AsyncMock(return_value=None)
+                        await service_b.create_supplier(
+                            SupplierCreateSchema(
+                                name="Race Supplier Co", supplier_type="direct", default_currency="USD"
+                            ),
+                            actor=actor,
+                        )
+
+                # The session must still be usable afterwards (rollback happened).
+                async with self.session_factory() as session:
+                    service_c = SupplierService(session)
+                    other = await service_c.create_supplier(
+                        SupplierCreateSchema(name="Unrelated Supplier Co", supplier_type="direct", default_currency="USD"),
+                        actor=actor,
+                    )
+                    await session.commit()
+                    self.assertTrue(other.id.startswith("sup_"))
+
+        asyncio.run(scenario())
+
+    def test_pagination_total_reflects_full_filtered_count_not_page_size(self):
+        """Track 1 audit H4."""
+
+        async def scenario():
+            async with self.session_factory() as session:
+                service = SupplierService(session)
+                actor = ActorRef(actor_id="staff@example.com", actor_type="staff")
+                for i in range(5):
+                    await service.create_supplier(
+                        SupplierCreateSchema(name=f"Paginated Supplier {i}", supplier_type="direct", default_currency="USD"),
+                        actor=actor,
+                    )
+                await session.commit()
+
+                items, total = await service.list_suppliers(limit=2)
+                self.assertEqual(len(items), 2)
+                self.assertEqual(total, 5)
+
+        asyncio.run(scenario())
+
+    def test_search_with_diacritics_finds_diacritic_stripped_normalized_name(self):
+        """Track 1 audit H5."""
+
+        async def scenario():
+            async with self.session_factory() as session:
+                service = SupplierService(session)
+                await service.create_supplier(
+                    SupplierCreateSchema(name="Điểm Đến Á Đông", supplier_type="direct", default_currency="USD"),
+                    actor=ActorRef(actor_id="staff@example.com", actor_type="staff"),
+                )
+                await session.commit()
+
+                items, total = await service.list_suppliers(search="Điểm")
+                self.assertEqual(total, 1)
+                self.assertEqual(items[0].name, "Điểm Đến Á Đông")
 
         asyncio.run(scenario())
 

@@ -1,20 +1,22 @@
 from __future__ import annotations
 
-import re
-import unicodedata
 from typing import Literal
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.kernel import ActorRef, generate_id
 from core.rules.catalog_vocab import DEFAULT_CHARGE_UNIT_BY_CATEGORY, SUBCATEGORY_BY_CATEGORY
+from core.rules.text_normalize import normalize_name
 from repositories.accommodation_repository import AccommodationRepository
+from repositories.destination_repository import DestinationRepository
 from repositories.product_repository import ProductRepository
+from repositories.supplier_repository import SupplierRepository
 from schemas.v2.product import ProductCreateSchema, ProductResponseSchema, ProductUpdateSchema
 
-_WHITESPACE_RE = re.compile(r"\s+")
-
 ID_PREFIX = "prd"
+
+_SENTINEL = object()
 
 
 class ProductValidationError(ValueError):
@@ -25,12 +27,9 @@ class ProductConflictError(ValueError):
     """Dedupe key collision (maps to 409)."""
 
 
-def normalize_product_title(title: str) -> str:
-    """lower + strip diacritics + collapse whitespace (same algorithm as 15.1 supplier dedupe)."""
-    decomposed = unicodedata.normalize("NFD", title or "")
-    without_marks = "".join(ch for ch in decomposed if unicodedata.category(ch) != "Mn")
-    collapsed = _WHITESPACE_RE.sub(" ", without_marks).strip().lower()
-    return collapsed
+# Single canonical normalizer (Track 1 audit H1): must remain the same object as
+# services.supplier_service.normalize_supplier_name, not a copy.
+normalize_product_title = normalize_name
 
 
 class ProductService:
@@ -38,6 +37,8 @@ class ProductService:
         self.session = session
         self.repository = ProductRepository(session)
         self.accommodation_repository = AccommodationRepository(session)
+        self.destination_repository = DestinationRepository(session)
+        self.supplier_repository = SupplierRepository(session)
 
     async def list_products(
         self,
@@ -70,9 +71,12 @@ class ProductService:
         return ProductResponseSchema.model_validate(product)
 
     async def create_product(self, payload: ProductCreateSchema, *, actor: ActorRef) -> ProductResponseSchema:
-        await self._validate_subcategory(payload.category, payload.subcategory)
+        await self._validate_subcategory(payload.category, payload.subcategory, payload.subcategory_note)
         await self._validate_property(payload.category, payload.property_id, payload.destination_id)
-        await self._validate_origin(payload.category, payload.origin_destination_id)
+        await self._validate_origin(payload.category, payload.origin_destination_id, payload.destination_id)
+        await self._validate_destination_exists(payload.destination_id)
+        await self._validate_destination_exists(payload.origin_destination_id, field="origin_destination_id")
+        await self._validate_supplier_exists(payload.supplier_id)
 
         title_normalized = normalize_product_title(payload.title)
         conflict = await self.repository.find_dedupe_conflict(
@@ -98,7 +102,13 @@ class ProductService:
         values["updated_by"] = actor.serialize()
 
         product_id = generate_id(ID_PREFIX)
-        product = await self.repository.insert(product_id=product_id, values=values)
+        try:
+            product = await self.repository.insert(product_id=product_id, values=values)
+        except IntegrityError as exc:
+            await self.session.rollback()
+            raise ProductConflictError(
+                f"A product named '{payload.title}' already exists for this destination/category/supplier."
+            ) from exc
         return ProductResponseSchema.model_validate(product)
 
     async def update_product(
@@ -115,8 +125,12 @@ class ProductService:
 
         category = updates.get("category", product.category)
         subcategory = updates.get("subcategory", product.subcategory)
-        if "subcategory" in updates or "category" in updates:
-            await self._validate_subcategory(category, subcategory)
+        subcategory_note = updates.get("subcategory_note", _SENTINEL)
+        if subcategory_note is _SENTINEL:
+            subcategory_note = product.subcategory_note
+        if "subcategory" in updates or "category" in updates or "subcategory_note" in updates:
+            subcategory_note = await self._validate_subcategory(category, subcategory, subcategory_note)
+            updates["subcategory_note"] = subcategory_note
 
         property_id = updates.get("property_id", product.property_id)
         destination_id = updates.get("destination_id", product.destination_id)
@@ -124,8 +138,15 @@ class ProductService:
             await self._validate_property(category, property_id, destination_id)
 
         origin_destination_id = updates.get("origin_destination_id", product.origin_destination_id)
-        if "origin_destination_id" in updates or "category" in updates:
-            await self._validate_origin(category, origin_destination_id)
+        if "origin_destination_id" in updates or "category" in updates or "destination_id" in updates:
+            await self._validate_origin(category, origin_destination_id, destination_id)
+
+        if "destination_id" in updates:
+            await self._validate_destination_exists(destination_id)
+        if "origin_destination_id" in updates:
+            await self._validate_destination_exists(origin_destination_id, field="origin_destination_id")
+        if "supplier_id" in updates:
+            await self._validate_supplier_exists(updates["supplier_id"])
 
         if "title" in updates and updates["title"] is not None:
             updates["title"] = updates["title"].strip()
@@ -150,7 +171,11 @@ class ProductService:
                 raise ProductConflictError("A product with this title/destination/category/supplier already exists.")
 
         updates["updated_by"] = actor.serialize()
-        updated = await self.repository.update(product, values=updates)
+        try:
+            updated = await self.repository.update(product, values=updates)
+        except IntegrityError as exc:
+            await self.session.rollback()
+            raise ProductConflictError("A product with this title/destination/category/supplier already exists.") from exc
         return ProductResponseSchema.model_validate(updated)
 
     async def set_status(self, product_id: str, *, is_active: bool, actor: ActorRef) -> ProductResponseSchema | None:
@@ -166,22 +191,38 @@ class ProductService:
         return unit or default_unit, time_basis or default_time_basis
 
     @staticmethod
-    async def _validate_subcategory(category: str, subcategory: str | None) -> None:
-        if subcategory is None:
-            return
-        allowed = SUBCATEGORY_BY_CATEGORY[category]
-        if subcategory not in allowed:
-            raise ProductValidationError(
-                f"'{subcategory}' is not a valid subcategory for category '{category}'. "
-                f"Valid options: {sorted(allowed)}"
-            )
+    async def _validate_subcategory(
+        category: str, subcategory: str | None, subcategory_note: str | None
+    ) -> str | None:
+        """Validates the (subcategory, subcategory_note) pair on the *merged* state
+        (existing row + payload), not the payload in isolation (Track 1 audit H6).
+
+        Schema-level validation only ever sees the payload, so a partial PUT that
+        changes only ``subcategory`` (away from an ``other_*`` value) without also
+        clearing ``subcategory_note`` would otherwise leave a stale note bound to
+        an invalid combination. Doing this check here, on the state that will
+        actually be persisted, rejects that combination outright instead of
+        silently saving it.
+        """
+        if subcategory is not None:
+            allowed = SUBCATEGORY_BY_CATEGORY[category]
+            if subcategory not in allowed:
+                raise ProductValidationError(
+                    f"'{subcategory}' is not a valid subcategory for category '{category}'. "
+                    f"Valid options: {sorted(allowed)}"
+                )
+        if subcategory_note is not None and not (subcategory or "").startswith("other_"):
+            raise ProductValidationError("subcategory_note is only meaningful when subcategory is an other_* value.")
+        return subcategory_note
 
     @staticmethod
-    async def _validate_origin(category: str, origin_destination_id: str | None) -> None:
+    async def _validate_origin(category: str, origin_destination_id: str | None, destination_id: str) -> None:
         if origin_destination_id is not None and category not in ("transportation", "flights"):
             raise ProductValidationError(
                 "origin_destination_id may only be set when category is 'transportation' or 'flights'."
             )
+        if origin_destination_id is not None and origin_destination_id == destination_id:
+            raise ProductValidationError("origin_destination_id must differ from destination_id.")
 
     async def _validate_property(self, category: str, property_id: str | None, destination_id: str) -> None:
         if property_id is None:
@@ -193,3 +234,17 @@ class ProductService:
             raise ProductValidationError(f"Accommodation profile '{property_id}' was not found.")
         if profile.destination_id != destination_id:
             raise ProductValidationError("property_id must belong to the same destination_id as the product.")
+
+    async def _validate_destination_exists(self, destination_id: str | None, *, field: str = "destination_id") -> None:
+        if destination_id is None:
+            return
+        destination = await self.destination_repository.get(destination_id)
+        if destination is None:
+            raise ProductValidationError(f"{field} '{destination_id}' was not found.")
+
+    async def _validate_supplier_exists(self, supplier_id: str | None) -> None:
+        if supplier_id is None:
+            return
+        supplier = await self.supplier_repository.get_by_id(supplier_id)
+        if supplier is None:
+            raise ProductValidationError(f"supplier_id '{supplier_id}' was not found.")

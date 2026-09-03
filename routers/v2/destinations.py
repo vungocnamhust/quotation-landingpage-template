@@ -1,13 +1,13 @@
 """V2 destinations catalog routes."""
 from __future__ import annotations
 
-from typing import Annotated, Any, List
+from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, field_validator
 
 from core.auth import Principal, require_editor, require_quote_admin
 from core.rules.catalog_vocab import DESTINATION_TYPE
-from repositories.destination_repository import DestinationRepository
+from repositories.destination_repository import DestinationReactivationError, DestinationRepository
 
 
 router = APIRouter(prefix="/api/v2/destinations", tags=["destinations"])
@@ -178,7 +178,10 @@ async def update_destination_status(destination_id: str, payload: DestinationSta
                 status_code=422,
                 detail={"message": "An active destination requires coordinates.", "missingInputs": ["latitude", "longitude"]},
             )
-        saved = await repository.set_status(item, is_active=payload.isActive)
+        try:
+            saved = await repository.set_status(item, is_active=payload.isActive)
+        except DestinationReactivationError as exc:
+            raise HTTPException(status_code=422, detail={"message": str(exc), "missingInputs": ["isActive"]}) from exc
         await session.commit()
         return await h._serialize_destination(repository, saved)
 

@@ -14,7 +14,7 @@ import {
 import { useToast } from "../staff-workspace/ToastProvider.tsx";
 import { AccommodationSelect } from "../accommodation/AccommodationSelect.tsx";
 import { DestinationSelect } from "../destination/DestinationSelect.tsx";
-import type { DestinationRef } from "../destination/types.ts";
+import type { DestinationRef, DestinationType } from "../destination/types.ts";
 import { SupplierSelect } from "../supplier/SupplierSelect.tsx";
 import { RatePanel } from "./rates/RatePanel.tsx";
 import {
@@ -55,6 +55,14 @@ const TIME_BASIS_OPTIONS = ["night", "day", "trip"];
 const ORIGIN_ELIGIBLE_CATEGORIES: ProductCategory[] = [
   "transportation",
   "flights",
+];
+
+// Narrows the origin/destination pickers to leaf-level catalog entries (15.2b §5.3) —
+// country/region are excluded so staff can't accidentally bind a product to a whole country.
+const ORIGIN_DESTINATION_PICKER_TYPES: DestinationType[] = [
+  "province",
+  "city",
+  "sub_zone",
 ];
 
 function FormField({
@@ -364,6 +372,7 @@ export function ProductManageDrawer({
                     setDraftField("origin_destination_id", ref?.id ?? null);
                   }}
                   disabled={pending}
+                  types={ORIGIN_DESTINATION_PICKER_TYPES}
                 />
               </label>
               <label className="flex flex-col gap-2">
@@ -383,6 +392,7 @@ export function ProductManageDrawer({
                     setDraftField("destination_id", ref?.id ?? "");
                   }}
                   disabled={pending}
+                  types={ORIGIN_DESTINATION_PICKER_TYPES}
                 />
               </label>
             </div>
@@ -404,6 +414,7 @@ export function ProductManageDrawer({
                   setDraftField("destination_id", ref?.id ?? "");
                 }}
                 disabled={pending}
+                types={ORIGIN_DESTINATION_PICKER_TYPES}
               />
             </label>
           )}

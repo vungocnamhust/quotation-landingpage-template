@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Query, status
+from pydantic import BaseModel, Field
 
 from api.dependencies import DbSessionDep, EditorPrincipalDep
 from core.kernel import ActorRef
@@ -16,6 +17,10 @@ from schemas.v2.product import (
 from services.product_service import ProductConflictError, ProductService, ProductValidationError
 
 router = APIRouter(prefix="/api/v2/products", tags=["products"])
+
+
+class ProductStatusUpdateSchema(BaseModel):
+    is_active: bool = Field(alias="isActive")
 
 
 def _actor_from_principal(principal: EditorPrincipalDep) -> ActorRef:
@@ -100,16 +105,12 @@ async def update_product(
 @router.patch("/{product_id}/status", response_model=ProductResponseSchema)
 async def set_product_status(
     product_id: str,
-    payload: dict[str, bool],
+    payload: ProductStatusUpdateSchema,
     session: DbSessionDep,
     principal: EditorPrincipalDep = None,
 ) -> ProductResponseSchema:
-    if "isActive" not in payload and "is_active" not in payload:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="isActive is required")
-    is_active = bool(payload.get("isActive", payload.get("is_active", True)))
-
     service = ProductService(session)
-    product = await service.set_status(product_id, is_active=is_active, actor=_actor_from_principal(principal))
+    product = await service.set_status(product_id, is_active=payload.is_active, actor=_actor_from_principal(principal))
     if product is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product was not found.")
     await session.commit()

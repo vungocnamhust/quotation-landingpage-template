@@ -135,6 +135,47 @@ class SupplierApiTests(unittest.TestCase):
         response = self.client.post("/api/v2/suppliers", json=self._base_payload(supplier_type="not-a-real-type"))
         self.assertEqual(response.status_code, 422)
 
+    def test_search_by_contact_person_finds_supplier(self):
+        """Track 1 audit M1."""
+        target = self.client.post(
+            "/api/v2/suppliers",
+            json=self._base_payload(name="Sapa Trekking Co", contact_json={"person": "Mai Anh Tran"}),
+        ).json()
+        self.client.post("/api/v2/suppliers", json=self._base_payload(name="Unrelated Co"))
+
+        response = self.client.get("/api/v2/suppliers?active=all&search=Mai Anh")
+        self.assertEqual(response.status_code, 200, response.text)
+        ids = {item["id"] for item in response.json()["items"]}
+        self.assertIn(target["id"], ids)
+
+    def test_pagination_total_reflects_full_filtered_count_not_page_size(self):
+        """Track 1 audit H4."""
+        for i in range(5):
+            self.client.post("/api/v2/suppliers", json=self._base_payload(name=f"Pagination Supplier {i}"))
+
+        response = self.client.get("/api/v2/suppliers?limit=2")
+        self.assertEqual(response.status_code, 200, response.text)
+        body = response.json()
+        self.assertEqual(len(body["items"]), 2)
+        self.assertEqual(body["total"], 5)
+
+    def test_unsupported_currency_returns_422_not_409(self):
+        """Track 1 audit M2."""
+        response = self.client.post("/api/v2/suppliers", json=self._base_payload(default_currency="XYZ"))
+        self.assertEqual(response.status_code, 422, response.text)
+
+    def test_unknown_destination_id_returns_422_not_500(self):
+        """Track 1 audit H2."""
+        response = self.client.post(
+            "/api/v2/suppliers", json=self._base_payload(destination_id="dst_does_not_exist")
+        )
+        self.assertEqual(response.status_code, 422, response.text)
+
+    def test_blank_name_returns_422(self):
+        """Track 1 audit M3."""
+        response = self.client.post("/api/v2/suppliers", json=self._base_payload(name="   "))
+        self.assertEqual(response.status_code, 422, response.text)
+
 
 if __name__ == "__main__":
     unittest.main()
