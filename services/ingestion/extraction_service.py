@@ -8,6 +8,7 @@ catalog repository/service (15.8 chốt #1) — the only DB writes here are to
 """
 from __future__ import annotations
 
+import re
 from dataclasses import asdict
 from typing import Any
 
@@ -41,9 +42,43 @@ class ExtractionError(RuntimeError):
     """The Extractor agent failed to return a valid payload after retries."""
 
 
+_MIN_FRAGMENT_LENGTH = 8
+
+
+def _normalize_ws(s: str) -> str:
+    return re.sub(r"\s+", " ", s).strip()
+
+
 def _quote_verified(source_quote: str | None, sanitized_text: str) -> bool:
     """A source_quote must be a real, verbatim excerpt — never hallucinated."""
-    return bool(source_quote) and source_quote.strip() in sanitized_text
+    if not source_quote:
+        return False
+    quote = source_quote.strip()
+    if not quote:
+        return False
+    sanitized_lower = sanitized_text.lower()
+    if quote in sanitized_text or quote.lower() in sanitized_lower:
+        return True
+
+    norm_quote = _normalize_ws(quote).lower()
+    norm_sanitized = _normalize_ws(sanitized_text).lower()
+    if norm_quote in norm_sanitized:
+        return True
+
+    # Support non-contiguous quotes joined by ellipsis (...) or unicode ellipsis (…). Each
+    # fragment must be long enough to rule out a trivial/common substring, and the fragments
+    # must appear in the sanitized text in the same order the model claimed to quote them —
+    # otherwise "a … b" would pass even when "a" and "b" never co-occur (Track 1 audit review).
+    fragments = [_normalize_ws(f).lower() for f in re.split(r"\s*(?:\.\.\.|…)\s*", quote) if f.strip()]
+    if len(fragments) > 1 and all(len(f) >= _MIN_FRAGMENT_LENGTH for f in fragments):
+        cursor = 0
+        for fragment in fragments:
+            position = norm_sanitized.find(fragment, cursor)
+            if position == -1:
+                return False
+            cursor = position + len(fragment)
+        return True
+    return False
 
 
 async def _run_extractor(sanitized_text: str) -> tuple[CatalogIngestPayload, object]:
@@ -185,9 +220,10 @@ def parse_payload(payload: CatalogIngestPayload) -> tuple[CatalogIngestPayload, 
 
         supplement_entries: list[dict[str, Any]] = []
         for sp_index, supplement in enumerate(rate_group.supplements):
-            amount = parse_amount_text(supplement.amount_text, supplement.currency_text)
+            fallback_curr = supplement.currency_text or (rate_group.price_lines[0].currency_text if rate_group.price_lines else None)
+            amount = parse_amount_text(supplement.amount_text, fallback_curr)
             supplement_entries.append({"amount": _amount_dict(amount)})
-            if amount.ambiguous:
+            if amount.ambiguous and not re.search(r"\b(?:chưa\s*bao\s*gồm|not\s*included|excluded)\b", supplement.amount_text or "", re.I):
                 new_unresolved.append(
                     UnresolvedItem(
                         description=f"supplement amount_text '{supplement.amount_text}' is ambiguous ({rg_path}/supplements/{sp_index})",
