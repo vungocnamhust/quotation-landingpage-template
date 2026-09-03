@@ -114,6 +114,43 @@ class TestParseAmountText:
         assert result.ambiguous is False
         assert result.minor_units == 1_250_000
 
+    def test_free_text_resolves_to_zero_with_a_real_currency(self):
+        result = parse_amount_text("miễn phí", "VND")
+        assert result.ambiguous is False
+        assert result.minor_units == 0
+        assert result.currency == "VND"
+        assert result.is_percent is False
+
+    def test_free_of_charge_english_variant(self):
+        result = parse_amount_text("Free of charge")
+        assert result.ambiguous is False
+        assert result.minor_units == 0
+        assert result.currency == "VND"  # no currency signal anywhere -> domain default
+
+    def test_percent_amount_is_typed_as_percent_not_money(self):
+        """A discount/uplift percentage (e.g. a 'giảm 5%' group discount) is not a money
+        amount: it must never carry a fabricated '%' currency or a minor_units value derived
+        from the percentage, or a caller that only understands money (a rate price line) could
+        silently persist it as a real price (regression guard for the bug this replaced)."""
+        result = parse_amount_text("giảm 5%")
+        assert result.ambiguous is False
+        assert result.is_percent is True
+        assert result.percent_value == 5.0
+        assert result.minor_units is None
+        assert result.currency is None
+
+    def test_negative_percent_amount_is_typed_as_percent(self):
+        result = parse_amount_text("-10%")
+        assert result.is_percent is True
+        assert result.percent_value == -10.0
+        assert result.minor_units is None
+        assert result.currency is None
+
+    def test_percent_amount_never_produces_a_percent_currency_code(self):
+        result = parse_amount_text("phụ thu 10% dịp lễ", "VND")
+        assert result.currency != "%"
+        assert result.currency is None
+
 
 class TestParseValidityText:
     def test_full_date_range_with_years(self):
@@ -238,3 +275,30 @@ class TestParseTierPaxText:
     def test_empty_is_ambiguous(self):
         result = parse_tier_pax_text("")
         assert result.ambiguous is True
+
+    def test_seat_count_wording_is_recognized(self):
+        result = parse_tier_pax_text("16 chỗ")
+        assert result.ambiguous is False
+        assert result.tier_min == 16
+        assert result.tier_max == 16
+
+    def test_seats_english_wording_is_recognized(self):
+        result = parse_tier_pax_text("29 seats")
+        assert result.ambiguous is False
+        assert result.tier_min == 29
+        assert result.tier_max == 29
+
+    def test_child_age_band_is_not_mistaken_for_a_pax_headcount_tier(self):
+        """'5-10 tuổi' is a child age range, not a booking size of 5-15 guests — before this
+        guard, the plain '(\\d+)-(\\d+)' tier regex matched it anyway and would have written a
+        nonsensical 5-10 person tier onto a product that has nothing to do with group size."""
+        result = parse_tier_pax_text("5-10 tuổi")
+        assert result.ambiguous is False
+        assert result.tier_min is None
+        assert result.tier_max is None
+
+    def test_months_age_band_is_not_mistaken_for_a_pax_headcount_tier(self):
+        result = parse_tier_pax_text("6-24 months")
+        assert result.ambiguous is False
+        assert result.tier_min is None
+        assert result.tier_max is None

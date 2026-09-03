@@ -23,18 +23,33 @@ system_prompt: |
   - Copy validity/date phrases EXACTLY as written into `validity_text` (e.g. "15/12/2026 -
     20/12/2026", "01/10-30/04", "15/12"). Never compute or infer a year that is not present in
     the text.
-  - Copy cancellation-policy language EXACTLY as written into `policy_text` — do not summarize
-    or restructure it into tiers yourself.
-  - Every product, rate group, and price line you emit MUST include a `source_quote` — a
+  - `policy_text` in rate groups is strictly for cancellation and refund penalty policies
+    (e.g. "Hủy trước 30 ngày: miễn phí; 15-29 ngày: phạt 50%..."). Copy cancellation policies
+    EXACTLY as written into `policy_text`. If the text contains no cancellation policy, leave
+    `policy_text` empty/null. Never put road fee notes, inclusions, exclusions, or child policies
+    into `policy_text`.
+  - Extract stated surcharges, meal allowances, service fees, or volume discounts (e.g. 'Phụ thu Tết Nguyên Đán: +500.000',
+    'Guide meal allowance: VND 150.000', 'Nhóm từ 10-15 khách được giảm 5%', gala dinner, peak season)
+    into `supplements[]` of the relevant rate group(s); do NOT analyze whether surcharges overlap base rates.
+    If a fee specifies a variable base plus a fixed service fee (e.g. 'actual cost + VND 100.000 service fee'),
+    extract it into `supplements[]` using the fixed portion (e.g. amount_text: "100.000", currency_text: "VND").
+    Do NOT add stated discounts, service fees, or free terms (FOC/miễn phí) to `unresolved[]`.
+    Never extract general exclusions or notes about what is NOT included (e.g. 'chưa bao gồm phí đỗ xe...',
+    'excludes entrance fees') into `supplements[]` or `unresolved[]`. Simply extract real surcharges into `supplements[]`.
+  - Every product, rate group, and price line you emit MUST include a `source_quote` — a continuous
     verbatim excerpt (max 200 characters) from the raw text that supports it. If you cannot
     quote a real excerpt, do not emit the item — add it to `unresolved[]` describing what you
     saw but could not confidently extract.
   - When the text is genuinely ambiguous, vague, or you are not confident (e.g. "liên hệ",
     "call for rates", a price with no clear currency, a date with no year, two suppliers
     mentioned in one email), do NOT guess. Emit it into `unresolved[]` with a short description
-    and the relevant `source_quote`.
-  - If the text appears to describe more than one supplier, set `covers_multiple_suppliers`
-    to true and stop extracting products/rates — the operator will be asked to split the paste.
+    and the relevant `source_quote`. Never put clear rate lines, free terms / child policies
+    (e.g. 'Trẻ em dưới 5 tuổi: miễn phí' -> extract as a price line with amount_text copied
+    verbatim as "miễn phí" — never invent "0"; that is a computed value, not what is written),
+    group/volume discounts (e.g. 'giảm 5% tổng hóa đơn'), standard policies, or exclusions into `unresolved[]`.
+  - If the text mentions, forwards, or compares rates from more than one hotel, resort, or distinct supplier
+    (e.g. 'Forwarding two quotes...', '1) Emerald Bay Resort... 2) Pearl Island Villas...'), you MUST set
+    `covers_multiple_suppliers: true` (the person or agency forwarding them is not the single supplier).
 
   Output strictly the structured `CatalogIngestPayload` shape you have been given. Do not add
   any narration, explanation, or markdown outside the structured fields.

@@ -75,6 +75,17 @@ class ParsedAmount:
     currency: str | None
     ambiguous: bool
     reason: str | None = None
+    # A percentage (e.g. a "giảm 5%" group discount or a "+10%" seasonal uplift) is not a
+    # money amount at all — it has no currency and no minor-unit representation. Earlier this
+    # was smuggled through minor_units/currency (minor_units=round(pct*100), currency="%"),
+    # which violates every other branch's contract that `currency` is a real ISO code in
+    # SUPPORTED_INGEST_CURRENCIES; a percent-worded price *line* (not a supplement) would then
+    # silently persist as a real price of a few hundred minor units under a bogus "%" currency
+    # instead of being rejected. Percent amounts now carry their own typed fields and leave
+    # minor_units/currency both None, so any caller that still only understands money (like a
+    # rate price line) correctly treats them as unresolved instead of committing garbage.
+    is_percent: bool = False
+    percent_value: float | None = None
 
 
 def _detect_currency(amount_text: str, currency_text: str | None) -> str | None:
@@ -156,6 +167,16 @@ def parse_amount_text(amount_text: str | None, currency_text: str | None = None)
     """
     if not amount_text or not amount_text.strip():
         return ParsedAmount(minor_units=None, currency=None, ambiguous=True, reason="empty amount text")
+
+    stripped = amount_text.strip()
+    if re.search(r"\b(?:miễn\s*phí|free(?:\s+of\s+charge)?|foc)\b", stripped, re.I):
+        currency = _detect_currency(amount_text, currency_text) or (currency_text.strip() if currency_text else None) or "VND"
+        return ParsedAmount(minor_units=0, currency=currency, ambiguous=False)
+
+    percent_match = re.search(r"([-+]?\d+(?:[.,]\d+)?)\s*%", stripped)
+    if percent_match:
+        pct_val = float(percent_match.group(1).replace(",", "."))
+        return ParsedAmount(minor_units=None, currency=None, ambiguous=False, is_percent=True, percent_value=pct_val)
 
     for pattern, reason in _AMBIGUOUS_AMOUNT_PATTERNS:
         if pattern.search(amount_text):
@@ -419,7 +440,7 @@ def parse_cancellation_policy_text(policy_text: str | None) -> ParsedCancellatio
 # ---------------------------------------------------------------------------
 
 _TIER_PAX_RE = re.compile(r"(\d+)\s*(?:-|–|to|đến)\s*(\d+)")
-_TIER_PAX_SINGLE_RE = re.compile(r"(\d+)\s*(?:khách|pax|guests?|people|người)\b", re.I)
+_TIER_PAX_SINGLE_RE = re.compile(r"(\d+)\s*(?:khách|pax|guests?|people|người|chỗ|seats?)\b", re.I)
 
 
 @dataclass(frozen=True)
@@ -434,6 +455,9 @@ def parse_tier_pax_text(tier_pax_text: str | None) -> ParsedPaxTier:
     """Convert ``tier_pax_text`` (e.g. "nhóm 10-15 khách") into (tier_min, tier_max)."""
     if not tier_pax_text or not tier_pax_text.strip():
         return ParsedPaxTier(None, None, ambiguous=True, reason="empty pax tier text")
+
+    if re.search(r"\b(?:tuổi|years?|yo|age|tháng|months?)\b", tier_pax_text, re.I):
+        return ParsedPaxTier(None, None, ambiguous=False)
 
     if match := _TIER_PAX_RE.search(tier_pax_text):
         low, high = int(match.group(1)), int(match.group(2))
