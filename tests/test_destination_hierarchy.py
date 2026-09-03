@@ -3,7 +3,8 @@ import os
 import tempfile
 import unittest
 
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from tests._db import make_test_engine
 
 from db.base import Base
 from db.models.destination import DestinationCatalog
@@ -15,7 +16,7 @@ class DestinationHierarchyTests(unittest.TestCase):
     def setUpClass(cls):
         cls.db_file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
         cls.db_file.close()
-        cls.engine = create_async_engine(f"sqlite+aiosqlite:///{cls.db_file.name}")
+        cls.engine = make_test_engine(f"sqlite+aiosqlite:///{cls.db_file.name}")
         cls.session_factory = async_sessionmaker(cls.engine, class_=AsyncSession, expire_on_commit=False)
 
     @classmethod
@@ -36,6 +37,7 @@ class DestinationHierarchyTests(unittest.TestCase):
                     id="dst_country_vietnam", canonical_name="Vietnam", slug="country-vietnam", destination_type="country"
                 )
             )
+            await session.flush()
             session.add(
                 DestinationCatalog(
                     id="dst_quang_ninh",
@@ -45,6 +47,7 @@ class DestinationHierarchyTests(unittest.TestCase):
                     parent_id="dst_country_vietnam",
                 )
             )
+            await session.flush()
             session.add(
                 DestinationCatalog(
                     id="dst_ha_long",
@@ -54,6 +57,7 @@ class DestinationHierarchyTests(unittest.TestCase):
                     parent_id="dst_quang_ninh",
                 )
             )
+            await session.flush()
             session.add(
                 DestinationCatalog(
                     id="dst_merged_away",
@@ -162,22 +166,25 @@ class DestinationHierarchyTests(unittest.TestCase):
     def test_effective_destination_id_stops_at_max_depth(self):
         async def scenario():
             async with self.session_factory() as session:
-                session.add(
-                    DestinationCatalog(
-                        id="dst_chain_a", canonical_name="A", slug="chain-a", merged_into_id="dst_chain_b", is_active=False
-                    )
-                )
-                session.add(
-                    DestinationCatalog(
-                        id="dst_chain_b", canonical_name="B", slug="chain-b", merged_into_id="dst_chain_c", is_active=False
-                    )
-                )
+                session.add(DestinationCatalog(id="dst_chain_d", canonical_name="D", slug="chain-d"))
+                await session.flush()
                 session.add(
                     DestinationCatalog(
                         id="dst_chain_c", canonical_name="C", slug="chain-c", merged_into_id="dst_chain_d", is_active=False
                     )
                 )
-                session.add(DestinationCatalog(id="dst_chain_d", canonical_name="D", slug="chain-d"))
+                await session.flush()
+                session.add(
+                    DestinationCatalog(
+                        id="dst_chain_b", canonical_name="B", slug="chain-b", merged_into_id="dst_chain_c", is_active=False
+                    )
+                )
+                await session.flush()
+                session.add(
+                    DestinationCatalog(
+                        id="dst_chain_a", canonical_name="A", slug="chain-a", merged_into_id="dst_chain_b", is_active=False
+                    )
+                )
                 await session.commit()
 
                 repository = DestinationRepository(session)

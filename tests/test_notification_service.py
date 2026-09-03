@@ -3,7 +3,8 @@ from __future__ import annotations
 import unittest
 from datetime import datetime, timezone
 
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import async_sessionmaker
+from tests._db import make_test_engine
 
 from notification.application.ingest_event import IngestEventUseCase
 from notification.application.manage_inbox import MarkReadUseCase, QueryInboxUseCase
@@ -90,7 +91,7 @@ class TestNotificationDomainAndPolicy(unittest.TestCase):
 
 class TestNotificationRepositoryAndUseCases(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
-        self.engine = create_async_engine("sqlite+aiosqlite:///:memory:", echo=False)
+        self.engine = make_test_engine("sqlite+aiosqlite:///:memory:", echo=False)
         async with self.engine.begin() as conn:
             await conn.run_sync(NotificationBase.metadata.create_all)
         self.session_factory = async_sessionmaker(self.engine, expire_on_commit=False)

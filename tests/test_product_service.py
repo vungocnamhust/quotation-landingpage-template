@@ -4,7 +4,8 @@ import tempfile
 import unittest
 
 import pydantic
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from tests._db import make_test_engine
 
 from core.kernel import ActorRef
 from db.base import Base
@@ -32,7 +33,7 @@ class ProductServiceTests(unittest.TestCase):
     def setUpClass(cls):
         cls.db_file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
         cls.db_file.close()
-        cls.engine = create_async_engine(f"sqlite+aiosqlite:///{cls.db_file.name}")
+        cls.engine = make_test_engine(f"sqlite+aiosqlite:///{cls.db_file.name}")
         cls.session_factory = async_sessionmaker(cls.engine, class_=AsyncSession, expire_on_commit=False)
 
     @classmethod
@@ -50,6 +51,7 @@ class ProductServiceTests(unittest.TestCase):
         async with self.session_factory() as session:
             session.add(DestinationCatalog(id="dst_hanoi", canonical_name="Hanoi", slug="hanoi"))
             session.add(DestinationCatalog(id="dst_hue", canonical_name="Hue", slug="hue"))
+            await session.flush()
             session.add(
                 AccommodationProfile(
                     id="acc_la_siesta",
@@ -665,6 +667,188 @@ class ProductServiceTests(unittest.TestCase):
 
         asyncio.run(scenario())
 
+    def test_create_product_rejects_merged_and_inactive_destinations(self):
+        """Track 1 audit R-H2: validate product destination liveness (merged & inactive rejection)."""
+        from repositories.destination_repository import DestinationRepository
+
+        async def scenario():
+            async with self.session_factory() as session:
+                dest_repo = DestinationRepository(session)
+                live_dest = await dest_repo.create(
+                    destination_id="dst_live_prd_hub",
+                    canonical_name="Live Prd Hub",
+                    slug="live-prd-hub",
+                    aliases=[],
+                    country_slug="vietnam",
+                    region_slug="central",
+                    province_slug="quang-nam",
+                    latitude=15.88,
+                    longitude=108.33,
+                )
+                inactive_dest = await dest_repo.create(
+                    destination_id="dst_inactive_prd_hub",
+                    canonical_name="Inactive Prd Hub",
+                    slug="inactive-prd-hub",
+                    aliases=[],
+                    country_slug="vietnam",
+                    region_slug="central",
+                    province_slug="quang-nam",
+                    latitude=15.89,
+                    longitude=108.34,
+                )
+                await dest_repo.set_status(inactive_dest, is_active=False)
+
+                source_dest = await dest_repo.create(
+                    destination_id="dst_source_prd_hub",
+                    canonical_name="Source Prd Hub",
+                    slug="source-prd-hub",
+                    aliases=[],
+                    country_slug="vietnam",
+                    region_slug="central",
+                    province_slug="quang-nam",
+                    latitude=15.90,
+                    longitude=108.35,
+                )
+                await dest_repo.merge(source_id="dst_source_prd_hub", target_id="dst_live_prd_hub")
+                await session.commit()
+
+            # 1. destination_id merged -> 422 with merged_into_id
+            async with self.session_factory() as session:
+                service = ProductService(session)
+                with self.assertRaises(ProductValidationError) as ctx:
+                    await service.create_product(
+                        ProductCreateSchema(
+                            destination_id="dst_source_prd_hub",
+                            category="ticket",
+                            title="Merged Destination Ticket",
+                        ),
+                        actor=ACTOR,
+                    )
+                self.assertIn("has been merged into 'dst_live_prd_hub'", str(ctx.exception))
+
+            # 2. destination_id inactive -> 422
+            async with self.session_factory() as session:
+                service = ProductService(session)
+                with self.assertRaises(ProductValidationError) as ctx:
+                    await service.create_product(
+                        ProductCreateSchema(
+                            destination_id="dst_inactive_prd_hub",
+                            category="ticket",
+                            title="Inactive Destination Ticket",
+                        ),
+                        actor=ACTOR,
+                    )
+                self.assertIn("is inactive", str(ctx.exception))
+
+            # 3. origin_destination_id merged -> 422
+            async with self.session_factory() as session:
+                service = ProductService(session)
+                with self.assertRaises(ProductValidationError) as ctx:
+                    await service.create_product(
+                        ProductCreateSchema(
+                            destination_id="dst_hanoi",
+                            origin_destination_id="dst_source_prd_hub",
+                            category="transportation",
+                            title="Merged Origin Bus",
+                        ),
+                        actor=ACTOR,
+                    )
+                self.assertIn("has been merged into 'dst_live_prd_hub'", str(ctx.exception))
+
+            # 4. origin_destination_id inactive -> 422
+            async with self.session_factory() as session:
+                service = ProductService(session)
+                with self.assertRaises(ProductValidationError) as ctx:
+                    await service.create_product(
+                        ProductCreateSchema(
+                            destination_id="dst_hanoi",
+                            origin_destination_id="dst_inactive_prd_hub",
+                            category="transportation",
+                            title="Inactive Origin Bus",
+                        ),
+                        actor=ACTOR,
+                    )
+                self.assertIn("is inactive", str(ctx.exception))
+
+            # 5. active target -> success
+            async with self.session_factory() as session:
+                service = ProductService(session)
+                created = await service.create_product(
+                    ProductCreateSchema(
+                        destination_id="dst_live_prd_hub",
+                        category="ticket",
+                        title="Live Target Ticket",
+                    ),
+                    actor=ACTOR,
+                )
+                await session.commit()
+                self.assertEqual(created.destination_id, "dst_live_prd_hub")
+
+        asyncio.run(scenario())
+
+    def test_create_product_savepoint_preserves_outer_transaction_on_conflict(self):
+        """Track 1 audit R-M2: SAVEPOINT prevents session.rollback from destroying outer writes."""
+        from unittest.mock import patch
+        from sqlalchemy.exc import IntegrityError
+        from repositories.supplier_repository import SupplierRepository
+        from db.models.supplier import Supplier
+
+        async def scenario():
+            async with self.session_factory() as session:
+                # 1. Outer write in this session: create a supplier
+                sup_repo = SupplierRepository(session)
+                await sup_repo.insert(
+                    supplier_id="sup_outer_test",
+                    values={
+                        "name": "Outer Write Supplier",
+                        "name_normalized": "outer write supplier",
+                        "supplier_type": "dmc",
+                        "default_currency": "USD",
+                        "created_by": "staff:tester",
+                        "updated_by": "staff:tester",
+                    },
+                )
+                await session.flush()
+
+                # 2. Existing product to cause dedupe conflict
+                service = ProductService(session)
+                await service.create_product(
+                    ProductCreateSchema(
+                        destination_id="dst_hanoi",
+                        category="ticket",
+                        title="Conflict Ticket",
+                        supplier_id="sup_outer_test",
+                    ),
+                    actor=ACTOR,
+                )
+                await session.flush()
+
+                # 3. Simulate IntegrityError inside create_product
+                with self.assertRaises(ProductConflictError):
+                    with patch.object(service.repository, "insert", side_effect=IntegrityError("stmt", {}, Exception())):
+                        await service.create_product(
+                            ProductCreateSchema(
+                                destination_id="dst_hanoi",
+                                category="ticket",
+                                title="Another Ticket",
+                                supplier_id="sup_outer_test",
+                            ),
+                            actor=ACTOR,
+                        )
+
+                # 4. Outer session is NOT rolled back! The supplier and prod1 can be committed!
+                await session.commit()
+
+            # Verify in a new session that the outer write (sup_outer_test) was indeed committed
+            async with self.session_factory() as session:
+                persisted_sup = await session.get(Supplier, "sup_outer_test")
+                self.assertIsNotNone(persisted_sup)
+                self.assertEqual(persisted_sup.name, "Outer Write Supplier")
+
+        asyncio.run(scenario())
+
 
 if __name__ == "__main__":
     unittest.main()
+
+

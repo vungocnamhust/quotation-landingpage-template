@@ -5,7 +5,8 @@ import unittest
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from tests._db import make_test_engine
 
 import main
 from db.base import Base
@@ -16,7 +17,7 @@ class DestinationCatalogCrudTests(unittest.TestCase):
     def setUpClass(cls):
         cls.database_file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
         cls.database_file.close()
-        cls.engine = create_async_engine(f"sqlite+aiosqlite:///{cls.database_file.name}")
+        cls.engine = make_test_engine(f"sqlite+aiosqlite:///{cls.database_file.name}")
         cls.session_factory = async_sessionmaker(cls.engine, class_=AsyncSession, expire_on_commit=False)
         asyncio.run(cls._create_schema())
         cls.session_patch = patch.object(main, "_get_db_session_factory", return_value=cls.session_factory)
@@ -135,5 +136,42 @@ class DestinationCatalogCrudTests(unittest.TestCase):
 
         reactivated = self.client.patch(f"/api/v2/destinations/{source_id}/status", json={"isActive": True})
         self.assertEqual(reactivated.status_code, 422, reactivated.text)
+
+    def test_create_destination_with_aliases_enforces_foreign_keys_and_persists(self):
+        """Track 1 audit R-C1: DestinationCatalog and DestinationAlias insert order under PRAGMA foreign_keys=ON."""
+        from sqlalchemy import select, text
+        from db.models.destination import DestinationCatalog, DestinationAlias
+
+        payload = {
+            "canonicalName": "Da Lat Highlands",
+            "slug": "da-lat-highlands",
+            "aliases": ["Dalat", "Lam Vien"],
+            "countrySlug": "vietnam",
+            "regionSlug": "central-highlands",
+            "provinceSlug": "lam-dong",
+            "latitude": 11.9404,
+            "longitude": 108.4583,
+        }
+        res = self.client.post("/api/v2/destinations", json=payload)
+        self.assertEqual(res.status_code, 201, res.text)
+        created = res.json()
+        dest_id = created["id"]
+
+        async def verify():
+            async with self.session_factory() as session:
+                fk_check = await session.execute(text("PRAGMA foreign_keys"))
+                self.assertEqual(fk_check.scalar(), 1)
+                catalog = await session.get(DestinationCatalog, dest_id)
+                self.assertIsNotNone(catalog)
+                self.assertEqual(catalog.canonical_name, "Da Lat Highlands")
+                aliases = (
+                    await session.scalars(
+                        select(DestinationAlias).where(DestinationAlias.destination_id == dest_id)
+                    )
+                ).all()
+                self.assertGreaterEqual(len(aliases), 2)
+
+        asyncio.run(verify())
+
 
 

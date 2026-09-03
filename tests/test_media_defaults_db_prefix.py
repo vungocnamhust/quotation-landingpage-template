@@ -1,5 +1,6 @@
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession
+from tests._db import make_test_engine
 from sqlalchemy.orm import sessionmaker
 
 from db.base import Base
@@ -11,7 +12,7 @@ from repositories.media_library_repository import MediaLibraryRepository
 
 @pytest.fixture
 async def async_session():
-    engine = create_async_engine("sqlite+aiosqlite:///:memory:", echo=False)
+    engine = make_test_engine("sqlite+aiosqlite:///:memory:", echo=False)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     session_factory = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)

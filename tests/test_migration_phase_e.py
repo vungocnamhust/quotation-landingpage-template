@@ -9,7 +9,8 @@ from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 from PIL import Image
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from tests._db import make_test_engine
 
 import main
 from db.base import Base
@@ -83,7 +84,7 @@ class PhaseEMigrationTests(unittest.TestCase):
     def setUpClass(cls):
         cls.db_file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
         cls.db_file.close()
-        cls.engine = create_async_engine(f"sqlite+aiosqlite:///{cls.db_file.name}")
+        cls.engine = make_test_engine(f"sqlite+aiosqlite:///{cls.db_file.name}")
         cls.session_factory = async_sessionmaker(cls.engine, class_=AsyncSession, expire_on_commit=False)
         asyncio.run(cls._init_db())
         cls.session_patch = patch.object(main, "_get_db_session_factory", return_value=cls.session_factory)

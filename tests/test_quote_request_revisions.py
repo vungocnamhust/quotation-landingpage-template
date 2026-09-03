@@ -3,7 +3,8 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from tests._db import make_test_engine
 
 import main
 from db.base import Base
@@ -24,7 +25,7 @@ class TestQuoteRequestRevisions(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
         self.db_file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
         self.db_file.close()
-        self.engine = create_async_engine(f"sqlite+aiosqlite:///{self.db_file.name}")
+        self.engine = make_test_engine(f"sqlite+aiosqlite:///{self.db_file.name}")
         self.session_factory = async_sessionmaker(self.engine, class_=AsyncSession, expire_on_commit=False)
         self.session_patch = patch.object(main, "_get_db_session_factory", return_value=self.session_factory)
         self.session_patch.start()

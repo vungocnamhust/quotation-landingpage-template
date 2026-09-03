@@ -103,9 +103,9 @@ class ProductService:
 
         product_id = generate_id(ID_PREFIX)
         try:
-            product = await self.repository.insert(product_id=product_id, values=values)
+            async with self.session.begin_nested():
+                product = await self.repository.insert(product_id=product_id, values=values)
         except IntegrityError as exc:
-            await self.session.rollback()
             raise ProductConflictError(
                 f"A product named '{payload.title}' already exists for this destination/category/supplier."
             ) from exc
@@ -172,9 +172,9 @@ class ProductService:
 
         updates["updated_by"] = actor.serialize()
         try:
-            updated = await self.repository.update(product, values=updates)
+            async with self.session.begin_nested():
+                updated = await self.repository.update(product, values=updates)
         except IntegrityError as exc:
-            await self.session.rollback()
             raise ProductConflictError("A product with this title/destination/category/supplier already exists.") from exc
         return ProductResponseSchema.model_validate(updated)
 
@@ -241,6 +241,12 @@ class ProductService:
         destination = await self.destination_repository.get(destination_id)
         if destination is None:
             raise ProductValidationError(f"{field} '{destination_id}' was not found.")
+        if destination.merged_into_id is not None:
+            raise ProductValidationError(
+                f"Destination '{destination_id}' has been merged into '{destination.merged_into_id}'."
+            )
+        if not destination.is_active:
+            raise ProductValidationError(f"Destination '{destination_id}' is inactive.")
 
     async def _validate_supplier_exists(self, supplier_id: str | None) -> None:
         if supplier_id is None:

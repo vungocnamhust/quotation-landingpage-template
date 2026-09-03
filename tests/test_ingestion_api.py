@@ -20,7 +20,8 @@ from schemas.catalog_ingest import (
     SupplierCandidate,
 )
 from services.ai_platform.guardrails import AllowlistRecorder, RunBudget
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from tests._db import make_test_engine
 
 CLEAN_PAYLOAD = CatalogIngestPayload(
     supplier=SupplierCandidate(name_text="Sunrise Travel Co", source_quote="Sunrise Travel Co"),
@@ -81,7 +82,7 @@ class IngestionApiTests(unittest.TestCase):
     def setUpClass(cls):
         cls.database_file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
         cls.database_file.close()
-        cls.engine = create_async_engine(f"sqlite+aiosqlite:///{cls.database_file.name}")
+        cls.engine = make_test_engine(f"sqlite+aiosqlite:///{cls.database_file.name}")
         cls.session_factory = async_sessionmaker(cls.engine, class_=AsyncSession, expire_on_commit=False)
         asyncio.run(cls._create_schema())
         cls.session_patch = patch.object(db_session, "get_session_factory", return_value=cls.session_factory)
@@ -119,6 +120,7 @@ class IngestionApiTests(unittest.TestCase):
             await connection.run_sync(Base.metadata.create_all)
         async with self.session_factory() as session:
             session.add(DestinationCatalog(id="dst_hanoi", canonical_name="Hanoi", slug="hanoi"))
+            await session.flush()
             session.add(DestinationAlias(id="dal_hanoi", destination_id="dst_hanoi", normalized_alias="hanoi"))
             await session.commit()
 

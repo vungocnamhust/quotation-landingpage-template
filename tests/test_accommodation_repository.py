@@ -3,7 +3,8 @@ import os
 import tempfile
 import unittest
 
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from tests._db import make_test_engine
 
 from db.base import Base
 from repositories.accommodation_repository import AccommodationRepository
@@ -15,7 +16,7 @@ class AccommodationRepositoryTests(unittest.TestCase):
     def setUp(self):
         self.file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
         self.file.close()
-        self.engine = create_async_engine(f"sqlite+aiosqlite:///{self.file.name}")
+        self.engine = make_test_engine(f"sqlite+aiosqlite:///{self.file.name}")
         self.factory = async_sessionmaker(self.engine, class_=AsyncSession, expire_on_commit=False)
         asyncio.run(self._create())
 

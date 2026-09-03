@@ -5,7 +5,8 @@ from datetime import date
 from pydantic_ai import Agent
 from pydantic_ai.messages import ModelResponse, TextPart, ToolCallPart
 from pydantic_ai.models.function import AgentInfo, FunctionModel
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from tests._db import make_test_engine
 
 from db.base import Base
 from db.models.destination import DestinationCatalog
@@ -37,7 +38,7 @@ class CatalogToolsetTests(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
         self.database_file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
         self.database_file.close()
-        self.engine = create_async_engine(f"sqlite+aiosqlite:///{self.database_file.name}")
+        self.engine = make_test_engine(f"sqlite+aiosqlite:///{self.database_file.name}")
         self.session_factory = async_sessionmaker(self.engine, class_=AsyncSession, expire_on_commit=False)
         async with self.engine.begin() as connection:
             await connection.run_sync(Base.metadata.create_all)
@@ -54,6 +55,7 @@ class CatalogToolsetTests(unittest.IsolatedAsyncioTestCase):
                     default_currency="USD",
                 )
             )
+            await session.flush()
             session.add(
                 Product(
                     id="prd_deluxe",
@@ -94,6 +96,7 @@ class CatalogToolsetTests(unittest.IsolatedAsyncioTestCase):
                     category_attributes={"physical_level": "low"},
                 )
             )
+            await session.flush()
             session.add(
                 Rate(
                     id="rat_winter",
@@ -106,6 +109,7 @@ class CatalogToolsetTests(unittest.IsolatedAsyncioTestCase):
                     lifecycle_status="active",
                 )
             )
+            await session.flush()
             session.add(RatePriceLine(rate_id="rat_winter", price_for="adult", occupancy_basis="na", unit="person", amount_minor=1_000_000))
             await session.commit()
 

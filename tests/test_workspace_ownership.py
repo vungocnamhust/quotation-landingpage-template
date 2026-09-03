@@ -5,7 +5,8 @@ import unittest
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from tests._db import make_test_engine
 
 import main
 from db.base import Base
@@ -18,7 +19,7 @@ class WorkspaceOwnershipTests(unittest.TestCase):
     def setUpClass(cls):
         cls.file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
         cls.file.close()
-        cls.engine = create_async_engine(f"sqlite+aiosqlite:///{cls.file.name}")
+        cls.engine = make_test_engine(f"sqlite+aiosqlite:///{cls.file.name}")
         cls.sessions = async_sessionmaker(cls.engine, class_=AsyncSession, expire_on_commit=False)
         asyncio.run(cls._init())
         cls.session_patch = patch.object(main, "_get_db_session_factory", return_value=cls.sessions)

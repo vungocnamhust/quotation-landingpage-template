@@ -5,7 +5,8 @@ import unittest
 import unittest.mock
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from tests._db import make_test_engine
 
 from db.base import Base
 from db.models.destination import DestinationAlias, DestinationCatalog
@@ -23,7 +24,7 @@ class DestinationMergeTests(unittest.TestCase):
     def setUpClass(cls):
         cls.db_file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
         cls.db_file.close()
-        cls.engine = create_async_engine(f"sqlite+aiosqlite:///{cls.db_file.name}")
+        cls.engine = make_test_engine(f"sqlite+aiosqlite:///{cls.db_file.name}")
         cls.session_factory = async_sessionmaker(cls.engine, class_=AsyncSession, expire_on_commit=False)
 
     @classmethod
@@ -50,6 +51,7 @@ class DestinationMergeTests(unittest.TestCase):
             session.add(DestinationCatalog(id="dst_hub_b", canonical_name="Hub B", slug="hub-b"))
             session.add(DestinationCatalog(id="dst_hub_inactive", canonical_name="Inactive Hub", slug="inactive-hub", is_active=False))
             session.add(DestinationCatalog(id="dst_hub_owner_c", canonical_name="Hub C Owner", slug="hub-c-owner"))
+            await session.flush()
 
             session.add(DestinationAlias(id="dal_a_slug", destination_id="dst_hub_a", normalized_alias="old hub a"))
             session.add(DestinationAlias(id="dal_a_keyword", destination_id="dst_hub_a", normalized_alias="legacy name for a"))

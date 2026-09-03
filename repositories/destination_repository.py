@@ -88,6 +88,7 @@ class DestinationRepository:
                 **({"timezone": timezone} if timezone is not None else {}),
             )
             self.session.add(item)
+            await self.session.flush()
 
         else:
             # Seed calls are intentionally non-destructive: once an administrator
@@ -169,6 +170,7 @@ class DestinationRepository:
             timezone=timezone,
         )
         self.session.add(item)
+        await self.session.flush()
         for alias in {normalize_destination(value) for value in [canonical_name, slug, *aliases] if normalize_destination(value)}:
             digest = hashlib.sha256(alias.encode("utf-8")).hexdigest()[:20]
             self.session.add(DestinationAlias(id=f"dal_{digest}", destination_id=destination_id, normalized_alias=alias))

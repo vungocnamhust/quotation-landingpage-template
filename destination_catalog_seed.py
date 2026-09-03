@@ -248,3 +248,18 @@ def get_country_parent_id(country_slug: str) -> str | None:
         (profile["id"] for profile in COUNTRY_PARENT_PROFILES if profile["country_slug"] == country_slug),
         None,
     )
+
+
+if __name__ == "__main__":
+    import asyncio
+    from db.session import get_session_factory
+    from repositories.destination_repository import seed_destination_catalog
+
+    async def _main():
+        factory = get_session_factory()
+        async with factory() as session:
+            await seed_destination_catalog(session)
+            print("Destination catalog seeded successfully.")
+
+    asyncio.run(_main())
+

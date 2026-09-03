@@ -73,9 +73,9 @@ class SupplierService:
         values["created_by"] = actor.serialize()
         values["updated_by"] = actor.serialize()
         try:
-            supplier = await self.repository.insert(supplier_id=supplier_id, values=values)
+            async with self.session.begin_nested():
+                supplier = await self.repository.insert(supplier_id=supplier_id, values=values)
         except IntegrityError as exc:
-            await self.session.rollback()
             raise SupplierConflictError(f"A supplier named '{payload.name}' already exists.") from exc
         return SupplierResponseSchema.model_validate(supplier)
 
@@ -103,9 +103,9 @@ class SupplierService:
 
         updates["updated_by"] = actor.serialize()
         try:
-            updated = await self.repository.update(supplier, values=updates)
+            async with self.session.begin_nested():
+                updated = await self.repository.update(supplier, values=updates)
         except IntegrityError as exc:
-            await self.session.rollback()
             raise SupplierConflictError(f"A supplier named '{updates.get('name', supplier.name)}' already exists.") from exc
         return SupplierResponseSchema.model_validate(updated)
 
@@ -121,12 +121,18 @@ class SupplierService:
         if currency.upper() not in SUPPORTED_CURRENCIES:
             raise SupplierValidationError(f"Unsupported currency '{currency}'.")
 
-    async def _validate_destination_exists(self, destination_id: str | None) -> None:
+    async def _validate_destination_exists(self, destination_id: str | None, *, field: str = "destination_id") -> None:
         if destination_id is None:
             return
         destination = await self.destination_repository.get(destination_id)
         if destination is None:
-            raise SupplierValidationError(f"destination_id '{destination_id}' was not found.")
+            raise SupplierValidationError(f"{field} '{destination_id}' was not found.")
+        if destination.merged_into_id is not None:
+            raise SupplierValidationError(
+                f"Destination '{destination_id}' has been merged into '{destination.merged_into_id}'."
+            )
+        if not destination.is_active:
+            raise SupplierValidationError(f"Destination '{destination_id}' is inactive.")
 
     @staticmethod
     def _payload_to_values(payload: SupplierCreateSchema) -> dict:

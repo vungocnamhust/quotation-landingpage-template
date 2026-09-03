@@ -4,7 +4,8 @@ import tempfile
 import unittest
 
 import pydantic
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from tests._db import make_test_engine
 
 from core.kernel import ActorRef
 from db.base import Base
@@ -99,7 +100,7 @@ class SupplierServiceTests(unittest.TestCase):
     def setUpClass(cls):
         cls.db_file = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
         cls.db_file.close()
-        cls.engine = create_async_engine(f"sqlite+aiosqlite:///{cls.db_file.name}")
+        cls.engine = make_test_engine(f"sqlite+aiosqlite:///{cls.db_file.name}")
         cls.session_factory = async_sessionmaker(cls.engine, class_=AsyncSession, expire_on_commit=False)
         asyncio.run(cls._init_db())
 
@@ -326,6 +327,101 @@ class SupplierServiceTests(unittest.TestCase):
 
         asyncio.run(scenario())
 
+    def test_create_supplier_rejects_merged_and_inactive_destinations(self):
+        """Track 1 audit R-H2: validate destination liveness (merged & inactive rejection)."""
+        from repositories.destination_repository import DestinationRepository
+
+        async def scenario():
+            async with self.session_factory() as session:
+                dest_repo = DestinationRepository(session)
+                live_dest = await dest_repo.create(
+                    destination_id="dst_live_hub",
+                    canonical_name="Live Hub",
+                    slug="live-hub",
+                    aliases=[],
+                    country_slug="vietnam",
+                    region_slug="central",
+                    province_slug="quang-nam",
+                    latitude=15.88,
+                    longitude=108.33,
+                )
+                inactive_dest = await dest_repo.create(
+                    destination_id="dst_inactive_hub",
+                    canonical_name="Inactive Hub",
+                    slug="inactive-hub",
+                    aliases=[],
+                    country_slug="vietnam",
+                    region_slug="central",
+                    province_slug="quang-nam",
+                    latitude=15.89,
+                    longitude=108.34,
+                )
+                await dest_repo.set_status(inactive_dest, is_active=False)
+
+                source_dest = await dest_repo.create(
+                    destination_id="dst_source_hub",
+                    canonical_name="Source Hub",
+                    slug="source-hub",
+                    aliases=[],
+                    country_slug="vietnam",
+                    region_slug="central",
+                    province_slug="quang-nam",
+                    latitude=15.90,
+                    longitude=108.35,
+                )
+                await dest_repo.merge(source_id="dst_source_hub", target_id="dst_live_hub")
+                await session.commit()
+
+            actor = ActorRef(actor_id="staff@example.com", actor_type="staff")
+
+            # 1. Pointing to merged destination -> 422 with merged_into_id
+            async with self.session_factory() as session:
+                service = SupplierService(session)
+                with self.assertRaises(SupplierValidationError) as ctx:
+                    await service.create_supplier(
+                        SupplierCreateSchema(
+                            name="Supplier Merged Target",
+                            supplier_type="direct",
+                            default_currency="USD",
+                            destination_id="dst_source_hub",
+                        ),
+                        actor=actor,
+                    )
+                self.assertIn("has been merged into 'dst_live_hub'", str(ctx.exception))
+
+            # 2. Pointing to inactive destination -> 422 inactive
+            async with self.session_factory() as session:
+                service = SupplierService(session)
+                with self.assertRaises(SupplierValidationError) as ctx:
+                    await service.create_supplier(
+                        SupplierCreateSchema(
+                            name="Supplier Inactive Target",
+                            supplier_type="direct",
+                            default_currency="USD",
+                            destination_id="dst_inactive_hub",
+                        ),
+                        actor=actor,
+                    )
+                self.assertIn("is inactive", str(ctx.exception))
+
+            # 3. Pointing to active live destination -> 201/success
+            async with self.session_factory() as session:
+                service = SupplierService(session)
+                created = await service.create_supplier(
+                    SupplierCreateSchema(
+                        name="Supplier Live Target",
+                        supplier_type="direct",
+                        default_currency="USD",
+                        destination_id="dst_live_hub",
+                    ),
+                    actor=actor,
+                )
+                await session.commit()
+                self.assertEqual(created.destination_id, "dst_live_hub")
+
+        asyncio.run(scenario())
+
 
 if __name__ == "__main__":
     unittest.main()
+

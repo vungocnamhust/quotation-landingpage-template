@@ -71,8 +71,28 @@ class SqliteForeignKeyEnforcementTests(unittest.TestCase):
                 with self.assertRaises(IntegrityError):
                     await session.flush()
 
+    def test_make_test_engine_enforces_sqlite_foreign_keys(self):
+        """Track 1 audit R-H1: make_test_engine() must enforce PRAGMA foreign_keys=ON."""
+        from tests._db import make_test_engine
+
+        async def scenario():
+            # In-memory engine
+            mem_engine = make_test_engine("sqlite+aiosqlite:///:memory:")
+            async with mem_engine.connect() as conn:
+                res = await conn.execute(text("PRAGMA foreign_keys"))
+                self.assertEqual(res.scalar(), 1)
+            await mem_engine.dispose()
+
+            # File-based engine
+            file_engine = make_test_engine(f"sqlite+aiosqlite:///{self.database_file.name}")
+            async with file_engine.connect() as conn:
+                res = await conn.execute(text("PRAGMA foreign_keys"))
+                self.assertEqual(res.scalar(), 1)
+            await file_engine.dispose()
+
         asyncio.run(scenario())
 
 
 if __name__ == "__main__":
     unittest.main()
+
