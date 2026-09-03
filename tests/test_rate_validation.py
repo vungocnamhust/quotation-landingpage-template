@@ -103,5 +103,19 @@ class OverlapIsWarningNotErrorTests(unittest.TestCase):
         self.assertEqual(result.warnings, [])
 
 
+class PriceLineTierOverlapTests(unittest.TestCase):
+    def test_overlapping_tiers_warn_without_blocking_activation(self):
+        result = validate_rate_for_activation(
+            _context(
+                lines=(
+                    PriceLineInput(100_000, price_for="adult", occupancy_basis="na", unit="person", tier_min_pax=1, tier_max_pax=5),
+                    PriceLineInput(90_000, price_for="adult", occupancy_basis="na", unit="person", tier_min_pax=3, tier_max_pax=8),
+                )
+            )
+        )
+        self.assertTrue(result.passed)
+        self.assertIn("PRICE_LINE_TIER_OVERLAP", [issue.code for issue in result.warnings])
+
+
 if __name__ == "__main__":
     unittest.main()

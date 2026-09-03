@@ -124,9 +124,39 @@ class RateApiTests(unittest.TestCase):
     def test_update_draft_succeeds(self):
         created = self.client.post(f"/api/v2/products/{self.product_id}/rates", json=self._rate_payload()).json()
 
-        response = self.client.put(f"/api/v2/rates/{created['id']}", json=self._rate_payload(season_name="Edited"))
+        response = self.client.put(
+            f"/api/v2/rates/{created['id']}",
+            json=self._rate_payload(
+                season_name="Edited",
+                lines=[
+                    {"price_for": "adult", "occupancy_basis": "na", "unit": "person", "amount_minor": 111},
+                    {"price_for": "child", "occupancy_basis": "na", "unit": "person", "amount_minor": 222},
+                ],
+            ),
+        )
         self.assertEqual(response.status_code, 200, response.text)
         self.assertEqual(response.json()["season_name"], "Edited")
+        self.assertEqual([(line["price_for"], line["amount_minor"]) for line in response.json()["lines"]], [("adult", 111), ("child", 222)])
+
+    def test_duplicate_price_line_combo_and_unknown_source_return_422(self):
+        duplicate = self.client.post(
+            f"/api/v2/products/{self.product_id}/rates",
+            json=self._rate_payload(
+                lines=[
+                    {"price_for": "adult", "occupancy_basis": "na", "unit": "person", "amount_minor": 1},
+                    {"price_for": "adult", "occupancy_basis": "na", "unit": "person", "amount_minor": 2},
+                ]
+            ),
+        )
+        self.assertEqual(duplicate.status_code, 422, duplicate.text)
+        self.assertEqual(duplicate.json()["error"]["code"], "VALIDATION_FAILED")
+
+        missing_source = self.client.post(
+            f"/api/v2/products/{self.product_id}/rates",
+            json=self._rate_payload(source={"supplier_id": "sup_missing"}),
+        )
+        self.assertEqual(missing_source.status_code, 422, missing_source.text)
+        self.assertEqual(missing_source.json()["error"]["code"], "VALIDATION_FAILED")
 
     def test_activate_without_lines_returns_422(self):
         created = self.client.post(f"/api/v2/products/{self.product_id}/rates", json=self._rate_payload(lines=[])).json()
@@ -156,6 +186,27 @@ class RateApiTests(unittest.TestCase):
 
         out_of_range = self.client.get(f"/api/v2/products/{self.product_id}/rates?on_date=2026-12-01")
         self.assertEqual(out_of_range.json()["total"], 0)
+
+    def test_list_total_counts_beyond_limit_and_excludes_blackout(self):
+        for month in (1, 4, 7):
+            created = self.client.post(
+                f"/api/v2/products/{self.product_id}/rates",
+                json=self._rate_payload(
+                    valid_from=f"2026-{month:02d}-01",
+                    valid_to=f"2026-{month + 2:02d}-28",
+                    blackout_json=[{"from": f"2026-{month:02d}-15", "to": f"2026-{month:02d}-15"}],
+                ),
+            ).json()
+            self.assertEqual(self.client.post(f"/api/v2/rates/{created['id']}/activate").status_code, 200)
+
+        paged = self.client.get(f"/api/v2/products/{self.product_id}/rates?limit=1")
+        self.assertEqual(paged.status_code, 200, paged.text)
+        self.assertEqual(len(paged.json()["items"]), 1)
+        self.assertEqual(paged.json()["total"], 3)
+
+        blackout = self.client.get(f"/api/v2/products/{self.product_id}/rates?on_date=2026-04-15")
+        self.assertEqual(blackout.status_code, 200, blackout.text)
+        self.assertEqual(blackout.json()["total"], 0)
 
     def test_hard_delete_draft(self):
         created = self.client.post(f"/api/v2/products/{self.product_id}/rates", json=self._rate_payload()).json()

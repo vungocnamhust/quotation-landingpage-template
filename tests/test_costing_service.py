@@ -4,16 +4,18 @@ import tempfile
 import unittest
 from datetime import date
 
+from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from core.kernel import ActorRef
 from db.base import Base
+from db.models.costing import ServiceLine
 from db.models.destination import DestinationCatalog
 from db.models.supplier import Supplier
 from repositories.quote_request_repository import QuoteRequestRepository
 from repositories.quotation_repository import QuotationRepository
 from schemas.v2.product import ProductCreateSchema
-from schemas.v2.rate import RateCreateSchema, RatePriceLineCreateSchema
+from schemas.v2.rate import RateCreateSchema, RatePriceLineCreateSchema, RateSupersedeSchema
 from schemas.v2.costing import (
     AttachQuotationSchema,
     CostingSettingsUpdateSchema,
@@ -117,6 +119,7 @@ class CostingServiceTests(unittest.TestCase):
             product_id=self.product_id,
             rate_id=self.rate_id,
             price_line_id=self.price_line_id,
+            service_date=date(2026, 6, 15),
             qty_unit=2,
             qty_time=3,
         )
@@ -350,6 +353,65 @@ class CostingServiceTests(unittest.TestCase):
 
         asyncio.run(scenario())
 
+    def test_fx_rate_is_rejected_when_line_currency_matches_sheet(self):
+        async def scenario():
+            async with self.session_factory() as session:
+                service = CostingService(session)
+                sheet = await service.create_sheet(CostingSheetCreateSchema(request_id="req_test1", currency="USD"), actor=ACTOR)
+                await session.commit()
+                with self.assertRaises(CostingValidationError):
+                    await service.create_line(
+                        sheet.id,
+                        self._manual_line_payload(sheet.costing_revision, cost_currency="USD", fx_rate_ppm=1_000_000),
+                        actor=ACTOR,
+                        idempotency_key="same-currency-fx",
+                    )
+
+        asyncio.run(scenario())
+
+    def test_qty_edit_keeps_catalog_snapshot_after_rate_supersede(self):
+        async def scenario():
+            async with self.session_factory() as session:
+                service = CostingService(session)
+                sheet = await service.create_sheet(CostingSheetCreateSchema(request_id="req_test1", currency="USD"), actor=ACTOR)
+                await session.commit()
+                created = await service.create_line(
+                    sheet.id, self._catalog_line_payload(sheet.costing_revision), actor=ACTOR, idempotency_key="snapshot-qty"
+                )
+                await session.commit()
+                line = created.items[0]
+
+                await RateService(session).supersede(
+                    self.rate_id,
+                    RateSupersedeSchema(
+                        rate_basis="net", valid_from=date(2027, 1, 1), valid_to=date(2027, 12, 31),
+                        lines=[RatePriceLineCreateSchema(price_for="room", occupancy_basis="dbl", unit="room", amount_minor=9_999_999)],
+                    ),
+                    actor=ACTOR,
+                )
+                await session.commit()
+
+                updated = await service.update_line(
+                    sheet.id,
+                    line.id,
+                    ServiceLineUpdateSchema(
+                        base_costing_revision=created.sheet.costing_revision,
+                        day_number=line.day_number,
+                        service_date=line.service_date,
+                        product_id=line.product_id,
+                        rate_id=line.tariff_id,
+                        price_line_id=line.price_line_id,
+                        qty_unit=5,
+                        qty_time=line.qty_time,
+                    ),
+                    actor=ACTOR,
+                )
+                self.assertEqual(updated.items[0].tariff_id, self.rate_id)
+                self.assertEqual(updated.items[0].unit_cost_minor, 1_000_000)
+                self.assertEqual(updated.items[0].cost_minor, 1_000_000 * 5 * 3)
+
+        asyncio.run(scenario())
+
     def test_editing_cost_of_catalog_line_cuts_tariff_reference(self):
         async def scenario():
             async with self.session_factory() as session:
@@ -405,6 +467,271 @@ class CostingServiceTests(unittest.TestCase):
 
                 self.assertEqual(len(first.items), 1)
                 self.assertEqual(len(second.items), 1)
+
+        asyncio.run(scenario())
+
+    def test_same_idempotency_key_with_different_payload_returns_original_line(self):
+        async def scenario():
+            async with self.session_factory() as session:
+                service = CostingService(session)
+                sheet = await service.create_sheet(CostingSheetCreateSchema(request_id="req_test1", currency="USD"), actor=ACTOR)
+                await session.commit()
+                first = await service.create_line(
+                    sheet.id, self._catalog_line_payload(sheet.costing_revision, qty_unit=2), actor=ACTOR, idempotency_key="stable-key"
+                )
+                await session.commit()
+                replay = await service.create_line(
+                    sheet.id,
+                    self._catalog_line_payload(first.sheet.costing_revision, qty_unit=99),
+                    actor=ACTOR,
+                    idempotency_key="stable-key",
+                )
+                self.assertEqual(len(replay.items), 1)
+                self.assertEqual(replay.items[0].qty_unit, 2)
+
+        asyncio.run(scenario())
+
+    def test_catalog_line_rejects_rate_outside_pax_window_and_lists_other_candidate(self):
+        async def scenario():
+            async with self.session_factory() as session:
+                rate_service = RateService(session)
+                restricted = await rate_service.create_draft(
+                    self.product_id,
+                    RateCreateSchema(
+                        product_id=self.product_id,
+                        rate_basis="net",
+                        valid_from=date(2027, 1, 1),
+                        valid_to=date(2027, 12, 31),
+                        min_pax=3,
+                        lines=[RatePriceLineCreateSchema(price_for="room", occupancy_basis="dbl", unit="room", amount_minor=2_000_000)],
+                    ),
+                    actor=ACTOR,
+                )
+                await session.commit()
+                restricted = await rate_service.activate(restricted.id, actor=ACTOR)
+                await session.commit()
+
+                alternative = await rate_service.create_draft(
+                    self.product_id,
+                    RateCreateSchema(
+                        product_id=self.product_id,
+                        rate_basis="net",
+                        valid_from=date(2027, 1, 1),
+                        valid_to=date(2027, 12, 31),
+                        lines=[RatePriceLineCreateSchema(price_for="room", occupancy_basis="dbl", unit="room", amount_minor=2_100_000)],
+                    ),
+                    actor=ACTOR,
+                )
+                await session.commit()
+                alternative = await rate_service.activate(alternative.id, actor=ACTOR)
+                await session.commit()
+
+                sheet = await CostingService(session).create_sheet(
+                    CostingSheetCreateSchema(request_id="req_test1", currency="USD"), actor=ACTOR
+                )
+                await session.commit()
+                with self.assertRaises(CostingValidationError) as error:
+                    await CostingService(session).create_line(
+                        sheet.id,
+                        ServiceLineCreateSchema(
+                            base_costing_revision=sheet.costing_revision,
+                            product_id=self.product_id,
+                            rate_id=restricted.id,
+                            price_line_id=restricted.lines[0].id,
+                            service_date=date(2027, 6, 15),
+                        ),
+                        actor=ACTOR,
+                        idempotency_key="pax-window",
+                    )
+                self.assertIn(alternative.id, str(error.exception))
+
+        asyncio.run(scenario())
+
+    def test_catalog_line_rejects_sibling_product_rate(self):
+        async def scenario():
+            async with self.session_factory() as session:
+                sibling = await ProductService(session).create_product(
+                    ProductCreateSchema(destination_id="dst_hanoi", category="transportation", title="Airport transfer", supplier_id="sup_la_siesta"),
+                    actor=ACTOR,
+                )
+                await session.commit()
+                rate_service = RateService(session)
+                sibling_rate = await rate_service.create_draft(
+                    sibling.id,
+                    RateCreateSchema(
+                        product_id=sibling.id,
+                        rate_basis="net",
+                        valid_from=date(2026, 1, 1),
+                        valid_to=date(2026, 12, 31),
+                        lines=[RatePriceLineCreateSchema(price_for="adult", occupancy_basis="na", unit="person", amount_minor=100)],
+                    ),
+                    actor=ACTOR,
+                )
+                await session.commit()
+                sibling_rate = await rate_service.activate(sibling_rate.id, actor=ACTOR)
+                await session.commit()
+                sheet = await CostingService(session).create_sheet(CostingSheetCreateSchema(request_id="req_test1", currency="USD"), actor=ACTOR)
+                await session.commit()
+                with self.assertRaises(CostingValidationError):
+                    await CostingService(session).create_line(
+                        sheet.id,
+                        ServiceLineCreateSchema(
+                            base_costing_revision=sheet.costing_revision,
+                            product_id=self.product_id,
+                            rate_id=sibling_rate.id,
+                            price_line_id=sibling_rate.lines[0].id,
+                            service_date=date(2026, 6, 15),
+                        ),
+                        actor=ACTOR,
+                        idempotency_key="wrong-product-rate",
+                    )
+
+        asyncio.run(scenario())
+
+    def test_attached_quotation_facts_override_request_party(self):
+        async def scenario():
+            async with self.session_factory() as session:
+                quotation_repo = QuotationRepository(session)
+                await quotation_repo.create_version_facts(
+                    quotation_id="qtn_test1",
+                    canonical_facts_json={"customer_facts": {"adults": 4, "children": 1}},
+                    resolved_facts_json={},
+                    facts_hash="facts-party",
+                    source_request_id="req_test1",
+                    source_request_revision=1,
+                )
+                await session.commit()
+                sheet = await CostingService(session).create_sheet(
+                    CostingSheetCreateSchema(quotation_id="qtn_test1", currency="USD"), actor=ACTOR
+                )
+                await session.commit()
+                self.assertEqual(await CostingService(session)._authoritative_party_size((await CostingService(session).repository.get_sheet_by_id(sheet.id))), 5)
+
+        asyncio.run(scenario())
+
+    def test_catalog_service_date_is_date_only_contract(self):
+        with self.assertRaises(ValueError):
+            ServiceLineCreateSchema(
+                base_costing_revision=0,
+                product_id="prd_1",
+                rate_id="rat_1",
+                price_line_id=1,
+                service_date="2026-06-15T18:00:00Z",
+            )
+
+    def test_attached_sheet_without_immutable_facts_rejects_catalog_selection(self):
+        async def scenario():
+            async with self.session_factory() as session:
+                service = CostingService(session)
+                sheet = await service.create_sheet(CostingSheetCreateSchema(quotation_id="qtn_test1", currency="USD"), actor=ACTOR)
+                await session.commit()
+                with self.assertRaises(CostingValidationError):
+                    await service.create_line(
+                        sheet.id, self._catalog_line_payload(sheet.costing_revision), actor=ACTOR, idempotency_key="missing-facts"
+                    )
+
+        asyncio.run(scenario())
+
+    def test_duplicate_line_key_does_not_discard_uncommitted_sibling_lines(self):
+        async def scenario():
+            from repositories.costing_repository import CostingLineDuplicateError, CostingRepository
+
+            async with self.session_factory() as session:
+                service = CostingService(session)
+                sheet = await service.create_sheet(CostingSheetCreateSchema(request_id="req_test1", currency="USD"), actor=ACTOR)
+                await session.commit()
+                seeded = await service.create_line(
+                    sheet.id, self._manual_line_payload(sheet.costing_revision, cost_currency="USD"), actor=ACTOR, idempotency_key="duplicate"
+                )
+                await session.commit()
+                repo = CostingRepository(session)
+                fresh = await repo.get_sheet_by_id(sheet.id)
+                values = {
+                    "category": "visa", "title": "Sibling write", "unit": "person", "time_basis": "trip",
+                    "qty_unit": 1, "qty_time": 1, "unit_cost_minor": 1, "cost_currency": "USD",
+                    "fx_rate_ppm": None, "sell_override_minor": None, "day_number": None, "service_date": None,
+                    "note": None, "sort_order": 1, "idempotency_key": "sibling", "created_by": ACTOR.serialize(), "updated_by": ACTOR.serialize(),
+                }
+                await repo.insert_line(fresh, line_id="csl_sibling", values=values, expected_revision=seeded.sheet.costing_revision)
+                duplicate_values = {**values, "idempotency_key": "duplicate"}
+                with self.assertRaises(CostingLineDuplicateError):
+                    await repo.insert_line(fresh, line_id="csl_duplicate", values=duplicate_values, expected_revision=fresh.costing_revision)
+                await session.commit()
+
+                workbench = await service.get_workbench(sheet.id)
+                self.assertEqual({item.id for item in workbench.items}, {"csl_sibling", seeded.items[0].id})
+
+        asyncio.run(scenario())
+
+    def test_currency_change_races_line_insert_exactly_one_wins_then_loser_retries(self):
+        async def scenario():
+            async with self.session_factory() as session_a:
+                service_a = CostingService(session_a)
+                sheet = await service_a.create_sheet(CostingSheetCreateSchema(request_id="req_test1", currency="USD"), actor=ACTOR)
+                await session_a.commit()
+                stale = await service_a.repository.get_sheet_by_id(sheet.id)
+                await session_a.commit()
+
+                async with self.session_factory() as session_b:
+                    winner = await CostingService(session_b).update_settings(
+                        sheet.id,
+                        CostingSettingsUpdateSchema(base_costing_revision=0, markup_rate_bps=2_000),
+                        actor=ACTOR,
+                    )
+                    await session_b.commit()
+                    self.assertEqual(winner.sheet.costing_revision, 1)
+
+                with self.assertRaises(CostingConflictError):
+                    await service_a.create_line(
+                        sheet.id, self._manual_line_payload(stale.costing_revision, cost_currency="USD"), actor=ACTOR, idempotency_key="race-loser"
+                    )
+                await session_a.rollback()
+                current = await service_a.get_workbench(sheet.id)
+                retried = await service_a.create_line(
+                    sheet.id,
+                    self._manual_line_payload(current.sheet.costing_revision, cost_currency="USD"),
+                    actor=ACTOR,
+                    idempotency_key="race-retry",
+                )
+                self.assertEqual(retried.sheet.costing_revision, 2)
+
+        asyncio.run(scenario())
+
+    def test_workbench_query_count_is_bounded_for_many_catalog_lines(self):
+        async def scenario():
+            async with self.session_factory() as session:
+                service = CostingService(session)
+                sheet = await service.create_sheet(CostingSheetCreateSchema(request_id="req_test1", currency="USD"), actor=ACTOR)
+                await session.commit()
+                for index in range(10):
+                    destination_id = f"dst_batch_{index}"
+                    session.add(DestinationCatalog(id=destination_id, canonical_name=f"Batch {index}", slug=f"batch-{index}"))
+                    product = await ProductService(session).create_product(
+                        ProductCreateSchema(destination_id=destination_id, category="visa", title=f"Visa {index}", supplier_id="sup_la_siesta"),
+                        actor=ACTOR,
+                    )
+                    for offset in range(5):
+                        session.add(
+                            ServiceLine(
+                                id=f"csl_batch_{index}_{offset}", sheet_id=sheet.id, category="visa", title="Catalog snapshot",
+                                supplier_id="sup_la_siesta", product_id=product.id, unit="person", time_basis="trip",
+                                qty_unit=1, qty_time=1, unit_cost_minor=100, cost_currency="USD", source="manual",
+                                idempotency_key=f"batch-{index}-{offset}", sort_order=index * 5 + offset,
+                            )
+                        )
+                await session.commit()
+                statements: list[str] = []
+
+                def count_queries(*args):
+                    statements.append(args[2])
+
+                event.listen(self.engine.sync_engine, "before_cursor_execute", count_queries)
+                try:
+                    workbench = await CostingService(session).get_workbench(sheet.id)
+                finally:
+                    event.remove(self.engine.sync_engine, "before_cursor_execute", count_queries)
+                self.assertEqual(len(workbench.items), 50)
+                self.assertLessEqual(len(statements), 6)
 
         asyncio.run(scenario())
 

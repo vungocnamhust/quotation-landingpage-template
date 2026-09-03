@@ -15,8 +15,9 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.runtime import apply_pricing_option
-from core.kernel import ActorRef, generate_id, validate_currency
+from core.kernel import ActorRef, generate_id, validate_amount_minor, validate_currency
 from core.rules.costing_rules import ServiceLineInput, summarize
+from core.rules.rate_selection import pick_price_line, select_rates
 from db.models.costing import CostingSheet
 from notification.domain.events import EventType
 from repositories.costing_repository import (
@@ -51,6 +52,7 @@ from schemas.v2.costing import (
     ServiceLineWriteSchema,
 )
 from services.outbox_service import OutboxService
+from services.rate_candidates import rate_candidates_from_rows
 
 log = logging.getLogger(__name__)
 
@@ -128,7 +130,7 @@ class CostingService:
                     current_revision=existing.costing_revision,
                 )
 
-        currency = validate_currency(payload.currency) if payload.currency else _DEFAULT_SHEET_CURRENCY
+        currency = self._currency(payload.currency) if payload.currency else _DEFAULT_SHEET_CURRENCY
         values: dict[str, Any] = {
             "quote_request_id": payload.request_id,
             "quotation_id": payload.quotation_id,
@@ -152,7 +154,7 @@ class CostingService:
 
         values: dict[str, Any] = {"updated_by": actor.serialize()}
         if payload.currency is not None:
-            currency = validate_currency(payload.currency)
+            currency = self._currency(payload.currency)
             if currency != sheet.currency and sheet.lines:
                 raise CostingConflictError(
                     "Currency is locked once the sheet has service lines (CS1).",
@@ -284,7 +286,7 @@ class CostingService:
             return None
         self._guard_booked_line(line, sheet)
 
-        values = await self._resolve_line_values(sheet, payload)
+        values = await self._resolve_line_values(sheet, payload, existing_line=line)
         values["updated_by"] = actor.serialize()
         try:
             await self.repository.update_line(
@@ -518,9 +520,20 @@ class CostingService:
                 current_revision=sheet.costing_revision,
             )
 
-    async def _resolve_line_values(self, sheet: CostingSheet, payload: ServiceLineWriteSchema) -> dict[str, Any]:
-        if payload.product_id:
-            values = await self._resolve_catalog_line(payload)
+    async def _resolve_line_values(
+        self, sheet: CostingSheet, payload: ServiceLineWriteSchema, *, existing_line=None
+    ) -> dict[str, Any]:
+        same_catalog_snapshot = (
+            existing_line is not None
+            and payload.product_id is not None
+            and payload.product_id == existing_line.product_id
+            and payload.rate_id == existing_line.tariff_id
+            and payload.price_line_id == existing_line.price_line_id
+        )
+        if same_catalog_snapshot:
+            values = self._snapshot_catalog_values(existing_line)
+        elif payload.product_id:
+            values = await self._resolve_catalog_line(sheet, payload)
         else:
             values = self._resolve_manual_line(payload)
 
@@ -528,6 +541,10 @@ class CostingService:
         if cost_currency != sheet.currency and payload.fx_rate_ppm is None:
             raise CostingValidationError(
                 f"fx_rate_ppm is required: line currency '{cost_currency}' differs from sheet currency '{sheet.currency}'."
+            )
+        if cost_currency == sheet.currency and payload.fx_rate_ppm is not None:
+            raise CostingValidationError(
+                "fx_rate_ppm must be omitted when line currency equals the costing sheet currency."
             )
         values["fx_rate_ppm"] = payload.fx_rate_ppm
         values["sell_override_minor"] = payload.sell_override_minor
@@ -539,26 +556,49 @@ class CostingService:
         values["qty_time"] = payload.qty_time
         return values
 
-    async def _resolve_catalog_line(self, payload: ServiceLineWriteSchema) -> dict[str, Any]:
+    async def _resolve_catalog_line(self, sheet: CostingSheet, payload: ServiceLineWriteSchema) -> dict[str, Any]:
         product = await self.product_repository.get_by_id(payload.product_id)
         if product is None:
             raise CostingValidationError(f"product '{payload.product_id}' was not found.")
 
-        rate = await self.rate_repository.get_by_id(payload.rate_id)
-        if rate is None or rate.product_id != product.id:
+        rate_rows, _total = await self.rate_repository.list_by_product(product.id, lifecycle="active", limit=200)
+        rate = next((row for row in rate_rows if row.id == payload.rate_id), None)
+        if rate is None:
             raise CostingValidationError(f"rate '{payload.rate_id}' was not found for product '{payload.product_id}'.")
-        if rate.lifecycle_status != "active":
+        pax = await self._authoritative_party_size(sheet)
+        candidates = rate_candidates_from_rows(rate_rows)
+        selection = select_rates(candidates, payload.service_date, pax)
+        selected_candidate = next((candidate for candidate in selection.candidates if candidate.rate_id == rate.id), None)
+        candidate_payload = [
+            {"rate_id": candidate.rate_id, "season": next(row.season_name for row in rate_rows if row.id == candidate.rate_id),
+             "validity": {"valid_from": candidate.valid_from.isoformat(), "valid_to": candidate.valid_to.isoformat()}}
+            for candidate in selection.candidates
+        ]
+        if selected_candidate is None:
             raise CostingValidationError(
-                {"message": f"rate '{rate.id}' is not active.", "candidates": []},
-            )
-        if not self._rate_covers_date(rate, payload.service_date):
-            raise CostingValidationError(
-                {"message": f"rate '{rate.id}' does not cover service_date {payload.service_date}.", "candidates": []},
+                {"message": f"rate '{rate.id}' does not cover this service date and party size.", "candidates": candidate_payload},
             )
 
         price_line = next((line for line in rate.lines if line.id == payload.price_line_id), None)
         if price_line is None:
             raise CostingValidationError(f"price_line '{payload.price_line_id}' was not found on rate '{rate.id}'.")
+        price_selection = pick_price_line(
+            list(selected_candidate.lines), price_line.price_for, price_line.occupancy_basis, pax, unit=price_line.unit
+        )
+        if price_selection.has_conflict or not price_selection.candidates:
+            raise CostingValidationError(
+                {"message": "The selected price line has no unique tier for this party size.", "candidates": candidate_payload}
+            )
+        resolved = price_selection.candidates[0]
+        if (resolved.price_for, resolved.occupancy_basis, resolved.unit, resolved.tier_min_pax) != (
+            price_line.price_for,
+            price_line.occupancy_basis,
+            price_line.unit,
+            price_line.tier_min_pax,
+        ):
+            raise CostingValidationError(
+                {"message": "The selected price line does not apply to this party size.", "candidates": candidate_payload}
+            )
 
         return {
             "category": product.category,
@@ -574,8 +614,11 @@ class CostingService:
             "cost_currency": rate.currency,
         }
 
-    @staticmethod
-    def _resolve_manual_line(payload: ServiceLineWriteSchema) -> dict[str, Any]:
+    def _resolve_manual_line(self, payload: ServiceLineWriteSchema) -> dict[str, Any]:
+        try:
+            amount_minor = validate_amount_minor(payload.unit_cost_minor)
+        except ValueError as err:
+            raise CostingValidationError(str(err)) from err
         return {
             "category": payload.category,
             "subcategory": payload.subcategory,
@@ -586,20 +629,40 @@ class CostingService:
             "price_line_id": None,
             "unit": payload.unit,
             "time_basis": payload.time_basis,
-            "unit_cost_minor": payload.unit_cost_minor,
-            "cost_currency": validate_currency(payload.cost_currency),
+            "unit_cost_minor": amount_minor,
+            "cost_currency": self._currency(payload.cost_currency),
         }
 
     @staticmethod
-    def _rate_covers_date(rate, service_date: date | None) -> bool:
-        if service_date is None:
-            return True
-        if not (rate.valid_from <= service_date <= rate.valid_to):
-            return False
-        for blackout in rate.blackout_json:
-            if date.fromisoformat(blackout["from"]) <= service_date <= date.fromisoformat(blackout["to"]):
-                return False
-        return True
+    def _snapshot_catalog_values(line) -> dict[str, Any]:
+        return {
+            field: getattr(line, field)
+            for field in (
+                "category", "subcategory", "title", "supplier_id", "product_id", "tariff_id", "price_line_id",
+                "unit", "time_basis", "unit_cost_minor", "cost_currency",
+            )
+        }
+
+    async def _authoritative_party_size(self, sheet: CostingSheet) -> int:
+        if sheet.quotation_id:
+            facts = await self.quotation_repository.get_version_facts(sheet.quotation_id)
+            customer = (facts.canonical_facts_json or {}).get("customer_facts") if facts else None
+            adults = customer.get("adults") if isinstance(customer, dict) else None
+            children = customer.get("children") if isinstance(customer, dict) else None
+        else:
+            request = await self.quote_request_repository.get_by_id(sheet.quote_request_id) if sheet.quote_request_id else None
+            adults = request.adults if request else None
+            children = request.children if request else None
+        if not isinstance(adults, int) or adults < 1 or not isinstance(children, int) or children < 0:
+            raise CostingValidationError("Authoritative Facts must include a valid adult and child party count before selecting a catalog rate.")
+        return adults + children
+
+    @staticmethod
+    def _currency(value: str | None) -> str:
+        try:
+            return validate_currency(value or "")
+        except ValueError as err:
+            raise CostingValidationError(str(err)) from err
 
     async def _to_workbench(self, sheet: CostingSheet) -> CostingWorkbenchResponseSchema:
         lines = sorted(sheet.lines, key=lambda line: (line.day_number is None, line.day_number or 0, line.sort_order))
@@ -620,11 +683,15 @@ class CostingService:
             line_inputs, markup_rate_bps=sheet.markup_rate_bps, rounding_increment_minor=sheet.rounding_increment_minor
         )
         totals_by_line = {item.line_id: item for item in summary.lines}
+        products = await self.product_repository.get_by_ids({line.product_id for line in lines if line.product_id})
+        destinations = await self.destination_repository.get_by_ids(
+            {product.destination_id for product in products.values() if product.destination_id}
+        )
 
         items: list[ServiceLineResponseSchema] = []
         for line in lines:
             totals = totals_by_line[line.id]
-            product_ref = await self._product_ref(line.product_id) if line.product_id else None
+            product_ref = self._product_ref_from_maps(products.get(line.product_id), destinations) if line.product_id else None
             item = ServiceLineResponseSchema.model_validate(line)
             item = item.model_copy(update={"cost_minor": totals.cost_minor, "sell_minor": totals.sell_minor, "product_ref": product_ref})
             items.append(item)
@@ -688,11 +755,11 @@ class CostingService:
             drift=drift,
         )
 
-    async def _product_ref(self, product_id: str) -> ProductRefSchema | None:
-        product = await self.product_repository.get_by_id(product_id)
+    @staticmethod
+    def _product_ref_from_maps(product, destinations: dict[str, Any]) -> ProductRefSchema | None:
         if product is None:
             return None
-        destination = await self.destination_repository.get(product.destination_id)
+        destination = destinations.get(product.destination_id) if product.destination_id else None
         return ProductRefSchema(
             property_id=product.property_id,
             destination_id=product.destination_id,

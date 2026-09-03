@@ -163,6 +163,12 @@ class RateAggregateBaseSchema(BaseModel):
         for supplement in self.supplements_json:
             if not (self.valid_from <= supplement.applies_from and supplement.applies_to <= self.valid_to):
                 raise ValueError("supplements_json applies range must be within [valid_from, valid_to]")
+        seen_line_keys: set[tuple[str, str, str, int]] = set()
+        for line in self.lines:
+            key = (line.price_for, line.occupancy_basis, line.unit, line.tier_min_pax if line.tier_min_pax is not None else -1)
+            if key in seen_line_keys:
+                raise ValueError("lines must not duplicate price_for, occupancy_basis, unit and tier_min_pax")
+            seen_line_keys.add(key)
         return self
 
 

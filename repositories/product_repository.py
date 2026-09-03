@@ -3,12 +3,20 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.rules.text_normalize import normalize_name
 from db.models.product import Product
 
 DEFAULT_TENANT_ID = "capella"
+
+
+def _ilike_pattern(term: str) -> str:
+    """Escapes ILIKE wildcard metacharacters so a literal ``%``/``_`` in a search
+    term cannot expand into an unintended wildcard match."""
+    escaped = term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    return f"%{escaped}%"
 
 
 class ProductRepository:
@@ -27,7 +35,7 @@ class ProductRepository:
         search: str = "",
         limit: int = 100,
     ) -> tuple[list[Product], int]:
-        stmt = select(Product).where(Product.tenant_id == tenant_id).order_by(Product.title.asc())
+        stmt = select(Product).where(Product.tenant_id == tenant_id)
         if active_only is True:
             stmt = stmt.where(Product.is_active.is_(True))
         elif active_only is False:
@@ -42,17 +50,31 @@ class ProductRepository:
             stmt = stmt.where(Product.property_id == property_id)
         term = (search or "").strip()
         if term:
-            stmt = stmt.where(Product.title_normalized.ilike(f"%{term}%"))
-        stmt = stmt.limit(max(1, min(limit, 200)))
+            # title_normalized stores diacritic-stripped text, so the search term must
+            # go through the same normalizer before ILIKE (Track 1 audit H5).
+            pattern = _ilike_pattern(normalize_name(term))
+            stmt = stmt.where(Product.title_normalized.ilike(pattern, escape="\\"))
+
+        total = await self.session.scalar(select(func.count()).select_from(stmt.subquery()))
+
+        stmt = stmt.order_by(Product.title.asc()).limit(max(1, min(limit, 200)))
         result = await self.session.scalars(stmt)
         items = list(result.all())
-        return items, len(items)
+        return items, int(total or 0)
 
     async def get_by_id(self, product_id: str, *, tenant_id: str = DEFAULT_TENANT_ID) -> Product | None:
         product = await self.session.get(Product, product_id)
         if product is None or product.tenant_id != tenant_id:
             return None
         return product
+
+    async def get_by_ids(self, product_ids: set[str], *, tenant_id: str = DEFAULT_TENANT_ID) -> dict[str, Product]:
+        if not product_ids:
+            return {}
+        result = await self.session.scalars(
+            select(Product).where(Product.id.in_(product_ids), Product.tenant_id == tenant_id)
+        )
+        return {product.id: product for product in result}
 
     async def find_dedupe_conflict(
         self,

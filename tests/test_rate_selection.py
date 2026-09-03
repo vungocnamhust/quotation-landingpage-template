@@ -95,12 +95,25 @@ class PickPriceLineTests(unittest.TestCase):
             RatePriceLineCandidate("adult", "na", "person", 100_000, tier_min_pax=1, tier_max_pax=2),
             RatePriceLineCandidate("adult", "na", "person", 80_000, tier_min_pax=3, tier_max_pax=6),
         ]
-        self.assertEqual(pick_price_line(lines, "adult", "na", 2).amount_minor, 100_000)
-        self.assertEqual(pick_price_line(lines, "adult", "na", 3).amount_minor, 80_000)
+        self.assertEqual(pick_price_line(lines, "adult", "na", 2).candidates[0].amount_minor, 100_000)
+        self.assertEqual(pick_price_line(lines, "adult", "na", 3).candidates[0].amount_minor, 80_000)
 
     def test_no_match_returns_none(self):
         lines = [RatePriceLineCandidate("adult", "na", "person", 100_000)]
-        self.assertIsNone(pick_price_line(lines, "child", "na", 2))
+        self.assertEqual(pick_price_line(lines, "child", "na", 2).candidates, ())
+
+    def test_respects_unit_and_flags_overlapping_tiers(self):
+        lines = [
+            RatePriceLineCandidate("adult", "na", "person", 100_000, tier_min_pax=1, tier_max_pax=5),
+            RatePriceLineCandidate("adult", "na", "room", 200_000, tier_min_pax=1, tier_max_pax=5),
+            RatePriceLineCandidate("adult", "na", "person", 90_000, tier_min_pax=3, tier_max_pax=8),
+        ]
+        person = pick_price_line(lines, "adult", "na", 4, unit="person")
+        self.assertTrue(person.has_conflict)
+        self.assertEqual(len(person.candidates), 2)
+        room = pick_price_line(lines, "adult", "na", 4, unit="room")
+        self.assertFalse(room.has_conflict)
+        self.assertEqual(room.candidates[0].amount_minor, 200_000)
 
 
 if __name__ == "__main__":

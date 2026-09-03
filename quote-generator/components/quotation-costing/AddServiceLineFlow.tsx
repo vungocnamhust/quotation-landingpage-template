@@ -64,7 +64,7 @@ export function AddServiceLineFlow({ sheetCurrency, disabled, onAdd, initialCate
 
   const canSubmit =
     mode === "catalog"
-      ? Boolean(draft.productId && draft.rateId && draft.priceLineId) && (!needsFx || Boolean(draft.fxRatePpm))
+      ? Boolean(draft.productId && draft.rateId && draft.priceLineId && draft.serviceDate) && (!needsFx || Boolean(draft.fxRatePpm))
       : Boolean(draft.category && draft.title && draft.unit && draft.timeBasis && draft.unitCostMinor !== null && draft.costCurrency) &&
         (!needsFx || Boolean(draft.fxRatePpm));
 
@@ -183,7 +183,11 @@ export function AddServiceLineFlow({ sheetCurrency, disabled, onAdd, initialCate
               <Field label="Rate">
                 <select
                   value={draft.rateId ?? ""}
-                  onChange={(e) => setDraft((d) => ({ ...d, rateId: e.target.value || null, priceLineId: null }))}
+                  onChange={(e) => setDraft((d) => {
+                    const rateId = e.target.value || null;
+                    const rate = rateList?.items.find((item) => item.id === rateId);
+                    return { ...d, rateId, priceLineId: null, fxRatePpm: rate?.currency === sheetCurrency ? null : d.fxRatePpm };
+                  })}
                   className={inputClass}
                 >
                   <option value="">Select rate...</option>
@@ -305,7 +309,10 @@ export function AddServiceLineFlow({ sheetCurrency, disabled, onAdd, initialCate
             <input
               type="text"
               value={draft.costCurrency ?? ""}
-              onChange={(e) => setDraft((d) => ({ ...d, costCurrency: e.target.value.toUpperCase() || null }))}
+              onChange={(e) => setDraft((d) => {
+                const costCurrency = e.target.value.toUpperCase() || null;
+                return { ...d, costCurrency, fxRatePpm: costCurrency === sheetCurrency ? null : d.fxRatePpm };
+              })}
               className={inputClass}
               placeholder={sheetCurrency}
             />

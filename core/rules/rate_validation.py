@@ -16,6 +16,11 @@ from core.rules.base import GateIssue, GateResult, Severity
 @dataclass(frozen=True)
 class PriceLineInput:
     amount_minor: int
+    price_for: str = "unit"
+    occupancy_basis: str = "na"
+    unit: str = "unit"
+    tier_min_pax: int | None = None
+    tier_max_pax: int | None = None
 
 
 @dataclass(frozen=True)
@@ -124,6 +129,27 @@ def validate_rate_for_activation(context: RateValidationContext) -> GateResult:
                     severity=Severity.WARNING,
                 )
             )
+
+    for index, line in enumerate(context.lines):
+        for other in context.lines[index + 1 :]:
+            if (line.price_for, line.occupancy_basis, line.unit) != (
+                other.price_for,
+                other.occupancy_basis,
+                other.unit,
+            ):
+                continue
+            line_from, line_to = line.tier_min_pax or 1, line.tier_max_pax or 10**9
+            other_from, other_to = other.tier_min_pax or 1, other.tier_max_pax or 10**9
+            if _windows_overlap(line_from, line_to, other_from, other_to):
+                issues.append(
+                    GateIssue(
+                        field="lines",
+                        code="PRICE_LINE_TIER_OVERLAP",
+                        message="Price-line tiers overlap for the same price_for, occupancy_basis and unit.",
+                        severity=Severity.WARNING,
+                    )
+                )
+                break
 
     result = GateResult(passed=True, issues=issues)
     return GateResult(passed=not result.errors, issues=issues)

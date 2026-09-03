@@ -62,6 +62,7 @@ export function CostingWorkbench({
     isCreatingSheet,
     isApplyingPricing,
     actionError,
+    rateCandidates,
     createSheet,
     updateSettings,
     addLine,
@@ -144,7 +145,16 @@ export function CostingWorkbench({
 
       {actionError ? (
         <div className={cn(getTypographyClassName("bodySm"), "rounded-[var(--radius-button)] border border-rose-300 bg-rose-50 px-3 py-2 text-rose-700")}>
-          {actionError}
+          <p>{actionError}</p>
+          {rateCandidates?.length ? (
+            <ul className="mt-2 list-disc pl-5">
+              {rateCandidates.map((candidate) => (
+                <li key={candidate.rate_id}>
+                  {candidate.season || candidate.rate_id} · {candidate.validity?.valid_from}–{candidate.validity?.valid_to}
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </div>
       ) : null}
 

@@ -167,7 +167,7 @@ class BookingService:
         for line in sorted(sheet.lines, key=lambda item: (item.day_number is None, item.day_number or 0, item.sort_order)):
             values = await self._snapshot_line(line, sheet=sheet)
             await self.repository.insert_line(booking, line_id=generate_id(LINE_ID_PREFIX), values=values)
-            line.booking_status = "to_request"
+            await self.costing_repository.update_line_booking_status(line, booking_status="to_request")
 
         await self.session.flush()
 
@@ -351,8 +351,7 @@ class BookingService:
         values["created_by"] = actor.serialize()
         values["updated_by"] = actor.serialize()
         await self.repository.insert_line(booking, line_id=generate_id(LINE_ID_PREFIX), values=values)
-        service_line.booking_status = "to_request"
-        await self.session.flush()
+        await self.costing_repository.update_line_booking_status(service_line, booking_status="to_request")
 
         booking = await self.repository.get_booking_by_id(booking.id)
         return self._to_detail(booking, today=today)
@@ -448,8 +447,7 @@ class BookingService:
     async def _mirror_service_line_status(self, source_service_line_id: str, status: str) -> None:
         service_line = await self.costing_repository.get_line_by_id(source_service_line_id)
         if service_line is not None:
-            service_line.booking_status = status
-            await self.session.flush()
+            await self.costing_repository.update_line_booking_status(service_line, booking_status=status)
 
     async def _next_code(self, code_type: str, year: int) -> str:
         seq = await self.repository.next_business_code_sequence(code_type=code_type, year=year)

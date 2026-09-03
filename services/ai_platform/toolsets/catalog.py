@@ -14,10 +14,11 @@ from datetime import date
 
 from pydantic_ai import RunContext
 
-from core.rules.rate_selection import BlackoutWindow, RateCandidate, RatePriceLineCandidate, pick_price_line, select_rates
+from core.rules.rate_selection import pick_price_line, select_rates
 from services.ai_platform.deps import CatalogReadOnlyDeps
 from services.product_service import normalize_product_title
 from services.supplier_service import normalize_supplier_name
+from services.rate_candidates import rate_candidates_from_rows
 
 
 def _budget_exhausted_notice() -> list[dict]:
@@ -234,37 +235,9 @@ async def search_activities_and_dining(
     ]
 
 
-def _rate_candidates_for_product(rate_rows) -> list[RateCandidate]:
-    candidates: list[RateCandidate] = []
-    for rate in rate_rows:
-        lines = tuple(
-            RatePriceLineCandidate(
-                price_for=line.price_for,
-                occupancy_basis=line.occupancy_basis,
-                unit=line.unit,
-                amount_minor=line.amount_minor,
-                tier_min_pax=line.tier_min_pax,
-                tier_max_pax=line.tier_max_pax,
-            )
-            for line in rate.lines
-        )
-        blackouts = tuple(
-            BlackoutWindow(from_date=date.fromisoformat(b["from"]), to_date=date.fromisoformat(b["to"]), reason=b.get("reason", ""))
-            for b in (rate.blackout_json or [])
-        )
-        candidates.append(
-            RateCandidate(
-                rate_id=rate.id,
-                lifecycle_status=rate.lifecycle_status,
-                valid_from=rate.valid_from,
-                valid_to=rate.valid_to,
-                min_pax=rate.min_pax,
-                max_pax=rate.max_pax,
-                blackouts=blackouts,
-                lines=lines,
-            )
-        )
-    return candidates
+def _rate_candidates_for_product(rate_rows):
+    """Compatibility export for existing callers during the mapper migration."""
+    return rate_candidates_from_rows(rate_rows)
 
 
 async def resolve_applicable_rates(
@@ -292,7 +265,7 @@ async def resolve_applicable_rates(
     rate_rows, _total = await ctx.deps.rate_repository.list_by_product(
         product_id, tenant_id=ctx.deps.tenant_id, lifecycle="active", limit=50
     )
-    candidates = _rate_candidates_for_product(rate_rows)
+    candidates = rate_candidates_from_rows(rate_rows)
     selection = select_rates(candidates, local_date, pax)
 
     if not selection.candidates:
@@ -302,9 +275,10 @@ async def resolve_applicable_rates(
         return {"tariff_id": None, "price_line_id": None, "has_conflict": True, "rate_missing": False, "price_band": None}
 
     chosen = selection.candidates[0]
-    line = pick_price_line(list(chosen.lines), "adult", occupancy, pax)
-    if line is None:
+    line_selection = pick_price_line(list(chosen.lines), "adult", occupancy, pax)
+    if not line_selection.candidates or line_selection.has_conflict:
         return {"tariff_id": chosen.rate_id, "price_line_id": None, "has_conflict": False, "rate_missing": True, "price_band": None}
+    line = line_selection.candidates[0]
 
     all_amounts = sorted(price_line.amount_minor for price_line in chosen.lines) or [line.amount_minor]
     rank = all_amounts.index(line.amount_minor) / max(1, len(all_amounts) - 1)

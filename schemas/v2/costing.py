@@ -37,8 +37,8 @@ class CostingSettingsUpdateSchema(BaseModel):
 
     base_costing_revision: int = Field(ge=0)
     currency: str | None = Field(default=None, min_length=3, max_length=3)
-    markup_rate_bps: int | None = Field(default=None, ge=0)
-    rounding_increment_minor: int | None = Field(default=None, ge=0)
+    markup_rate_bps: int | None = Field(default=None, ge=0, le=9_500)
+    rounding_increment_minor: int | None = Field(default=None, ge=0, le=1_000_000_000)
 
 
 class AttachQuotationSchema(BaseModel):
@@ -81,12 +81,12 @@ class ServiceLineWriteSchema(BaseModel):
 
     unit: str | None = None
     time_basis: str | None = None
-    qty_unit: int = Field(default=1, ge=1)
-    qty_time: int = Field(default=1, ge=1)
+    qty_unit: int = Field(default=1, ge=1, le=10_000)
+    qty_time: int = Field(default=1, ge=1, le=10_000)
 
     unit_cost_minor: int | None = Field(default=None, ge=0)
     cost_currency: str | None = Field(default=None, min_length=3, max_length=3)
-    fx_rate_ppm: int | None = Field(default=None, ge=1)
+    fx_rate_ppm: int | None = Field(default=None, ge=1, le=1_000_000_000_000)
     sell_override_minor: int | None = Field(default=None, ge=0)
 
     note: str | None = Field(default=None, max_length=2000)
@@ -98,6 +98,8 @@ class ServiceLineWriteSchema(BaseModel):
         if is_catalog_pick:
             if not self.rate_id or self.price_line_id is None:
                 raise ValueError("rate_id and price_line_id are required when product_id is set.")
+            if self.service_date is None:
+                raise ValueError("service_date is required when product_id is set.")
         else:
             if not self.category or not self.title or not self.unit or not self.time_basis:
                 raise ValueError("category, title, unit and time_basis are required for a manual line.")
@@ -278,4 +280,3 @@ class CostingWorkbenchResponseSchema(BaseModel):
     summary: CostingSummarySchema
     applications: list[CostingApplicationResponseSchema] = Field(default_factory=list)
     drift: CostingDriftSchema | None = None
-

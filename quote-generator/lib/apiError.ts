@@ -12,6 +12,7 @@ export type ApiErrorMetadata = {
   retryable?: boolean;
   recovery?: ApiRecovery;
   requestId?: string;
+  rateCandidates?: Array<{ rate_id: string; season?: string | null; validity?: { valid_from?: string; valid_to?: string } }>;
 };
 
 export class QuotationApiError extends Error {
@@ -60,6 +61,10 @@ function metadataFrom(detail: unknown, envelope: unknown, requestId: string | nu
   const source = envelope && typeof envelope === 'object' ? envelope as Record<string, unknown> : {};
   const detailRecord = detail && typeof detail === 'object' ? detail as Record<string, unknown> : {};
   const readStringArray = (value: unknown) => Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : undefined;
+  const rateCandidates = Array.isArray(detailRecord.candidates)
+    ? detailRecord.candidates.filter((item): item is { rate_id: string; season?: string | null; validity?: { valid_from?: string; valid_to?: string } } =>
+      Boolean(item) && typeof item === 'object' && typeof (item as { rate_id?: unknown }).rate_id === 'string')
+    : undefined;
   const rawFields = Array.isArray(source.fieldErrors) ? source.fieldErrors : undefined;
   return {
     code: typeof source.code === 'string' ? source.code : undefined,
@@ -75,6 +80,7 @@ function metadataFrom(detail: unknown, envelope: unknown, requestId: string | nu
     retryable: typeof source.retryable === 'boolean' ? source.retryable : undefined,
     recovery: source.recovery === 'retry' || source.recovery === 'reload' || source.recovery === 'sign-in' || source.recovery === 'open-blockers' ? source.recovery : null,
     requestId: typeof source.requestId === 'string' ? source.requestId : requestId ?? undefined,
+    rateCandidates,
   };
 }
 

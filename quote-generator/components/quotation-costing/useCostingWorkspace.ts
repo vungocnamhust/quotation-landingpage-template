@@ -38,6 +38,7 @@ function newIdempotencyKey(): string {
 export function useCostingWorkspace(anchor: CostingWorkbenchAnchor) {
   const [sheetId, setSheetId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [rateCandidates, setRateCandidates] = useState<QuotationApiError["metadata"]["rateCandidates"]>(undefined);
   const [isCreatingSheet, setIsCreatingSheet] = useState(false);
   const [isApplyingPricing, setIsApplyingPricing] = useState(false);
 
@@ -67,6 +68,7 @@ export function useCostingWorkspace(anchor: CostingWorkbenchAnchor) {
       setSheetId(result.sheet.id);
       mutateWorkbench(result, { revalidate: false });
       setActionError(null);
+      setRateCandidates(undefined);
       return result;
     },
     [mutateWorkbench],
@@ -78,6 +80,7 @@ export function useCostingWorkspace(anchor: CostingWorkbenchAnchor) {
         return await action();
       } catch (error) {
         setActionError(apiErrorMessage(error));
+        setRateCandidates(error instanceof QuotationApiError ? error.metadata.rateCandidates : undefined);
         if (error instanceof QuotationApiError && error.kind === "conflict") {
           // Someone else moved the sheet on — reload the authoritative state.
           if (resolvedSheetId) await mutateWorkbench();
@@ -217,6 +220,7 @@ export function useCostingWorkspace(anchor: CostingWorkbenchAnchor) {
     isCreatingSheet,
     isApplyingPricing,
     actionError,
+    rateCandidates,
     createSheet,
     updateSettings,
     addLine,

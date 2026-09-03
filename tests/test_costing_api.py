@@ -145,6 +145,43 @@ class CostingApiTests(unittest.TestCase):
         self.assertEqual(settings_response.status_code, 200, settings_response.text)
         self.assertEqual(settings_response.json()["sheet"]["markup_rate_bps"], 1000)
 
+    def test_settings_bounds_and_invalid_currency_return_422(self):
+        sheet = self._create_sheet()
+        for payload in (
+            {"base_costing_revision": sheet["costing_revision"], "markup_rate_bps": 9_501},
+            {"base_costing_revision": sheet["costing_revision"], "currency": "JPY"},
+        ):
+            response = self.client.put(f"/api/v2/costing-sheets/{sheet['id']}/settings", json=payload)
+            self.assertEqual(response.status_code, 422, response.text)
+
+        invalid_sheet = self.client.post("/api/v2/costing-sheets", json={"quotation_id": "qtn_api1", "currency": "JPY"})
+        self.assertEqual(invalid_sheet.status_code, 422, invalid_sheet.text)
+        self.assertEqual(invalid_sheet.json()["error"]["code"], "VALIDATION_FAILED")
+
+        invalid_line = self.client.post(
+            f"/api/v2/costing-sheets/{sheet['id']}/lines",
+            headers={"Idempotency-Key": "unsupported-currency"},
+            json={
+                "base_costing_revision": sheet["costing_revision"], "category": "visa", "title": "Visa", "unit": "person",
+                "time_basis": "trip", "unit_cost_minor": 1, "cost_currency": "JPY", "fx_rate_ppm": 1_000_000,
+            },
+        )
+        self.assertEqual(invalid_line.status_code, 422, invalid_line.text)
+        self.assertEqual(invalid_line.json()["error"]["code"], "VALIDATION_FAILED")
+
+    def test_same_currency_fx_returns_422(self):
+        sheet = self._create_sheet()
+        response = self.client.post(
+            f"/api/v2/costing-sheets/{sheet['id']}/lines",
+            headers={"Idempotency-Key": "same-currency-fx"},
+            json={
+                "base_costing_revision": sheet["costing_revision"], "category": "visa", "title": "Visa", "unit": "person",
+                "time_basis": "trip", "unit_cost_minor": 1, "cost_currency": "USD", "fx_rate_ppm": 1_000_000,
+            },
+        )
+        self.assertEqual(response.status_code, 422, response.text)
+        self.assertEqual(response.json()["error"]["code"], "VALIDATION_FAILED")
+
     def test_stale_revision_returns_409(self):
         sheet = self._create_sheet()
         response = self.client.post(

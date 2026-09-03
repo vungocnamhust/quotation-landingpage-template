@@ -143,6 +143,8 @@ class BookingServiceTests(unittest.TestCase):
         async def scenario():
             async with self.session_factory() as session:
                 sheet_id, line_id = await self._make_sheet_with_line(session)
+                costing = CostingService(session)
+                before = await costing.get_workbench(sheet_id)
                 booking_service = BookingService(session)
                 await booking_service.create_booking(
                     BookingCreateSchema(quotation_id="qtn_bk1", deposit_received_at=date(2026, 6, 1)),
@@ -152,9 +154,9 @@ class BookingServiceTests(unittest.TestCase):
                 )
                 await session.commit()
 
-                costing = CostingService(session)
                 workbench = await costing.get_workbench(sheet_id)
                 self.assertEqual(workbench.items[0].booking_status, "to_request")
+                self.assertEqual(workbench.sheet.costing_revision, before.sheet.costing_revision + 1)
 
         asyncio.run(scenario())
 

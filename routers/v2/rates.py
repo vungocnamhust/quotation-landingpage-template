@@ -5,6 +5,7 @@ from datetime import date
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Query, status
+from sqlalchemy.exc import IntegrityError
 
 from api.dependencies import DbSessionDep, EditorPrincipalDep
 from core.kernel import ActorRef
@@ -59,6 +60,11 @@ async def create_product_rate(
         return rate
     except RateValidationError as err:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(err)) from err
+    except IntegrityError as err:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Rate payload conflicts with an existing price-line or provenance constraint.",
+        ) from err
 
 
 @router.get("/api/v2/rates/{rate_id}", response_model=RateResponseSchema)
@@ -92,6 +98,11 @@ async def update_rate(
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(err)) from err
     except RateValidationError as err:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(err)) from err
+    except IntegrityError as err:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Rate payload conflicts with an existing price-line or provenance constraint.",
+        ) from err
 
 
 @router.delete("/api/v2/rates/{rate_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -127,6 +138,11 @@ async def activate_rate(
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(err)) from err
     except RateValidationError as err:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(err)) from err
+    except IntegrityError as err:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Rate payload conflicts with an existing price-line or provenance constraint.",
+        ) from err
 
 
 @router.post("/api/v2/rates/{rate_id}/supersede", response_model=RateResponseSchema, status_code=status.HTTP_201_CREATED)

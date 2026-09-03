@@ -20,6 +20,7 @@ from db.models.ai_run import AiRun
 from db.models.costing import CostingSheet
 from repositories.product_repository import ProductRepository
 from repositories.rate_repository import RateRepository
+from services.rate_candidates import rate_candidates_from_rows
 from schemas.service_draft import DayDraftResult
 from schemas.trip_profile import TripProfile
 from schemas.v2.ai_drafter import DraftDayOutcomeSchema, DraftDaySpecSchema, DraftResponseSchema
@@ -27,7 +28,6 @@ from schemas.v2.costing import ServiceLineWriteSchema
 from services.ai_drafter.service_drafter import build_day_context, draft_day
 from services.ai_platform.deps import CatalogReadOnlyDeps
 from services.ai_platform.guardrails import AllowlistRecorder, RunBudget
-from services.ai_platform.toolsets.catalog import _rate_candidates_for_product
 from services.costing_service import CostingConflictError, CostingService, CostingValidationError
 
 AGENT_NAME = "service_drafter"
@@ -122,7 +122,7 @@ async def _resolve_price_serverside(
     rate_rows, _total = await RateRepository(session).list_by_product(
         product_id, tenant_id=tenant_id, lifecycle="active", limit=50
     )
-    candidates = _rate_candidates_for_product(rate_rows)
+    candidates = rate_candidates_from_rows(rate_rows)
     selection = select_rates(candidates, service_date, pax_count)
 
     if not selection.candidates:
@@ -131,9 +131,12 @@ async def _resolve_price_serverside(
         return None, None, {"rate_conflict"}
 
     chosen = selection.candidates[0]
-    price_line = pick_price_line(list(chosen.lines), price_for, occupancy_basis, pax_count)
-    if price_line is None:
+    line_selection = pick_price_line(list(chosen.lines), price_for, occupancy_basis, pax_count)
+    if not line_selection.candidates:
         return chosen.rate_id, None, {"rate_missing"}
+    if line_selection.has_conflict:
+        return chosen.rate_id, None, {"rate_conflict"}
+    price_line = line_selection.candidates[0]
 
     raw_rate = next((r for r in rate_rows if r.id == chosen.rate_id), None)
     flags: set[str] = set()

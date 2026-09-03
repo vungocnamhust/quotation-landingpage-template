@@ -51,6 +51,19 @@ class SelectionResult:
     has_conflict: bool
 
 
+@dataclass(frozen=True)
+class PriceLineSelection:
+    """All price lines matching one commercial selection.
+
+    Just like rate selection, this deliberately never picks a winner when more
+    than one tier covers the same party.  Callers must surface that conflict to
+    a staff user (or flag it for AI review).
+    """
+
+    candidates: tuple[RatePriceLineCandidate, ...]
+    has_conflict: bool
+
+
 def _covers_date(rate: RateCandidate, service_date: date) -> bool:
     if not (rate.valid_from <= service_date <= rate.valid_to):
         return False
@@ -68,6 +81,16 @@ def _covers_pax(rate: RateCandidate, pax: int) -> bool:
     return True
 
 
+def is_rate_available_on_date(rate: RateCandidate, service_date: date) -> bool:
+    """Lifecycle/date/blackout predicate for rate list surfaces without pax context."""
+    return rate.lifecycle_status == "active" and covers_service_date(rate, service_date)
+
+
+def covers_service_date(rate: RateCandidate, service_date: date) -> bool:
+    """Date/blackout predicate that intentionally does not make a lifecycle decision."""
+    return _covers_date(rate, service_date)
+
+
 def select_rates(rates: list[RateCandidate], service_date: date, pax: int) -> SelectionResult:
     """Filter to active rates covering ``service_date`` (outside blackout) and ``pax``.
 
@@ -77,7 +100,7 @@ def select_rates(rates: list[RateCandidate], service_date: date, pax: int) -> Se
     matches = tuple(
         rate
         for rate in rates
-        if rate.lifecycle_status == "active" and _covers_date(rate, service_date) and _covers_pax(rate, pax)
+        if is_rate_available_on_date(rate, service_date) and _covers_pax(rate, pax)
     )
     return SelectionResult(candidates=matches, has_conflict=len(matches) > 1)
 
@@ -87,17 +110,19 @@ def pick_price_line(
     price_for: str,
     occupancy_basis: str,
     pax_count: int,
-) -> RatePriceLineCandidate | None:
-    """Resolve the price line matching ``price_for``/``occupancy_basis`` whose tier covers ``pax_count``.
+    unit: str | None = None,
+) -> PriceLineSelection:
+    """Return every matching price line for the given party and optional unit.
 
     Tier bounds are inclusive. A line with no tier bounds matches any pax_count.
     """
-    for line in lines:
-        if line.price_for != price_for or line.occupancy_basis != occupancy_basis:
-            continue
-        if line.tier_min_pax is not None and pax_count < line.tier_min_pax:
-            continue
-        if line.tier_max_pax is not None and pax_count > line.tier_max_pax:
-            continue
-        return line
-    return None
+    matches = tuple(
+        line
+        for line in lines
+        if line.price_for == price_for
+        and line.occupancy_basis == occupancy_basis
+        and (unit is None or line.unit == unit)
+        and (line.tier_min_pax is None or pax_count >= line.tier_min_pax)
+        and (line.tier_max_pax is None or pax_count <= line.tier_max_pax)
+    )
+    return PriceLineSelection(candidates=matches, has_conflict=len(matches) > 1)

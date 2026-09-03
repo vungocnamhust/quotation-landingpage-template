@@ -11,7 +11,8 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.kernel import ActorRef, generate_id, validate_currency
+from core.kernel import ActorRef, generate_id, validate_amount_minor, validate_currency
+from core.rules.rate_selection import covers_service_date, is_rate_available_on_date
 from core.rules.rate_validation import (
     BlackoutInput,
     OverlapCandidate,
@@ -22,7 +23,7 @@ from core.rules.rate_validation import (
 )
 from db.models.rate import Rate, RatePriceLine
 from repositories.product_repository import ProductRepository
-from repositories.rate_repository import RateRepository
+from repositories.rate_repository import RateLifecycleRaceError, RateRepository
 from repositories.supplier_repository import SupplierRepository
 from schemas.v2.rate import (
     RateCreateSchema,
@@ -31,6 +32,7 @@ from schemas.v2.rate import (
     RateUpdateSchema,
 )
 from services.outbox_service import OutboxService
+from services.rate_candidates import rate_candidates_from_rows
 
 ID_PREFIX = "rat"
 SOURCE_ID_PREFIX = "rsc"
@@ -64,9 +66,20 @@ class RateService:
         product = await self.product_repository.get_by_id(product_id)
         if product is None:
             return None
-        rates, total = await self.repository.list_by_product(product_id, lifecycle=lifecycle, on_date=on_date, limit=limit)
+        rates, _total = await self.repository.list_by_product(product_id, lifecycle=lifecycle, on_date=on_date, limit=limit)
+        if on_date is not None:
+            date_predicate = is_rate_available_on_date if lifecycle == "active" else covers_service_date
+            allowed_ids = {
+                candidate.rate_id
+                for candidate in rate_candidates_from_rows(rates)
+                if date_predicate(candidate, on_date)
+            }
+            rates = [rate for rate in rates if rate.id in allowed_ids]
+        total = len(rates)
+        rates = rates[: max(1, min(limit, 200))]
         supplier = await self._supplier_for_product(product)
-        items = [await self._to_response(rate, supplier=supplier) for rate in rates]
+        sources = await self.repository.get_sources_by_ids({rate.source_id for rate in rates if rate.source_id})
+        items = [await self._to_response(rate, supplier=supplier, source=sources.get(rate.source_id)) for rate in rates]
         return items, total
 
     async def get_rate(self, rate_id: str) -> RateResponseSchema | None:
@@ -87,7 +100,7 @@ class RateService:
             return None
         supplier = await self._supplier_for_product(product)
         currency = await self._resolve_currency(payload.currency, supplier)
-        source_id = await self._resolve_source(payload, actor=actor)
+        source_id = await self._resolve_source(payload, product=product, actor=actor)
 
         values = self._header_values(payload, currency=currency, source_id=source_id)
         values["product_id"] = product_id
@@ -95,7 +108,7 @@ class RateService:
         values["updated_by"] = actor.serialize()
 
         rate = await self.repository.insert_rate(rate_id=generate_id(ID_PREFIX), values=values)
-        await self.repository.replace_lines(rate.id, lines=self._line_values(payload.lines, actor=actor))
+        await self.repository.replace_lines(rate, lines=self._line_values(payload.lines, actor=actor))
         rate = await self.repository.get_by_id(rate.id)
         return await self._to_response(rate, supplier=supplier)
 
@@ -111,13 +124,13 @@ class RateService:
         product = await self.product_repository.get_by_id(rate.product_id)
         supplier = await self._supplier_for_product(product) if product else None
         currency = await self._resolve_currency(payload.currency, supplier)
-        source_id = await self._resolve_source(payload, actor=actor)
+        source_id = await self._resolve_source(payload, product=product, actor=actor)
 
         values = self._header_values(payload, currency=currency, source_id=source_id)
         values["updated_by"] = actor.serialize()
 
         rate = await self.repository.update_header(rate, values=values)
-        await self.repository.replace_lines(rate.id, lines=self._line_values(payload.lines, actor=actor))
+        await self.repository.replace_lines(rate, lines=self._line_values(payload.lines, actor=actor))
         rate = await self.repository.get_by_id(rate.id)
         return await self._to_response(rate, supplier=supplier)
 
@@ -143,7 +156,12 @@ class RateService:
             raise RateValidationError("; ".join(issue.message for issue in gate_result.errors))
 
         flags = [issue.code for issue in gate_result.warnings]
-        rate = await self.repository.set_lifecycle_status(rate, lifecycle_status="active", validation_flags=flags)
+        try:
+            rate = await self.repository.set_lifecycle_status(
+                rate, expected_status="draft", lifecycle_status="active", validation_flags=flags
+            )
+        except RateLifecycleRaceError as err:
+            raise RateConflictError("Rate lifecycle changed concurrently. Reload and retry.") from err
 
         product = await self.product_repository.get_by_id(rate.product_id)
         await OutboxService(self.session).emit_event(
@@ -174,7 +192,7 @@ class RateService:
         product = await self.product_repository.get_by_id(old_rate.product_id)
         supplier = await self._supplier_for_product(product) if product else None
         currency = await self._resolve_currency(payload.currency, supplier)
-        source_id = await self._resolve_source(payload, actor=actor)
+        source_id = await self._resolve_source(payload, product=product, actor=actor)
 
         values = self._header_values(payload, currency=currency, source_id=source_id)
         values["product_id"] = old_rate.product_id
@@ -183,18 +201,27 @@ class RateService:
         values["created_by"] = actor.serialize()
         values["updated_by"] = actor.serialize()
 
+        # Claim the active predecessor first. The conditional update is the
+        # concurrency authority; a later failure rolls it back with the rest
+        # of this request transaction.
+        try:
+            old_rate = await self.repository.set_lifecycle_status(
+                old_rate, expected_status="active", lifecycle_status="superseded"
+            )
+        except RateLifecycleRaceError as err:
+            raise RateConflictError("Rate lifecycle changed concurrently. Reload and retry.") from err
+
         new_rate = await self.repository.insert_rate(rate_id=generate_id(ID_PREFIX), values=values)
-        await self.repository.replace_lines(new_rate.id, lines=self._line_values(payload.lines, actor=actor))
-        new_rate = await self.repository.get_by_id(new_rate.id)
+        await self.repository.replace_lines(new_rate, lines=self._line_values(payload.lines, actor=actor))
 
         siblings = await self.repository.list_active_for_product(old_rate.product_id, exclude_rate_id=old_rate.id)
         gate_result = validate_rate_for_activation(self._build_validation_context(new_rate, siblings))
         if not gate_result.passed:
             raise RateValidationError("; ".join(issue.message for issue in gate_result.errors))
         flags = [issue.code for issue in gate_result.warnings]
-        new_rate = await self.repository.set_lifecycle_status(new_rate, lifecycle_status="active", validation_flags=flags)
-
-        old_rate = await self.repository.set_lifecycle_status(old_rate, lifecycle_status="superseded")
+        new_rate = await self.repository.set_lifecycle_status(
+            new_rate, expected_status="draft", lifecycle_status="active", validation_flags=flags
+        )
 
         await OutboxService(self.session).emit_event(
             event_type="catalog.rate.superseded",
@@ -226,8 +253,9 @@ class RateService:
         except ValueError as err:
             raise RateValidationError(str(err)) from err
 
-    async def _resolve_source(self, payload, *, actor: ActorRef) -> str | None:
+    async def _resolve_source(self, payload, *, product, actor: ActorRef) -> str | None:
         if payload.source is not None:
+            await self._validate_source_supplier(payload.source.supplier_id, product)
             source = await self.repository.insert_source(
                 source_id=generate_id(SOURCE_ID_PREFIX),
                 values={
@@ -241,8 +269,16 @@ class RateService:
             existing = await self.repository.get_source(payload.source_id)
             if existing is None:
                 raise RateValidationError(f"rate_source '{payload.source_id}' was not found.")
+            await self._validate_source_supplier(existing.supplier_id, product)
             return existing.id
         return None
+
+    async def _validate_source_supplier(self, supplier_id: str, product) -> None:
+        supplier = await self.supplier_repository.get_by_id(supplier_id)
+        if supplier is None:
+            raise RateValidationError(f"source supplier '{supplier_id}' was not found.")
+        if product is not None and product.supplier_id is not None and product.supplier_id != supplier_id:
+            raise RateValidationError("source supplier must match the product supplier.")
 
     @staticmethod
     def _header_values(payload, *, currency: str, source_id: str | None) -> dict[str, Any]:
@@ -272,14 +308,21 @@ class RateService:
 
     @staticmethod
     def _line_values(lines, *, actor: ActorRef) -> list[dict[str, Any]]:
-        return [
-            {
-                **line.model_dump(mode="json"),
-                "created_by": actor.serialize(),
-                "updated_by": actor.serialize(),
-            }
-            for line in lines
-        ]
+        values: list[dict[str, Any]] = []
+        for line in lines:
+            try:
+                amount_minor = validate_amount_minor(line.amount_minor)
+            except ValueError as err:
+                raise RateValidationError(str(err)) from err
+            values.append(
+                {
+                    **line.model_dump(mode="json"),
+                    "amount_minor": amount_minor,
+                    "created_by": actor.serialize(),
+                    "updated_by": actor.serialize(),
+                }
+            )
+        return values
 
     @staticmethod
     def _build_validation_context(rate: Rate, siblings: list[Rate]) -> RateValidationContext:
@@ -288,7 +331,17 @@ class RateService:
             valid_to=rate.valid_to,
             rate_basis=rate.rate_basis,
             commission_pct=rate.commission_pct,
-            lines=tuple(PriceLineInput(amount_minor=line.amount_minor) for line in rate.lines),
+            lines=tuple(
+                PriceLineInput(
+                    amount_minor=line.amount_minor,
+                    price_for=line.price_for,
+                    occupancy_basis=line.occupancy_basis,
+                    unit=line.unit,
+                    tier_min_pax=line.tier_min_pax,
+                    tier_max_pax=line.tier_max_pax,
+                )
+                for line in rate.lines
+            ),
             blackouts=tuple(
                 BlackoutInput(from_date=date.fromisoformat(b["from"]), to_date=date.fromisoformat(b["to"]))
                 for b in rate.blackout_json
@@ -310,20 +363,23 @@ class RateService:
         old_amounts = [line.amount_minor for line in old_lines]
         new_amounts = [line.amount_minor for line in new_lines]
 
-        def _pct_delta(old_value: int | None, new_value: int | None) -> float | None:
+        def _delta_bps(old_value: int | None, new_value: int | None) -> int | None:
             if not old_value or new_value is None:
                 return None
-            return round(((new_value - old_value) / old_value) * 100, 2)
+            numerator = (new_value - old_value) * 10_000
+            half = abs(old_value) // 2
+            return (numerator + half) // old_value if numerator >= 0 else -((-numerator + half) // old_value)
 
         old_min, old_max = (min(old_amounts), max(old_amounts)) if old_amounts else (None, None)
         new_min, new_max = (min(new_amounts), max(new_amounts)) if new_amounts else (None, None)
         return {
-            "min_pct": _pct_delta(old_min, new_min),
-            "max_pct": _pct_delta(old_max, new_max),
+            "min_delta_bps": _delta_bps(old_min, new_min),
+            "max_delta_bps": _delta_bps(old_max, new_max),
         }
 
-    async def _to_response(self, rate: Rate, *, supplier) -> RateResponseSchema:
-        source = await self.repository.get_source(rate.source_id) if rate.source_id else None
+    async def _to_response(self, rate: Rate, *, supplier, source=None) -> RateResponseSchema:
+        if source is None and rate.source_id:
+            source = await self.repository.get_source(rate.source_id)
 
         resolved_payment_terms, inherited_payment_terms = self._resolve_policy(
             rate.payment_terms_json, supplier.payment_terms_json if supplier else None

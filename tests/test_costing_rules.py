@@ -108,6 +108,22 @@ def test_summarize_zero_lines_returns_zeroed_summary():
     assert summary.by_category == ()
 
 
+def test_summary_dataclasses_contain_only_integer_money_values():
+    def contains_float(value):
+        if isinstance(value, float):
+            return True
+        if hasattr(value, "__dataclass_fields__"):
+            return any(contains_float(getattr(value, field)) for field in value.__dataclass_fields__)
+        if isinstance(value, dict):
+            return any(contains_float(item) for item in value.values())
+        if isinstance(value, (list, tuple)):
+            return any(contains_float(item) for item in value)
+        return False
+
+    summary = summarize([_line(unit_cost_minor=777, qty_unit=3, fx_rate_ppm=123_456)], markup_rate_bps=9500, rounding_increment_minor=1)
+    assert not contains_float(summary)
+
+
 def test_summarize_groups_multiple_lines_same_day_and_category():
     lines = [
         _line(line_id="a", day_number=1, category="accommodation", unit_cost_minor=1_000),

@@ -13,6 +13,17 @@ _MAX_PARENT_WALK_DEPTH = 6
 
 
 def normalize_destination(value: str) -> str:
+    """Normalizes a destination alias/canonical-name key for exact-match lookups
+    (upsert/search/resolve layer 1) and merge-alias bookkeeping.
+
+    Track 1 audit M7: this intentionally does **not** strip diacritics, unlike
+    ``core.rules.destination_rules.normalize_destination_text`` used by
+    ``resolve()`` layer 2/3. The two layers of ``resolve()`` are deliberately
+    different tiers of matching — exact alias lookup here, then a
+    diacritic-folding fuzzy fallback — not an accidental drift. Do not unify
+    them without re-verifying alias uniqueness semantics (destination aliases
+    are keyed on this exact, un-folded normalization).
+    """
     return " ".join((value or "").casefold().replace("-", " ").split())
 
 
@@ -24,9 +35,19 @@ class DestinationMergeError(ValueError):
     """Merge precondition violation (maps to 409/422 by the caller)."""
 
 
+class DestinationReactivationError(ValueError):
+    """Attempt to reactivate a destination that has been merged away (maps to 422)."""
+
+
 class DestinationRepository:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
+
+    async def get_by_ids(self, destination_ids: set[str]) -> dict[str, DestinationCatalog]:
+        if not destination_ids:
+            return {}
+        result = await self.session.scalars(select(DestinationCatalog).where(DestinationCatalog.id.in_(destination_ids)))
+        return {destination.id: destination for destination in result}
 
     async def upsert(
         self,
@@ -192,6 +213,10 @@ class DestinationRepository:
         return item
 
     async def set_status(self, item: DestinationCatalog, *, is_active: bool) -> DestinationCatalog:
+        if is_active and item.merged_into_id is not None:
+            raise DestinationReactivationError(
+                f"Destination '{item.id}' has been merged into '{item.merged_into_id}' and cannot be reactivated."
+            )
         item.is_active = is_active
         await self.session.flush()
         return item
@@ -213,6 +238,7 @@ class DestinationRepository:
         """
 
         def _apply_filters(stmt):
+            stmt = stmt.where(DestinationCatalog.merged_into_id.is_(None))
             if active == "true":
                 stmt = stmt.where(DestinationCatalog.is_active.is_(True))
             elif active == "false":
@@ -315,15 +341,14 @@ class DestinationRepository:
         if not target.is_active:
             raise DestinationMergeError(f"Target destination '{target_id}' is not active.")
 
-        current_id = target_id
-        for _ in range(_MAX_MERGE_CHAIN_DEPTH):
-            if current_id == source_id:
-                raise DestinationMergeError("Merge would create a cycle between source and target.")
-            current = await self.session.get(DestinationCatalog, current_id)
-            if current is None or current.merged_into_id is None:
-                break
-            current_id = current.merged_into_id
-
+        # Track 1 audit M6: a merge chain longer than depth 1 cannot exist today —
+        # the `target.merged_into_id is not None` check above already rejects
+        # merging into an already-merged destination, so `target` is always a live
+        # root at this point. Re-targeting (letting an already-merged destination
+        # become a new source, or extending an existing chain) is not supported;
+        # if that ever changes, restore a real chain-walk with a depth guard here
+        # and add a test that exercises depth > 1 through this method, not through
+        # hand-inserted rows.
         identity_values = {normalize_destination(source.canonical_name), normalize_destination(source.slug)}
         alias_rows = (
             await self.session.scalars(select(DestinationAlias).where(DestinationAlias.destination_id == source_id))
@@ -378,7 +403,11 @@ class DestinationRepository:
         stmt = (
             select(DestinationCatalog)
             .join(DestinationAlias, DestinationAlias.destination_id == DestinationCatalog.id)
-            .where(DestinationAlias.normalized_alias == normalized, DestinationCatalog.is_active.is_(True))
+            .where(
+                DestinationAlias.normalized_alias == normalized,
+                DestinationCatalog.is_active.is_(True),
+                DestinationCatalog.merged_into_id.is_(None),
+            )
         )
         item = await self.session.scalar(stmt)
         if item is not None:
@@ -396,6 +425,7 @@ class DestinationRepository:
                         DestinationCatalog.province_slug == matched_slug,
                     ),
                     DestinationCatalog.is_active.is_(True),
+                    DestinationCatalog.merged_into_id.is_(None),
                 )
             )
             item = await self.session.scalar(fallback_stmt)
@@ -417,7 +447,7 @@ class DestinationRepository:
         alias_stmt = (
             select(DestinationCatalog, DestinationAlias.normalized_alias)
             .join(DestinationAlias, DestinationAlias.destination_id == DestinationCatalog.id)
-            .where(DestinationCatalog.is_active.is_(True))
+            .where(DestinationCatalog.is_active.is_(True), DestinationCatalog.merged_into_id.is_(None))
         )
         alias_rows = (await self.session.execute(alias_stmt)).all()
 
@@ -491,4 +521,3 @@ async def seed_destination_catalog(session: AsyncSession) -> None:
             parent_id=profile.get("parent_id"),
             timezone=profile.get("timezone"),
         )
-

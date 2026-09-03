@@ -1,0 +1,80 @@
+name: Track 2 PostgreSQL migration round trip
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "alembic/**"
+      - "db/**"
+      - "core/**"
+      - "requirements*.txt"
+      - ".github/workflows/track2-postgres-migrations.yml"
+  push:
+    branches: [main]
+    paths:
+      - "alembic/**"
+      - "db/**"
+      - "core/**"
+      - "requirements*.txt"
+      - ".github/workflows/track2-postgres-migrations.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  rates-costing-round-trip:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: quotation
+          POSTGRES_USER: quotation
+          POSTGRES_PASSWORD: quotation_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U quotation -d quotation"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      ENVIRONMENT: ci
+      DATABASE_URL: postgresql+asyncpg://quotation:quotation_password@localhost:5432/quotation
+      DATABASE_URL_SYNC: postgresql+psycopg://quotation:quotation_password@localhost:5432/quotation
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.lock
+
+      - name: Install locked backend dependencies
+        run: pip install -r requirements.lock
+
+      - name: Verify rates and costing migration round trip
+        run: |
+          alembic upgrade head
+          alembic downgrade 20260830_38
+          alembic upgrade head
+          python - <<'PY'
+          from sqlalchemy import create_engine, inspect
+
+          engine = create_engine("postgresql+psycopg://quotation:quotation_password@localhost:5432/quotation")
+          inspector = inspect(engine)
+          assert "rates" in inspector.get_table_names()
+          assert "costing_sheets" in inspector.get_table_names()
+          assert "service_lines" in inspector.get_table_names()
+          rate_indexes = {index["name"] for index in inspector.get_indexes("rate_price_lines")}
+          line_indexes = {index["name"] for index in inspector.get_indexes("service_lines")}
+          rate_constraints = {constraint["name"] for constraint in inspector.get_check_constraints("rates")}
+          sheet_constraints = {constraint["name"] for constraint in inspector.get_check_constraints("costing_sheets")}
+          assert "uq_rate_price_lines_rate_combo" in rate_indexes
+          assert "uq_service_lines_sheet_idempotency_key" in line_indexes
+          assert "ck_rates_valid_to_after_from" in rate_constraints
+          assert "ck_costing_sheets_has_a_parent" in sheet_constraints
+          PY

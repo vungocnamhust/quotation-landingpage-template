@@ -117,6 +117,8 @@ async def update_costing_settings(
         return workbench
     except CostingConflictError as err:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=_conflict_detail(err)) from err
+    except CostingValidationError as err:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=_validation_detail(err)) from err
 
 
 @router.post("/{sheet_id}/attach-quotation", response_model=CostingWorkbenchResponseSchema)
@@ -234,4 +236,3 @@ async def apply_costing_pricing(
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=_validation_detail(err)) from err
     except CostingConflictError as err:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=_conflict_detail(err)) from err
-

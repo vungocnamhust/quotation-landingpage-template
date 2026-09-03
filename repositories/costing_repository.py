@@ -122,11 +122,11 @@ class CostingRepository:
     async def insert_sheet(self, *, sheet_id: str, tenant_id: str = DEFAULT_TENANT_ID, values: dict[str, Any]) -> CostingSheet:
         now = datetime.now(timezone.utc)
         sheet = CostingSheet(id=sheet_id, tenant_id=tenant_id, created_at=now, updated_at=now, **values)
-        self.session.add(sheet)
         try:
-            await self.session.flush()
+            async with self.session.begin_nested():
+                self.session.add(sheet)
+                await self.session.flush()
         except IntegrityError as err:
-            await self.session.rollback()
             raise CostingSheetSlotTakenError(str(err)) from err
         return sheet
 
@@ -203,14 +203,14 @@ class CostingRepository:
         if updated_by is not None:
             values["updated_by"] = updated_by
         try:
-            result = await self.session.execute(
-                update(CostingSheet)
-                .where(CostingSheet.id == sheet.id, CostingSheet.quotation_id.is_(None))
-                .values(**values)
-                .execution_options(synchronize_session=False)
-            )
+            async with self.session.begin_nested():
+                result = await self.session.execute(
+                    update(CostingSheet)
+                    .where(CostingSheet.id == sheet.id, CostingSheet.quotation_id.is_(None))
+                    .values(**values)
+                    .execution_options(synchronize_session=False)
+                )
         except IntegrityError as err:
-            await self.session.rollback()
             raise CostingSheetSlotTakenError(str(err)) from err
         if result.rowcount != 1:
             raise CostingSheetAlreadyAttachedError(
@@ -229,16 +229,16 @@ class CostingRepository:
         expected_revision: int,
     ) -> ServiceLine:
         now = datetime.now(timezone.utc)
-        line = ServiceLine(id=line_id, sheet_id=sheet.id, tenant_id=tenant_id, created_at=now, updated_at=now, **values)
-        self.session.add(line)
-        sheet.lines.append(line)
         try:
-            await self._bump_revision_guarded(sheet, expected_revision=expected_revision)
-            await self.session.flush()
+            async with self.session.begin_nested():
+                line = ServiceLine(id=line_id, sheet_id=sheet.id, tenant_id=tenant_id, created_at=now, updated_at=now, **values)
+                self.session.add(line)
+                sheet.lines.append(line)
+                await self._bump_revision_guarded(sheet, expected_revision=expected_revision)
+                await self.session.flush()
         except IntegrityError as err:
             # Concurrent duplicate with the same Idempotency-Key: the loser replays
             # gracefully instead of surfacing a 500 (16.3 F-18).
-            await self.session.rollback()
             raise CostingLineDuplicateError(str(err)) from err
         return line
 
@@ -271,6 +271,15 @@ class CostingRepository:
         await self._bump_revision_guarded(sheet, expected_revision=expected_revision)
         await self.session.flush()
 
+    async def update_line_booking_status(self, line: ServiceLine, *, booking_status: str) -> None:
+        """Mirror booking state through the Costing aggregate's revision CAS."""
+        sheet = await self.get_sheet_by_id(line.sheet_id)
+        if sheet is None:
+            return
+        line.booking_status = booking_status
+        await self._bump_revision_guarded(sheet, expected_revision=sheet.costing_revision)
+        await self.session.flush()
+
     async def insert_application(
         self, *, application_id: str, tenant_id: str = DEFAULT_TENANT_ID, values: dict[str, Any]
     ) -> CostingApplication:
@@ -279,4 +288,3 @@ class CostingRepository:
         self.session.add(app)
         await self.session.flush()
         return app
-

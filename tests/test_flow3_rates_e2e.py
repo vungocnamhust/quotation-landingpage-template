@@ -412,12 +412,12 @@ class Flow3RatesE2ETestCase(unittest.TestCase):
 
         # 6. Price line picker resolution
         dbl_line = pick_price_line(list(candidate_v2.lines), price_for="adult", occupancy_basis="dbl", pax_count=2)
-        self.assertIsNotNone(dbl_line)
-        self.assertEqual(dbl_line.amount_minor, 5_500_000)
+        self.assertFalse(dbl_line.has_conflict)
+        self.assertEqual(dbl_line.candidates[0].amount_minor, 5_500_000)
 
         sgl_line = pick_price_line(list(candidate_v2.lines), price_for="adult", occupancy_basis="sgl", pax_count=1)
-        self.assertIsNotNone(sgl_line)
-        self.assertEqual(sgl_line.amount_minor, 4_800_000)
+        self.assertFalse(sgl_line.has_conflict)
+        self.assertEqual(sgl_line.candidates[0].amount_minor, 4_800_000)
 
     def test_money_kernel_and_schema_invariants(self):
         """Verify strict integer minor units, no float math, and zero destination columns on rates."""
