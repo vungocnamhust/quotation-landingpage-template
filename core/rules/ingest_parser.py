@@ -10,6 +10,7 @@ blocking ``Clarification`` question. Zero fabricated tiers, zero guessed years, 
 """
 from __future__ import annotations
 
+import calendar
 import re
 from dataclasses import dataclass, field
 
@@ -44,6 +45,29 @@ _AMBIGUOUS_AMOUNT_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
 
 _NUMERIC_RE = re.compile(r"[0-9][0-9.,\s]*")
 
+# A char class matching a Unicode *letter* only (not digit, not underscore) — used to build
+# alias boundaries below. `\w` includes digits, so we exclude those explicitly.
+_LETTER = r"[^\W\d_]"
+
+
+def _build_alias_matchers() -> list[tuple[re.Pattern[str], str]]:
+    """Longest alias first, so multi-char aliases (``usd``) are tried before a single-char
+    one (``d``) can steal a match out of the middle of them. Purely-alphabetic aliases get a
+    letter-boundary guard so ``d`` never matches inside ``usd``/``dollars``; symbol aliases
+    (``$``, ``€``, ``₫``, ``us$``) are matched as plain substrings since they never appear
+    embedded inside an unrelated word."""
+    matchers: list[tuple[re.Pattern[str], str]] = []
+    for alias, code in sorted(_CURRENCY_ALIASES.items(), key=lambda kv: len(kv[0]), reverse=True):
+        if alias.isalpha():
+            pattern = re.compile(rf"(?<!{_LETTER}){re.escape(alias)}(?!{_LETTER})")
+        else:
+            pattern = re.compile(re.escape(alias))
+        matchers.append((pattern, code))
+    return matchers
+
+
+_ALIAS_MATCHERS = _build_alias_matchers()
+
 
 @dataclass(frozen=True)
 class ParsedAmount:
@@ -60,10 +84,30 @@ def _detect_currency(amount_text: str, currency_text: str | None) -> str | None:
         normalized = source.strip().lower()
         if normalized in _CURRENCY_ALIASES:
             return _CURRENCY_ALIASES[normalized]
-        for alias, code in _CURRENCY_ALIASES.items():
-            if alias in normalized:
+        for pattern, code in _ALIAS_MATCHERS:
+            if pattern.search(normalized):
                 return code
     return None
+
+
+def _find_amount_token(amount_text: str) -> tuple[str | None, bool]:
+    """Return (numeric_token, ambiguous). When ``amount_text`` contains more than one numeric
+    group (e.g. a leading pax count — "2 pax: 500.000 VND"), pick the group with strictly more
+    digit characters (the price, not the count); a tie (e.g. a "50.000 - 80.000" range) is
+    reported ambiguous rather than silently taking whichever group happened to come first.
+    """
+    groups = [m.group(0).strip() for m in _NUMERIC_RE.finditer(amount_text)]
+    groups = [g for g in groups if g]
+    if not groups:
+        return None, False
+    if len(groups) == 1:
+        return groups[0], False
+    digit_counts = [sum(ch.isdigit() for ch in g) for g in groups]
+    max_count = max(digit_counts)
+    winners = [g for g, c in zip(groups, digit_counts) if c == max_count]
+    if len(winners) == 1:
+        return winners[0], False
+    return None, True
 
 
 def _split_numeric_groups(numeric: str) -> tuple[float | None, bool]:
@@ -123,11 +167,13 @@ def parse_amount_text(amount_text: str | None, currency_text: str | None = None)
     if currency not in SUPPORTED_INGEST_CURRENCIES:
         return ParsedAmount(minor_units=None, currency=currency, ambiguous=True, reason=f"unsupported currency '{currency}'")
 
-    match = _NUMERIC_RE.search(amount_text)
-    if match is None:
+    token, token_ambiguous = _find_amount_token(amount_text)
+    if token_ambiguous:
+        return ParsedAmount(minor_units=None, currency=currency, ambiguous=True, reason="multiple numeric groups found — cannot determine which one is the amount")
+    if token is None:
         return ParsedAmount(minor_units=None, currency=currency, ambiguous=True, reason="no numeric amount found")
 
-    value, ambiguous = _split_numeric_groups(match.group(0))
+    value, ambiguous = _split_numeric_groups(token)
     if ambiguous or value is None or value <= 0:
         return ParsedAmount(minor_units=None, currency=currency, ambiguous=True, reason="could not resolve numeric amount")
 
@@ -174,41 +220,47 @@ def _parse_date_component(token: str) -> ParsedDateComponent:
 
     if match := _YMD_RE.match(token):
         year, month, day = (int(g) for g in match.groups())
-        return ParsedDateComponent(month, day, year, valid=_is_valid_calendar(month, day))
+        return ParsedDateComponent(month, day, year, valid=_is_valid_calendar(month, day, year))
 
     if match := _DMY_RE.match(token):
         day, month, year = match.groups()
         day, month = int(day), int(month)
         year = _normalize_year(int(year))
-        return ParsedDateComponent(month, day, year, valid=_is_valid_calendar(month, day))
+        return ParsedDateComponent(month, day, year, valid=_is_valid_calendar(month, day, year))
 
     if match := _TEXT_DM_Y_RE.match(token):
         day_s, month_name, year_s = match.groups()
         month = _MONTH_NAMES.get(month_name.lower())
         if month is None:
             return ParsedDateComponent(None, None, None, valid=False)
-        return ParsedDateComponent(month, int(day_s), int(year_s), valid=_is_valid_calendar(month, int(day_s)))
+        return ParsedDateComponent(month, int(day_s), int(year_s), valid=_is_valid_calendar(month, int(day_s), int(year_s)))
 
     if match := _TEXT_MONTH_D_Y_RE.match(token):
         month_name, day_s, year_s = match.groups()
         month = _MONTH_NAMES.get(month_name.lower())
         if month is None:
             return ParsedDateComponent(None, None, None, valid=False)
-        return ParsedDateComponent(month, int(day_s), int(year_s), valid=_is_valid_calendar(month, int(day_s)))
+        return ParsedDateComponent(month, int(day_s), int(year_s), valid=_is_valid_calendar(month, int(day_s), int(year_s)))
 
     if match := _DM_RE.match(token):
         day, month = (int(g) for g in match.groups())
-        return ParsedDateComponent(month, day, None, valid=_is_valid_calendar(month, day))
+        return ParsedDateComponent(month, day, None, valid=_is_valid_calendar(month, day, None))
 
     return ParsedDateComponent(None, None, None, valid=False)
 
 
-def _is_valid_calendar(month: int | None, day: int | None) -> bool:
+def _is_valid_calendar(month: int | None, day: int | None, year: int | None = None) -> bool:
+    """Real calendar validation (not just ``1 <= day <= 31``) — a token like "31/02/2025"
+    must never be reported ``valid`` (it would otherwise crash ``date.fromisoformat`` far
+    downstream, in resolution/commit). When ``year`` is unknown (a recurring season window,
+    e.g. "01/10-30/04"), validate against a leap year so 29 Feb stays permitted.
+    """
     if month is None or day is None:
         return False
-    if not (1 <= month <= 12):
+    if not (1 <= month <= 12) or day < 1:
         return False
-    return 1 <= day <= 31
+    reference_year = year if year is not None else 2000  # 2000 is a leap year
+    return day <= calendar.monthrange(reference_year, month)[1]
 
 
 def _iso(component: ParsedDateComponent) -> str | None:

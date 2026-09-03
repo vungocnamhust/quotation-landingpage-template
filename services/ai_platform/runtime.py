@@ -20,6 +20,7 @@ from typing import Any
 import yaml
 from pydantic import BaseModel
 from pydantic_ai import Agent
+from pydantic_ai.agent import AgentRunResult
 
 import llm_client
 from prompts.loader import PROMPTS_DIR
@@ -68,3 +69,18 @@ def build_agent(
         retries=retries,
         name=name,
     )
+
+
+async def run_agent(agent: Agent, user_prompt: str, *, deps: Any = None) -> AgentRunResult[Any]:
+    """Run ``agent`` with tool-call execution forced sequential.
+
+    pydantic_ai 2.16 defaults to running the multiple tool calls a single model turn can emit
+    concurrently (``asyncio.create_task`` per call). Every AI Platform tool reads through
+    ``ctx.deps.session`` — one ``AsyncSession`` shared for the whole agent run (and, for the
+    drafter, the very session the caller later writes lines with) — and ``AsyncSession``
+    forbids concurrent operations. Forcing 'sequential' here is the single choke point that
+    keeps every current and future tool-bearing agent safe from that crash/session-poisoning
+    class of bug (Track 4 audit C3), including 0-tool agents for which this is a no-op.
+    """
+    with Agent.parallel_tool_call_execution_mode("sequential"):
+        return await agent.run(user_prompt, deps=deps)

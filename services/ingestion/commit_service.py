@@ -26,7 +26,7 @@ from repositories.rate_repository import RateRepository
 from schemas.catalog_ingest import CatalogIngestPayload
 from schemas.v2.product import ProductCreateSchema, ProductUpdateSchema
 from schemas.v2.rate import RateCreateSchema, RatePriceLineCreateSchema, RateSourceCreateSchema, RateSupersedeSchema
-from schemas.v2.supplier import SupplierContactSchema, SupplierCreateSchema, SupplierType, SupplierUpdateSchema
+from schemas.v2.supplier import SupplierContactSchema, SupplierCreateSchema, SupplierType
 from services.outbox_service import OutboxService
 from services.product_service import ProductConflictError, ProductService, ProductValidationError
 from services.rate_service import RateConflictError, RateService, RateValidationError
@@ -94,9 +94,12 @@ async def _resolve_or_create_supplier(
     if action == "skip_duplicate" and matched_id:
         return matched_id
     if action == "update" and matched_id:
-        contact = SupplierContactSchema()
-        updated = await service.update_supplier(matched_id, SupplierUpdateSchema(contact_json=contact), actor=actor)
-        return updated.id if updated else matched_id
+        # H4: never overwrite contact_json here — the ingest payload carries no contact
+        # field mapped onto SupplierContactSchema, so calling update_supplier with an EMPTY
+        # one would silently wipe the existing supplier's real contact info. "update" for a
+        # supplier is a no-op confirmation (the dedupe match itself is the useful signal);
+        # commit only ever touches products/rates for this candidate.
+        return matched_id
     if action == "create":
         created = await service.create_supplier(
             SupplierCreateSchema(

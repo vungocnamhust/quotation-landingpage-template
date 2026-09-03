@@ -13,7 +13,7 @@ from core.kernel import ActorRef
 from schemas.trip_profile import PartyComposition, RoomAllocation, TripProfile
 from services.ai_platform.guardrails import RunBudget
 from services.ai_platform.runs import record_run
-from services.ai_platform.runtime import build_agent
+from services.ai_platform.runtime import build_agent, run_agent
 from services.rooming_heuristic_service import RoomingHeuristicService
 
 AGENT_NAME = "trip_analyst"
@@ -26,7 +26,7 @@ class TripAnalysisError(RuntimeError):
 
 async def _run_analyst(raw_text: str) -> tuple[TripProfile, object]:
     agent = build_agent(AGENT_NAME, output_type=TripProfile, prompt_file="trip_analyst", tools=())
-    result = await agent.run(raw_text)
+    result = await run_agent(agent, raw_text)
     return result.output, result.usage
 
 

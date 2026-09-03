@@ -29,7 +29,7 @@ MANIFEST = json.loads((CORPUS_DIR / "manifest.json").read_text(encoding="utf-8")
 async def _extract_and_parse(case: dict):
     raw_text = (CORPUS_DIR / case["file"]).read_text(encoding="utf-8")
     sanitized = sanitize_ingest_text(raw_text)
-    extracted = await _run_extractor(sanitized)
+    extracted, _usage = await _run_extractor(sanitized)
     verified = verify_source_quotes(extracted, sanitized)
     return parse_payload(verified)
 

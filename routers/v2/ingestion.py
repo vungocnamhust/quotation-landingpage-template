@@ -41,6 +41,19 @@ router = APIRouter(prefix="/api/v2/ingestion-batches", tags=["ingestion"])
 
 MAX_BATCHES_PER_ACTOR_PER_DAY = 50
 
+# H6: a batch that already reached a terminal state must never accept further edits or a
+# second rejection — editing a ``committed`` batch can flip it back to ``needs_clarification``
+# (a committable state), opening the door to a duplicate commit replaying the whole resolution
+# plan against the real catalog a second time.
+_TERMINAL_BATCH_STATUSES = frozenset({"committed", "rejected", "archived"})
+
+
+def _terminal_status_conflict(batch_id: str, current_status: str) -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail=f"Ingestion batch '{batch_id}' is '{current_status}' and can no longer be modified.",
+    )
+
 
 def _actor_from_principal(principal) -> ActorRef:
     return ActorRef(actor_id=principal.email or "unknown", actor_type="staff")
@@ -195,6 +208,8 @@ async def edit_ingestion_batch(
     principal: EditorPrincipalDep,
 ) -> IngestionBatchResponseSchema:
     batch = await _get_batch_or_404(session, batch_id)
+    if batch.status in _TERMINAL_BATCH_STATUSES:
+        raise _terminal_status_conflict(batch_id, batch.status)
     actor = _actor_from_principal(principal)
 
     stored = batch.payload_json or {}
@@ -257,6 +272,8 @@ async def reject_ingestion_batch(
     principal: EditorPrincipalDep,
 ) -> IngestionBatchResponseSchema:
     batch = await _get_batch_or_404(session, batch_id)
+    if batch.status in _TERMINAL_BATCH_STATUSES:
+        raise _terminal_status_conflict(batch_id, batch.status)
     actor = _actor_from_principal(principal)
     repository = IngestionRepository(session)
     try:

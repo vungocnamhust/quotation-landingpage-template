@@ -13,7 +13,7 @@ from pydantic import BaseModel
 from schemas.service_draft import DayDraftResult
 from schemas.trip_profile import RoomAllocation, TripProfile
 from services.ai_platform.deps import CatalogReadOnlyDeps
-from services.ai_platform.runtime import build_agent
+from services.ai_platform.runtime import build_agent, run_agent
 from services.ai_platform.toolsets.catalog import CATALOG_TOOLSET_A
 
 AGENT_NAME = "service_drafter"
@@ -64,6 +64,6 @@ async def draft_day(deps: CatalogReadOnlyDeps, day_context: DayContext) -> DayDr
         deps_type=CatalogReadOnlyDeps,
         tools=CATALOG_TOOLSET_A,
     )
-    result = await agent.run(day_context.model_dump_json(), deps=deps)
+    result = await run_agent(agent, day_context.model_dump_json(), deps=deps)
     deps.budget.record_usage(result.usage)
     return result.output

@@ -210,6 +210,50 @@ class IngestCommitTests(unittest.IsolatedAsyncioTestCase):
         assert old_rate.lifecycle_status == "superseded"
         assert old_rate.lines[0].amount_minor == 1_000_000  # untouched, not mutated
 
+    async def test_commit_supplier_update_never_wipes_existing_contact_json(self):
+        """H4 — a supplier resolution action of ``update`` must never overwrite the existing
+        supplier's real ``contact_json`` with an empty one; the ingest payload carries no
+        contact data to write in the first place."""
+        title_normalized = normalize_product_title("Riverside Villa — Garden View")
+        name_normalized = normalize_supplier_name("Brand New Supplier Co")
+        existing_contact = {"person": "Ms. Lan", "email": "lan@existingsupplier.example", "phone": "+84-90-000-0000"}
+        self.session.add(
+            Supplier(
+                id="sup_existing",
+                name="Brand New Supplier Co",
+                name_normalized=name_normalized,
+                supplier_type="direct",
+                default_currency="VND",
+                contact_json=existing_contact,
+            )
+        )
+        self.session.add(
+            Product(
+                id="prd_existing",
+                destination_id="dst_hanoi",
+                category="accommodation",
+                title="Riverside Villa — Garden View",
+                title_normalized=title_normalized,
+                supplier_id="sup_existing",
+                unit="room",
+                time_basis="night",
+            )
+        )
+        await self.session.commit()
+
+        entries = [
+            {"entity_ref": "/supplier", "entity_type": "supplier", "action": "update", "matched_id": "sup_existing", "evidence": "matches existing", "clarifications": []},
+            {"entity_ref": "/products/0", "entity_type": "product", "action": "update", "matched_id": "prd_existing", "evidence": "matches existing", "clarifications": []},
+            {"entity_ref": "/rate_groups/0", "entity_type": "rate", "action": "create", "matched_id": None, "evidence": "new rate", "clarifications": []},
+        ]
+        batch = await self._make_ready_batch(entries=entries)
+        committed = await commit_batch(self.session, batch=batch, actor=ACTOR, expected_revision=0, idempotency_key="commit-supplier-update")
+        await self.session.commit()
+
+        assert committed.commit_result_json["supplier_id"] == "sup_existing"
+        supplier = await SupplierRepository(self.session).get_by_id("sup_existing")
+        assert supplier.contact_json == existing_contact
+
     async def test_commit_mid_failure_rolls_back_all_writes(self):
         """Chốt #7 — commit is one transaction: a failure partway through (here, a price
         line missing price_for_hint, only caught while building the rate) must leave 0

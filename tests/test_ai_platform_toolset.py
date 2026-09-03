@@ -2,6 +2,9 @@ import tempfile
 import unittest
 from datetime import date
 
+from pydantic_ai import Agent
+from pydantic_ai.messages import ModelResponse, TextPart, ToolCallPart
+from pydantic_ai.models.function import AgentInfo, FunctionModel
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from db.base import Base
@@ -11,6 +14,7 @@ from db.models.rate import Rate, RatePriceLine
 from db.models.supplier import Supplier
 from services.ai_platform.deps import CatalogReadOnlyDeps
 from services.ai_platform.guardrails import AllowlistRecorder, RunBudget
+from services.ai_platform.runtime import run_agent
 from services.ai_platform.toolsets.catalog import (
     find_active_rates,
     find_products,
@@ -159,11 +163,91 @@ class CatalogToolsetTests(unittest.IsolatedAsyncioTestCase):
         await find_products(_FakeRunContext(deps), category="accommodation")
         assert deps.budget.calls == 2
 
+    # ── C3: pydantic_ai's default parallel tool-call execution must never touch the
+    # shared AsyncSession concurrently (crash / session poisoning risk). ──
+
+    async def test_run_agent_serializes_concurrent_tool_calls_on_shared_session(self):
+        """A single model turn that emits two tool calls (routine for a real drafter/resolver
+        turn) must not crash the shared ``AsyncSession`` when run through ``runtime.run_agent``.
+        """
+        deps = self._deps()
+        call_count = {"n": 0}
+
+        def _respond(messages, info: AgentInfo) -> ModelResponse:
+            call_count["n"] += 1
+            if call_count["n"] == 1:
+                return ModelResponse(
+                    parts=[
+                        ToolCallPart(tool_name="find_supplier", args={"name_text": "La Siesta"}, tool_call_id="call_1"),
+                        ToolCallPart(tool_name="find_products", args={"category": "accommodation"}, tool_call_id="call_2"),
+                    ]
+                )
+            return ModelResponse(parts=[TextPart(content="done")])
+
+        agent = Agent(
+            model=FunctionModel(_respond),
+            output_type=str,
+            deps_type=CatalogReadOnlyDeps,
+            tools=[find_supplier, find_products],
+        )
+
+        result = await run_agent(agent, "draft this day", deps=deps)
+
+        assert result.output == "done"
+        assert deps.budget.calls == 2
+        assert deps.allowlist.contains("sup_la_siesta")
+        assert deps.allowlist.contains("prd_deluxe")
+
+    async def test_bare_agent_run_would_crash_on_the_same_concurrent_turn(self):
+        """Documents the bug ``run_agent`` fixes: without forcing sequential tool execution,
+        pydantic_ai's default parallel scheduling crashes the shared ``AsyncSession``. If this
+        stops raising, pydantic_ai's default execution mode changed and ``run_agent``'s
+        sequential guard may no longer be necessary — investigate before deleting it.
+        """
+        from sqlalchemy.exc import InvalidRequestError
+
+        deps = self._deps()
+
+        def _respond(messages, info: AgentInfo) -> ModelResponse:
+            return ModelResponse(
+                parts=[
+                    ToolCallPart(tool_name="find_supplier", args={"name_text": "La Siesta"}, tool_call_id="call_1"),
+                    ToolCallPart(tool_name="find_products", args={"category": "accommodation"}, tool_call_id="call_2"),
+                ]
+            )
+
+        agent = Agent(
+            model=FunctionModel(_respond),
+            output_type=str,
+            deps_type=CatalogReadOnlyDeps,
+            tools=[find_supplier, find_products],
+        )
+
+        with self.assertRaises(InvalidRequestError):
+            await agent.run("draft this day", deps=deps)
+
     def test_deps_has_no_write_method(self):
-        forbidden = {"insert", "update", "delete", "create", "commit"}
+        """H7: read-only 'by construction' — recurse one attribute-hop deep, since a facade
+        that itself exposes a full read/write repository (or the raw session) would pass a
+        shallow ``dir(deps)`` check while still handing tools a write path."""
+        forbidden = {"insert", "update", "delete", "create", "commit", "flush", "add", "execute", "session"}
         deps = CatalogReadOnlyDeps(session=None, tenant_id="capella", allowlist=AllowlistRecorder(), budget=RunBudget())
-        own_attrs = [name for name in dir(deps) if not name.startswith("_")]
-        assert not any(any(word in name.lower() for word in forbidden) for name in own_attrs), own_attrs
+
+        def _own_attrs(obj) -> list[str]:
+            return [name for name in dir(obj) if not name.startswith("_")]
+
+        top_level = _own_attrs(deps)
+        assert not any(any(word in name.lower() for word in forbidden) for name in top_level), top_level
+
+        for attr_name in top_level:
+            value = getattr(deps, attr_name)
+            if not hasattr(value, "__class__") or isinstance(value, (str, int, float, bool, type(None))):
+                continue
+            nested_attrs = _own_attrs(value)
+            assert not any(any(word in name.lower() for word in forbidden) for name in nested_attrs), (
+                attr_name,
+                nested_attrs,
+            )
 
     # ── Toolset nhóm A (15.7) ──
 

@@ -29,7 +29,7 @@ from schemas.catalog_ingest import CatalogIngestPayload, Clarification, Resoluti
 from services.ai_platform.deps import CatalogReadOnlyDeps
 from services.ai_platform.guardrails import AllowlistRecorder, RunBudget
 from services.ai_platform.runs import record_run
-from services.ai_platform.runtime import build_agent
+from services.ai_platform.runtime import build_agent, run_agent
 from services.ai_platform.toolsets.catalog import CATALOG_TOOLSET_B
 from services.ingestion.extraction_service import parse_payload
 from services.product_service import normalize_product_title
@@ -102,7 +102,7 @@ async def _run_resolver(
         tools=CATALOG_TOOLSET_B,
     )
     try:
-        result = await agent.run(payload.model_dump_json(), deps=deps)
+        result = await run_agent(agent, payload.model_dump_json(), deps=deps)
     except Exception as exc:  # pragma: no cover - network/provider errors
         raise ResolutionError("The Resolver agent did not return a valid plan.") from exc
     budget.record_usage(result.usage)

@@ -62,6 +62,58 @@ class TestParseAmountText:
         result = parse_amount_text("0", "VND")
         assert result.ambiguous is True
 
+    # --- C1: currency alias "d" must never match inside "usd"/"dollars" ---------------
+
+    def test_usd_with_trailing_word_is_not_misdetected_as_vnd(self):
+        result = parse_amount_text("500 USD net")
+        assert result.ambiguous is False
+        assert result.currency == "USD"
+        assert result.minor_units == 50_000
+
+    def test_usd_with_slash_suffix_is_not_misdetected_as_vnd(self):
+        result = parse_amount_text("150 usd/pax")
+        assert result.ambiguous is False
+        assert result.currency == "USD"
+
+    def test_word_containing_d_is_not_misdetected_as_vnd(self):
+        result = parse_amount_text("120 dollars")
+        assert result.ambiguous is True
+        assert "currency" in (result.reason or "")
+
+    def test_vnd_no_space_before_symbol_still_detected(self):
+        result = parse_amount_text("500.000đ")
+        assert result.ambiguous is False
+        assert result.currency == "VND"
+        assert result.minor_units == 500_000
+
+    def test_eur_alias_still_detected(self):
+        result = parse_amount_text("35 eur")
+        assert result.ambiguous is False
+        assert result.currency == "EUR"
+
+    # --- C2: must not silently grab the FIRST number when several are present --------
+
+    def test_leading_pax_count_does_not_win_over_the_price(self):
+        result = parse_amount_text("2 pax: 500.000 VND")
+        assert result.ambiguous is False
+        assert result.currency == "VND"
+        assert result.minor_units == 500_000
+
+    def test_leading_multiplier_does_not_win_over_the_price(self):
+        result = parse_amount_text("1 x 500.000 đ")
+        assert result.ambiguous is False
+        assert result.minor_units == 500_000
+
+    def test_ambiguous_price_range_is_flagged_not_guessed(self):
+        result = parse_amount_text("50.000 - 80.000 VND")
+        assert result.ambiguous is True
+        assert result.minor_units is None
+
+    def test_single_numeric_group_unaffected(self):
+        result = parse_amount_text("1.250.000 (2 pax)", "VND")
+        assert result.ambiguous is False
+        assert result.minor_units == 1_250_000
+
 
 class TestParseValidityText:
     def test_full_date_range_with_years(self):
@@ -106,6 +158,35 @@ class TestParseValidityText:
     def test_mismatched_year_presence_is_ambiguous(self):
         result = parse_validity_text("15/12/2026 - 30/04")
         assert result.ambiguous is True
+
+    # --- H5: a calendar-impossible date must never claim to be valid -----------------
+
+    def test_february_31_range_is_ambiguous_not_a_crash(self):
+        result = parse_validity_text("31/02/2025 - 15/03/2025")
+        assert result.ambiguous is True
+        assert result.date_from is None
+
+    def test_february_30_single_date_is_ambiguous(self):
+        result = parse_validity_text("30/02/2025")
+        assert result.ambiguous is True
+
+    def test_april_31_single_date_is_ambiguous(self):
+        result = parse_validity_text("31/04/2025")
+        assert result.ambiguous is True
+
+    def test_february_29_leap_year_is_valid(self):
+        result = parse_validity_text("29/02/2024")
+        assert result.ambiguous is False
+        assert result.date_from == "2024-02-29"
+
+    def test_february_29_non_leap_year_is_ambiguous(self):
+        result = parse_validity_text("29/02/2025")
+        assert result.ambiguous is True
+
+    def test_season_window_february_29_without_year_is_permitted(self):
+        result = parse_validity_text("29/02-15/03")
+        assert result.kind == "season_window"
+        assert result.ambiguous is False
 
 
 class TestParseCancellationPolicyText:

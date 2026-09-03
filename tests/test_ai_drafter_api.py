@@ -175,6 +175,64 @@ class AiDrafterApiTests(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 422)
 
+    def test_analyze_oversized_raw_text_returns_422(self):
+        """H9 — an oversized paste must fail schema validation before ever reaching the LLM,
+        not degrade into a silent fallback profile that looks like an AI failure."""
+        sheet = self._create_sheet()
+        response = self.client.post(
+            f"/api/v2/costing-sheets/{sheet['id']}/ai/analyze",
+            json={"rawText": "x" * 20_001},
+            headers={"Idempotency-Key": "analyze-oversized"},
+        )
+        self.assertEqual(response.status_code, 422)
+
+    def test_analyze_oversized_idempotency_key_returns_422(self):
+        sheet = self._create_sheet()
+        response = self.client.post(
+            f"/api/v2/costing-sheets/{sheet['id']}/ai/analyze",
+            json={"rawText": "anything"},
+            headers={"Idempotency-Key": "k" * 200},
+        )
+        self.assertEqual(response.status_code, 422)
+
+    def test_analyze_rejects_a_key_already_used_by_draft(self):
+        """H3 — the ai_runs unique constraint is agent-agnostic; a key already claimed by a
+        Draft run on this sheet must come back as a clean 422, never a 500/IntegrityError."""
+        sheet = self._create_sheet()
+        draft = DayDraftResult(
+            day_number=1,
+            services=[
+                ServiceDraft(
+                    category="accommodation", product_id=self.product_id, occupancy_basis="dbl",
+                    price_for="adult", pax_count=2, selection_reason="ok",
+                )
+            ],
+        )
+
+        async def fake_draft_day(deps, day_context):
+            deps.allowlist.record([self.product_id])
+            return draft
+
+        with patch.object(draft_run_service, "draft_day", side_effect=fake_draft_day):
+            draft_response = self.client.post(
+                f"/api/v2/costing-sheets/{sheet['id']}/ai/draft",
+                json={
+                    "runId": "run_placeholder",
+                    "tripProfile": self._sample_trip_profile_json(),
+                    "days": [{"dayNumber": 1, "destinationId": "dst_hanoi", "serviceDate": "2026-02-14"}],
+                    "baseCostingRevision": sheet["costing_revision"],
+                },
+                headers={"Idempotency-Key": "shared-cross-agent-key"},
+            )
+        self.assertEqual(draft_response.status_code, 200, draft_response.text)
+
+        analyze_response = self.client.post(
+            f"/api/v2/costing-sheets/{sheet['id']}/ai/analyze",
+            json={"rawText": "2 adults, relaxed pace"},
+            headers={"Idempotency-Key": "shared-cross-agent-key"},
+        )
+        self.assertEqual(analyze_response.status_code, 422, analyze_response.text)
+
     # ── Draft ──
 
     def test_draft_creates_lines_and_returns_summary(self):

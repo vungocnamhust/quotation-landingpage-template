@@ -30,7 +30,7 @@ from repositories.ingestion_repository import IngestionRepository
 from schemas.catalog_ingest import CatalogIngestPayload, UnresolvedItem
 from services.ai_platform.guardrails import OutputValidator, RunBudget
 from services.ai_platform.runs import record_run
-from services.ai_platform.runtime import build_agent
+from services.ai_platform.runtime import build_agent, run_agent
 
 ID_PREFIX = "igb"
 DEFAULT_TENANT_ID = "capella"
@@ -50,7 +50,7 @@ async def _run_extractor(sanitized_text: str) -> tuple[CatalogIngestPayload, obj
     """Returns (payload, usage) — usage is a pydantic_ai ``RunUsage`` for token accounting."""
     agent = build_agent(AGENT_NAME, output_type=CatalogIngestPayload, prompt_file="ingest_extractor", tools=())
     try:
-        result = await agent.run(wrap_with_delimiter(sanitized_text))
+        result = await run_agent(agent, wrap_with_delimiter(sanitized_text))
     except Exception as exc:  # pragma: no cover - network/provider errors
         raise ExtractionError("The Extractor agent did not return a valid payload.") from exc
     return result.output, result.usage

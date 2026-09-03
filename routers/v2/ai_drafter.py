@@ -56,13 +56,15 @@ async def analyze_trip_route(
     payload: AnalyzeRequestSchema,
     session: DbSessionDep,
     principal: EditorPrincipalDep,
-    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    # H9: ai_runs.idempotency_key is String(128) — an oversized header would otherwise crash
+    # the eventual insert with an opaque DataError deep inside a run instead of a clean 422.
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key", min_length=1, max_length=128)],
 ) -> AnalyzeResponseSchema:
     sheet = await _get_sheet_or_404(sheet_id, session, principal)
     actor = _actor_from_principal(principal)
 
-    existing = await find_existing_run(session, anchor_id=sheet.id, idempotency_key=idempotency_key)
-    if existing is not None and existing.agent_name == "trip_analyst":
+    existing = await find_existing_run(session, anchor_id=sheet.id, idempotency_key=idempotency_key, agent_name="trip_analyst")
+    if existing is not None:
         stored = existing.output_json.get("trip_profile")
         if stored:
             profile = TripProfile.model_validate(stored)
@@ -72,6 +74,19 @@ async def analyze_trip_route(
                 fallback_used=bool(existing.output_json.get("fallback_used")),
                 confidence_notes=profile.confidence_notes,
             )
+
+    # H3: the DB unique constraint on ``ai_runs`` is agent-agnostic — a key already used by a
+    # different agent (e.g. Draft) on this sheet must not fall through to a real LLM call and
+    # an eventual opaque IntegrityError; reject it up front instead.
+    other_agent_run = await find_existing_run(session, anchor_id=sheet.id, idempotency_key=idempotency_key)
+    if other_agent_run is not None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Idempotency-Key '{idempotency_key}' was already used by a different operation "
+                f"('{other_agent_run.agent_name}') on this sheet — use a new key."
+            ),
+        )
 
     profile, fallback_used = await analyze_trip(
         session,
@@ -83,7 +98,7 @@ async def analyze_trip_route(
     )
     await session.commit()
 
-    run = await find_existing_run(session, anchor_id=sheet.id, idempotency_key=idempotency_key)
+    run = await find_existing_run(session, anchor_id=sheet.id, idempotency_key=idempotency_key, agent_name="trip_analyst")
     return AnalyzeResponseSchema(
         run_id=run.id if run else idempotency_key,
         trip_profile=profile,
@@ -98,7 +113,9 @@ async def draft_services_route(
     payload: DraftRequestSchema,
     session: DbSessionDep,
     principal: EditorPrincipalDep,
-    idempotency_key: Annotated[str, Header(alias="Idempotency-Key")],
+    # H9: ai_runs.idempotency_key is String(128) — an oversized header would otherwise crash
+    # the eventual insert with an opaque DataError deep inside a run instead of a clean 422.
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key", min_length=1, max_length=128)],
 ) -> DraftResponseSchema:
     sheet = await _get_sheet_or_404(sheet_id, session, principal)
     actor = _actor_from_principal(principal)

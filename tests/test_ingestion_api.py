@@ -233,6 +233,39 @@ class IngestionApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200, response.text)
         self.assertIn(response.json()["status"], {"ready", "draft"})
 
+    def test_edit_and_reject_on_committed_batch_return_409(self):
+        """H6 — a terminal (``committed``) batch must reject further edits/rejects instead of
+        silently flipping it back to ``needs_clarification`` and opening the door to a second
+        commit replaying the resolution plan against the real catalog again."""
+        created = self._create_batch(idempotency_key="terminal-guard-1")
+        self.assertEqual(created.json()["status"], "ready", created.text)
+        batch_id, revision = created.json()["id"], created.json()["batch_revision"]
+
+        committed = self.client.post(
+            f"/api/v2/ingestion-batches/{batch_id}/commit",
+            json={"baseBatchRevision": revision},
+            headers={"Idempotency-Key": "terminal-guard-commit-1"},
+        )
+        self.assertEqual(committed.status_code, 200, committed.text)
+        self.assertEqual(committed.json()["status"], "committed")
+        committed_revision = committed.json()["batch_revision"]
+
+        edit_response = self.client.put(
+            f"/api/v2/ingestion-batches/{batch_id}/edits",
+            json={"edits": {}, "baseBatchRevision": committed_revision},
+        )
+        self.assertEqual(edit_response.status_code, 409, edit_response.text)
+
+        reject_response = self.client.post(
+            f"/api/v2/ingestion-batches/{batch_id}/reject",
+            json={"baseBatchRevision": committed_revision, "reason": "changed my mind"},
+        )
+        self.assertEqual(reject_response.status_code, 409, reject_response.text)
+
+        # Neither rejected attempt actually touched the batch.
+        refetched = self.client.get(f"/api/v2/ingestion-batches/{batch_id}")
+        self.assertEqual(refetched.json()["status"], "committed")
+
     def test_rate_limit_returns_429_after_daily_max(self):
         import routers.v2.ingestion as ingestion_router
 

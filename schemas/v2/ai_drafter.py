@@ -28,10 +28,17 @@ class DraftDaySpecSchema(BaseModel):
     service_date: date = Field(alias="serviceDate")
 
 
+# H9: no cap on raw_text meant an oversized paste (a whole PDF dump) went straight to the LLM
+# at full cost, with a provider-side failure then masquerading as "the AI degraded" instead of
+# "the input was too large" (trip_analyst's fallback catches any Exception). Trip descriptions
+# are prose, not tariff documents — 20k chars is generous headroom over any real one.
+MAX_ANALYZE_RAW_TEXT_CHARS = 20_000
+
+
 class AnalyzeRequestSchema(BaseModel):
     model_config = ConfigDict(extra="ignore", populate_by_name=True)
 
-    raw_text: str = Field(alias="rawText", min_length=1)
+    raw_text: str = Field(alias="rawText", min_length=1, max_length=MAX_ANALYZE_RAW_TEXT_CHARS)
 
 
 class AnalyzeResponseSchema(BaseModel):

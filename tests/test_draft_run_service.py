@@ -13,10 +13,13 @@ import unittest
 from datetime import date
 from unittest import mock
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+import db.session as db_session
 from core.kernel import ActorRef
 from db.base import Base
+from db.models.ai_run import AiRun
 from db.models.destination import DestinationCatalog
 from db.models.supplier import Supplier
 from schemas import service_draft as service_draft_module
@@ -51,9 +54,15 @@ class DraftRunServiceTests(unittest.TestCase):
         cls.db_file.close()
         cls.engine = create_async_engine(f"sqlite+aiosqlite:///{cls.db_file.name}")
         cls.session_factory = async_sessionmaker(cls.engine, class_=AsyncSession, expire_on_commit=False)
+        # H8's isolated-failure-logging path opens its own session via
+        # ``db.session.get_session_factory()`` — point it at this same test database so the
+        # mandatory tests can assert the logged row actually landed.
+        cls.session_patch = mock.patch.object(db_session, "get_session_factory", return_value=cls.session_factory)
+        cls.session_patch.start()
 
     @classmethod
     def tearDownClass(cls):
+        cls.session_patch.stop()
         asyncio.run(cls.engine.dispose())
         os.unlink(cls.db_file.name)
 
@@ -465,6 +474,204 @@ class DraftRunServiceTests(unittest.TestCase):
         from repositories.costing_repository import CostingRepository
 
         return await CostingRepository(session).get_sheet_by_id(self.sheet_id)
+
+    # --- H1: each day's writes must commit immediately, not stay pending across the whole run ---
+
+    def test_day_commits_are_visible_before_the_whole_run_finishes(self):
+        good_draft = DayDraftResult(
+            day_number=1,
+            services=[
+                ServiceDraft(
+                    category="accommodation", product_id=self.product.id, occupancy_basis="dbl",
+                    price_for="adult", pax_count=2, selection_reason="ok",
+                )
+            ],
+        )
+        seen_from_other_session: dict[str, int] = {}
+
+        async def scenario():
+            async with self.session_factory() as session:
+                sheet = await self._get_sheet(session)
+
+                async def fake_draft_day(deps, day_context):
+                    deps.allowlist.record([self.product.id])
+                    if day_context.day_number == 2:
+                        # Day 1 must already be durably committed and visible from a totally
+                        # independent session before day 2's agent call even runs.
+                        async with self.session_factory() as other_session:
+                            workbench = await CostingService(other_session).get_workbench(self.sheet_id)
+                            seen_from_other_session["items_before_day_2"] = len(workbench.items)
+                    return good_draft
+
+                with mock.patch.object(draft_run_service, "draft_day", side_effect=fake_draft_day):
+                    await run_draft(
+                        session, sheet=sheet, trip_profile=_sample_trip_profile(), days=self._days(1, 2),
+                        day_numbers_filter=None, base_costing_revision=0, actor=ACTOR, idempotency_key="draft-lock-check",
+                    )
+
+        asyncio.run(scenario())
+        self.assertEqual(seen_from_other_session.get("items_before_day_2"), 1)
+
+    # --- H2: RunBudget must be per-day, not one run-wide (days + 2) ceiling ------------------
+
+    def test_each_day_gets_its_own_fresh_tool_call_budget(self):
+        seen_budgets: list[tuple[int, int, int]] = []
+
+        async def scenario():
+            async with self.session_factory() as session:
+                sheet = await self._get_sheet(session)
+
+                async def fake_draft_day(deps, day_context):
+                    seen_budgets.append((day_context.day_number, deps.budget.max_calls, deps.budget.calls))
+                    deps.budget.record_call()
+                    deps.budget.record_call()
+                    deps.budget.record_call()
+                    return DayDraftResult(day_number=day_context.day_number, services=[])
+
+                with mock.patch.object(draft_run_service, "draft_day", side_effect=fake_draft_day):
+                    await run_draft(
+                        session, sheet=sheet, trip_profile=_sample_trip_profile(), days=self._days(1, 2, 3),
+                        day_numbers_filter=None, base_costing_revision=0, actor=ACTOR, idempotency_key="draft-budget",
+                    )
+
+        asyncio.run(scenario())
+        self.assertEqual(len(seen_budgets), 3)
+        # A run-wide "days + 2" budget would give this 3-day run only 5 tool calls total, and
+        # every day after the first would start with calls > 0 (carried over from earlier days).
+        for day_number, max_calls, calls_before_this_day in seen_budgets:
+            self.assertGreaterEqual(max_calls, 3, f"day {day_number} must not inherit a starved run-wide budget")
+            self.assertEqual(calls_before_this_day, 0, f"day {day_number} must start with a fresh budget")
+
+    # --- H3: an idempotency key already used by a DIFFERENT agent must not crash or replay wrong ---
+
+    def test_draft_rejects_an_idempotency_key_already_used_by_analyze(self):
+        from services.ai_drafter.trip_analyst import analyze_trip
+
+        async def scenario():
+            async with self.session_factory() as session:
+                await analyze_trip(
+                    session,
+                    raw_text="2 adults, relaxed pace",
+                    anchor_type="costing_sheet",
+                    anchor_id=self.sheet_id,
+                    idempotency_key="shared-key",
+                    actor=ACTOR,
+                )
+                await session.commit()
+
+                sheet = await self._get_sheet(session)
+                with self.assertRaises(draft_run_service.DraftValidationError):
+                    await run_draft(
+                        session, sheet=sheet, trip_profile=_sample_trip_profile(), days=self._days(1),
+                        day_numbers_filter=None, base_costing_revision=0, actor=ACTOR, idempotency_key="shared-key",
+                    )
+
+        asyncio.run(scenario())
+
+    # --- H8: a mid-run hard failure must still leave an ai_runs record, not vanish silently ---
+
+    def test_conflict_mid_run_logs_a_failed_run_and_keeps_the_earlier_day_committed(self):
+        good_draft = DayDraftResult(
+            day_number=1,
+            services=[
+                ServiceDraft(
+                    category="accommodation", product_id=self.product.id, occupancy_basis="dbl",
+                    price_for="adult", pax_count=2, selection_reason="ok",
+                )
+            ],
+        )
+        conflict_draft = DayDraftResult(
+            day_number=2,
+            services=[
+                ServiceDraft(
+                    category="accommodation", product_id=self.product.id, occupancy_basis="dbl",
+                    price_for="adult", pax_count=2, selection_reason="ok",
+                )
+            ],
+        )
+
+        async def scenario():
+            async with self.session_factory() as session:
+                sheet = await self._get_sheet(session)
+
+                async def fake_draft_day(deps, day_context):
+                    deps.allowlist.record([self.product.id])
+                    return good_draft if day_context.day_number == 1 else conflict_draft
+
+                from services.costing_service import CostingConflictError
+
+                original_create_line = CostingService.create_line
+                call_count = {"n": 0}
+
+                async def flaky_create_line(self_svc, *args, **kwargs):
+                    call_count["n"] += 1
+                    if call_count["n"] == 2:  # day 2's line
+                        raise CostingConflictError("stale revision", current_revision=999)
+                    return await original_create_line(self_svc, *args, **kwargs)
+
+                with mock.patch.object(draft_run_service, "draft_day", side_effect=fake_draft_day), mock.patch.object(
+                    CostingService, "create_line", flaky_create_line
+                ):
+                    with self.assertRaises(DraftConflictError):
+                        await run_draft(
+                            session, sheet=sheet, trip_profile=_sample_trip_profile(), days=self._days(1, 2),
+                            day_numbers_filter=None, base_costing_revision=0, actor=ACTOR,
+                            idempotency_key="draft-conflict-midrun",
+                        )
+
+        asyncio.run(scenario())
+
+        async def verify():
+            async with self.session_factory() as session:
+                workbench = await CostingService(session).get_workbench(self.sheet_id)
+                self.assertEqual(len(workbench.items), 1, "day 1's line must survive day 2's abort")
+
+                run_row = await session.scalar(select(AiRun).where(AiRun.idempotency_key == "draft-conflict-midrun"))
+                self.assertIsNotNone(run_row, "a failed/partial ai_runs row must exist even though the request rolled back")
+                self.assertIn(run_row.status, ("failed", "partial"))
+
+        asyncio.run(verify())
+
+    def test_malformed_supplement_json_degrades_instead_of_crashing(self):
+        """H8: a rate whose ``supplements_json`` is missing an expected key must not crash the
+        day's draft — the supplement is skipped, the line still gets created."""
+        draft = DayDraftResult(
+            day_number=1,
+            services=[
+                ServiceDraft(
+                    category="accommodation", product_id=self.product.id, occupancy_basis="dbl",
+                    price_for="adult", pax_count=2, selection_reason="ok",
+                )
+            ],
+        )
+
+        async def scenario():
+            async with self.session_factory() as session:
+                from sqlalchemy import update as sa_update
+
+                from db.models.rate import Rate
+
+                await session.execute(
+                    sa_update(Rate).where(Rate.id == self.rate_id).values(supplements_json=[{"label": "peak surcharge"}])
+                )
+                await session.commit()
+
+                sheet = await self._get_sheet(session)
+
+                async def fake_draft_day(deps, day_context):
+                    deps.allowlist.record([self.product.id])
+                    return draft
+
+                with mock.patch.object(draft_run_service, "draft_day", side_effect=fake_draft_day):
+                    result = await run_draft(
+                        session, sheet=sheet, trip_profile=_sample_trip_profile(), days=self._days(1),
+                        day_numbers_filter=None, base_costing_revision=0, actor=ACTOR, idempotency_key="draft-bad-supplement",
+                    )
+                return result
+
+        result = asyncio.run(scenario())
+        self.assertEqual(result.status, "succeeded")
+        self.assertEqual(len(result.created_line_ids), 1)
 
 
 if __name__ == "__main__":
