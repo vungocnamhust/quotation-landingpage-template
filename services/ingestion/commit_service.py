@@ -15,6 +15,7 @@ import copy
 from datetime import date, datetime, timezone
 from typing import Any
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.kernel import ActorRef
@@ -251,6 +252,14 @@ async def _commit_rate_group(
             raise CommitError(f"rate_group[{index}] resolution action '{action}' is not committable")
     except (RateValidationError, RateConflictError) as exc:
         raise CommitError(str(exc)) from exc
+    except IntegrityError as exc:
+        # Unlike SupplierService/ProductService (Track 1 audit R-M2), RateService does not
+        # wrap its own inserts in a savepoint, so a duplicate/conflicting rate can still
+        # reach this call as a raw IntegrityError. Converting it here — rather than letting
+        # it leak out as an unhandled 500 — relies on commit_batch's own begin_nested() (this
+        # function's caller) to roll back to its savepoint; this function must not call
+        # session.rollback() itself, which would discard the whole batch's outer transaction.
+        raise CommitError(f"rate_group[{index}] conflicts with an existing rate — cannot commit") from exc
 
     if result is None:
         raise CommitError(f"rate_group[{index}] could not be committed (product not found)")
@@ -291,61 +300,62 @@ async def commit_batch(
     if any(e.get("action") == "needs_input" for e in entries):
         raise CommitError(f"batch '{batch.id}' still has entries marked needs_input")
 
-    supplier_entry = next((e for e in entries if e["entity_type"] == "supplier"), None)
-    supplier_id = await _resolve_or_create_supplier(session, payload, parsed, supplier_entry, actor=actor)
+    async with session.begin_nested():
+        supplier_entry = next((e for e in entries if e["entity_type"] == "supplier"), None)
+        supplier_id = await _resolve_or_create_supplier(session, payload, parsed, supplier_entry, actor=actor)
 
-    product_ids_by_title: dict[str, str] = {}
-    created_products: list[str] = []
-    for entry in [e for e in entries if e["entity_type"] == "product"]:
-        product_id = await _resolve_or_create_product(session, payload, entry, supplier_id, actor=actor)
-        index = int(entry["entity_ref"].strip("/").split("/")[1])
-        product_ids_by_title[payload.products[index].title_text] = product_id
-        created_products.append(product_id)
+        product_ids_by_title: dict[str, str] = {}
+        created_products: list[str] = []
+        for entry in [e for e in entries if e["entity_type"] == "product"]:
+            product_id = await _resolve_or_create_product(session, payload, entry, supplier_id, actor=actor)
+            index = int(entry["entity_ref"].strip("/").split("/")[1])
+            product_ids_by_title[payload.products[index].title_text] = product_id
+            created_products.append(product_id)
 
-    rate_source: RateSourceCreateSchema | None = None
-    if supplier_id is not None:
-        rate_source = RateSourceCreateSchema(
-            supplier_id=supplier_id,
-            document_type=batch.source_document_type,
-            channel=batch.source_channel,
-            received_at=datetime.now(timezone.utc),
-            notes=f"Ingested via Interactive Ingestion Co-Pilot, batch {batch.id}",
+        rate_source: RateSourceCreateSchema | None = None
+        if supplier_id is not None:
+            rate_source = RateSourceCreateSchema(
+                supplier_id=supplier_id,
+                document_type=batch.source_document_type,
+                channel=batch.source_channel,
+                received_at=datetime.now(timezone.utc),
+                notes=f"Ingested via Interactive Ingestion Co-Pilot, batch {batch.id}",
+            )
+
+        created_rates: list[str] = []
+        reused_source_id: str | None = None
+        for entry in [e for e in entries if e["entity_type"] == "rate"]:
+            rate_id, used_source_id = await _commit_rate_group(
+                session, payload, parsed, entry, product_ids_by_title, rate_source if reused_source_id is None else None, reused_source_id, actor=actor
+            )
+            if reused_source_id is None:
+                reused_source_id = used_source_id
+            if rate_id:
+                created_rates.append(rate_id)
+
+        commit_result = {
+            "supplier_id": supplier_id,
+            "product_ids": created_products,
+            "rate_ids": created_rates,
+            "rate_source_id": reused_source_id,
+            "committed_at": datetime.now(timezone.utc).isoformat(),
+        }
+
+        await OutboxService(session).emit_event(
+            event_type="catalog.ingestion.committed",
+            aggregate_type="ingestion_batch",
+            aggregate_id=batch.id,
+            actor_email=actor.actor_id,
+            payload=commit_result,
         )
 
-    created_rates: list[str] = []
-    reused_source_id: str | None = None
-    for entry in [e for e in entries if e["entity_type"] == "rate"]:
-        rate_id, used_source_id = await _commit_rate_group(
-            session, payload, parsed, entry, product_ids_by_title, rate_source if reused_source_id is None else None, reused_source_id, actor=actor
+        repository = IngestionRepository(session)
+        return await repository.update_guarded(
+            batch,
+            expected_revision=expected_revision,
+            values={
+                "status": "committed",
+                "commit_result_json": commit_result,
+                "updated_by": actor.serialize(),
+            },
         )
-        if reused_source_id is None:
-            reused_source_id = used_source_id
-        if rate_id:
-            created_rates.append(rate_id)
-
-    commit_result = {
-        "supplier_id": supplier_id,
-        "product_ids": created_products,
-        "rate_ids": created_rates,
-        "rate_source_id": reused_source_id,
-        "committed_at": datetime.now(timezone.utc).isoformat(),
-    }
-
-    await OutboxService(session).emit_event(
-        event_type="catalog.ingestion.committed",
-        aggregate_type="ingestion_batch",
-        aggregate_id=batch.id,
-        actor_email=actor.actor_id,
-        payload=commit_result,
-    )
-
-    repository = IngestionRepository(session)
-    return await repository.update_guarded(
-        batch,
-        expected_revision=expected_revision,
-        values={
-            "status": "committed",
-            "commit_result_json": commit_result,
-            "updated_by": actor.serialize(),
-        },
-    )

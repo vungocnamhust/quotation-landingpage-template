@@ -82,12 +82,12 @@ class IngestCommitTests(unittest.IsolatedAsyncioTestCase):
         await self.engine.dispose()
         os.unlink(self.database_file.name)
 
-    async def _make_ready_batch(self, *, payload=None, entries=None):
+    async def _make_ready_batch(self, *, payload=None, entries=None, batch_id="igb_test1", idempotency_key="idem-1"):
         payload = payload or _ready_payload()
         reparsed, parsed = parse_payload(payload)
         repository = IngestionRepository(self.session)
         batch = await repository.insert(
-            batch_id="igb_test1",
+            batch_id=batch_id,
             values={
                 "status": "ready",
                 "raw_text": "irrelevant for commit test",
@@ -97,7 +97,7 @@ class IngestCommitTests(unittest.IsolatedAsyncioTestCase):
                 "resolution_json": {"entries": entries if entries is not None else _resolution_entries(), "clarifications": []},
                 "conversation_json": [],
                 "operator_edits_json": {},
-                "idempotency_key": "idem-1",
+                "idempotency_key": idempotency_key,
                 "created_by": ACTOR.serialize(),
                 "updated_by": ACTOR.serialize(),
             },
@@ -279,3 +279,37 @@ class IngestCommitTests(unittest.IsolatedAsyncioTestCase):
         assert total == 0, "supplier created earlier in the same failed commit must be rolled back"
         products, total = await ProductRepository(self.session).list(active_only=None)
         assert total == 0, "product created earlier in the same failed commit must be rolled back"
+
+    async def test_commit_converts_raw_rate_integrity_error_to_commit_error_without_poisoning_session(self):
+        """RateService (unlike SupplierService/ProductService, Track 1 audit R-M2) has no
+        savepoint of its own around its inserts, so a duplicate/conflicting rate can still
+        reach commit_batch as a raw IntegrityError from the database driver. This must come
+        out as a typed CommitError (422 at the router), and — because commit_batch's own
+        begin_nested() rolls back to its savepoint on the way out — the session must stay
+        usable afterwards for the *next* commit attempt in the same request/session, with no
+        explicit session.rollback() needed first."""
+        from unittest.mock import AsyncMock, patch
+
+        from sqlalchemy.exc import IntegrityError
+
+        batch = await self._make_ready_batch()
+
+        with patch(
+            "services.rate_service.RateService.create_draft",
+            new=AsyncMock(side_effect=IntegrityError("stmt", {}, Exception("duplicate rate"))),
+        ):
+            with self.assertRaises(CommitError):
+                await commit_batch(self.session, batch=batch, actor=ACTOR, expected_revision=0, idempotency_key="commit-rate-conflict")
+
+        # No manual rollback here — proves the outer begin_nested() already recovered the
+        # session, unlike test_commit_mid_failure_rolls_back_all_writes above which needs one.
+        suppliers, total = await SupplierRepository(self.session).list(active_only=None)
+        assert total == 0, "supplier created earlier in the same failed commit must be rolled back"
+        products, total = await ProductRepository(self.session).list(active_only=None)
+        assert total == 0, "product created earlier in the same failed commit must be rolled back"
+
+        # The session must still accept new work — proof it was never left "poisoned".
+        other_batch = await self._make_ready_batch(batch_id="igb_test2", idempotency_key="idem-2")
+        committed = await commit_batch(self.session, batch=other_batch, actor=ACTOR, expected_revision=0, idempotency_key="commit-retry-after-conflict")
+        await self.session.commit()
+        assert committed.status == "committed"
