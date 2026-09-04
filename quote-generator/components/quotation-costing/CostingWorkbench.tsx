@@ -1,5 +1,6 @@
 "use client";
 
+import { useToast } from "../staff-workspace/ToastProvider.tsx";
 import { Loader2, PlusCircle } from "lucide-react";
 import { getTypographyClassName } from "../../config/typography.ts";
 import { cn } from "../../utils/cn.ts";
@@ -10,6 +11,14 @@ import { AddServiceLineFlow } from "./AddServiceLineFlow.tsx";
 import { deriveDaySpecsFromLines } from "./ai/deriveDaySpecs.ts";
 import type { ApplyPricingResponse, CostingWorkbenchAnchor, DraftDaySpec } from "./types.ts";
 import type { ExistingPricingOption } from "./ApplyPricingDialog.tsx";
+
+function useSafeToast() {
+  try {
+    return useToast();
+  } catch {
+    return null;
+  }
+}
 
 // Mirrors schemas/service_draft.py DraftFlag — see ServiceLineRow.tsx for the row-level check.
 const NEEDS_MANUAL_REVIEW_FLAGS = new Set(["rate_missing", "rate_conflict", "needs_manual"]);
@@ -55,6 +64,7 @@ export function CostingWorkbench({
   aiDrafterDays,
   className,
 }: CostingWorkbenchProps) {
+  const toastCtx = useSafeToast();
   const {
     sheetId,
     workbench,
@@ -69,7 +79,11 @@ export function CostingWorkbench({
     removeLine,
     applyPricing,
     refresh,
-  } = useCostingWorkspace(anchor);
+  } = useCostingWorkspace(anchor, {
+    notifyToast: (message, type) => {
+      toastCtx?.toast(message, type);
+    },
+  });
 
   if (isLoading) {
     return (
@@ -86,17 +100,59 @@ export function CostingWorkbench({
         <p className={cn(getTypographyClassName("bodySm"), "text-[var(--color-muted)]")}>
           No costing sheet yet for this {anchor.requestId ? "request" : "quotation"}.
         </p>
+
+        {actionError ? (
+          <div
+            role="alert"
+            className={cn(
+              getTypographyClassName("bodySm"),
+              "flex flex-col items-center gap-2 max-w-md w-full rounded-[var(--radius-button)] border border-rose-300 bg-rose-50 p-3 text-rose-700 text-center",
+            )}
+          >
+            <p>{actionError}</p>
+            {rateCandidates?.length ? (
+              <ul className="mt-2 list-disc pl-5 text-left">
+                {rateCandidates.map((candidate) => (
+                  <li key={candidate.rate_id}>
+                    {candidate.season || candidate.rate_id} · {candidate.validity?.valid_from}–{candidate.validity?.valid_to}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            <button
+              type="button"
+              disabled={isCreatingSheet}
+              onClick={() => void createSheet()}
+              className={cn(
+                getTypographyClassName("caption"),
+                "underline hover:no-underline text-rose-800 disabled:opacity-50 cursor-pointer",
+              )}
+            >
+              Retry
+            </button>
+          </div>
+        ) : null}
+
         <button
           type="button"
           disabled={isCreatingSheet}
-          onClick={() => createSheet()}
+          onClick={() => void createSheet()}
           className={cn(
             getTypographyClassName("buttonPrimary"),
             "flex items-center gap-2 rounded-[var(--radius-button)] bg-[var(--color-accent)] px-5 py-2.5 text-white shadow-md transition-opacity hover:opacity-90 disabled:opacity-60 cursor-pointer",
           )}
         >
-          <PlusCircle size={16} aria-hidden="true" />
-          <span>Start costing sheet</span>
+          {isCreatingSheet ? (
+            <>
+              <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+              <span>Creating costing sheet...</span>
+            </>
+          ) : (
+            <>
+              <PlusCircle size={16} aria-hidden="true" />
+              <span>Start costing sheet</span>
+            </>
+          )}
         </button>
       </div>
     );
