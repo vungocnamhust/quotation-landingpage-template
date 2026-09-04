@@ -9,6 +9,7 @@ import type { DraftDaySpec } from "../../../../../components/quotation-costing/t
 import { dateForItineraryDay } from "../../../../../lib/rules/datesRules.ts";
 import { getTypographyClassName } from "../../../../../config/typography";
 import { cn } from "../../../../../utils/cn";
+import { HelpTooltip } from "../../../../../components/ui/tooltip/index.ts";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -90,17 +91,20 @@ export default function RequestCostingPage({ params }: Props) {
         anchor={{ requestId: id }}
         aiDrafterDays={aiDrafterDays}
         headerAction={(sheetId) => (
-          <button
-            type="button"
-            onClick={() => push(`/workspace/quotations/new?requestId=${id}&costingSheetId=${sheetId}`)}
-            className={cn(
-              getTypographyClassName("buttonPrimary"),
-              "flex items-center gap-2 rounded-[var(--radius-button)] bg-[var(--color-accent)] px-5 py-2.5 text-white shadow-md transition-all hover:opacity-90 cursor-pointer",
-            )}
-          >
-            <FileOutput size={16} aria-hidden="true" />
-            <span>Tạo báo giá từ dự toán</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => push(`/workspace/quotations/new?requestId=${id}&costingSheetId=${sheetId}`)}
+              className={cn(
+                getTypographyClassName("buttonPrimary"),
+                "flex items-center gap-2 rounded-[var(--radius-button)] bg-[var(--color-accent)] px-5 py-2.5 text-white shadow-md transition-all hover:opacity-90 cursor-pointer",
+              )}
+            >
+              <FileOutput size={16} aria-hidden="true" />
+              <span>Tạo báo giá từ dự toán</span>
+            </button>
+            <HelpTooltip conceptKey="CREATE_QUOTATION_CTA" size="md" />
+          </div>
         )}
       />
     </div>

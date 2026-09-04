@@ -11,6 +11,7 @@ import { DriftBadge } from "./DriftBadge.tsx";
 import { ApplyPricingButton } from "./ApplyPricingButton.tsx";
 import type { ExistingPricingOption } from "./ApplyPricingDialog.tsx";
 import { AIDraftButton } from "./ai/AIDraftButton.tsx";
+import { HelpTooltip } from "../ui/tooltip/index.ts";
 
 export interface CostingSettingsBarProps {
   sheet: CostingSheetProfile;
@@ -76,14 +77,17 @@ export function CostingSettingsBar({
 
         <div className="flex items-center gap-2">
           {aiDrafterDays && onAiDraftComplete ? (
-            <AIDraftButton
-              sheetId={sheet.id}
-              baseCostingRevision={sheet.costing_revision}
-              days={aiDrafterDays}
-              disabled={disabled}
-              onDraftComplete={onAiDraftComplete}
-              onConflict={onAiDraftConflict}
-            />
+            <div className="flex items-center gap-1">
+              <AIDraftButton
+                sheetId={sheet.id}
+                baseCostingRevision={sheet.costing_revision}
+                days={aiDrafterDays}
+                disabled={disabled}
+                onDraftComplete={onAiDraftComplete}
+                onConflict={onAiDraftConflict}
+              />
+              <HelpTooltip conceptKey="AI_DRAFTER" size="sm" />
+            </div>
           ) : null}
 
         {onApplyPricing ? (
@@ -113,6 +117,7 @@ export function CostingSettingsBar({
           <span className={cn(getTypographyClassName("label"), "flex items-center gap-1 text-[var(--color-muted)]")}>
             Currency
             {currencyLocked ? <Lock size={11} aria-hidden="true" /> : null}
+            <HelpTooltip conceptKey="CURRENCY" size="sm" />
           </span>
           <select
             value={sheet.currency}
@@ -133,7 +138,10 @@ export function CostingSettingsBar({
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>Markup (bps)</span>
+          <span className={cn(getTypographyClassName("label"), "flex items-center gap-1 text-[var(--color-muted)]")}>
+            Markup (bps)
+            <HelpTooltip conceptKey="MARKUP_BPS" size="sm" />
+          </span>
           <input
             type="number"
             min={0}
@@ -154,7 +162,10 @@ export function CostingSettingsBar({
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>Round up to</span>
+          <span className={cn(getTypographyClassName("label"), "flex items-center gap-1 text-[var(--color-muted)]")}>
+            Round up to
+            <HelpTooltip conceptKey="ROUND_UP_TO" size="sm" />
+          </span>
           <input
             type="number"
             min={0}
@@ -176,19 +187,28 @@ export function CostingSettingsBar({
 
         <div className="ml-auto flex items-center gap-6">
           <div className="flex flex-col items-end gap-0.5">
-            <span className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>Cost</span>
+            <span className={cn(getTypographyClassName("caption"), "flex items-center gap-1 text-[var(--color-muted)]")}>
+              Cost
+              <HelpTooltip conceptKey="COST" size="sm" />
+            </span>
             <span className={cn(getTypographyClassName("bodyMd"), "text-[var(--color-on-surface)]")}>
               {formatMinor(summary.cost_total_minor, sheet.currency)}
             </span>
           </div>
           <div className="flex flex-col items-end gap-0.5">
-            <span className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>Sell</span>
+            <span className={cn(getTypographyClassName("caption"), "flex items-center gap-1 text-[var(--color-muted)]")}>
+              Sell
+              <HelpTooltip conceptKey="SELL" size="sm" />
+            </span>
             <span className={cn(getTypographyClassName("bodyMd"), "text-[var(--color-accent)]")}>
               {formatMinor(summary.sell_total_minor, sheet.currency)}
             </span>
           </div>
           <div className="flex flex-col items-end gap-0.5">
-            <span className={cn(getTypographyClassName("caption"), "text-[var(--color-muted)]")}>Margin</span>
+            <span className={cn(getTypographyClassName("caption"), "flex items-center gap-1 text-[var(--color-muted)]")}>
+              Margin
+              <HelpTooltip conceptKey="MARGIN" size="sm" />
+            </span>
             <span className={cn(getTypographyClassName("bodyMd"), "text-[var(--color-on-surface)]")}>
               {formatMinor(summary.margin_minor, sheet.currency)} ({(summary.margin_bps / 100).toFixed(1)}%)
             </span>

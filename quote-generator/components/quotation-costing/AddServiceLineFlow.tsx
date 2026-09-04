@@ -11,6 +11,8 @@ import { ProductSelect } from "../product/ProductSelect.tsx";
 import { RateEditorDrawer } from "../product/rates/RateEditorDrawer.tsx";
 import { emptyServiceLineDraft, draftToWriteInput, type ServiceLineDraftForm } from "../../lib/rules/costingAdapter.ts";
 import type { ServiceLineWriteInput } from "./types.ts";
+import { HelpTooltip } from "../ui/tooltip/index.ts";
+import type { CostingConceptKey } from "../../lib/glossary/costingGlossary.ts";
 
 export interface AddServiceLineFlowProps {
   sheetCurrency: string;
@@ -28,10 +30,21 @@ const inputClass = cn(
   "h-9 w-full rounded-[var(--radius-button)] border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-2.5 text-[var(--color-on-surface)]",
 );
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  conceptKey,
+  children,
+}: {
+  label: string;
+  conceptKey?: CostingConceptKey;
+  children: React.ReactNode;
+}) {
   return (
     <div className="flex flex-col gap-1">
-      <span className={cn(getTypographyClassName("label"), "text-[var(--color-muted)]")}>{label}</span>
+      <span className={cn(getTypographyClassName("label"), "flex items-center gap-1 text-[var(--color-muted)]")}>
+        {label}
+        {conceptKey ? <HelpTooltip conceptKey={conceptKey} size="sm" /> : null}
+      </span>
       {children}
     </div>
   );
@@ -90,25 +103,28 @@ export function AddServiceLineFlow({ sheetCurrency, disabled, onAdd, initialCate
 
   return (
     <div className="flex flex-col gap-3 rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
-      <div className="flex items-center gap-1 rounded-[var(--radius-button)] bg-[var(--color-surface-muted)] p-1 w-fit">
-        {(["catalog", "manual"] as Mode[]).map((tab) => (
-          <button
-            key={tab}
-            type="button"
-            onClick={() => setMode(tab)}
-            className={cn(
-              getTypographyClassName("buttonSecondary"),
-              "rounded-[var(--radius-button)] px-3 py-1.5 cursor-pointer transition-colors",
-              mode === tab ? "bg-[var(--color-surface)] text-[var(--color-on-surface)] shadow-2xs" : "text-[var(--color-muted)]",
-            )}
-          >
-            {tab === "catalog" ? "Pick from catalog" : "Type manually"}
-          </button>
-        ))}
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 rounded-[var(--radius-button)] bg-[var(--color-surface-muted)] p-1 w-fit">
+          {(["catalog", "manual"] as Mode[]).map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setMode(tab)}
+              className={cn(
+                getTypographyClassName("buttonSecondary"),
+                "rounded-[var(--radius-button)] px-3 py-1.5 cursor-pointer transition-colors",
+                mode === tab ? "bg-[var(--color-surface)] text-[var(--color-on-surface)] shadow-2xs" : "text-[var(--color-muted)]",
+              )}
+            >
+              {tab === "catalog" ? "Pick from catalog" : "Type manually"}
+            </button>
+          ))}
+        </div>
+        <HelpTooltip conceptKey="SOURCE_MODE" size="sm" />
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Field label="Day #">
+        <Field label="Day #" conceptKey="DAY_NUMBER">
           <input
             type="number"
             min={1}
@@ -118,7 +134,7 @@ export function AddServiceLineFlow({ sheetCurrency, disabled, onAdd, initialCate
             placeholder="whole trip"
           />
         </Field>
-        <Field label="Qty (unit)">
+        <Field label="Qty (unit)" conceptKey="QTY_UNIT">
           <input
             type="number"
             min={1}
@@ -127,7 +143,7 @@ export function AddServiceLineFlow({ sheetCurrency, disabled, onAdd, initialCate
             className={inputClass}
           />
         </Field>
-        <Field label="Qty (time)">
+        <Field label="Qty (time)" conceptKey="QTY_TIME">
           <input
             type="number"
             min={1}
@@ -136,7 +152,7 @@ export function AddServiceLineFlow({ sheetCurrency, disabled, onAdd, initialCate
             className={inputClass}
           />
         </Field>
-        <Field label="Service date">
+        <Field label="Service date" conceptKey="SERVICE_DATE">
           <input
             type="date"
             value={draft.serviceDate ?? ""}
@@ -148,7 +164,11 @@ export function AddServiceLineFlow({ sheetCurrency, disabled, onAdd, initialCate
 
       {mode === "catalog" ? (
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-          <div className="md:col-span-3">
+          <div className="md:col-span-3 flex flex-col gap-1">
+            <span className={cn(getTypographyClassName("label"), "flex items-center gap-1 text-[var(--color-muted)]")}>
+              Product
+              <HelpTooltip conceptKey="PRODUCT_SELECT" size="sm" />
+            </span>
             <ProductSelect
               value={draft.productId}
               onChange={(productId, product) => {
@@ -333,7 +353,7 @@ export function AddServiceLineFlow({ sheetCurrency, disabled, onAdd, initialCate
       )}
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        <Field label="Sell override (minor, optional)">
+        <Field label="Sell override (minor, optional)" conceptKey="SELL_OVERRIDE">
           <input
             type="number"
             min={0}
@@ -343,7 +363,7 @@ export function AddServiceLineFlow({ sheetCurrency, disabled, onAdd, initialCate
             placeholder="leave blank to use markup"
           />
         </Field>
-        <Field label="Note">
+        <Field label="Note" conceptKey="SERVICE_NOTE">
           <input
             type="text"
             value={draft.note ?? ""}
@@ -353,18 +373,21 @@ export function AddServiceLineFlow({ sheetCurrency, disabled, onAdd, initialCate
         </Field>
       </div>
 
-      <button
-        type="button"
-        disabled={disabled || isSubmitting || !canSubmit}
-        onClick={handleSubmit}
-        className={cn(
-          getTypographyClassName("buttonPrimary"),
-          "flex w-fit items-center gap-1.5 rounded-[var(--radius-button)] bg-[var(--color-accent)] px-4 py-2 text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer",
-        )}
-      >
-        <Plus size={14} aria-hidden="true" />
-        <span>Add line</span>
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          disabled={disabled || isSubmitting || !canSubmit}
+          onClick={handleSubmit}
+          className={cn(
+            getTypographyClassName("buttonPrimary"),
+            "flex w-fit items-center gap-1.5 rounded-[var(--radius-button)] bg-[var(--color-accent)] px-4 py-2 text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer",
+          )}
+        >
+          <Plus size={14} aria-hidden="true" />
+          <span>Add line</span>
+        </button>
+        <HelpTooltip conceptKey="ADD_LINE" size="sm" />
+      </div>
 
       <RateEditorDrawer
         mode={rateDrawerOpen ? "create" : null}
