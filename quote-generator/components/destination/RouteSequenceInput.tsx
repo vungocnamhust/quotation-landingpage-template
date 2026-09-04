@@ -28,6 +28,20 @@ import {
   formatRouteString,
   parseRouteTokens,
 } from "../../lib/rules/routeRules.ts";
+import { useToast, type ToastType } from "../staff-workspace/ToastProvider.tsx";
+import {
+  collapseConsecutiveTokens,
+  getDestinationChipKey,
+  isConsecutiveDuplicateDestination,
+} from "./routeSequenceRules.ts";
+
+function useSafeToast() {
+  try {
+    return useToast();
+  } catch {
+    return null;
+  }
+}
 
 export type RouteSequenceInputProps = {
   values?: DestinationRef[];
@@ -36,6 +50,7 @@ export type RouteSequenceInputProps = {
   routingConstraints?: string;
   onRoutingConstraintsChange?: (constraints: string) => void;
   onApplyToItinerary?: (values: DestinationRef[]) => void;
+  onToast?: (message: string, type?: ToastType) => void;
   label?: string;
   placeholder?: string;
   disabled?: boolean;
@@ -55,6 +70,7 @@ export function RouteSequenceInput({
   routingConstraints = "",
   onRoutingConstraintsChange,
   onApplyToItinerary,
+  onToast,
   label = "Route Sequence & Destinations",
   placeholder = "+ Add next destination or paste route…",
   disabled = false,
@@ -70,6 +86,18 @@ export function RouteSequenceInput({
   const inputId = `route-sequence-${generatedId}`;
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const toastCtx = useSafeToast();
+
+  const safeToast = useCallback(
+    (message: string, type: ToastType = "info") => {
+      if (onToast) {
+        onToast(message, type);
+      } else if (toastCtx) {
+        toastCtx.toast(message, type);
+      }
+    },
+    [onToast, toastCtx]
+  );
 
   // Normalize initial items from either DestinationRef[] or string[]
   const effectiveValues: DestinationRef[] =
@@ -117,13 +145,22 @@ export function RouteSequenceInput({
 
   const handleSelect = useCallback(
     (item: DestinationRef) => {
+      const lastItem = effectiveValues[effectiveValues.length - 1];
+      if (isConsecutiveDuplicateDestination(item, lastItem)) {
+        safeToast(
+          `Cannot add consecutive duplicate destination "${item.name}".`,
+          "warning"
+        );
+        return;
+      }
+
       const next = [...effectiveValues, item];
       commitItems(next);
       setQuery("");
       setIsOpen(false);
       inputRef.current?.focus();
     },
-    [effectiveValues, commitItems]
+    [effectiveValues, commitItems, safeToast]
   );
 
   const handleRemoveChip = useCallback(
@@ -149,19 +186,36 @@ export function RouteSequenceInput({
 
       if (tokens.length > 1) {
         e.preventDefault();
-        const newItems: DestinationRef[] = tokens.map((token, idx) => ({
-          id: `dst_${token.toLowerCase().replace(/[^a-z0-9]/g, "_")}_${Date.now()}_${idx}`,
-          name: token,
-          slug: token.toLowerCase().replace(/\s+/g, "-"),
-        }));
-        const next = [...effectiveValues, ...newItems];
-        commitItems(next);
+        const lastItem = effectiveValues[effectiveValues.length - 1];
+        const { retainedTokens, omittedCount } = collapseConsecutiveTokens(
+          tokens,
+          lastItem
+        );
+
+        if (omittedCount > 0) {
+          safeToast(
+            "Consecutive duplicate destinations were omitted from the pasted route.",
+            "warning"
+          );
+        }
+
+        if (retainedTokens.length > 0) {
+          const newItems: DestinationRef[] = retainedTokens.map((token, idx) => ({
+            id: `dst_${token.toLowerCase().replace(/[^a-z0-9]/g, "_")}_${Date.now()}_${idx}`,
+            name: token,
+            slug: token.toLowerCase().replace(/\s+/g, "-"),
+          }));
+          const next = [...effectiveValues, ...newItems];
+          commitItems(next);
+        }
+
         setQuery("");
         setIsOpen(false);
       }
     },
-    [effectiveValues, commitItems]
+    [effectiveValues, commitItems, safeToast]
   );
+
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (disabled || readOnly) return;
@@ -259,7 +313,7 @@ export function RouteSequenceInput({
             const isLast = index === effectiveValues.length - 1;
 
             return (
-              <div key={ref.id || index} className="flex items-center gap-2">
+              <div key={getDestinationChipKey(ref, index)} className="flex items-center gap-2">
                 {/* Destination Chip */}
                 <div
                   className={cn(
