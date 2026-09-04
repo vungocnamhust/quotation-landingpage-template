@@ -45,8 +45,7 @@ class ContentValueBudgetError(ValueError):
 # (non-entity) fields resolve straight to a (budget_scope, field_key) pair in
 # `core/rules/content_budgets.py`; entity fields (itinerary day) share one
 # budget scope ("itinerary_day") regardless of which day is being edited.
-# Fields with no registered budget spec (pricing, hotel editorial,
-# finalization — Plan 16 §B.2 tracks migrating these into the registry) fall
+# Fields with no registered budget spec (pricing, hotel editorial) fall
 # back to an explicit `max_chars`.
 _BUDGET_LOOKUP: dict[str, dict[str, Any]] = {
     "/trip/title": {"budget": ("hero", "trip_title")},
@@ -75,10 +74,6 @@ _BUDGET_LOOKUP: dict[str, dict[str, Any]] = {
     "/pricing/title": {"max_chars": 160},
     "/pricing/description": {"max_chars": 1600},
     "/stays/hotels/{hotelId}/editorialIntroduction": {"max_chars": 300},
-    "/content/sections/finalization/blocks/0/groups/0/items/*": {"max_chars": 1600},
-    "/content/sections/finalization/blocks/0/groups/1/items/*": {"max_chars": 1600},
-    "/content/sections/finalization/blocks/0/groups/0/title": {"max_chars": 160},
-    "/content/sections/finalization/blocks/0/groups/1/title": {"max_chars": 160},
 }
 
 

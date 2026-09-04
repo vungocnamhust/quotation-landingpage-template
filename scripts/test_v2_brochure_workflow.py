@@ -344,7 +344,6 @@ def make_facts(brand_id: str, lang: str, opportunity_id: str) -> dict[str, Any]:
         ], "inclusions": ["WF_SENTINEL inclusion one", "WF_SENTINEL inclusion two"], "exclusions": ["WF_SENTINEL exclusion one", "WF_SENTINEL exclusion two"], "room_notes": "WF_SENTINEL room note"},
         "pricing_facts": {"conditions": ["WF_SENTINEL condition one", "WF_SENTINEL condition two"], "options": [{"id": "wf-signature", "label": "WF_SENTINEL option", "currency": "USD", "per_traveler_amount_minor": 300_000, "group_total_amount_minor": 900_000}]},
         "booking_facts": {"title": "WF_SENTINEL booking title", "description": "WF_SENTINEL booking description", "items": [{"key": "deposit", "label": "WF_SENTINEL deposit", "body": "WF_SENTINEL deposit body"}, {"key": "balance", "label": "WF_SENTINEL balance", "body": "WF_SENTINEL balance body"}]},
-        "finalization_facts": {"required_title": "WF_SENTINEL required title", "after_confirmation_title": "WF_SENTINEL after title", "required_items": ["WF_SENTINEL passport"], "after_confirmation_items": ["WF_SENTINEL vouchers"]},
         "seller_facts": {"seller_name": "WF_SENTINEL Seller", "seller_subtitle": "WF_SENTINEL seller subtitle", "seller_email": "seller@example.test", "seller_phone": "+84003", "contact_web": "https://example.test", "designer_name": "WF_SENTINEL Designer", "designer_signature": "WF_SENTINEL signature", "designer_kicker": "WF_SENTINEL designer kicker", "designer_quote": "WF_SENTINEL designer quote", "designer_experience": "WF_SENTINEL experience", "designer_title": "WF_SENTINEL title", "cta_body": "WF_SENTINEL CTA body", "designer_email": "designer@example.test", "designer_phone": "+84004"},
     }
 
@@ -427,12 +426,8 @@ def assert_fact_step(api: CurlApi, quotation_id: str, facts: dict[str, Any], lan
 def assert_content_candidate(scope: str, draft: dict[str, Any], facts: dict[str, Any]) -> None:
     require(draft["status"] == "draft", f"{scope}: candidate is not a draft.")
     require(not draft["missingInputs"], f"{scope}: generator reported missing inputs: {draft['missingInputs']}")
-    if scope == "finalization":
-        require(draft["generation"].get("llmCalled") is False, "finalization: deterministic checklist must not call the LLM.")
-        require(draft["generation"].get("generationStatus") == "deterministic", "finalization: generation status is not deterministic.")
-    else:
-        require(draft["generation"].get("llmCalled") is True, f"{scope}: LLM fallback is not accepted by this integration gate.")
-        require(draft["generation"].get("generationStatus") == "generated", f"{scope}: generation status is not generated.")
+    require(draft["generation"].get("llmCalled") is True, f"{scope}: LLM fallback is not accepted by this integration gate.")
+    require(draft["generation"].get("generationStatus") == "generated", f"{scope}: generation status is not generated.")
     candidate = draft["candidate"]
     snapshot = draft.get("factsSnapshot") or {}
     if scope == "hero":
@@ -441,8 +436,6 @@ def assert_content_candidate(scope: str, draft: dict[str, Any], facts: dict[str,
         require(all(bool(get_path(candidate, path)) for path in ("narrative.letterIntro", "narrative.letterBody2")), "overview: required generated fields are empty.")
     elif scope in {"route", "itinerary"}:
         require(bool(get_path(candidate, f"{scope}.title")), f"{scope}: generated title is empty.")
-    elif scope == "finalization":
-        require(bool(get_path(candidate, f"content.sections.{scope}.blocks")), f"{scope}: required canonical blocks are empty.")
     else:
         day = facts["trip_facts"]["itinerary"][int(scope.rsplit(":", 1)[1]) - 1]
         require(get_path(snapshot, "itineraryDay.destination") == day["destination"], f"{scope}: draft provenance lost its destination fact.")
@@ -467,12 +460,10 @@ def assert_content_candidate(scope: str, draft: dict[str, Any], facts: dict[str,
                 [day.get("summary") for day in snapshot_days] == [day["summary"] for day in expected_days],
                 "itinerary: draft provenance lost its itinerary programme.",
             )
-        elif scope == "finalization":
-            require("finalization_facts.required_items" in scoped_facts, "finalization: draft provenance lost its scoped facts.")
 
 
 def run_content_step(api: CurlApi, quotation_id: str, facts: dict[str, Any], lang: str, revision: int) -> tuple[dict[str, Any], int]:
-    scopes = ["hero", "overview_letter", "route", "itinerary", "finalization"] + [f"itinerary:day:{day['day_number']}" for day in facts["trip_facts"]["itinerary"]]
+    scopes = ["hero", "overview_letter", "route", "itinerary"] + [f"itinerary:day:{day['day_number']}" for day in facts["trip_facts"]["itinerary"]]
     document: dict[str, Any] = {}
     for scope in scopes:
         created = api.request("POST", f"/api/v2/quotations/{quotation_id}/content-drafts", query={"lang": lang}, body={"scope": scope, "generationMode": "storytelling", "instruction": "ONE_SHOT_WORKFLOW_GUIDANCE"})
@@ -490,8 +481,6 @@ def run_content_step(api: CurlApi, quotation_id: str, facts: dict[str, Any], lan
             require(bool(get_path(document, "narrative.letterIntro")), "overview: Apply did not update canonical content.")
         elif scope in {"route", "itinerary"}:
             require(bool(get_path(document, f"{scope}.title")), f"{scope}: Apply did not update canonical content.")
-        elif scope == "finalization":
-            require(bool(get_path(document, f"content.sections.{scope}.blocks")), f"{scope}: Apply did not update canonical blocks.")
         elif scope.startswith("itinerary:day:"):
             index = int(scope.rsplit(":", 1)[1]) - 1
             require(bool(get_path(document, f"itinerary.days.{index}.description")), f"{scope}: Apply did not update canonical content.")

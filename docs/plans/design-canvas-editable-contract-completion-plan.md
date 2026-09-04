@@ -75,7 +75,6 @@ Out of scope:
 | `/presentation/copyOverrides/a11y.brochureSections` | Design | local Design inspector | `NavViewModel.sectionAriaLabel` is the sole input to the nav landmark. The locale label is only its default strategy. |
 | `/presentation/identityOverrides/logoAlt` | Design | local Design inspector | `NavViewModel.brandLogoAlt` is the sole preferred logo image alt; propagate its marker to the actual `<Image>`. |
 | `/{assets.hero,assets.itineraryDivider,assets.hotelDivider,designer.image,itinerary.days.*/images/carousel/*,stays.hotels.*/{hotelImage,roomImage}}/altText` | Fact media | Facts media editor | A rendered image must consume the matching canonical media object’s `altText`; fallback copy is allowed only when the canonical alt is empty and must retain the canonical alt path. |
-| `/content/sections/finalization/blocks/0/groups/{0,1}/{title,items/*}` | Content | `content / finalization` | Existing checklist editor remains the only writable source. |
 | `/designer/{subtitle,signature,quote,experience}` | Fact | `facts / seller`, anchor to its existing field | Quote Fact fields already exist. |
 | `/designer/{name,email,phone,contact}` | Fact-derived profile snapshot | `facts / trip`, anchor `travel-designer` | Clicking changes/inspects the selected designer assignment; do not imply that a quote can edit a shared designer profile. If profile editing is required, add a separate explicit profile-workspace link later. |
 | `/stays/roomNotes`, `/stays/hotels/*/{city,name,introduction,hotelDate,tel,roomType}` | Fact | `facts / services`, hotel index/anchor | Repeated hotel index is resolved from the wildcard source. |
@@ -110,7 +109,7 @@ Out of scope:
 
 **Goal:** Every declared source has a marker in the actual rendered canonical `DisplayDocument`, with paths that identify the real canonical origin.
 
-**Demo/validation:** A generated display model contains the expected `EditableText.path/owner/mode` for overview, finalization, hotel, pricing, itinerary, route, booking, designer, brand, and labels.
+**Demo/validation:** A generated display model contains the expected `EditableText.path/owner/mode` for overview, hotel, pricing, itinerary, route, booking, designer, brand, and labels.
 
 ### Task 2.1: Inventory and close builder/renderer gaps
 
@@ -188,7 +187,7 @@ Out of scope:
 ### Task 4.2: Browser workflow tests
 
 - **Locations:** existing browser/Playwright test harness and new test file
-- **Work:** Use a real seeded V2 quotation. Test desktop click and keyboard selection for: overview Content including sign-off/sender; finalization title; itinerary day; hotel; pricing option; booking term; designer assignment; a derived route segment; and a system label. Assert the nav landmark and logo image use saved Design a11y/alt overrides, then save a permitted field, reload, and confirm the Design Canvas/public view value.
+- **Work:** Use a real seeded V2 quotation. Test desktop click and keyboard selection for: overview Content including sign-off/sender; itinerary day; hotel; pricing option; booking term; designer assignment; a derived route segment; and a system label. Assert the nav landmark and logo image use saved Design a11y/alt overrides, then save a permitted field, reload, and confirm the Design Canvas/public view value.
 - **Acceptance criteria:** Fact and Content changes obey `baseRevision`; no Design Canvas click writes canonical state directly. System/derived fields never present a text save. The browser DOM reflects the saved ARIA/logo-alt values rather than just the editor state.
 - **Validation:** Browser suite at desktop and mobile widths.
 

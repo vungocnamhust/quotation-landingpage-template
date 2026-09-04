@@ -28,7 +28,7 @@ quotation_agent = Agent(
         "   - TP. Hồ Chí Minh: The Reverie Saigon, Park Hyatt Saigon\n"
         "3. Tự động điền thông tin thiếu: Nếu yêu cầu đầu vào thiếu các chi tiết như:\n"
         "   - Ngày cụ thể: Hãy tự chọn khoảng thời gian hợp lý (ví dụ: mùa thu hoặc mùa đông 2026).\n"
-        "   - Điều khoản đặt phòng & thanh toán (bookingTerms, finalization): Hãy tự điền các điều khoản tiêu chuẩn của Vietnam Safar (ví dụ: đặt cọc 30%, thanh toán nốt trước 45 ngày).\n"
+        "   - Điều khoản đặt phòng & thanh toán (bookingTerms): Hãy tự điền các điều khoản tiêu chuẩn của Vietnam Safar (ví dụ: đặt cọc 30%, thanh toán nốt trước 45 ngày).\n"
         "   - Chi tiết Itinerary: Hãy sáng tạo lộ trình ngày qua ngày thật mượt mà, bao gồm hoạt động chi tiết, trải nghiệm độc bản (Vespa tour, du thuyền ngắm hoàng hôn, làm lồng đèn, fast-track sân bay VIP).\n"
         "   - Tại sao lộ trình này phù hợp (whyWorks): Viết 3 đoạn văn nhỏ tinh tế về sự riêng tư/linh hoạt (privateFlexible), sự thoải mái (comfort) và tính chất ẩm thực phù hợp (ví dụ: halal-friendly hoặc no-pork nếu khách là người đạo Hồi từ Singapore/GCC).\n"
         "4. Giá cả (Pricing): Nếu khách không cung cấp ngân sách, hãy ước tính giá tour luxury hợp lý trong trường pricing (ví dụ: 3000 USD đến 8000 USD/pax tùy số ngày).\n"

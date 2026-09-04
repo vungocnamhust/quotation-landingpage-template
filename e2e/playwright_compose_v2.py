@@ -177,7 +177,7 @@ def apply_required_content(
     the actual Facts -> Content -> Design sequence rather than side-step the
     content contract with a presentation write to an invalid document.
     """
-    scopes = ["hero", "overview_letter", "route", "itinerary", "finalization"]
+    scopes = ["hero", "overview_letter", "route", "itinerary"]
     scopes.extend(f"itinerary:day:{item['day_number']}" for item in itinerary)
     for scope in scopes:
         status, created = request_json(
@@ -396,7 +396,7 @@ def main() -> None:
     )
     status, canonical = request_json(f"/api/v2/quotations/{quotation_id}/document?lang=en")
     assert status == 200 and canonical["currentRevision"] == revision, canonical
-    assert all(key in canonical["document"].get("content", {}).get("sections", {}) for key in ("inclusions_exclusions", "booking_terms", "finalization")), canonical
+    assert all(key in canonical["document"].get("content", {}).get("sections", {}) for key in ("inclusions_exclusions", "booking_terms")), canonical
     expected_trip_title = canonical["document"]["trip"]["title"]
     storage = R2Storage()
     old_key, new_key, gallery_key = "vietnam/e2e/old-hero.png", "vietnam/e2e/new-hero.png", "vietnam/e2e/gallery-hero.png"

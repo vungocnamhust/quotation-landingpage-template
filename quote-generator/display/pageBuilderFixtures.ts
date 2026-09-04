@@ -463,13 +463,6 @@ export function buildPageViewModel({
         emphasis: 'secondary',
       },
     },
-    finalization: {
-      kicker: 'NEXT STEPS',
-      title: 'Finalization Checklist',
-      description: 'The remaining details we will confirm together.',
-      required: { title: 'Final Details Required', items: [] },
-      afterConfirmation: { title: 'After Confirmation', items: [] },
-    },
     designer: {
       ...brochure.designer,
       contactActions: [

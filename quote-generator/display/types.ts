@@ -605,19 +605,6 @@ export interface PaymentTermsViewModel {
   terms: PaymentTermItemViewModel[];
 }
 
-export interface FinalizationColumnViewModel {
-  title: TextValue;
-  items: TextValue[];
-}
-
-export interface FinalizationViewModel {
-  kicker: TextValue;
-  title: TextValue;
-  description: TextValue;
-  required: FinalizationColumnViewModel;
-  afterConfirmation: FinalizationColumnViewModel;
-}
-
 export interface DesignerSupportBlockViewModel {
   title: TextValue;
   iconSrc: string;

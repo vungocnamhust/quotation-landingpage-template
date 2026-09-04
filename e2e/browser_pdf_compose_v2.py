@@ -280,7 +280,7 @@ def main() -> int:
             assert_canvas_handoff(page, quotation_id=quotation_id, source="/narrative/letterSender", stage="content", section="overview_letter")
             report["canvasAssertions"].append("content-letter-sender")
             assert_canvas_handoff(page, quotation_id=quotation_id, source="/content/sections/inclusions_exclusions/blocks/0/leftItems/0", stage="content", section="inclusions_exclusions")
-            report["canvasAssertions"].append("content-finalization-group")
+            report["canvasAssertions"].append("content-inclusions-group")
             assert_canvas_handoff(page, quotation_id=quotation_id, source="/itinerary/days/0/title", stage="content", section=f"itinerary:day:{day_number}")
             assert_canvas_handoff(page, quotation_id=quotation_id, source="/itinerary/days/0/labelHighlights", stage="facts", section="programme", focus_control="day-0-number")
             report["canvasAssertions"].append("facts-itinerary-repeater")

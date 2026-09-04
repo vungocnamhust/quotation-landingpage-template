@@ -88,7 +88,7 @@ def apply_required_content(
     revision: int,
     itinerary: list[dict[str, Any]],
 ) -> int:
-    scopes = ["hero", "overview_letter", "route", "itinerary", "finalization"]
+    scopes = ["hero", "overview_letter", "route", "itinerary"]
     scopes.extend(f"itinerary:day:{item['day_number']}" for item in itinerary)
     for scope in scopes:
         status, created = request_json(

@@ -228,12 +228,6 @@ export type QuotationFacts = {
     description: string | null;
     items: BookingItemFact[];
   };
-  finalization_facts: {
-    required_title: string | null;
-    after_confirmation_title: string | null;
-    required_items: string[];
-    after_confirmation_items: string[];
-  };
   designer_facts: {
     seller_subtitle: string | null;
     designer_signature: string | null;
@@ -350,11 +344,6 @@ export function serializeFactsForApi(
       options: serializeCommercialOptions(facts.pricing_facts.options),
     },
     booking_facts: facts.booking_facts,
-    finalization_facts: {
-      ...facts.finalization_facts,
-      required_items: normalizedLines(facts.finalization_facts.required_items),
-      after_confirmation_items: normalizedLines(facts.finalization_facts.after_confirmation_items),
-    },
     designer_facts: facts.designer_facts,
     factMediaSlots,
   };
@@ -525,13 +514,6 @@ export const BROCHURE_DEFAULT_BOOKING_TERMS: readonly BookingItemFact[] = [
   },
 ];
 
-export const BROCHURE_DEFAULT_FINALIZATION = {
-  required_title: null as string | null,
-  after_confirmation_title: null as string | null,
-  required_items: [] as string[],
-  after_confirmation_items: [] as string[],
-} as const;
-
 export const MAX_COMMERCIAL_OPTIONS = 4;
 
 const CURRENCY_FRACTION_DIGITS: Record<string, number> = { USD: 2, VND: 0, EUR: 2, GBP: 2, AUD: 2 };
@@ -664,12 +646,6 @@ export const emptyFacts = (): QuotationFacts => ({
     options: [],
   },
   booking_facts: { title: null, description: null, items: [] },
-  finalization_facts: {
-    required_title: null,
-    after_confirmation_title: null,
-    required_items: [],
-    after_confirmation_items: [],
-  },
   designer_facts: {
     seller_subtitle: null,
     designer_signature: DESIGNER_PRESENTATION_DEFAULTS.signature,
@@ -751,12 +727,6 @@ export function ensureFactsDefaults(facts?: Partial<QuotationFacts> | null): Quo
         ...item,
       })),
     },
-    finalization_facts: {
-      ...base.finalization_facts,
-      ...(facts.finalization_facts ?? {}),
-      required_items: facts.finalization_facts?.required_items ?? base.finalization_facts.required_items,
-      after_confirmation_items: facts.finalization_facts?.after_confirmation_items ?? base.finalization_facts.after_confirmation_items,
-    },
     designer_facts: {
       ...base.designer_facts,
       ...(facts.designer_facts ?? {}),
@@ -774,12 +744,6 @@ export const createBrochureFacts = (): QuotationFacts => {
       title: "Booking & Payment Terms",
       description: "Commercial conditions, deposits, and cancellation policy for this booking.",
       items: BROCHURE_DEFAULT_BOOKING_TERMS.map((item) => ({ ...item })),
-    },
-    finalization_facts: {
-      ...facts.finalization_facts,
-      ...BROCHURE_DEFAULT_FINALIZATION,
-      required_items: [...BROCHURE_DEFAULT_FINALIZATION.required_items],
-      after_confirmation_items: [...BROCHURE_DEFAULT_FINALIZATION.after_confirmation_items],
     },
   };
 };

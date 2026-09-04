@@ -226,32 +226,6 @@ class BookingTerms(FrozenModel):
         return data
 
 
-class Finalization(FrozenModel):
-    finalDetailsRequired: str = pydantic_Field(
-        description=(
-            "Operationally realistic list/statement of documents/details "
-            "needed prior to travel, as appropriate."
-        )
-    )
-    afterConfirmation: str = pydantic_Field(
-        description="Description of key actions and support after booking confirmation."
-    )
-
-    @model_validator(mode="before")
-    @classmethod
-    def lenient_final(cls, data: Any) -> Any:
-        if not isinstance(data, dict):
-            return data
-        defaults = {
-            "finalDetailsRequired": "Passport copies and flight details required for booking.",
-            "afterConfirmation": "Our operations team will coordinate vouchers and guide details.",
-        }
-        for k, v in defaults.items():
-            if k not in data or data[k] is None:
-                data[k] = v
-        return data
-
-
 class PriceOption(FrozenModel):
     label: str = pydantic_Field(
         description="Label for this price option (e.g., 'Family Suite', 'Executive Villa')."
@@ -345,7 +319,6 @@ class TourQuotationPayload(FrozenModel):
         description="Array of premium optional enhancements fitting the guest context."
     )
     bookingTerms: BookingTerms
-    finalization: Finalization
     pricing: Union[Pricing, dict, Any] = pydantic_Field(
         description="Pricing can be Pricing model or calculated pricing context dictionary."
     )

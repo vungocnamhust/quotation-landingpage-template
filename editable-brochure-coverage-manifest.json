@@ -696,51 +696,6 @@
       "domAttribute": "data-editable"
     },
     {
-      "fieldId": "finalization.kicker",
-      "source": "/presentation/copyOverrides/finalization.kicker",
-      "owner": "design",
-      "kind": "text",
-      "behavior": "inspector",
-      "renderer": "quote-generator/display/runtimePageBuilder.ts",
-      "domAttribute": "data-editable"
-    },
-    {
-      "fieldId": "finalization.title",
-      "source": "/presentation/copyOverrides/finalization.title",
-      "owner": "design",
-      "kind": "text",
-      "behavior": "inspector",
-      "renderer": "quote-generator/display/runtimePageBuilder.ts",
-      "domAttribute": "data-editable"
-    },
-    {
-      "fieldId": "finalization.description",
-      "source": "/presentation/copyOverrides/finalization.description",
-      "owner": "design",
-      "kind": "text",
-      "behavior": "inspector",
-      "renderer": "quote-generator/display/runtimePageBuilder.ts",
-      "domAttribute": "data-editable"
-    },
-    {
-      "fieldId": "finalization.requiredItems",
-      "source": "/content/sections/finalization/blocks/0/groups/0/items/*",
-      "owner": "content",
-      "kind": "text",
-      "behavior": "handoff",
-      "renderer": "quote-generator/display/runtimePageBuilder.ts",
-      "domAttribute": "data-editable"
-    },
-    {
-      "fieldId": "finalization.afterConfirmationItems",
-      "source": "/content/sections/finalization/blocks/0/groups/1/items/*",
-      "owner": "content",
-      "kind": "text",
-      "behavior": "handoff",
-      "renderer": "quote-generator/display/runtimePageBuilder.ts",
-      "domAttribute": "data-editable"
-    },
-    {
       "fieldId": "designer.kicker",
       "source": "/designer/kicker",
       "owner": "fact",
@@ -878,24 +833,6 @@
     {
       "fieldId": "letter.sender",
       "source": "/narrative/letterSender",
-      "owner": "content",
-      "kind": "text",
-      "behavior": "handoff",
-      "renderer": "quote-generator/display/runtimePageBuilder.ts",
-      "domAttribute": "data-editable"
-    },
-    {
-      "fieldId": "finalization.requiredTitle",
-      "source": "/content/sections/finalization/blocks/0/groups/0/title",
-      "owner": "content",
-      "kind": "text",
-      "behavior": "handoff",
-      "renderer": "quote-generator/display/runtimePageBuilder.ts",
-      "domAttribute": "data-editable"
-    },
-    {
-      "fieldId": "finalization.afterConfirmationTitle",
-      "source": "/content/sections/finalization/blocks/0/groups/1/title",
       "owner": "content",
       "kind": "text",
       "behavior": "handoff",

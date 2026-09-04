@@ -259,10 +259,6 @@ _STATIC_CONTENT_SCOPES: dict[str, str] = {
     "/pricing/kicker": "pricing",
     "/pricing/title": "pricing",
     "/pricing/description": "pricing",
-    "/content/sections/finalization/blocks/0/groups/0/items/*": "finalization",
-    "/content/sections/finalization/blocks/0/groups/1/items/*": "finalization",
-    "/content/sections/finalization/blocks/0/groups/0/title": "finalization",
-    "/content/sections/finalization/blocks/0/groups/1/title": "finalization",
 }
 
 

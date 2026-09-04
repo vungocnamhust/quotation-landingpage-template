@@ -15,19 +15,6 @@ from schemas.quote_document.brand import (
     QuoteBaseModel,
 )
 
-SECTION_TYPES = (
-    "hero",
-    "overview_letter",
-    "route_map",
-    "itinerary",
-    "hotel_plan",
-    "pricing",
-    "inclusions_exclusions",
-    "booking_terms",
-    "designer",
-    "finalization",
-)
-
 
 class QuoteAssetRef(QuoteBaseModel):
     assetId: str = ""

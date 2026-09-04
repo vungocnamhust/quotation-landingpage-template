@@ -49,7 +49,6 @@
     "inclusions_exclusions",
     "booking_terms",
     "designer",
-    "finalization",
   ];
   const SIDEBAR_STORAGE_KEY = "brochureDraftCollapsed";
 
@@ -165,11 +164,6 @@
     next.bookingTerms = normalizeBookingTerms(next.bookingTerms || {});
     next.designer = next.designer || {};
     next.designer.image = normalizeAsset(next.designer.image);
-    next.finalization = next.finalization || {};
-    next.finalization.requiredTitle = next.finalization.requiredTitle || next.finalization.required_title || "Final Details Required";
-    next.finalization.afterConfirmationTitle = next.finalization.afterConfirmationTitle || next.finalization.after_confirmation_title || "After Confirmation";
-    next.finalization.requiredItems = (next.finalization.requiredItems || []).map((item, index) => ({ id: item.id || `final-req-${index + 1}`, text: item.text || "" }));
-    next.finalization.afterConfirmation = (next.finalization.afterConfirmation || []).map((item, index) => ({ id: item.id || `final-after-${index + 1}`, text: item.text || "" }));
     next.layout = next.layout || {};
     next.layout.sections = normalizeLayoutSections(next.layout.sections || []);
     return next;
@@ -752,24 +746,6 @@
     });
   }
 
-  function applyFinalization(draft) {
-    const finalization = draft.finalization || {};
-    setEditable("final_req_title", finalization.requiredTitle || "");
-    setEditable("final_after_title", finalization.afterConfirmationTitle || "");
-    (draft.finalization.requiredItems || []).forEach((item, index) => {
-      setEditable(`final_req_${index}`, item.text || "");
-    });
-    (draft.finalization.afterConfirmation || []).forEach((item, index) => {
-      setEditable(`final_after_${index}`, item.text || "");
-    });
-    document.querySelectorAll("[data-finalization-required-list]").forEach((container) => {
-      container.innerHTML = (finalization.requiredItems || []).map((item, index) => `<li data-editable="final_req_${index}">${escapeHtml(item.text || "")}</li>`).join("");
-    });
-    document.querySelectorAll("[data-finalization-after-list]").forEach((container) => {
-      container.innerHTML = (finalization.afterConfirmation || []).map((item, index) => `<li data-editable="final_after_${index}">${escapeHtml(item.text || "")}</li>`).join("");
-    });
-  }
-
   function applyRouteSegments(draft) {
     const segments = draft.route.staySegments || [];
     segments.forEach((segment, index) => {
@@ -831,7 +807,6 @@
     applyCollection("inc", viewDraft.inclusions || []);
     applyCollection("exc", viewDraft.exclusions || []);
     applyBookingTerms(viewDraft);
-    applyFinalization(viewDraft);
     applyRouteSegments(viewDraft);
   }
 
@@ -1288,8 +1263,6 @@
     ];
     const layout = [
       field("layout.sections", "Sections", "layoutItems"),
-      field("finalization.requiredTitle", "Final details title"),
-      field("finalization.afterConfirmationTitle", "After confirmation title"),
     ];
     return { trip, narrative, brand, designer, booking, layout };
   }
@@ -1444,7 +1417,7 @@
         <details class="draft-section"><summary>Brand & Assets</summary>${renderBrandPresetPicker()}${sections.brand.map(renderField).join("")}</details>
         <details class="draft-section"><summary>Designer</summary>${sections.designer.map(renderField).join("")}</details>
         <details class="draft-section"><summary>Booking Terms</summary>${sections.booking.map(renderField).join("")}</details>
-        <details class="draft-section"><summary>Layout & Finalization</summary>${sections.layout.map(renderField).join("")}</details>
+        <details class="draft-section"><summary>Layout</summary>${sections.layout.map(renderField).join("")}</details>
         <details class="draft-section"><summary>Route</summary>${dynamic.routeMarkup}</details>
         <details class="draft-section"><summary>Itinerary</summary>${dynamic.daysMarkup}</details>
         <details class="draft-section"><summary>Hotels</summary>${dynamic.hotelsMarkup}</details>
@@ -1452,8 +1425,6 @@
         <details class="draft-section"><summary>Lists</summary>
           <label class="draft-field"><span>Inclusions</span><textarea data-array-path="inclusions">${escapeHtml((state.inclusions || []).map((item) => item.text || "").join("\n"))}</textarea></label>
           <label class="draft-field"><span>Exclusions</span><textarea data-array-path="exclusions">${escapeHtml((state.exclusions || []).map((item) => item.text || "").join("\n"))}</textarea></label>
-          <label class="draft-field"><span>Final details required</span><textarea data-array-path="finalization.requiredItems">${escapeHtml((state.finalization.requiredItems || []).map((item) => item.text || "").join("\n"))}</textarea></label>
-          <label class="draft-field"><span>After confirmation</span><textarea data-array-path="finalization.afterConfirmation">${escapeHtml((state.finalization.afterConfirmation || []).map((item) => item.text || "").join("\n"))}</textarea></label>
         </details>
         <div class="draft-sidebar-actions">
           <button type="button" id="draft-save-btn">Save now</button>
@@ -1528,7 +1499,7 @@
             }
           }
         }
-        if (arrayPath === "inclusions" || arrayPath === "exclusions" || arrayPath.startsWith("finalization.")) {
+        if (arrayPath === "inclusions" || arrayPath === "exclusions") {
           setPath(state, arrayPath, splitLines(target.value).map((text, index) => ({ id: `${arrayPath.split(".").pop()}-${index + 1}`, text })));
         }
         didUpdate = true;
@@ -1636,7 +1607,7 @@
         const res = await fetch(`/api/v2/quotations/${quotationId}/regenerate-narrative?lang=${encodeURIComponent(currentLang)}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ scopes: ["hero", "overview", "itinerary", "booking_terms", "finalization"] }),
+          body: JSON.stringify({ scopes: ["hero", "overview", "itinerary", "booking_terms"] }),
         });
         const data = await parseJsonResponseSafe(res, "Narrative regeneration");
         if (!res.ok) throw new Error(describeErrors(data.detail || data));

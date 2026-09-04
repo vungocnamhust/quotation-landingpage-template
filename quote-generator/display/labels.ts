@@ -64,9 +64,6 @@ const I18N_LABELS = {
     termCancellationLabel: 'Cancellation',
     termCancellationBody:
       'Written notice required. Cancellation fees apply based on arrival date:\n• > 45 days prior: Deposit forfeited (30%)\n• 45 – 31 days prior: 50% of total tour cost\n• 30 – 20 days prior: 75% of total tour cost\n• < 20 days prior: 100% of total tour cost\n\nAny non-refundable payments, cancellation charges or penalties imposed by hotels, airlines, cruise operators and other service providers may also apply.',
-    finalizationKicker: 'NEXT STEPS',
-    finalizationTitle: 'Finalization Checklist',
-    finalizationDescription: 'The remaining details we will confirm together.',
     footerText: 'This confidential quotation has been prepared exclusively for your journey.',
     pdfWhitespaceSlogan: 'Your journeys through Vietnam and Indochina, shaped around living heritage, quiet landscapes and the luxury of time.',
     brochureSections: 'Brochure sections',
@@ -144,9 +141,6 @@ const I18N_LABELS = {
     termCancellationLabel: 'Hủy dịch vụ',
     termCancellationBody:
       'Yêu cầu thông báo bằng văn bản. Phí hủy dịch vụ áp dụng dựa trên ngày khởi hành:\n• > 45 ngày trước khởi hành: Mất cọc (30%)\n• 45 – 31 ngày trước khởi hành: 50% tổng chi phí tour\n• 30 – 20 ngày trước khởi hành: 75% tổng chi phí tour\n• < 20 ngày trước khởi hành: 100% tổng chi phí tour\n\nMọi khoản thanh toán không hoàn lại hoặc chi phí phạt từ khách sạn, hãng hàng không, du thuyền và đối tác cung cấp dịch vụ có thể áp dụng thêm.',
-    finalizationKicker: 'BƯỚC TIẾP THEO',
-    finalizationTitle: 'Thông Tin Xác Nhận',
-    finalizationDescription: 'Những chi tiết còn lại chúng ta sẽ cùng xác nhận.',
     footerText: 'Báo giá bảo mật này được chuẩn bị riêng cho hành trình của bạn.',
     pdfWhitespaceSlogan: 'Những hành trình qua Việt Nam và Đông Dương được định hình bởi di sản sống, cảnh quan tĩnh lặng và sự xa xỉ của thời gian.',
     brochureSections: 'Các phần của brochure',
@@ -224,9 +218,6 @@ const I18N_LABELS = {
     termCancellationLabel: 'الإلغاء',
     termCancellationBody:
       'يلزم تقديم إشعار خطي. تطبق رسوم الإلغاء بناءً على تاريخ الوصول:\n• أكثر من 45 يومًا: مصادرة العربون (30%)\n• 45 - 31 يومًا: 50% من إجمالي تكلفة الجولة\n• 30 - 20 يومًا: 75% من إجمالي تكلفة الجولة\n• أقل من 20 يومًا: 100% من إجمالي تكلفة الجولة\n\nقد تنطبق أيضًا أي مدفوعات غير قابلة للاسترداد أو غرامات مفروضة من الفنادق وشركات الطيران ومقدمي الخدمات.',
-    finalizationKicker: 'الخطوات التالية',
-    finalizationTitle: 'قائمة التحقق النهائية',
-    finalizationDescription: 'التفاصيل المتبقية التي سنؤكدها معا.',
     footerText: 'أعد عرض السعر السري هذا حصريا لرحلتك.',
     pdfWhitespaceSlogan: 'رحلاتكم عبر فيتنام والهند الصينية تصوغها التقاليد الحية والمناظر الهادئة وفخامة الوقت.',
     brochureSections: 'أقسام الكتيب',

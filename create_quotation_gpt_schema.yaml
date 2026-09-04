@@ -429,9 +429,6 @@ components:
         bookingTerms:
           $ref: "#/components/schemas/BookingPaymentTerms"
 
-        finalization:
-          $ref: "#/components/schemas/FinalizationSteps"
-
         output:
           $ref: "#/components/schemas/QuotationOutput"
 
@@ -942,22 +939,3 @@ components:
         confirmation:
           type: string
           example: Services are secured after deposit
-
-    FinalizationSteps:
-      type: object
-      additionalProperties: false
-      properties:
-        finalDetailsRequired:
-          type: array
-          items:
-            type: string
-          example:
-            - Guest full names
-            - Passport details
-        afterConfirmation:
-          type: array
-          items:
-            type: string
-          example:
-            - Vietnam Safar secures all hotels and services
-            - Final travel documents shared before arrival
