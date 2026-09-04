@@ -255,7 +255,7 @@ export default function DetailRequestView({ request: initialRequest }: Props) {
             )}
           >
             <Calculator size={16} aria-hidden="true" />
-            <span>Lên dự toán &amp; Báo giá</span>
+            <span>Cost Estimation &amp; Quotation</span>
           </button>
         </div>
       </div>
